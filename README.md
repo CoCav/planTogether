@@ -182,7 +182,7 @@ project-root
 │   └── server.js
 │
 ├── tests
-│   └── testDB.js
+│   └── auth.test.js
 │
 ├── .env
 ├── .env.example

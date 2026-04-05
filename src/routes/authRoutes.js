@@ -13,10 +13,10 @@ router.post('/register', registerValidator, validateRequest, authController.regi
 router.post('/login', loginValidator, validateRequest, authController.login);
 
 // ROUTE GET - Get current user profile
-router.get('/me', authenticateToken, authController.getUserByID);
+router.get('/profile', authenticateToken, authController.getUserByID);
 
 // ROUTE PUT - Update current user profile
-router.put('/me', authenticateToken, updateProfileValidator, validateRequest, authController.updateUserByID);
+router.put('/profile', authenticateToken, updateProfileValidator, validateRequest, authController.updateUserByID);
 
 // ROUTE POST - Logout user (client should delete token)
 router.post('/logout', authenticateToken, authController.logout);

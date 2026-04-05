@@ -42,8 +42,8 @@ const loginUser = async ({ email, password }) => {
 
         const normalizedEmail = String(email).toLowerCase().trim();
 
-        // Check if user exists in the database
-        const user = await User.findOne({ where: { email: normalizedEmail } });
+        // Check if user exists in the database and include the password
+        const user = await User.scope('withPassword').findOne({ where: { email: normalizedEmail } });
         if (!user) {
             const error = new Error('Invalid email or invalid password');
             error.statusCode = 401;

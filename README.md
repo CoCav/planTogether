@@ -183,6 +183,8 @@ project-root
 │
 ├── tests
 │   └── auth.test.js
+│   └── event.test.js
+│   └── eventMembership.test.js
 │
 ├── .env
 ├── .env.example

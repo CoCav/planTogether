@@ -1,6 +1,6 @@
 const request = require('supertest');
 const app = require('../src/app');
-const { initDB, sequelize } = require('../src/models');
+const { initDB, sequelize, User, Event, EventUserRole } = require('../src/models');
 
 // Test suite for all authentication-related endpoints
 describe('Auth API', () => {
@@ -10,18 +10,16 @@ describe('Auth API', () => {
         await initDB();
     });
 
-    // Close the database connection after all tests are finished
-    afterAll(async () => {
-        await sequelize.close();
-    });
-
     // Clean database after each test
     afterEach(async () => {
-        const { User, Event, EventUserRole } = require('../src/models');
-
         await EventUserRole.destroy({ where: {} });
         await Event.destroy({ where: {} });
         await User.destroy({ where: {} });
+    });
+
+    // Close the database connection after all tests are finished
+    afterAll(async () => {
+        await sequelize.close();
     });
 
 
@@ -78,7 +76,7 @@ describe('Auth API', () => {
         // Check that login is successful
         expect(res.statusCode).toBe(200);
 
-            // Check that a JWT token is returned
+        // Check that a JWT token is returned
         expect(res.body).toHaveProperty('token');
     });
 

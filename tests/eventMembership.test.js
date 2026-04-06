@@ -289,4 +289,350 @@ describe('Event Membership API', () => {
         expect(Array.isArray(res.body.organizers)).toBe(true);
         expect(res.body.organizers.length).toBeGreaterThan(0);
     });
+
+
+    // Test to verify that the event creator is automatically assigned the organizer role
+    it('should assign organizer role to the event creator', async () => {
+
+        const creatorEmail = `mainorganizer${Date.now()}@test.com`;
+
+        // Step 1: Register the event creator
+        const creatorRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+            name: 'Main Organizer',
+            email: creatorEmail,
+            password: 'Password123'
+        });
+
+        const creatorToken = creatorRes.body.token;
+
+        // Step 2: Create an event
+        const eventRes = await request(app)
+        .post('/api/events')
+        .set('Authorization', `Bearer ${creatorToken}`)
+        .send({
+            title: 'Organizer Role Event',
+            description: 'Testing automatic organizer assignment',
+            date: '2026-12-31',
+            location: 'Montreal',
+            type: 'Meetup',
+            theme: 'Technology'
+        });
+
+        const eventId = eventRes.body.event.id;
+
+        // Step 3: Get organizers of the event
+        const res = await request(app)
+        .get(`/api/events/${eventId}/organizers`)
+        .set('Authorization', `Bearer ${creatorToken}`);
+
+        // Check that request is successful
+        expect(res.statusCode).toBe(200);
+
+        // Check that organizers are returned
+        expect(res.body).toHaveProperty('organizers');
+        expect(Array.isArray(res.body.organizers)).toBe(true);
+        expect(res.body.organizers.length).toBeGreaterThan(0);
+
+        // Try common response shapes
+        const organizerEmails = res.body.organizers.map((organizer) =>
+            organizer.email || organizer.User?.email
+        );
+
+        expect(organizerEmails).toContain(creatorEmail);
+    });
+
+    // Test to verify that an organizer can update a member's role
+    it('should allow an organizer to update a member role to co_organizer', async () => {
+
+        const organizerEmail = `roleorganizer${Date.now()}@test.com`;
+        const participantEmail = `roleparticipant${Date.now()}@test.com`;
+
+        // Step 1: Register the event creator (organizer)
+        const creatorRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+            name: 'Role Organizer',
+            email: organizerEmail,
+            password: 'Password123'
+        });
+
+        const creatorToken = creatorRes.body.token;
+
+        // Step 2: Create an event
+        const eventRes = await request(app)
+        .post('/api/events')
+        .set('Authorization', `Bearer ${creatorToken}`)
+        .send({
+            title: 'Role Test Event',
+            description: 'Testing role updates',
+            date: '2026-12-31',
+            location: 'Montreal',
+            type: 'Meetup',
+            theme: 'Technology'
+        });
+
+        const eventId = eventRes.body.event.id;
+
+        // Step 3: Register a participant
+        const participantRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+            name: 'Role Participant',
+            email: participantEmail,
+            password: 'Password123'
+        });
+
+        const participantToken = participantRes.body.token;
+
+        const participant = await User.findOne({
+            where: { email: participantEmail }
+        });
+
+        const participantId = participant.id;
+
+        // Step 4: Participant joins the event
+        await request(app)
+        .post(`/api/events/${eventId}/members/join`)
+        .set('Authorization', `Bearer ${participantToken}`);
+
+        // Step 5: Organizer updates role
+        const res = await request(app)
+        .put(`/api/events/${eventId}/members/${participantId}/role`)
+        .set('Authorization', `Bearer ${creatorToken}`)
+        .send({
+            newRole: 'co_organizer'
+        });
+
+        // Check that role update is successful
+        expect(res.statusCode).toBe(200);
+
+        // Check that response exists
+        expect(res.body).toBeDefined();
+    });
+
+
+    // Test to verify that a participant cannot update another member's role
+    it('should reject role update when requested by a participant', async () => {
+        const organizerEmail = `forbiddenorganizer${Date.now()}@test.com`;
+        const participantOneEmail = `participantone${Date.now()}@test.com`;
+        const participantTwoEmail = `participanttwo${Date.now()}@test.com`;
+
+        // Step 1: Register organizer
+        const creatorRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+            name: 'Forbidden Organizer',
+            email: organizerEmail,
+            password: 'Password123'
+        });
+
+        const creatorToken = creatorRes.body.token;
+
+        // Step 2: Create event
+        const eventRes = await request(app)
+        .post('/api/events')
+        .set('Authorization', `Bearer ${creatorToken}`)
+        .send({
+            title: 'Forbidden Role Update Event',
+            description: 'Testing forbidden role updates',
+            date: '2026-12-31',
+            location: 'Montreal',
+            type: 'Meetup',
+            theme: 'Technology'
+        });
+
+        const eventId = eventRes.body.event.id;
+
+        // Step 3: Register participant one
+        const participantOneRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+            name: 'Participant One',
+            email: participantOneEmail,
+            password: 'Password123'
+        });
+
+        const participantOneToken = participantOneRes.body.token;
+
+        // Step 4: Register participant two
+        const participantTwoRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+            name: 'Participant Two',
+            email: participantTwoEmail,
+            password: 'Password123'
+        });
+
+        // Step 5: Retrieve participant two id from database
+        const participantTwo = await User.findOne({
+            where: { email: participantTwoEmail }
+        });
+
+        const participantTwoId = participantTwo.id;
+
+        // Step 6: Both participants join the event
+        await request(app)
+        .post(`/api/events/${eventId}/members/join`)
+        .set('Authorization', `Bearer ${participantOneToken}`);
+
+        await request(app)
+        .post(`/api/events/${eventId}/members/join`)
+        .set('Authorization', `Bearer ${participantTwoRes.body.token}`);
+
+        // Step 7: Participant one tries to update participant two role
+        const res = await request(app)
+        .put(`/api/events/${eventId}/members/${participantTwoId}/role`)
+        .set('Authorization', `Bearer ${participantOneToken}`)
+        .send({
+            newRole: 'co_organizer'
+        });
+
+        // Check that access is denied
+        expect(res.statusCode).toBe(403);
+    });
+
+    // Test to verify that an organizer can remove a member from an event
+    it('should allow an organizer to remove a member from an event', async () => {
+        const organizerEmail = `removeorganizer${Date.now()}@test.com`;
+        const participantEmail = `removeparticipant${Date.now()}@test.com`;
+
+        // Step 1: Register organizer
+        const creatorRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+            name: 'Remove Organizer',
+            email: organizerEmail,
+            password: 'Password123'
+        });
+
+        const creatorToken = creatorRes.body.token;
+
+        // Step 2: Create event
+        const eventRes = await request(app)
+        .post('/api/events')
+        .set('Authorization', `Bearer ${creatorToken}`)
+        .send({
+            title: 'Remove Member Event',
+            description: 'Testing member removal',
+            date: '2026-12-31',
+            location: 'Montreal',
+            type: 'Meetup',
+            theme: 'Technology'
+        });
+
+        const eventId = eventRes.body.event.id;
+
+        // Step 3: Register participant
+        const participantRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+            name: 'Remove Participant',
+            email: participantEmail,
+            password: 'Password123'
+        });
+
+        const participantToken = participantRes.body.token;
+
+        // Step 4: Retrieve participant id from DB
+        const participant = await User.findOne({
+            where: { email: participantEmail }
+        });
+
+        const participantId = participant.id;
+
+        // Step 5: Participant joins event
+        await request(app)
+        .post(`/api/events/${eventId}/members/join`)
+        .set('Authorization', `Bearer ${participantToken}`);
+
+        // Step 6: Organizer removes participant
+        const res = await request(app)
+        .delete(`/api/events/${eventId}/members/${participantId}`)
+        .set('Authorization', `Bearer ${creatorToken}`);
+
+        // Check that removal is successful
+        expect(res.statusCode).toBe(200);
+    });
+
+    // Test to verify that a participant cannot remove another member from an event
+    it('should reject member removal when requested by a participant', async () => {
+
+        const organizerEmail = `forbiddenremoveorganizer${Date.now()}@test.com`;
+        const participantOneEmail = `removeparticipantone${Date.now()}@test.com`;
+        const participantTwoEmail = `removeparticipanttwo${Date.now()}@test.com`;
+
+        // Step 1: Register organizer
+        const creatorRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+            name: 'Forbidden Remove Organizer',
+            email: organizerEmail,
+            password: 'Password123'
+        });
+
+        const creatorToken = creatorRes.body.token;
+
+        // Step 2: Create event
+        const eventRes = await request(app)
+        .post('/api/events')
+        .set('Authorization', `Bearer ${creatorToken}`)
+        .send({
+            title: 'Forbidden Remove Event',
+            description: 'Testing forbidden member removal',
+            date: '2026-12-31',
+            location: 'Montreal',
+            type: 'Meetup',
+            theme: 'Technology'
+        });
+
+        const eventId = eventRes.body.event.id;
+
+        // Step 3: Register participant one
+        const participantOneRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+            name: 'Remove Participant One',
+            email: participantOneEmail,
+            password: 'Password123'
+        });
+
+        const participantOneToken = participantOneRes.body.token;
+
+        // Step 4: Register participant two
+        const participantTwoRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+            name: 'Remove Participant Two',
+            email: participantTwoEmail,
+            password: 'Password123'
+        });
+
+        const participantTwoToken = participantTwoRes.body.token;
+
+        // Step 5: Retrieve participant two id from DB
+        const participantTwo = await User.findOne({
+            where: { email: participantTwoEmail }
+        });
+
+        const participantTwoId = participantTwo.id;
+
+        // Step 6: Both participants join the event
+        await request(app)
+        .post(`/api/events/${eventId}/members/join`)
+        .set('Authorization', `Bearer ${participantOneToken}`);
+
+        await request(app)
+        .post(`/api/events/${eventId}/members/join`)
+        .set('Authorization', `Bearer ${participantTwoToken}`);
+
+        // Step 7: Participant one tries to remove participant two
+        const res = await request(app)
+        .delete(`/api/events/${eventId}/members/${participantTwoId}`)
+        .set('Authorization', `Bearer ${participantOneToken}`);
+
+        // Check that access is denied
+        expect(res.statusCode).toBe(403);
+    });
 });

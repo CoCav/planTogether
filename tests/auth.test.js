@@ -113,4 +113,57 @@ describe('Auth API', () => {
         expect(res.statusCode).toBe(401);
     });
 
+    // Test to verify that an authenticated user can update their profile
+    it('should update the profile of an authenticated user', async () => {
+        const originalEmail = `profileupdate${Date.now()}@test.com`;
+        const updatedEmail = `updatedprofile${Date.now()}@test.com`;
+
+        // Step 1: Register user
+        const registerRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+            name: 'Profile User',
+            email: originalEmail,
+            password: 'Password123'
+        });
+
+        const token = registerRes.body.token;
+
+        // Step 2: Update profile
+        const res = await request(app)
+        .put('/api/auth/profile')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+            name: 'Updated Name',
+            email: updatedEmail
+        });
+
+        // Check success
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toBeDefined();
+    });
+
+ 
+    // Test to verify that an authenticated user can logout
+    it('should logout an authenticated user', async () => {
+        // Step 1: Register user
+        const registerRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+            name: 'Logout User',
+            email: `logout${Date.now()}@test.com`,
+            password: 'Password123'
+        });
+
+        const token = registerRes.body.token;
+
+        // Step 2: Call logout
+        const res = await request(app)
+        .post('/api/auth/logout')
+        .set('Authorization', `Bearer ${token}`);
+
+        // Check success
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toBeDefined();
+    });
 });

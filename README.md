@@ -30,6 +30,7 @@ The API handles:
 - **PostgreSQL / Sequelize** – relational database & ORM
 - **JWT Authentication** – secure authentication and session handling
 - **Express Validator** – input validation
+- **Jest & Supertest** - API testing
 - **Middleware architecture** – authentication, validation, permissions
 - **MVC pattern** – modular and maintainable backend structure
 
@@ -56,6 +57,7 @@ The API handles:
 - Retrieve a specific event
 - Update events *(organizer or co_organizer)*
 - Delete events *(organizer only)*
+- Filter by type, theme and other criteria
 
 Each event automatically assigns the creator as **organizer**.
 
@@ -120,6 +122,30 @@ Additional features:
 
 - Sorting (`date`, `title`, `creatorId`)
 - Pagination
+
+---
+
+# 🧪 Testing
+
+The API includes a complete test suite using Jest and Supertest.
+
+Coverage: 
+- Authentication flows (register, login, profile, update, logout)
+- Event CRUD operations
+- Membership logic
+- Role-based permissions
+- Route protection (401 / 403)
+
+Edge Cases:
+
+- Prevent duplicate event join
+- Prevent leaving an event without membership
+
+Run tests:
+
+```
+npm test
+```
 
 ---
 
@@ -301,18 +327,17 @@ DELETE /api/events/:eventId/members/:userId
 
 | Component | Status |
 |-----------|--------|
-| Backend API | Functional |
+| Backend API | Fully functional |
 | Architecture | Modular |
 | Authentication | Implemented |
 | Authorization | Role-based |
-| Testing | In progress |
+| Testing | Completed (28 tests) |
 | Frontend | Planned |
 
 # Future Improvements
 
+- Frontend integration
 - Event invitation system
 - Email notifications
 - Public / private events
-- Event categories
-- Frontend integration
-- Automated testing
+- Deployment

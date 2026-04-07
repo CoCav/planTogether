@@ -2,8 +2,9 @@ const request = require('supertest');
 const app = require('../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../src/models');
 
-// Test suite for all event-related endpoints
+// Test suite for event routes
 describe('Event API', () => {
+
     // Initialize the test database before running the test suite
     beforeAll(async () => {
         await initDB();
@@ -22,9 +23,9 @@ describe('Event API', () => {
     });
 
 
-
     // ---------------- TESTS ----------------
 
+    // ----------- NORMAL CASES ----------
 
     // Test to verify that an authenticated user can create an event
     it('should create an event for an authenticated user', async () => {
@@ -57,24 +58,6 @@ describe('Event API', () => {
 
         // Check that the response contains the created event
         expect(res.body).toHaveProperty('event');
-    });
-
-
-    // Test to verify that event creation is rejected without authentication
-    it('should reject event creation without token', async () => {
-        const res = await request(app)
-        .post('/api/events')
-        .send({
-            title: 'Unauthorized Event',
-            description: 'This event should not be created',
-            date: '2026-12-31',
-            location: 'Montreal',
-            type: 'Meetup',
-            theme: 'Technology'
-        });
-
-        // Check that access is denied
-        expect(res.statusCode).toBe(401);
     });
 
     // Test to verify that an authenticated user can retrieve all events
@@ -115,8 +98,8 @@ describe('Event API', () => {
         expect(res.body).toBeDefined();
     });
 
-    // Test to verify that an authenticated user can retrieve one event by id
-    it('should get one event by id for an authenticated user', async () => {
+    // Test to verify that an authenticated user can retrieve one event by ID
+    it('should get one event by ID for an authenticated user', async () => {
         // Step 1: Register a user
         const registerRes = await request(app)
         .post('/api/auth/register')
@@ -203,6 +186,115 @@ describe('Event API', () => {
         expect(res.body).toBeDefined();
     });
 
+    // Test to verify that an organizer can delete an event
+    it('should allow an organizer to delete an event', async () => {
+        // Step 1: Register a user
+        const registerRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+            name: 'Event Deleter',
+            email: `eventdeleter${Date.now()}@test.com`,
+            password: 'Password123'
+        });
+
+        const token = registerRes.body.token;
+
+        // Step 2: Create an event
+        const eventRes = await request(app)
+        .post('/api/events')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+            title: 'Event To Delete',
+            description: 'Testing delete event',
+            date: '2026-12-31',
+            location: 'Montreal',
+            type: 'Meetup',
+            theme: 'Technology'
+        });
+
+        const eventId = eventRes.body.event.id;
+
+        // Step 3: Delete the event
+        const res = await request(app)
+        .delete(`/api/events/${eventId}`)
+        .set('Authorization', `Bearer ${token}`);
+
+        // Check that deletion is successful
+        expect(res.statusCode).toBe(200);
+    });
+
+    // Test to verify that an authenticated user can filter events by type
+    it('should filter events by type for an authenticated user', async () => {
+        // Step 1: Register a user
+        const registerRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+            name: 'Filter User',
+            email: `filteruser${Date.now()}@test.com`,
+            password: 'Password123'
+        });
+
+        const token = registerRes.body.token;
+
+        // Step 2: Create a first event with type Meetup
+        await request(app)
+        .post('/api/events')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+            title: 'Meetup Event',
+            description: 'This event should match the filter',
+            date: '2026-12-31',
+            location: 'Montreal',
+            type: 'Meetup',
+            theme: 'Technology'
+        });
+
+        // Step 3: Create a second event with another type
+        await request(app)
+        .post('/api/events')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+            title: 'Conference Event',
+            description: 'This event should not match the filter',
+            date: '2026-12-31',
+            location: 'Quebec City',
+            type: 'Conference',
+            theme: 'Business'
+        });
+
+        // Step 4: Filter events by type
+        const res = await request(app)
+        .get('/api/events/filtered')
+        .query({ type: 'Meetup' })
+        .set('Authorization', `Bearer ${token}`);
+
+        // Check that request is successful
+        expect(res.statusCode).toBe(200);
+
+        // Check that the response exists
+        expect(res.body).toBeDefined();
+    });
+
+
+    // ----------- PERMISSIONS ----------
+
+    // Test to verify that event creation is rejected without authentication
+    it('should reject event creation without token', async () => {
+        const res = await request(app)
+        .post('/api/events')
+        .send({
+            title: 'Unauthorized Event',
+            description: 'This event should not be created',
+            date: '2026-12-31',
+            location: 'Montreal',
+            type: 'Meetup',
+            theme: 'Technology'
+        });
+
+        // Check that access is denied
+        expect(res.statusCode).toBe(401);
+    });
+
     // Test to verify that a participant cannot update an event
     it('should reject event update when requested by a participant', async () => {
         const organizerEmail = `updateorganizer${Date.now()}@test.com`;
@@ -267,44 +359,6 @@ describe('Event API', () => {
         expect(res.statusCode).toBe(403);
     });
 
-
-    // Test to verify that an organizer can delete an event
-    it('should allow an organizer to delete an event', async () => {
-        // Step 1: Register a user
-        const registerRes = await request(app)
-        .post('/api/auth/register')
-        .send({
-            name: 'Event Deleter',
-            email: `eventdeleter${Date.now()}@test.com`,
-            password: 'Password123'
-        });
-
-        const token = registerRes.body.token;
-
-        // Step 2: Create an event
-        const eventRes = await request(app)
-        .post('/api/events')
-        .set('Authorization', `Bearer ${token}`)
-        .send({
-            title: 'Event To Delete',
-            description: 'Testing delete event',
-            date: '2026-12-31',
-            location: 'Montreal',
-            type: 'Meetup',
-            theme: 'Technology'
-        });
-
-        const eventId = eventRes.body.event.id;
-
-        // Step 3: Delete the event
-        const res = await request(app)
-        .delete(`/api/events/${eventId}`)
-        .set('Authorization', `Bearer ${token}`);
-
-        // Check that deletion is successful
-        expect(res.statusCode).toBe(200);
-    });
-
     // Test to verify that a participant cannot delete an event
     it('should reject event deletion when requested by a participant', async () => {
         const organizerEmail = `deleteorganizer${Date.now()}@test.com`;
@@ -359,57 +413,5 @@ describe('Event API', () => {
 
         // Check that access is denied
         expect(res.statusCode).toBe(403);
-    });
-
-    // Test to verify that an authenticated user can filter events by type
-    it('should filter events by type for an authenticated user', async () => {
-        // Step 1: Register a user
-        const registerRes = await request(app)
-        .post('/api/auth/register')
-        .send({
-            name: 'Filter User',
-            email: `filteruser${Date.now()}@test.com`,
-            password: 'Password123'
-        });
-
-        const token = registerRes.body.token;
-
-        // Step 2: Create a first event with type Meetup
-        await request(app)
-        .post('/api/events')
-        .set('Authorization', `Bearer ${token}`)
-        .send({
-            title: 'Meetup Event',
-            description: 'This event should match the filter',
-            date: '2026-12-31',
-            location: 'Montreal',
-            type: 'Meetup',
-            theme: 'Technology'
-        });
-
-        // Step 3: Create a second event with another type
-        await request(app)
-        .post('/api/events')
-        .set('Authorization', `Bearer ${token}`)
-        .send({
-            title: 'Conference Event',
-            description: 'This event should not match the filter',
-            date: '2026-12-31',
-            location: 'Quebec City',
-            type: 'Conference',
-            theme: 'Business'
-        });
-
-        // Step 4: Filter events by type
-        const res = await request(app)
-        .get('/api/events/filtered')
-        .query({ type: 'Meetup' })
-        .set('Authorization', `Bearer ${token}`);
-
-        // Check that request is successful
-        expect(res.statusCode).toBe(200);
-
-        // Check that the response exists
-        expect(res.body).toBeDefined();
     });
 });

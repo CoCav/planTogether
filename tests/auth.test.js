@@ -2,7 +2,7 @@ const request = require('supertest');
 const app = require('../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../src/models');
 
-// Test suite for all authentication-related endpoints
+// Test suite for authentication routes
 describe('Auth API', () => {
 
     // Initialize the test database before running all the tests
@@ -23,9 +23,9 @@ describe('Auth API', () => {
     });
 
 
-
     // ---------------- TESTS ----------------
- 
+
+    // ----------- NORMAL CASES ----------
 
     // Test to ensure that unknown routes return a 404 status
     it('should return 404 for unknown route', async () => {
@@ -105,13 +105,31 @@ describe('Auth API', () => {
         expect(res.body).toHaveProperty('user');
     });
 
-    // Test to verify that a protected route rejects requests without a token
-    it('should reject access to profile without token', async () => {
-        const res = await request(app).get('/api/auth/profile');
+    // Test to verify that an authenticated user can logout
+    it('should logout an authenticated user', async () => {
+        // Step 1: Register user
+        const registerRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+            name: 'Logout User',
+            email: `logout${Date.now()}@test.com`,
+            password: 'Password123'
+        });
 
-         // Check that access is denied
-        expect(res.statusCode).toBe(401);
+        const token = registerRes.body.token;
+
+        // Step 2: Call logout
+        const res = await request(app)
+        .post('/api/auth/logout')
+        .set('Authorization', `Bearer ${token}`);
+
+        // Check success
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toBeDefined();
     });
+
+
+    // ----------- PERMISSIONS ----------
 
     // Test to verify that an authenticated user can update their profile
     it('should update the profile of an authenticated user', async () => {
@@ -144,26 +162,11 @@ describe('Auth API', () => {
     });
 
  
-    // Test to verify that an authenticated user can logout
-    it('should logout an authenticated user', async () => {
-        // Step 1: Register user
-        const registerRes = await request(app)
-        .post('/api/auth/register')
-        .send({
-            name: 'Logout User',
-            email: `logout${Date.now()}@test.com`,
-            password: 'Password123'
-        });
+       // Test to verify that a protected route rejects requests without a token
+    it('should reject access to profile without token', async () => {
+        const res = await request(app).get('/api/auth/profile');
 
-        const token = registerRes.body.token;
-
-        // Step 2: Call logout
-        const res = await request(app)
-        .post('/api/auth/logout')
-        .set('Authorization', `Bearer ${token}`);
-
-        // Check success
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toBeDefined();
+         // Check that access is denied
+        expect(res.statusCode).toBe(401);
     });
 });

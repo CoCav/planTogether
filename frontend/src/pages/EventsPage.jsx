@@ -1,3 +1,41 @@
+import { useEffect, useState } from "react";
+import { getAllEvents } from "../api/eventApi";
+
 export default function EventsPage() {
-  return <h1>Events page</h1>;
+    const [events, setEvents] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchEvents = async () => {
+        try {
+            const response = await getAllEvents();
+            setEvents(response.data.events);
+            console.log(response.data.events);
+            
+        } catch (error) {
+            console.error("Error fetching events:", error);
+        } finally {
+            setLoading(false);
+        }
+        };
+
+        fetchEvents();
+    }, []);
+
+    if (loading) return <p>Loading events...</p>;
+
+    return (
+    <div>
+        <h1>Events</h1>
+
+        {events.length === 0 ? (
+            <p>No events found</p>
+        ) : (<ul>
+            {events.map((event) => (
+                <li key={event.id}>
+                    <strong>{event.title}</strong> - {event.description}
+                </li>))}
+            </ul>)}
+    </div>
+  );
 }

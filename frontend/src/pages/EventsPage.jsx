@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getAllEvents } from "../api/eventApi";
+import { Link } from "react-router-dom";
 
 export default function EventsPage() {
     const [events, setEvents] = useState([]);
@@ -10,7 +11,6 @@ export default function EventsPage() {
         try {
             const response = await getAllEvents();
             setEvents(response.data.events);
-            console.log(response.data.events);
             
         } catch (error) {
             console.error("Error fetching events:", error);
@@ -27,6 +27,8 @@ export default function EventsPage() {
     return (
     <div>
         <h1>Events</h1>
+
+        <Link to="/events/create">Create Event</Link>
 
         {events.length === 0 ? (
             <p>No events found</p>

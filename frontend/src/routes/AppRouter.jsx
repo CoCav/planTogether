@@ -4,6 +4,7 @@ import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import EventsPage from "../pages/EventsPage";
 import CreateEventPage from "../pages/createEventPage.jsx";
+import EventDetailsPage from "../pages/EventDetailsPage";
 import { useAuth } from "../context/useAuth.js";
 
 function ProtectedRoute({ children }) {
@@ -29,6 +30,8 @@ export default function AppRouter() {
                      <CreateEventPage />
                     </ProtectedRoute>
                 }/>
+                
+            <Route path="/events/:eventId" element={<EventDetailsPage />} />
         </Routes>
     );
 }

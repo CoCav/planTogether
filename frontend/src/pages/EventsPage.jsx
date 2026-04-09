@@ -112,7 +112,9 @@ export default function EventsPage() {
 
                 return (
                     <li key={event.id}>
-                        <strong>{event.title}</strong> - {event.description}
+                        <Link to={`/events/${event.id}`}>
+                            <strong>{event.title}</strong>
+                        </Link> - {event.description}
                         <div>
                             { user && (isMember ? (
                             <button onClick={() => handleLeave(event.id)}>Leave</button>

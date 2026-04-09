@@ -7,7 +7,10 @@ export default function CreateEventPage() {
     const [form, setForm] = useState({
         title: "",
         description: "",
+        type: "",
+        theme: "",
         date: "",
+        location: "",
     });
 
     const [error, setError] = useState("");
@@ -54,9 +57,30 @@ export default function CreateEventPage() {
                 onChange={handleChange}/>
 
                 <input
+                type="text"
+                name="type"
+                placeholder="Type"
+                value={form.type}
+                onChange={handleChange}/>
+
+                <input
+                type="text"
+                name="theme"
+                placeholder="Theme"
+                value={form.theme}
+                onChange={handleChange}/>
+
+                <input
                 type="date"
                 name="date"
                 value={form.date}
+                onChange={handleChange}/>
+
+                <input
+                type="text"
+                name="location"
+                placeholder="Location"
+                value={form.location}
                 onChange={handleChange}/>
 
                 <button type="submit">Create</button>

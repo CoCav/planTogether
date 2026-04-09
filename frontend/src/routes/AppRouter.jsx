@@ -1,9 +1,9 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "../pages/HomePage";
 import LoginPage from "../pages/LoginPage";
 import EventsPage from "../pages/EventsPage";
-import { useAuth } from "../context/useAuth.js";
 import CreateEventPage from "../pages/createEventPage.jsx";
+import { useAuth } from "../context/useAuth.js";
 
 function ProtectedRoute({ children }) {
 
@@ -16,16 +16,10 @@ function ProtectedRoute({ children }) {
 
 export default function AppRouter() {
     return (
-        <BrowserRouter>
         <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/events"
-                    element={
-                    // <ProtectedRoute>
-                        <EventsPage />
-                    // </ProtectedRoute>
-                }/>
+            <Route path="/events" element={<EventsPage />}/>
 
             <Route path="/events/create"
                     element={
@@ -33,7 +27,6 @@ export default function AppRouter() {
                      <CreateEventPage />
                     </ProtectedRoute>
                 }/>
-            </Routes>
-        </BrowserRouter>
+        </Routes>
     );
 }

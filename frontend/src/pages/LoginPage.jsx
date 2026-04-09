@@ -6,6 +6,7 @@ import { useAuth } from "../context/useAuth.js";
 export default function LoginPage() {
     const navigate = useNavigate();
     const { login } = useAuth();
+    const [showPassword, setShowPassword] = useState(false);
 
     const [form, setForm] = useState({
         email: "",
@@ -53,12 +54,18 @@ export default function LoginPage() {
                 </div>
 
             <div>
-                 <input
-                type="password"
+                <input
+                type={showPassword ? "text" : "password"}
                 name="password"
                 placeholder="Password"
                 value={form.password}
                 onChange={handleChange}/>
+
+                <button 
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}>
+                    {showPassword ? "🙈" : "👁️"}
+                </button>
             </div>
 
             <button type="submit">Login</button>

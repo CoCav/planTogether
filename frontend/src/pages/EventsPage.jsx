@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";"../utils/dataLoader";
 import { getAllEvents, getMyMemberships, joinEvent, leaveEvent } from "../api/eventApi";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/useAuth";
 
 
 export default function EventsPage() {
@@ -9,6 +10,7 @@ export default function EventsPage() {
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
+    const { user } = useAuth();
 
     const fetchEvents = async () => {
         const response = await getAllEvents();
@@ -95,6 +97,8 @@ export default function EventsPage() {
     <div>
         <h1>Events</h1>
 
+        {!user && <p>🔐 Login to join events</p>}
+
         {message && <p style={{ color: "green" }}>{message}</p>}
         {error && <p style={{ color: "red" }}>{error}</p>}
 
@@ -111,10 +115,10 @@ export default function EventsPage() {
                     <li key={event.id}>
                         <strong>{event.title}</strong> - {event.description}
                         <div>
-                            {isMember ? (
+                            { user && (isMember ? (
                             <button onClick={() => handleLeave(event.id)}>Leave</button>
                             ) : (
-                            <button onClick={() => handleJoin(event.id)}>Join</button>)}
+                            <button onClick={() => handleJoin(event.id)}>Join</button>))}
                         </div>
                     </li>);
                 })}

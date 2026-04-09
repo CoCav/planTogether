@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import HomePage from "../pages/HomePage";
 import LoginPage from "../pages/LoginPage";
 import EventsPage from "../pages/EventsPage";
 import { useAuth } from "../context/useAuth.js";
@@ -17,13 +18,13 @@ export default function AppRouter() {
     return (
         <BrowserRouter>
         <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/events"
                     element={
-                    <ProtectedRoute>
+                    // <ProtectedRoute>
                         <EventsPage />
-                    </ProtectedRoute>
+                    // </ProtectedRoute>
                 }/>
 
             <Route path="/events/create"

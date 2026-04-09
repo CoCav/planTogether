@@ -5,13 +5,14 @@ import { useAuth } from "../context/useAuth";
 
 
 export default function EventsPage() {
+    const { user } = useAuth();
+
     const [events, setEvents] = useState([]);
     const [myEventIds, setMyEventIds] = useState([]);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
-    const { user } = useAuth();
-
+    
     const fetchEvents = async () => {
         const response = await getAllEvents();
         return response.data.events || response.data;
@@ -28,18 +29,16 @@ export default function EventsPage() {
     try {
         setError("");
 
-        const [eventsData, membershipsData] = await Promise.all([
-        fetchEvents(),
-        fetchMyMemberships(),]);
-
+        const eventsData = await fetchEvents();
         setEvents(eventsData);
 
-        const joinedIds = membershipsData.map((item) => item.id || item.eventId);
-        setMyEventIds(joinedIds);
-
-        console.log("Events:", eventsData);
-        console.log("My memberships:", membershipsData);
-        console.log("My event IDs:", joinedIds);
+        if (user) {
+            const membershipsData = await fetchMyMemberships();
+            const joinedIds = membershipsData.map((item) => item.id || item.eventId);
+            setMyEventIds(joinedIds);
+        } else {
+            setMyEventIds([]);
+        }
     } catch (error) {
         console.error("Error loading data:", error);
         setError("❌ Failed to load events");
@@ -50,7 +49,7 @@ export default function EventsPage() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (message || error) {

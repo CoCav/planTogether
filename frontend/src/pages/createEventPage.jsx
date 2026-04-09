@@ -4,7 +4,6 @@ import { createEvent } from "../api/eventApi";
 
 export default function CreateEventPage() {
     const navigate = useNavigate();
-
     const [form, setForm] = useState({
         title: "",
         description: "",

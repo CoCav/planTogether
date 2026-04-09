@@ -15,7 +15,7 @@ router.get('/filtered', authenticateToken, eventController.getFilteredEvents);
 router.post('/', authenticateToken, createEventValidator, validateRequest, eventController.createEvent);
 
 // ROUTE GET - Get all events
-router.get('/', authenticateToken, eventController.getAllEvents);
+router.get('/', eventController.getAllEvents);
 
 // ROUTE GET - Get an event by ID 
 router.get('/:eventId', authenticateToken, eventIdParamValidator, validateRequest, eventController.getEvent);

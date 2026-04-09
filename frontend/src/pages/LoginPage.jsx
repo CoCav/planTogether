@@ -64,7 +64,7 @@ export default function LoginPage() {
                 <button 
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}>
-                    {showPassword ? "🙈" : "👁️"}
+                    {showPassword ? "Hide" : "Show"}
                 </button>
             </div>
 

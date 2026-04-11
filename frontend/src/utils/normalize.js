@@ -1,0 +1,52 @@
+/* 
+This file is responsible for:
+ * - simplifying API (Axios) responses
+ * - standardizing data used in the frontend
+ * - avoiding complex logic inside React components
+ */
+
+// Extracts useful data from API response, handling different possible structures
+export const extractApiData = (response = {}, key = "") => {
+  if (!response || !response.data) return [];
+
+  // If a specific key exists (e.g. events, members, organizers)
+  if (key && response.data[key]) {
+    return response.data[key];
+  }
+
+  return response.data;
+};
+
+// Normalizes s single event object
+// Ensures that all expected fields are present with default values
+export const normalizeEvent = (event = {}) => ({
+    id: event.id,
+    title: event.title || "",
+    description: event.description || "",
+    date: event.date || null,
+    location: event.location || "",
+    theme: event.theme || "",
+    type: event.type || "",
+    creatorId: event.creatorId || null,
+    createdAt: event.createdAt || null,
+    updatedAt: event.updatedAt || null,
+});
+
+// Normalizes an array of events
+export const normalizeEvents = (events) => events.map(normalizeEvent);
+
+// Normalizes user-role data (members / organizers) 
+export const normalizeUserRoleData = (items = []) =>
+    items.map((item) => ({
+        id: item.User.id,
+        name: item.User.name,
+        email: item.User.email,
+        role: item.role,
+    })
+);
+
+// Extracts and normalizes events from API response.
+export const getNormalizedEvents = (response = {}) => normalizeEvents(extractApiData(response, "events"));
+
+// Extracts and normalizes membership-related events from API response.
+export const getMembershipEvents = (response = {}) => normalizeEvents(extractApiData(response, "events"));

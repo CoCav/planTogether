@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";"../utils/dataLoader";
+import { useEffect, useState } from "react";
 import { getAllEvents, getMyMemberships, joinEvent, leaveEvent } from "../api/eventApi";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import { getNormalizedEvents, getMembershipEvents } from "../utils/normalize.js";
 
 
 export default function EventsPage() {
@@ -15,14 +16,12 @@ export default function EventsPage() {
     
     const fetchEvents = async () => {
         const response = await getAllEvents();
-        return response.data.events || response.data;
+        return getNormalizedEvents(response);
     };
 
   const fetchMyMemberships = async () => {
     const response = await getMyMemberships();
-    return response.data.events || response.data;
-    
-    
+    return getMembershipEvents(response);
   };
 
     const loadData = async () => {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getAllEvents } from "../api/eventApi";
+import { getNormalizedEvents } from "../utils/normalize.js";
 
 export default function HomePage() {
     const [events, setEvents] = useState([]);
@@ -9,7 +10,7 @@ export default function HomePage() {
     const fetchEvents = async () => {
         try {
             const response = await getAllEvents();
-            setEvents(response.data.events || response.data);
+            setEvents(getNormalizedEvents(response));    
         } catch (error) {
             console.error("Error fetching events:", error);
         }

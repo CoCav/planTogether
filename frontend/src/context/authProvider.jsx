@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AuthContext } from "./authContext";
-import { getProfile } from "../api/authApi";
+import { getProfile, logOutUser } from "../api/authApi";
 import { getToken, removeToken, setToken } from "../utils/token";
 
 export default function AuthProvider({ children }) {
@@ -22,9 +22,15 @@ export default function AuthProvider({ children }) {
         await fetchProfile();
     };
 
-    const logout = () => {
-        removeToken();
-        setUser(null);
+    const logout = async () => {
+        try {
+            await logOutUser();
+        } catch (error) {
+            console.error("Logout API error:", error);
+        } finally {
+            removeToken();
+            setUser(null);
+        }
     };
 
     useEffect(() => {

@@ -6,10 +6,11 @@ export default function Navbar() {
     
     const navigate = useNavigate();
 
-    const handleLogout = () => {
-        logout();
+    const handleLogout = async () => {
+        await logout();
         navigate("/");
     };
+
 
     return (
         <nav style={{ padding: "10px", borderBottom: "1px solid #ccc" }}>

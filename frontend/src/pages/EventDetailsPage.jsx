@@ -15,10 +15,9 @@ export default function EventDetailsPage() {
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
-
     // Find current user's role in this event
-    const myRole = organizers.find((userRole) => userRole.id === user?.id)?.role || members.find((userRole) => userRole.id === user?.id)?.role || null;
-
+    const currentUserId = user?.userId;
+    const myRole = organizers.find((person) => person.id === currentUserId)?.role || members.find((person) => person.id === currentUserId)?.role || null;
 
     const loadData = async () => {
 
@@ -88,6 +87,21 @@ export default function EventDetailsPage() {
         }
     };
 
+    const getRoleLabel = (role) => {
+        if (role === "organizer") return "👑 Organizer";
+        if (role === "co_organizer") return "🛡️ Co-organizer";
+        if (role === "participant") return "👤 Participant";
+        return null;
+    };
+
+    const getRoleStyle = (role) => {
+        if (role === "organizer") return { backgroundColor: "#fef3c7" };
+        if (role === "co_organizer") return { backgroundColor: "#e0f2fe" };
+        return { backgroundColor: "#f3f4f6" };
+    };
+
+    const filteredMembers = members.filter((person) => person.role == 'participant');
+
     if (loading) return <p>Loading...</p>;
     if (!event) return <p>Event not found</p>;
 
@@ -97,6 +111,13 @@ export default function EventDetailsPage() {
 
             {message && <p style={{ color: "green" }}>{message}</p>}
             {error && <p style={{ color: "red" }}>{error}</p>}
+
+
+            {currentUserId && myRole && (
+                <p style={{ marginTop: "10px", padding: "8px 12px", backgroundColor: "#f9fafb", borderRadius: "8px",  display: "inline-block", fontWeight: "bold", ...getRoleStyle(myRole) }}>
+                    Your role in this event: {getRoleLabel(myRole)}
+                </p>
+            )}
 
             <div style={{ marginTop: "20px" }}>
                 <h2>Organized by</h2>
@@ -113,7 +134,7 @@ export default function EventDetailsPage() {
                                 <span style={{ marginLeft: "10px", padding: "4px 8px", borderRadius: "12px", fontSize: "12px", backgroundColor: person.role === "organizer" ? "#fef3c7" : "#e0f2fe"}}>
                                     {person.role === "organizer" ? "👑 Organizer" : "🛡️ Co-organizer"}
                                 </span>
-                                
+
                             </li>
                         ))}
                     </ul>
@@ -131,15 +152,14 @@ export default function EventDetailsPage() {
 
             {user && (
                 <div style={{ marginTop: "20px" }}>
-                    <h2>Participants</h2>
+                    <h2>Attendees</h2>
 
-                    {members.length === 0 ? (
+                    {filteredMembers.length === 0 ? (
                         <p>No participants</p>
                     ) : (
                         <ul style={{ listStyle: "none", padding: 0 }}>
-                            {members.map((person) => (
+                            {filteredMembers.map((person) => (
                                 <li key={person.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #ddd" }}>
-                                    {person.name} ({person.role})
 
                                     <div>
                                         <span style={{ fontWeight: "bold" }}>{person.name}</span>
@@ -149,7 +169,7 @@ export default function EventDetailsPage() {
                                         </span>
                                     </div>
 
-                                    {myRole === "organizer" && person.id !== user.id && (
+                                    {myRole === "organizer" && person.id !== currentUserId && (
                                     <div>
                                         {person.role === "participant" && (
                                             <button

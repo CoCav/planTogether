@@ -104,6 +104,8 @@ export default function EventDetailsPage() {
     };
 
     const filteredMembers = members.filter((person) => person.role == 'participant');
+    const participantCount = filteredMembers.length;
+    const organizersCount = organizers.length;
 
     const handleJoin = async () => {
 
@@ -145,6 +147,7 @@ export default function EventDetailsPage() {
     };
 
     const handleDeleteEvent = async () => {
+
         const confirmed = window.confirm("Are you sure you want to delete this event?");
 
         if (!confirmed) return;
@@ -203,7 +206,7 @@ export default function EventDetailsPage() {
             )}
 
             <div style={{ marginTop: "20px" }}>
-                <h2>Organized by</h2>
+                <h2>👑 {organizersCount} Organizer{organizersCount > 1 ? "s" : ""}</h2>
 
                 {organizers.length === 0 ? (
                     <p>No organizers</p>
@@ -235,7 +238,7 @@ export default function EventDetailsPage() {
 
             {user && (
                 <div style={{ marginTop: "20px" }}>
-                    <h2>Attendees</h2>
+                    <h2>👥 {participantCount} Attendee{participantCount > 1 ? "s" : ""}</h2>
 
                     {filteredMembers.length === 0 ? (
                         <p>No participants</p>

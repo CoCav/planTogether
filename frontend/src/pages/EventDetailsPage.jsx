@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { getEventById, getEventMembers, getEventOrganizers, updateMemberRole, joinEvent, leaveEvent } from "../api/eventApi";
+import { useParams, useNavigate } from "react-router-dom";
+import { getEventById, getEventMembers, getEventOrganizers, updateMemberRole, joinEvent, leaveEvent, deleteEvent } from "../api/eventApi";
 import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../utils/normalize";
 import { useAuth } from "../context/useAuth";
 import BackButton from "../components/BackButton.jsx";
@@ -8,6 +8,7 @@ import BackButton from "../components/BackButton.jsx";
 export default function EventDetailsPage() {
     const { eventId } = useParams();
     const { user, loading: authLoading } = useAuth();
+    const navigate = useNavigate();
 
     const [event, setEvent] = useState(null);
     const [members, setMembers] = useState([]);
@@ -114,7 +115,7 @@ export default function EventDetailsPage() {
             await joinEvent(eventId);
             setMessage("✅ Joined event");
             await loadData();
-            
+
         } catch (error) {
             console.error("Error joining event:", error);
             setError("❌ Unable to join event");
@@ -143,6 +144,24 @@ export default function EventDetailsPage() {
         }
     };
 
+    const handleDeleteEvent = async () => {
+        const confirmed = window.confirm("Are you sure you want to delete this event?");
+
+        if (!confirmed) return;
+
+        try {
+            setError("");
+            setMessage("");
+
+            await deleteEvent(eventId);
+            navigate("/events");
+
+        } catch (error) {
+            console.error("Error deleting event:", error);
+            setError("❌ Unable to delete event");
+    }
+    };
+
     if (loading) return <p>Loading...</p>;
     if (!event) return <p>Event not found</p>;
 
@@ -158,17 +177,24 @@ export default function EventDetailsPage() {
 
 
             {user && (
-                <div style={{ marginTop: "10px" }}>
+                <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
                     {!isMember ? (
                         <button onClick={handleJoin}>Join Event</button>
                     ) : myRole !== "organizer" ? (
                         <button onClick={handleLeave}>Leave Event</button>
-                    ) : (
-                        null
-                    )}
+                    ) : null}
+                    
+                    {myRole === "organizer" && (
+                    <div style={{ marginTop: "10px" }}>
+                        <button onClick={handleDeleteEvent}>
+                            Delete Event
+                        </button>
+        
+                    </div>)} 
                 </div>
             )}
 
+            
 
             {currentUserId && myRole && (
                 <p style={{ marginTop: "10px", padding: "8px 12px", backgroundColor: "#f9fafb", borderRadius: "8px",  display: "inline-block", fontWeight: "bold", ...getRoleStyle(myRole) }}>

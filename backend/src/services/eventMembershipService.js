@@ -54,6 +54,13 @@ const leaveEvent = async ({ eventId, userId }) => {
             throw error;
         }
 
+        // Prevent organizer from leaving their own event
+        if (membership.role === "organizer") {
+            const error = new Error("Organizers cannot leave their own event");
+            error.statusCode = 403;
+            throw error;
+        }
+
         // Remove membership
         await membership.destroy();
         return;

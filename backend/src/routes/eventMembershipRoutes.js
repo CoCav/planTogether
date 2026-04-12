@@ -23,8 +23,7 @@ router.get('/:eventId/members', authenticateToken, eventMembershipController.get
 router.get('/:eventId/organizers', eventMembershipController.getOrganizers);
 
 // ROUTE PUT - Organizer or co_organizer can change the role of a member
-router.put(
-  '/:eventId/members/:userId/role', authenticateToken, updateMemberRoleValidator, validateRequest, requireEventRole(['organizer', 'co_organizer']), authorizeRoleChange, eventMembershipController.updateMemberRole);
+router.put('/:eventId/members/:userId/role', authenticateToken, updateMemberRoleValidator, validateRequest, requireEventRole(['organizer', 'co_organizer']), authorizeRoleChange, eventMembershipController.updateMemberRole);
 
 // ROUTE DELETE - Organizer or co_organizer can remove a member from the event
 router.delete('/:eventId/members/:userId', authenticateToken, removeMemberValidator, validateRequest, requireEventRole(['organizer', 'co_organizer']), eventMembershipController.removeMember);

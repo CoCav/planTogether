@@ -33,8 +33,14 @@ export default function EventsPage() {
 
         if (user) {
             const membershipsData = await fetchMyMemberships();   
-            const joinedIds = membershipsData.map((item) => item.id);
-            setMyEventIds(joinedIds);
+            //const joinedIds = membershipsData.map((item) => item.id);
+            const membershipMap = {};
+
+membershipsData.forEach((item) => {
+  membershipMap[item.id] = item.role;
+});
+            //setMyEventIds(joinedIds);
+            setMyEventIds(membershipMap)
 
         } else {
             setMyEventIds([]);
@@ -77,6 +83,13 @@ export default function EventsPage() {
     };
 
     const handleLeave = async (eventId) => {
+
+        const role = myEventIds[eventId];
+
+        if (role === "organizer") {
+            setError("❌ Organizers cannot leave their own event");
+            return;
+        }
         try {
             setError("");
             setMessage("");
@@ -88,6 +101,12 @@ export default function EventsPage() {
             setError("❌ Unable to leave event");
             console.error("Error leaving event:", error);
         }
+    };
+
+    const getRoleLabel = (role) => {
+        if (role === "organizer") return "👑 Organizer";
+        if (role === "co_organizer") return "🛡️ Co-organizer";
+        return "👤 Participant";
     };
 
     if (loading) return <p>Loading events...</p>;
@@ -109,7 +128,9 @@ export default function EventsPage() {
         ) : (
             <ul>
                 {events.map((event) => {
-                const isMember = myEventIds.includes(event.id);
+                {/* const isMember = myEventIds.includes(event.id); */}
+                const role = myEventIds[event.id];
+                const isMember = !!role;
 
                 return (
                     <li key={event.id}>
@@ -117,31 +138,35 @@ export default function EventsPage() {
                             <strong>{event.title}</strong>
                         </Link> - {event.description}
                         <div>
-                            {/* { user && (isMember ? (
-                            <button disabled style={{ opacity: 0.5, cursor: "not-allowed" }}>
-                                Already joined
-                            </button>
-                            ) : (
-                            <button onClick={() => handleJoin(event.id)}>Join</button>))} */}
+                            <div>
+                                {user && role && (
+                                    <span style={{ marginRight: "10px" }}>
+                                        {getRoleLabel(role)}
+                                    </span>
+                                )}
 
-                            {user && (
-  <>
-    {isMember ? (
-      <>
-        <span style={{ marginRight: "10px", color: "green" }}>
-          ✅ Joined
-        </span>
-        <button onClick={() => handleLeave(event.id)}>
-          Leave
-        </button>
-      </>
-    ) : (
-      <button onClick={() => handleJoin(event.id)}>
-        Join
-      </button>
-    )}
-  </>
-)}
+                                {user && (
+                                    <>
+                                        {isMember ? (
+                                            role === "organizer" ? (
+                                                <span style={{ color: "gray" }}>You cannot leave your own event</span>
+                                            ) : (
+                                            <>
+                                                <span style={{ marginRight: "10px", color: "green" }}>
+                                                    ✅ Joined
+                                                </span>
+                                                <button onClick={() => handleLeave(event.id)}>
+                                                    Leave
+                                                </button>
+                                            </>
+                                        )) : (
+                                        <button onClick={() => handleJoin(event.id)}>
+                                            Join
+                                        </button>
+                                        )}
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </li>);
                 })}

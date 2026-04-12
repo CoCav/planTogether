@@ -51,7 +51,14 @@ export const getNormalizedEvents = (response = {}) => normalizeEvents(extractApi
 // Extracts and normalizes membership-related events from a reponse like GET /events/memberships/me
 export const getMembershipEvents = (response = {}) => {
   const items = response.data.events || [];
-  return items.map((item) => normalizeEvent(item.Event || item));
+  return items.map((item) => {
+    const event = normalizeEvent(item.Event || item);
+
+    return {
+        ...event,
+        role: item.role || null,
+    };
+  });
 }
 // Extracts and normalizes a single event from a response like GET /events/:id
 export const getNormalizedEvent = (response = {}) => normalizeEvent(extractApiData(response, "event"));

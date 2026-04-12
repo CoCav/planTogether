@@ -3,12 +3,11 @@ import { useParams } from "react-router-dom";
 import { getEventById, getEventMembers, getEventOrganizers, updateMemberRole, joinEvent, leaveEvent } from "../api/eventApi";
 import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../utils/normalize";
 import { useAuth } from "../context/useAuth";
-import { useNavigate } from "react-router-dom";
+import BackButton from "../components/BackButton.jsx";
 
 export default function EventDetailsPage() {
     const { eventId } = useParams();
     const { user, loading: authLoading } = useAuth();
-    const navigate = useNavigate();
 
     const [event, setEvent] = useState(null);
     const [members, setMembers] = useState([]);
@@ -17,7 +16,7 @@ export default function EventDetailsPage() {
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
-    // Find current user's role in this event
+    // Determine current user's role in the event
     const currentUserId = user?.userId;
     const myRole = organizers.find((person) => person.id === currentUserId)?.role || members.find((person) => person.id === currentUserId)?.role || null;
     const isMember = !!myRole;
@@ -106,13 +105,16 @@ export default function EventDetailsPage() {
     const filteredMembers = members.filter((person) => person.role == 'participant');
 
     const handleJoin = async () => {
+
         try {
+
             setError("");
             setMessage("");
 
             await joinEvent(eventId);
             setMessage("✅ Joined event");
             await loadData();
+            
         } catch (error) {
             console.error("Error joining event:", error);
             setError("❌ Unable to join event");
@@ -120,18 +122,21 @@ export default function EventDetailsPage() {
     };
 
     const handleLeave = async () => {
+
         try {
+
             setError("");
             setMessage("");
 
             if (myRole === "organizer") {
-                setError("❌ Organizer cannot leave their own event");
+                setError("❌ Organizers cannot leave their own event");
                 return;
             }
 
             await leaveEvent(eventId);
             setMessage("👋 Left event");
             await loadData();
+
         } catch (error) {
             console.error("Error leaving event:", error);
             setError("❌ Unable to leave event");
@@ -144,10 +149,7 @@ export default function EventDetailsPage() {
     return (
         <div>
 
-            <button onClick={() => navigate(-1)} style={{ marginTop: "10px", marginLeft: "10px", marginBottom: "10px" }}>
-                ← Back
-            </button>
-
+            <BackButton fallbackPath="/events" label="← Back to Events" />
 
             <h1>{event.title}</h1>
 

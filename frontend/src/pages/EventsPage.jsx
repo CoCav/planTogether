@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
-import { getAllEvents, getMyMemberships, joinEvent, leaveEvent } from "../api/eventApi";
+import { getAllEvents, getMyMemberships } from "../api/eventApi";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { getNormalizedEvents, getMembershipEvents } from "../utils/normalize.js";
-
+import useEventMembershipActions from "../hooks/useEventMembershipActions.js";
+import BackButton from "../components/BackButton.jsx";
 
 export default function EventsPage() {
     const { user } = useAuth();
 
     const [events, setEvents] = useState([]);
-    const [myEventIds, setMyEventIds] = useState([]);
+    const [myEventIds, setMyEventIds] = useState({});
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
@@ -39,7 +40,7 @@ export default function EventsPage() {
                 setMyEventIds(membershipMap)
 
             } else {
-                setMyEventIds([]);
+                setMyEventIds({});
             }
 
         } catch (error) {
@@ -66,54 +67,30 @@ export default function EventsPage() {
             }
         }, [message, error]);
 
-        const handleJoin = async (eventId) => {
-            try {
-                setError("");
-                setMessage("");
+        const getRoleByEventId = (eventId) => myEventIds[eventId];
 
-                await joinEvent(eventId);
-                setMessage("✅ Successfully joined event!");
-                await loadData();
-            } catch (error) {
-                setError("❌ Unable to join event (maybe already joined)");
-                console.error("Error joining event:", error);
-            }
-        };
-
-        const handleLeave = async (eventId) => {
-
-            const role = myEventIds[eventId];
-
-            if (role === "organizer") {
-                setError("❌ Organizers cannot leave their own event");
-                return;
-            }
-
-            try {
-                setError("");
-                setMessage("");
-
-                await leaveEvent(eventId);
-                setMessage("👋 Successfully left event!");
-                await loadData();
-            } catch (error) {
-                setError("❌ Unable to leave event");
-                console.error("Error leaving event:", error);
-            
-            }
-        };
+        const { handleJoin, handleLeave } = useEventMembershipActions({
+            loadData,
+            setMessage,
+            setError,
+            getRoleByEventId
+        })
 
         const getRoleLabel = (role) => {
             if (role === "organizer") return "👑 Organizer";
             if (role === "co_organizer") return "🛡️ Co-organizer";
             return "👤 Participant";
         };
+
+
         
         if (loading) return <p>Loading events...</p>;
 
 
     return (
     <div>
+
+        <BackButton label="← Back to Home" />
         <h1>Events</h1>
 
         {!user && <p>🔐 Login to join events</p>}
@@ -128,7 +105,6 @@ export default function EventsPage() {
         ) : (
             <ul>
                 {events.map((event) => {
-                {/* const isMember = myEventIds.includes(event.id); */}
                 const role = myEventIds[event.id];
                 const isMember = !!role;
 

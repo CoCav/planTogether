@@ -32,9 +32,10 @@ export default function EventsPage() {
         setEvents(eventsData);
 
         if (user) {
-            const membershipsData = await fetchMyMemberships();
-            const joinedIds = membershipsData.map((item) => item.id || item.eventId);
+            const membershipsData = await fetchMyMemberships();   
+            const joinedIds = membershipsData.map((item) => item.id);
             setMyEventIds(joinedIds);
+
         } else {
             setMyEventIds([]);
         }
@@ -91,6 +92,7 @@ export default function EventsPage() {
 
     if (loading) return <p>Loading events...</p>;
 
+
     return (
     <div>
         <h1>Events</h1>
@@ -115,10 +117,31 @@ export default function EventsPage() {
                             <strong>{event.title}</strong>
                         </Link> - {event.description}
                         <div>
-                            { user && (isMember ? (
-                            <button onClick={() => handleLeave(event.id)}>Leave</button>
+                            {/* { user && (isMember ? (
+                            <button disabled style={{ opacity: 0.5, cursor: "not-allowed" }}>
+                                Already joined
+                            </button>
                             ) : (
-                            <button onClick={() => handleJoin(event.id)}>Join</button>))}
+                            <button onClick={() => handleJoin(event.id)}>Join</button>))} */}
+
+                            {user && (
+  <>
+    {isMember ? (
+      <>
+        <span style={{ marginRight: "10px", color: "green" }}>
+          ✅ Joined
+        </span>
+        <button onClick={() => handleLeave(event.id)}>
+          Leave
+        </button>
+      </>
+    ) : (
+      <button onClick={() => handleJoin(event.id)}>
+        Join
+      </button>
+    )}
+  </>
+)}
                         </div>
                     </li>);
                 })}

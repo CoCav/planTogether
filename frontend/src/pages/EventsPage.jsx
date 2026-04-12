@@ -19,97 +19,97 @@ export default function EventsPage() {
         return getNormalizedEvents(response);
     };
 
-  const fetchMyMemberships = async () => {
-    const response = await getMyMemberships();
-    return getMembershipEvents(response);
-  };
+    const fetchMyMemberships = async () => {
+        const response = await getMyMemberships();
+        return getMembershipEvents(response);
+    };
 
     const loadData = async () => {
-    try {
-        setError("");
-
-        const eventsData = await fetchEvents();
-        setEvents(eventsData);
-
-        if (user) {
-            const membershipsData = await fetchMyMemberships();   
-            //const joinedIds = membershipsData.map((item) => item.id);
-            const membershipMap = {};
-
-membershipsData.forEach((item) => {
-  membershipMap[item.id] = item.role;
-});
-            //setMyEventIds(joinedIds);
-            setMyEventIds(membershipMap)
-
-        } else {
-            setMyEventIds([]);
-        }
-    } catch (error) {
-        console.error("Error loading data:", error);
-        setError("❌ Failed to load events");
-    } finally {
-        setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, [user]);
-
-  useEffect(() => {
-    if (message || error) {
-            const timer = setTimeout(() => {
-            setMessage("");
-            setError("");
-            }, 3000);
-
-            return () => clearTimeout(timer);
-        }
-    }, [message, error]);
-
-    const handleJoin = async (eventId) => {
         try {
             setError("");
-            setMessage("");
 
-            await joinEvent(eventId);
-            setMessage("✅ Successfully joined event!");
-            await loadData();
+            const eventsData = await fetchEvents();
+            setEvents(eventsData);
+
+            if (user) {
+                const membershipsData = await fetchMyMemberships();   
+                const membershipMap = {};
+
+                membershipsData.forEach((item) => { membershipMap[item.id] = item.role });
+                setMyEventIds(membershipMap)
+
+            } else {
+                setMyEventIds([]);
+            }
+
         } catch (error) {
-            setError("❌ Unable to join event (maybe already joined)");
-            console.error("Error joining event:", error);
+            console.error("Error loading data:", error);
+            setError("❌ Failed to load events");
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleLeave = async (eventId) => {
+    useEffect(() => {
+        loadData();
+    }, [user]);
 
-        const role = myEventIds[eventId];
+    useEffect(() => {
 
-        if (role === "organizer") {
-            setError("❌ Organizers cannot leave their own event");
-            return;
-        }
-        try {
-            setError("");
-            setMessage("");
+        if (message || error) {
+                const timer = setTimeout(() => {
+                setMessage("");
+                setError("");
+                }, 3000);
 
-            await leaveEvent(eventId);
-            setMessage("👋 Successfully left event!");
-            await loadData();
-        } catch (error) {
-            setError("❌ Unable to leave event");
-            console.error("Error leaving event:", error);
-        }
-    };
+                return () => clearTimeout(timer);
+            }
+        }, [message, error]);
 
-    const getRoleLabel = (role) => {
-        if (role === "organizer") return "👑 Organizer";
-        if (role === "co_organizer") return "🛡️ Co-organizer";
-        return "👤 Participant";
-    };
+        const handleJoin = async (eventId) => {
+            try {
+                setError("");
+                setMessage("");
 
-    if (loading) return <p>Loading events...</p>;
+                await joinEvent(eventId);
+                setMessage("✅ Successfully joined event!");
+                await loadData();
+            } catch (error) {
+                setError("❌ Unable to join event (maybe already joined)");
+                console.error("Error joining event:", error);
+            }
+        };
+
+        const handleLeave = async (eventId) => {
+
+            const role = myEventIds[eventId];
+
+            if (role === "organizer") {
+                setError("❌ Organizers cannot leave their own event");
+                return;
+            }
+
+            try {
+                setError("");
+                setMessage("");
+
+                await leaveEvent(eventId);
+                setMessage("👋 Successfully left event!");
+                await loadData();
+            } catch (error) {
+                setError("❌ Unable to leave event");
+                console.error("Error leaving event:", error);
+            
+            }
+        };
+
+        const getRoleLabel = (role) => {
+            if (role === "organizer") return "👑 Organizer";
+            if (role === "co_organizer") return "🛡️ Co-organizer";
+            return "👤 Participant";
+        };
+        
+        if (loading) return <p>Loading events...</p>;
 
 
     return (
@@ -146,7 +146,7 @@ membershipsData.forEach((item) => {
                                 )}
 
                                 {user && (
-                                    <>
+                                    <div>
                                         {isMember ? (
                                             role === "organizer" ? (
                                                 <span style={{ color: "gray" }}>You cannot leave your own event</span>
@@ -164,7 +164,7 @@ membershipsData.forEach((item) => {
                                             Join
                                         </button>
                                         )}
-                                    </>
+                                    </div>
                                 )}
                             </div>
                         </div>

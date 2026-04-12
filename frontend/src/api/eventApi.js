@@ -14,3 +14,5 @@ export const getEventById = (eventId) => api.get(`/events/${eventId}`);
 export const getEventMembers = (eventId) => api.get(`/events/${eventId}/members`);
 
 export const getEventOrganizers = (eventId) => api.get(`/events/${eventId}/organizers`);
+
+export const updateMemberRole = (eventId, userId, newRole) => api.put(`/events/${eventId}/members/${userId}/role`, { newRole });

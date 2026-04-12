@@ -85,7 +85,7 @@ const getOrganizers = async (req, res, next) => {
 const updateMemberRole = async (req, res, next) => {
     try {
         const eventId = req.params.eventId;
-        const userId = req.params.userId; // already toInt() by validator on PUT route
+        const userId = req.params.userId;
         const { newRole } = req.body;
 
         const membership = await eventMembershipService.updateMemberRole({

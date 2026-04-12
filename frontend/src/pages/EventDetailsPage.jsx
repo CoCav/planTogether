@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getEventById, getEventMembers, getEventOrganizers, updateMemberRole } from "../api/eventApi";
+import { getEventById, getEventMembers, getEventOrganizers, updateMemberRole, joinEvent, leaveEvent } from "../api/eventApi";
 import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../utils/normalize";
 import { useAuth } from "../context/useAuth";
+import { useNavigate } from "react-router-dom";
 
 export default function EventDetailsPage() {
     const { eventId } = useParams();
     const { user, loading: authLoading } = useAuth();
+    const navigate = useNavigate();
 
     const [event, setEvent] = useState(null);
     const [members, setMembers] = useState([]);
@@ -18,6 +20,7 @@ export default function EventDetailsPage() {
     // Find current user's role in this event
     const currentUserId = user?.userId;
     const myRole = organizers.find((person) => person.id === currentUserId)?.role || members.find((person) => person.id === currentUserId)?.role || null;
+    const isMember = !!myRole;
 
     const loadData = async () => {
 
@@ -102,15 +105,67 @@ export default function EventDetailsPage() {
 
     const filteredMembers = members.filter((person) => person.role == 'participant');
 
+    const handleJoin = async () => {
+        try {
+            setError("");
+            setMessage("");
+
+            await joinEvent(eventId);
+            setMessage("✅ Joined event");
+            await loadData();
+        } catch (error) {
+            console.error("Error joining event:", error);
+            setError("❌ Unable to join event");
+        }
+    };
+
+    const handleLeave = async () => {
+        try {
+            setError("");
+            setMessage("");
+
+            if (myRole === "organizer") {
+                setError("❌ Organizer cannot leave their own event");
+                return;
+            }
+
+            await leaveEvent(eventId);
+            setMessage("👋 Left event");
+            await loadData();
+        } catch (error) {
+            console.error("Error leaving event:", error);
+            setError("❌ Unable to leave event");
+        }
+    };
+
     if (loading) return <p>Loading...</p>;
     if (!event) return <p>Event not found</p>;
 
     return (
         <div>
+
+            <button onClick={() => navigate(-1)} style={{ marginTop: "10px", marginLeft: "10px", marginBottom: "10px" }}>
+                ← Back
+            </button>
+
+
             <h1>{event.title}</h1>
 
             {message && <p style={{ color: "green" }}>{message}</p>}
             {error && <p style={{ color: "red" }}>{error}</p>}
+
+
+            {user && (
+                <div style={{ marginTop: "10px" }}>
+                    {!isMember ? (
+                        <button onClick={handleJoin}>Join Event</button>
+                    ) : myRole !== "organizer" ? (
+                        <button onClick={handleLeave}>Leave Event</button>
+                    ) : (
+                        null
+                    )}
+                </div>
+            )}
 
 
             {currentUserId && myRole && (

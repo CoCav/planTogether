@@ -8,9 +8,6 @@ export default function HomePage() {
     const { user } = useAuth();
     const [events, setEvents] = useState([]);
 
-    console.log('user connecte', user);
-    
-
     useEffect(() => {
     const fetchEvents = async () => {
         try {

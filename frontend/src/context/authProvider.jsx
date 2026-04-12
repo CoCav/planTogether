@@ -10,7 +10,7 @@ export default function AuthProvider({ children }) {
     const fetchProfile = async () => {
         try {
             const response = await getProfile();
-            setUser(response.data);
+            setUser(response.data.user);
         } catch {
         removeToken();
         setUser(null);

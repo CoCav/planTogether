@@ -18,7 +18,7 @@ router.post('/', authenticateToken, createEventValidator, validateRequest, event
 router.get('/', eventController.getAllEvents);
 
 // ROUTE GET - Get an event by ID 
-router.get('/:eventId', authenticateToken, eventIdParamValidator, validateRequest, eventController.getEvent);
+router.get('/:eventId', eventIdParamValidator, validateRequest, eventController.getEvent);
 
 // ROUTE PUT - Update an event by ID (organizer OR co_organizer)
 router.put('/:eventId', authenticateToken, eventIdParamValidator, updateEventValidator, validateRequest, requireEventRole(['organizer', 'co_organizer']), eventController.updateEvent);

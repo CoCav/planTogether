@@ -20,7 +20,7 @@ router.get('/memberships/me', authenticateToken, eventMembershipController.getMy
 router.get('/:eventId/members', authenticateToken, eventMembershipController.getMembers);
 
 // ROUTE GET - Get all organizers and co_organizers of an event
-router.get('/:eventId/organizers', authenticateToken, eventMembershipController.getOrganizers);
+router.get('/:eventId/organizers', eventMembershipController.getOrganizers);
 
 // ROUTE PUT - Organizer or co_organizer can change the role of a member
 router.put(

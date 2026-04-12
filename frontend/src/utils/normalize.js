@@ -45,8 +45,17 @@ export const normalizeUserRoleData = (items = []) =>
     })
 );
 
-// Extracts and normalizes events from API response.
+// Extracts and normalizes events from a response like GET /events or GET /events/filtered
 export const getNormalizedEvents = (response = {}) => normalizeEvents(extractApiData(response, "events"));
 
-// Extracts and normalizes membership-related events from API response.
+// Extracts and normalizes membership-related events from a reponse like GET /events/memberships/me
 export const getMembershipEvents = (response = {}) => normalizeEvents(extractApiData(response, "events"));
+
+// Extracts and normalizes a single event from a response like GET /events/:id
+export const getNormalizedEvent = (response = {}) => normalizeEvent(extractApiData(response, "event"));
+
+// Extracts and normalizes organizers from a response like GET /events/:id/organizers
+export const getNormalizedOrganizers = (response = {}) => normalizeUserRoleData(extractApiData(response, "organizers"));
+
+// Extracts and normalizes members from a response like GET /events/:id/members
+export const getNormalizedMembers = (response = {}) => normalizeUserRoleData(extractApiData(response, "members"));

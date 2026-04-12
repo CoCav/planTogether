@@ -31,7 +31,7 @@ export default function Navbar() {
                 </Link>
 
                 <span style={{ marginRight: "10px" }}>
-                    Hello, {user.user.name}
+                    Hello, {user.name}
                 </span>
 
                 <button onClick={handleLogout}>Logout</button>

@@ -8,7 +8,7 @@
 
 This is the **backend application** of PlanTogether, built with **Node.js, Express and PostgreSQL**. 
 
-PlanTogether is a RESTful API that enables users to create, manage, and participate
+PlanTogether is a RESTful API that enables users to create, manage, and participate.
 
 Users can create, join and organize events through a **role-based system** (`organizer`, `co_organizer`, `participant`).  
 The API includes **secure authentication, advanced permissions and a modular architecture** designed for maintainable backend development.

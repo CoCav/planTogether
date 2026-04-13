@@ -4,8 +4,7 @@ import { useAuth } from "../context/useAuth";
 import BackButton from "../components/BackButton";
 
 export default function ProfilePage() {
-    const { user, login } = useAuth();
-
+    const { user, refreshUser } = useAuth();
     const [form, setForm] = useState({
         name: user?.name || "",
         email: user?.email || "",
@@ -27,12 +26,13 @@ export default function ProfilePage() {
         setError("");
 
         try {
-            const response = await updateProfile(form);
 
+            await updateProfile(form);
+            await refreshUser();
             setMessage("✅ Profile updated successfully");
-            console.log("Updated profile:", response.data);
 
         } catch (error) {
+
             console.error("Error updating profile:", error);
             setError("❌ Unable to update profile");
         }

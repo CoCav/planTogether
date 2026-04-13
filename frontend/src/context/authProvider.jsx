@@ -13,7 +13,8 @@ export default function AuthProvider({ children }) {
 
             const response = await getProfile();
             setUser(response.data.user);
-
+            return response.data.user
+            
         } catch {
             removeToken();
             setUser(null);
@@ -26,32 +27,51 @@ export default function AuthProvider({ children }) {
     };
 
     const logout = async () => {
+
         try {
+
             await logOutUser();
+
         } catch (error) {
+
             console.error("Logout API error:", error);
+
         } finally {
+
             removeToken();
             setUser(null);
         }
     };
 
-    useEffect(() => {
-        const initAuth = async () => {
-        const token = getToken();
+    const refreshUser = async () => {
+        await fetchProfile();
+    };
 
+    useEffect(() => {
+
+        const initAuth = async () => {
+
+        try {
+
+            const token = getToken();
             if (token) {
                 await fetchProfile();
             }
+ 
+        } catch (error) {
 
+            console.log("Auth initialization error:", error)
+
+        } finally {
             setLoading(false);
-        };
+
+        }};
 
         initAuth();
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );

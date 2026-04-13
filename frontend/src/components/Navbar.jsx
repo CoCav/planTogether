@@ -30,7 +30,11 @@ export default function Navbar() {
                     Create Event
                 </Link>
 
-                <span style={{ marginRight: "10px" }}>
+                <Link to="profile" style={{ marginRight: "10px" }}>
+                    Profile
+                </Link>
+
+                <span style={{ marginRight: "10px", marginLeft: "10px" }}>
                     Hello, {user.name}
                 </span>
 

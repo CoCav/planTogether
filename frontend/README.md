@@ -80,6 +80,7 @@ The application communicates with the backend API via **Axios**.
 ## 🎭 Role System
 
 Each user can have a role in an event:
+
 ````
 organizer
 co_organizer

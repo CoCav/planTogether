@@ -1,17 +1,24 @@
 /*
 This file is responsible for:
- * - store the JWT token in localStorage
- * - retrieve the token when needed
- * - remove the token on logout
- */
+ * - the JWT token
+*/
 
+// Key used to store the authenticated token
 const TOKEN_KEY = "token";
 
-// Retrieves the current authentication token from localStorage
-export const getToken = () => localStorage.getItem(TOKEN_KEY);
+// Retrieves the token from storage :
+//  1. sessionStorage (temporary session)
+// 2. localStorage (persistent session if "Remember me" is enabled)
+export const getToken = () => {  return sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY); };
 
-// Stores the authentication token in localStorage
-export const setToken = (token) => localStorage.setItem(TOKEN_KEY, token);
+// Stores the token based on user preference
+export const setToken = (token, remember = false) => { 
+    const storage = remember ? localStorage : sessionStorage; 
+    storage.setItem(TOKEN_KEY, token); 
+};
 
-// Removes the token (used when logging out)
-export const removeToken = () => localStorage.removeItem(TOKEN_KEY);
+// Removes the token from both storages
+export const removeToken = () => {
+    sessionStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+};

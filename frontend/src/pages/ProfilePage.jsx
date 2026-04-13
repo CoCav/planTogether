@@ -8,6 +8,7 @@ export default function ProfilePage() {
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
+    // Controls visibility of password fields (show/hide toggles)
     const [showPasswords, setShowPasswords] = useState({
         currentPassword: false,
         newPassword: false,
@@ -87,7 +88,7 @@ export default function ProfilePage() {
         }
     };
 
-
+    // Toggles visibility of a specific password field
     const togglePasswordVisibility = (field) => {
         setShowPasswords((prev) => ({
             ...prev,

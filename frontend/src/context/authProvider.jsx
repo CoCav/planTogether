@@ -7,10 +7,9 @@ export default function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    // Fetches the authenticated upser's profile and updates the global auth state
     const fetchProfile = async () => {
-
         try {
-
             const response = await getProfile();
             setUser(response.data.user);
             return response.data.user
@@ -18,31 +17,31 @@ export default function AuthProvider({ children }) {
         } catch {
             removeToken();
             setUser(null);
+            return null;
         }
     };
 
-    const login = async (token) => {
-        setToken(token);
+    // Logs in the user by storing the token and fetching profile data
+    const login = async (token, remember = false) => {
+        setToken(token, remember);
         await fetchProfile();
     };
 
+    // Logs out the user and clears all authentification data
     const logout = async () => {
-
         try {
-
             await logOutUser();
 
         } catch (error) {
-
             console.error("Logout API error:", error);
 
         } finally {
-
             removeToken();
             setUser(null);
         }
     };
 
+    // Refreshes the current user data (used after profile update)
     const refreshUser = async () => {
         await fetchProfile();
     };
@@ -50,23 +49,19 @@ export default function AuthProvider({ children }) {
     useEffect(() => {
 
         const initAuth = async () => {
+            try {
 
-        try {
-
-            const token = getToken();
-            if (token) {
-                await fetchProfile();
-            }
+                const token = getToken();
+                if (token) {
+                    await fetchProfile();
+                }
  
-        } catch (error) {
+            } catch (error) {
+                console.log("Auth initialization error:", error)
 
-            console.log("Auth initialization error:", error)
-
-        } finally {
-            setLoading(false);
-
-        }};
-
+            } finally {
+                setLoading(false);
+            }};
         initAuth();
     }, []);
 

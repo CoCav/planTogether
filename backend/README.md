@@ -6,7 +6,9 @@
 ![JWT](https://img.shields.io/badge/Auth-JWT-yellow)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-PlanTogether is a REST API built with **Node.js, Express and PostgreSQL** to manage collaborative events.
+This is the **backend application** of PlanTogether, built with **Node.js, Express and PostgreSQL**. 
+
+PlanTogether is a RESTful API that enables users to create, manage, and participate
 
 Users can create, join and organize events through a **role-based system** (`organizer`, `co_organizer`, `participant`).  
 The API includes **secure authentication, advanced permissions and a modular architecture** designed for maintainable backend development.
@@ -41,7 +43,7 @@ The API handles:
 ## User Management 
 
 - User registration
-- Login with JWT authentication (stateless, token-based)
+- Login with JWT authentication (stateless, token-based )
 - Profile retrieval
 - Profile update
 - Change password (secure flow with current password verification)

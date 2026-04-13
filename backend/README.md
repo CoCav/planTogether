@@ -41,9 +41,10 @@ The API handles:
 ## User Management 
 
 - User registration
-- Login with JWT authentication
+- Login with JWT authentication (stateless, token-based)
 - Profile retrieval
 - Profile update
+- Change password (secure flow with current password verification)
 - Logout endpoint
 - Email normalization and password hashing with **bcrypt**
 - Centralized error handling middleware
@@ -130,7 +131,7 @@ Additional features:
 The API includes a complete test suite using Jest and Supertest.
 
 Coverage: 
-- Authentication flows (register, login, profile, update, logout)
+- Authentication flows (register, login, profile, update, password change, logout)
 - Event CRUD operations
 - Membership logic
 - Role-based permissions
@@ -153,10 +154,12 @@ npm test
 
 The API implements several security mechanisms:
 
-- JWT authentication middleware
+- JWT authentication middleware (Bearer Token)
 - Input validation using **express-validator**
-- Role-based permission checks
+- Role-based permission checks (organizer / co_organizer / participant)
 - Protected routes
+- Password update requires current password verification
+- Sensitive fields (password) excluded by default using Sequelize scopes
 - SQL injection protection through Sequelize queries
 - Centralized error handler
 
@@ -293,6 +296,7 @@ POST /api/auth/register
 POST /api/auth/login
 GET /api/auth/profile
 PUT /api/auth/profile
+PUT /api/auth/password
 POST /api/auth/logout
 ```
 
@@ -323,13 +327,22 @@ PUT /api/events/:eventId/members/:userId/role
 DELETE /api/events/:eventId/members/:userId
 ```
 
+# 🚀 Recent Improvements
+
+- Added secure password update flow with current password verification
+- Improved authentication system with session-based token handling
+- Implemented dual storage strategy (sessionStorage / localStorage)
+- Added "Remember me" functionality
+- Improved frontend UX for password inputs (show/hide toggle)
+- Refactored authentication logic for better maintainability
+
 # 📌 Project Status
 
 | Component | Status |
 |-----------|--------|
 | Backend API | Fully functional |
 | Architecture | Modular |
-| Authentication | Implemented |
+| Authentication | Fully Implemented (login, logout, profile, password update) |
 | Authorization | Role-based |
 | Testing | Completed (28 tests) |
 | Frontend | Planned |

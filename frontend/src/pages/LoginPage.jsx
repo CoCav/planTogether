@@ -55,15 +55,15 @@ export default function LoginPage() {
 
             <div>
                 <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="Password"
-                value={form.password}
-                onChange={handleChange}/>
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="Password"
+                    value={form.password}
+                    onChange={handleChange}/>
 
                 <button 
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}>
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}>
                     {showPassword ? "Hide" : "Show"}
                 </button>
             </div>

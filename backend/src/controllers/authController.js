@@ -101,9 +101,31 @@ const updateUserByID = async (req, res, next) => {
     }
 };
 
+// Change the current user's password
+const changePassword = async (req, res, next) => {
+    try {
+
+        // Get user ID & all new datas from the user
+        const userId = req.user.userId;
+        const { currentPassword, newPassword } = req.body;
+
+        // Update user's new password
+        await authService.changeUserPasswordByID(
+            userId,
+            currentPassword,
+            newPassword
+        );
+
+        return res.status(200).json({ message: "Password updated successfully" });
+
+    } catch (error) {
+        return next(error);
+    }
+};
+
 // Logout user
 const logout = async (req, res) => {
     return res.status(200).json({ message: 'Logout successful' });
 };
 
-module.exports = { register, login, getUserByID, updateUserByID, logout };
+module.exports = { register, login, getUserByID, updateUserByID, changePassword, logout };

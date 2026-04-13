@@ -69,7 +69,7 @@ const loginUser = async ({ email, password }) => {
     }
 };
 
-// Get the profile of a user by their ID
+// Get the profile of an user by their ID
 const getUserProfileByID = async (userId) => {
     try {
 
@@ -90,9 +90,10 @@ const getUserProfileByID = async (userId) => {
     }
 };
 
-// Update the profile of a user by their ID
+// Update the profile of an user by their ID
 const updateUserProfileByID = async (userId, updatedData) => {
     try {
+        
         const user = await User.findByPk(userId);
 
         // Check if user exists in the database
@@ -102,12 +103,11 @@ const updateUserProfileByID = async (userId, updatedData) => {
             throw error;
         }
 
-        const { name, email, password } = updatedData;
+        const { name, email } = updatedData;
 
         // Update user fields if provided
         if (name) user.name = name;
         if (email) user.email = String(email).toLowerCase().trim();
-        if (password) user.password = await bcrypt.hash(password, 10);
 
         try {
             await user.save();
@@ -129,4 +129,45 @@ const updateUserProfileByID = async (userId, updatedData) => {
     }
 };
 
-module.exports = { registerUser, loginUser, getUserProfileByID, updateUserProfileByID };
+// Change the password of a connected user
+const changeUserPasswordByID = async (userId, currentPassword, newPassword) => {
+    try {
+        const user = await User.scope("withPassword").findByPk(userId);
+
+        // Check if user exists in the database
+        if (!user) {
+            const error = new Error("User not found");
+            error.statusCode = 404;
+            throw error;
+        }
+        
+        // Verify current password
+        const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+
+        if (!isPasswordValid) {
+            const error = new Error("Current password is incorrect");
+            error.statusCode = 401;
+            throw error;
+        }
+
+        // Prevent reusing the same password
+        const isSamePassword = await bcrypt.compare(newPassword, user.password);
+
+        if (isSamePassword) {
+            const error = new Error("New password must be different from the current password");
+            error.statusCode = 400;
+            throw error;
+        }
+
+        // Hash and save new password
+        user.password = await bcrypt.hash(newPassword, 10);
+        await user.save();
+
+        return;
+    } catch (error) {
+        console.error(`Error changing user password: ${error.message}`);
+        throw error;
+    }
+};
+
+module.exports = { registerUser, loginUser, getUserProfileByID, updateUserProfileByID, changeUserPasswordByID };

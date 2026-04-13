@@ -4,7 +4,7 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 const { authenticateToken } = require('../middlewares/authMiddleware');
 const validateRequest = require('../middlewares/validateRequest');
-const { registerValidator, loginValidator, updateProfileValidator } = require('../validators/authValidator');
+const { registerValidator, loginValidator, updateProfileValidator, changePasswordValidator } = require('../validators/authValidator');
 
 // ROUTE POST - Register user
 router.post('/register', registerValidator, validateRequest, authController.register);
@@ -17,6 +17,9 @@ router.get('/profile', authenticateToken, authController.getUserByID);
 
 // ROUTE PUT - Update current user profile
 router.put('/profile', authenticateToken, updateProfileValidator, validateRequest, authController.updateUserByID);
+
+// ROUTE PUT - Change current user's password
+router.put('/password', authenticateToken, changePasswordValidator, validateRequest, authController.changePassword);
 
 // ROUTE POST - Logout user (client should delete token)
 router.post('/logout', authenticateToken, authController.logout);

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getEventById, getEventMembers, getEventOrganizers, updateMemberRole, deleteEvent } from "../api/eventApi";
+import { getEventById, deleteEvent } from "../api/eventApi";
+import { getEventMembers, getEventOrganizers, updateMemberRole } from "../api/eventMembershipApi.js"
 import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../utils/normalize";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm.js";
 import { useAuth } from "../context/useAuth";

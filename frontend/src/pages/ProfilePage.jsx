@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { updateProfile, changePassword } from "../api/authApi";
-import { getMyEvents } from "../api/eventApi";
+import { getMyEvents } from "../api/eventMembershipApi";
 import { getMyEventsWithRole } from "../utils/normalize";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
 import BackButton from "../components/BackButton";

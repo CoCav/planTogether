@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "../context/useAuth.js";
 import HomePage from "../pages/HomePage";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
@@ -6,7 +7,6 @@ import ProfilePage from "../pages/ProfilePage.jsx";
 import EventsPage from "../pages/EventsPage";
 import CreateEventPage from "../pages/createEventPage.jsx";
 import EventDetailsPage from "../pages/EventDetailsPage";
-import { useAuth } from "../context/useAuth.js";
 
 function ProtectedRoute({ children }) {
 

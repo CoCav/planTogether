@@ -1,10 +1,19 @@
 import api from "./axios";
 
-export const loginUser = (data) => api.post("/auth/login", data);
-export const registerUser = (data) => api.post("/auth/register", data);
+// Register a new user
+export const registerUser = (userData) => api.post("/auth/register", userData);
 
+// Logs in a user and returns a JWT token
+export const loginUser = (credentials) => api.post("/auth/login", credentials);
+
+// Fetches the profile of the currently authenticated user
 export const getProfile = () => api.get("/auth/profile");
-export const updateProfile = (data) => api.put("auth/profile", data);
-export const changePassword = (data) => api.put("/auth/password", data);
 
+// Updates the profile of the currently authenticated user
+export const updateProfile = (profileData) => api.put("auth/profile", profileData);
+
+// Updates the password of the currently authenticated user
+export const changePassword = (passwordData) => api.put("/auth/password", passwordData);
+
+// Logs out the currently authenticated user
 export const logOutUser = () => api.post("/auth/logout");

@@ -1,18 +1,24 @@
 import axios from "axios";
 import { getToken } from "../utils/token";
 
+// Creates a reusable Axios instance for all API requests
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
 });
 
-api.interceptors.request.use((config) => {
-    const token = getToken();
+// Automatically attaches the JWT token to authenticated requests
+api.interceptors.request.use(
+    (config) => {
+        const token = getToken();
 
-    if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
+        if (token) {
+            config.headers = config.headers || {};
+            config.headers.Authorization = `Bearer ${token}`;
+        }
 
-    return config;
-});
+        return config;
+        
+    }, (error) => Promise.reject(error)
+);
 
 export default api;

@@ -1,4 +1,4 @@
-import { joinEvent, leaveEvent } from "../api/eventApi";
+import { joinEvent, leaveEvent } from "../api/eventMembershipApi";
 
 export default function useEventActions({
     loadData,

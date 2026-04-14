@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { getAllEvents, getMyEvents } from "../api/eventApi";
+import { getAllEvents } from "../api/eventApi";
+import { getMyEvents } from "../api/eventMembershipApi.js";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { getNormalizedEvents, getMyEventsWithRole } from "../utils/normalize.js";

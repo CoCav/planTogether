@@ -7,14 +7,15 @@ const validateRequest = require('../middlewares/validateRequest');
 const { requireEventRole, authorizeRoleChange } = require('../middlewares/requireEventRole');
 const { updateMemberRoleValidator, removeMemberValidator } = require('../validators/eventRoleValidator');
 
+
+// ROUTE GET - Get all events related to the current user
+router.get('/my-events', authenticateToken, eventMembershipController.getMyEvents);
+
 // ROUTE POST - User joins an event
 router.post('/:eventId/members/join', authenticateToken, eventMembershipController.joinEvent);
 
 // ROUTE DELETE - User leaves an event
 router.delete('/:eventId/members/leave', authenticateToken, eventMembershipController.leaveEvent);
-
-// ROUTE GET - Get all events the current user is participating in
-router.get('/memberships/me', authenticateToken, eventMembershipController.getMyEvents);
 
 // ROUTE GET - Get all members of an event
 router.get('/:eventId/members', authenticateToken, eventMembershipController.getMembers);

@@ -31,8 +31,9 @@ app.get('/', (req, res) => {
 
 // Routes (API)
 app.use('/api/auth', authRoutes);
-app.use('/api/events', eventRoutes);
 app.use('/api/events', eventMembershipRoutes);
+app.use('/api/events', eventRoutes);
+
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });

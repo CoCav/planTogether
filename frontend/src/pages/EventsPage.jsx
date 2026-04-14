@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { getAllEvents, getMyMemberships } from "../api/eventApi";
+import { getAllEvents, getMyEvents } from "../api/eventApi";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
-import { getNormalizedEvents, getMembershipEvents } from "../utils/normalize.js";
+import { getNormalizedEvents, getMyEventsWithRole } from "../utils/normalize.js";
 import useEventMembershipActions from "../hooks/useEventMembershipActions.js";
 import BackButton from "../components/BackButton.jsx";
 
@@ -21,8 +21,8 @@ export default function EventsPage() {
     };
 
     const fetchMyMemberships = async () => {
-        const response = await getMyMemberships();
-        return getMembershipEvents(response);
+        const response = await getMyEvents();
+        return  getMyEventsWithRole(response);
     };
 
     const loadData = async () => {

@@ -48,15 +48,15 @@ export const normalizeUserRoleData = (items = []) =>
 // Extracts and normalizes events from a response like GET /events or GET /events/filtered
 export const getNormalizedEvents = (response = {}) => normalizeEvents(extractApiData(response, "events"));
 
-// Extracts and normalizes membership-related events from a reponse like GET /events/memberships/me
-export const getMembershipEvents = (response = {}) => {
+// Extracts and normalizes events related to the current user (includes role(s))
+export const getMyEventsWithRole = (response = {}) => {
   const items = response.data.events || [];
   return items.map((item) => {
     const event = normalizeEvent(item.Event || item);
 
     return {
         ...event,
-        role: item.role || null,
+        role: item.role || "participant",
     };
   });
 }

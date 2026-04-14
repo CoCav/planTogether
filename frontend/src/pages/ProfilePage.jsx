@@ -1,19 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { updateProfile, changePassword } from "../api/authApi";
 import { useAuth } from "../context/useAuth";
 import BackButton from "../components/BackButton";
+import { getMyEvents } from "../api/eventApi";
+import {  getMyEventsWithRole } from "../utils/normalize";
 
 export default function ProfilePage() {
     const { user, refreshUser } = useAuth();
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
-    // Controls visibility of password fields (show/hide toggles)
-    const [showPasswords, setShowPasswords] = useState({
-        currentPassword: false,
-        newPassword: false,
-        confirmPassword: false
-    });
+    const [myEvents, setMyEvents] = useState([]);
+    const [loadingEvents, setLoadingEvents] = useState(true);
 
     const [profileForm, setProfileForm] = useState({
         name: user?.name || "",
@@ -25,6 +23,31 @@ export default function ProfilePage() {
         newPassword: "",
         confirmPassword: "",
     });
+
+    // Controls visibility of password fields (show/hide toggles)
+    const [showPasswords, setShowPasswords] = useState({
+        currentPassword: false,
+        newPassword: false,
+        confirmPassword: false
+    });
+
+    useEffect(() => {
+
+        // Fetches all events related to the current authenticated user
+        const fetchMyEvents = async () => {
+        try {
+
+            const response = await getMyEvents();
+            const normalized =  getMyEventsWithRole(response);
+            setMyEvents(normalized);
+
+        } catch (error) {
+            console.error("Error loading my events:", error);
+        } finally {
+            setLoadingEvents(false);
+        }};
+
+    fetchMyEvents();}, []);
 
     const handleProfileChange = (e) => {
         setProfileForm({
@@ -96,7 +119,11 @@ export default function ProfilePage() {
         }));
     };
 
-
+    // Splits events into : 
+    // - created events (user is organizer)
+    //- joined events (user is participant or co_organizer)
+    const createdEvents = myEvents.filter((event) => event.role === "organizer");
+    const joinedEvents = myEvents.filter((event) => event.role !== "organizer");
 
     if (!user) return <p>Loading profile...</p>;
 
@@ -196,6 +223,49 @@ export default function ProfilePage() {
 
                 <button type="submit">Update Password</button>
             </form>
+
+
+            <h2 style={{ marginTop: "30px" }}>My Events</h2>
+
+            {loadingEvents ? (
+                    <p>Loading events...</p>
+                ) : (
+                    <>
+                        {/* Created Events */}
+                        <div style={{ marginTop: "20px" }}>
+                            <h3>Created Events</h3>
+
+                            {createdEvents.length === 0 ? (
+                                <p>No created events</p>
+                            ) : (
+                                <ul>
+                                    {createdEvents.map((event) => (
+                                    <li key={event.id}>
+                                        {event.title} (Organizer)
+                                    </li>))}
+                                </ul>
+                            )}
+                        </div>
+
+                        {/* Joined Events */}
+                        <div style={{ marginTop: "20px" }}>
+                            <h3>Joined Events</h3>
+
+                            {joinedEvents.length === 0 ? (
+                                <p>No joined events</p>
+                            ) : (
+                                <ul>
+                                    {joinedEvents.map((event) => (
+                                    <li key={event.id}>
+                                        {event.title} ({event.role})
+                                    </li>))}
+                                </ul>
+                            )}
+                        </div>
+                    </>
+                )
+            }
+
         </div>
     );
 }

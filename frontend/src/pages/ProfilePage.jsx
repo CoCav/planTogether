@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { updateProfile, changePassword } from "../api/authApi";
 import { useAuth } from "../context/useAuth";
-import BackButton from "../components/BackButton";
-import { getMyEvents } from "../api/eventApi";
+import { updateProfile, changePassword } from "../api/authApi";
+import { getMyEvents, leaveEvent } from "../api/eventApi";
 import {  getMyEventsWithRole } from "../utils/normalize";
+import BackButton from "../components/BackButton";
+import { Link } from "react-router-dom";
 
 export default function ProfilePage() {
     const { user, refreshUser } = useAuth();
@@ -31,23 +32,21 @@ export default function ProfilePage() {
         confirmPassword: false
     });
 
-    useEffect(() => {
-
-        // Fetches all events related to the current authenticated user
-        const fetchMyEvents = async () => {
+    // Fetches all events related to the current authenticated user
+    const fetchMyEvents = async () => {
         try {
 
             const response = await getMyEvents();
-            const normalized =  getMyEventsWithRole(response);
-            setMyEvents(normalized);
+            const normalizedEvents =  getMyEventsWithRole(response);
+            setMyEvents(normalizedEvents);
 
         } catch (error) {
             console.error("Error loading my events:", error);
         } finally {
             setLoadingEvents(false);
-        }};
+    }};
 
-    fetchMyEvents();}, []);
+    useEffect(() => { fetchMyEvents()}, []);
 
     const handleProfileChange = (e) => {
         setProfileForm({
@@ -117,6 +116,25 @@ export default function ProfilePage() {
             ...prev,
             [field]: !prev[field],
         }));
+    };
+
+    const handleLeave = async (eventId) => {
+
+        const confirmLeave = window.confirm("Are you sure you want to leave this event?");
+        if (!confirmLeave) return;
+
+        try {
+            setError("");
+            setMessage("");
+
+            await leaveEvent(eventId);
+            setMessage("👋 Successfully left event");
+            await fetchMyEvents()
+
+        } catch (error) {
+            console.error("Error leaving event:", error);
+            setError("❌ Unable to leave event");
+        }
     };
 
     // Splits events into : 
@@ -241,7 +259,8 @@ export default function ProfilePage() {
                                 <ul>
                                     {createdEvents.map((event) => (
                                     <li key={event.id}>
-                                        {event.title} (Organizer)
+                                        <Link to={`/events/${event.id}`}>{event.title}</Link>
+                                        <span> 👑 Organizer</span>
                                     </li>))}
                                 </ul>
                             )}
@@ -257,9 +276,15 @@ export default function ProfilePage() {
                                 <ul>
                                     {joinedEvents.map((event) => (
                                     <li key={event.id}>
-                                        {event.title} ({event.role})
+                                        <Link to={`/events/${event.id}`}>{event.title}</Link>
+                                        <span style={{marginRight: "10px"}}> {event.role === "co_organizer" ? "🛡️ Co-organizer" : "👤 Participant"}</span>
+
+                                        <button onClick={() => handleLeave(event.id)}>
+                                            Leave
+                                        </button>
                                     </li>))}
                                 </ul>
+                                
                             )}
                         </div>
                     </>

@@ -3,7 +3,6 @@ import { getAllEvents, getMyEvents } from "../api/eventApi";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { getNormalizedEvents, getMyEventsWithRole } from "../utils/normalize.js";
-
 import  useEventActionsWithConfirm  from "../hooks/useEventActionsWithConfirm.js";
 import BackButton from "../components/BackButton.jsx";
 
@@ -70,7 +69,7 @@ export default function EventsPage() {
 
         const getRoleByEventId = (eventId) => myEventIds[eventId];
 
-        const { handleJoin, handleLeave } = useEventActionsWithConfirm({
+        const { handleJoinEvent, handleLeaveEvent } = useEventActionsWithConfirm({
             loadData,
             setMessage,
             setError,
@@ -132,12 +131,12 @@ export default function EventsPage() {
                                                 <span style={{ marginRight: "10px", color: "green" }}>
                                                     ✅ Joined
                                                 </span>
-                                                <button onClick={() => handleLeave(event.id)}>
+                                                <button onClick={() => handleLeaveEvent(event.id)}>
                                                     Leave
                                                 </button>
                                             </>
                                         )) : (
-                                        <button onClick={() => handleJoin(event.id)}>
+                                        <button onClick={() => handleJoinEvent(event.id)}>
                                             Join
                                         </button>
                                         )}

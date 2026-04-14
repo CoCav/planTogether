@@ -7,22 +7,22 @@ export default function useEventActionsWithConfirm({
     getRoleByEventId,
     confirmLeaveMessage = "Are you sure you want to leave this event?",
   }) {
-      const { handleJoin, handleLeave } = useEventActions({
+      const { handleJoinEvent, handleLeaveEvent } = useEventActions({
         loadData,
         setMessage,
         setError,
-      getRoleByEventId
+        getRoleByEventId
       });
 
-    const handleLeaveWithConfirm = async (eventId) => {
+    const handleLeaveEventWithConfirm = async (eventId) => {
       const confirmed = window.confirm(confirmLeaveMessage);
       if (!confirmed) return;
 
-      await handleLeave(eventId);
+      await handleLeaveEvent(eventId);
     };
 
     return {
-      handleJoin,
-      handleLeave: handleLeaveWithConfirm,
+      handleJoinEvent,
+      handleLeaveEvent: handleLeaveEventWithConfirm,
     };
 }

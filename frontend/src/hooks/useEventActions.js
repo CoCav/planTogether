@@ -8,7 +8,7 @@ export default function useEventActions({
 
     }) {
 
-        const handleJoin = async (eventId) => {
+        const handleJoinEvent = async (eventId) => {
 
             try {
                 setError("");
@@ -24,7 +24,7 @@ export default function useEventActions({
             }
         };
 
-        const handleLeave = async (eventId) => {
+        const handleLeaveEvent = async (eventId) => {
 
             try {
 
@@ -48,5 +48,5 @@ export default function useEventActions({
             }
         };
 
-    return { handleJoin, handleLeave };
+    return { handleJoinEvent, handleLeaveEvent };
 }

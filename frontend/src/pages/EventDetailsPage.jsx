@@ -2,10 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getEventById, getEventMembers, getEventOrganizers, updateMemberRole, deleteEvent } from "../api/eventApi";
 import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../utils/normalize";
+import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm.js";
 import { useAuth } from "../context/useAuth";
 import BackButton from "../components/BackButton.jsx";
-
-import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm.js";
 
 export default function EventDetailsPage() {
     const { eventId } = useParams();
@@ -111,7 +110,7 @@ export default function EventDetailsPage() {
 
     const getRoleByEventId = () => myRole;
 
-    const { handleJoin, handleLeave } = useEventActionsWithConfirm({
+    const { handleJoinEvent, handleLeaveEvent } = useEventActionsWithConfirm({
         loadData,
         setMessage,
         setError,
@@ -153,9 +152,9 @@ export default function EventDetailsPage() {
             {user && (
                 <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
                     {!isMember ? (
-                        <button onClick={() => handleJoin(event.id)}>Join Event</button>
+                        <button onClick={() => handleJoinEvent(event.id)}>Join Event</button>
                     ) : myRole !== "organizer" ? (
-                        <button onClick={() => handleLeave(event.id)}>Leave Event</button>
+                        <button onClick={() => handleLeaveEvent(event.id)}>Leave Event</button>
                     ) : null}
                     
                     {myRole === "organizer" && (

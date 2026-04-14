@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { updateProfile, changePassword } from "../api/authApi";
 import { getMyEvents } from "../api/eventApi";
-import {  getMyEventsWithRole } from "../utils/normalize";
-import BackButton from "../components/BackButton";
-import { Link } from "react-router-dom";
-
+import { getMyEventsWithRole } from "../utils/normalize";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
+import BackButton from "../components/BackButton";
 
 export default function ProfilePage() {
     const { user, refreshUser } = useAuth();
@@ -122,7 +121,7 @@ export default function ProfilePage() {
 
     const getRoleByEventId = (eventId) => myEvents.find((event) => event.id === eventId)?.role || null;
 
-    const {handleLeave } = useEventActionsWithConfirm({
+    const {handleLeaveEvent } = useEventActionsWithConfirm({
             loadData : fetchMyEvents,
             setMessage,
             setError,
@@ -271,7 +270,7 @@ export default function ProfilePage() {
                                         <Link to={`/events/${event.id}`}>{event.title}</Link>
                                         <span style={{marginRight: "10px"}}> {event.role === "co_organizer" ? "🛡️ Co-organizer" : "👤 Participant"}</span>
 
-                                        <button onClick={() => handleLeave(event.id)}>
+                                        <button onClick={() => handleLeaveEvent(event.id)}>
                                             Leave
                                         </button>
                                     </li>))}

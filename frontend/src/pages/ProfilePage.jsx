@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/useAuth";
 import { updateProfile, changePassword } from "../api/authApi";
-import { getMyEvents, leaveEvent } from "../api/eventApi";
+import { getMyEvents } from "../api/eventApi";
 import {  getMyEventsWithRole } from "../utils/normalize";
 import BackButton from "../components/BackButton";
 import { Link } from "react-router-dom";
+
+import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
 
 export default function ProfilePage() {
     const { user, refreshUser } = useAuth();
@@ -118,24 +120,14 @@ export default function ProfilePage() {
         }));
     };
 
-    const handleLeave = async (eventId) => {
+    const getRoleByEventId = (eventId) => myEvents.find((event) => event.id === eventId)?.role || null;
 
-        const confirmLeave = window.confirm("Are you sure you want to leave this event?");
-        if (!confirmLeave) return;
-
-        try {
-            setError("");
-            setMessage("");
-
-            await leaveEvent(eventId);
-            setMessage("👋 Successfully left event");
-            await fetchMyEvents()
-
-        } catch (error) {
-            console.error("Error leaving event:", error);
-            setError("❌ Unable to leave event");
-        }
-    };
+    const {handleLeave } = useEventActionsWithConfirm({
+            loadData : fetchMyEvents,
+            setMessage,
+            setError,
+            getRoleByEventId
+    });
 
     // Splits events into : 
     // - created events (user is organizer)

@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getEventById, getEventMembers, getEventOrganizers, updateMemberRole, joinEvent, leaveEvent, deleteEvent } from "../api/eventApi";
+import { getEventById, getEventMembers, getEventOrganizers, updateMemberRole, deleteEvent } from "../api/eventApi";
 import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../utils/normalize";
 import { useAuth } from "../context/useAuth";
 import BackButton from "../components/BackButton.jsx";
+
+import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm.js";
 
 export default function EventDetailsPage() {
     const { eventId } = useParams();
@@ -107,49 +109,18 @@ export default function EventDetailsPage() {
     const participantCount = filteredMembers.length;
     const organizersCount = organizers.length;
 
-    const handleJoin = async () => {
+    const getRoleByEventId = () => myRole;
 
-        try {
-
-            setError("");
-            setMessage("");
-
-            await joinEvent(eventId);
-            setMessage("✅ Joined event");
-            await loadData();
-
-        } catch (error) {
-            console.error("Error joining event:", error);
-            setError("❌ Unable to join event");
-        }
-    };
-
-    const handleLeave = async () => {
-
-        try {
-
-            setError("");
-            setMessage("");
-
-            if (myRole === "organizer") {
-                setError("❌ Organizers cannot leave their own event");
-                return;
-            }
-
-            await leaveEvent(eventId);
-            setMessage("👋 Left event");
-            await loadData();
-
-        } catch (error) {
-            console.error("Error leaving event:", error);
-            setError("❌ Unable to leave event");
-        }
-    };
+    const { handleJoin, handleLeave } = useEventActionsWithConfirm({
+        loadData,
+        setMessage,
+        setError,
+        getRoleByEventId
+    });
 
     const handleDeleteEvent = async () => {
 
         const confirmed = window.confirm("Are you sure you want to delete this event?");
-
         if (!confirmed) return;
 
         try {
@@ -182,9 +153,9 @@ export default function EventDetailsPage() {
             {user && (
                 <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
                     {!isMember ? (
-                        <button onClick={handleJoin}>Join Event</button>
+                        <button onClick={() => handleJoin(event.id)}>Join Event</button>
                     ) : myRole !== "organizer" ? (
-                        <button onClick={handleLeave}>Leave Event</button>
+                        <button onClick={() => handleLeave(event.id)}>Leave Event</button>
                     ) : null}
                     
                     {myRole === "organizer" && (

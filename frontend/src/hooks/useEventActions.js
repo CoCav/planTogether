@@ -1,10 +1,10 @@
 import { joinEvent, leaveEvent } from "../api/eventApi";
 
-export default function useEventMembershipActions({
+export default function useEventActions({
     loadData,
     setMessage,
     setError,
-    getRoleByEventId,
+    getRoleByEventId
 
     }) {
 

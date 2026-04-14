@@ -3,7 +3,8 @@ import { getAllEvents, getMyEvents } from "../api/eventApi";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { getNormalizedEvents, getMyEventsWithRole } from "../utils/normalize.js";
-import useEventMembershipActions from "../hooks/useEventMembershipActions.js";
+
+import  useEventActionsWithConfirm  from "../hooks/useEventActionsWithConfirm.js";
 import BackButton from "../components/BackButton.jsx";
 
 export default function EventsPage() {
@@ -69,7 +70,7 @@ export default function EventsPage() {
 
         const getRoleByEventId = (eventId) => myEventIds[eventId];
 
-        const { handleJoin, handleLeave } = useEventMembershipActions({
+        const { handleJoin, handleLeave } = useEventActionsWithConfirm({
             loadData,
             setMessage,
             setError,

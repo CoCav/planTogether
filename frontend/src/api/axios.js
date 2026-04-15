@@ -1,6 +1,11 @@
 import axios from "axios";
 import { getToken } from "../utils/token";
 
+/**
+ * Axios instance used across the frontend application.
+ * Handles base API URL and automatically injects the JWT token.
+ */
+
 // Creates a reusable Axios instance for all API requests
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
@@ -17,7 +22,7 @@ api.interceptors.request.use(
         }
 
         return config;
-        
+
     }, (error) => Promise.reject(error)
 );
 

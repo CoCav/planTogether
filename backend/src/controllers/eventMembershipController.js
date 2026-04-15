@@ -108,8 +108,9 @@ const removeMember = async (req, res, next) => {
     try {
         const eventId = req.params.eventId;
         const userId = req.params.userId;
+        const requestingUserId = req.user.userId;
 
-        await eventMembershipService.removeMember({ eventId, userId });
+        await eventMembershipService.removeMember({ eventId, userId, requestingUserId });
 
         return res.status(200).json({
             message: 'Member removed successfully',

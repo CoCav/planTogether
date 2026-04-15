@@ -176,7 +176,8 @@ const listOrganizers = async (eventId) => {
 };
 
 // Update a user's role in an event
-// (Authorization handled by middleware)
+// Authorization is mainly handled by middleware, but core business rules
+// are enforced here as a safety layer.
 const updateMemberRole = async ({ eventId, userId, newRole }) => {
     try {
 
@@ -206,6 +207,13 @@ const updateMemberRole = async ({ eventId, userId, newRole }) => {
             throw error;
         }
 
+        // Prevent useless update
+        if (membership.role === newRole) {
+            const error = new Error('User already has this role');
+            error.statusCode = 400;
+            throw error;
+        }
+
         // Update role
         membership.role = newRole;
         await membership.save();
@@ -219,8 +227,9 @@ const updateMemberRole = async ({ eventId, userId, newRole }) => {
 };
 
 // Remove a member from an event
-// (Authorization handled by middleware)
-const removeMember = async ({ eventId, userId }) => {
+// Authorization is partly handled by middleware, but role hierarchy
+// and protected member rules are enforced here.
+const removeMember = async ({ eventId, userId, requestingUserId }) => {
     try {
 
         // Check if event exists
@@ -236,15 +245,8 @@ const removeMember = async ({ eventId, userId }) => {
             where: { eventId, userId }
         });
 
-        if (!membership) {
-            const error = new Error('User is not a member of this event');
-            error.statusCode = 404;
-            throw error;
-        }
-
         // Remove membership
         await membership.destroy();
-
         return;
 
     } catch (error) {

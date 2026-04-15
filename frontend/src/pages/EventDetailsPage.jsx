@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { getEventById, deleteEvent } from "../api/eventApi";
-import { getEventMembers, getEventOrganizers, updateMemberRole } from "../api/eventMembershipApi.js"
+import { getEventMembers, getEventOrganizers, updateMemberRole, removeEventMember } from "../api/eventMembershipApi.js"
 import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../utils/normalize";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm.js";
 import BackButton from "../components/BackButton.jsx";
@@ -72,6 +72,8 @@ export default function EventDetailsPage() {
 
         } catch (error) {
             console.error("Error promoting user:", error);
+            console.error("Promote error:", error.response?.status, error.response?.data);
+console.error("Remove error:", error.response?.status, error.response?.data);
             setError("❌ Unable to promote user");
         }
     };
@@ -88,6 +90,8 @@ export default function EventDetailsPage() {
 
         } catch (error) {
             console.error("Error demoting user:", error);
+            console.error("Promote error:", error.response?.status, error.response?.data);
+console.error("Remove error:", error.response?.status, error.response?.data);
             setError("❌ Unable to demote user");
         }
     };
@@ -105,8 +109,8 @@ export default function EventDetailsPage() {
         return { backgroundColor: "#f3f4f6" };
     };
 
-    const filteredMembers = members.filter((person) => person.role == 'participant');
-    const participantCount = filteredMembers.length;
+    const participants = members.filter((person) => person.role == 'participant');
+    const participantCount = participants.length;
     const organizersCount = organizers.length;
 
     const getRoleByEventId = () => myRole;
@@ -117,6 +121,23 @@ export default function EventDetailsPage() {
         setError,
         getRoleByEventId
     });
+
+    const canPromote = (person) => myRole === "organizer" && person.role === "participant" && person.id !== currentUserId;
+    const canDemote = (person) => myRole === "organizer" && person.role === "co_organizer" && person.id !== currentUserId;
+
+    const canRemove = (person) => {
+        if (person.id === currentUserId) return false;
+
+        if (myRole === "organizer") {
+            return person.role === "participant" || person.role === "co_organizer";
+        }
+
+        if (myRole === "co_organizer") {
+            return person.role === "participant";
+        }
+
+        return false;
+    };
 
     const handleDeleteEvent = async () => {
 
@@ -134,6 +155,26 @@ export default function EventDetailsPage() {
             console.error("Error deleting event:", error);
             setError("❌ Unable to delete event");
     }
+    };
+
+    
+    // Removes a member from the current event
+    const handleRemoveMember = async (userId) => { 
+        
+        const confirmed = window.confirm("Are you sure you want to remove this member from the event?");
+        if (!confirmed) return;
+
+        try {
+            setMessage("");
+            setError("");
+
+            await removeEventMember(eventId, userId);
+            setMessage("🗑️ Member removed successfully");
+            await loadData();
+        } catch (error) {
+            console.error("Error removing member:", error);
+            setError("❌ Unable to remove member");
+        }
     };
 
     if (loading) return <p>Loading...</p>;
@@ -192,19 +233,22 @@ export default function EventDetailsPage() {
                 ) : (
                     <ul style={{ listStyle: "none", padding: 0 }}>
                         {organizers.map((person) => (
-                            <li key={person.id} style={{ display: "flex",  alignItems: "center", padding: "10px 0", borderBottom: "1px solid #ddd"}}>
+                            <li key={person.id} style={{ display: "flex",  alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #ddd"}}>
 
-                                <span style={{ fontWeight: "bold" }}>{person.name}</span>
+                                <div>
+                                    <span style={{ fontWeight: "bold" }}>{person.name}</span>
 
-                                <span style={{ marginLeft: "10px", padding: "4px 8px", borderRadius: "12px", fontSize: "12px", backgroundColor: person.role === "organizer" ? "#fef3c7" : "#e0f2fe"}}>
-                                    {person.role === "organizer" ? "👑 Organizer" : "🛡️ Co-organizer"}
-                                </span>
+                                    <span
+                                        style={{ marginLeft: "10px", padding: "4px 8px", borderRadius: "12px", fontSize: "12px", backgroundColor: person.role === "organizer" ? "#fef3c7" : "#e0f2fe"}}>
+                                        {person.role === "organizer" ? "👑 Organizer" : "🛡️ Co-organizer"}
+                                    </span>
+                                </div>
 
-                                {myRole === "organizer" && person.role === "co_organizer" && person.id !== currentUserId && (
-                                    <button  onClick={() => handleDemote(person.id)}>
-                                        Demote
-                                    </button>
-                                )}
+                                <div> 
+                                    {canDemote(person) && (<button onClick={() => handleDemote(person.id)}>Demote</button> )}
+
+                                    {canRemove(person) && (<button onClick={() => handleRemoveMember(person.id)} style={{ marginLeft: "10px" }}> Remove </button>)}
+                                </div>
                             </li>
                         ))}
                     </ul>
@@ -224,31 +268,24 @@ export default function EventDetailsPage() {
                 <div style={{ marginTop: "20px" }}>
                     <h2>👥 {participantCount} Attendee{participantCount > 1 ? "s" : ""}</h2>
 
-                    {filteredMembers.length === 0 ? (
+                    {participants.length === 0 ? (
                         <p>No participants</p>
                     ) : (
                         <ul style={{ listStyle: "none", padding: 0 }}>
-                            {filteredMembers.map((person) => (
+                            {participants.map((person) => (
                                 <li key={person.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #ddd" }}>
 
                                     <div>
                                         <span style={{ fontWeight: "bold" }}>{person.name}</span>
 
-                                        <span style={{ marginLeft: "10px", padding: "4px 8px", borderRadius: "12px", fontSize: "12px", backgroundColor: person.role === "co_organizer" ? "#e0f2fe" : "#f3f4f6"}}>
-                                            {person.role === "co_organizer" ? "🛡️ Co-organizer" : "👤 Participant"}
-                                        </span>
+                                        <span style={{ marginLeft: "10px", padding: "4px 8px", borderRadius: "12px", fontSize: "12px", backgroundColor: "#f3f4f6" }}>👤 Participant</span>
                                     </div>
 
-                                    {myRole === "organizer" && person.id !== currentUserId && (
                                     <div>
-                                        {person.role === "participant" && (
-                                            <button 
-                                                onClick={() => handlePromote(person.id)}
-                                                style={{ marginLeft: "10px" }}>
-                                                Promote
-                                            </button>
-                                        )}
-                                    </div>)}
+                                        {canPromote(person) && (<button onClick={() => handlePromote(person.id)}>Promote</button>)}
+
+                                        {canRemove(person) && (<button onClick={() => handleRemoveMember(person.id)} style={{ marginLeft: "10px" }}> Remove </button>)}
+                                    </div>
                                 </li>
                             ))}
                         </ul>

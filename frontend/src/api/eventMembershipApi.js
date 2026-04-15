@@ -18,5 +18,5 @@ export const getEventOrganizers = (eventId) => api.get(`/events/${eventId}/organ
 // Updates a member's role in an event
 export const updateMemberRole = (eventId, userId, newRole) => api.put(`/events/${eventId}/members/${userId}/role`, { newRole });
 
-// Removes a member from an event (not yet included in frontend)
+// Removes a member from an event
 export const removeEventMember = (eventId, userId) => api.delete(`/events/${eventId}/members/${userId}`); 

@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 
 const eventMembershipController = require('../controllers/eventMembershipController');
-const { authenticateToken } = require('../middlewares/authMiddleware');
+const { authenticateToken } = require('../middlewares/authenticateToken');
 const validateRequest = require('../middlewares/validateRequest');
-const { requireEventRole, authorizeRoleChange } = require('../middlewares/requireEventRole');
+const { requireEventRole } = require('../middlewares/requireEventRole');
+const { authorizeRoleChange, authorizeMemberRemoval } = require('../middlewares/authorizeEvent')
 const { updateMemberRoleValidator, removeMemberValidator } = require('../validators/eventRoleValidator');
 
 
@@ -23,10 +24,10 @@ router.get('/:eventId/members', authenticateToken, eventMembershipController.get
 // ROUTE GET - Get all organizers and co_organizers of an event
 router.get('/:eventId/organizers', eventMembershipController.getOrganizers);
 
-// ROUTE PUT - Organizer or co_organizer can change the role of a member
-router.put('/:eventId/members/:userId/role', authenticateToken, updateMemberRoleValidator, validateRequest, requireEventRole(['organizer', 'co_organizer']), authorizeRoleChange, eventMembershipController.updateMemberRole);
+// ROUTE PUT - Only organizer can change the role of a member
+router.put('/:eventId/members/:userId/role', authenticateToken, updateMemberRoleValidator, validateRequest, requireEventRole(['organizer']), authorizeRoleChange, eventMembershipController.updateMemberRole);
 
 // ROUTE DELETE - Organizer or co_organizer can remove a member from the event
-router.delete('/:eventId/members/:userId', authenticateToken, removeMemberValidator, validateRequest, requireEventRole(['organizer', 'co_organizer']), eventMembershipController.removeMember);
+router.delete('/:eventId/members/:userId', authenticateToken, removeMemberValidator, validateRequest, requireEventRole(['organizer', 'co_organizer']), authorizeMemberRemoval, eventMembershipController.removeMember);
 
 module.exports = router;

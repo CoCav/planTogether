@@ -6,12 +6,14 @@
 ![JWT](https://img.shields.io/badge/Auth-JWT-yellow)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-This is the **backend application** of PlanTogether, built with **Node.js, Express and PostgreSQL**. 
+This is the **backend application** of PlanTogether, built with **Node.js, Express and PostgreSQL**.
 
-PlanTogether is a RESTful API that enables users to create, manage, and participate.
+PlanTogether is a RESTful API that enables users to create, manage, and participate in collaborative events through a **role-based system**.
 
-Users can create, join and organize events through a **role-based system** (`organizer`, `co_organizer`, `participant`).  
-The API includes **secure authentication, advanced permissions and a modular architecture** designed for maintainable backend development.
+Users can create, join and organize events with different permission levels (`organizer`, `co_organizer`, `participant`).  
+The API includes **secure authentication, advanced authorization logic and a modular architecture** designed for maintainability and scalability.
+
+---
 
 # API Overview
 
@@ -60,7 +62,7 @@ The API handles:
 - Retrieve a specific event
 - Update events *(organizer or co_organizer)*
 - Delete events *(organizer only)*
-- Filter by type, theme and other criteria
+- Advanced filtering (type, theme, location, date)
 
 Each event automatically assigns the creator as **organizer**.
 
@@ -87,15 +89,60 @@ co_organizer
 participant
 ````
 
-### Permissions
+## 🔐 Role Hierarchy & Permissions
 
-| Role | Permissions |
-|-----|-------------|
-| Organizer | Full control of event |
-| Co_organizer | Manage participants and update event |
-| Participant | Join and leave events |
+The API enforces a strict role hierarchy:
+````
+organizer > co_organizer > participant
+````
 
-Role permissions are enforced via middleware.
+### Organizer capabilities
+
+- Full control over the event
+- Promote participants to co_organizers
+- Demote co_organizers
+- Remove participants and co_organizers
+
+### Co-organizer capabilities
+
+- Remove participants from an event
+
+### Participant capabilities
+
+- Join events
+- Leave events
+
+---
+
+## 🚫 Protected Actions
+
+The API prevents invalid or unsafe operations:
+
+- Cannot change the role of the organizer
+- Cannot promote a user to organizer
+- Cannot remove the organizer
+- Co_organizers cannot manage other co_organizers
+
+---
+
+## 🧠 Authorization System
+
+The backend uses a layered middleware system:
+
+- **Authentication**
+  - `authenticateToken` verifies JWT tokens
+
+- **Role validation**
+  - `requireEventRole` checks the user's role in an event
+
+- **Business rules**
+  - `authorizeRoleChange` enforces role change logic
+  - `authorizeMemberRemoval` enforces member removal rules
+
+This ensures a clear separation between:
+- authentication
+- access control
+- business logic
 
 ---
 
@@ -105,8 +152,8 @@ Organizers and co_organizers can:
 
 - View all members of an event
 - View organizers / co_organizers
-- Change a user's role
-- Remove a member from an event
+- Change a user's role *(organizer only)*
+- Remove a member from an event *(with role restrictions)*
 
 ---
 
@@ -161,7 +208,7 @@ The API implements several security mechanisms:
 - Role-based permission checks (organizer / co_organizer / participant)
 - Protected routes
 - Password update requires current password verification
-- Sensitive fields (password) excluded by default using Sequelize scopes
+- Sensitive fields (password) excluded via Sequelize scopes
 - SQL injection protection through Sequelize queries
 - Centralized error handler
 
@@ -182,8 +229,9 @@ project-root
 │   │   └── eventMembershipController.js
 │   │
 │   ├── middlewares
-│   │   ├── authMiddleware.js
+│   │   ├── authenticateToken.js
 │   │   ├── requireEventRole.js
+│   │   ├── authorizeEvent.js
 │   │   ├── validateRequest.js
 │   │   └── errorHandler.js
 │   │
@@ -226,16 +274,9 @@ project-root
 
 # Installation
 
-Clone the repository:
-
 ```
 git clone https://github.com/CoCav/planTogether.git
 cd plantogether
-```
-
-Install dependencies:
-
-```
 npm install
 ```
 
@@ -320,11 +361,11 @@ DELETE /api/events/:eventId
 ## Event Membership
 
 ```
+GET /api/events/my-events
 POST /api/events/:eventId/members/join
 DELETE /api/events/:eventId/members/leave
 GET /api/events/:eventId/members
 GET /api/events/:eventId/organizers
-GET /api/users/me/events
 PUT /api/events/:eventId/members/:userId/role
 DELETE /api/events/:eventId/members/:userId
 ```
@@ -332,22 +373,21 @@ DELETE /api/events/:eventId/members/:userId
 # 🚀 Recent Improvements
 
 - Added secure password update flow with current password verification
-- Improved authentication system with session-based token handling
-- Implemented dual storage strategy (sessionStorage / localStorage)
-- Added "Remember me" functionality
-- Improved frontend UX for password inputs (show/hide toggle)
-- Refactored authentication logic for better maintainability
+- Refactored middleware architecture (authentication vs authorization separation)
+- Introduced dedicated authorization middlewares for role change and member removal
+- Improved role hierarchy enforcement and permission consistency
+- Fixed role update logic (co_organizer promotion support)
 
 # 📌 Project Status
 
 | Component | Status |
 |-----------|--------|
 | Backend API | Fully functional |
-| Architecture | Modular |
+| Architecture | Modular & scalable |
 | Authentication | Fully Implemented (login, logout, profile, password update) |
-| Authorization | Role-based |
+| Authorization | Advanced role-based system |
 | Testing | Completed (28 tests) |
-| Frontend | Planned |
+| Frontend | In progress |
 
 # Future Improvements
 

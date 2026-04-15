@@ -17,7 +17,7 @@ It provides a user interface to interact with the PlanTogether API, allowing use
 The frontend allows users to:
 
 - authenticate securely using JWT
-- browse and view events
+- browse and manage events
 - join and leave events
 - manage roles within events (organizer / co-organizer / participant)
 - update their profile and password
@@ -65,6 +65,7 @@ The application communicates with the backend API via **Axios**.
 - View all events
 - View event details
 - Create events
+- Update events *(organizer / co_organizer)*
 - Delete events *(organizer only)*
 
 ---
@@ -87,18 +88,29 @@ co_organizer
 participant
 ````
 
-UI behavior adapts based on role:
-- organizer → full control
-- co-organizer → partial control
-- participant → limited actions
+### UI behavior dynamically adapts:
+
+#### Organizer
+- Edit event
+- Promote participants
+- Demote co_organizers
+- Remove participants and co_organizers
+
+#### Co-organizer
+- Remove participants
+
+#### Participant
+- Join / leave events only
 
 ---
 
 ## 🔘 Membership Actions
 
 - Join / Leave buttons with dynamic state
-- Prevent organizer from leaving event
-- Disable invalid actions in UI
+- Promote / Demote actions
+- Remove member functionality
+- UI restrictions based on permissions
+- Prevent invalid actions (organizer leaving, etc.)
 
 ---
 
@@ -116,7 +128,10 @@ Custom utilities ensure consistent frontend data:
 
 - Global auth state using Context API
 - Local component state with React hooks
-- Reusable logic with custom hooks (e.g. `useEventMembershipActions`)
+- - Reusable logic with custom hooks:
+  - `useEventActions`
+  - `useEventActionsWithConfirm`
+
 
 ---
 
@@ -124,8 +139,9 @@ Custom utilities ensure consistent frontend data:
 
 - Back navigation component
 - Password visibility toggle (show / hide)
+- Confirmation dialogs for critical actions
 - Dynamic feedback messages (success / error)
-- Conditional rendering based on auth and roles
+- Conditional rendering based on roles and auth state
 
 ---
 
@@ -135,8 +151,8 @@ Custom utilities ensure consistent frontend data:
 2. Token is stored in:
    - `sessionStorage` (default)
    - `localStorage` (if "Remember me" is enabled)
-3. Axios attaches token to every request
-4. Protected routes verify authentication state
+3. Axios interceptor attaches token to every request
+4. Protected routes validate authentication state
 5. Logout clears all stored tokens
 
 ---
@@ -149,7 +165,8 @@ src
 ├── api
 │   ├── axios.js
 │   ├── authApi.js
-│   └── eventApi.js
+│   ├── eventApi.js
+│   └── eventMembershipApi.js
 │
 ├── components
 │   ├── BackButton.jsx
@@ -161,7 +178,8 @@ src
 │   └── useAuth.js
 │
 ├── hooks
-│   └── useEventMembershipActions.js
+│   ├── useEventActions.jsx
+│   └── useEventActionsWithConfirm.js
 │
 ├── pages
 │   ├── HomePage.jsx
@@ -170,7 +188,8 @@ src
 │   ├── ProfilePage.jsx
 │   ├── createEventPage.jsx
 │   ├── EventsPage.jsx
-│   └── EventDetailsPage.jsx
+│   ├── EventsDetailsPage.jsx
+│   └── EditEventPage.jsx
 │
 ├── routes
 │   └── AppRouter.jsx
@@ -232,7 +251,7 @@ http://localhost:3000/api
 All requests are handled via Axios with an interceptor that:
 
 - automatically attaches JWT token
-- handles authentication headers
+- centralizes request configuration
 
 ---
 
@@ -248,13 +267,13 @@ All requests are handled via Axios with an interceptor that:
 
 # 🚀 Recent Improvements
 
-- Added "Remember me" authentication option
-- Switched to session-based token storage
-- Implemented password change functionality
-- Added password visibility toggle
-- Improved event participation UX
-- Refactored API data normalization
-- Introduced reusable hooks and components
+- Added event editing functionality
+- Implemented role-based actions (promote, demote, remove)
+- Refactored API layer (eventApi / eventMembershipApi separation)
+- Introduced reusable hooks for membership logic
+- Improved role-based UI consistency
+- Added confirmation handling for destructive actions
+- Improved authentication flow and token handling
 
 ---
 
@@ -265,7 +284,7 @@ All requests are handled via Axios with an interceptor that:
 | Frontend UI | Functional |
 | Authentication | Fully implemented |
 | Event Management | Complete |
-| Role System | Integrated |
+| Role System | Advanced (UI + backend aligned) |
 | UX Improvements | Ongoing |
 | API Integration | Stable |
 
@@ -273,7 +292,7 @@ All requests are handled via Axios with an interceptor that:
 
 # Future Improvements
 
-- UI redesign (modern layout)
+- UI redesign (modern layout / CSS system)
 - "My Events" dashboard
 - User avatars
 - Notifications system

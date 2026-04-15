@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/useAuth.js";
 import { getAllEvents } from "../api/eventApi";
 import { getNormalizedEvents } from "../utils/normalize.js";
-import { useAuth } from "../context/useAuth.js";
 
 export default function HomePage() {
     const { user } = useAuth();

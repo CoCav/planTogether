@@ -9,7 +9,7 @@ export const getEventById = (eventId) => api.get(`/events/${eventId}`);
 // Creates a new event
 export const createEvent = (eventData) => api.post("/events", eventData);
 
-// Updates an event by its ID (not yet used in frontend)
+// Updates an event by its ID
 export const updateEvent = (eventId, eventData) => api.put(`/events/${eventId}`, eventData);
 
 // Deletes an event by its ID

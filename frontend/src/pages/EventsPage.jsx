@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { getAllEvents } from "../api/eventApi";
-import { getMyEvents } from "../api/eventMembershipApi.js";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import { getAllEvents } from "../api/eventApi";
+import { getMyEvents } from "../api/eventMembershipApi.js";
 import { getNormalizedEvents, getMyEventsWithRole } from "../utils/normalize.js";
 import  useEventActionsWithConfirm  from "../hooks/useEventActionsWithConfirm.js";
 import BackButton from "../components/BackButton.jsx";

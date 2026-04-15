@@ -7,6 +7,7 @@ import ProfilePage from "../pages/ProfilePage.jsx";
 import EventsPage from "../pages/EventsPage";
 import CreateEventPage from "../pages/createEventPage.jsx";
 import EventDetailsPage from "../pages/EventDetailsPage";
+import EditEventPage from "../pages/EditEventPage.jsx";
 
 function ProtectedRoute({ children }) {
 
@@ -43,6 +44,7 @@ export default function AppRouter() {
             />
                 
             <Route path="/events/:eventId" element={<EventDetailsPage />} />
+            <Route path="/events/:eventId/edit" element={<EditEventPage />} />
         </Routes>
     );
 }

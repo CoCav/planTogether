@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/useAuth";
 import { getEventById, deleteEvent } from "../api/eventApi";
 import { getEventMembers, getEventOrganizers, updateMemberRole } from "../api/eventMembershipApi.js"
 import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../utils/normalize";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm.js";
-import { useAuth } from "../context/useAuth";
 import BackButton from "../components/BackButton.jsx";
 
 export default function EventDetailsPage() {
@@ -165,6 +165,14 @@ export default function EventDetailsPage() {
                         </button>
         
                     </div>)} 
+
+                    <div style={{ marginTop: "10px", marginLeft: "30px" }}>
+                        {(myRole === "organizer" || myRole === "co_organizer") && (
+                            <button onClick={() => navigate(`/events/${eventId}/edit`)}>
+                                Edit Event
+                            </button>
+                        )}
+                    </div>
                 </div>
             )}
 
@@ -184,7 +192,7 @@ export default function EventDetailsPage() {
                 ) : (
                     <ul style={{ listStyle: "none", padding: 0 }}>
                         {organizers.map((person) => (
-                            <li key={person.id} style={{ display: "flex", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #ddd"}}>
+                            <li key={person.id} style={{ display: "flex",  alignItems: "center", padding: "10px 0", borderBottom: "1px solid #ddd"}}>
 
                                 <span style={{ fontWeight: "bold" }}>{person.name}</span>
 
@@ -192,6 +200,11 @@ export default function EventDetailsPage() {
                                     {person.role === "organizer" ? "👑 Organizer" : "🛡️ Co-organizer"}
                                 </span>
 
+                                {myRole === "organizer" && person.role === "co_organizer" && person.id !== currentUserId && (
+                                    <button  onClick={() => handleDemote(person.id)}>
+                                        Demote
+                                    </button>
+                                )}
                             </li>
                         ))}
                     </ul>
@@ -229,20 +242,12 @@ export default function EventDetailsPage() {
                                     {myRole === "organizer" && person.id !== currentUserId && (
                                     <div>
                                         {person.role === "participant" && (
-                                            <button
+                                            <button 
                                                 onClick={() => handlePromote(person.id)}
                                                 style={{ marginLeft: "10px" }}>
                                                 Promote
                                             </button>
                                         )}
-
-                                            {person.role === "co_organizer" && (
-                                                <button
-                                                    onClick={() => handleDemote(person.id)}
-                                                    style={{ marginLeft: "10px" }}>
-                                                    Demote
-                                                </button>
-                                            )}
                                     </div>)}
                                 </li>
                             ))}

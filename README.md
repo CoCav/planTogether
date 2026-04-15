@@ -1,5 +1,15 @@
 # PlanTogether
 
+![Node.js](https://img.shields.io/badge/Backend-Node.js-green)
+![Express](https://img.shields.io/badge/Framework-Express-lightgrey)
+![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue)
+![Sequelize](https://img.shields.io/badge/ORM-Sequelize-orange)
+![React](https://img.shields.io/badge/Frontend-React-blue)
+![Vite](https://img.shields.io/badge/Build-Vite-purple)
+![Axios](https://img.shields.io/badge/HTTP-Axios-green)
+![JWT](https://img.shields.io/badge/Auth-JWT-yellow)
+![License](https://img.shields.io/badge/license-MIT-lightgrey)
+
 PlanTogether is a **full-stack web application** designed to manage collaborative events.
 
 It allows users to **create, organize, and participate in events** through a **role-based system** (`organizer`, `co_organizer`, `participant`) with secure authentication.
@@ -19,11 +29,12 @@ PlanTogether enables users to:
 - update their profile and password
 - manage their session with flexible authentication ("Remember me")
 
-The system enforces permissions both:
-- on the **backend** (middleware & role checks)
-- and on the **frontend** (dynamic UI behavior)
+The system enforces permissions on both:
 
-This ensures a consistent and secure user experience across the application.
+- the **backend** (middleware & authorization rules)
+- the **frontend** (dynamic UI rendering)
+
+This ensures a consistent and secure user experience.
 
 ---
 
@@ -31,8 +42,9 @@ This ensures a consistent and secure user experience across the application.
 
 - **Backend** → RESTful API (Node.js, Express, PostgreSQL)
 - **Frontend** → React application (Vite, Axios, Context API)
-- **Authentication** → JWT-based with session or persistent storage
-- **Database** → relational model with role-based event memberships
+- **Authentication** → JWT (sessionStorage / localStorage)
+- **Authorization** → Role-based system with middleware layers
+- **Database** → relational model with event memberships
 
 ---
 
@@ -79,7 +91,7 @@ npm install
 npm run dev
 ```
 
-The backend runs on:
+Runs on:
 
 ```
 http://localhost:3000
@@ -95,7 +107,7 @@ npm install
 npm run dev
 ```
 
-The frontend runs on:
+Runs on:
 
 ```
 http://localhost:5173
@@ -144,23 +156,60 @@ co_organizer
 participant
 ````
 
+### Role hierarchy
+
+````
+organizer > co_organizer > participant
+````
+
 Permissions:
 
-- **Organizer** → full control
-- **Co-organizer** → manage participants & edit events
-- **Participant** → limited actions
+- **Organizer**
+  - Full control over events
+  - Promote / demote users
+  - Remove members
+
+- **Co-organizer**
+  - Manage participants
+  - Remove participants
+
+- **Participant**
+  - Join / leave events
+
+---
+
+### 🧠 Authorization Architecture
+
+The application uses a layered authorization system:
+
+- **Authentication middleware**
+  - verifies JWT tokens
+
+- **Role validation**
+  - ensures user belongs to event
+
+- **Business rule enforcement**
+  - role change restrictions
+  - member removal rules
+
+This separation improves:
+- security
+- maintainability
+- scalability
 
 ---
 
 ### Frontend Features
 
 - Protected routes
-- Dynamic UI based on authentication and roles
-- Join / Leave buttons with state management
-- Password visibility toggle (show / hide)
+- Dynamic UI based on roles
+- Join / Leave / Promote / Demote / Remove actions
+- Event editing interface
+- Password visibility toggle
 - Back navigation component
 - Real-time profile updates
-- Data normalization for clean API handling
+- Data normalization utilities
+- Reusable custom hooks
 
 ---
 
@@ -171,8 +220,8 @@ cd backend
 npm test
 ```
 
-✔ 28 tests passing  
-✔ Covers authentication, events, memberships, permissions, and edge cases
+✔ 28 tests passing
+✔ Covers authentication, events, memberships, permissions and edge cases
 
 ---
 
@@ -182,19 +231,20 @@ npm test
 - Password hashing with bcrypt
 - Role-based authorization
 - Input validation (express-validator)
-- Sensitive fields excluded using Sequelize scopes
+- Sensitive data protection (Sequelize scopes)
 - Protected API routes
 
 ---
 
 ## 🚀 Recent Improvements
 
-- Added secure password update flow
-- Implemented session-based token storage
-- Added "Remember me" authentication option
-- Improved frontend UX (password toggle, navigation)
-- Refactored authentication logic
-- Enhanced data normalization in frontend
+- Added event editing functionality
+- Implemented role management (promote / demote / remove)
+- Refactored middleware architecture (auth vs authorization)
+- Introduced dedicated authorization layers
+- Improved frontend UX (confirmations, dynamic UI)
+- Enhanced token handling (session vs persistent storage)
+- Improved API data normalization
 
 ---
 
@@ -225,9 +275,9 @@ npm test
 
 - Designing and structuring a RESTful API
 - Managing relational data (many-to-many relationships)
-- Implementing role-based permissions
+- Implementing role-based authorization
 - Securing applications with JWT
-- Handling authentication state in React
+- Managing authentication state in React
 - Building reusable frontend logic with hooks
 - Writing backend tests with Jest & Supertest
-- Managing real-world edge cases in business logic
+- Handling real-world business logic and edge cases

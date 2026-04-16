@@ -14,3 +14,6 @@ export const updateEvent = (eventId, eventData) => api.put(`/events/${eventId}`,
 
 // Deletes an event by its ID
 export const deleteEvent = (eventId) => api.delete(`/events/${eventId}`);
+
+// Filters events
+export const getFilteredEvents = (filters) => api.get("/events/filtered", { params: filters });

@@ -70,6 +70,7 @@ const getFilteredEvents = async (query) => {
     try {
 
          const {
+            date,
             startDate,
             endDate,
             creatorId,
@@ -85,8 +86,28 @@ const getFilteredEvents = async (query) => {
         
         const whereConditions = {};
 
-        //  Filter by date ranges
-        if (startDate || endDate) {
+        // Filter by exact date
+        if (date) {
+            const exactDate = new Date(date);
+
+            if (Number.isNaN(exactDate.getTime())) {
+                const error = new Error('Invalid date');
+                error.statusCode = 400;
+                throw error;
+            }
+
+            const nextDay = new Date(exactDate);
+            nextDay.setDate(nextDay.getDate() + 1);
+
+            whereConditions.date = {
+                [Op.gte]: exactDate,
+                [Op.lt]: nextDay,
+            };
+            
+       
+        } 
+        // Filter by range date
+        else if (startDate || endDate) {
             const start = startDate ? new Date(startDate) : null;
             const end = endDate ? new Date(endDate) : null;
 
@@ -95,6 +116,7 @@ const getFilteredEvents = async (query) => {
                 error.statusCode = 400;
                 throw error;
             }
+
             if (end && Number.isNaN(end.getTime())) {
                 const error = new Error('Invalid endDate');
                 error.statusCode = 400;

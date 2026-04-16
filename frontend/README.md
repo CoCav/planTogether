@@ -63,7 +63,7 @@ The application communicates with the backend API via **Axios**.
 ## 📅 Event Management
 
 - View all events
-- View event details
+- Browse event details with advanced filtering (search in title and description, type, theme, location date)
 - Create events
 - Update events *(organizer / co_organizer)*
 - Delete events *(organizer only)*
@@ -75,6 +75,28 @@ The application communicates with the backend API via **Axios**.
 - Join events
 - Leave events *(except organizer)*
 - Role-based UI behavior
+
+---
+
+## 🔍 Event Filtering
+
+The application provides an advanced filtering system for events.
+
+Users can filter events using:
+
+- keyword search (title and description)
+- type
+- theme
+- location
+- exact date
+- date range (startDate / endDate)
+
+### UX Behavior
+
+- If an exact date is selected, date range inputs are automatically disabled
+- If no exact date is provided, users can filter using a date range
+- Filters can be reset to reload all events
+- Multiple filters can be combined for precise results
 
 ---
 
@@ -128,7 +150,7 @@ Custom utilities ensure consistent frontend data:
 
 - Global auth state using Context API
 - Local component state with React hooks
-- - Reusable logic with custom hooks:
+- Reusable logic with custom hooks:
   - `useEventActions`
   - `useEventActionsWithConfirm`
 
@@ -140,6 +162,7 @@ Custom utilities ensure consistent frontend data:
 - Back navigation component
 - Password visibility toggle (show / hide)
 - Confirmation dialogs for critical actions
+- Smart filtering UX (exact date vs date range handlings)
 - Dynamic feedback messages (success / error)
 - Conditional rendering based on roles and auth state
 
@@ -274,6 +297,9 @@ All requests are handled via Axios with an interceptor that:
 - Improved role-based UI consistency
 - Added confirmation handling for destructive actions
 - Improved authentication flow and token handling
+- Added advanced event filtering system (search, type, theme, location, date)
+- Implemented exact date and date range filtering with UX logic
+- Aligned frontend filtering with backend query parameters
 
 ---
 

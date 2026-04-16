@@ -159,19 +159,34 @@ Organizers and co_organizers can:
 
 ## Event Search & Filtering
 
-The API supports advanced filtering:
+The API supports advanced filtering using query parameters:
 
-- Filter by `date`
-- Filter by `creator`
-- Filter by `type`
-- Filter by `theme`
-- Filter by `location`
-- Keyword search in `title` and `description`
+- `search` → keyword search in title and description
+- `type` → filter by event type
+- `theme` → filter by event theme
+- `location` → filter by event location
+- `startDate` → filter events starting from a specific date
+- `endDate` → filter events up to a specific date
+- `date` → filter events for an exact day (overrides startDate/endDate if provided)
 
 Additional features:
 
 - Sorting (`date`, `title`, `creatorId`)
-- Pagination
+- Pagination (`page`, `pageSize`)
+
+### Examples
+
+Filter events using keyword and date range:
+
+```
+GET /api/events/filtered?search=party&type=music&startDate=2026-04-01&endDate=2026-04-30
+```
+
+Filter events for an exact date:
+
+```
+GET /api/events/filtered?date=2026-04-16
+```
 
 ---
 
@@ -377,6 +392,9 @@ DELETE /api/events/:eventId/members/:userId
 - Introduced dedicated authorization middlewares for role change and member removal
 - Improved role hierarchy enforcement and permission consistency
 - Fixed role update logic (co_organizer promotion support)
+- Added advanced event filtering (search, type, theme, location, date, date range)
+- Introduced exact date filtering with priority over date range
+- Improved frontend/backend consistency for filtering queries
 
 # 📌 Project Status
 

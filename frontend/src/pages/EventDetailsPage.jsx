@@ -173,6 +173,8 @@ console.error("Remove error:", error.response?.status, error.response?.data);
             await loadData();
         } catch (error) {
             console.error("Error removing member:", error);
+            console.error("Remove error status:", error.response?.status);
+            console.error("Remove error data:", error.response?.data);
             setError("❌ Unable to remove member");
         }
     };

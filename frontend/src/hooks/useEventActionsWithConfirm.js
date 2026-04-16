@@ -5,7 +5,6 @@ export default function useEventActionsWithConfirm({
     setMessage,
     setError,
     getRoleByEventId,
-    confirmLeaveMessage = "Are you sure you want to leave this event?",
   }) {
       const { handleJoinEvent, handleLeaveEvent } = useEventActions({
         loadData,
@@ -15,9 +14,12 @@ export default function useEventActionsWithConfirm({
       });
 
     const handleLeaveEventWithConfirm = async (eventId) => {
-      const confirmed = window.confirm(confirmLeaveMessage);
-      if (!confirmed) return;
+      const currentRole = getRoleByEventId(eventId);
 
+      const confirmLeaveMessage = currentRole === "co_organizer" ? "Are you sure you want to leave this event? You will lose your co-organizer role and will rejoin later as a participant." : "Are you sure you want to leave this event?";
+      const confirmed = window.confirm(confirmLeaveMessage);
+
+      if (!confirmed) return;
       await handleLeaveEvent(eventId);
     };
 

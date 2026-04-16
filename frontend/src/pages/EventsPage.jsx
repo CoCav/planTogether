@@ -68,7 +68,7 @@ export default function EventsPage() {
             }
         }, [message, error]);
 
-        const getRoleByEventId = (eventId) => myEventIds[eventId];
+        const getRoleByEventId = (eventId) => myEventIds[eventId] || null ;
 
         const { handleJoinEvent, handleLeaveEvent } = useEventActionsWithConfirm({
             loadData,
@@ -82,7 +82,6 @@ export default function EventsPage() {
             if (role === "co_organizer") return "🛡️ Co-organizer";
             return "👤 Participant";
         };
-
 
         
         if (loading) return <p>Loading events...</p>;

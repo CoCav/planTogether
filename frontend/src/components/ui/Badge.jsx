@@ -1,5 +1,4 @@
 
-
 export default function Badge({ role, className = "" }) {
     if (!role) return null;
 

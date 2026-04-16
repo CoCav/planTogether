@@ -5,7 +5,11 @@ import { getEventById, deleteEvent } from "../api/eventApi";
 import { getEventMembers, getEventOrganizers, updateMemberRole, removeEventMember } from "../api/eventMembershipApi.js"
 import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../utils/normalize";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm.js";
+
 import BackButton from "../components/ui/BackButton.jsx";
+import Button from "../components/ui/Button.jsx";
+import Card from "../components/ui/Card.jsx";
+import Badge from "../components/ui/Badge.jsx";
 
 export default function EventDetailsPage() {
     const { eventId } = useParams();
@@ -25,7 +29,6 @@ export default function EventDetailsPage() {
     const isMember = !!myRole;
 
     const loadData = async () => {
-
         try {
             setError("");
 
@@ -61,7 +64,6 @@ export default function EventDetailsPage() {
     }, [eventId, user, authLoading]);
 
     const handlePromote = async (userId) => {
-
         try {
             setMessage("");
             setError("");
@@ -79,7 +81,6 @@ console.error("Remove error:", error.response?.status, error.response?.data);
     };
 
     const handleDemote = async (userId) => {
-
         try {
             setMessage("");
             setError("");
@@ -90,23 +91,8 @@ console.error("Remove error:", error.response?.status, error.response?.data);
 
         } catch (error) {
             console.error("Error demoting user:", error);
-            console.error("Promote error:", error.response?.status, error.response?.data);
-console.error("Remove error:", error.response?.status, error.response?.data);
             setError("❌ Unable to demote user");
         }
-    };
-
-    const getRoleLabel = (role) => {
-        if (role === "organizer") return "👑 Organizer";
-        if (role === "co_organizer") return "🛡️ Co-organizer";
-        if (role === "participant") return "👤 Participant";
-        return null;
-    };
-
-    const getRoleStyle = (role) => {
-        if (role === "organizer") return { backgroundColor: "#fef3c7" };
-        if (role === "co_organizer") return { backgroundColor: "#e0f2fe" };
-        return { backgroundColor: "#f3f4f6" };
     };
 
     const participants = members.filter((person) => person.role == 'participant');
@@ -156,7 +142,6 @@ console.error("Remove error:", error.response?.status, error.response?.data);
             setError("❌ Unable to delete event");
     }
     };
-
     
     // Removes a member from the current event
     const handleRemoveMember = async (userId) => { 
@@ -179,121 +164,167 @@ console.error("Remove error:", error.response?.status, error.response?.data);
         }
     };
 
-    if (loading) return <p>Loading...</p>;
-    if (!event) return <p>Event not found</p>;
+    if (loading) {
+        return (
+            <div className="container page-section">
+                <BackButton fallbackPath="/events" label="← Back to Events" />
+                <p className="status-text">Loading event details...</p>
+            </div>
+        );
+    }
+
+    if (!event) {
+        return (
+            <div className="container page-section">
+                <BackButton fallbackPath="/events" label="← Back to Events" />
+                <Card>
+                    <p className="empty-state">Event not found.</p>
+                </Card>
+            </div>
+        );
+    }
 
     return (
-        <div>
-
+        <div className="container page-section">
             <BackButton fallbackPath="/events" label="← Back to Events" />
 
-            <h1>{event.title}</h1>
-
-            {message && <p style={{ color: "green" }}>{message}</p>}
-            {error && <p style={{ color: "red" }}>{error}</p>}
-
-
-            {user && (
-                <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
-                    {!isMember ? (
-                        <button onClick={() => handleJoinEvent(event.id)}>Join Event</button>
-                    ) : myRole !== "organizer" ? (
-                        <button onClick={() => handleLeaveEvent(event.id)}>Leave Event</button>
-                    ) : null}
-                    
-                    {myRole === "organizer" && (
-                    <div style={{ marginTop: "10px" }}>
-                        <button onClick={handleDeleteEvent}>
-                            Delete Event
-                        </button>
-        
-                    </div>)} 
-
-                    <div style={{ marginTop: "10px", marginLeft: "30px" }}>
-                        {(myRole === "organizer" || myRole === "co_organizer") && (
-                            <button onClick={() => navigate(`/events/${eventId}/edit`)}>
-                                Edit Event
-                            </button>
-                        )}
-                    </div>
+            <div className="page-header">
+                <div>
+                    <h1 className="page-title">{event.title}</h1>
+                    <p className="page-subtitle">View event details, manage attendance, and organize members.</p>
                 </div>
-            )}
-
-            
-
-            {currentUserId && myRole && (
-                <p style={{ marginTop: "10px", padding: "8px 12px", backgroundColor: "#f9fafb", borderRadius: "8px",  display: "inline-block", fontWeight: "bold", ...getRoleStyle(myRole) }}>
-                    Your role in this event: {getRoleLabel(myRole)}
-                </p>
-            )}
-
-            <div style={{ marginTop: "20px" }}>
-                <h2>👑 {organizersCount} Organizer{organizersCount > 1 ? "s" : ""}</h2>
-
-                {organizers.length === 0 ? (
-                    <p>No organizers</p>
-                ) : (
-                    <ul style={{ listStyle: "none", padding: 0 }}>
-                        {organizers.map((person) => (
-                            <li key={person.id} style={{ display: "flex",  alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #ddd"}}>
-
-                                <div>
-                                    <span style={{ fontWeight: "bold" }}>{person.name}</span>
-
-                                    <span
-                                        style={{ marginLeft: "10px", padding: "4px 8px", borderRadius: "12px", fontSize: "12px", backgroundColor: person.role === "organizer" ? "#fef3c7" : "#e0f2fe"}}>
-                                        {person.role === "organizer" ? "👑 Organizer" : "🛡️ Co-organizer"}
-                                    </span>
-                                </div>
-
-                                <div> 
-                                    {canDemote(person) && (<button onClick={() => handleDemote(person.id)}>Demote</button> )}
-
-                                    {canRemove(person) && (<button onClick={() => handleRemoveMember(person.id)} style={{ marginLeft: "10px" }}> Remove </button>)}
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                )}
             </div>
 
-            <p><strong>Description:</strong> {event.description}</p>
-            <p><strong>Date:</strong> {new Date(event.date).toLocaleDateString()}</p>
-            <p><strong>Location:</strong> {event.location}</p>
-            <p><strong>Theme:</strong> {event.theme}</p>
-            <p><strong>Type:</strong> {event.type}</p>
+            {message && <div className="alert alert-success">{message}</div>}
+            {error && <div className="alert alert-danger">{error}</div>}
 
-            {!user && <p>Login to view participants.</p>}
+            <Card className="event-details-card">
+                <div className="event-details-header">
+                    <div className="event-details-main">
+                        <h2 className="section-title">Event Overview</h2>
+                        <p className="event-description">{event.description || "No description provided."}</p>
+                    </div>
 
-
-            {user && (
-                <div style={{ marginTop: "20px" }}>
-                    <h2>👥 {participantCount} Attendee{participantCount > 1 ? "s" : ""}</h2>
-
-                    {participants.length === 0 ? (
-                        <p>No participants</p>
-                    ) : (
-                        <ul style={{ listStyle: "none", padding: 0 }}>
-                            {participants.map((person) => (
-                                <li key={person.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #ddd" }}>
-
-                                    <div>
-                                        <span style={{ fontWeight: "bold" }}>{person.name}</span>
-
-                                        <span style={{ marginLeft: "10px", padding: "4px 8px", borderRadius: "12px", fontSize: "12px", backgroundColor: "#f3f4f6" }}>👤 Participant</span>
-                                    </div>
-
-                                    <div>
-                                        {canPromote(person) && (<button onClick={() => handlePromote(person.id)}>Promote</button>)}
-
-                                        {canRemove(person) && (<button onClick={() => handleRemoveMember(person.id)} style={{ marginLeft: "10px" }}> Remove </button>)}
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
+                    {currentUserId && myRole && (
+                        <div className="role-summary">
+                            <span className="role-summary-label">Your role</span>
+                            <Badge role={myRole} />
+                        </div>
                     )}
                 </div>
-            )}               
+
+                {user && (
+                    <div className="action-bar">
+                        {!isMember ? (
+                            <Button type="button" onClick={() => handleJoinEvent(event.id)}>Join Event</Button>
+                        ) : myRole !== "organizer" ? (
+                            <Button type="button" variant="outline" onClick={() => handleLeaveEvent(event.id)}>Leave Event</Button>
+                        ) : null}
+
+                        {(myRole === "organizer" || myRole === "co_organizer") && (
+                            <Button type="button" variant="outline" onClick={() => navigate(`/events/${eventId}/edit`)}>Edit Event</Button>
+                        )}
+
+                        {myRole === "organizer" && (
+                            <Button type="button" variant="danger" onClick={handleDeleteEvent}>Delete Event</Button>
+                        )}
+                    </div>
+                )}
+
+                <div className="details-grid">
+                    <div className="detail-item">
+                        <span className="detail-label">Date</span>
+                        <span className="detail-value">{event.date ? new Date(event.date).toLocaleDateString() : "N/A"}</span>
+                    </div>
+
+                    <div className="detail-item">
+                        <span className="detail-label">Location</span>
+                        <span className="detail-value">{event.location || "N/A"}</span>
+                    </div>
+
+                    <div className="detail-item">
+                        <span className="detail-label">Theme</span>
+                        <span className="detail-value">{event.theme || "N/A"}</span>
+                    </div>
+
+                    <div className="detail-item">
+                        <span className="detail-label">Type</span>
+                        <span className="detail-value">{event.type || "N/A"}</span>
+                    </div>
+                </div>
+            </Card>
+
+            <div className="details-sections">
+                <Card>
+                    <div className="section-header">
+                        <h2 className="section-title">👑 {organizersCount} Organizer{organizersCount > 1 ? "s" : ""}</h2>
+                        <p className="section-subtitle">Event leadership and co-organization team.</p>
+                    </div>
+
+                    {organizers.length === 0 ? (
+                        <p className="empty-state">No organizers.</p>
+                    ) : (
+                        <div className="member-list">
+                            {organizers.map((person) => (
+                                <div key={person.id} className="member-row">
+                                    <div className="member-info">
+                                        <span className="member-name">{person.name}</span>
+                                        <Badge role={person.role} />
+                                    </div>
+
+                                    <div className="member-actions">
+                                        {canDemote(person) && (
+                                            <Button type="button" variant="outline" onClick={() => handleDemote(person.id)}>Demote</Button>
+                                        )}
+
+                                        {canRemove(person) && (
+                                            <Button type="button" variant="danger" onClick={() => handleRemoveMember(person.id)}>Remove</Button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </Card>
+
+                {!user ? (
+                    <Card>
+                        <p className="empty-state">Login to view participants.</p>
+                    </Card>
+                    ) : (
+                    <Card>
+                        <div className="section-header">
+                            <h2 className="section-title">👥 {participantCount} Attendee{participantCount > 1 ? "s" : ""}</h2>
+                            <p className="section-subtitle">Members currently participating in this event.</p>
+                        </div>
+
+                        {participants.length === 0 ? (
+                            <p className="empty-state">No participants.</p>
+                        ) : (
+                            <div className="member-list">
+                                {participants.map((person) => (
+                                    <div key={person.id} className="member-row">
+                                        <div className="member-info">
+                                            <span className="member-name">{person.name}</span>
+                                            <Badge role={person.role} />
+                                        </div>
+
+                                        <div className="member-actions">
+                                            {canPromote(person) && (
+                                                <Button type="button" variant="outline" onClick={() => handlePromote(person.id)}>Promote</Button>
+                                            )}
+
+                                            {canRemove(person) && (
+                                                <Button type="button" variant="danger" onClick={() => handleRemoveMember(person.id)}>Remove</Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </Card>
+                )}
+            </div>
         </div>
     );
 }

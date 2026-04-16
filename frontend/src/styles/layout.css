@@ -40,3 +40,8 @@
 .section-subtitle {
     color: var(--color-text-muted);
 }
+
+.status-text,
+.empty-state {
+  color: var(--color-text-muted);
+}

@@ -6,4 +6,4 @@ export default function FormField({ label, children }) {
             {children}
         </div>
     );
-}
+};

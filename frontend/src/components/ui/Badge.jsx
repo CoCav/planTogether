@@ -20,4 +20,4 @@ export default function Badge({ role, className = "" }) {
     }
 
     return (<span className={`badge badge-${variant} ${className}`.trim()}>{label}</span>);
-}
+};

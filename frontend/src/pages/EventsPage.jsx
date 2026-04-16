@@ -12,6 +12,9 @@ import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 import Input from "../components/ui/Input";
 import FormField from "../components/ui/FormField";
+import Alert from "../components/ui/Alert";
+import EmptyState from "../components/ui/EmptyState";
+import LoadingState from "../components/ui/LoadingState";
 
 export default function EventsPage() {
     const { user } = useAuth();
@@ -159,7 +162,7 @@ export default function EventsPage() {
         return (
             <div className="container page-section">
                 <BackButton label="← Back to Home" />
-                <p className="status-text">Loading events...</p>
+                <LoadingState>Loading events...</LoadingState>
             </div>
         );
     }
@@ -176,10 +179,9 @@ export default function EventsPage() {
             <Link to="/events/create" className="btn btn-primary">Create Event</Link>
         </div>
 
-        {!user && (<div className="alert alert-info">🔐 Login to join events and manage your participation.</div>)}
-
-        {message && <div className="alert alert-success">{message}</div>}
-        {error && <div className="alert alert-danger">{error}</div>}
+        {!user && (<Alert type="info">🔐 Login to join events and manage your participation.</Alert>)}
+        {message && <Alert type="success">{message}</Alert>}
+        {error && <Alert type="danger">{error}</Alert>}
 
         <Card className="filter-card">
             <div className="section-header">
@@ -268,8 +270,8 @@ export default function EventsPage() {
 
         {events.length === 0 ? (
             <Card>
-                <p className="empty-state">No events found.</p>
-             </Card>
+                <EmptyState>No events found.</EmptyState>
+            </Card>
             ) : (
                 <div className="event-list">
                     {events.map((event) => { 

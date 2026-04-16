@@ -10,6 +10,9 @@ import BackButton from "../components/ui/BackButton.jsx";
 import Button from "../components/ui/Button.jsx";
 import Card from "../components/ui/Card.jsx";
 import Badge from "../components/ui/Badge.jsx";
+import Alert from "../components/ui/Alert.jsx";
+import EmptyState from "../components/ui/EmptyState.jsx";
+import LoadingState from "../components/ui/LoadingState.jsx";
 
 export default function EventDetailsPage() {
     const { eventId } = useParams();
@@ -31,6 +34,7 @@ export default function EventDetailsPage() {
     const loadData = async () => {
         try {
             setError("");
+            setLoading(true);
 
             const [eventRes, organizersRes] = await Promise.all([
                 getEventById(eventId), 
@@ -74,8 +78,6 @@ export default function EventDetailsPage() {
 
         } catch (error) {
             console.error("Error promoting user:", error);
-            console.error("Promote error:", error.response?.status, error.response?.data);
-console.error("Remove error:", error.response?.status, error.response?.data);
             setError("❌ Unable to promote user");
         }
     };
@@ -168,7 +170,7 @@ console.error("Remove error:", error.response?.status, error.response?.data);
         return (
             <div className="container page-section">
                 <BackButton fallbackPath="/events" label="← Back to Events" />
-                <p className="status-text">Loading event details...</p>
+                <LoadingState>Loading event details...</LoadingState>
             </div>
         );
     }
@@ -178,7 +180,7 @@ console.error("Remove error:", error.response?.status, error.response?.data);
             <div className="container page-section">
                 <BackButton fallbackPath="/events" label="← Back to Events" />
                 <Card>
-                    <p className="empty-state">Event not found.</p>
+                    <EmptyState>Event not found.</EmptyState>
                 </Card>
             </div>
         );
@@ -195,8 +197,8 @@ console.error("Remove error:", error.response?.status, error.response?.data);
                 </div>
             </div>
 
-            {message && <div className="alert alert-success">{message}</div>}
-            {error && <div className="alert alert-danger">{error}</div>}
+            {message && <Alert type="success">{message}</Alert>}
+            {error && <Alert type="danger">{error}</Alert>}
 
             <Card className="event-details-card">
                 <div className="event-details-header">
@@ -262,7 +264,7 @@ console.error("Remove error:", error.response?.status, error.response?.data);
                     </div>
 
                     {organizers.length === 0 ? (
-                        <p className="empty-state">No organizers.</p>
+                        <EmptyState>No organizers.</EmptyState>
                     ) : (
                         <div className="member-list">
                             {organizers.map((person) => (
@@ -289,7 +291,7 @@ console.error("Remove error:", error.response?.status, error.response?.data);
 
                 {!user ? (
                     <Card>
-                        <p className="empty-state">Login to view participants.</p>
+                        <EmptyState>Login to view participants.</EmptyState>
                     </Card>
                     ) : (
                     <Card>
@@ -299,7 +301,7 @@ console.error("Remove error:", error.response?.status, error.response?.data);
                         </div>
 
                         {participants.length === 0 ? (
-                            <p className="empty-state">No participants.</p>
+                            <EmptyState>No participants.</EmptyState>
                         ) : (
                             <div className="member-list">
                                 {participants.map((person) => (

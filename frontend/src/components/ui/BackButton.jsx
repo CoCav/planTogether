@@ -20,4 +20,4 @@ return (
     <button onClick={handleClick} style={style}>
         {label}
     </button>
-)}
+)};

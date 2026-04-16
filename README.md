@@ -24,6 +24,7 @@ PlanTogether enables users to:
 
 - securely register and authenticate using JWT
 - create and manage events
+- browse events with advanced filtering (search in title and description, type, theme, location, date)
 - join and leave events
 - collaborate with other users through role-based permissions
 - update their profile and password
@@ -146,6 +147,27 @@ http://localhost:5173
 
 ---
 
+### 🔍 Event Filtering
+
+The application provides an advanced filtering system for events.
+
+Users can filter events using:
+
+- keyword search (title and description)
+- type
+- theme
+- location
+- exact date
+- date range (start / end date)
+
+### Behavior
+
+- If an exact date is selected, date range filters are disabled
+- If no exact date is provided, users can filter using a date range
+- Multiple filters can be combined for precise results
+
+---
+
 ### Role-Based System
 
 Each user has a role within an event:
@@ -203,6 +225,7 @@ This separation improves:
 
 - Protected routes
 - Dynamic UI based on roles
+- Advanced filtering UI with dynamic behavior (exact date vs date range)
 - Join / Leave / Promote / Demote / Remove actions
 - Event editing interface
 - Password visibility toggle
@@ -245,6 +268,9 @@ npm test
 - Improved frontend UX (confirmations, dynamic UI)
 - Enhanced token handling (session vs persistent storage)
 - Improved API data normalization
+- Added advanced event filtering system (search, type, theme, location, date)
+- Implemented exact date and date range filtering with dynamic UI behavior
+- Improved frontend/backend consistency for filtering queries
 
 ---
 

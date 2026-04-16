@@ -5,7 +5,7 @@ import { updateProfile, changePassword } from "../api/authApi";
 import { getMyEvents } from "../api/eventMembershipApi";
 import { getMyEventsWithRole } from "../utils/normalize";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
-import BackButton from "../components/BackButton";
+import BackButton from "../components/ui/BackButton";
 
 export default function ProfilePage() {
     const { user, refreshUser } = useAuth();

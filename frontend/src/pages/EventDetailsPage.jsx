@@ -5,7 +5,7 @@ import { getEventById, deleteEvent } from "../api/eventApi";
 import { getEventMembers, getEventOrganizers, updateMemberRole, removeEventMember } from "../api/eventMembershipApi.js"
 import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../utils/normalize";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm.js";
-import BackButton from "../components/BackButton.jsx";
+import BackButton from "../components/ui/BackButton.jsx";
 
 export default function EventDetailsPage() {
     const { eventId } = useParams();

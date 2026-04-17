@@ -5,37 +5,63 @@ import { updateProfile, changePassword } from "../api/authApi";
 import { getMyEvents } from "../api/eventMembershipApi";
 import { getMyEventsWithRole } from "../utils/normalize";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
+
 import BackButton from "../components/ui/BackButton";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Input from "../components/ui/Input";
+import FormField from "../components/ui/FormField";
+import Alert from "../components/ui/Alert";
+import EmptyState from "../components/ui/EmptyState";
+import LoadingState from "../components/ui/LoadingState";
+import Badge from "../components/ui/Badge";
 
 export default function ProfilePage() {
     const { user, refreshUser } = useAuth();
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
+    // Events state: stores all user-related events
     const [myEvents, setMyEvents] = useState([]);
     const [loadingEvents, setLoadingEvents] = useState(true);
 
+    // Submit loading states: controls button loading UX
+    const [profileSubmitting, setProfileSubmitting] = useState(false);
+    const [passwordSubmitting, setPasswordSubmitting] = useState(false);
+
+    // Profile form state : personal information form
     const [profileForm, setProfileForm] = useState({
-        name: user?.name || "",
-        email: user?.email || "",
+        name: user?.name ?? "",
+        email: user?.email ?? ""
     });
 
+    // Password form state: change password form
     const [passwordForm, setPasswordForm] = useState({
         currentPassword: "",
         newPassword: "",
-        confirmPassword: "",
+        confirmPassword: ""
     });
 
-    // Controls visibility of password fields (show/hide toggles)
+    // Password visibily state: toggles show / hide password inputs
     const [showPasswords, setShowPasswords] = useState({
         currentPassword: false,
         newPassword: false,
         confirmPassword: false
     });
 
+    // Derived event collection : split events by role
+    const createdEvents = myEvents.filter((event) => event.role === "organizer");
+    const joinedEvents = myEvents.filter((event) => event.role !== "organizer");
+
+
+    /* =========================
+        Data loading functions
+    ========================= */
+
     // Fetches all events related to the current authenticated user
     const fetchMyEvents = async () => {
         try {
+            setLoadingEvents(true);
 
             const response = await getMyEvents();
             const normalizedEvents =  getMyEventsWithRole(response);
@@ -47,37 +73,80 @@ export default function ProfilePage() {
             setLoadingEvents(false);
     }};
 
+
+    /* =========================
+        Effects
+    ========================= */
+
+    // Load user events on page mount
     useEffect(() => { fetchMyEvents()}, []);
+
+    // Auto-clear feedback messages after delay
+    useEffect(() => {
+        if (message || error) {
+                const timer = setTimeout(() => {
+                setMessage("");
+                setError("");
+            }, 3000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [message, error]);
+
+
+    /* =========================
+        Helpers
+    ========================= */
+    const getRoleByEventId = (eventId) => myEvents.find((event) => event.id === eventId)?.role || null;
+    const {handleLeaveEvent } = useEventActionsWithConfirm({loadData : fetchMyEvents, setMessage, setError, getRoleByEventId});
+
+
+    /* =========================
+        Inputs handlers
+    ========================= */
 
     const handleProfileChange = (e) => {
         setProfileForm({
             ...profileForm,
-            [e.target.name]: e.target.value,
+            [e.target.name]: e.target.value
         });
     };
 
     const handlePasswordChange = (e) => {
         setPasswordForm({
             ...passwordForm,
-            [e.target.name]: e.target.value,
+            [e.target.name]: e.target.value
         });
     };
+
+    // Toggles visibility of a specific password field
+    const togglePasswordVisibility = (field) => {
+        setShowPasswords((prev) => ({
+            ...prev,
+            [field]: !prev[field]
+        }));
+    };
+
+
+    /* =========================
+       Form submit handlers
+    ========================= */
 
     const handleProfileSubmit = async (e) => {
         e.preventDefault();
         setMessage("");
         setError("");
+        setProfileSubmitting(true);
 
         try {
-
             await updateProfile(profileForm);
             await refreshUser();
             setMessage("✅ Profile updated successfully");
-
         } catch (error) {
-
             console.error("Error updating profile:", error);
             setError("❌ Unable to update profile");
+        } finally {
+            setProfileSubmitting(false);
         }
     };
 
@@ -91,197 +160,209 @@ export default function ProfilePage() {
             return;
         }
 
-        try {
-            await changePassword({
-                currentPassword: passwordForm.currentPassword,
-                newPassword: passwordForm.newPassword,
-            });
+        setPasswordSubmitting(true);
 
+        try {
+            await changePassword({currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword});
             setMessage("✅ Password updated successfully");
 
             setPasswordForm({
                 currentPassword: "",
                 newPassword: "",
-                confirmPassword: "",
+                confirmPassword: ""
             });
-
         } catch (error) {
             console.error("Error updating password:", error);
             setError("❌ Unable to update password");
+        } finally {
+            setPasswordSubmitting(false);
         }
     };
 
-    // Toggles visibility of a specific password field
-    const togglePasswordVisibility = (field) => {
-        setShowPasswords((prev) => ({
-            ...prev,
-            [field]: !prev[field],
-        }));
-    };
 
-    const getRoleByEventId = (eventId) => myEvents.find((event) => event.id === eventId)?.role || null;
+    /* =========================
+       Conditional rendering
+    ========================= */
 
-    const {handleLeaveEvent } = useEventActionsWithConfirm({
-            loadData : fetchMyEvents,
-            setMessage,
-            setError,
-            getRoleByEventId
-    });
+    if (!user) {
+        return (
+            <div className="container page-section">
+                <BackButton fallbackPath="/" label="← Back to Home" useHistory={false} />
+                <LoadingState>Loading profile...</LoadingState>
+            </div>
+        );
+    }
 
-    // Splits events into : 
-    // - created events (user is organizer)
-    //- joined events (user is participant or co_organizer)
-    const createdEvents = myEvents.filter((event) => event.role === "organizer");
-    const joinedEvents = myEvents.filter((event) => event.role !== "organizer");
-
-    if (!user) return <p>Loading profile...</p>;
+    
+    /* =========================
+       Main render
+    ========================= */
 
     return (
-        <div>
-            <BackButton fallbackPath="/" label="← Back" />
+        <div className="container page-section">
+            <BackButton fallbackPath="/" label="← Back to Home" useHistory={false} />
 
-            <h1>My Profile</h1>
-
-            {message && <p style={{ color: "green" }}>{message}</p>}
-            {error && <p style={{ color: "red" }}>{error}</p>}
-
-            <form onSubmit={handleProfileSubmit} style={{ maxWidth: "400px" }}>
-                <div style={{ marginBottom: "10px" }}>
-                    <label>Name</label>
-                    <input
-                        type="text"
-                        name="name"
-                        value={profileForm.name}
-                        onChange={handleProfileChange}
-                        style={{ display: "block", width: "100%", marginTop: "5px" }}/>
+            <div className="page-header">
+                <div>
+                    <h1 className="page-title">My Profile</h1>
+                    <p className="page-subtitle">Manage your personal information, password, and event participation.</p>
                 </div>
+            </div>
 
-                <div style={{ marginBottom: "10px" }}>
-                    <label>Email</label>
-                    <input
-                        type="email"
-                        name="email"
-                        value={profileForm.email}
-                        onChange={handleProfileChange}
-                        style={{ display: "block", width: "100%", marginTop: "5px" }}/>
-                </div>
+            {message && <Alert type="success">{message}</Alert>}
+            {error && <Alert type="danger">{error}</Alert>}
 
-                <button type="submit">Update Profile</button>
-            </form>
-
-
-            <form onSubmit={handlePasswordSubmit} style={{ maxWidth: "400px" }}>
-                <h2>Change password</h2>
-
-                <div style={{ marginBottom: "10px" }}>
-                    <label>Current password</label>
-
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "5px" }}>
-                          <input
-                            type={showPasswords.currentPassword ? "text" : "password"}
-                            name="currentPassword"
-                            value={passwordForm.currentPassword}
-                            onChange={handlePasswordChange}
-                            style={{ flex: 1 }}/>
-                        <button 
-                            type="button"
-                            onClick={() => togglePasswordVisibility("currentPassword")}>
-                            {showPasswords.currentPassword ? "Hide" : "Show"}
-                        </button>
+            <div className="profile-grid">
+                <Card>
+                    <div className="section-header">
+                        <h2 className="section-title">Profile Information</h2>
+                        <p className="section-subtitle">Update your public account details.</p>
                     </div>
-                  
-                </div>
 
-                <div style={{ marginBottom: "10px" }}>
-                    <label>New password</label>
+                    <form onSubmit={handleProfileSubmit} className="event-form">
+                        <div className="form-grid">
+                            <FormField label="Name">
+                                <Input
+                                    type="text"
+                                    name="name"
+                                    value={profileForm.name}
+                                    onChange={handleProfileChange}
+                                    placeholder="Your name"
+                                />
+                            </FormField>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "5px" }}>
-                        <input
-                            type={showPasswords.newPassword ? "text" : "password"}
-                            name="newPassword"
-                            value={passwordForm.newPassword}
-                            onChange={handlePasswordChange}
-                            style={{ flex: 1 }}/>
-                        <button 
-                            type="button"
-                            onClick={() => togglePasswordVisibility("newPassword")}>
-                            {showPasswords.newPassword ? "Hide" : "Show"}
-                        </button>
-                    </div>
-                   
-                </div>
-
-                <div style={{ marginBottom: "10px" }}>
-                    <label>Confirm new password</label>
-
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "5px" }}>
-                        <input
-                            type={showPasswords.confirmPassword ? "text" : "password"}
-                            name="confirmPassword"
-                            value={passwordForm.confirmPassword}
-                            onChange={handlePasswordChange}
-                            style={{ flex: 1 }}/>
-                        <button 
-                            type="button"
-                            onClick={() => togglePasswordVisibility("confirmPassword")}>
-                            {showPasswords.confirmPassword ? "Hide" : "Show"}
-                        </button>
-                    </div>
-        
-                </div>
-
-                <button type="submit">Update Password</button>
-            </form>
-
-
-            <h2 style={{ marginTop: "30px" }}>My Events</h2>
-
-            {loadingEvents ? (
-                    <p>Loading events...</p>
-                ) : (
-                    <>
-                        {/* Created Events */}
-                        <div style={{ marginTop: "20px" }}>
-                            <h3>Created Events</h3>
-
-                            {createdEvents.length === 0 ? (
-                                <p>No created events</p>
-                            ) : (
-                                <ul>
-                                    {createdEvents.map((event) => (
-                                    <li key={event.id}>
-                                        <Link to={`/events/${event.id}`}>{event.title}</Link>
-                                        <span> 👑 Organizer</span>
-                                    </li>))}
-                                </ul>
-                            )}
+                            <FormField label="Email">
+                                <Input
+                                    type="email"
+                                    name="email"
+                                    value={profileForm.email}
+                                    onChange={handleProfileChange}
+                                    placeholder="Your email"
+                                />
+                            </FormField>
                         </div>
 
-                        {/* Joined Events */}
-                        <div style={{ marginTop: "20px" }}>
-                            <h3>Joined Events</h3>
-
-                            {joinedEvents.length === 0 ? (
-                                <p>No joined events</p>
-                            ) : (
-                                <ul>
-                                    {joinedEvents.map((event) => (
-                                    <li key={event.id}>
-                                        <Link to={`/events/${event.id}`}>{event.title}</Link>
-                                        <span style={{marginRight: "10px"}}> {event.role === "co_organizer" ? "🛡️ Co-organizer" : "👤 Participant"}</span>
-
-                                        <button onClick={() => handleLeaveEvent(event.id)}>
-                                            Leave
-                                        </button>
-                                    </li>))}
-                                </ul>
-                                
-                            )}
+                        <div className="form-actions">
+                            <Button type="submit" loading={profileSubmitting}>Update Profile</Button>
                         </div>
-                    </>
-                )
-            }
+                    </form>
+                </Card>
 
+                <Card>
+                    <div className="section-header">
+                        <h2 className="section-title">Change Password</h2>
+                        <p className="section-subtitle">Update your password securely.</p>
+                    </div>
+
+                    <form onSubmit={handlePasswordSubmit} className="event-form">
+                        <div className="password-fields">
+                            <FormField label="Current password">
+                                <div className="password-row">
+                                    <Input
+                                        type={showPasswords.currentPassword ? "text" : "password"}
+                                        name="currentPassword"
+                                        value={passwordForm.currentPassword}
+                                        onChange={handlePasswordChange}
+                                        placeholder="Current password"
+                                    />
+                                    <Button type="button" variant="outline" onClick={() => togglePasswordVisibility("currentPassword")}>{showPasswords.currentPassword ? "Hide" : "Show"}</Button>
+                                </div>
+                            </FormField>
+
+                            <FormField label="New password">
+                                <div className="password-row">
+                                    <Input
+                                        type={showPasswords.newPassword ? "text" : "password"}
+                                        name="newPassword"
+                                        value={passwordForm.newPassword}
+                                        onChange={handlePasswordChange}
+                                        placeholder="New password"
+                                    />
+                                    <Button type="button" variant="outline" onClick={() => togglePasswordVisibility("newPassword")}>{showPasswords.newPassword ? "Hide" : "Show"}</Button>
+                                </div>
+                            </FormField>
+
+                            <FormField label="Confirm new password">
+                                <div className="password-row">
+                                    <Input
+                                        type={showPasswords.confirmPassword ? "text" : "password"}
+                                        name="confirmPassword"
+                                        value={passwordForm.confirmPassword}
+                                        onChange={handlePasswordChange}
+                                        placeholder="Confirm new password"
+                                    />
+                                    <Button type="button" variant="outline" onClick={() => togglePasswordVisibility("confirmPassword")}>{showPasswords.confirmPassword ? "Hide" : "Show"}</Button>
+                                </div>
+                            </FormField>
+                        </div>
+
+                        <div className="form-actions">
+                            <Button type="submit" loading={passwordSubmitting}>Update Password</Button>
+                        </div>
+                    </form>
+                </Card>
+            </div>
+
+            <div className="details-sections">
+                <Card>
+                    <div className="section-header">
+                        <h2 className="section-title">My Events</h2>
+                        <p className="section-subtitle">Events you created or joined.</p>
+                    </div>
+
+                    {loadingEvents ? (
+                        <LoadingState>Loading events...</LoadingState>
+                    ) : (
+                        <div className="profile-events-grid">
+                            <div>
+                                <h3 className="subsection-title">Created Events</h3>
+
+                                {createdEvents.length === 0 ? (
+                                    <EmptyState>No created events.</EmptyState>
+                                ) : (
+                                    <div className="member-list">
+                                        {createdEvents.map((event) => (
+                                            <div key={event.id} className="member-row">
+                                                <div className="member-info">
+                                                    <Link to={`/events/${event.id}`} className="event-title-link">
+                                                        <span className="member-name">{event.title}</span>
+                                                    </Link>
+                                                    <Badge role="organizer" />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <h3 className="subsection-title">Joined Events</h3>
+
+                                {joinedEvents.length === 0 ? (
+                                    <EmptyState>No joined events.</EmptyState>
+                                ) : (
+                                    <div className="member-list">
+                                        {joinedEvents.map((event) => (
+                                            <div key={event.id} className="member-row">
+                                                <div className="member-info">
+                                                    <Link to={`/events/${event.id}`} className="event-title-link">
+                                                        <span className="member-name">{event.title}</span>
+                                                    </Link>
+                                                    <Badge role={event.role} />
+                                                </div>
+
+                                                <div className="member-actions">
+                                                    <Button type="button" variant="outline" onClick={() => handleLeaveEvent(event.id)}>Leave</Button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </Card>
+            </div>
         </div>
     );
 }

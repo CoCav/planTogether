@@ -261,7 +261,10 @@
     text-decoration: underline;
 }
 
-/* EVENTS PAGE */
+
+/* =========================
+   Event Page
+========================= */
 .event-list {
     display: flex;
     flex-direction: column;
@@ -326,7 +329,9 @@
 }
 
 
-/*  EVENT DETAILS PAGE */
+/* =========================
+   EventDetails page
+========================= */
 .event-details-card {
     margin-bottom: var(--space-5);
 }
@@ -432,4 +437,44 @@
     display: flex;
     gap: var(--space-3);
     flex-wrap: wrap;
+}
+
+
+/* =========================
+   Profile page
+========================= */
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--space-5);
+    margin-bottom: var(--space-5);
+}
+
+.password-fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.password-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.password-row .input {
+    flex: 1;
+}
+
+.profile-events-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--space-5);
+}
+
+.subsection-title {
+    font-size: var(--font-size-base);
+    font-weight: 700;
+    margin-bottom: var(--space-3);
 }

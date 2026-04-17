@@ -1,31 +1,53 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { registerUser } from "../api/authApi";
 
-export default function RegisterPage() {
-    const navigate = useNavigate();
-    const { login } = useAuth();
+import BackButton from "../components/ui/BackButton";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Input from "../components/ui/Input";
+import FormField from "../components/ui/FormField";
+import Alert from "../components/ui/Alert";
 
+export default function RegisterPage() {
+    const { login } = useAuth();
+    const navigate = useNavigate();
+    const [error, setError] = useState("");
+
+    // Password visibility state: controls show / hide password
+    const [showPassword, setShowPassword] = useState(false);
+
+    // Submit loading state: controls register button loading
+    const [submitting, setSubmitting] = useState(false);
+
+    // Registration form state: stores user account inputs
     const [form, setForm] = useState({
-        name: "",
         email: "",
         password: "",
     });
 
-    const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState("");
 
+    /* =========================
+     Input change handler
+        Updates form fields
+    ========================= */
     const handleChange = (e) => {
         setForm({
             ...form,
-            [e.target.name]: e.target.value,
+            [e.target.name]: e.target.value
         });
     };
 
+
+    /* =========================
+     Register submit handler
+        Creates account then logs in
+    ========================= */
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+        setSubmitting(true);
 
         try {
             const response = await registerUser(form);
@@ -36,54 +58,71 @@ export default function RegisterPage() {
         } catch (err) {
             console.error("Register error:", err);
             setError("Unable to register. Please check your information.");
+        } finally {
+            setSubmitting(false);
         }
     };
 
-     return (
-        <div>
-            <h1>Register</h1>
+    return (
+        <div className="container page-section">
+            <BackButton fallbackPath="/" label="← Back to Home" useHistory={false}/>
 
-            {error && <p style={{ color: "red" }}>{error}</p>}
-
-            <form onSubmit={handleSubmit}>
+            <div className="page-header">
                 <div>
-                    <input
-                        type="text"
-                        name="name"
-                        placeholder="Name"
-                        value={form.name}
-                        onChange={handleChange}/>
+                    <h1 className="page-title">Register</h1>
+                    <p className="page-subtitle">Create your account and start organizing events.</p>
                 </div>
+            </div>
 
-                <div>
-                    <input
-                        type="email"
-                        name="email"
-                        placeholder="Email"
-                        value={form.email}
-                        onChange={handleChange}/>
-                </div>
+            {error && <Alert type="danger">{error}</Alert>}
 
-                <div>
-                    <input
-                        type={showPassword ? "text" : "password"}
-                        name="password"
-                        placeholder="Password"
-                        value={form.password}
-                        onChange={handleChange}/>
+            <Card className="auth-card">
+                <form onSubmit={handleSubmit} className="event-form">
+                    <div className="auth-form-grid">
+                        <FormField label="Name">
+                            <Input
+                                type="text"
+                                name="name"
+                                placeholder="Your name"
+                                value={form.name}
+                                onChange={handleChange}
+                            />
+                        </FormField>
 
-                    <button 
-                        type="button"
-                        onClick={() => setShowPassword((prev) => !prev)}
-                        style={{ marginLeft: "10px" }}>
-                        {showPassword ? "Hide" : "Show"}
-                    </button>
-                </div>
+                        <FormField label="Email">
+                            <Input
+                                type="email"
+                                name="email"
+                                placeholder="Your email"
+                                value={form.email}
+                                onChange={handleChange}
+                            />
+                        </FormField>
 
-                <button type="submit">Register</button>
-            </form>
+                        <FormField label="Password">
+                            <div className="password-row">
+                                <Input
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    placeholder="Choose a password"
+                                    value={form.password}
+                                    onChange={handleChange}
+                                />
 
-            <p>Already have an account? <a href="/login">Login</a></p>
+                                <Button type="button" variant="outline" onClick={() => setShowPassword((prev) => !prev)}>{showPassword ? "Hide" : "Show"}</Button>
+                            </div>
+                        </FormField>
+                    </div>
+
+                    <div className="form-actions">
+                        <Button type="submit" loading={submitting}>Register</Button>
+                    </div>
+
+                    <p className="auth-footer text-muted">Already have an account?{" "} 
+                        <Link to="/login" className="link-inline">Login</Link>
+                    </p>
+                </form>
+            </Card>
         </div>
     );
 }

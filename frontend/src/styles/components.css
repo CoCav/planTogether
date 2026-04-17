@@ -365,6 +365,78 @@ textarea:focus {
     }
 }
 
+
+/* ==================================================
+   AUTH PAGES
+================================================== */
+.auth-card {
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+.auth-form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.checkbox-row {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+}
+
+.checkbox-row input {
+    accent-color: var(--color-primary);
+}
+
+.auth-footer {
+    margin-top: var(--space-2);
+    font-size: var(--font-size-sm);
+}
+
+
+/* ==================================================
+   PROFILE PAGE
+================================================== */
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--space-5);
+    margin-bottom: var(--space-5);
+}
+
+.password-fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.password-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.password-row .input {
+    flex: 1;
+}
+
+.profile-events-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--space-5);
+}
+
+.subsection-title {
+    font-size: var(--font-size-base);
+    font-weight: 700;
+    margin-bottom: var(--space-3);
+}
+
+
 /* ==================================================
    EVENTS PAGE
 ================================================== */
@@ -534,43 +606,4 @@ textarea:focus {
     display: flex;
     gap: var(--space-3);
     flex-wrap: wrap;
-}
-
-
-/* ==================================================
-   PROFILE PAGE
-================================================== */
-.profile-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: var(--space-5);
-    margin-bottom: var(--space-5);
-}
-
-.password-fields {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-}
-
-.password-row {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-}
-
-.password-row .input {
-    flex: 1;
-}
-
-.profile-events-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: var(--space-5);
-}
-
-.subsection-title {
-    font-size: var(--font-size-base);
-    font-weight: 700;
-    margin-bottom: var(--space-3);
 }

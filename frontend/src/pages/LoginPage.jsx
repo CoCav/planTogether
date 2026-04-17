@@ -1,22 +1,40 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth.js";
 import { loginUser } from "../api/authApi";
 
+import BackButton from "../components/ui/BackButton";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Input from "../components/ui/Input";
+import FormField from "../components/ui/FormField";
+import Alert from "../components/ui/Alert";
+
 export default function LoginPage() {
-    const navigate = useNavigate();
     const { login } = useAuth();
+    const navigate = useNavigate();
+    const [error, setError] = useState("");
+
+    // Password visibility state: controls show / hide password
     const [showPassword, setShowPassword] = useState(false);
 
-    // Controls whether the user wants to persist the session after closing the browser
+    // Session persistance state: stores token in localStorage when "Remember me" is enabled
     const [rememberMe, setRememberMe] = useState(false);
 
+    // Submit loading state: controls login button loading
+    const [submitting, setSubmitting] = useState(false);
+
+    // Login form state: user credentials input
     const [form, setForm] = useState({
         email: "",
         password: "",
     });
 
-    const [error, setError] = useState("");
+
+    /* =========================
+     Input change handler
+        Updates email / password
+    ========================= */
 
     const handleChange = (e) => {
         setForm({
@@ -25,11 +43,17 @@ export default function LoginPage() {
         });
     };
 
-    // Handles login request
-    // Stores token depending on 'Remember me' option
+
+    /* =========================
+     Login submit handler
+        Authenticates user and stores
+        token depending on rememberMe
+    ========================= */
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+        setSubmitting(true);
 
         try {
             const response = await loginUser(form);
@@ -39,59 +63,70 @@ export default function LoginPage() {
             navigate("/events");
         } catch {
             setError("Invalid email or password");
+        } finally {
+            setSubmitting(false);
         }
     };
 
     return (
-        <div>
-            <h1>Login</h1>
+        <div className="container page-section">
+            <BackButton fallbackPath="/" label="← Back to Home" useHistory={false}/>
 
-            {error && <p>{error}</p>}
-
-            <form onSubmit={handleSubmit}>
+            <div className="page-header">
                 <div>
-                    <input
-                    type="email"
-                    name="email"
-                    placeholder="Email"
-                    value={form.email}
-                    onChange={handleChange}/>
+                    <h1 className="page-title">Login</h1>
+                    <p className="page-subtitle">Access your account to manage events and participation.</p>
                 </div>
-
-            <div style={{ marginTop: "10px", marginBottom: "10px" }}>
-                <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    placeholder="Password"
-                    value={form.password}
-                    onChange={handleChange}
-                    style={{ marginRight: "10px" }}
-                    />
-
-                <button 
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}>
-                    {showPassword ? "Hide" : "Show"}
-                </button>
             </div>
 
-            <div style={{ marginBottom: "10px" }}>
-                <label>
-                    <input
-                        type="checkbox"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        style={{ marginRight: "5px" }}/>
-                        Remember me
-                </label>
-            </div>
+            {error && <Alert type="danger">{error}</Alert>}
 
-            <button type="submit">Login</button>
-            </form>
+            <Card className="auth-card">
+                <form onSubmit={handleSubmit} className="event-form">
+                    <div className="auth-form-grid">
+                        <FormField label="Email">
+                            <Input
+                                type="email"
+                                name="email"
+                                placeholder="Your email"
+                                value={form.email}
+                                onChange={handleChange}
+                            />
+                        </FormField>
 
-            <div style={{ marginBottom: "10px" }}>
+                        <FormField label="Password">
+                            <div className="password-row">
+                                <Input
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    placeholder="Your password"
+                                    value={form.password}
+                                    onChange={handleChange}
+                                />
 
-</div>
+                                <Button type="button" variant="outline" onClick={() => setShowPassword((prev) => !prev)}>{showPassword ? "Hide" : "Show"}</Button>
+                            </div>
+                        </FormField>
+                    </div>
+
+                    <label className="checkbox-row">
+                        <input
+                            type="checkbox"
+                           checked={rememberMe}
+                           onChange={(e) => setRememberMe(e.target.checked)}
+                        />
+                        <span>Remember me</span>
+                    </label>
+
+                    <div className="form-actions">
+                        <Button type="submit" loading={submitting}>Login</Button>
+                    </div>
+
+                    <p className="auth-footer text-muted">Don’t have an account?{" "}
+                        <Link to="/register" className="link-inline">Create one</Link>
+                    </p>
+                </form>
+            </Card>
         </div>
     );
 }

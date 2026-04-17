@@ -41,7 +41,7 @@ export default function Navbar() {
                             <Button type="button" variant="outline" onClick={handleLogout}>Logout</Button>
                         </div>
                     ) : (
-                        <div>
+                        <div className="navbar-auth-group">
                             <Link to="/login" className="navbar-link">Login</Link>
                             <Link to="/register">
                                 <Button type="button">Register</Button>

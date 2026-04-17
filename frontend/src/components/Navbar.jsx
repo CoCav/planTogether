@@ -1,9 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 
+import Button from "./ui/Button";
+
 export default function Navbar() {
     const { user, logout } = useAuth();
-    
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -13,39 +14,42 @@ export default function Navbar() {
 
 
     return (
-        <nav style={{ padding: "10px", borderBottom: "1px solid #ccc" }}>
-            {/* Logo */}
-            <Link to="/" style={{ marginRight: "20px" }}>
-                <strong>PlanTogether</strong>
-            </Link>
+        <header className="navbar">
+            <div className="container navbar-inner">
 
-            {/* Navigation */}
-            <Link to="/" style={{ marginRight: "10px" }}>Home</Link>
-            <Link to="/events" style={{ marginRight: "10px" }}>Events</Link>
+                {/* Brand */}
+                <Link to="/" className="navbar-brand">PlanTogether</Link>
 
-            {/* Auth */}
-            {user ? (
-                <>
-                <Link to="/events/create" style={{ marginRight: "10px" }}>
-                    Create Event
-                </Link>
+                {/* Navigation */}
+                <nav className="navbar-links">
+                    <Link to="/" className="navbar-link">Home</Link>
+                    <Link to="/events" className="navbar-link">Events</Link>
 
-                <Link to="profile" style={{ marginRight: "10px" }}>
-                    Profile
-                </Link>
+                    {user && (
+                        <div className="navbar-links-group">
+                            <Link to="/events/create" className="navbar-link">Create Event</Link>
+                            <Link to="/profile" className="navbar-link">Profile</Link>
+                        </div>
+                    )}
+                </nav>
 
-                <span style={{ marginRight: "10px", marginLeft: "10px" }}>
-                    Hello, {user.name}
-                </span>
-
-                <button onClick={handleLogout}>Logout</button>
-            </>
-            ) : (
-            <>
-                <Link to="/login" style={{ marginRight: "10px" }}>Login</Link>
-                <Link to="/register" style={{ marginRight: "10px" }}>Register</Link>
-            </>
-            )}
-        </nav>
+                {/* Right side */}
+                <div className="navbar-actions">
+                    {user ? (
+                        <div className="navbar-user-group">
+                            <span className="navbar-user">Hello, {user.name}</span>
+                            <Button type="button" variant="outline" onClick={handleLogout}>Logout</Button>
+                        </div>
+                    ) : (
+                        <div>
+                            <Link to="/login" className="navbar-link">Login</Link>
+                            <Link to="/register">
+                                <Button type="button">Register</Button>
+                            </Link>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </header>
     );
 }

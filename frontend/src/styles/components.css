@@ -1,4 +1,6 @@
-/* BUTTONS */
+/* ==================================================
+   BUTTONS
+================================================== */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -31,7 +33,7 @@
 
 .btn-primary {
     background: var(--color-primary);
-    color: #fff;
+    color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -59,7 +61,10 @@
     box-shadow: var(--shadow-sm);
 }
 
-/* CARDS */
+
+/* ==================================================
+   CARDS
+================================================== */
 .card {
     background: var(--color-surface);
     padding: var(--space-5);
@@ -82,7 +87,9 @@
 }
 
 
-/* FORMS */
+/* ==================================================
+   FORMS
+================================================== */
 .form-field {
     display: flex;
     flex-direction: column;
@@ -117,60 +124,46 @@
     margin: 0 auto;
 }
 
-/* INPUTS */
-
-.input {
-    width: 100%;
-    padding: var(--space-3);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    color: var(--color-text);
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
+.event-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
 }
 
-.input:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
-}
-
-.input:disabled {
-    background: #f3f4f6;
-    cursor: not-allowed;
-}
-
+/* ==================================================
+   INPUTS
+================================================== */
+.input,
 .textarea {
     width: 100%;
     padding: var(--space-3);
-    border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
     background: var(--color-surface);
     color: var(--color-text);
-    resize: vertical;
-    min-height: 100px;
     transition:
         border-color 0.2s ease,
         box-shadow 0.2s ease,
         background 0.2s ease;
 }
 
-.textarea:focus {
+.input:focus,
+textarea:focus {
     outline: none;
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
 }
 
+.input:disabled,
 .textarea:disabled {
     background: #f3f4f6;
     cursor: not-allowed;
 }
 
 
-/*  BADGES (ROLES) */
+/* ==================================================
+   BADGES
+================================================== */
 .badge {
     display: inline-flex;
     align-items: center;
@@ -180,26 +173,25 @@
     font-weight: 500;
 }
 
-/* Organizer */
 .badge-organizer {
     background: #ede9fe;
     color: #5b21b6;
 }
 
-/* Co-organizer */
 .badge-co {
     background: #dbeafe;
     color: #1d4ed8;
 }
 
-/* Participant */
 .badge-participant {
     background: #e5e7eb;
     color: #374151;
 }
 
 
-/* ALERTS AND STATES */
+/* ==================================================
+   ALERTS & STATES
+================================================== */
 .alert {
     padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-md);
@@ -226,20 +218,21 @@
     border-color: #fecaca;
 }
 
-.empty-state {
-    color: var(--color-text-muted);
+.empty-state,
+.loading-state {
     text-align: center;
+    color: var(--color-text-muted);
+    border-radius: var(--radius-md);
+}
+
+.empty-state {
     padding: var(--space-5);
     border: 1px dashed var(--color-border);
-    border-radius: var(--radius-md);
     background: #fcfcfd;
 }
 
 .loading-state {
-    text-align: center;
-    color: var(--color-text-muted);
     padding: var(--space-6);
-    border-radius: var(--radius-md);
 }
 
 .status-text {
@@ -251,7 +244,9 @@
     color: var(--color-success);
 }
 
-/*  LINKS */
+/* ==================================================
+   LINKS
+================================================== */
 .link-inline {
     color: var(--color-primary);
     font-weight: 500;
@@ -262,9 +257,117 @@
 }
 
 
-/* =========================
-   Event Page
-========================= */
+/* ==================================================
+   NAVBAR
+================================================== */
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.navbar-inner {
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+}
+
+.navbar-brand {
+    font-size: var(--font-size-lg);
+    font-weight: 800;
+    color: var(--color-primary);
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.navbar-links,
+.navbar-links-group,
+.navbar-user-group,
+.navbar-auth-group,
+.navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.navbar-links {
+    flex: 1;
+    gap: var(--space-4);
+    margin-left: var(--space-5);
+}
+
+.navbar-links-group,
+.navbar-user-group,
+.navbar-auth-group,
+.navbar-actions {
+    gap: var(--space-4);
+}
+
+.navbar-link {
+    color: var(--color-text);
+    text-decoration: none;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.navbar-link:hover {
+    color: var(--color-primary);
+}
+
+
+/* RIGHT SIDE */
+.navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+
+.navbar-user {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    background: #eef2ff;
+    color: var(--color-primary);
+    border: 1px solid #c7d2fe;
+    border-radius: 999px;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+
+/* ==================================================
+   RESPONSIVE NAVBAR
+================================================== */
+@media (max-width: 768px) {
+    .navbar-inner {
+        flex-wrap: wrap;
+        align-items: flex-start;
+        padding: var(--space-3) 0;
+    }
+
+    .navbar-links {
+        width: 100%;
+        margin-left: 0;
+        margin-top: var(--space-2);
+    }
+
+    .navbar-actions {
+        width: 100%;
+        justify-content: flex-start;
+        margin-top: var(--space-2);
+    }
+}
+
+/* ==================================================
+   EVENTS PAGE
+================================================== */
 .event-list {
     display: flex;
     flex-direction: column;
@@ -315,12 +418,6 @@
     flex-wrap: wrap;
 }
 
-.event-form {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-}
-
 .inline-actions {
     display: flex;
     align-items: center;
@@ -329,9 +426,9 @@
 }
 
 
-/* =========================
-   EventDetails page
-========================= */
+/* ==================================================
+   EVENT DETAILS PAGE
+================================================== */
 .event-details-card {
     margin-bottom: var(--space-5);
 }
@@ -440,10 +537,9 @@
 }
 
 
-/* =========================
-   Profile page
-========================= */
-
+/* ==================================================
+   PROFILE PAGE
+================================================== */
 .profile-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));

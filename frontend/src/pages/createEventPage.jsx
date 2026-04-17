@@ -2,6 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createEvent } from "../api/eventApi";
 
+import BackButton from "../components/ui/BackButton";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Input from "../components/ui/Input";
+import Textarea from "../components/ui/Textarea";
+import FormField from "../components/ui/FormField";
+import Alert from "../components/ui/Alert";
+
 export default function CreateEventPage() {
     const navigate = useNavigate();
     const [form, setForm] = useState({
@@ -14,6 +22,7 @@ export default function CreateEventPage() {
     });
 
     const [error, setError] = useState("");
+    const [submitting, setSubmitting] = useState(false);
 
     const handleChange = (e) => {
         setForm({
@@ -25,66 +34,102 @@ export default function CreateEventPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+        setSubmitting(true)
 
         try {
             await createEvent(form);
             navigate("/events");
         } catch (err) {
-            console.error(err);
+            console.error("Error creating event:", err);
             setError("Failed to create event");
+        } finally {
+            setSubmitting(false);
         }
     };
 
     return (
-        <div>
-            <h1>Create Event</h1>
+        <div className="container page-section">
+            <BackButton fallbackPath="/events" label="← Back to Events" />
 
-            {error && <p style={{ color: "red" }}>{error}</p>}
+            <div className="page-header">
+                <div>
+                    <h1 className="page-title">Create Event</h1>
+                    <p className="page-subtitle">Fill in the details below to create a new event.</p>
+                </div>
+            </div>
 
-            <form onSubmit={handleSubmit}>
-                <input
-                type="text"
-                name="title"
-                placeholder="Title"
-                value={form.title}
-                onChange={handleChange}/>
+            {error && <Alert type="danger">{error}</Alert>}
 
-                <input
-                type="text"
-                name="description"
-                placeholder="Description"
-                value={form.description}
-                onChange={handleChange}/>
+            <Card className="form-card">
+                <form onSubmit={handleSubmit} className="event-form">
+                    <div className="form-grid">
+                        <FormField label="Title">
+                            <Input
+                                type="text"
+                                name="title"
+                                placeholder="Event title"
+                                value={form.title}
+                                onChange={handleChange}
+                            />
+                        </FormField>
 
-                <input
-                type="text"
-                name="type"
-                placeholder="Type"
-                value={form.type}
-                onChange={handleChange}/>
+                        <FormField label="Type">
+                            <Input
+                                type="text"
+                                name="type"
+                                placeholder="Event type"
+                                value={form.type}
+                                onChange={handleChange}
+                            />
+                        </FormField>
 
-                <input
-                type="text"
-                name="theme"
-                placeholder="Theme"
-                value={form.theme}
-                onChange={handleChange}/>
+                        <FormField label="Theme">
+                            <Input
+                                type="text"
+                                name="theme"
+                                placeholder="Event theme"
+                                value={form.theme}
+                                onChange={handleChange}
+                            />
+                        </FormField>
 
-                <input
-                type="date"
-                name="date"
-                value={form.date}
-                onChange={handleChange}/>
+                        <FormField label="Description" className="form-field-full">
+                            <Textarea
+                                name="description"
+                                placeholder="Describe your event (what, where, for who...)"
+                                value={form.description}
+                                onChange={handleChange}
+                                rows={5}
+                            />
+                        </FormField>
 
-                <input
-                type="text"
-                name="location"
-                placeholder="Location"
-                value={form.location}
-                onChange={handleChange}/>
+                        <FormField label="Location">
+                            <Input
+                                type="text"
+                                name="location"
+                                placeholder="Event location"
+                                value={form.location}
+                                onChange={handleChange}
+                            />
+                        </FormField>
 
-                <button type="submit">Create</button>
-            </form>
+                        <FormField label="Date">
+                            <Input
+                                type="date"
+                                name="date"
+                                value={form.date}
+                                onChange={handleChange}
+                            />
+                        </FormField>
+                    </div>
+
+                    <div className="form-actions">
+                        <Button type="submit" loading={submitting}>Create Event</Button>
+
+                        <Button type="button" variant="outline" onClick={() => navigate("/events")} disabled={submitting}>Cancel</Button>
+                    </div>
+                </form>
+            </Card>
         </div>
     );
 }

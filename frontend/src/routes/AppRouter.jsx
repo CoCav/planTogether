@@ -5,7 +5,7 @@ import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import ProfilePage from "../pages/ProfilePage.jsx";
 import EventsPage from "../pages/EventsPage";
-import CreateEventPage from "../pages/createEventPage.jsx";
+import CreateEventPage from "../pages/CreateEventPage.jsx";
 import EventDetailsPage from "../pages/EventDetailsPage";
 import EditEventPage from "../pages/EditEventPage.jsx";
 

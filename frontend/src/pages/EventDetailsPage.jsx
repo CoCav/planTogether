@@ -178,7 +178,7 @@ export default function EventDetailsPage() {
     if (!event) {
         return (
             <div className="container page-section">
-                <BackButton fallbackPath="/events" label="← Back to Events" />
+                <BackButton fallbackPath="/events" label="← Back to Events" useHistory={false}/>
                 <Card>
                     <EmptyState>Event not found.</EmptyState>
                 </Card>
@@ -188,7 +188,7 @@ export default function EventDetailsPage() {
 
     return (
         <div className="container page-section">
-            <BackButton fallbackPath="/events" label="← Back to Events" />
+            <BackButton fallbackPath="/events" label="← Back to Events" useHistory={false}/>
 
             <div className="page-header">
                 <div>

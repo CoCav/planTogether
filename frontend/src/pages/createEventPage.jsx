@@ -49,7 +49,7 @@ export default function CreateEventPage() {
 
     return (
         <div className="container page-section">
-            <BackButton fallbackPath="/events" label="← Back to Events" />
+            <BackButton fallbackPath="/events" label="← Back to Events" useHistory={false}/>
 
             <div className="page-header">
                 <div>

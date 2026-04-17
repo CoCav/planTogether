@@ -161,7 +161,7 @@ export default function EventsPage() {
     if (loading) {
         return (
             <div className="container page-section">
-                <BackButton label="← Back to Home" />
+                <BackButton fallbackPath="/" label="← Back to Home" useHistory={false}/>
                 <LoadingState>Loading events...</LoadingState>
             </div>
         );
@@ -169,7 +169,7 @@ export default function EventsPage() {
 
     return (
     <div className="container page-section">
-        <BackButton label="← Back to Home" />
+        <BackButton label="← Back to Home" useHistory={false}/>
 
         <div className="page-header">
             <div>

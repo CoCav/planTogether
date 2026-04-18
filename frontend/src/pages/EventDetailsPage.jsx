@@ -4,6 +4,7 @@ import { useAuth } from "../context/useAuth";
 import { getEventById, deleteEvent } from "../api/eventApi";
 import { getEventMembers, getEventOrganizers, updateMemberRole, removeEventMember } from "../api/eventMembershipApi.js"
 import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../utils/normalize";
+import { formatDate } from "../utils/format.js";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm.js";
 
 import Button from "../components/ui/Button.jsx";
@@ -231,7 +232,7 @@ export default function EventDetailsPage() {
                 <div className="details-grid">
                     <div className="detail-item">
                         <span className="detail-label">Date</span>
-                        <span className="detail-value">{event.date ? new Date(event.date).toLocaleDateString() : "N/A"}</span>
+                        <span className="detail-value">{formatDate(event.date)}</span>
                     </div>
 
                     <div className="detail-item">

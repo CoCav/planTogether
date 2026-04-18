@@ -340,8 +340,6 @@ textarea:focus {
 }
 
 .navbar-user-trigger {
-    /* display: inline-flex;
-    align-items: center; */
     gap: 6px;
     background: #eef2ff;
     border: 1px solid #c7d2fe;
@@ -666,6 +664,20 @@ textarea:focus {
     align-items: flex-start;
     gap: var(--space-4);
     margin-bottom: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.event-header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+
+.event-header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
     flex-wrap: wrap;
 }
 

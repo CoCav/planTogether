@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth.js";
 import { getAllEvents } from "../api/eventApi";
 import { getNormalizedEvents } from "../utils/normalize.js";
+import { formatDate } from "../utils/format.js";
 
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
@@ -44,6 +45,11 @@ export default function HomePage() {
 
     const MAX_HOME_EVENTS = 4;
     const previewEvents = events.slice(0, MAX_HOME_EVENTS);
+
+
+    /* =========================
+       Main render
+    ========================= */
 
     return (
         <div className="container page-section">
@@ -153,7 +159,7 @@ export default function HomePage() {
 
                                         <div className="event-meta">
                                             {event.creatorName && (<span className="event-meta-item">👤 {event.creatorName}</span>)}
-                                            <span className="event-meta-item">📅 {event.date ? new Date(event.date).toLocaleDateString() : "No date"}</span>
+                                            <span className="event-meta-item">📅 {formatDate(event.date)}</span>
                                             <span className="event-meta-item">📍 {event.location || "No location"}</span>
                                         </div>
                                     </div>

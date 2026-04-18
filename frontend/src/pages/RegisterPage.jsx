@@ -62,6 +62,11 @@ export default function RegisterPage() {
         }
     };
 
+    
+    /* =========================
+       Main render
+    ========================= */
+
     return (
         <div className="container page-section">
             <div className="page-header">

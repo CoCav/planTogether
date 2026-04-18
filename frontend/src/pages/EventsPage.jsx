@@ -4,6 +4,7 @@ import { useAuth } from "../context/useAuth";
 import { getAllEvents, getFilteredEvents } from "../api/eventApi";
 import { getMyEvents } from "../api/eventMembershipApi";
 import { getNormalizedEvents, getMyEventsWithRole } from "../utils/normalize";
+import { formatDate } from "../utils/format";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
 
 import Button from "../components/ui/Button";
@@ -17,13 +18,19 @@ import LoadingState from "../components/ui/LoadingState";
 
 export default function EventsPage() {
     const { user } = useAuth();
-
-    const [events, setEvents] = useState([]);
-    const [myEvents, setMyEvents] = useState({});
-    const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
+    // Events list state: stores all events
+    const [events, setEvents] = useState([]);
+
+    // Membership role state: stores current user role by event ID
+    const [myEvents, setMyEvents] = useState({});
+
+    // Page loading state: controls loading scren while events are fetched
+    const [loading, setLoading] = useState(true);
+
+    // Filters state: controls all event filtering inputs
     const [filters, setFilters] = useState({
         search: "",
         type: "",
@@ -34,16 +41,19 @@ export default function EventsPage() {
         endDate: ""
     });
 
+    
+    /* =========================
+        Data loading functions
+    ========================= */
 
-    // Fetches all events or filtered events depending on active filters.
+    // Fetches all events or filtered events depending on active filters
     const fetchEvents = async (customFilters = filters) => {
         const hasActiveFilters = Object.values(customFilters).some((value) => value.trim() !== "");
         const response = hasActiveFilters ? await getFilteredEvents(customFilters) : await getAllEvents();
         return getNormalizedEvents(response);
     };
 
-  
-    // Fetches the current user's events and returns a role map: { [eventId]: role }
+    // Fetches current user memberships and returns a role map indexed by event ID
     const fetchMyEvents = async () => {
         if (!user) return {};
 
@@ -51,15 +61,11 @@ export default function EventsPage() {
         const membershipEvents = getMyEventsWithRole(response);
 
         const membershipMap = {};
-        membershipEvents.forEach((item) => {
-            membershipMap[item.id] = item.role;
-        });
-
+        membershipEvents.forEach((item) => {membershipMap[item.id] = item.role});
         return membershipMap;
     };
 
-
-    // Loads events list and user memberships.
+    // Fetches visible events and current user memberships
     const loadData = async (customFilters = filters) => {
         try {
             setError("");
@@ -82,10 +88,10 @@ export default function EventsPage() {
         }
     };
 
-    useEffect(() => {
-        loadData();
-    }, [user]);
+    // Load initial user data or reload data when authentication state change
+    useEffect(() => {loadData()}, [user]);
 
+    // Auto-clear feedback messages after delay
     useEffect(() => {
         if (message || error) {
             const timer = setTimeout(() => {
@@ -98,15 +104,28 @@ export default function EventsPage() {
     }, [message, error]);
 
 
-   // Returns the current user's role for a given event.
+    /* =========================
+     Derived helper
+        Returns current user's role for a given event
+    ========================= */
     const getRoleByEventId = (eventId) => myEvents[eventId] || null;
 
+    /* =========================
+     Event membership actions
+        Provides join / leave handlers with shared UX logic
+    ========================= */
     const { handleJoinEvent, handleLeaveEvent } = useEventActionsWithConfirm({
         loadData,
         setMessage,
         setError,
         getRoleByEventId,
     });
+
+
+    /* =========================
+     Filters input handler
+        Keep exact date exclusive with date range filters
+    ========================= */
 
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
@@ -117,17 +136,22 @@ export default function EventsPage() {
                     ...prev,
                     date: value,
                     startDate: value ? "" : prev.startDate,
-                     endDate: value ? "" : prev.endDate,
+                     endDate: value ? "" : prev.endDate
                 };
-            }
-
+            } 
             return {
-            ...prev,
-            [name]: value,};
+                ...prev, 
+                [name]: value
+            };
         });
     };
 
-    // Applies filters using the current filter state.
+
+    /* =========================
+     Filters submit handler
+        Applies the current filters to reload the events list
+    ========================= */
+
     const handleFilterSubmit = async (e) => {
         e.preventDefault();
 
@@ -140,7 +164,12 @@ export default function EventsPage() {
         await loadData(formattedFilters);
     };
 
-    // Resets all filters and reloads unfiltered events.
+
+    /* =========================
+     Filters reset handler
+        Clears all filters and reloads all events
+    ========================= */
+
     const handleResetFilters = async () => {
         const resetFilters = {
             search: "",
@@ -157,6 +186,10 @@ export default function EventsPage() {
     };
 
 
+    /* =========================
+        Loading render
+    ========================= */
+
     if (loading) {
         return (
             <div className="container page-section">
@@ -164,6 +197,11 @@ export default function EventsPage() {
             </div>
         );
     }
+
+
+    /* =========================
+       Main render
+    ========================= */
 
     return (
     <div className="container page-section">
@@ -276,36 +314,53 @@ export default function EventsPage() {
 
                         return (
                             <Card key={event.id} className="event-card">
+
+                                {/* =========================
+                                    Top row (title, badges, actions)
+                                ========================= */}
                                 <div className="event-card-header">
-                                    <div className="event-card-main">
+
+                                    {/* Left side: title + type + role */}
+                                    <div className="event-header-left">
                                         <Link to={`/events/${event.id}`} className="event-title-link">
                                             <h3 className="event-title">{event.title}</h3>
                                         </Link>
-
-                                        <p className="event-description">{event.description || "No description provided."}</p>
+                                        {event.type && (<span className="event-type-badge">{event.type}</span>)}
+                                        {user && role && <Badge role={role} />}
                                     </div>
 
-                                    {user && role && <Badge role={role} />}
-                                </div>
-
-                                <div className="event-card-footer">
-                                    {user ? (
-                                        isMember ? (
-                                            role === "organizer" ? (
-                                                 <span className="text-muted">You cannot leave your own event</span>
+                                    {/* Righ side: actions */}
+                                    <div className="event-header-actions">
+                                        {user ? (
+                                            isMember ? (
+                                                role === "organizer" ? null : (
+                                                    <div className="inline-actions">
+                                                        <span className="status-joined">Joined</span>
+                                                        <Button type="button" variant="outline" onClick={() => handleLeaveEvent(event.id)}>Leave</Button>
+                                                    </div>
+                                                )
                                             ) : (
-                                                <div className="inline-actions">
-                                                    <span className="status-joined">✅ Joined</span>
-                                                    <Button type="button" variant="outline" onClick={() => handleLeaveEvent(event.id)}>Leave</Button>
-                                                </div>
+                                                <Button type="button" onClick={() => handleJoinEvent(event.id)}>Join</Button>
                                             )
                                         ) : (
-                                            <Button type="button" onClick={() => handleJoinEvent(event.id)}>Join</Button>
-                                        )
-                                    ) : (
-                                            <Link to={`/events/${event.id}`} className="btn btn-outline">View Details</Link>
-                                    )}
+                                            <Link to={`/events/${event.id}`} className="btn btn-outline">View</Link>
+                                        )}
+                                    </div>
                                 </div>
+
+                                {/* =========================
+                                    Description
+                                ========================= */}
+                                <p className="event-description">{event.description || "No description provided."}</p>
+
+                                {/* =========================
+                                    Meta info (date / location / type)
+                                ========================= */}
+                                <div className="event-meta">
+                                    <span className="event-meta-item">📅 {formatDate(event.date)}</span>
+                                    {event.location && (<span className="event-meta-item">📍 {event.location}</span>)}
+                                </div>
+
                             </Card>
                         );
                     })}

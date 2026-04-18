@@ -67,6 +67,11 @@ export default function LoginPage() {
         }
     };
 
+    
+    /* =========================
+       Main render
+    ========================= */
+
     return (
         <div className="container page-section">
             <div className="page-header">

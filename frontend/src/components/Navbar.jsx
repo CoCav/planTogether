@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, NavLink } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 
 import Button from "./ui/Button";
@@ -50,10 +50,10 @@ export default function Navbar() {
 
                 {/* Main navigation */}
                 <nav className="navbar-links">
-                    <Link to="/" className="navbar-link">Home</Link>
-                    <Link to="/events" className="navbar-link">Events</Link>
+                    <NavLink to="/" end className={({ isActive }) => `navbar-link ${isActive ? "active" : ""}`.trim()}>Home</NavLink>
+                    <NavLink to="/events" end className={({ isActive }) => `navbar-link ${isActive ? "active" : ""}`.trim()}>Events</NavLink>
 
-                    {user && (<Link to="/events/create" className="navbar-link">Create Event</Link>)}
+                    {user && (<NavLink to="/events/create" className={({ isActive }) => `navbar-link ${isActive ? "active" : ""}`.trim()}>Create a event</NavLink>)}
                 </nav>
 
                 {/* Right side */}
@@ -67,14 +67,14 @@ export default function Navbar() {
 
                             {isUserMenuOpen && (
                                 <div className="navbar-dropdown" role="menu">
-                                    <Link to="/profile" className="navbar-dropdown-item" role="menuitem" onClick={() => setIsUserMenuOpen(false)}>My Profile</Link>
-                                    <button type="button" className="navbar-dropdown-item navbar-dropdown-danger" role="menuitem" onClick={handleLogout}>Logout</button>
+                                    <Link to="/profile" role="menuitem" className="navbar-dropdown-item" onClick={() => setIsUserMenuOpen(false)}>My Profile</Link>
+                                    <button type="button" role="menuitem" className="navbar-dropdown-item navbar-dropdown-danger" onClick={handleLogout}>Logout</button>
                                 </div>
                             )}
                         </div>
                     ) : (
                         <div className="navbar-auth-group">
-                            <Link to="/login" className="navbar-link">Login</Link>
+                            <NavLink to="/login" className={({ isActive }) => `navbar-link ${isActive ? "active" : ""}`.trim()}>Login</NavLink>
 
                             <Link to="/register">
                                 <button type="button" className="btn btn-primary">Register</button>

@@ -285,10 +285,6 @@ textarea:focus {
 }
 
 .navbar-links {
-    /* display: flex;
-    align-items: center;
-    gap: var(--space-4);
-    flex-wrap: wrap; */
     flex: 1;
     margin-left: var(--space-5);
 }
@@ -298,12 +294,37 @@ textarea:focus {
     text-decoration: none;
     font-weight: 500;
     white-space: nowrap;
+    position: relative;
+    transition: color 0.2s ease;
 }
 
 .navbar-link:hover {
     color: var(--color-primary);
 }
 
+.navbar-link.active {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.navbar-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -6px;
+    width: 100%;
+    height: 2px;
+    background: var(--color-primary);
+    border-radius: 999px;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.28s ease;
+}
+
+.navbar-link:hover::after,
+.navbar-link.active::after {
+    transform: scaleX(1);
+}
 
 .navbar-links,
 .navbar-auth-group,
@@ -319,8 +340,8 @@ textarea:focus {
 }
 
 .navbar-user-trigger {
-    display: inline-flex;
-    align-items: center;
+    /* display: inline-flex;
+    align-items: center; */
     gap: 6px;
     background: #eef2ff;
     border: 1px solid #c7d2fe;

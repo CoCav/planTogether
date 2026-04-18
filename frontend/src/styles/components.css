@@ -61,6 +61,17 @@
     box-shadow: var(--shadow-sm);
 }
 
+.btn-outline-danger {
+    background: transparent;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+}
+
+.btn-outline-danger:hover:not(:disabled) {
+    background: #fee2e2;
+    border-color: #fca5a5;
+}
+
 
 /* ==================================================
    CARDS
@@ -239,10 +250,6 @@ textarea:focus {
     color: var(--color-text-muted);
 }
 
-.status-joined {
-    font-weight: 600;
-    color: var(--color-success);
-}
 
 /* ==================================================
    LINKS
@@ -655,7 +662,12 @@ textarea:focus {
 }
 
 .event-card {
-    margin-bottom: 0;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.event-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .event-card-header {
@@ -663,7 +675,7 @@ textarea:focus {
     justify-content: space-between;
     align-items: flex-start;
     gap: var(--space-4);
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-3);
     flex-wrap: wrap;
 }
 
@@ -672,6 +684,7 @@ textarea:focus {
     align-items: center;
     gap: var(--space-3);
     flex-wrap: wrap;
+    min-width: 0;
 }
 
 .event-header-actions {
@@ -693,15 +706,47 @@ textarea:focus {
 
 .event-title {
     font-size: var(--font-size-lg);
-    line-height: 1.2;
+    line-height: 1.3;
 }
 
-.event-title-link:hover .event-title {
+.event-title-link:hover 
+.event-title {
     text-decoration: underline;
 }
 
 .event-description {
     color: var(--color-text-muted);
+    margin-bottom: var(--space-3);
+}
+
+.event-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--color-border);
+}
+
+.event-meta-item {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+}
+
+.event-type-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.status-joined {
+    font-weight: 600;
+    color: var(--color-success);
 }
 
 .event-card-footer {

@@ -335,12 +335,11 @@ export default function EventsPage() {
                                             isMember ? (
                                                 role === "organizer" ? null : (
                                                     <div className="inline-actions">
-                                                        <span className="status-joined">Joined</span>
-                                                        <Button type="button" variant="outline" onClick={() => handleLeaveEvent(event.id)}>Leave</Button>
+                                                        <Button type="button" variant="outline-danger" onClick={() => handleLeaveEvent(event.id)}>Leave the event</Button>
                                                     </div>
                                                 )
                                             ) : (
-                                                <Button type="button" onClick={() => handleJoinEvent(event.id)}>Join</Button>
+                                                <Button type="button" onClick={() => handleJoinEvent(event.id)}>Join the event</Button>
                                             )
                                         ) : (
                                             <Link to={`/events/${event.id}`} className="btn btn-outline">View</Link>

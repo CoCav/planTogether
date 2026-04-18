@@ -28,6 +28,7 @@ export const normalizeEvent = (event = {}) => ({
     theme: event.theme || "",
     type: event.type || "",
     creatorId: event.creatorId || null,
+    creatorName: event.creator?.name || "",
     createdAt: event.createdAt || null,
     updatedAt: event.updatedAt || null,
 });

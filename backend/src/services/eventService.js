@@ -37,7 +37,16 @@ const createEvent = async (data, userId) => {
 // Get all events
 const getAllEvents = async () => {
     try {
-        return await Event.findAll();
+        return await Event.findAll({
+            include: [
+                {
+                    model: User,
+                    as: "creator",
+                    attributes: ["id", "name"]
+                },
+            ],
+            order: [["createdAt", "DESC"]]
+        });
     } catch (error) {
         console.error('Error in getting all events:', error);
         throw error;

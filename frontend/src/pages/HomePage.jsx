@@ -42,7 +42,8 @@ export default function HomePage() {
     fetchEvents();
   }, []);
 
-    const previewEvents = events.slice(0, 5);
+    const MAX_HOME_EVENTS = 4;
+    const previewEvents = events.slice(0, MAX_HOME_EVENTS);
 
     return (
         <div className="container page-section">
@@ -51,33 +52,39 @@ export default function HomePage() {
                 Hero section
             ========================= */}
             <section className="hero-section">
-                <div className="hero-content">
-                    <p className="hero-eyebrow">Plan events together</p>
+                <div className="hero-container">
 
-                    <h1 className="hero-title">Organize, join, and manage events with ease</h1>
-                    <p className="hero-description">PlanTogether helps you create events, invite participants, manage roles, and keep everything organized in one place.</p>
+                     <div className="hero-top-row">
+                        <p className="hero-eyebrow">Plan events together</p>
 
-                    <div className="hero-actions">
-                        <Link to="/events">
-                            <Button type="button">Browse Events</Button>
-                        </Link>
-
-                        {user ? (
-                            <Link to="/events/create">
-                                <Button type="button" variant="outline">Create Event</Button>
-                            </Link>
-                        ) : (
-                            <Link to="/register">
-                                <Button type="button" variant="outline">Create Account</Button>
-                            </Link>
-                         )}
+                        {user && (
+                            <span className="hero-user-inline">
+                                Connected as <strong className="hero-user-name">{user.name}</strong>
+                            </span>
+                        )}
                     </div>
 
-                    {user && (
-                        <div className="hero-user-badge">
-                            You are connected as <strong>{user.name}</strong>
+                    <div className="hero-content">
+                        <h1 className="hero-title">Organize, join, and manage events with ease</h1>
+                        <p className="hero-description">PlanTogether helps you create events, invite participants, manage roles, and keep everything organized in one place.</p>
+
+                        <div className="hero-actions">
+                            <Link to="/events">
+                                <Button>Browse Events</Button>
+                            </Link>
+
+                            {user ? (
+                                <Link to="/events/create">
+                                    <Button variant="outline">Create Event</Button>
+                                </Link>
+                            ) : (
+                                <Link to="/register">
+                                    <Button variant="outline">Create Account</Button>
+                                </Link>
+                            )}
                         </div>
-                    )}
+                    </div>
+
                 </div>
             </section>
 
@@ -114,12 +121,12 @@ export default function HomePage() {
             </section>
 
             {/* =========================
-                Upcoming events preview
+                Recently added events preview
             ========================= */}
             <section className="home-section">
                 <div className="section-header">
-                    <h2 className="section-title">Upcoming Events</h2>
-                    <p className="section-subtitle">A quick preview of what’s happening next.</p>
+                    <h2 className="section-title">Latest Events</h2>
+                    <p className="section-subtitle">Discover the most recently created events on PlanTogether.</p>
                 </div>
 
                 {error && <Alert type="danger">{error}</Alert>}
@@ -134,23 +141,27 @@ export default function HomePage() {
                             <Card key={event.id} className="event-card">
                                 <div className="event-card-header">
                                     <div className="event-card-main">
-                                        <Link to={`/events/${event.id}`} className="event-title-link">
-                                            <h3 className="event-title">{event.title}</h3>
-                                        </Link>
+                                        <div className="event-card-top">
+                                            <Link to={`/events/${event.id}`} className="event-title-link">
+                                                <h3 className="event-title">{event.title}</h3>
+                                            </Link>
+
+                                            {event.type && (<span className="event-type-badge">{event.type}</span>)}
+                                        </div>
 
                                         <p className="event-description">{event.description || "No description provided."}</p>
+
+                                        <div className="event-meta">
+                                            {event.creatorName && (<span className="event-meta-item">👤 {event.creatorName}</span>)}
+                                            <span className="event-meta-item">📅 {event.date ? new Date(event.date).toLocaleDateString() : "No date"}</span>
+                                            <span className="event-meta-item">📍 {event.location || "No location"}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </Card>
                         ))}
                     </div>
                 )}
-
-                <div className="home-section-actions">
-                    <Link to="/events">
-                        <Button type="button" variant="outline">View All Events</Button>
-                    </Link>
-                </div>
             </section>
         </div>
     );

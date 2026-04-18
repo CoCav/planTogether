@@ -50,10 +50,10 @@ export default function Navbar() {
 
                 {/* Main navigation */}
                 <nav className="navbar-links">
-                    <NavLink to="/" end className={({ isActive }) => `navbar-link ${isActive ? "active" : ""}`.trim()}>Home</NavLink>
-                    <NavLink to="/events" end className={({ isActive }) => `navbar-link ${isActive ? "active" : ""}`.trim()}>Events</NavLink>
+                    <NavLink to="/" end className={({ isActive }) => `navbar-link link-underline link-color-hover ${isActive ? "active" : ""}`.trim()}>Home</NavLink>
+                    <NavLink to="/events" end className={({ isActive }) => `navbar-link link-underline link-color-hover ${isActive ? "active" : ""}`.trim()}>Events</NavLink>
 
-                    {user && (<NavLink to="/events/create" className={({ isActive }) => `navbar-link ${isActive ? "active" : ""}`.trim()}>Create a event</NavLink>)}
+                    {user && (<NavLink to="/events/create" className={({ isActive }) => `navbar-link link-underline link-color-hover ${isActive ? "active" : ""}`.trim()}>Create a event</NavLink>)}
                 </nav>
 
                 {/* Right side */}
@@ -74,7 +74,7 @@ export default function Navbar() {
                         </div>
                     ) : (
                         <div className="navbar-auth-group">
-                            <NavLink to="/login" className={({ isActive }) => `navbar-link ${isActive ? "active" : ""}`.trim()}>Login</NavLink>
+                            <NavLink to="/login" className={({ isActive }) => `navbar-link link-underline link-color-hover ${isActive ? "active" : ""}`.trim()}>Login</NavLink>
 
                             <Link to="/register">
                                 <button type="button" className="btn btn-primary">Register</button>

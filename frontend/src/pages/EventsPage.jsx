@@ -323,7 +323,7 @@ export default function EventsPage() {
                                     {/* Left side: title + type + role */}
                                     <div className="event-header-left">
                                         <Link to={`/events/${event.id}`} className="event-title-link">
-                                            <h3 className="event-title">{event.title}</h3>
+                                            <h3 className="event-title-link link-underline link-color-hover">{event.title}</h3>
                                         </Link>
                                         {event.type && (<span className="event-type-badge">{event.type}</span>)}
                                         {user && role && <Badge role={role} />}

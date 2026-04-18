@@ -263,6 +263,39 @@ textarea:focus {
     text-decoration: underline;
 }
 
+/* Reusable animated underline for interactive links */
+.link-underline {
+    position: relative;
+    display: inline-block;
+}
+
+.link-underline::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+    width: 100%;
+    height: 2px;
+    background: var(--color-primary);
+    border-radius: 999px;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.28s ease;
+}
+
+.link-underline:hover::after,
+.link-underline.active::after {
+    transform: scaleX(1);
+}
+
+.link-color-hover {
+    transition: color 0.2s ease;
+}
+
+.link-color-hover:hover {
+    color: var(--color-primary);
+}
+
 
 /* ==================================================
    NAVBAR
@@ -301,36 +334,11 @@ textarea:focus {
     text-decoration: none;
     font-weight: 500;
     white-space: nowrap;
-    position: relative;
-    transition: color 0.2s ease;
-}
-
-.navbar-link:hover {
-    color: var(--color-primary);
 }
 
 .navbar-link.active {
     color: var(--color-primary);
     font-weight: 600;
-}
-
-.navbar-link::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: -6px;
-    width: 100%;
-    height: 2px;
-    background: var(--color-primary);
-    border-radius: 999px;
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.28s ease;
-}
-
-.navbar-link:hover::after,
-.navbar-link.active::after {
-    transform: scaleX(1);
 }
 
 .navbar-links,
@@ -702,16 +710,12 @@ textarea:focus {
 .event-title-link {
     display: inline-block;
     margin-bottom: var(--space-2);
+    text-decoration: none;
 }
 
 .event-title {
     font-size: var(--font-size-lg);
     line-height: 1.3;
-}
-
-.event-title-link:hover 
-.event-title {
-    text-decoration: underline;
 }
 
 .event-description {

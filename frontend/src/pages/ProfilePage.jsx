@@ -6,7 +6,6 @@ import { getMyEvents } from "../api/eventMembershipApi";
 import { getMyEventsWithRole } from "../utils/normalize";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
 
-import BackButton from "../components/ui/BackButton";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
@@ -187,7 +186,6 @@ export default function ProfilePage() {
     if (!user) {
         return (
             <div className="container page-section">
-                <BackButton fallbackPath="/" label="← Back to Home" useHistory={false} />
                 <LoadingState>Loading profile...</LoadingState>
             </div>
         );
@@ -200,8 +198,6 @@ export default function ProfilePage() {
 
     return (
         <div className="container page-section">
-            <BackButton fallbackPath="/" label="← Back to Home" useHistory={false} />
-
             <div className="page-header">
                 <div>
                     <h1 className="page-title">My Profile</h1>

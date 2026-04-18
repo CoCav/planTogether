@@ -6,7 +6,6 @@ import { getEventMembers, getEventOrganizers, updateMemberRole, removeEventMembe
 import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../utils/normalize";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm.js";
 
-import BackButton from "../components/ui/BackButton.jsx";
 import Button from "../components/ui/Button.jsx";
 import Card from "../components/ui/Card.jsx";
 import Badge from "../components/ui/Badge.jsx";
@@ -169,7 +168,6 @@ export default function EventDetailsPage() {
     if (loading) {
         return (
             <div className="container page-section">
-                <BackButton fallbackPath="/events" label="← Back to Events" />
                 <LoadingState>Loading event details...</LoadingState>
             </div>
         );
@@ -178,7 +176,6 @@ export default function EventDetailsPage() {
     if (!event) {
         return (
             <div className="container page-section">
-                <BackButton fallbackPath="/events" label="← Back to Events" useHistory={false}/>
                 <Card>
                     <EmptyState>Event not found.</EmptyState>
                 </Card>
@@ -188,8 +185,6 @@ export default function EventDetailsPage() {
 
     return (
         <div className="container page-section">
-            <BackButton fallbackPath="/events" label="← Back to Events" useHistory={false}/>
-
             <div className="page-header">
                 <div>
                     <h1 className="page-title">{event.title}</h1>

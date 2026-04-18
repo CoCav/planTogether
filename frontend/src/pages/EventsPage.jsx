@@ -6,7 +6,6 @@ import { getMyEvents } from "../api/eventMembershipApi";
 import { getNormalizedEvents, getMyEventsWithRole } from "../utils/normalize";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
 
-import BackButton from "../components/ui/BackButton";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
@@ -161,7 +160,6 @@ export default function EventsPage() {
     if (loading) {
         return (
             <div className="container page-section">
-                <BackButton fallbackPath="/" label="← Back to Home" useHistory={false}/>
                 <LoadingState>Loading events...</LoadingState>
             </div>
         );
@@ -169,8 +167,6 @@ export default function EventsPage() {
 
     return (
     <div className="container page-section">
-        <BackButton label="← Back to Home" useHistory={false}/>
-
         <div className="page-header">
             <div>
                 <h1 className="page-title">Events</h1>

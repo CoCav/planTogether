@@ -3,7 +3,6 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { registerUser } from "../api/authApi";
 
-import BackButton from "../components/ui/BackButton";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
@@ -65,8 +64,6 @@ export default function RegisterPage() {
 
     return (
         <div className="container page-section">
-            <BackButton fallbackPath="/" label="← Back to Home" useHistory={false}/>
-
             <div className="page-header">
                 <div>
                     <h1 className="page-title">Register</h1>

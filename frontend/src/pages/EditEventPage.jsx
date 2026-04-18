@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getEventById, updateEvent } from "../api/eventApi";
 
-import BackButton from "../components/ui/BackButton";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
@@ -88,7 +87,6 @@ export default function EditEventPage() {
     if (loading) {
         return (
             <div className="container page-section">
-                <BackButton fallbackPath={`/events/${eventId}`} label="← Back to Event" useHistory={false}/>
                 <LoadingState>Loading event form...</LoadingState>
             </div>
         );
@@ -96,8 +94,6 @@ export default function EditEventPage() {
 
     return (
         <div className="container page-section">
-            <BackButton fallbackPath={`/events/${eventId}`} label="← Back to Event" useHistory={false}/>
-
             <div className="page-header">
                 <div>
                     <h1 className="page-title">Edit Event</h1>

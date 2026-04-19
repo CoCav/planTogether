@@ -7,13 +7,22 @@ const EventUserRole = require('../models/Link/eventUserRoleModel');
 const createEvent = async (data, userId) => {
     try {
         // Get all datas from an user while creating an event
-        const { title, description, date, type, theme, location } = data;
+        const { title, description, startDateTime, endDateTime, mode, type, theme, location } = data;
+
+        // Minimal safety validation (defensive layer)
+        if (new Date(endDateTime) < new Date(startDateTime)) {
+            const error = new Error("End date must be after start date");
+            error.statusCode = 400;
+            throw error;
+        }
 
         const event = await Event.create({
             title,
             description,
-            date,
-            location,
+            startDateTime,
+            endDateTime,
+            mode,
+            location: mode === "online" ? null : location,
             type,
             theme,
             creatorId: userId
@@ -112,8 +121,9 @@ const getFilteredEvents = async (query) => {
             type,
             theme,
             location,
+            mode,
             search,
-            sortBy = 'date',
+            sortBy = 'startDateTime',
             order = 'asc',
             page = 1,
             pageSize = 10
@@ -124,17 +134,11 @@ const getFilteredEvents = async (query) => {
         // Filter by exact date
         if (date) {
             const exactDate = new Date(date);
-
-            if (Number.isNaN(exactDate.getTime())) {
-                const error = new Error('Invalid date');
-                error.statusCode = 400;
-                throw error;
-            }
-
             const nextDay = new Date(exactDate);
+
             nextDay.setDate(nextDay.getDate() + 1);
 
-            whereConditions.date = {
+            whereConditions.startDateTime = {
                 [Op.gte]: exactDate,
                 [Op.lt]: nextDay,
             };
@@ -146,55 +150,29 @@ const getFilteredEvents = async (query) => {
             const start = startDate ? new Date(startDate) : null;
             const end = endDate ? new Date(endDate) : null;
 
-            if (start && Number.isNaN(start.getTime())) {
-                const error = new Error('Invalid startDate');
-                error.statusCode = 400;
-                throw error;
-            }
-
-            if (end && Number.isNaN(end.getTime())) {
-                const error = new Error('Invalid endDate');
-                error.statusCode = 400;
-                throw error;
-            }
-
-            if (start && end) whereConditions.date = { [Op.between]: [start, end] };
-            else if (start) whereConditions.date = { [Op.gte]: start };
-            else if (end) whereConditions.date = { [Op.lte]: end };
+            if (start && end) whereConditions.startDateTime = { [Op.between]: [start, end] };
+            else if (start) whereConditions.startDateTime = { [Op.gte]: start };
+            else if (end) whereConditions.startDateTime = { [Op.lte]: end };
         }
 
-        // Filter by creator
-        if (creatorId) {
-            const creatorIdInt = parseInt(creatorId, 10);
-
-            if (Number.isNaN(creatorIdInt)) {
-                const error = new Error('Invalid creatorId');
-                error.statusCode = 400;
-                throw error;
-            }
-
-            whereConditions.creatorId = { [Op.eq]: creatorIdInt };
-        }
-
-        // Filter by type/theme/location
-        if (type) whereConditions.type = { [Op.iLike]: `%${String(type).trim()}%` };
-        if (theme) whereConditions.theme = { [Op.iLike]: `%${String(theme).trim()}%` };
-        if (location) whereConditions.location = { [Op.iLike]: `%${String(location).trim()}%` };
+        // Filter by creator/type/theme/mode/location
+        if (creatorId) whereConditions.creatorId = parseInt(creatorId, 10);
+        if (mode) whereConditions.mode = mode;
+        if (type) whereConditions.type = { [Op.iLike]: `%${type}%` };
+        if (theme) whereConditions.theme = { [Op.iLike]: `%${theme}%` };
+        if (location) whereConditions.location = { [Op.iLike]: `%${location}%` };
 
         // Search in title or description
         if (search) {
-            const s = String(search).trim();
-            if (s) {
-                 whereConditions[Op.or] = [
-                    { title: { [Op.iLike]: `%${s}%` } },
-                    { description: { [Op.iLike]: `%${s}%` } }
-                ];
-            }
-        }    
+            whereConditions[Op.or] = [
+                { title: { [Op.iLike]: `%${search}%` } },
+                { description: { [Op.iLike]: `%${search}%` } },
+            ];
+        } 
      
         // Sorting allowlist (prevents SQL injection)
-        const allowedSortFields = ['date', 'title', 'creatorId'];
-        const orderField = allowedSortFields.includes(sortBy) ? sortBy : 'date';
+        const allowedSortFields = ['startDateTime', 'title', 'creatorId', 'createdAt'];
+        const orderField = allowedSortFields.includes(sortBy) ? sortBy : 'startDateTime';
         const orderDirection = String(order).toLowerCase() === 'desc' ? 'DESC' : 'ASC';
 
         // Pagination (simple + capped)
@@ -202,7 +180,7 @@ const getFilteredEvents = async (query) => {
         const pageInt = Math.max(parseInt(page, 10) || 1, 1);
         const offsetInt = (pageInt - 1) * limitInt;
 
-        // Fetch the filtered events with creator and participant count
+        // Query: fetch the filtered events with creator and participant count
         const { count, rows } = await Event.findAndCountAll({
             where: whereConditions,
             limit: limitInt,
@@ -256,7 +234,38 @@ const updateEventById = async (id, data) => {
             throw error;
         }
 
-        await event.update(data);
+        const {
+            title,
+            description,
+            startDateTime,
+            endDateTime,
+            mode,
+            type,
+            theme,
+            location 
+        } = data;
+
+        // Minimal safety validation
+        if (startDateTime && endDateTime) {
+            if (new Date(endDateTime) < new Date(startDateTime)) {
+                const error = new Error("End date must be after start date");
+                error.statusCode = 400;
+                throw error;
+            }
+        }
+
+        const updatedData = { 
+            title,
+            description,
+            startDateTime,
+            endDateTime,
+            mode,
+            location: mode === "online" ? null : location,
+            type,
+            theme
+        };
+
+        await event.update(updatedData);
         return event;
 
     } catch (error) {

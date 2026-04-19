@@ -20,9 +20,20 @@ const Event = sequelize.define('Event', {
         allowNull: true
     },
 
-    date: {
+    startDateTime: {
         type: DataTypes.DATE,
         allowNull: false
+    },
+
+    endDateTime: {
+        type: DataTypes.DATE,
+        allowNull: false
+    },
+
+    mode: {
+        type: DataTypes.ENUM("online", "in_person"),
+        allowNull: false,
+        defaultValue: "in_person"
     },
 
     location: {

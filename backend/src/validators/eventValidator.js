@@ -8,21 +8,45 @@ const createEventValidator = [
         .isString().withMessage('Title must be a string')
         .isLength({ max: 255 }).withMessage('Title must be at most 255 characters long'),
 
-    body('date')
-        .notEmpty()
-        .withMessage('Date is required')
-        .isISO8601().withMessage('Date must be a valid date format')
+    body("startDateTime")
+        .notEmpty().withMessage("Start date and time is required")
+        .isISO8601().withMessage("Start date and time must be a valid ISO 8601 date")
         .toDate(),
+
+    body("endDateTime")
+        .notEmpty().withMessage("End date and time is required")
+        .isISO8601().withMessage("End date and time must be a valid ISO 8601 date")
+        .toDate()
+        .custom((value, { req }) => {
+            const start = new Date(req.body.startDateTime);
+            const end = new Date(value);
+
+            if (end < start) {
+                throw new Error("End date and time must be after start date and time");
+            }
+
+            return true;
+        }),
 
     body('description')
         .optional()
         .trim()
         .isString().withMessage('Description must be a string'),
 
-    body('location')
-        .optional()
+    body("mode")
+        .notEmpty().withMessage("Mode is required")
+        .isIn(["online", "in_person"]).withMessage("Mode must be either online or in_person"),
+
+    body("location")
+        .optional({ nullable: true })
         .trim()
-        .isString().withMessage('Location must be a string'),
+        .isString().withMessage("Location must be a string")
+        .custom((value, { req }) => {
+            if (req.body.mode === "in_person" && !value?.trim()) {
+                throw new Error("Location is required for in-person events");
+            }
+            return true;
+        }),
 
     body('type')
         .optional()
@@ -48,10 +72,25 @@ const updateEventValidator = [
         .isString().withMessage('Title must be a string')
         .isLength({ max: 255 }).withMessage('Title must be at most 255 characters long'),
 
-    body('date')
-        .optional()
-        .isISO8601().withMessage('Date must be a valid date format')
+    body("startDateTime")
+        .notEmpty().withMessage("Start date and time is required")
+        .isISO8601().withMessage("Start date and time must be a valid ISO 8601 date")
         .toDate(),
+
+    body("endDateTime")
+        .notEmpty().withMessage("End date and time is required")
+        .isISO8601().withMessage("End date and time must be a valid ISO 8601 date")
+        .toDate()
+        .custom((value, { req }) => {
+            const start = new Date(req.body.startDateTime);
+            const end = new Date(value);
+
+            if (end < start) {
+                throw new Error("End date and time must be after start date and time");
+            }
+
+            return true;
+        }),
 
     body('description')
         .optional()
@@ -59,10 +98,20 @@ const updateEventValidator = [
         .withMessage('Description must be a string')
         .trim(),
 
-    body('location')
-        .optional()
+    body("mode")
+        .notEmpty().withMessage("Mode is required")
+        .isIn(["online", "in_person"]).withMessage("Mode must be either online or in_person"),
+
+    body("location")
+        .optional({ nullable: true })
         .trim()
-        .isString().withMessage('Location must be a string'),
+        .isString().withMessage("Location must be a string")
+        .custom((value, { req }) => {
+            if (req.body.mode === "in_person" && !value?.trim()) {
+                throw new Error("Location is required for in-person events");
+            }
+            return true;
+        }),
 
     body('type')
         .optional()
@@ -74,7 +123,6 @@ const updateEventValidator = [
         .trim()
         .isString().withMessage('Theme must be a string')
 ];
-
 
 // Validator for eventId parameter
 const eventIdParamValidator = [

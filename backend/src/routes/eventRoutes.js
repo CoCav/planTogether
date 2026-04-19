@@ -9,7 +9,7 @@ const { createEventValidator, updateEventValidator, eventIdParamValidator } = re
 
 
 // ROUTE GET - Get all filtered events
-router.get('/filtered', authenticateToken, eventController.getFilteredEvents);
+router.get('/filtered', eventController.getFilteredEvents);
 
 // ROUTE POST - Create a new event
 router.post('/', authenticateToken, createEventValidator, validateRequest, eventController.createEvent);

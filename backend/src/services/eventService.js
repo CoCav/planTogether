@@ -131,7 +131,7 @@ const getFilteredEvents = async (query) => {
         
         const whereConditions = {};
 
-        // Filter by exact date
+        // // Filter by exact date
         if (date) {
             const exactDate = new Date(date);
             const nextDay = new Date(exactDate);
@@ -141,23 +141,38 @@ const getFilteredEvents = async (query) => {
             whereConditions.startDateTime = {
                 [Op.gte]: exactDate,
                 [Op.lt]: nextDay,
-            };
+            }};
             
        
-        } 
+        // } 
         // Filter by range date
-        else if (startDate || endDate) {
-            const start = startDate ? new Date(startDate) : null;
-            const end = endDate ? new Date(endDate) : null;
+        if (startDate || endDate) {
+            const start = startDate ? new Date(`${startDate}T00:00:00.000`) : null;
+            const end = endDate ? new Date(`${endDate}T23:59:59.999`) : null;
+            
+            if (start && Number.isNaN(start.getTime())) {
+                const error = new Error("Invalid startDate");
+                error.statusCode = 400;
+                throw error;
+            }
 
-            if (start && end) whereConditions.startDateTime = { [Op.between]: [start, end] };
+            if (end && Number.isNaN(end.getTime())) {
+                const error = new Error("Invalid endDate");
+                error.statusCode = 400;
+                throw error;
+            }
+
+            if (start && end) whereConditions[Op.and] = [ 
+                    {startDateTime: {[Op.lte]: end}}, 
+                    {endDateTime: {[Op.gte]: start}}
+                ];
             else if (start) whereConditions.startDateTime = { [Op.gte]: start };
             else if (end) whereConditions.startDateTime = { [Op.lte]: end };
         }
 
         // Filter by creator/type/theme/mode/location
         if (creatorId) whereConditions.creatorId = parseInt(creatorId, 10);
-        if (mode) whereConditions.mode = mode;
+        if (mode) whereConditions.mode = String(mode).trim();;
         if (type) whereConditions.type = { [Op.iLike]: `%${type}%` };
         if (theme) whereConditions.theme = { [Op.iLike]: `%${theme}%` };
         if (location) whereConditions.location = { [Op.iLike]: `%${location}%` };
@@ -195,7 +210,7 @@ const getFilteredEvents = async (query) => {
                 include: [
                     [ literal(`(
                             SELECT COUNT(*)
-                            FROM "EventUserRoles" AS eur
+                            FROM "event_user_roles" AS eur
                             WHERE eur."eventId" = "Event"."id"
                               AND eur."role" = 'participant'
                         )`),

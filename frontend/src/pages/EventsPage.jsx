@@ -4,7 +4,7 @@ import { useAuth } from "../context/useAuth";
 import { getAllEvents, getFilteredEvents } from "../api/eventApi";
 import { getMyEvents } from "../api/eventMembershipApi";
 import { getNormalizedEvents, getMyEventsWithRole } from "../utils/normalize";
-import { formatEventDateRange, formatCount } from "../utils/format";
+import { formatEventDateRange, formatCount, formatTime } from "../utils/format";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
 
 import Button from "../components/ui/Button";
@@ -35,16 +35,12 @@ export default function EventsPage() {
         search: "",
         type: "",
         theme: "",
-        location: "",
-        date: "",
         startDate: "",
-        endDate: ""
+        endDate: "",
+        mode: "",
+        location: ""
     });
 
-    const role = myEvents[event.id];
-    const isMember = !!role;
-
-    
     /* =========================
         Data loading functions
     ========================= */
@@ -133,20 +129,10 @@ export default function EventsPage() {
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
 
-        setFilters((prev) => {
-            if (name === "date") {
-                 return {
-                    ...prev,
-                    date: value,
-                    startDate: value ? "" : prev.startDate,
-                     endDate: value ? "" : prev.endDate
-                };
-            } 
-            return {
-                ...prev, 
-                [name]: value
-            };
-        });
+        setFilters((prev) => ({
+            ...prev,
+            [name]: value
+        }));
     };
 
 
@@ -157,14 +143,7 @@ export default function EventsPage() {
 
     const handleFilterSubmit = async (e) => {
         e.preventDefault();
-
-        const formattedFilters = filters.date ? {
-            ...filters,
-            startDate: "",
-            endDate: ""
-        } : filters
-
-        await loadData(formattedFilters);
+        await loadData(filters);
     };
 
 
@@ -178,10 +157,10 @@ export default function EventsPage() {
             search: "",
             type: "",
             theme: "",
-            location: "",
-            date: "",
             startDate: "",
-            endDate: ""
+            endDate: "",
+            mode: "",
+            location: ""
         };
 
         setFilters(resetFilters);
@@ -223,7 +202,7 @@ export default function EventsPage() {
         <Card className="filter-card">
             <div className="section-header">
                 <h2 className="section-title">Filter Events</h2>
-                <p className="section-subtitle">Search by keyword, category, location, or date.</p>
+                <p className="section-subtitle">Search by keyword, type, theme, mode, location, or date range.</p>
             </div>
 
             <form onSubmit={handleFilterSubmit} className="filter-form">
@@ -258,6 +237,14 @@ export default function EventsPage() {
                         />
                     </FormField>
 
+                    <FormField label="Mode">
+                        <select name="mode" value={filters.mode} onChange={handleFilterChange} className="input">
+                            <option value="">All modes</option>
+                            <option value="in_person">In person</option>
+                            <option value="online">Online</option>
+                        </select>
+                    </FormField>
+
                     <FormField label="Location">
                         <Input
                             type="text"
@@ -268,22 +255,13 @@ export default function EventsPage() {
                         />
                     </FormField>
 
-                    <FormField label="Exact date">
-                        <Input
-                            type="date"
-                            name="date"
-                            value={filters.date}
-                            onChange={handleFilterChange}
-                        />
-                    </FormField>
-
                     <FormField label="Start date">
                         <Input
                             type="date"
                             name="startDate"
                             value={filters.startDate}
                             onChange={handleFilterChange}
-                            disabled={!!filters.date}
+                            // disabled={!!filters.date}
                         />
                     </FormField>
 
@@ -293,7 +271,7 @@ export default function EventsPage() {
                             name="endDate"
                             value={filters.endDate}
                             onChange={handleFilterChange}
-                            disabled={!!filters.date}
+                            // disabled={!!filters.date}
                         />
                     </FormField>
                 </div>
@@ -312,6 +290,9 @@ export default function EventsPage() {
             ) : (
                 <div className="event-list">
                     {events.map((event) => { 
+                        const role = myEvents[event.id];
+                        const isMember = !!role;
+
                         return (
                             <Card key={event.id} className="event-card">
 
@@ -342,7 +323,7 @@ export default function EventsPage() {
                                                 <Button type="button" onClick={() => handleJoinEvent(event.id)}>Join the event</Button>
                                             )
                                         ) : (
-                                            <Link to={`/events/${event.id}`} className="btn btn-outline">View</Link>
+                                           <Alert type="info">🔐 Login to join</Alert>
                                         )}
                                     </div>
                                 </div>
@@ -358,9 +339,9 @@ export default function EventsPage() {
                                 <div className="event-meta">
                                     <span className="event-meta-item">👥 {formatCount(event.participantCount, "participant")}</span>
                                     <span className="event-meta-item">📅 {formatEventDateRange(event.startDateTime, event.endDateTime)}</span>
+                                    <span className="event-meta-item">🕒 {formatTime(event.startDateTime)} → {formatTime(event.endDateTime)}</span>
                                     {event.location && (<span className="event-meta-item">📍{event.mode === "online" ? "Online" : event.location || "No location"}</span>)}
                                 </div>
-
                             </Card>
                         );
                     })}

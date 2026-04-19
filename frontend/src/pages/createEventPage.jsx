@@ -153,7 +153,7 @@ export default function CreateEventPage() {
                         </FormField>
 
                         <FormField label="Mode">
-                            <select className="input" name="theme" value={form.theme} onChange={handleChange}> 
+                            <select className="input" name="mode" value={form.mode} onChange={handleChange}> 
                                 <option value="in_person">In person</option>
                                 <option value="online">Online</option>
                             </select>

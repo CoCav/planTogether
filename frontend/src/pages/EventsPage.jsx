@@ -4,7 +4,7 @@ import { useAuth } from "../context/useAuth";
 import { getAllEvents, getFilteredEvents } from "../api/eventApi";
 import { getMyEvents } from "../api/eventMembershipApi";
 import { getNormalizedEvents, getMyEventsWithRole } from "../utils/normalize";
-import { formatDate } from "../utils/format";
+import { formatDate, formatCount } from "../utils/format";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
 
 import Button from "../components/ui/Button";
@@ -356,6 +356,7 @@ export default function EventsPage() {
                                     Meta info (date / location / type)
                                 ========================= */}
                                 <div className="event-meta">
+                                    <span className="event-meta-item">👥 {formatCount(event.participantCount, "participant")}</span>
                                     <span className="event-meta-item">📅 {formatDate(event.date)}</span>
                                     {event.location && (<span className="event-meta-item">📍 {event.location}</span>)}
                                 </div>

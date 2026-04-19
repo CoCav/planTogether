@@ -19,7 +19,7 @@ router.post('/:eventId/members/join', authenticateToken, eventMembershipControll
 router.delete('/:eventId/members/leave', authenticateToken, eventMembershipController.leaveEvent);
 
 // ROUTE GET - Get all members of an event
-router.get('/:eventId/members', authenticateToken, eventMembershipController.getMembers);
+router.get('/:eventId/members', eventMembershipController.getMembers);
 
 // ROUTE GET - Get all organizers and co_organizers of an event
 router.get('/:eventId/organizers', eventMembershipController.getOrganizers);

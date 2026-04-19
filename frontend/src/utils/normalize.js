@@ -29,6 +29,7 @@ export const normalizeEvent = (event = {}) => ({
     type: event.type || "",
     creatorId: event.creatorId || null,
     creatorName: event.creator?.name || "",
+    participantCount: Number(event.participantCount) || 0,
     createdAt: event.createdAt || null,
     updatedAt: event.updatedAt || null,
 });

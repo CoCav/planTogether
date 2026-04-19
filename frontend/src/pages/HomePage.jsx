@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth.js";
 import { getAllEvents } from "../api/eventApi";
 import { getNormalizedEvents } from "../utils/normalize.js";
-import { formatDate } from "../utils/format.js";
+import { formatDate, formatCount } from "../utils/format.js";
 
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
@@ -149,7 +149,7 @@ export default function HomePage() {
                                     <div className="event-card-main">
                                         <div className="event-card-top">
                                             <Link to={`/events/${event.id}`} className="event-title-link">
-                                                <h3 className="event-title">{event.title}</h3>
+                                                <h3 className="event-title-link link-underline link-color-hover">{event.title}</h3>
                                             </Link>
 
                                             {event.type && (<span className="event-type-badge">{event.type}</span>)}
@@ -159,6 +159,7 @@ export default function HomePage() {
 
                                         <div className="event-meta">
                                             {event.creatorName && (<span className="event-meta-item">👤 {event.creatorName}</span>)}
+                                            <span className="event-meta-item">👥 {formatCount(event.participantCount, "participant")}</span>
                                             <span className="event-meta-item">📅 {formatDate(event.date)}</span>
                                             <span className="event-meta-item">📍 {event.location || "No location"}</span>
                                         </div>

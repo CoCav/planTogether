@@ -776,6 +776,22 @@ textarea:focus {
     margin-bottom: var(--space-5);
 }
 
+.page-header {
+    margin-bottom: var(--space-5);
+    justify-content: space-between;
+    align-items: center;
+}
+
+.page-title {
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    font-weight: 700;
+}
+
+.page-subtitle {
+    color: var(--color-text-muted);
+    margin-top: var(--space-2);
+}
+
 .event-details-header {
     display: flex;
     justify-content: space-between;
@@ -788,19 +804,6 @@ textarea:focus {
 .event-details-main {
     flex: 1;
     min-width: 0;
-}
-
-.role-summary {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    align-items: flex-start;
-}
-
-.role-summary-label {
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    color: var(--color-text-muted);
 }
 
 .action-bar {
@@ -822,8 +825,17 @@ textarea:focus {
     gap: var(--space-2);
     padding: var(--space-4);
     border: 1px solid var(--color-border);
+    background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
     border-radius: var(--radius-md);
-    background: #fafafa;
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.detail-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
 }
 
 .detail-label {

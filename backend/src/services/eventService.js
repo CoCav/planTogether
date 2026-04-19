@@ -1,4 +1,4 @@
-const { Op } = require('sequelize');
+const { Op, fn, col, literal } = require('sequelize');
 const Event = require('../models/eventModel');
 const User = require('../models/userModel');
 const EventUserRole = require('../models/Link/eventUserRoleModel');
@@ -38,17 +38,27 @@ const createEvent = async (data, userId) => {
 const getAllEvents = async () => {
     try {
         return await Event.findAll({
-            include: [
-                {
+            attributes: {
+            include: [ [fn("COUNT", col("participants.id")), "participantCount"]] },
+            include: [{
                     model: User,
                     as: "creator",
                     attributes: ["id", "name"]
-                },
-            ],
+                }, {
+                    model: User,
+                    as: "participants",
+                    attributes: [],
+                    through: {
+                        attributes: [],
+                        where: { role: "participant" }
+                    },
+                    required: false
+                }],
+            group: ["Event.id", "creator.id"],
             order: [["createdAt", "DESC"]]
         });
     } catch (error) {
-        console.error('Error in getting all events:', error);
+        console.error("Error in getting all events:", error);
         throw error;
     }
 };
@@ -56,19 +66,35 @@ const getAllEvents = async () => {
 // Get an event by its ID
 const getEventById = async (id) => {
     try {
-        //Check if event exists
-        const event = await Event.findByPk(id);
+        const event = await Event.findOne({
+            where: { id },
+            attributes: { include: [[fn("COUNT", col("participants.id")), "participantCount"]] },
+            include: [{
+                    model: User,
+                    as: "creator",
+                    attributes: ["id", "name"]
+                }, {
+                    model: User,
+                    as: "participants",
+                    attributes: [],
+                    through: {
+                        attributes: [],
+                        where: { role: "participant" }
+                    },
+                    required: false
+                }],
+            group: ["Event.id", "creator.id"]
+        });
 
         if (!event) {
-            const error = new Error('Event not found');
+            const error = new Error("Event not found");
             error.statusCode = 404;
             throw error;
         }
 
-        return event
-
+        return event;
     } catch (error) {
-        console.error('Error in getting the event:', error);
+        console.error("Error in getting the event:", error);
         throw error;
     }
 };
@@ -161,7 +187,7 @@ const getFilteredEvents = async (query) => {
             if (s) {
                  whereConditions[Op.or] = [
                     { title: { [Op.iLike]: `%${s}%` } },
-                    { description: { [Op.iLike]: `%${s}%` } },
+                    { description: { [Op.iLike]: `%${s}%` } }
                 ];
             }
         }    
@@ -176,7 +202,7 @@ const getFilteredEvents = async (query) => {
         const pageInt = Math.max(parseInt(page, 10) || 1, 1);
         const offsetInt = (pageInt - 1) * limitInt;
 
-        // Fetch the filtered events
+        // Fetch the filtered events with creator and participant count
         const { count, rows } = await Event.findAndCountAll({
             where: whereConditions,
             limit: limitInt,
@@ -185,8 +211,20 @@ const getFilteredEvents = async (query) => {
             include: [{
                 model: User,
                 as: 'creator',
-                attributes: ['id', 'name'],
+                attributes: ['id', 'name']
             }],
+            attributes: {
+                include: [
+                    [ literal(`(
+                            SELECT COUNT(*)
+                            FROM "EventUserRoles" AS eur
+                            WHERE eur."eventId" = "Event"."id"
+                              AND eur."role" = 'participant'
+                        )`),
+                        "participantCount"
+                    ]
+                ]
+            }
         });
   
         return {
@@ -194,7 +232,7 @@ const getFilteredEvents = async (query) => {
             pageSize: limitInt,
             totalEvents: count,
             totalPages: Math.ceil(count / limitInt),
-            events: rows,
+            events: rows
         };
         
     } catch (error) {

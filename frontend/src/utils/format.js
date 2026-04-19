@@ -51,13 +51,11 @@ export const formatEventDateRange = (start, end) => {
 /* =========================
    Count formatting
     Returns a properly formatted label with singular / plural
-    Example: 1 member / 2 members
 ========================= */
 export const formatCount = (count, singular, plural = `${singular}s`) => {return `${count} ${count > 1 ? plural : singular}`};
 
 /* =========================
    Verb agreement helper
-    Returns correct verb form based on count
-    Example: 1 is / 2 are
+    Returns "is" or "are" depending on count
 ========================= */
 export const formatBe = (count) => { return count > 1 ? "are" : "is" };

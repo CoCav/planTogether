@@ -4,7 +4,7 @@ import { useAuth } from "../context/useAuth";
 import { getEventById, deleteEvent } from "../api/eventApi";
 import { getEventMembers, getEventOrganizers, updateMemberRole, removeEventMember } from "../api/eventMembershipApi.js"
 import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../utils/normalize";
-import { formatEventDateRange, formatCount, formatBe } from "../utils/format.js";
+import { formatEventDateRange, formatCount, formatBe, formatTime } from "../utils/format.js";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm.js";
 
 import Button from "../components/ui/Button.jsx";
@@ -31,14 +31,32 @@ export default function EventDetailsPage() {
 
 
     /* =========================
-     Derived user state
-        Determines current user membership and role in this event
+     Derived user state & Actions permissions
+        Defines which actions are available depending on the current user role
     ========================= */
+
+    // Stores current user ID
     const currentUserId = user?.userId;
+    
+    // Determines current ruser role in the event
     const myRole = organizers.find((person) => person.id === currentUserId)?.role || members.find((person) => person.id === currentUserId)?.role || null;
+    
+    // Check if current user is part of the event
     const isMember = !!myRole;
 
-    
+    // Can join the event
+    const canJoin = user && !isMember;
+
+    // Can leave the event
+    const canLeave = user && isMember && myRole !== 'organizer';
+
+    // Can edit the event (organizer / co_organizer)
+    const canEdit = user && (myRole === 'organizer' || myRole === 'co_organizer');
+
+    // Can delete the event (only organizer / creator)
+    const canDelete = user && myRole === 'organizer';
+
+
     /* =========================
      Derived collections
         Splits visible members into organizers and participants
@@ -47,6 +65,7 @@ export default function EventDetailsPage() {
     const participants = members.filter((person) => person.role == 'participant');
     const participantCount = event?.participantCount ?? 0;
     const organizersCount = organizers.length;
+
 
     /* =========================
      Role helper
@@ -253,7 +272,6 @@ export default function EventDetailsPage() {
         <div className="container page-section">
             <div className="page-header">
                 <div>
-                    <h1 className="page-title">{event.title}</h1>
                     <p className="page-subtitle">View event details, manage attendance, and organize members.</p>
                 </div>
                 
@@ -264,49 +282,57 @@ export default function EventDetailsPage() {
 
             <Card className="event-details-card">
                 <div className="event-details-header">
-                    <div className="event-details-main">
-                        <h2 className="section-title">Event Overview</h2>
-                        <p className="event-description">{event.description || "No description provided."}</p>
+                
+                    <div className="event-details-header-main">
+                        <h1 className="page-title">{event.title}</h1>
+                            {/* <div className="event-header-meta">
+                                {event.type && (<span className="event-type-badge">🏷️ {event.type}</span>)}
+                                {event.theme && (<span className="event-theme-badge">🎯 {event.theme}</span>)}
+                            </div> */}
+                        <p className="event-subtitle">{event.description || "No description provided."}</p>
+
+
                     </div>
+
+                    {user && (
+                        <div className="event-details-header-actions">
+                            {canJoin && (<Button type="button" onClick={() => handleJoinEvent(event.id)}>Join the event</Button>)}
+                            {canLeave && (<Button type="button" variant="outline-danger" onClick={() => handleLeaveEvent(event.id)}>Leave the event</Button>)}
+                            {canEdit && (<Button type="button" variant="outline" onClick={() => navigate(`/events/${event.id}/edit`)}>Edit Event</Button>)}
+                            {canDelete && (<Button type="button" variant="danger" onClick={handleDeleteEvent}>Delete Event</Button>)}
+                        </div>
+                    )}
                 </div>
 
-                {user && (
-                    <div className="action-bar">
-                        {!isMember ? (
-                            <Button type="button" onClick={() => handleJoinEvent(event.id)}>Join Event</Button>
-                        ) : myRole !== "organizer" ? (
-                            <Button type="button" variant="outline-danger" onClick={() => handleLeaveEvent(event.id)}>Leave Event</Button>
-                        ) : null}
-
-                        {(myRole === "organizer" || myRole === "co_organizer") && (
-                            <Button type="button" variant="outline" onClick={() => navigate(`/events/${eventId}/edit`)}>Edit Event</Button>
-                        )}
-
-                        {myRole === "organizer" && (
-                            <Button type="button" variant="danger" onClick={handleDeleteEvent}>Delete Event</Button>
-                        )}
-                    </div>
-                )}
-
-                <div className="details-grid">
-                    <div className="detail-item">
-                        <span className="detail-label">Date</span>
-                        <span className="detail-value">{formatEventDateRange(event.startDateTime, event.endDateTime)}</span>
+                <div className="event-info-grid">
+                    <div className="event-info-card">
+                        <span className="event-info-label">📅 Date</span>
+                        <span className="event-info-value">{formatEventDateRange(event.startDateTime, event.endDateTime)}</span>
                     </div>
 
-                    <div className="detail-item">
-                        <span className="detail-label">Location</span>
-                        <span className="detail-value">{event.mode === "online" ? "Online" : event.location || "No location"}</span>
+                    <div className="event-info-card">
+                        <span className="event-info-label">🕒 Time</span>
+                        <span className="event-info-value">{formatTime(event.startDateTime)} → {formatTime(event.endDateTime)}</span>
                     </div>
 
-                    <div className="detail-item">
-                        <span className="detail-label">Theme</span>
-                        <span className="detail-value">{event.theme || "N/A"}</span>
+                    <div className="event-info-card">
+                        <span className="event-info-label">📍 Location</span>
+                        <span className="event-info-value">{event.mode === "online" ? "Online" : event.location || "N/A"}</span>
                     </div>
 
-                    <div className="detail-item">
-                        <span className="detail-label">Type</span>
-                        <span className="detail-value">{event.type || "N/A"}</span>
+                    <div className="event-info-card">
+                        <span className="event-info-label">🏷️ Type</span>
+                        <span className="event-info-value">{event.type || "N/A"}</span>
+                    </div>
+
+                    <div className="event-info-card">
+                        <span className="event-info-label">🎯 Theme</span>
+                        <span className="event-info-value">{event.theme || "N/A"}</span>
+                    </div>
+                                    
+                    <div className="event-info-card">
+                        <span className="event-info-label">📍 Mode</span>
+                        <span className="event-info-value">{event.mode === "online" ? "Online" : "In person"}</span>
                     </div>
                 </div>
             </Card>
@@ -332,7 +358,6 @@ export default function EventDetailsPage() {
                                     {user && (
                                          <div className="member-actions">
                                             {canDemote(person) && (<Button type="button" variant="outline" onClick={() => handleDemote(person.id)}>Demote</Button>)}
-
                                             {canRemove(person) && (<Button type="button" variant="danger" onClick={() => handleRemoveMember(person.id)}>Remove</Button>)}
                                         </div>
                                     )}
@@ -345,7 +370,7 @@ export default function EventDetailsPage() {
                 <Card>
                     <div className="section-header">
                         <h2 className="section-title">👥 {participantCount} Attendee{participantCount > 1 ? "s" : ""}</h2>
-                        <p className="section-subtitle">{formatCount(participantCount, "attendee")} {formatBe(participantCount)} currently participating in this event.</p>
+                        <p className="section-subtitle">{formatCount(participantCount, "attendee")} {formatBe(participantCount)} attending this event.</p>
                     </div>
 
                     {!user && (<Alert type="info">Login to join this event and interact with participants.</Alert>)}
@@ -364,7 +389,6 @@ export default function EventDetailsPage() {
                                     {user && (
                                         <div className="member-actions">
                                             {canPromote(person) && (<Button type="button" variant="outline" onClick={() => handlePromote(person.id)}>Promote</Button>)}
-
                                             {canRemove(person) && (<Button type="button" variant="danger" onClick={() => handleRemoveMember(person.id)}>Remove</Button>)}
                                         </div>
                                     )}

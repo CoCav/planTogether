@@ -41,6 +41,9 @@ export default function EventsPage() {
         endDate: ""
     });
 
+    const role = myEvents[event.id];
+    const isMember = !!role;
+
     
     /* =========================
         Data loading functions
@@ -309,9 +312,6 @@ export default function EventsPage() {
             ) : (
                 <div className="event-list">
                     {events.map((event) => { 
-                        const role = myEvents[event.id];
-                        const isMember = !!role;
-
                         return (
                             <Card key={event.id} className="event-card">
 

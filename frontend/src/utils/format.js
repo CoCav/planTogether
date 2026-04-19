@@ -10,9 +10,42 @@
     Default locale: en-GB (DD/MM/YYYY)
 ========================= */
 export const formatDate = (date, locale = "en-GB") => {
-  if (!date) return "No date";
+    if (!date) return "No date";
 
-  return new Date(date).toLocaleDateString(locale);
+    return new Date(date).toLocaleDateString(locale);
+};
+
+/* =========================
+   Time formatting
+    Formats time (HH:mm)
+========================= */
+export const formatTime = (date, locale = "en-GB") => {
+    if (!date) return "";
+    return new Date(date).toLocaleTimeString(locale, {
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+};
+
+/* =========================
+   Event date range formatting
+    Handles:
+    - single day events
+    - multi-day events
+========================= */
+export const formatEventDateRange = (start, end) => {
+    if (!start) return "No date";
+
+    const startDate = formatDate(start);
+    const endDate = formatDate(end);
+
+    // Same day
+    if (!end || startDate === endDate) {
+        return startDate;
+    }
+
+    // Multi-day
+    return `${startDate} → ${endDate}`;
 };
 
 /* =========================

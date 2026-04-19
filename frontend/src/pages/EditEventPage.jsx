@@ -13,22 +13,41 @@ import LoadingState from "../components/ui/LoadingState";
 export default function EditEventPage() {
     const { eventId } = useParams();
     const navigate = useNavigate();
-
-    const [form, setForm] = useState({
-        title: "",
-        description: "",
-        date: "",
-        location: "",
-        type: "",
-        theme: "",
-    });
-
-    const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
-    // Load event data and pre-fill form
+    // Page loading state: controls loading scren while data is fetched
+    const [loading, setLoading] = useState(true);
+
+    // Submit loading state: controls login button loading
+    const [submitting, setSubmitting] = useState(false);
+
+    // Edit form state: stores event fields
+    const [form, setForm] = useState({
+        title: "",
+        description: "",
+        type: "",
+        theme: "",
+        startDate: "",
+        startTime: "",
+        endDate: "",
+        endTime: "",
+        mode: "in_person",
+        location: "",
+    });
+
+
+    /* =========================
+     Derived UI state
+        Detects online mode to hide / disable location field
+    ========================= */
+    const isOnlineEvent = form.mode === "online";
+
+
+    /* =========================
+     Load event data
+        Fetches current event information and pre-fills the form
+    ========================= */
     useEffect(() => {
         const fetchEvent = async () => {
             try {
@@ -38,13 +57,20 @@ export default function EditEventPage() {
                 const response = await getEventById(eventId);
                 const event = response.data.event;
 
+                const start = event.startDateTime ? new Date(event.startDateTime) : null;
+                const end = event.endDateTime ? new Date(event.endDateTime) : null;
+
                 setForm({
                     title: event.title || "",
                     description: event.description || "",
-                    date: event.date ? event.date.slice(0, 10) : "",
-                    location: event.location || "",
                     type: event.type || "",
                     theme: event.theme || "",
+                    mode: event.mode || "in_person",
+                    location: event.location || "",
+                    startDate: start ? start.toISOString().slice(0, 10) : "",
+                    startTime: start ? start.toISOString().slice(11, 16) : "",
+                    endDate: end ? end.toISOString().slice(0, 10) : "",
+                    endTime: end ? end.toISOString().slice(11, 16) : "",
                 });
             } catch (error) {
                 console.error("Error loading event:", error);
@@ -56,24 +82,63 @@ export default function EditEventPage() {
 
     fetchEvent();}, [eventId]);
 
+
+    /* =========================
+     Input change handler
+        Updates form values as the user edits fields
+    ========================= */
     const handleChange = (e) => {
-        setForm({
-            ...form,
-            [e.target.name]: e.target.value
+        const { name, value } = e.target;
+
+        setForm((prev) => {
+            if (name === "mode" && value === "online") {
+                return {
+                    ...prev,
+                    mode: value,
+                    location: ""
+                };
+            }
+
+            return {
+                ...prev,
+                [name]: value
+            };
         });
     };
 
 
-   // Handle event update
+    /* =========================
+     Datetime builder
+        Combines separate date and time fields into ISO strings
+    ========================= */
+    const buildDateTime = (date, time) => {
+        if (!date || !time) return "";
+        return new Date(`${date}T${time}`).toISOString();
+    };
 
+
+    /* =========================
+     Submit handler
+        Saves event updates and redirects to event details
+    ========================= */
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setMessage("");
         setError("");
         setSubmitting(true);
 
         try {
-            await updateEvent(eventId, form);
+            const payload = {
+                title: form.title,
+                description: form.description,
+                type: form.type,
+                theme: form.theme,
+                mode: form.mode,
+                startDateTime: buildDateTime(form.startDate, form.startTime),
+                endDateTime: buildDateTime(form.endDate, form.endTime),
+                location: isOnlineEvent ? null : form.location,
+            };
+
+            await updateEvent(eventId, payload);
             setMessage("✅ Event updated successfully");
             navigate(`/events/${eventId}`, {replace: true});
         } catch (error) {
@@ -84,6 +149,12 @@ export default function EditEventPage() {
         }
     };
 
+
+
+    /* =========================
+        Loading render
+    ========================= */
+
     if (loading) {
         return (
             <div className="container page-section">
@@ -91,6 +162,11 @@ export default function EditEventPage() {
             </div>
         );
     }
+
+
+    /* =========================
+       Main render
+    ========================= */
 
     return (
         <div className="container page-section">
@@ -137,6 +213,13 @@ export default function EditEventPage() {
                             />
                         </FormField>
 
+                        <FormField label="Mode">
+                            <select className="input" name="theme" value={form.theme} onChange={handleChange}> 
+                                <option value="in_person">In person</option>
+                                <option value="online">Online</option>
+                            </select>
+                        </FormField>
+
                         <FormField label="Description" className="form-field-full">
                             <Textarea
                                name="description"
@@ -147,29 +230,55 @@ export default function EditEventPage() {
                              />
                         </FormField>
 
-                        <FormField label="Date">
+                        {!isOnlineEvent && (
+                            <FormField label="Location">
+                                <Input
+                                    type="text"
+                                    name="location"
+                                    placeholder="Event location"
+                                    value={form.location}
+                                    onChange={handleChange}
+                                />
+                            </FormField>
+                        )}
+
+                        <FormField label="Start date">
                             <Input
-                               type="date"
-                               name="date"
-                               value={form.date}
-                               onChange={handleChange}
+                                type="date"
+                                name="startDate"
+                                value={form.startDate}
+                                onChange={handleChange}
+                            />
+                        </FormField>
+                        <FormField label="Start time">
+                            <Input
+                                type="time"
+                                name="startTime"
+                                value={form.startTime}
+                                onChange={handleChange}
                             />
                         </FormField>
 
-                        <FormField label="Location">
+                         <FormField label="End date">
                             <Input
-                               type="text"
-                               name="location"
-                               value={form.location}
-                               onChange={handleChange}
-                               placeholder="Event location"
+                                type="date"
+                                name="endDate"
+                                value={form.endDate}
+                                onChange={handleChange}
+                            />
+                        </FormField>
+                        <FormField label="End time">
+                            <Input
+                                type="time"
+                                name="endTime"
+                                value={form.endTime}
+                                onChange={handleChange}
                             />
                         </FormField>
                     </div>
 
                     <div className="form-actions">
-                         <Button type="submit" loading={submitting}>Update Event</Button>
-
+                        <Button type="submit" loading={submitting}>Update Event</Button>
                         <Button type="button" variant="outline" onClick={() => navigate(`/events/${eventId}`)} disabled={submitting}>Cancel</Button>
                     </div>
                 </form>

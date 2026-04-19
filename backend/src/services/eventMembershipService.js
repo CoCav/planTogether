@@ -91,11 +91,13 @@ const listMyEvents = async (userId) => {
                 attributes: [
                     'id',
                     'title',
-                    'description',
-                    'date',
-                    'location',
                     'type',
                     'theme',
+                    'description',
+                    'startDateTime',
+                    'endDateTime',
+                    'mode',
+                    'location',
                     'creatorId'
                 ]
             }],

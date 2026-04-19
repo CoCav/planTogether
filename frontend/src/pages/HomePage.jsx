@@ -62,12 +62,6 @@ export default function HomePage() {
 
                      <div className="hero-top-row">
                         <p className="hero-eyebrow">Plan events together</p>
-
-                        {user && (
-                            <span className="hero-user-inline">
-                                Connected as <strong className="hero-user-name">{user.name}</strong>
-                            </span>
-                        )}
                     </div>
 
                     <div className="hero-content">

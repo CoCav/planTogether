@@ -61,7 +61,7 @@ export default function Navbar() {
                     {user ? (
                         <div className="navbar-user-menu" ref={userMenuRef}>
                             <button type="button" className="btn btn-outline navbar-user-trigger" onClick={() => setIsUserMenuOpen((prev) => !prev)} aria-expanded={isUserMenuOpen} aria-haspopup="menu" aria-label="Open user menu">
-                                    <span>Welcome {user.name} !</span>
+                                    <span>{user.name}</span>
                                     <span className="navbar-caret">▾</span>
                             </button>
 

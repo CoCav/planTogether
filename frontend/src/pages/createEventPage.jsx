@@ -5,7 +5,7 @@ import { createEvent } from "../api/eventApi";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
-import Textarea from "../components/ui/Textarea";
+import TextArea from "../components/ui/TextArea";
 import FormField from "../components/ui/FormField";
 import Alert from "../components/ui/Alert";
 
@@ -160,7 +160,7 @@ export default function CreateEventPage() {
                         </FormField>
 
                         <FormField label="Description" className="form-field-full">
-                            <Textarea
+                            <TextArea
                                 name="description"
                                 placeholder="Describe your event (what, where, for who...)"
                                 value={form.description}

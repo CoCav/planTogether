@@ -230,9 +230,25 @@
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.event-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+.event-card-clickable {
+    cursor: pointer;
+    transition:         
+        background 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.event-card-clickable:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.event-card-clickable:active {
+    transform: scale(0.99);
+}
+
+.event-card-clickable:hover .event-title {
+    color: var(--color-primary);
 }
 
 .event-card-header {
@@ -272,6 +288,10 @@
     display: inline-flex;
     align-items: center;
     text-decoration: none;
+}
+
+.event-title-link:hover {
+    color: var(--color-primary)
 }
 
 .event-description {

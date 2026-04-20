@@ -1,4 +1,19 @@
+/* ==================================================
+   ALERT COMPONENT
+   Displays contextual messages (info, success, error)
+================================================== */
+export default function Alert({ children, type = "info", className = "" }) {
 
-export default function Alert({ type = "info", children }) {
-    return <div className={`alert alert-${type}`}>{children}</div>;
-};
+    /* =========================
+       Compute CSS classes
+       - Base alert styles
+       - Type-based variant
+    ========================= */
+    const classes = `alert alert-${type} ${className}`.trim();
+
+    /* =========================
+       Render alert message
+    ========================= */
+    return <div className={classes}>{children}</div>
+
+}

@@ -4,8 +4,7 @@
     Reusable component to display an event preview
     Used in both HomePage and EventsPage
 ================================================== */
-
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { formatEventDateRange, formatTime, formatCount } from "../../utils/format";
 
 import Button from "../ui/Button";
@@ -26,11 +25,23 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
     // Show organizer if user not logged in OR user is not the organizer
     const shouldShowOrganizerInline = !user || !isOrganizer;
 
+    const navigate = useNavigate();
+
+    const handleCardClick = (e) => {
+        // Ignore clicks on interactive elements
+        const interactive = e.target.closest("button, a");
+        if (interactive) return;
+
+        navigate(`/events/${event.id}`);
+    };
+
+
+
     return (
-        <Card className="event-card">
+        <Card className="event-car event-card-clickable" onClick={handleCardClick}>
             <div className="event-card-header">
                 <div className="event-header-left">
-                    <Link to={`/events/${event.id}`} className="event-title-link link-underline link-color-hover">
+                    <Link to={`/events/${event.id}`} className="event-title-link">
                         <h3 className="event-title">{event.title}</h3>
                     </Link>
 

@@ -5,6 +5,7 @@ import { getEventById, updateEvent } from "../api/eventApi";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
+import Select from "../components/ui/Select";
 import TextArea from "../components/ui/TextArea";
 import FormField from "../components/ui/FormField";
 import Alert from "../components/ui/Alert";
@@ -214,10 +215,10 @@ export default function EditEventPage() {
                         </FormField>
 
                         <FormField label="Mode">
-                            <select className="input" name="mode" value={form.mode} onChange={handleChange}> 
+                            <Select name="mode" value={form.mode} onChange={handleChange}> 
                                 <option value="in_person">In person</option>
                                 <option value="online">Online</option>
-                            </select>
+                            </Select>
                         </FormField>
 
                         <FormField label="Description" className="form-field-full">

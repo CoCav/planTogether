@@ -11,6 +11,7 @@ import Button from "../components/ui/Button";
 import EventCard from "../components/ui/EventCard";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
+import Select from "../components/ui/Select";
 import Input from "../components/ui/Input";
 import FormField from "../components/ui/FormField";
 import Alert from "../components/ui/Alert";
@@ -304,11 +305,11 @@ export default function EventsPage() {
                     </FormField>
 
                     <FormField label="Mode">
-                        <select name="mode" value={filters.mode} onChange={handleFilterChange} className="input">
+                        <Select name="mode" value={filters.mode} onChange={handleFilterChange}>
                             <option value="">All modes</option>
                             <option value="in_person">In person</option>
                             <option value="online">Online</option>
-                        </select>
+                        </Select>
                     </FormField>
 
                     <FormField label="Location">
@@ -352,10 +353,10 @@ export default function EventsPage() {
                     </FormField>
 
                     <FormField label="Sort events">
-                        <select name="order" value={filters.order} onChange={handleFilterChange} className="input">
+                        <Select name="order" value={filters.order} onChange={handleFilterChange}>
                             <option value="asc">Upcoming events first</option>
                             <option value="desc">Latest events first</option>
-                        </select>
+                        </Select>
                     </FormField>
                 </div>
 

@@ -3,6 +3,9 @@
     --color-primary: #4f46e5;
     --color-primary-hover: #4338ca;
 
+    --color-primary-soft: rgba(79, 70, 229, 0.1);
+    --color-primary-soft-hover: rgba(79, 70, 229, 0.15);
+
     --color-danger: #dc2626;
     --color-success: #16a34a;
 

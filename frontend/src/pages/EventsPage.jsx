@@ -5,6 +5,7 @@ import { getAllEvents, getFilteredEvents } from "../api/eventApi";
 import { getMyEvents } from "../api/eventMembershipApi";
 import { getNormalizedEvents, getMyEventsWithRole } from "../utils/normalize";
 import { formatEventDateRange, formatCount, formatTime } from "../utils/format";
+import { getDefaultEventFilters, getTodayEventFilters, getWeekendEventFilters } from "../utils/eventFilters";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
 
 import Button from "../components/ui/Button";
@@ -31,15 +32,7 @@ export default function EventsPage() {
     const [loading, setLoading] = useState(true);
 
     // Filters state: controls all event filtering inputs
-    const [filters, setFilters] = useState({
-        search: "",
-        type: "",
-        theme: "",
-        startDate: "",
-        endDate: "",
-        mode: "",
-        location: ""
-    });
+    const [filters, setFilters] = useState(getDefaultEventFilters);
 
     /* =========================
         Data loading functions
@@ -153,18 +146,26 @@ export default function EventsPage() {
     ========================= */
 
     const handleResetFilters = async () => {
-        const resetFilters = {
-            search: "",
-            type: "",
-            theme: "",
-            startDate: "",
-            endDate: "",
-            mode: "",
-            location: ""
-        };
-
+        const resetFilters = getDefaultEventFilters();
         setFilters(resetFilters);
         await loadData(resetFilters);
+    };
+
+
+    /* =========================
+     Quick date filters
+        Applies common date presets for easier browsing
+    ========================= */
+    const handleTodayFilter = async () => {
+        const nextFilters = getTodayEventFilters(filters);
+        setFilters(nextFilters);
+        await loadData(nextFilters);
+    };
+
+    const handleWeekendFilter = async () => {
+        const nextFilters = getWeekendEventFilters(filters);
+        setFilters(nextFilters);
+        await loadData(nextFilters);
     };
 
 
@@ -204,6 +205,11 @@ export default function EventsPage() {
                 <h2 className="section-title">Filter Events</h2>
                 <p className="section-subtitle">Search by keyword, type, theme, mode, location, or date range.</p>
             </div>
+
+              <div className="filter-shortcuts">
+                    <Button type="button" variant={filters.date ? "filter-active" : "outline-primary"} onClick={handleTodayFilter}>Today</Button>
+                    <Button type="button" variant={filters.startDate ? "filter-active" : "outline-primary"} onClick={handleWeekendFilter}>This weekend</Button>
+                </div>
 
             <form onSubmit={handleFilterSubmit} className="filter-form">
                 <div className="form-grid">
@@ -255,13 +261,23 @@ export default function EventsPage() {
                         />
                     </FormField>
 
+                    <FormField label="Exact date">
+                        <Input
+                            type="date"
+                            name="date"
+                            value={filters.date}
+                            onChange={handleFilterChange}
+                            disabled={!!filters.startDate || !!filters.endDate}
+                        />
+                    </FormField>
+
                     <FormField label="Start date">
                         <Input
                             type="date"
                             name="startDate"
                             value={filters.startDate}
                             onChange={handleFilterChange}
-                            // disabled={!!filters.date}
+                            disabled={!!filters.date}
                         />
                     </FormField>
 
@@ -271,7 +287,7 @@ export default function EventsPage() {
                             name="endDate"
                             value={filters.endDate}
                             onChange={handleFilterChange}
-                            // disabled={!!filters.date}
+                            disabled={!!filters.date}
                         />
                     </FormField>
                 </div>

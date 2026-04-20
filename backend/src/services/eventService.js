@@ -131,40 +131,25 @@ const getFilteredEvents = async (query) => {
         
         const whereConditions = {};
 
-        // // Filter by exact date
+        //Filter by exact date
         if (date) {
-            const exactDate = new Date(date);
-            const nextDay = new Date(exactDate);
+            const start = new Date(`${date}T00:00:00.000`);
+            const end = new Date(`${date}T23:59:59.999`);
+  
+            whereConditions[Op.and] = [ 
+                { startDateTime: {[Op.lte]: end} }, 
+                { endDateTime: {[Op.gte]: start} }
+            ];
+        };
 
-            nextDay.setDate(nextDay.getDate() + 1);
-
-            whereConditions.startDateTime = {
-                [Op.gte]: exactDate,
-                [Op.lt]: nextDay,
-            }};
-            
-       
-        // } 
-        // Filter by range date
+        // Filter by range date using event overlap logic 
         if (startDate || endDate) {
             const start = startDate ? new Date(`${startDate}T00:00:00.000`) : null;
             const end = endDate ? new Date(`${endDate}T23:59:59.999`) : null;
-            
-            if (start && Number.isNaN(start.getTime())) {
-                const error = new Error("Invalid startDate");
-                error.statusCode = 400;
-                throw error;
-            }
-
-            if (end && Number.isNaN(end.getTime())) {
-                const error = new Error("Invalid endDate");
-                error.statusCode = 400;
-                throw error;
-            }
 
             if (start && end) whereConditions[Op.and] = [ 
-                    {startDateTime: {[Op.lte]: end}}, 
-                    {endDateTime: {[Op.gte]: start}}
+                    { startDateTime: {[Op.lte]: end} }, 
+                    { endDateTime: {[Op.gte]: start} }
                 ];
             else if (start) whereConditions.startDateTime = { [Op.gte]: start };
             else if (end) whereConditions.startDateTime = { [Op.lte]: end };

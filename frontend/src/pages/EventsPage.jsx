@@ -35,14 +35,40 @@ export default function EventsPage() {
     const [filters, setFilters] = useState(getDefaultEventFilters);
 
     /* =========================
+    Pagination state
+        Controls current page and page size
+    ========================= */
+    const [pagination, setPagination] = useState({
+        page: 1,
+        pageSize: 4,
+        totalPages: 1,
+        totalEvents: 0
+    });
+
+
+    /* =========================
         Data loading functions
     ========================= */
 
     // Fetches all events or filtered events depending on active filters
-    const fetchEvents = async (customFilters = filters) => {
-        const hasActiveFilters = Object.values(customFilters).some((value) => value.trim() !== "");
-        const response = hasActiveFilters ? await getFilteredEvents(customFilters) : await getAllEvents();
-        return getNormalizedEvents(response);
+    const fetchEvents = async (customFilters = filters, customPage = pagination.page) => {
+        const hasActiveFilters = Object.values(customFilters).some((value) => String(value).trim() !== "");
+
+        const params = {
+            ...customFilters,
+            page: customPage,
+            pageSize: pagination.pageSize,
+        };
+
+        const response = hasActiveFilters ? await getFilteredEvents(params) : await getAllEvents(params);
+
+        return {
+            events: getNormalizedEvents(response),
+            page: response.data.page || 1,
+            pageSize: response.data.pageSize || pagination.pageSize,
+            totalPages: response.data.totalPages || 1,
+            totalEvents: response.data.totalEvents || 0,
+        };
     };
 
     // Fetches current user memberships and returns a role map indexed by event ID
@@ -58,13 +84,21 @@ export default function EventsPage() {
     };
 
     // Fetches visible events and current user memberships
-    const loadData = async (customFilters = filters) => {
+    const loadData = async (customFilters = filters, customPage = pagination.page) => {
         try {
             setError("");
             setLoading(true);
 
-            const eventsData = await fetchEvents(customFilters);
-            setEvents(eventsData);
+            const result = await fetchEvents(customFilters, customPage);
+
+            setEvents(result.events);
+            setPagination((prev) => ({
+                ...prev,
+                page: result.page,
+                pageSize: result.pageSize,
+                totalPages: result.totalPages,
+                totalEvents: result.totalEvents,
+            }));
 
             if (user) {
                 const membershipMap = await fetchMyEvents();
@@ -129,6 +163,7 @@ export default function EventsPage() {
     };
 
 
+
     /* =========================
      Filters submit handler
         Applies the current filters to reload the events list
@@ -136,7 +171,13 @@ export default function EventsPage() {
 
     const handleFilterSubmit = async (e) => {
         e.preventDefault();
-        await loadData(filters);
+
+        setPagination((prev) => ({
+            ...prev,
+            page: 1
+        }));
+        
+        await loadData(filters, 1);
     };
 
 
@@ -148,7 +189,26 @@ export default function EventsPage() {
     const handleResetFilters = async () => {
         const resetFilters = getDefaultEventFilters();
         setFilters(resetFilters);
-        await loadData(resetFilters);
+
+        setPagination((prev) => ({
+            ...prev,
+            page: 1
+        }));
+
+        await loadData(resetFilters, 1);
+    };
+
+    /* =========================
+     Pagination handlers
+    ========================= */
+    const handlePreviousPage = async () => {
+        if (pagination.page <= 1) return;
+        await loadData(filters, pagination.page - 1);
+    };
+
+    const handleNextPage = async () => {
+        if (pagination.page >= pagination.totalPages) return;
+        await loadData(filters, pagination.page + 1);
     };
 
 
@@ -290,6 +350,13 @@ export default function EventsPage() {
                             disabled={!!filters.date}
                         />
                     </FormField>
+
+                    <FormField label="Sort events">
+                        <select name="order" value={filters.order} onChange={handleFilterChange} className="input">
+                            <option value="asc">Upcoming events first</option>
+                            <option value="desc">Latest events first</option>
+                        </select>
+                    </FormField>
                 </div>
 
                 <div className="form-actions">
@@ -304,64 +371,76 @@ export default function EventsPage() {
                 <EmptyState>No events found.</EmptyState>
             </Card>
             ) : (
-                <div className="event-list">
-                    {events.map((event) => { 
-                        const role = myEvents[event.id];
-                        const isMember = !!role;
+                <>
+                    <div className="results-summary">
+                        <p className="results-count">{pagination.totalEvents} Event{pagination.totalEvents > 1 ? "s" : ""} have been found !</p>
+                        {pagination.totalPages > 1 && (<p className="results-page-info">Showing page {pagination.page} of {pagination.totalPages}</p>)}
+                    </div>
+                    <div className="event-list">
+                        {events.map((event) => { 
+                            const role = myEvents[event.id];
+                            const isMember = !!role;
 
-                        return (
-                            <Card key={event.id} className="event-card">
+                            return (
+                                <Card key={event.id} className="event-card">
 
-                                {/* =========================
-                                    Top row (title, badges, actions)
-                                ========================= */}
-                                <div className="event-card-header">
+                                    {/* =========================
+                                     Top row (title, badges, actions)
+                                    ========================= */}
+                                    <div className="event-card-header">
 
-                                    {/* Left side: title + type + role */}
-                                    <div className="event-header-left">
-                                        <Link to={`/events/${event.id}`} className="event-title-link">
-                                            <h3 className="event-title-link link-underline link-color-hover">{event.title}</h3>
-                                        </Link>
-                                        {event.type && (<span className="event-type-badge">{event.type}</span>)}
-                                        {user && role && <Badge role={role} />}
-                                    </div>
+                                        <div className="event-header-left">
+                                            <Link to={`/events/${event.id}`} className="event-title-link link-underline link-color-hover">
+                                                <h3 className="event-title">{event.title}</h3>
+                                            </Link>
+                                            {event.type && (<span className="event-type-badge">{event.type}</span>)}
+                                            {user && role && <Badge role={role} />}
+                                        </div>
 
-                                    {/* Righ side: actions */}
-                                    <div className="event-header-actions">
-                                        {user ? (
-                                            isMember ? (
-                                                role === "organizer" ? null : (
-                                                    <div className="inline-actions">
-                                                        <Button type="button" variant="outline-danger" onClick={() => handleLeaveEvent(event.id)}>Leave the event</Button>
-                                                    </div>
+                                        <div className="event-header-actions">
+                                            {user ? (
+                                                isMember ? (
+                                                    role === "organizer" ? null : (
+                                                        <div className="inline-actions">
+                                                            <Button type="button" variant="outline-danger" onClick={() => handleLeaveEvent(event.id)}>Leave the event</Button>
+                                                        </div>
+                                                    )
+                                                ) : (
+                                                    <Button type="button" onClick={() => handleJoinEvent(event.id)}>Join the event</Button>
                                                 )
                                             ) : (
-                                                <Button type="button" onClick={() => handleJoinEvent(event.id)}>Join the event</Button>
-                                            )
-                                        ) : (
-                                           <Alert type="info">🔐 Login to join</Alert>
-                                        )}
+                                                <Alert type="info">🔐 Login to join</Alert>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
 
-                                {/* =========================
-                                    Description
-                                ========================= */}
-                                <p className="event-description">{event.description || "No description provided."}</p>
+                                    {/* =========================
+                                     Description
+                                    ========================= */}
+                                    <p className="event-description">{event.description || "No description provided."}</p>
 
-                                {/* =========================
-                                    Meta info (date / location / type)
-                                ========================= */}
-                                <div className="event-meta">
-                                    <span className="event-meta-item">👥 {formatCount(event.participantCount, "participant")}</span>
-                                    <span className="event-meta-item">📅 {formatEventDateRange(event.startDateTime, event.endDateTime)}</span>
-                                    <span className="event-meta-item">🕒 {formatTime(event.startDateTime)} → {formatTime(event.endDateTime)}</span>
-                                    {event.location && (<span className="event-meta-item">📍{event.mode === "online" ? "Online" : event.location || "No location"}</span>)}
-                                </div>
-                            </Card>
-                        );
-                    })}
-                </div>
+                                    {/* =========================
+                                     Meta info (startDate-endDate / location / type)
+                                    ========================= */}
+                                    <div className="event-meta">
+                                        <span className="event-meta-item">👥 {formatCount(event.participantCount, "participant")}</span>
+                                        <span className="event-meta-item">📅 {formatEventDateRange(event.startDateTime, event.endDateTime)}</span>
+                                        <span className="event-meta-item">🕒 {formatTime(event.startDateTime)} → {formatTime(event.endDateTime)}</span>
+                                        {event.location && (<span className="event-meta-item">📍{event.mode === "online" ? "Online" : event.location || "No location"}</span>)}
+                                    </div>
+                                </Card>
+                            );
+                        })}
+                    </div>
+
+                    {pagination.totalPages > 1 && (
+                        <div className="pagination">
+                            <Button type="button" variant="outline" onClick={handlePreviousPage} disabled={pagination.page === 1}>Previous</Button>
+                            <span className="pagination-info">Page {pagination.page} of {pagination.totalPages}</span>
+                            <Button type="button" variant="outline" onClick={handleNextPage} disabled={pagination.page === pagination.totalPages}>Next</Button>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

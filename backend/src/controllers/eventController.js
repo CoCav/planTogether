@@ -18,10 +18,11 @@ const createEvent = async (req, res, next) => {
 // Get all events
 const getAllEvents = async (req, res, next) => {
     try {
-        const events = await eventService.getAllEvents();
+        const events = await eventService.getAllEvents(req.query);
+
         return res.status(200).json({
             message: "All events retrieved successfully",
-            events: events
+            ...events
         });
 
     } catch (error) {

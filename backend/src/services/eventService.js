@@ -1,7 +1,8 @@
-const { Op, fn, col, literal } = require('sequelize');
+const { Op, fn, col } = require('sequelize');
 const Event = require('../models/eventModel');
 const User = require('../models/userModel');
 const EventUserRole = require('../models/Link/eventUserRoleModel');
+const { getPaginationOptions } = require('../utils/pagination');
 
 // Create a new event and assign the creator as the organizer
 const createEvent = async (data, userId) => {
@@ -43,17 +44,32 @@ const createEvent = async (data, userId) => {
     }
 };
 
-// Get all events
-const getAllEvents = async () => {
+// Get all events with pagination
+const getAllEvents = async (query) => {
     try {
-        return await Event.findAll({
+        const {
+            page,
+            pageSize,
+            limit,
+            offset,
+            orderField,
+            orderDirection
+        } = getPaginationOptions(query, ["startDateTime", "title", "creatorId", "createdAt"], "createdAt", "DESC");
+
+        const { count, rows } = await Event.findAndCountAll({
+            limit,
+            offset,
+            order: [[orderField, orderDirection]],
             attributes: {
-            include: [ [fn("COUNT", col("participants.id")), "participantCount"]] },
-            include: [{
+                include: [[fn("COUNT", col("participants.id")), "participantCount"]]
+            },
+            include: [
+                {
                     model: User,
                     as: "creator",
                     attributes: ["id", "name"]
-                }, {
+                },
+                {
                     model: User,
                     as: "participants",
                     attributes: [],
@@ -61,11 +77,22 @@ const getAllEvents = async () => {
                         attributes: [],
                         where: { role: "participant" }
                     },
-                    required: false
-                }],
+                    required: false,
+                }
+            ],
             group: ["Event.id", "creator.id"],
-            order: [["createdAt", "DESC"]]
+            subQuery: false
         });
+
+        const totalEvents = Array.isArray(count) ? count.length : count;
+
+        return {
+            page,
+            pageSize,
+            totalEvents,
+            totalPages: Math.ceil(totalEvents / pageSize),
+            events: rows
+        };
     } catch (error) {
         console.error("Error in getting all events:", error);
         throw error;
@@ -77,7 +104,9 @@ const getEventById = async (id) => {
     try {
         const event = await Event.findOne({
             where: { id },
-            attributes: { include: [[fn("COUNT", col("participants.id")), "participantCount"]] },
+            attributes: { 
+                include: [[fn("COUNT", col("participants.id")), "participantCount"]] 
+            },
             include: [{
                     model: User,
                     as: "creator",
@@ -112,7 +141,6 @@ const getEventById = async (id) => {
 // Sorted by ascending date
 const getFilteredEvents = async (query) => {
     try {
-
          const {
             date,
             startDate,
@@ -122,11 +150,7 @@ const getFilteredEvents = async (query) => {
             theme,
             location,
             mode,
-            search,
-            sortBy = 'startDateTime',
-            order = 'asc',
-            page = 1,
-            pageSize = 10
+            search
         } = query;
         
         const whereConditions = {};
@@ -140,10 +164,9 @@ const getFilteredEvents = async (query) => {
                 { startDateTime: {[Op.lte]: end} }, 
                 { endDateTime: {[Op.gte]: start} }
             ];
-        };
-
+        }
         // Filter by range date using event overlap logic 
-        if (startDate || endDate) {
+        else if (startDate || endDate) {
             const start = startDate ? new Date(`${startDate}T00:00:00.000`) : null;
             const end = endDate ? new Date(`${endDate}T23:59:59.999`) : null;
 
@@ -169,47 +192,53 @@ const getFilteredEvents = async (query) => {
                 { description: { [Op.iLike]: `%${search}%` } },
             ];
         } 
-     
-        // Sorting allowlist (prevents SQL injection)
-        const allowedSortFields = ['startDateTime', 'title', 'creatorId', 'createdAt'];
-        const orderField = allowedSortFields.includes(sortBy) ? sortBy : 'startDateTime';
-        const orderDirection = String(order).toLowerCase() === 'desc' ? 'DESC' : 'ASC';
 
-        // Pagination (simple + capped)
-        const limitInt = Math.min(parseInt(pageSize, 10) || 10, 100);
-        const pageInt = Math.max(parseInt(page, 10) || 1, 1);
-        const offsetInt = (pageInt - 1) * limitInt;
+        // Pagination and sorting
+        const {
+            page,
+            pageSize,
+            limit,
+            offset,
+            orderField,
+            orderDirection
+        } = getPaginationOptions(query, ["startDateTime", "title", "creatorId", "createdAt"], "createdAt", "DESC");
 
         // Query: fetch the filtered events with creator and participant count
         const { count, rows } = await Event.findAndCountAll({
             where: whereConditions,
-            limit: limitInt,
-            offset: offsetInt,
+            limit,
+            offset,
             order: [[orderField, orderDirection]],
-            include: [{
-                model: User,
-                as: 'creator',
-                attributes: ['id', 'name']
-            }],
             attributes: {
-                include: [
-                    [ literal(`(
-                            SELECT COUNT(*)
-                            FROM "event_user_roles" AS eur
-                            WHERE eur."eventId" = "Event"."id"
-                              AND eur."role" = 'participant'
-                        )`),
-                        "participantCount"
-                    ]
-                ]
-            }
+                include: [[fn("COUNT", col("participants.id")), "participantCount"]]
+            },
+            include: [
+                {
+                    model: User,
+                    as: 'creator',
+                    attributes: ['id', 'name']
+                }, {
+                    model: User,
+                    as: "participants",
+                    attributes: [],
+                    through: {
+                        attributes: [],
+                        where: { role: "participant" }
+                    },
+                    required: false
+                }
+            ],
+            group: ["Event.id", "creator.id"],
+            subQuery: false
         });
-  
+
+        const totalEvents = Array.isArray(count) ? count.length : count;
+
         return {
-            page: pageInt,
-            pageSize: limitInt,
-            totalEvents: count,
-            totalPages: Math.ceil(count / limitInt),
+            page,
+            pageSize,
+            totalEvents,
+            totalPages: Math.ceil(totalEvents / pageSize),
             events: rows
         };
         
@@ -271,7 +300,6 @@ const updateEventById = async (id, data) => {
     } catch (error) {
         console.error('Error in updating the event:', error);
         throw error;
-
     }
 };
 

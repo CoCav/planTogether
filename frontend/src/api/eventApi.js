@@ -1,7 +1,7 @@
 import api from "./axios";
 
 // Fetches all public events
-export const getAllEvents = () => api.get("/events");
+export const getAllEvents = (params = {}) => api.get("/events", { params });
 
 // Fetches one event by its ID
 export const getEventById = (eventId) => api.get(`/events/${eventId}`);
@@ -16,4 +16,4 @@ export const updateEvent = (eventId, eventData) => api.put(`/events/${eventId}`,
 export const deleteEvent = (eventId) => api.delete(`/events/${eventId}`);
 
 // Filters events
-export const getFilteredEvents = (filters) => api.get("/events/filtered", { params: filters });
+export const getFilteredEvents = (params = {}) => api.get("/events/filtered", { params });

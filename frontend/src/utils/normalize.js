@@ -37,7 +37,7 @@ export const normalizeEvent = (event = {}) => ({
 });
 
 // Normalizes an array of events
-export const normalizeEvents = (events) => events.map(normalizeEvent);
+export const normalizeEvents = (events = []) => Array.isArray(events) ? events.map(normalizeEvent) : [];
 
 // Normalizes user-role data (members / organizers) 
 export const normalizeUserRoleData = (items = []) =>

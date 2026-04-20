@@ -3,8 +3,12 @@
     Helpers for building event filter presets
 ================================================== */
 
-
-const toLocalDateInput = (date) => {
+/* =========================
+   Local date formatter
+   Converts a Date object to YYYY-MM-DD format using local timezone
+   (avoids UTC issues caused by toISOString for date inputs)
+========================= */
+const formatDateForInput = (date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
@@ -34,8 +38,7 @@ export const getDefaultEventFilters = () => ({
     Returns filters for events happening today
 ========================= */
 export const getTodayEventFilters = (currentFilters = {}) => {
-   // const today = new Date().toISOString().slice(0, 10);
-   const today = toLocalDateInput(new Date())
+   const today = formatDateForInput(new Date());
 
     return {
         ...currentFilters,
@@ -62,9 +65,7 @@ export const getWeekendEventFilters = (currentFilters = {}) => {
     return {
         ...currentFilters,
         date: "",
-        //startDate: saturday.toISOString().slice(0, 10),
-       //endDate: sunday.toISOString().slice(0, 10),
-       startDate: toLocalDateInput(saturday),
-       endDate: toLocalDateInput(sunday)
+        startDate: formatDateForInput(saturday),
+        endDate:  formatDateForInput(sunday)
     };
 };

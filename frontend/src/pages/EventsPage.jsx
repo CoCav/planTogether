@@ -4,11 +4,11 @@ import { useAuth } from "../context/useAuth";
 import { getAllEvents, getFilteredEvents } from "../api/eventApi";
 import { getMyEvents } from "../api/eventMembershipApi";
 import { getNormalizedEvents, getMyEventsWithRole } from "../utils/normalize";
-import { formatEventDateRange, formatCount, formatTime } from "../utils/format";
 import { getDefaultEventFilters, getTodayEventFilters, getWeekendEventFilters } from "../utils/eventFilters";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
 
 import Button from "../components/ui/Button";
+import EventCard from "../components/ui/EventCard";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 import Input from "../components/ui/Input";
@@ -163,7 +163,6 @@ export default function EventsPage() {
     };
 
 
-
     /* =========================
      Filters submit handler
         Applies the current filters to reload the events list
@@ -197,6 +196,7 @@ export default function EventsPage() {
 
         await loadData(resetFilters, 1);
     };
+    
 
     /* =========================
      Pagination handlers
@@ -377,60 +377,17 @@ export default function EventsPage() {
                         {pagination.totalPages > 1 && (<p className="results-page-info">Showing page {pagination.page} of {pagination.totalPages}</p>)}
                     </div>
                     <div className="event-list">
-                        {events.map((event) => { 
-                            const role = myEvents[event.id];
-                            const isMember = !!role;
-
-                            return (
-                                <Card key={event.id} className="event-card">
-
-                                    {/* =========================
-                                     Top row (title, badges, actions)
-                                    ========================= */}
-                                    <div className="event-card-header">
-
-                                        <div className="event-header-left">
-                                            <Link to={`/events/${event.id}`} className="event-title-link link-underline link-color-hover">
-                                                <h3 className="event-title">{event.title}</h3>
-                                            </Link>
-                                            {event.type && (<span className="event-type-badge">{event.type}</span>)}
-                                            {user && role && <Badge role={role} />}
-                                        </div>
-
-                                        <div className="event-header-actions">
-                                            {user ? (
-                                                isMember ? (
-                                                    role === "organizer" ? null : (
-                                                        <div className="inline-actions">
-                                                            <Button type="button" variant="outline-danger" onClick={() => handleLeaveEvent(event.id)}>Leave the event</Button>
-                                                        </div>
-                                                    )
-                                                ) : (
-                                                    <Button type="button" onClick={() => handleJoinEvent(event.id)}>Join the event</Button>
-                                                )
-                                            ) : (
-                                                <Alert type="info">🔐 Login to join</Alert>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* =========================
-                                     Description
-                                    ========================= */}
-                                    <p className="event-description">{event.description || "No description provided."}</p>
-
-                                    {/* =========================
-                                     Meta info (startDate-endDate / location / type)
-                                    ========================= */}
-                                    <div className="event-meta">
-                                        <span className="event-meta-item">👥 {formatCount(event.participantCount, "participant")}</span>
-                                        <span className="event-meta-item">📅 {formatEventDateRange(event.startDateTime, event.endDateTime)}</span>
-                                        <span className="event-meta-item">🕒 {formatTime(event.startDateTime)} → {formatTime(event.endDateTime)}</span>
-                                        {event.location && (<span className="event-meta-item">📍{event.mode === "online" ? "Online" : event.location || "No location"}</span>)}
-                                    </div>
-                                </Card>
-                            );
-                        })}
+                        {events.map((event) =>  (
+                                <EventCard                                 
+                                    key={event.id}
+                                    event={event}
+                                    user={user}
+                                    role={myEvents[event.id] || null}
+                                    onJoin={handleJoinEvent}
+                                    onLeave={handleLeaveEvent}
+                                />
+                            )  
+                        )}
                     </div>
 
                     {pagination.totalPages > 1 && (

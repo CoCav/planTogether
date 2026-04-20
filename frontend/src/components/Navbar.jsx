@@ -50,10 +50,9 @@ export default function Navbar() {
 
                 {/* Main navigation */}
                 <nav className="navbar-links">
-                    <NavLink to="/" end className={({ isActive }) => `navbar-link link-underline link-color-hover ${isActive ? "active" : ""}`.trim()}>Home</NavLink>
                     <NavLink to="/events" end className={({ isActive }) => `navbar-link link-underline link-color-hover ${isActive ? "active" : ""}`.trim()}>Events</NavLink>
 
-                    {user && (<NavLink to="/events/create" className={({ isActive }) => `navbar-link link-underline link-color-hover ${isActive ? "active" : ""}`.trim()}>Create a event</NavLink>)}
+                    {user && (<NavLink to="/events/create" className={({ isActive }) => `navbar-link link-underline link-color-hover ${isActive ? "active" : ""}`.trim()}>Create event</NavLink>)}
                 </nav>
 
                 {/* Right side */}

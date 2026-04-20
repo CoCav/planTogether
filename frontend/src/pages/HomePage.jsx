@@ -1,50 +1,104 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth.js";
-import { getAllEvents } from "../api/eventApi";
-import { getNormalizedEvents } from "../utils/normalize.js";
-import { formatEventDateRange, formatCount } from "../utils/format.js";
+import { getAllEvents } from "../api/eventApi"
+import { getMyEvents } from "../api/eventMembershipApi";
+import { getNormalizedEvents, getMyEventsWithRole } from "../utils/normalize";
+import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
 
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import EventCard from "../components/ui/EventCard.jsx";
 import EmptyState from "../components/ui/EmptyState";
 import LoadingState from "../components/ui/LoadingState";
 import Alert from "../components/ui/Alert";
 
 export default function HomePage() {
     const { user } = useAuth();
+    const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
     // Events preview state: stores homepage event preview
     const [events, setEvents] = useState([]);
     const [loadingEvents, setLoadingEvents] = useState(true);
 
+    // Membership role state: stores current user role by event ID
+    const [myEvents, setMyEvents] = useState({});
+
 
     /* =========================
-     Load upcoming events
-        Fetches a preview list for homepage
+     Load homepage data
     ========================= */
 
-    useEffect(() => {
-    const fetchEvents = async () => {
-        setError("");
-        setLoadingEvents(true);
-
+    // Fetches visible events and current user memberships
+    const loadData = async () => {
         try {
+            setError("");
+            setLoadingEvents(true);
+
             const response = await getAllEvents();
-            setEvents(getNormalizedEvents(response));    
+            setEvents(getNormalizedEvents(response));
+
+            if (user) {
+                const membershipMap = await fetchMyEvents();
+                setMyEvents(membershipMap);
+            } else {
+                setMyEvents({});
+            }
         } catch (error) {
             console.error("Error fetching events:", error);
+            setError("❌ Failed to load events");
         } finally {
             setLoadingEvents(false);
         }
     };
 
-    fetchEvents();
-  }, []);
+    // Fetches current user memberships and returns a role map indexed by event ID
+      const fetchMyEvents = async () => {
+        if (!user) return {};
+  
+        const response = await getMyEvents();
+        const membershipEvents = getMyEventsWithRole(response);
+  
+        const membershipMap = {};
+        membershipEvents.forEach((item) => {membershipMap[item.id] = item.role});
+        return membershipMap;
+    };
+
+    // Load initial user data or reload data when authentication state change
+    useEffect(() => {loadData()}, [user]);
+
+    // Auto-clear feedback messages after delay
+    useEffect(() => {
+        if (message || error) {
+            const timer = setTimeout(() => {
+            setMessage("");
+            setError("");
+        }, 3000);
+
+        return () => clearTimeout(timer);
+        }
+    }, [message, error]);
 
     const MAX_HOME_EVENTS = 4;
     const previewEvents = events.slice(0, MAX_HOME_EVENTS);
+
+    /* =========================
+     Derived helper
+        returns current user's role for a given event
+    ========================= */
+    const getRoleByEventId = (eventId) => myEvents[eventId] || null;
+    
+    /* =========================
+     Event membership actions
+        Provides join / leave handlers with shared UX logic
+    ========================= */
+    const { handleJoinEvent, handleLeaveEvent } = useEventActionsWithConfirm({
+        loadData,
+        setMessage,
+        setError,
+        getRoleByEventId,
+    });
 
 
     /* =========================
@@ -138,32 +192,14 @@ export default function HomePage() {
                 ) : (
                     <div className="event-list">
                         {previewEvents.map((event) => (
-                            <Card key={event.id} className="event-card">
-                                <div className="event-card-header">
-                                    <div className="event-card-main">
-                                        <div className="event-card-top">
-                                            <Link to={`/events/${event.id}`} className="event-title-link link-underline link-color-hover">
-                                                <h3 className="event-title">{event.title}</h3>
-                                            </Link>
-
-                                            {event.type && (<span className="event-type-badge">{event.type}</span>)}
-                                        </div>
-
-                                        <p className="event-description">{event.description || "No description provided."}</p>
-
-                                        <div className="event-meta">
-                                            {event.creatorName && (<span className="event-meta-item">👤 {event.creatorName}</span>)}
-                                            <span className="event-meta-item">👥 {formatCount(event.participantCount, "participant")}</span>
-                                            <span className="event-meta-item">📅 
-                                                {formatEventDateRange(event.startDateTime, event.endDateTime)} 
-                                                {/* {event.endDateTime && formatEventDateRange(event.endDateTime) !== formatEventDateRange(event.startDateTime) 
-                                                && ` → ${formatEventDateRange(event.endDateTime)}`} */}
-                                            </span>
-                                            <span className="event-meta-item">📍 {event.mode === "online" ? "Online" : event.location || "No location"}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </Card>
+                            <EventCard
+                                key={event.id}
+                                event={event}
+                                user={user}
+                                role={myEvents[event.id] || null}
+                                onJoin={handleJoinEvent}
+                                onLeave={handleLeaveEvent}
+                            />
                         ))}
                     </div>
                 )}

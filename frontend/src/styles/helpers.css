@@ -1,3 +1,8 @@
+/* ==================================================
+   HELPERS
+    Small reusable utility classes for spacing, layout and text
+================================================== */
+
 .w-full {
     width: 100%;
 }

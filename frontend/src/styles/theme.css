@@ -1,3 +1,8 @@
+/* ==================================================
+   THEME TOKENS
+    Global design variables used across the app
+================================================== */
+
 :root {
     /* Colors */
     --color-primary: #4f46e5;

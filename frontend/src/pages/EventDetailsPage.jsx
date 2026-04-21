@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { getEventById, deleteEvent } from "../api/eventApi";
 import { getEventMembers, getEventOrganizers, updateMemberRole, removeEventMember } from "../api/eventMembershipApi.js"
-import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../utils/normalize";
+import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../features/events/normalizeData.js";
 import { formatEventDateRange, formatCount, formatBe, formatTime } from "../utils/format.js";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm.js";
 

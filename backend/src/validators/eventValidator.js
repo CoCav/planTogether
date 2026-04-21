@@ -29,8 +29,8 @@ const createEventValidator = [
         }),
 
     body('description')
-        .optional()
         .trim()
+        .notEmpty().withMessage("Description is required")
         .isString().withMessage('Description must be a string'),
 
     body("mode")
@@ -49,13 +49,13 @@ const createEventValidator = [
         }),
 
     body('type')
-        .optional()
         .trim()
+        .notEmpty().withMessage("Type is required")
         .isString().withMessage('Type must be a string'),
 
     body('theme')
-        .optional()
         .trim()
+        .notEmpty().withMessage("Theme is required")
         .isString().withMessage('Theme must be a string'),
 ];
 

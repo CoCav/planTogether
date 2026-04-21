@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createEvent } from "../api/eventApi";
+import { validateEventForm } from "../features/events/eventValidation";
 
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
@@ -13,6 +14,7 @@ import Alert from "../components/ui/Alert";
 export default function CreateEventPage() {
     const navigate = useNavigate();
     const [error, setError] = useState("");
+    const [errors, setErrors] = useState({});
 
     // Submit loading state: controls login button loading
     const [submitting, setSubmitting] = useState(false);
@@ -60,6 +62,11 @@ export default function CreateEventPage() {
                 [name]: value
             };
         });
+
+        setErrors((prev) => ({
+            ...prev,
+            [name]: undefined
+        }));
     };
 
     
@@ -80,6 +87,15 @@ export default function CreateEventPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+
+        const validationErrors = validateEventForm(form);
+        
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
+
+        setErrors({});
         setSubmitting(true);
 
         try {
@@ -130,7 +146,9 @@ export default function CreateEventPage() {
                                 placeholder="Event title"
                                 value={form.title}
                                 onChange={handleChange}
+                                className={errors.title ? "error" : ""}
                             />
+                            {errors.title && <p className="field-error">{errors.title}</p>}
                         </FormField>
 
                         <FormField label="Type">
@@ -140,7 +158,9 @@ export default function CreateEventPage() {
                                 placeholder="Event type"
                                 value={form.type}
                                 onChange={handleChange}
+                                className={errors.type ? "error" : ""}
                             />
+                            {errors.type && <p className="field-error">{errors.type}</p>}
                         </FormField>
 
                         <FormField label="Theme">
@@ -150,7 +170,9 @@ export default function CreateEventPage() {
                                 placeholder="Event theme"
                                 value={form.theme}
                                 onChange={handleChange}
+                                className={errors.theme ? "error" : ""}
                             />
+                            {errors.theme && <p className="field-error">{errors.theme}</p>}
                         </FormField>
 
                         <FormField label="Mode">
@@ -167,7 +189,9 @@ export default function CreateEventPage() {
                                 value={form.description}
                                 onChange={handleChange}
                                 rows={5}
+                                className={errors.description ? "error" : ""}
                             />
+                            {errors.description && <p className="field-error">{errors.description}</p>}
                         </FormField>
 
                         {!isOnlineEvent && (
@@ -178,7 +202,9 @@ export default function CreateEventPage() {
                                     placeholder="Event location"
                                     value={form.location}
                                     onChange={handleChange}
-                                />
+                                    className={errors.location ? "error" : ""}
+                            />
+                                {errors.location && <p className="field-error">{errors.location}</p>}
                             </FormField>
                         )}
 
@@ -188,7 +214,9 @@ export default function CreateEventPage() {
                                 name="startDate"
                                 value={form.startDate}
                                 onChange={handleChange}
+                                className={errors.startDate ? "error" : ""}
                             />
+                            {errors.startDate && <p className="field-error">{errors.startDate}</p>}
                         </FormField>
                         <FormField label="Start time">
                             <Input
@@ -196,7 +224,9 @@ export default function CreateEventPage() {
                                 name="startTime"
                                 value={form.startTime}
                                 onChange={handleChange}
+                                className={errors.startTime ? "error" : ""}
                             />
+                            {errors.startTime && <p className="field-error">{errors.startTime}</p>}
                         </FormField>
 
                          <FormField label="End date">
@@ -205,7 +235,9 @@ export default function CreateEventPage() {
                                 name="endDate"
                                 value={form.endDate}
                                 onChange={handleChange}
+                                className={errors.endDate ? "error" : ""}
                             />
+                            {errors.endDate && <p className="field-error">{errors.endDate}</p>}
                         </FormField>
                         <FormField label="End time">
                             <Input
@@ -213,7 +245,9 @@ export default function CreateEventPage() {
                                 name="endTime"
                                 value={form.endTime}
                                 onChange={handleChange}
+                                className={errors.endTime ? "error" : ""}
                             />
+                            {errors.endTime && <p className="field-error">{errors.endTime}</p>}
                         </FormField>
                     </div>
 

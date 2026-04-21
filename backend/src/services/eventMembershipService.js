@@ -99,6 +99,13 @@ const listMyEvents = async (userId) => {
                     'mode',
                     'location',
                     'creatorId'
+                ],
+                include: [
+                    {
+                        model: User,
+                        as: "creator",
+                        attributes: ["id", "name"]
+                    }
                 ]
             }],
             order: [['createdAt', 'DESC']]

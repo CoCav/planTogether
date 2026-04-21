@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { AuthContext } from "./authContext";
 import { getProfile, logOutUser } from "../api/authApi";
-import { getToken, removeToken, setToken } from "../utils/token";
+import { getToken, removeToken, setToken } from "../features/auth/token";
 
 export default function AuthProvider({ children }) {
     const [user, setUser] = useState(null);

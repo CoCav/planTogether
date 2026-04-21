@@ -107,6 +107,53 @@
 
 
 /* ==================================================
+   ALERTS & STATES
+================================================== */
+.alert {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-4);
+    border: 1px solid transparent;
+    font-size: var(--font-size-sm);
+}
+
+.alert-info {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+}
+
+.alert-success {
+    background: #ecfdf5;
+    color: #15803d;
+    border-color: #bbf7d0;
+}
+
+.alert-danger {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+}
+
+.empty-state,
+.loading-state {
+    text-align: center;
+    color: var(--color-text-muted);
+    border-radius: var(--radius-md);
+}
+
+.empty-state {
+    padding: var(--space-5);
+    border: 1px dashed var(--color-border);
+    background: #fcfcfd;
+}
+
+.loading-state {
+    padding: var(--space-6);
+}
+
+
+/* ==================================================
    CARDS
 ================================================== */
 .card {
@@ -126,6 +173,50 @@
     box-shadow: var(--shadow-md);
 }
 
+
+/* ==================================================
+   PASSWORD RULES
+================================================== */
+.password-rule {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    transition: color 0.2s ease;
+    opacity: 0.7;
+}
+
+.password-rule.valid {
+    color: var(--color-success);
+    font-weight: 500;
+    opacity: 1;
+}
+
+.password-rule-icon {
+    font-size: 0.8rem;
+    width: 14px;
+    text-align: center;
+}
+
+.password-rules {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-1);
+}
+
+.password-rules-title {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin-bottom: 4px;
+}
+
+.password-rules-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
 
 /* ==================================================
    FORMS
@@ -162,6 +253,21 @@
 .form-card {
     max-width: 900px;
     margin: 0 auto;
+}
+
+.field-error {
+    margin-top: var(--space-1);
+    font-size: var(--font-size-sm);
+    color: var(--color-danger);
+}
+
+.field-error-list {
+    margin-top: var(--space-1);
+    padding-left: 1rem;
+}
+
+.field-error-list .field-error {
+    margin-top: 0;
 }
 
 
@@ -201,6 +307,22 @@
     cursor: not-allowed;
 }
 
+.input.valid {
+  border-color: var(--color-success);
+}
+
+.input.error,
+.textarea.error,
+.select.error {
+    border-color: var(--color-danger);
+}
+
+.input.error:focus,
+.textarea.error:focus,
+.select.error:focus {
+    border-color: var(--color-danger);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
 
 /* ==================================================
    SELECT
@@ -261,52 +383,6 @@
     color: #374151;
 }
 
-
-/* ==================================================
-   ALERTS & STATES
-================================================== */
-.alert {
-    padding: var(--space-3) var(--space-4);
-    border-radius: var(--radius-md);
-    margin-bottom: var(--space-4);
-    border: 1px solid transparent;
-    font-size: var(--font-size-sm);
-}
-
-.alert-info {
-    background: #eff6ff;
-    color: #1d4ed8;
-    border-color: #bfdbfe;
-}
-
-.alert-success {
-    background: #ecfdf5;
-    color: #15803d;
-    border-color: #bbf7d0;
-}
-
-.alert-danger {
-    background: #fef2f2;
-    color: #b91c1c;
-    border-color: #fecaca;
-}
-
-.empty-state,
-.loading-state {
-    text-align: center;
-    color: var(--color-text-muted);
-    border-radius: var(--radius-md);
-}
-
-.empty-state {
-    padding: var(--space-5);
-    border: 1px dashed var(--color-border);
-    background: #fcfcfd;
-}
-
-.loading-state {
-    padding: var(--space-6);
-}
 
 /* ==================================================
    LINKS

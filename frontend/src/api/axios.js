@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getToken } from "../utils/token";
+import { getToken } from "../features/auth/token";
 
 /**
  * Axios instance used across the frontend application.

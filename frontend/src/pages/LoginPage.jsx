@@ -2,17 +2,19 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth.js";
 import { loginUser } from "../api/authApi";
+import { validateLoginForm } from "../features/auth/authValidation.js";
 
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
-import Input from "../components/ui/Input";
 import FormField from "../components/ui/FormField";
+import Input from "../components/ui/Input";
 import Alert from "../components/ui/Alert";
 
 export default function LoginPage() {
     const { login } = useAuth();
     const navigate = useNavigate();
     const [error, setError] = useState("");
+    const [errors, setErrors] = useState({});
 
     // Password visibility state: controls show / hide password
     const [showPassword, setShowPassword] = useState(false);
@@ -26,7 +28,7 @@ export default function LoginPage() {
     // Login form state: user credentials input
     const [form, setForm] = useState({
         email: "",
-        password: "",
+        password: ""
     });
 
 
@@ -34,12 +36,18 @@ export default function LoginPage() {
      Input change handler
         Updates email / password
     ========================= */
-
     const handleChange = (e) => {
+        const { name, value } = e.target;
+
         setForm({
             ...form,
-            [e.target.name]: e.target.value
+            [name]: value
         });
+
+        setErrors((prev) => ({
+            ...prev,
+            [name]: undefined
+        }));
     };
 
 
@@ -48,10 +56,17 @@ export default function LoginPage() {
         Authenticates user and stores
         token depending on rememberMe
     ========================= */
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+
+        const validationErrors = validateLoginForm(form);
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
+
+        setErrors({});
         setSubmitting(true);
 
         try {
@@ -61,7 +76,7 @@ export default function LoginPage() {
             await login(token, rememberMe);
             navigate("/events");
         } catch {
-            setError("Invalid email or password");
+            setError("Unable to login. Please check your credentials.");
         } finally {
             setSubmitting(false);
         }
@@ -77,7 +92,7 @@ export default function LoginPage() {
             <div className="page-header">
                 <div>
                     <h1 className="page-title">Login</h1>
-                    <p className="page-subtitle">Access your account to manage events and participation.</p>
+                    <p className="page-subtitle">Sign in to manage your events and participation.</p>
                 </div>
             </div>
 
@@ -93,7 +108,9 @@ export default function LoginPage() {
                                 placeholder="Your email"
                                 value={form.email}
                                 onChange={handleChange}
+                                className={errors.email ? "error" : ""}
                             />
+                            {errors.email && <p className="field-error">{errors.email}</p>}
                         </FormField>
 
                         <FormField label="Password">
@@ -104,10 +121,12 @@ export default function LoginPage() {
                                     placeholder="Your password"
                                     value={form.password}
                                     onChange={handleChange}
+                                    className={errors.password ? "error" : ""}
                                 />
 
                                 <Button type="button" variant="outline" onClick={() => setShowPassword((prev) => !prev)}>{showPassword ? "Hide" : "Show"}</Button>
                             </div>
+                            {errors.password && <p className="field-error">{errors.password}</p>}
                         </FormField>
                     </div>
 
@@ -124,8 +143,8 @@ export default function LoginPage() {
                         <Button type="submit" loading={submitting}>Login</Button>
                     </div>
 
-                    <p className="auth-footer text-muted">Don’t have an account?{" "}
-                        <Link to="/register" className="link-inline">Create one</Link>
+                    <p className="auth-footer text-muted">Don't have an account?{" "}
+                        <Link to="/register" className="link-inline">Register</Link>
                     </p>
                 </form>
             </Card>

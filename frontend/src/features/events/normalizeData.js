@@ -1,21 +1,9 @@
-/* 
-This file is responsible for:
- * - simplifying API (Axios) responses
- * - standardizing data used in the frontend
- * - avoiding complex logic inside React components
- */
+/* ==================================================
+   EVENT NORMALIZATION
+   Transforms backend event data into frontend-friendly format
+================================================== */
 
-// Extracts useful data from API response, handling different possible structures
-export const extractApiData = (response = {}, key = "") => {
-  if (!response || !response.data) return [];
-
-  // If a specific key exists (e.g. events, members, organizers)
-  if (key && response.data[key]) {
-    return response.data[key];
-  }
-
-  return response.data;
-};
+import { extractApiData } from "../../utils/extractApiData";
 
 // Normalizes s single event object
 // Ensures that all expected fields are present with default values

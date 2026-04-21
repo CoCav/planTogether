@@ -2,17 +2,20 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { registerUser } from "../api/authApi";
+import { validateRegisterForm } from "../features/auth/authValidation";
 
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
-import Input from "../components/ui/Input";
 import FormField from "../components/ui/FormField";
+import Input from "../components/ui/Input";
+import PasswordRules from "../components/ui/PasswordRules";
 import Alert from "../components/ui/Alert";
 
 export default function RegisterPage() {
     const { login } = useAuth();
     const navigate = useNavigate();
     const [error, setError] = useState("");
+    const [errors, setErrors] = useState({});
 
     // Password visibility state: controls show / hide password
     const [showPassword, setShowPassword] = useState(false);
@@ -22,8 +25,9 @@ export default function RegisterPage() {
 
     // Registration form state: stores user account inputs
     const [form, setForm] = useState({
+        name: "",
         email: "",
-        password: "",
+        password: ""
     });
 
 
@@ -32,10 +36,17 @@ export default function RegisterPage() {
         Updates form fields
     ========================= */
     const handleChange = (e) => {
+        const { name, value } = e.target;
+
         setForm({
             ...form,
-            [e.target.name]: e.target.value
+            [name]: value
         });
+
+        setErrors((prev) => ({
+            ...prev,
+            [name]: undefined
+        }));
     };
 
 
@@ -46,6 +57,14 @@ export default function RegisterPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+
+        const validationErrors = validateRegisterForm(form);
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
+
+        setErrors({});
         setSubmitting(true);
 
         try {
@@ -57,6 +76,7 @@ export default function RegisterPage() {
         } catch (err) {
             console.error("Register error:", err);
             setError("Unable to register. Please check your information.");
+
         } finally {
             setSubmitting(false);
         }
@@ -88,7 +108,9 @@ export default function RegisterPage() {
                                 placeholder="Your name"
                                 value={form.name}
                                 onChange={handleChange}
+                                className={errors.name ? "error" : ""}
                             />
+                            {errors.name && <p className="field-error">{errors.name}</p>}
                         </FormField>
 
                         <FormField label="Email">
@@ -98,7 +120,9 @@ export default function RegisterPage() {
                                 placeholder="Your email"
                                 value={form.email}
                                 onChange={handleChange}
+                                className={errors.email ? "error" : ""}
                             />
+                            {errors.email && <p className="field-error">{errors.email}</p>}
                         </FormField>
 
                         <FormField label="Password">
@@ -109,10 +133,21 @@ export default function RegisterPage() {
                                     placeholder="Choose a password"
                                     value={form.password}
                                     onChange={handleChange}
+                                    className={errors.password ? "error" : ""}
                                 />
 
                                 <Button type="button" variant="outline" onClick={() => setShowPassword((prev) => !prev)}>{showPassword ? "Hide" : "Show"}</Button>
                             </div>
+
+                            {Array.isArray(errors.password) ? (
+                                <ul className="field-error-list">
+                                    {errors.password.map((error) => (<li key={error} className="field-error">{error}</li>))}
+                                </ul>
+                            ) : (
+                                errors.password && <p className="field-error">{errors.password}</p>
+                            )}
+
+                            <PasswordRules password={form.password}/>
                         </FormField>
                     </div>
 

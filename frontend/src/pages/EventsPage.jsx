@@ -4,7 +4,7 @@ import { useAuth } from "../context/useAuth";
 import { getAllEvents, getFilteredEvents } from "../api/eventApi";
 import { getMyEvents } from "../api/eventMembershipApi";
 import { getNormalizedEvents, getMyEventsWithRole } from "../utils/normalize";
-import { getDefaultEventFilters, getTodayEventFilters, getWeekendEventFilters } from "../utils/eventFilters";
+import { getDefaultEventFilters, getTodayEventFilters, getWeekendEventFilters } from "../features/events/eventFilters";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
 
 import Button from "../components/ui/Button";

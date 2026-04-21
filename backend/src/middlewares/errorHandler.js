@@ -12,8 +12,8 @@ function errorHandler(error, req, res, next) {
     if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({
         success: false,
-        error: 'Validation error',
-        errors: error.errors?.map(err => ({ field: err.path, message: err.message })),
+        message: 'Validation error',
+        errors: error.errors?.map(err => ({ field: err.path, message: err.message }))
       });
     }
 
@@ -22,7 +22,7 @@ function errorHandler(error, req, res, next) {
 
     res.status(statusCode).json({
       success: false,
-      error: message,
+      message,
       ...(error.errors && { errors: error.errors }),
       ...(!isProd && { stack: error.stack })
     });

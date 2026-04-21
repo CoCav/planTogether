@@ -3,13 +3,15 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { updateProfile, changePassword } from "../api/authApi";
 import { getMyEvents } from "../api/eventMembershipApi";
-import { getMyEventsWithRole } from "../utils/normalize";
+import { getMyEventsWithRole } from "../features/events/normalizeData";
+import { validateProfileForm, validateChangePasswordForm } from "../features/auth/authValidation";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
 
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
-import Input from "../components/ui/Input";
 import FormField from "../components/ui/FormField";
+import Input from "../components/ui/Input";
+import PasswordRules from "../components/ui/PasswordRules";
 import Alert from "../components/ui/Alert";
 import EmptyState from "../components/ui/EmptyState";
 import LoadingState from "../components/ui/LoadingState";
@@ -19,6 +21,9 @@ export default function ProfilePage() {
     const { user, refreshUser } = useAuth();
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
+    const [profileErrors, setProfileErrors] = useState({});
+    const [passwordErrors, setPasswordErrors] = useState({});
+
 
     // Events state: stores all user-related events
     const [myEvents, setMyEvents] = useState([]);
@@ -64,6 +69,8 @@ export default function ProfilePage() {
 
             const response = await getMyEvents();
             const normalizedEvents =  getMyEventsWithRole(response);
+            console.log(normalizedEvents);
+            
             setMyEvents(normalizedEvents);
 
         } catch (error) {
@@ -103,19 +110,31 @@ export default function ProfilePage() {
     /* =========================
         Inputs handlers
     ========================= */
-
     const handleProfileChange = (e) => {
+        const { name, value } = e.target;
+
         setProfileForm({
             ...profileForm,
-            [e.target.name]: e.target.value
+            [name]: value
         });
+
+        setProfileErrors((prev) => ({
+            ...prev,
+            [name]: undefined
+        }));
     };
 
     const handlePasswordChange = (e) => {
+        const { name, value } = e.target;
+
         setPasswordForm({
             ...passwordForm,
-            [e.target.name]: e.target.value
+            [name]: value
         });
+        setPasswordErrors((prev) => ({
+            ...prev,
+            [name]: undefined
+        }));
     };
 
     // Toggles visibility of a specific password field
@@ -135,6 +154,14 @@ export default function ProfilePage() {
         e.preventDefault();
         setMessage("");
         setError("");
+
+        const validationErrors = validateProfileForm(profileForm);
+        if (Object.keys(validationErrors).length > 0) {
+            setProfileErrors(validationErrors);
+            return;
+        }
+        
+        setProfileErrors({});
         setProfileSubmitting(true);
 
         try {
@@ -154,11 +181,26 @@ export default function ProfilePage() {
         setMessage("");
         setError("");
 
-        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-            setError("❌ New passwords do not match");
+        const validationErrors = validateChangePasswordForm(passwordForm);
+
+        if (passwordForm.currentPassword && passwordForm.newPassword && passwordForm.currentPassword === passwordForm.newPassword) {
+            validationErrors.newPassword = "New password must be different from current password";
+        }
+        
+        if (!passwordForm.confirmPassword) {
+            validationErrors.confirmPassword = "Confirm password is required";
+        }
+
+        if (passwordForm.newPassword && passwordForm.confirmPassword && passwordForm.newPassword !== passwordForm.confirmPassword) {
+            validationErrors.confirmPassword = "Passwords do not match. Please check again.";
+        }
+
+        if (Object.keys(validationErrors).length > 0) {
+            setPasswordErrors(validationErrors);
             return;
         }
 
+        setPasswordErrors({});
         setPasswordSubmitting(true);
 
         try {
@@ -172,7 +214,25 @@ export default function ProfilePage() {
             });
         } catch (error) {
             console.error("Error updating password:", error);
-            setError("❌ Unable to update password");
+            const status = error.response?.status;
+            const message = error.response?.data?.message || "Unable to update password";
+
+            if (status === 401) {
+                setPasswordErrors((prev) => ({
+                    ...prev,
+                    currentPassword: message
+                }));
+                return;
+            } else if (status === 400 && message.toLowerCase().includes("new password")) {
+                setPasswordErrors((prev) => ({
+                    ...prev,
+                    newPassword: message
+                }));
+                return;
+            } 
+            
+            setError(`${message}`);
+
         } finally {
             setPasswordSubmitting(false);
         }
@@ -224,7 +284,9 @@ export default function ProfilePage() {
                                     value={profileForm.name}
                                     onChange={handleProfileChange}
                                     placeholder="Your name"
+                                    className={profileErrors.name ? "error" : ""}
                                 />
+                                {profileErrors.name && <p className="field-error">{profileErrors.name}</p>}
                             </FormField>
 
                             <FormField label="Email">
@@ -234,7 +296,9 @@ export default function ProfilePage() {
                                     value={profileForm.email}
                                     onChange={handleProfileChange}
                                     placeholder="Your email"
+                                    className={profileErrors.email ? "error" : ""}
                                 />
+                                {profileErrors.email && <p className="field-error">{profileErrors.email}</p>}
                             </FormField>
                         </div>
 
@@ -260,9 +324,11 @@ export default function ProfilePage() {
                                         value={passwordForm.currentPassword}
                                         onChange={handlePasswordChange}
                                         placeholder="Current password"
+                                        className={passwordErrors.currentPassword ? "error" : ""}
                                     />
                                     <Button type="button" variant="outline" onClick={() => togglePasswordVisibility("currentPassword")}>{showPasswords.currentPassword ? "Hide" : "Show"}</Button>
                                 </div>
+                                {passwordErrors.currentPassword && <p className="field-error">{passwordErrors.currentPassword}</p>}
                             </FormField>
 
                             <FormField label="New password">
@@ -273,9 +339,19 @@ export default function ProfilePage() {
                                         value={passwordForm.newPassword}
                                         onChange={handlePasswordChange}
                                         placeholder="New password"
+                                        className={passwordErrors.newPassword ? "error" : ""}
                                     />
                                     <Button type="button" variant="outline" onClick={() => togglePasswordVisibility("newPassword")}>{showPasswords.newPassword ? "Hide" : "Show"}</Button>
                                 </div>
+
+                                {Array.isArray(passwordErrors.newPassword) ? (
+                                    <ul className="field-error-list">
+                                        {passwordErrors.newPassword.map((error) => (<li key={error} className="field-error">{error}</li>))}
+                                    </ul>
+                                ) : (
+                                    passwordErrors.newPassword && <p className="field-error">{passwordErrors.newPassword}</p>
+                                )}
+                                <PasswordRules password={passwordForm.newPassword}/>
                             </FormField>
 
                             <FormField label="Confirm new password">
@@ -286,9 +362,11 @@ export default function ProfilePage() {
                                         value={passwordForm.confirmPassword}
                                         onChange={handlePasswordChange}
                                         placeholder="Confirm new password"
+                                        className={passwordErrors.confirmPassword ? "error" : ""}
                                     />
                                     <Button type="button" variant="outline" onClick={() => togglePasswordVisibility("confirmPassword")}>{showPasswords.confirmPassword ? "Hide" : "Show"}</Button>
                                 </div>
+                                 {passwordErrors.confirmPassword && <p className="field-error">{passwordErrors.confirmPassword}</p>}
                             </FormField>
                         </div>
 
@@ -344,11 +422,11 @@ export default function ProfilePage() {
                                                     <Link to={`/events/${event.id}`} className="event-title-link">
                                                         <span className="member-name">{event.title}</span>
                                                     </Link>
-                                                    <Badge role={event.role} />
-                                                </div>
+                                                    {event.creatorName && (<span className="badge badge-organizer">👑 {event.creatorName}</span>)}
+                                                    <Badge role={event.role} />                                                </div>
 
                                                 <div className="member-actions">
-                                                    <Button type="button" variant="outline" onClick={() => handleLeaveEvent(event.id)}>Leave</Button>
+                                                    <Button type="button" variant="outline-danger" onClick={() => handleLeaveEvent(event.id)}>Leave</Button>
                                                 </div>
                                             </div>
                                         ))}

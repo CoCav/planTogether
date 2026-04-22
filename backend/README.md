@@ -45,13 +45,13 @@ The API handles:
 ## User Management 
 
 - User registration
-- Login with JWT authentication (stateless, token-based )
+- Login with JWT authentication (stateless, token-based)
 - Profile retrieval
 - Profile update
 - Change password (secure flow with current password verification)
 - Logout endpoint
 - Email normalization and password hashing with **bcrypt**
-- Centralized error handling middleware
+- Centralized error handling middleware with consistent responses
 
 ---
 
@@ -63,6 +63,11 @@ The API handles:
 - Update events *(organizer or co_organizer)*
 - Delete events *(organizer only)*
 - Advanced filtering (type, theme, location, date)
+
+Additional improvements:
+
+- Event creator information included in responses (for frontend usage)
+- Strong validation (required fields + date consistency)
 
 Each event automatically assigns the creator as **organizer**.
 
@@ -229,6 +234,28 @@ The API implements several security mechanisms:
 
 ---
 
+## API Response Format
+
+All API responses follow a consistent structure:
+
+### Success
+```json
+{
+  "success": true,
+  "data": { }
+}
+```
+
+### Error
+```
+{
+  "success": false,
+  "message": "Error description",
+  "errors": []
+}
+```
+
+
 # 📁 Project Structure
 
 ```
@@ -387,14 +414,27 @@ DELETE /api/events/:eventId/members/:userId
 
 # 🚀 Recent Improvements
 
-- Added secure password update flow with current password verification
-- Refactored middleware architecture (authentication vs authorization separation)
-- Introduced dedicated authorization middlewares for role change and member removal
-- Improved role hierarchy enforcement and permission consistency
-- Fixed role update logic (co_organizer promotion support)
-- Added advanced event filtering (search, type, theme, location, date, date range)
-- Introduced exact date filtering with priority over date range
-- Improved frontend/backend consistency for filtering queries
+- Improved centralized error handling:
+  - standardized response format using `message`
+  - better frontend compatibility for error display
+
+- Enhanced event validation:
+  - required fields enforced (title, description, type, theme)
+  - strict date validation (end must be after start)
+  - improved consistency between create and update validators
+
+- Added event creator information in responses:
+  - includes creator name for frontend usage
+  - improves UI display (e.g. "joined events" section)
+
+- Improved backend/frontend consistency:
+  - aligned validation rules between frontend and backend
+  - clearer and more predictable API responses
+
+- Refactored and stabilized authentication flows:
+  - better error handling for password updates
+  - improved response clarity for authentication errors
+
 
 # 📌 Project Status
 

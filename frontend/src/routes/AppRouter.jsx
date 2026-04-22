@@ -29,7 +29,7 @@ export default function AppRouter() {
             <Route path="/profile"
                 element={
                     <ProtectedRoute>
-                     <ProfilePage />
+                        <ProfilePage />
                     </ProtectedRoute>
                 }
             />
@@ -37,7 +37,7 @@ export default function AppRouter() {
             <Route path="/my-events"
                 element={
                     <ProtectedRoute>
-                    <MyEventsPage/>
+                        <MyEventsPage/>
                     </ProtectedRoute>
                 }
             />
@@ -47,13 +47,20 @@ export default function AppRouter() {
             <Route path="/events/create"
                 element={
                     <ProtectedRoute>
-                     <CreateEventPage />
+                        <CreateEventPage />
                     </ProtectedRoute>
                 }
             />
                 
-            <Route path="/events/:eventId" element={<EventDetailsPage />} />
-            <Route path="/events/:eventId/edit" element={<EditEventPage />} />
+            <Route path="/events/:eventId" element={<EventDetailsPage />}/>
+            
+            <Route path="/events/:eventId/edit" 
+                element={
+                    <ProtectedRoute>
+                        <EditEventPage />
+                    </ProtectedRoute>
+                }  
+            />
         </Routes>
     );
 }

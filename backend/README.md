@@ -1,4 +1,6 @@
-# PlanTogether - Collaborative Event Management API
+# PlanTogether - Backend API (Node.js)
+
+PlanTogether is a collaborative event management platform where users can create, join and manage events with role-based permissions.
 
 ![Node.js](https://img.shields.io/badge/Node.js-Express-green)
 ![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue)
@@ -8,9 +10,10 @@
 
 This is the **backend application** of PlanTogether, built with **Node.js, Express and PostgreSQL**.
 
-PlanTogether is a RESTful API that enables users to create, manage, and participate in collaborative events through a **role-based system**.
+It provides a secure and scalable RESTful API that handles authentication, event management, and role-based access control.
 
-Users can create, join and organize events with different permission levels (`organizer`, `co_organizer`, `participant`).  
+Users can create, join and organize events with different permission levels (`organizer`, `co_organizer`, `participant`).
+
 The API includes **secure authentication, advanced authorization logic and a modular architecture** designed for maintainability and scalability.
 
 ---
@@ -19,7 +22,7 @@ The API includes **secure authentication, advanced authorization logic and a mod
 
 PlanTogether provides a **RESTful API** that allows users to create and manage collaborative events with **role-based permissions**.
 
-The API handles:
+The API enables:
 
 - secure authentication with JWT
 - event creation and management
@@ -64,7 +67,7 @@ The API handles:
 - Delete events *(organizer only)*
 - Advanced filtering (type, theme, location, date)
 
-Additional improvements:
+Additional features:
 
 - Event creator information included in responses (for frontend usage)
 - Strong validation (required fields + date consistency)
@@ -230,7 +233,7 @@ The API implements several security mechanisms:
 - Password update requires current password verification
 - Sensitive fields (password) excluded via Sequelize scopes
 - SQL injection protection through Sequelize queries
-- Centralized error handler
+- Centralized error handler with consistent API responses
 
 ---
 

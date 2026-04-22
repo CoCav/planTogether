@@ -8,8 +8,8 @@
 ![Vite](https://img.shields.io/badge/Build-Vite-purple)
 ![Axios](https://img.shields.io/badge/HTTP-Axios-green)
 ![JWT](https://img.shields.io/badge/Auth-JWT-yellow)
-![Tests](https://img.shields.io/badge/tests-97%20passing-brightgreen)
 ![Jest](https://img.shields.io/badge/Testing-Jest-red)
+![Tests](https://img.shields.io/badge/tests-97%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 A production-oriented fullstack application with strong backend architecture and comprehensive testing.

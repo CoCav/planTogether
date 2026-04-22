@@ -6,8 +6,8 @@ PlanTogether is a collaborative event management platform where users can create
 ![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue)
 ![Sequelize](https://img.shields.io/badge/ORM-Sequelize-orange)
 ![JWT](https://img.shields.io/badge/Auth-JWT-yellow)
-![Tests](https://img.shields.io/badge/tests-97%20passing-brightgreen)
 ![Jest](https://img.shields.io/badge/Testing-Jest-red)
+![Tests](https://img.shields.io/badge/tests-97%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 This is the **backend application** of PlanTogether, built with **Node.js, Express and PostgreSQL**.

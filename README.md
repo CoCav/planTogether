@@ -1,4 +1,6 @@
-# PlanTogether
+# PlanTogether - Fullstack Event Management Platform
+
+PlanTogether is a collaborative event management platform where users can create, join and manage events with role-based permissions.
 
 ![Node.js](https://img.shields.io/badge/Backend-Node.js-green)
 ![Express](https://img.shields.io/badge/Framework-Express-lightgrey)
@@ -14,7 +16,7 @@ PlanTogether is a **full-stack web application** designed to manage collaborativ
 
 It allows users to **create, organize, and participate in events** through a **role-based system** (`organizer`, `co_organizer`, `participant`) with secure authentication.
 
-The application is built with a **Node.js / Express backend** and a **React frontend**, providing a complete workflow from API design to user interaction.
+The application is built with a **Node.js / Express backend** and a **React frontend**, providing a complete fullstack workflow from API design to user interaction.
 
 ---
 
@@ -23,17 +25,18 @@ The application is built with a **Node.js / Express backend** and a **React fron
 PlanTogether enables users to:
 
 - securely register and authenticate using JWT
-- create and manage events
+- create, organize and manage events
 - browse events with advanced filtering (search in title and description, type, theme, location, date)
 - join and leave events
 - collaborate with other users through role-based permissions
 - update their profile and password
 - manage their session with flexible authentication ("Remember me")
+- access a personal event dashboard with created and joined events
 
 The system enforces permissions on both:
 
 - the **backend** (middleware & authorization rules)
-- the **frontend** (dynamic UI rendering)
+- the **frontend** (dynamic UI rendering and protected routes)
 
 This ensures a consistent and secure user experience.
 
@@ -76,8 +79,9 @@ This ensures a consistent and secure user experience.
 
 ```
 planTogether/
-├── backend/ # REST API
-├── frontend/ # React application
+├── backend/      # REST API
+├── frontend/     # React application
+└── README.md
 ```
 
 --- 
@@ -126,6 +130,7 @@ http://localhost:5173
 - Logout functionality
 - Session-based authentication (token cleared on browser close)
 - Optional "Remember me" (persistent login)
+- Redirect to the originally requested page after login
 
 ---
 
@@ -136,6 +141,8 @@ http://localhost:5173
 - View event details
 - Update events *(organizer / co-organizer)*
 - Delete events *(organizer only)*
+- Strong validation on both frontend and backend
+- Date/time consistency rules (end must be after start)
 
 ---
 
@@ -158,13 +165,15 @@ Users can filter events using:
 - theme
 - location
 - exact date
-- date range (start / end date)
+- date range (startDate / endDate)
 
 ### Behavior
 
 - If an exact date is selected, date range filters are disabled
 - If no exact date is provided, users can filter using a date range
 - Multiple filters can be combined for precise results
+- Filters can be reset to reload all events
+- Sorting is supported on the events page
 
 ---
 
@@ -229,10 +238,27 @@ This separation improves:
 - Join / Leave / Promote / Demote / Remove actions
 - Event editing interface
 - Password visibility toggle
-- Back navigation component
+- Password rules component
 - Real-time profile updates
 - Data normalization utilities
 - Reusable custom hooks
+- Footer component with navigation
+- My Events page split into created and joined sections
+- Clear separation between Profile and Events pages
+- Loading, empty and feedback states
+- Consistent error handling across forms and actions
+
+---
+
+## 🧠 Error Handling
+
+The frontend relies on consistent backend responses:
+
+- errors use a standardized message field
+- field-specific errors are displayed in forms
+- global errors are shown through alert components
+
+This improves clarity and keeps frontend/backend behavior aligned.
 
 ---
 
@@ -243,7 +269,7 @@ cd backend
 npm test
 ```
 
-✔ 28 tests passing
+✔ 28 tests passing successfully
 ✔ Covers authentication, events, memberships, permissions and edge cases
 
 ---
@@ -256,17 +282,19 @@ npm test
 - Input validation (express-validator)
 - Sensitive data protection (Sequelize scopes)
 - Protected API routes
+- Centralized error handling with consistent API responses
 
 ---
 
 ## 🚀 Recent Improvements
 
-- Added event editing functionality
-- Implemented role management (promote / demote / remove)
-- Refactored middleware architecture (auth vs authorization)
-- Introduced dedicated authorization layers
-- Improved frontend UX (confirmations, dynamic UI)
-- Enhanced token handling (session vs persistent storage)
+- Added My Events dashboard (created vs joined events)
+- Refactored Profile page to separate account settings from event activity
+- Improved protected routing and redirect-after-login flow
+- Added footer and layout improvements
+- Enhanced validation on both frontend and backend
+- Standardized backend error responses using message
+- Added event creator information in API responses for frontend usage
 - Improved API data normalization
 - Added advanced event filtering system (search, type, theme, location, date)
 - Implemented exact date and date range filtering with dynamic UI behavior
@@ -281,24 +309,25 @@ npm test
 | Backend    | ✅ Completed    |
 | Frontend   | ✅ Functional   |
 | Security   | ✅ Solid        |
-| UX         | 🚧 Improving    |
+| UX         | 🚧 Ongoing improvements    |
 | Testing    | ✅ Backend only |
 
 ---
 
 ## 🎯 Future Improvements
 
-- "My Events" dashboard
-- UI redesign (cards, responsive layout)
+- UI redesign (cards, spacing, design system)
 - Notifications system
 - User avatars
 - Event invitations
+- Better mobile optimization
 - Deployment (Vercel / Railway / Render)
 
 ---
 
 ## 🧠 What I Learned
 
+- Structuring a fullstack application
 - Designing and structuring a RESTful API
 - Managing relational data (many-to-many relationships)
 - Implementing role-based authorization

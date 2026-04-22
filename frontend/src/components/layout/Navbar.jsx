@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, NavLink } from "react-router-dom";
-import { useAuth } from "../context/useAuth";
+import { useAuth } from "../../context/useAuth";
 
-import Button from "./ui/Button";
+import Button from "../ui/Button";
 
 export default function Navbar() {
     const { user, logout } = useAuth();

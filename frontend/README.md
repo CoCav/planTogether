@@ -1,5 +1,7 @@
 # PlanTogether - Frontend (React)
 
+PlanTogether is a collaborative event management platform where users can create, join and manage events with role-based permissions.
+
 ![React](https://img.shields.io/badge/Frontend-React-blue)
 ![Vite](https://img.shields.io/badge/Build-Vite-purple)
 ![Axios](https://img.shields.io/badge/HTTP-Axios-green)
@@ -8,7 +10,7 @@
 
 This is the **frontend application** of PlanTogether, built with **React and Vite**.
 
-It provides a user interface to interact with the PlanTogether API, allowing users to manage events, roles, and their profile through a modern and responsive UI.
+It provides a modern interface to interact with the PlanTogether API, allowing users to manage events, roles, and their profile through a responsive and user-friendly UI.
 
 ---
 
@@ -22,6 +24,7 @@ The frontend allows users to:
 - manage roles within events (organizer / co-organizer / participant)
 - update their profile and password
 - manage session behavior with "Remember me"
+- view personal event dashboard (created / joined events)
 
 The application communicates with the backend API via **Axios**.
 
@@ -48,6 +51,7 @@ The application communicates with the backend API via **Axios**.
 - Persistent session (optional "Remember me")
 - Session-based authentication (token cleared on browser close)
 - Protected routes
+- Redirect to originally requested page after login
 
 ---
 
@@ -55,26 +59,34 @@ The application communicates with the backend API via **Axios**.
 
 - View profile information
 - Update name and email
-- Change password (secure flow with current password verification)
+- Change password with validation
 - Real-time UI update using `refreshUser`
+- Clear error messages from backend
 
 ---
 
 ## 📅 Event Management
 
 - View all events
-- Browse event details with advanced filtering (search in title and description, type, theme, location date)
+- Browse event details with advanced filtering (search in title and description, type, theme, location, date)
 - Create events
 - Update events *(organizer / co_organizer)*
 - Delete events *(organizer only)*
 
+Includes:
+
+- Strong frontend validation aligned with backend
+- Date/time validation (no past start, end after start)
+
 ---
 
-## 👥 Event Participation
+## 👥 My Events (User Dashboard)
 
-- Join events
-- Leave events *(except organizer)*
-- Role-based UI behavior
+- View **created events (organizer)**
+- View **joined events (participant / co-organizer)**
+- Leave events directly from the UI
+
+UI is split into clear sections using reusable components.
 
 ---
 
@@ -91,7 +103,7 @@ Users can filter events using:
 - exact date
 - date range (startDate / endDate)
 
-### UX Behavior
+### UX Behaviour
 
 - If an exact date is selected, date range inputs are automatically disabled
 - If no exact date is provided, users can filter using a date range
@@ -122,7 +134,7 @@ participant
 - Remove participants
 
 #### Participant
-- Join / leave events only
+- Join / leave events
 
 ---
 
@@ -130,15 +142,15 @@ participant
 
 - Join / Leave buttons with dynamic state
 - Promote / Demote actions
-- Remove member functionality
-- UI restrictions based on permissions
-- Prevent invalid actions (organizer leaving, etc.)
+- Remove members
+- Confirmation dialogs for critical actions
+- Role-based UI restrictions
 
 ---
 
 ## 🔁 Data Normalization
 
-Custom utilities ensure consistent frontend data:
+Frontend utilities:
 
 - normalize API responses
 - simplify backend structures
@@ -148,23 +160,26 @@ Custom utilities ensure consistent frontend data:
 
 ## 🧠 State Management
 
-- Global auth state using Context API
-- Local component state with React hooks
-- Reusable logic with custom hooks:
+- Context API for authentication
+- Local state via React hooks
+- Custom hooks:
   - `useEventActions`
   - `useEventActionsWithConfirm`
 
-
 ---
 
-## 🎨 UX Improvements
+## 🎨 UI / UX Enhancements
 
-- Back navigation component
-- Password visibility toggle (show / hide)
-- Confirmation dialogs for critical actions
-- Smart filtering UX (exact date vs date range handlings)
-- Dynamic feedback messages (success / error)
-- Conditional rendering based on roles and auth state
+- Protected navigation (ProtectedRoute)
+- Redirect to intended page after login
+- Password visibility toggle
+- Password rules component
+- Clear error messages from backend
+- Consistent error feedback across forms and actions
+- Loading and empty states
+- Footer component with navigation
+- Responsive layout
+- Clear separation between Profile and Events
 
 ---
 
@@ -172,11 +187,23 @@ Custom utilities ensure consistent frontend data:
 
 1. User logs in → receives JWT
 2. Token is stored in:
-   - `sessionStorage` (default)
-   - `localStorage` (if "Remember me" is enabled)
-3. Axios interceptor attaches token to every request
-4. Protected routes validate authentication state
-5. Logout clears all stored tokens
+  - `sessionStorage` (default)
+  - `localStorage` (if "Remember me" is enabled)
+3. Axios attaches token to requests
+4. Redirect after login to intended page
+5. Logout clears tokens
+
+---
+
+## 🧠 Error Handling
+
+The frontend relies on consistent backend responses:
+
+- errors use a standardized `message` field
+- field-specific errors are displayed in forms
+- global errors are shown via alert components
+
+This ensures clear and user-friendly feedback.
 
 ---
 
@@ -192,12 +219,37 @@ src
 │   └── eventMembershipApi.js
 │
 ├── components
-│   ├── BackButton.jsx
-│   └── Navbar.jsx
+│   ├── ui
+│   │   ├── Alert.jsx
+│   │   ├── Badge.jsx
+│   │   ├── Button.jsx
+│   │   ├── Card.jsx
+│   │   ├── EmptyState.jsx
+│   │   ├── EventCard.jsx
+│   │   ├── FormField.jsx
+│   │   ├── Input.jsx
+│   │   ├── LoadingState.jsx
+│   │   ├── PasswordRules.jsx
+│   │   ├── Select.jsx
+│   │   └── TextArea.jsx
+│   │ 
+│   └── layout
+│       ├── NavBar.jsx
+│       └── Footer.jsx
+│
+├── features
+│   ├── auth
+│   │   ├── authValidation.js
+│   │   └── token.jsx
+│   │
+│   └── events
+│       ├── eventFilter.js
+│       ├── eventValidation.js
+│       └── normalizeData.js
 │
 ├── context
 │   ├── authContext.jsx
-    ├── authProvider.jsx
+│   ├── authProvider.jsx
 │   └── useAuth.js
 │
 ├── hooks
@@ -205,21 +257,30 @@ src
 │   └── useEventActionsWithConfirm.js
 │
 ├── pages
+│   ├── CreateEventPage.jsx
+│   ├── EditEventPage.jsx
+│   ├── EventsDetailsPage.jsx
+│   ├── MyEventsPage.jsx
+│   ├── EventsPage.jsx
 │   ├── HomePage.jsx
 │   ├── LoginPage.jsx
 │   ├── RegisterPage.jsx
-│   ├── ProfilePage.jsx
-│   ├── createEventPage.jsx
-│   ├── EventsPage.jsx
-│   ├── EventsDetailsPage.jsx
-│   └── EditEventPage.jsx
+│   └── ProfilePage.jsx
 │
 ├── routes
 │   └── AppRouter.jsx
 │
+├── styles
+│   ├── base.css
+│   ├── components.css
+│   ├── helpers.css
+│   ├── layout.css
+│   ├── pages.css
+│   └── theme.css
+│
 ├── utils
-│   ├── normalize.js
-│   └── token.js
+│   ├── extractApiData.js
+│   └── format.js
 │
 ├── App.jsx
 ├── main.jsx
@@ -242,21 +303,12 @@ VITE_API_URL=http://localhost:3000/api
 
 # ▶️ Running the App
 
-Install dependencies:
-
 ```
 npm install
-```
-
-Start development server:
-
-```
 npm run dev
 ```
 
 App runs on:
-
-Install dependencies:
 
 ```
 http://localhost:5173
@@ -271,35 +323,36 @@ The frontend communicates with the backend API:
 http://localhost:3000/api
 ```
 
-All requests are handled via Axios with an interceptor that:
+Axios is configured to:
 
-- automatically attaches JWT token
-- centralizes request configuration
+- JWT injection
+- request configuration
 
 ---
 
 # 🔐 Security
 
-- JWT stored in browser storage
-- Session-based token by default
-- Optional persistent login ("Remember me")
+- JWT stored securely in browser
 - Protected routes
 - Role-based UI restrictions
+- Error handling aligned with backend
+- No sensitive data exposed
 
 ---
 
 # 🚀 Recent Improvements
 
-- Added event editing functionality
-- Implemented role-based actions (promote, demote, remove)
-- Refactored API layer (eventApi / eventMembershipApi separation)
-- Introduced reusable hooks for membership logic
-- Improved role-based UI consistency
-- Added confirmation handling for destructive actions
-- Improved authentication flow and token handling
-- Added advanced event filtering system (search, type, theme, location, date)
-- Implemented exact date and date range filtering with UX logic
-- Aligned frontend filtering with backend query parameters
+- Added MyEventsPage
+- My Events dashboard (created vs joined events)
+- Refactored ProfilePage (separation of concerns)
+- Improved routing protection (ProtectedRoute)
+- Improved redirect after login
+- Improved error handling with backend messages
+- Added PasswordRules component
+- Improved password validation and feedback
+- Improved form validation (aligned with backend)
+- Added footer component with navigation and layout improvements
+- Improved UI consistency and structure
 
 ---
 

@@ -67,6 +67,7 @@ export default function Navbar() {
                             {isUserMenuOpen && (
                                 <div className="navbar-dropdown" role="menu">
                                     <Link to="/profile" role="menuitem" className="navbar-dropdown-item" onClick={() => setIsUserMenuOpen(false)}>My Profile</Link>
+                                    <Link to="/my-events" role="menuitem" className="navbar-dropdown-item" onClick={() => setIsUserMenuOpen(false)}>My Events</Link>
                                     <button type="button" role="menuitem" className="navbar-dropdown-item navbar-dropdown-danger" onClick={handleLogout}>Logout</button>
                                 </div>
                             )}

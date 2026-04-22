@@ -2,10 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { updateProfile, changePassword } from "../api/authApi";
-import { getMyEvents } from "../api/eventMembershipApi";
-import { getMyEventsWithRole } from "../features/events/normalizeData";
 import { validateProfileForm, validateChangePasswordForm } from "../features/auth/authValidation";
-import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
 
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
@@ -13,21 +10,18 @@ import FormField from "../components/ui/FormField";
 import Input from "../components/ui/Input";
 import PasswordRules from "../components/ui/PasswordRules";
 import Alert from "../components/ui/Alert";
-import EmptyState from "../components/ui/EmptyState";
-import LoadingState from "../components/ui/LoadingState";
-import Badge from "../components/ui/Badge";
 
+/* ==================================================
+   PROFILE PAGE
+   Allows the user to update profile information 
+   and change their password
+================================================== */
 export default function ProfilePage() {
     const { user, refreshUser } = useAuth();
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
     const [profileErrors, setProfileErrors] = useState({});
     const [passwordErrors, setPasswordErrors] = useState({});
-
-
-    // Events state: stores all user-related events
-    const [myEvents, setMyEvents] = useState([]);
-    const [loadingEvents, setLoadingEvents] = useState(true);
 
     // Submit loading states: controls button loading UX
     const [profileSubmitting, setProfileSubmitting] = useState(false);
@@ -53,41 +47,11 @@ export default function ProfilePage() {
         confirmPassword: false
     });
 
-    // Derived event collection : split events by role
-    const createdEvents = myEvents.filter((event) => event.role === "organizer");
-    const joinedEvents = myEvents.filter((event) => event.role !== "organizer");
-
 
     /* =========================
-        Data loading functions
+     Effect
+        Auto-clear feedback messages after delay
     ========================= */
-
-    // Fetches all events related to the current authenticated user
-    const fetchMyEvents = async () => {
-        try {
-            setLoadingEvents(true);
-
-            const response = await getMyEvents();
-            const normalizedEvents =  getMyEventsWithRole(response);
-            console.log(normalizedEvents);
-            
-            setMyEvents(normalizedEvents);
-
-        } catch (error) {
-            console.error("Error loading my events:", error);
-        } finally {
-            setLoadingEvents(false);
-    }};
-
-
-    /* =========================
-        Effects
-    ========================= */
-
-    // Load user events on page mount
-    useEffect(() => { fetchMyEvents()}, []);
-
-    // Auto-clear feedback messages after delay
     useEffect(() => {
         if (message || error) {
                 const timer = setTimeout(() => {
@@ -101,15 +65,9 @@ export default function ProfilePage() {
 
 
     /* =========================
-        Helpers
+     Inputs handlers
     ========================= */
-    const getRoleByEventId = (eventId) => myEvents.find((event) => event.id === eventId)?.role || null;
-    const {handleLeaveEvent } = useEventActionsWithConfirm({loadData : fetchMyEvents, setMessage, setError, getRoleByEventId});
-
-
-    /* =========================
-        Inputs handlers
-    ========================= */
+    
     const handleProfileChange = (e) => {
         const { name, value } = e.target;
 
@@ -374,67 +332,6 @@ export default function ProfilePage() {
                             <Button type="submit" loading={passwordSubmitting}>Update Password</Button>
                         </div>
                     </form>
-                </Card>
-            </div>
-
-            <div className="details-sections">
-                <Card>
-                    <div className="section-header">
-                        <h2 className="section-title">My Events</h2>
-                        <p className="section-subtitle">Events you created or joined.</p>
-                    </div>
-
-                    {loadingEvents ? (
-                        <LoadingState>Loading events...</LoadingState>
-                    ) : (
-                        <div className="profile-events-grid">
-                            <div>
-                                <h3 className="subsection-title">Created Events</h3>
-
-                                {createdEvents.length === 0 ? (
-                                    <EmptyState>No created events.</EmptyState>
-                                ) : (
-                                    <div className="member-list">
-                                        {createdEvents.map((event) => (
-                                            <div key={event.id} className="member-row">
-                                                <div className="member-info">
-                                                    <Link to={`/events/${event.id}`} className="event-title-link">
-                                                        <span className="member-name">{event.title}</span>
-                                                    </Link>
-                                                    <Badge role="organizer" />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div>
-                                <h3 className="subsection-title">Joined Events</h3>
-
-                                {joinedEvents.length === 0 ? (
-                                    <EmptyState>No joined events.</EmptyState>
-                                ) : (
-                                    <div className="member-list">
-                                        {joinedEvents.map((event) => (
-                                            <div key={event.id} className="member-row">
-                                                <div className="member-info">
-                                                    <Link to={`/events/${event.id}`} className="event-title-link">
-                                                        <span className="member-name">{event.title}</span>
-                                                    </Link>
-                                                    {event.creatorName && (<span className="badge badge-organizer">👑 {event.creatorName}</span>)}
-                                                    <Badge role={event.role} />                                                </div>
-
-                                                <div className="member-actions">
-                                                    <Button type="button" variant="outline-danger" onClick={() => handleLeaveEvent(event.id)}>Leave</Button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
                 </Card>
             </div>
         </div>

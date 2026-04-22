@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth.js";
 import { loginUser } from "../api/authApi";
 import { validateLoginForm } from "../features/auth/authValidation.js";
@@ -13,6 +13,9 @@ import Alert from "../components/ui/Alert";
 export default function LoginPage() {
     const { login } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+    const from = location.state?.from?.pathname || "/events";
+
     const [error, setError] = useState("");
     const [errors, setErrors] = useState({});
 
@@ -74,7 +77,7 @@ export default function LoginPage() {
             const token = response.data.token;
 
             await login(token, rememberMe);
-            navigate("/events");
+            navigate(from, { replace: true });
         } catch {
             setError("Unable to login. Please check your credentials.");
         } finally {

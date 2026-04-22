@@ -1,20 +1,21 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation  } from "react-router-dom";
 import { useAuth } from "../context/useAuth.js";
 import HomePage from "../pages/HomePage";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import ProfilePage from "../pages/ProfilePage.jsx";
+import MyEventsPage from "../pages/MyEventsPage.jsx";
 import EventsPage from "../pages/EventsPage";
 import CreateEventPage from "../pages/CreateEventPage.jsx";
 import EventDetailsPage from "../pages/EventDetailsPage";
 import EditEventPage from "../pages/EditEventPage.jsx";
 
 function ProtectedRoute({ children }) {
-
     const { user, loading } = useAuth();
+    const location = useLocation();
 
     if (loading) return <p>Loading...</p>;
-    if (!user) return <Navigate to="/login" replace />;
+    if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
     return children;
 }
 
@@ -29,6 +30,14 @@ export default function AppRouter() {
                 element={
                     <ProtectedRoute>
                      <ProfilePage />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route path="/my-events"
+                element={
+                    <ProtectedRoute>
+                    <MyEventsPage/>
                     </ProtectedRoute>
                 }
             />

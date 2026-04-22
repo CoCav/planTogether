@@ -6,6 +6,8 @@ PlanTogether is a collaborative event management platform where users can create
 ![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue)
 ![Sequelize](https://img.shields.io/badge/ORM-Sequelize-orange)
 ![JWT](https://img.shields.io/badge/Auth-JWT-yellow)
+![Tests](https://img.shields.io/badge/tests-97%20passing-brightgreen)
+![Jest](https://img.shields.io/badge/Testing-Jest-red)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 This is the **backend application** of PlanTogether, built with **Node.js, Express and PostgreSQL**.
@@ -65,7 +67,8 @@ The API enables:
 - Retrieve a specific event
 - Update events *(organizer or co_organizer)*
 - Delete events *(organizer only)*
-- Advanced filtering (type, theme, location, date)
+- Advanced filtering (search, type, theme, mode, location, exact date, date range)
+- Sorting and pagination
 
 Additional features:
 
@@ -200,25 +203,35 @@ GET /api/events/filtered?date=2026-04-16
 
 # 🧪 Testing
 
-The API includes a complete test suite using Jest and Supertest.
+The API includes a comprehensive automated test suite built with **Jest** and **Supertest**.
 
-Coverage: 
-- Authentication flows (register, login, profile, update, password change, logout)
-- Event CRUD operations
-- Membership logic
-- Role-based permissions
-- Route protection (401 / 403)
+Coverage includes:
+- authentication flows (register, login, logout, profile, password update)
+- profile protection and update validation
+- event CRUD operations
+- event filtering, sorting and pagination
+- event validation rules
+- event membership flows (join, leave, my events, members, organizers)
+- role-based permissions (organizer, co_organizer, participant)
+- edge cases and invalid input handling
 
-Edge Cases:
+Validation scenarios covered:
+- invalid request bodies
+- invalid route parameters
+- duplicate joins
+- invalid role updates
+- invalid date ordering
+- invalid mode / location combination
 
-- Prevent duplicate event join
-- Prevent leaving an event without membership
-
-Run tests:
+Run all tests:
 
 ```
 npm test
 ```
+
+Current result:
+- 9 test suites passing
+- 97 tests passing
 
 ---
 
@@ -306,9 +319,21 @@ project-root
 │   └── server.js
 │
 ├── tests
-│   └── auth.test.js
-│   └── event.test.js
-│   └── eventMembership.test.js
+│   ├── auth
+│   │   ├── auth.test.js
+│   │   └── profile.test.js
+│   │
+│   ├── events
+│   │   ├── event.test.js
+│   │   ├── event.filter.test.js
+│   │   ├── event.permissions.test.js
+│   │   ├── event.permissions.test.js
+│   │   └── event.validation.test.js
+│   │
+│   └── memberships
+│       ├── eventMembership.test.js
+│       ├── eventMembership.permissions.test.js
+│       └── eventMembership.validation.test.js
 │
 ├── .env
 ├── .env.example
@@ -418,25 +443,42 @@ DELETE /api/events/:eventId/members/:userId
 # 🚀 Recent Improvements
 
 - Improved centralized error handling:
-  - standardized response format using `message`
+  - standardized API responses using `message`
   - better frontend compatibility for error display
 
 - Enhanced event validation:
-  - required fields enforced (title, description, type, theme)
-  - strict date validation (end must be after start)
+  - required fields enforced
+  - ISO date validation
+  - date ordering validation
+  - mode/location consistency (`online` vs `in_person`)
   - improved consistency between create and update validators
+
+- Improved event filtering system:
+  - keyword search
+  - exact date filtering
+  - date range filtering
+  - filtering by type, theme, location and mode
+  - sorting and pagination support
 
 - Added event creator information in responses:
   - includes creator name for frontend usage
-  - improves UI display (e.g. "joined events" section)
+  - improves UI display consistency
 
-- Improved backend/frontend consistency:
-  - aligned validation rules between frontend and backend
-  - clearer and more predictable API responses
+- Refactored test architecture:
+  - split test suite into dedicated folders (`auth`, `events`, `memberships`)
+  - separated normal flows, validation rules and permissions
+  - improved readability and maintainability
 
-- Refactored and stabilized authentication flows:
-  - better error handling for password updates
-  - improved response clarity for authentication errors
+- Expanded backend test coverage:
+  - authentication and profile flows
+  - event CRUD, filtering, sorting and pagination
+  - membership flows
+  - role-based permissions
+  - invalid input and edge cases
+
+- Improved test database reliability:
+  - updated test database initialization in `models/index.js`
+  - improved consistency of schema synchronization in test environment
 
 
 # 📌 Project Status
@@ -447,8 +489,8 @@ DELETE /api/events/:eventId/members/:userId
 | Architecture | Modular & scalable |
 | Authentication | Fully Implemented (login, logout, profile, password update) |
 | Authorization | Advanced role-based system |
-| Testing | Completed (28 tests) |
-| Frontend | In progress |
+| Testing | Completed (97 tests, 9 suites) |
+| Frontend | Functional and connected |
 
 # Future Improvements
 

@@ -29,9 +29,4 @@ const removeMemberValidator = [
         .toInt()
 ];
 
-module.exports = {
-  updateMemberRoleValidator,
-  removeMemberValidator
-};
-
 module.exports = { updateMemberRoleValidator, removeMemberValidator };

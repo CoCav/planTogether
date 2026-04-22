@@ -10,7 +10,15 @@ const initDB = async () => {
         console.log('✅ Database connection has been established successfully !');
 
         console.log('👉 Synchronizing models...');
-        await sequelize.sync(process.env.NODE_ENV === 'development' ? { alter: true } : {});
+
+        if (process.env.NODE_ENV === 'development') {
+            await sequelize.sync({ alter: true });
+        } else if (process.env.NODE_ENV === 'test') {
+            await sequelize.sync({ force: true });
+        } else {
+            await sequelize.sync();
+        }
+
         console.log('✅ Database synchronized successfully !');
 
     } catch (error) {
@@ -18,7 +26,6 @@ const initDB = async () => {
         throw error;
     }
 };
-
 // Relationships
 // A user can create multiple events
 // An event belongs to a user (the creator)

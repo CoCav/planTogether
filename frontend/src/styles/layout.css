@@ -46,6 +46,10 @@
     color: var(--color-text-muted);
 }
 
+.events-section {
+    margin-top: var(--space-6);
+}
+
 .status-text,
 .empty-state {
   color: var(--color-text-muted);

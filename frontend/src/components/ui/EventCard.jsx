@@ -15,12 +15,15 @@ import Badge from "../ui/Badge";
 
 export default function EventCard({ event, user, role = null, onJoin, onLeave }) {
 
+    // Event status: Determines if the event is upcoming or past
+    const isPast = event.status === "past";
+
     // Role & permissions: Determines user interaction capabilities
     const isMember = Boolean(role);
     const isOrganizer = role === "organizer";
 
-    const canJoin = Boolean(user) && !isMember;
-    const canLeave = Boolean(user) && isMember && !isOrganizer;
+    const canJoin = Boolean(user) && !isPast && !isMember;
+    const canLeave = Boolean(user) && !isPast && isMember && !isOrganizer;
 
     // Show organizer if user not logged in OR user is not the organizer
     const shouldShowOrganizerInline = !user || !isOrganizer;
@@ -47,6 +50,9 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
 
                     <div className="event-header-meta">
                         {event.type && <span className="event-type-badge">{event.type}</span>}
+
+                        {isPast && <Badge variant="neutral" label="Past event" />}
+                        
                         {shouldShowOrganizerInline && event.creatorName && (<Badge variant="organizer" label={`👑 ${event.creatorName}`}></Badge>)}
                         {user && role && <Badge role={role} />}
                     </div>

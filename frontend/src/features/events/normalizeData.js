@@ -1,11 +1,11 @@
 /* ==================================================
-   EVENT NORMALIZATION
-   Transforms backend event data into frontend-friendly format
+   DATA NORMALIZATION
+   Transforms backend data into frontend-friendly format
 ================================================== */
 
 import { extractApiData } from "../../utils/extractApiData";
 
-// Normalizes s single event object
+// Normalizes a single event object
 // Ensures that all expected fields are present with default values
 export const normalizeEvent = (event = {}) => ({
     id: event.id,
@@ -20,6 +20,7 @@ export const normalizeEvent = (event = {}) => ({
     creatorId: event.creatorId || null,
     creatorName: event.creator?.name || "",
     participantCount: Number(event.participantCount) || 0,
+    status: event.status || "upcoming",
     createdAt: event.createdAt || null,
     updatedAt: event.updatedAt || null,
 });

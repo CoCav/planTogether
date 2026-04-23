@@ -137,6 +137,10 @@ export default function EventsPage() {
     ========================= */
     const getRoleByEventId = (eventId) => myEvents[eventId] || null;
 
+    // Split visible events into upcoming and past sections
+    const upcomingEvents = events.filter((event) => event.status !== "past");
+    const pastEvents = events.filter((event) => event.status === "past");
+
     /* =========================
      Event membership actions
         Provides join / leave handlers with shared UX logic
@@ -377,19 +381,60 @@ export default function EventsPage() {
                         <p className="results-count">{pagination.totalEvents} Event{pagination.totalEvents > 1 ? "s" : ""} have been found !</p>
                         {pagination.totalPages > 1 && (<p className="results-page-info">Showing page {pagination.page} of {pagination.totalPages}</p>)}
                     </div>
-                    <div className="event-list">
-                        {events.map((event) =>  (
-                                <EventCard                                 
-                                    key={event.id}
-                                    event={event}
-                                    user={user}
-                                    role={myEvents[event.id] || null}
-                                    onJoin={handleJoinEvent}
-                                    onLeave={handleLeaveEvent}
-                                />
-                            )  
+
+                    {/* Upcoming events section */}
+                    <section className="events-section">
+                        <div className="section-header">
+                            <h2 className="section-title">Upcoming Events</h2>
+                            <p className="section-subtitle">Events that are still open for participation.</p>
+                        </div>
+
+                        {upcomingEvents.length === 0 ? (
+                            <Card>
+                                <EmptyState>No upcoming events found.</EmptyState>
+                            </Card>
+                        ) : (
+                            <div className="event-list">
+                                {upcomingEvents.map((event) => (
+                                    <EventCard
+                                        key={event.id}
+                                        event={event}
+                                        user={user}
+                                        role={myEvents[event.id] || null}
+                                        onJoin={handleJoinEvent}
+                                        onLeave={handleLeaveEvent}
+                                    />
+                                ))}
+                            </div>
                         )}
-                    </div>
+                    </section>
+
+                    {/* Past events section */}
+                    <section className="events-section">
+                        <div className="section-header">
+                            <h2 className="section-title">Past Events</h2>
+                            <p className="section-subtitle">Events that have already ended.</p>
+                        </div>
+
+                        {pastEvents.length === 0 ? (
+                            <Card>
+                                <EmptyState>No past events found.</EmptyState>
+                            </Card>
+                        ) : (
+                            <div className="event-list">
+                                {pastEvents.map((event) => (
+                                    <EventCard
+                                        key={event.id}
+                                        event={event}
+                                        user={user}
+                                        role={myEvents[event.id] || null}
+                                        onJoin={handleJoinEvent}
+                                        onLeave={handleLeaveEvent}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </section>
 
                     {pagination.totalPages > 1 && (
                         <div className="pagination">

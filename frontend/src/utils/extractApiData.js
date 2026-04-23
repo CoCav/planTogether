@@ -1,22 +1,30 @@
 /* ==================================================
    API RESPONSE HELPER
-   Extracts useful data from Axios API responses
-   and handles different possible response structures
+   Extracts useful data from API responses
+   Supports both raw Axios responses and already-unwrapped payloads
 ================================================== */
 
 /* =========================
    Extract API data
-   - Returns response.data[key] if a key is provided
-   - Otherwise returns response.data
-   - Falls back to an empty array if response is invalid
+   - Supports raw Axios responses: response.data
+   - Supports already-unwrapped payloads
+   - Returns payload[key] when a key is provided
+   - Returns the full payload otherwise
+   - Falls back to an empty array if nothing usable is found
 ========================= */
 export const extractApiData = (response = {}, key = "") => {
-    if (!response || !response.data) return [];
+    // Support both Axios responses and already-unwrapped payloads
+    const payload = response?.data ?? response;
 
-    // If a specific key exists (e.g. events, members, organizers)
-    if (key && response.data[key]) {
-        return response.data[key];
+    if (!payload || typeof payload !== "object") {
+        return [];
     }
 
-    return response.data;
+    // Return a specific property if requested
+    if (key) {
+        return payload[key] ?? [];
+    }
+
+    // Otherwise return the full payload
+    return payload;
 };

@@ -3,7 +3,7 @@ const app = require('../../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../../src/models');
 
 /* ==================================================
-   EVENT CRUD TESTS
+   EVENT TESTS
    Covers:
    - create event
    - get all events
@@ -143,6 +143,52 @@ describe('Event CRUD API', () => {
         expect(res.statusCode).toBe(404);
     });
 
+    it('should return event status when getting one event by ID', async () => {
+        const token = await registerAndGetToken(
+            'Status Reader',
+            `statusreader${Date.now()}@test.com`
+        );
+
+        const eventRes = await request(app)
+            .post('/api/events')
+            .set('Authorization', `Bearer ${token}`)
+            .send(getValidEventPayload());
+
+        const eventId = eventRes.body.event.id;
+
+        const res = await request(app).get(`/api/events/${eventId}`);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty('event');
+        expect(res.body.event).toHaveProperty('status');
+        expect(res.body.event.status).toBe('upcoming');
+    });
+
+    it('should return past status for a past event when getting one event by ID', async () => {
+        const token = await registerAndGetToken(
+            'Past Status Reader',
+            `paststatusreader${Date.now()}@test.com`
+        );
+
+        const eventRes = await request(app)
+            .post('/api/events')
+            .set('Authorization', `Bearer ${token}`)
+            .send(getValidEventPayload({
+                title: 'Past Event',
+                startDateTime: '2020-01-01T10:00:00.000Z',
+                endDateTime: '2020-01-01T12:00:00.000Z'
+            }));
+
+        const eventId = eventRes.body.event.id;
+
+        const res = await request(app).get(`/api/events/${eventId}`);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty('event');
+        expect(res.body.event).toHaveProperty('status');
+        expect(res.body.event.status).toBe('past');
+    });
+
     /* =========================
        Update
     ========================= */
@@ -205,6 +251,36 @@ describe('Event CRUD API', () => {
         expect(res.statusCode).toBe(403);
     });
 
+    it('should NOT allow updating a past event', async () => {
+        const token = await registerAndGetToken(
+            'Past Event Updater',
+            `pastupdate${Date.now()}@test.com`
+        );
+
+        const eventRes = await request(app)
+            .post('/api/events')
+            .set('Authorization', `Bearer ${token}`)
+            .send(getValidEventPayload({
+                title: 'Past Event',
+                startDateTime: '2020-01-01T10:00:00.000Z',
+                endDateTime: '2020-01-01T12:00:00.000Z'
+            }));
+
+        const eventId = eventRes.body.event.id;
+
+        const res = await request(app)
+            .put(`/api/events/${eventId}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                ...getValidEventPayload(),
+                title: 'Updated Title'
+            });
+
+        expect(res.statusCode).toBe(403);
+    });
+
+
+
     /* =========================
        Delete
     ========================= */
@@ -261,6 +337,30 @@ describe('Event CRUD API', () => {
         expect(res.statusCode).toBe(403);
     });
 
+    it('should NOT allow deleting a past event', async () => {
+        const token = await registerAndGetToken(
+            'Past Event Deleter',
+            `pastdelete${Date.now()}@test.com`
+        );
+
+        const eventRes = await request(app)
+            .post('/api/events')
+            .set('Authorization', `Bearer ${token}`)
+            .send(getValidEventPayload({
+                title: 'Past Event',
+                startDateTime: '2020-01-01T10:00:00.000Z',
+                endDateTime: '2020-01-01T12:00:00.000Z'
+            }));
+
+        const eventId = eventRes.body.event.id;
+
+        const res = await request(app)
+            .delete(`/api/events/${eventId}`)
+            .set('Authorization', `Bearer ${token}`);
+
+        expect(res.statusCode).toBe(403);
+    });
+
     /* =========================
        Pagination (basic)
     ========================= */
@@ -298,5 +398,26 @@ describe('Event CRUD API', () => {
         expect(res.body.events.length).toBe(2);
         expect(res.body).toHaveProperty('page');
         expect(res.body).toHaveProperty('pageSize');
+    });
+
+    it('should include status for each event when getting all events', async () => {
+        const token = await registerAndGetToken(
+            'Events Status Reader',
+            `eventsstatus${Date.now()}@test.com`
+        );
+
+        await request(app)
+        .post('/api/events')
+        .set('Authorization', `Bearer ${token}`)
+        .send(getValidEventPayload());
+
+        const res = await request(app).get('/api/events');
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty('events');
+        expect(Array.isArray(res.body.events)).toBe(true);
+        expect(res.body.events.length).toBeGreaterThan(0);
+        expect(res.body.events[0]).toHaveProperty('status');
+        expect(['upcoming', 'past']).toContain(res.body.events[0].status);
     });
 });

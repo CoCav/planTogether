@@ -170,6 +170,58 @@ describe('Event Membership API', () => {
         expect(res.statusCode).toBe(401);
     });
 
+    it('should NOT allow a user to join a past event', async () => {
+        const creator = await registerUser(
+            'Past Event Creator',
+            `pastcreator${Date.now()}@test.com`
+        );
+
+        const eventRes = await createEvent(creator.token, {
+            title: 'Past Event',
+            startDateTime: '2020-01-01T10:00:00.000Z',
+            endDateTime: '2020-01-01T12:00:00.000Z'
+        });
+
+        const eventId = eventRes.body.event.id;
+
+        const participant = await registerUser(
+            'Past Participant',
+            `pastparticipant${Date.now()}@test.com`
+        );
+
+        const res = await request(app)
+        .delete(`/api/events/${eventId}/members/leave`)
+        .set('Authorization', `Bearer ${participant.token}`);
+
+        expect(res.statusCode).toBe(403);
+    });
+
+    it('should NOT allow a user to leave a past event', async () => {
+        const creator = await registerUser(
+            'Past Leave Creator',
+            `pastleavecreator${Date.now()}@test.com`
+        );
+
+        const eventRes = await createEvent(creator.token, {
+            title: 'Past Leave Event',
+            startDateTime: '2020-01-01T10:00:00.000Z',
+            endDateTime: '2020-01-01T12:00:00.000Z'
+        });
+
+        const eventId = eventRes.body.event.id;
+
+        const participant = await registerUser(
+            'Past Leave Participant',
+            `pastleaveparticipant${Date.now()}@test.com`
+        );
+
+        const res = await request(app)
+            .delete(`/api/events/${eventId}/members/leave`)
+            .set('Authorization', `Bearer ${participant.token}`);
+
+        expect(res.statusCode).toBe(403);
+    });
+
     /* =========================
        Current user's memberships
     ========================= */

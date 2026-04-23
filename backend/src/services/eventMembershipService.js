@@ -2,13 +2,13 @@ const { Op } = require('sequelize');
 const Event = require('../models/eventModel');
 const User = require('../models/userModel');
 const EventUserRole = require('../models/relations/eventUserRoleModel');
+const { assertEventNotPast } = require('../utils/eventTime');
 
 const VALID_ROLES = ['organizer', 'co_organizer', 'participant'];
 
 // User joins an event
 const joinEvent = async ({ eventId, userId }) => {
     try {
-
         // Check if event exists
         const event = await Event.findByPk(eventId);
         if (!event) {
@@ -16,6 +16,9 @@ const joinEvent = async ({ eventId, userId }) => {
             error.statusCode = 404;
             throw error;
         }
+
+        // Check if event is in the past
+        assertEventNotPast(event);
 
         // Check if user already joined the event
         const existingMembership = await EventUserRole.findOne({ where: { eventId, userId } });
@@ -44,6 +47,16 @@ const joinEvent = async ({ eventId, userId }) => {
 // User leaves an event
 const leaveEvent = async ({ eventId, userId }) => {
     try {
+        // Check if event exists
+        const event = await Event.findByPk(eventId);
+        if (!event) {
+            const error = new Error('Event not found');
+            error.statusCode = 404;
+            throw error;
+        }
+
+        // Check if event is in the past
+        assertEventNotPast(event);
 
         // Check if membership exists
         const membership = await EventUserRole.findOne({ where: { eventId, userId } });
@@ -198,6 +211,9 @@ const updateMemberRole = async ({ eventId, userId, newRole }) => {
             throw error;
         }
 
+        // Check if event is in the past
+        assertEventNotPast(event);
+
         // Validate role
         if (!VALID_ROLES.includes(newRole)) {
             const error = new Error('Invalid role provided');
@@ -249,10 +265,19 @@ const removeMember = async ({ eventId, userId, requestingUserId }) => {
             throw error;
         }
 
+        // Check if event is in the past
+        assertEventNotPast(event);
+
         // Check if membership exists
         const membership = await EventUserRole.findOne({
             where: { eventId, userId }
         });
+
+        if (!membership) { 
+            const error = new Error('User is not a member of this event');
+            error.statusCode = 404;
+            throw error;
+        }
 
         // Remove membership
         await membership.destroy();

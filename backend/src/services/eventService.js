@@ -3,6 +3,7 @@ const Event = require('../models/eventModel');
 const User = require('../models/userModel');
 const EventUserRole = require('../models/relations/eventUserRoleModel');
 const { getPaginationOptions } = require('../utils/pagination');
+const { assertEventNotPast, getEventStatus } = require('../utils/eventTime');
 
 // Create a new event and assign the creator as the organizer
 const createEvent = async (data, userId) => {
@@ -91,7 +92,10 @@ const getAllEvents = async (query) => {
             pageSize,
             totalEvents,
             totalPages: Math.ceil(totalEvents / pageSize),
-            events: rows
+            events: rows.map((event) => ({
+                ...event.toJSON(),
+                status: getEventStatus(event)
+            }))
         };
     } catch (error) {
         console.error("Error in getting all events:", error);
@@ -130,7 +134,10 @@ const getEventById = async (id) => {
             throw error;
         }
 
-        return event;
+        return {
+            ...event.toJSON(),
+            status: getEventStatus(event)
+        };
     } catch (error) {
         console.error("Error in getting the event:", error);
         throw error;
@@ -239,9 +246,11 @@ const getFilteredEvents = async (query) => {
             pageSize,
             totalEvents,
             totalPages: Math.ceil(totalEvents / pageSize),
-            events: rows
+            events: rows.map((event) => ({
+                ...event.toJSON(),
+                status: getEventStatus(event)
+            }))
         };
-        
     } catch (error) {
         console.error('Error in filtering events:', error);
         throw error;
@@ -262,6 +271,9 @@ const updateEventById = async (id, data) => {
             error.statusCode = 404;
             throw error;
         }
+
+        // Check if event is in the past
+        assertEventNotPast(event);
 
         const {
             title,
@@ -314,6 +326,9 @@ const deleteEventById = async (id) => {
             error.statusCode = 404;
             throw error;
         }
+
+        // Check if event is in the past
+        assertEventNotPast(event);
 
         await event.destroy();
         return;

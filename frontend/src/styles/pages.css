@@ -226,117 +226,32 @@
     gap: var(--space-4);
 }
 
-.event-card {
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+.events-section .event-list {
+    margin-top: var(--space-4);
 }
 
-.event-card-clickable {
-    cursor: pointer;
-    transition:         
-        background 0.2s ease,
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
+.events-section .section-header {
+    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-2);
+    border-bottom: 1px solid var(--color-border);
 }
 
-.event-card-clickable:hover {
-    border-color: var(--color-primary);
+.past-events-section {
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
     box-shadow: var(--shadow-sm);
 }
 
-.event-card-clickable:active {
-    transform: scale(0.99);
+.section-header-with-action .btn {
+    flex-shrink: 0;
 }
 
-.event-card-clickable:hover .event-title {
-    color: var(--color-primary);
-}
 
-.event-card-header {
+.section-header-content {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: var(--space-4);
-    flex-wrap: wrap;
-    margin-bottom: var(--space-2);
+    flex-direction: column;
 }
-
-.event-header-left {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    flex-wrap: wrap;
-}
-
-.event-header-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.event-header-actions {
-    display: flex;
-    gap: var(--space-2);
-    flex-wrap: wrap;
-}
-
-.event-title {
-    margin: 0;
-    line-height: 1.2;
-}
-
-.event-title-link {
-    display: inline-flex;
-    align-items: center;
-    text-decoration: none;
-}
-
-.event-title-link:hover {
-    color: var(--color-primary)
-}
-
-.event-description {
-    color: var(--color-text-muted);
-    margin-bottom: var(--space-3);
-}
-
-.event-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    margin-top: var(--space-2);
-    padding-top: var(--space-2);
-    border-top: 1px solid var(--color-border);
-}
-
-.event-meta-item {
-    font-size: var(--font-size-sm);
-    color: var(--color-text-muted);
-}
-
-.event-type-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: #eef2ff;
-    color: var(--color-primary);
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.status-joined {
-    font-weight: 600;
-    color: var(--color-success);
-}
-
-.inline-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    flex-wrap: wrap;
-}
-
 
 /* ==================================================
    EVENT DETAILS PAGE

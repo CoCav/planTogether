@@ -50,6 +50,17 @@
     margin-top: var(--space-6);
 }
 
+.events-section:first-of-type {
+    margin-top: 0;
+}
+
+.section-header-with-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-4);
+}
+
 .status-text,
 .empty-state {
   color: var(--color-text-muted);

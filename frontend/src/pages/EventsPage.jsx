@@ -29,6 +29,9 @@ export default function EventsPage() {
     // Membership role state: stores current user role by event ID
     const [myEvents, setMyEvents] = useState({});
 
+    // Controls visibility of the past events section
+    const [showPastEvents, setShowPastEvents] = useState(false);
+
     // Page loading state: controls loading scren while events are fetched
     const [loading, setLoading] = useState(true);
 
@@ -410,29 +413,37 @@ export default function EventsPage() {
                     </section>
 
                     {/* Past events section */}
-                    <section className="events-section">
-                        <div className="section-header">
-                            <h2 className="section-title">Past Events</h2>
-                            <p className="section-subtitle">Events that have already ended.</p>
+                    <section className="events-section past-events-section">
+                        <div className="section-header section-header-with-action">
+                            <div className="section-header-content">
+                                <h2 className="section-title">Archives</h2>
+                                <p className="section-subtitle">Events that have already ended.</p>
+                            </div>
+
+                            <Button type="button" variant="outline" onClick={() => setShowPastEvents((prev) => !prev)}>{showPastEvents ? "Hide past events" : `Show past events (${pastEvents.length})`}</Button>
                         </div>
 
-                        {pastEvents.length === 0 ? (
-                            <Card>
-                                <EmptyState>No past events found.</EmptyState>
-                            </Card>
-                        ) : (
-                            <div className="event-list">
-                                {pastEvents.map((event) => (
-                                    <EventCard
-                                        key={event.id}
-                                        event={event}
-                                        user={user}
-                                        role={myEvents[event.id] || null}
-                                        onJoin={handleJoinEvent}
-                                        onLeave={handleLeaveEvent}
-                                    />
-                                ))}
-                            </div>
+
+                        {showPastEvents && ( 
+                            pastEvents.length === 0 ? (
+                                <Card>
+                                    <EmptyState>No past events found.</EmptyState>
+                                </Card>
+                            ) : (
+                                <div className="event-list">
+                                    {pastEvents.map((event) => (
+                                        <EventCard
+                                            key={event.id}
+                                            event={event}
+                                            user={user}
+                                            role={myEvents[event.id] || null}
+                                            onJoin={handleJoinEvent}
+                                            onLeave={handleLeaveEvent}
+                                        />
+                                    ))}
+                                </div>
+                        
+                            )
                         )}
                     </section>
 

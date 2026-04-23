@@ -41,7 +41,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
 
 
     return (
-        <Card className="event-car event-card-clickable" onClick={handleCardClick}>
+        <Card className="event-card event-card-clickable" onClick={handleCardClick}>
             <div className="event-card-header">
                 <div className="event-header-left">
                     <Link to={`/events/${event.id}`} className="event-title-link">
@@ -50,16 +50,14 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
 
                     <div className="event-header-meta">
                         {event.type && <span className="event-type-badge">{event.type}</span>}
-
-                        {isPast && <Badge variant="neutral" label="Past event" />}
-                        
                         {shouldShowOrganizerInline && event.creatorName && (<Badge variant="organizer" label={`👑 ${event.creatorName}`}></Badge>)}
-                        {user && role && <Badge role={role} />}
                     </div>
                 </div>
 
                 <div className="event-header-actions">
-                    {user ? ( canLeave ? (
+                    {isPast ? (
+                        <span className="event-status-label">Ended</span>
+                    ) : user ? ( canLeave ? (
                             <Button type="button" variant="outline-danger" onClick={() => onLeave?.(event.id)}>Leave the event</Button>
                         ) : canJoin ? (
                             <Button type="button" onClick={() => onJoin?.(event.id)}>Join the event</Button>

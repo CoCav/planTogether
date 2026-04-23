@@ -51,6 +51,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                     <div className="event-header-meta">
                         {event.type && <span className="event-type-badge">{event.type}</span>}
                         {shouldShowOrganizerInline && event.creatorName && (<Badge variant="organizer" label={`👑 ${event.creatorName}`}></Badge>)}
+                        {user && role && <Badge role={role} />}
                     </div>
                 </div>
 

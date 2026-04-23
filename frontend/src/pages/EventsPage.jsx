@@ -383,7 +383,7 @@ export default function EventsPage() {
 
                     <FormField label="Sort events">
                         <Select name="sortBy" value={`${filters.sortBy}-${filters.order}`} onChange={handleSortChange}>
-                            <option value="startDateTime-asc">Soonest first</option>
+                            <option value="startDateTime-asc">Upcoming first</option>
                             <option value="startDateTime-desc">Farthest first</option>
                             <option value="title-asc">Title A-Z</option>
                             <option value="title-desc">Title Z-A</option>

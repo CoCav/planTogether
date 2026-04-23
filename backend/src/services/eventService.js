@@ -1,7 +1,7 @@
 const { Op, fn, col } = require('sequelize');
 const Event = require('../models/eventModel');
 const User = require('../models/userModel');
-const EventUserRole = require('../models/Link/eventUserRoleModel');
+const EventUserRole = require('../models/relations/eventUserRoleModel');
 const { getPaginationOptions } = require('../utils/pagination');
 
 // Create a new event and assign the creator as the organizer

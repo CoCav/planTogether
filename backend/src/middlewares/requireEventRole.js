@@ -1,4 +1,4 @@
-const EventUserRole = require('../models/Link/eventUserRoleModel');
+const EventUserRole = require('../models/relations/eventUserRoleModel');
 
 // Ensures the authenticated user has one of the allowed roles for the given event
 const requireEventRole = (allowedRoles) => {

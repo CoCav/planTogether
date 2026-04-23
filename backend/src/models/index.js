@@ -1,7 +1,7 @@
 const sequelize = require('../config/database');
 const User = require('./userModel');
 const Event = require('./eventModel');
-const EventUserRole = require('./Link/eventUserRoleModel');
+const EventUserRole = require('./relations/eventUserRoleModel');
 
 const initDB = async () => {
     try {

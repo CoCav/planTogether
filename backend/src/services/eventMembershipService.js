@@ -1,7 +1,7 @@
 const { Op } = require('sequelize');
 const Event = require('../models/eventModel');
 const User = require('../models/userModel');
-const EventUserRole = require('../models/Link/eventUserRoleModel');
+const EventUserRole = require('../models/relations/eventUserRoleModel');
 
 const VALID_ROLES = ['organizer', 'co_organizer', 'participant'];
 

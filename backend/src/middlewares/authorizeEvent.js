@@ -1,4 +1,4 @@
-const EventUserRole = require('../models/Link/eventUserRoleModel');
+const EventUserRole = require('../models/relations/eventUserRoleModel');
 const Event = require('../models/eventModel');
 
 // Prevents unauthorized role changes

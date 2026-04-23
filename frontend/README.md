@@ -1,20 +1,29 @@
 # PlanTogether - Frontend (React)
 
-PlanTogether is a collaborative event management platform where users can create, join and manage events with role-based permissions.
+PlanTogether is a collaborative event management platform where users can create, join, and manage events with role-based permissions.
 
 ![React](https://img.shields.io/badge/Frontend-React-blue)
 ![Vite](https://img.shields.io/badge/Build-Vite-purple)
 ![Axios](https://img.shields.io/badge/HTTP-Axios-green)
 ![JWT](https://img.shields.io/badge/Auth-JWT-yellow)
+
+![Vitest](https://img.shields.io/badge/🧪-Vitest-6E9F18)
+![Testing Library](https://img.shields.io/badge/🧪-RTL-E33332)
+![Tests](https://img.shields.io/badge/Tests-61%20passing-brightgreen)
+
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
-
-This is the **frontend application** of PlanTogether, built with **React and Vite**.
-
-It provides a modern interface to interact with the PlanTogether API, allowing users to manage events, roles, and their profile through a responsive and user-friendly UI.
 
 ---
 
-# 🎯 Application Overview
+This is the **frontend application** of PlanTogether, built with **React and Vite**.
+
+It provides a modern and responsive interface to interact with the PlanTogether API.
+
+The application focuses on **usability, role-based interactions, and reliability**, with a comprehensive frontend test suite ensuring stability across core user flows.
+
+---
+
+## 🎯 Application Overview
 
 The frontend allows users to:
 
@@ -24,190 +33,37 @@ The frontend allows users to:
 - manage roles within events (organizer / co-organizer / participant)
 - update their profile and password
 - manage session behavior with "Remember me"
-- view personal event dashboard (created / joined events)
+- view a personal event dashboard (created / joined events)
 
-The application communicates with the backend API via **Axios**.
+The application is designed to provide a smooth and intuitive user experience, with clear navigation and role-based interactions across all features.
+
+It communicates with the backend API using **Axios**, ensuring reliable data fetching and consistent behavior across the application.
 
 ---
 
-# 🔧 Tech Stack
+## 🔧 Tech Stack / Tools
 
-- **React** – UI library
-- **Vite** – fast development environment
-- **React Router** – client-side routing
-- **Axios** – API communication
+The frontend is built using modern and efficient tools for performance, scalability, and maintainability:
+
+- **React** – component-based UI library
+- **Vite** – fast development and build tool
+- **React Router** – client-side routing and navigation
+- **Axios** – HTTP client for API communication
 - **Context API** – global state management (authentication)
-- **Custom hooks** – reusable logic (membership actions)
-- **Session / Local Storage** – token handling
+- **Custom hooks** – reusable business logic (e.g., membership actions)
+- **Session / Local Storage** – token persistence and session handling
+- **Testing (Vitest + React Testing Library)** – ensures reliability across UI and user flows
+
+**Additional testing utilities:**
+- **@testing-library/jest-dom**
+- **@testing-library/user-event**
+- **jsdom**
 
 ---
 
-# 🧩 Key Features
+## 📁 Frontend Structure
 
-## 🔐 Authentication
-
-- Login with JWT
-- Logout
-- Persistent session (optional "Remember me")
-- Session-based authentication (token cleared on browser close)
-- Protected routes
-- Redirect to originally requested page after login
-
----
-
-## 👤 User Profile
-
-- View profile information
-- Update name and email
-- Change password with validation
-- Real-time UI update using `refreshUser`
-- Clear error messages from backend
-
----
-
-## 📅 Event Management
-
-- View all events
-- Browse event details with advanced filtering (search in title and description, type, theme, location, date)
-- Create events
-- Update events *(organizer / co_organizer)*
-- Delete events *(organizer only)*
-
-Includes:
-
-- Strong frontend validation aligned with backend
-- Date/time validation (no past start, end after start)
-
----
-
-## 👥 My Events (User Dashboard)
-
-- View **created events (organizer)**
-- View **joined events (participant / co-organizer)**
-- Leave events directly from the UI
-
-UI is split into clear sections using reusable components.
-
----
-
-## 🔍 Event Filtering
-
-The application provides an advanced filtering system for events.
-
-Users can filter events using:
-
-- keyword search (title and description)
-- type
-- theme
-- location
-- exact date
-- date range (startDate / endDate)
-
-### UX Behaviour
-
-- If an exact date is selected, date range inputs are automatically disabled
-- If no exact date is provided, users can filter using a date range
-- Filters can be reset to reload all events
-- Multiple filters can be combined for precise results
-
----
-
-## 🎭 Role System
-
-Each user can have a role in an event:
-
-````
-organizer
-co_organizer
-participant
-````
-
-### UI behavior dynamically adapts:
-
-#### Organizer
-- Edit event
-- Promote participants
-- Demote co_organizers
-- Remove participants and co_organizers
-
-#### Co-organizer
-- Remove participants
-
-#### Participant
-- Join / leave events
-
----
-
-## 🔘 Membership Actions
-
-- Join / Leave buttons with dynamic state
-- Promote / Demote actions
-- Remove members
-- Confirmation dialogs for critical actions
-- Role-based UI restrictions
-
----
-
-## 🔁 Data Normalization
-
-Frontend utilities:
-
-- normalize API responses
-- simplify backend structures
-- avoid complex logic in components
-
----
-
-## 🧠 State Management
-
-- Context API for authentication
-- Local state via React hooks
-- Custom hooks:
-  - `useEventActions`
-  - `useEventActionsWithConfirm`
-
----
-
-## 🎨 UI / UX Enhancements
-
-- Protected navigation (ProtectedRoute)
-- Redirect to intended page after login
-- Password visibility toggle
-- Password rules component
-- Clear error messages from backend
-- Consistent error feedback across forms and actions
-- Loading and empty states
-- Footer component with navigation
-- Responsive layout
-- Clear separation between Profile and Events
-
----
-
-# 🔐 Authentication Flow
-
-1. User logs in → receives JWT
-2. Token is stored in:
-  - `sessionStorage` (default)
-  - `localStorage` (if "Remember me" is enabled)
-3. Axios attaches token to requests
-4. Redirect after login to intended page
-5. Logout clears tokens
-
----
-
-## 🧠 Error Handling
-
-The frontend relies on consistent backend responses:
-
-- errors use a standardized `message` field
-- field-specific errors are displayed in forms
-- global errors are shown via alert components
-
-This ensures clear and user-friendly feedback.
-
----
-
-# 📁 Project Structure
+The frontend follows a modular and feature-oriented architecture, designed to keep the codebase scalable, maintainable, and easy to navigate.
 
 ```
 src
@@ -240,7 +96,7 @@ src
 ├── features
 │   ├── auth
 │   │   ├── authValidation.js
-│   │   └── token.jsx
+│   │   └── token.js
 │   │
 │   └── events
 │       ├── eventFilter.js
@@ -259,7 +115,7 @@ src
 ├── pages
 │   ├── CreateEventPage.jsx
 │   ├── EditEventPage.jsx
-│   ├── EventsDetailsPage.jsx
+│   ├── EventDetailsPage.jsx
 │   ├── MyEventsPage.jsx
 │   ├── EventsPage.jsx
 │   ├── HomePage.jsx
@@ -277,6 +133,23 @@ src
 │   ├── layout.css
 │   ├── pages.css
 │   └── theme.css
+│ 
+├── tests
+│   ├── pages
+│   │   ├── CreateEventPage.test.jsx
+│   │   ├── EditEventPage.test.jsx
+│   │   ├── EventDetailsPage.test.jsx
+│   │   ├── MyEventsPage.test.jsx
+│   │   ├── EventsPage.test.jsx
+│   │   ├── HomePage.test.jsx
+│   │   ├── LoginPage.test.jsx
+│   │   ├── RegisterPage.test.jsx
+│   │   └── ProfilePage.test.jsx
+│   │
+│   ├── routes
+│   │   └── AppRouter.test.jsx
+│   │
+│   └── setupTests.js
 │
 ├── utils
 │   ├── extractApiData.js
@@ -285,95 +158,240 @@ src
 ├── App.jsx
 ├── main.jsx
 ├── index.html
-├── .env
-├── .gitignore
 └── README.md
 ```
 
+This structure promotes a clear separation of concerns, improves reusability, and ensures scalability and maintainability.  
+It also makes the codebase easier to test, debug, and evolve as new features are added.
+
 ---
 
-# ⚙️ Environment Variables
+## ✨ Features
 
-Create a `.env` file:
+### 🔐 Authentication
+
+- Login and register
+- Authenticate using JWT
+- Access protected routes
+- Redirect to the originally requested page after login
+- Persist sessions with "Remember me"
+
+---
+
+### 👤 User Profile
+
+- View profile information
+- Update name and email
+- Change password with validation
+- Automatically refresh UI after updates
+- Display clear and contextual error messages
+
+---
+
+### 📅 Event Management
+
+- View all events
+- Create events
+- Edit events
+- Delete events
+
+Includes:
+
+- strong frontend validation aligned with backend rules
+- date and time validation (no past start date, end after start)
+- dynamic UI behavior based on event mode and user role
+
+---
+
+### 👥 My Events
+
+- View created events
+- View joined events
+- Leave events directly from the interface
+
+---
+
+### 🔍 Event Filtering
+
+Users can filter events using:
+
+- keyword search (title and description)
+- type
+- theme
+- location
+- exact date
+- date range
+
+UX behavior:
+
+- selecting an exact date disables the date range inputs
+- multiple filters can be combined
+- reset filters reloads all events
+
+---
+
+### 🎭 Role System
+
+Each user can have a role in an event:
+
+```txt
+organizer
+co_organizer
+participant
+guest
+```
+
+#### Organizer
+- Edit event
+- Delete event
+- Promote participants
+- Demote co_organizers
+- Remove participants and co_organizers
+
+#### Co-organizer
+- Edit event
+- Remove participants
+
+#### Participant
+- Join event
+- Leave event
+
+#### Guest
+- Browse public event information
+- Login prompt for interactive actions
+
+The UI dynamically adapts based on the user's role and permissions.
+
+---
+
+## 🧪 Testing
+
+The frontend includes a **comprehensive automated test suite** built with **Vitest** and **React Testing Library**, ensuring reliability across core user flows.
+
+Run all tests:
+
+```bash
+npm run test:run
+```
+
+### Results
+- ✅ 10 test files
+- ✅ 61 tests passing
+
+---
+
+### Coverage
+
+#### Pages
+
+- HomePage
+- LoginPage
+- RegisterPage
+- EventsPage
+- EventDetailsPage
+- MyEventsPage
+- CreateEventPage
+- EditEventPage
+- ProfilePage
+
+#### Routing
+
+- AppRouter / ProtectedRoute
+
+--- 
+
+#### Tested behaviors
+
+- routing and protected access
+- form validation and user input handling
+- authentication flows (login / register)
+- API interactions (mocked)
+- loading, empty, and error states
+- event creation and editing flows
+- role-based UI behavior
+- profile and password update
+
+👉 This test suite improves application stability, reduces regressions, and validates the most critical user interactions across the interface.
+
+---
+
+## ⚙️ Environment Variables
+
+The application requires a backend API URL to function properly.
+
+Create a `.env` file at the root of the frontend project:
 ```
 VITE_API_URL=http://localhost:3000/api
 ```
 
 ---
 
-# ▶️ Running the App
+## ▶️ Running the App
 
+Install dependencies and start the development server:
 ```
 npm install
 npm run dev
 ```
 
-App runs on:
-
+The application will run on:
 ```
 http://localhost:5173
 ```
+
 ---
 
-# 🔗 API Integration
+## 🔗 API Integration
 
-The frontend communicates with the backend API:
+The frontend communicates with the backend API using Axios.
 
+Default API base URL:
 ```
 http://localhost:3000/api
 ```
 
 Axios is configured to:
 
-- JWT injection
-- request configuration
+- automatically attach the JWT token to requests
+- handle authenticated requests
+- centralize API configuration and error handling
+
+This ensures consistent communication between the frontend and backend across the application.
 
 ---
 
-# 🔐 Security
+## 📌 Project Status
 
-- JWT stored securely in browser
-- Protected routes
-- Role-based UI restrictions
-- Error handling aligned with backend
-- No sensitive data exposed
-
----
-
-# 🚀 Recent Improvements
-
-- Added MyEventsPage
-- My Events dashboard (created vs joined events)
-- Refactored ProfilePage (separation of concerns)
-- Improved routing protection (ProtectedRoute)
-- Improved redirect after login
-- Improved error handling with backend messages
-- Added PasswordRules component
-- Improved password validation and feedback
-- Improved form validation (aligned with backend)
-- Added footer component with navigation and layout improvements
-- Improved UI consistency and structure
+| Area            | Status |
+|-----------------|--------|
+| UI / Pages      | ✅ Functional |
+| Features        | ✅ Complete |
+| Routing         | ✅ Complete |
+| API Integration | ✅ Complete |
+| Testing         | ✅ 61 tests (10 test files) |
+| UX Improvements | 🚧 Ongoing |
 
 ---
 
-# 📌 Project Status
+## 🚀 Recent Improvements
 
-| Component | Status |
-|-----------|--------|
-| Frontend UI | Functional |
-| Authentication | Fully implemented |
-| Event Management | Complete |
-| Role System | Advanced (UI + backend aligned) |
-| UX Improvements | Ongoing |
-| API Integration | Stable |
+- Added **MyEventsPage** with a dashboard (created vs joined events)
+- Refactored **ProfilePage** to improve separation of concerns
+- Improved routing protection using **ProtectedRoute**
+- Improved redirect behavior after login
+- Enhanced error handling with backend messages
+- Added **PasswordRules** component for better validation feedback
+- Improved form validation aligned with backend rules
+- Added comprehensive frontend test coverage with Vitest and React Testing Library
+- Implemented tests for all main pages and routing system
+- Added global test setup for cleanup and mock handling
 
 ---
 
-# Future Improvements
+## 🔮 Future Improvements
 
-- UI redesign (modern layout / CSS system)
-- "My Events" dashboard
-- User avatars
-- Notifications system
-- Better mobile responsiveness
-- Deployment (Vercel / Netlify)
+- Extend test coverage to lower-level reusable UI components
+- Add end-to-end testing (E2E) for complete user journeys
+- Improve accessibility (labels, semantic structure, ARIA support)
+- Enhance mobile responsiveness across devices
+- Add notifications and reminder features

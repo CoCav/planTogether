@@ -4,7 +4,7 @@ import { useAuth } from "../context/useAuth";
 import { getAllEvents, getFilteredEvents } from "../api/eventApi";
 import { getMyEvents } from "../api/eventMembershipApi";
 import { getNormalizedEvents, getMyEventsWithRole } from "../features/events/normalizeData.js";
-import { getDefaultEventFilters, getTodayEventFilters, getWeekendEventFilters } from "../features/events/eventFilters";
+import { getDefaultEventFilters, EVENT_SORT_MAP, getTodayEventFilters, getWeekendEventFilters } from "../features/events/eventFilters";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
 
 import Button from "../components/ui/Button";
@@ -54,14 +54,20 @@ export default function EventsPage() {
         Data loading functions
     ========================= */
 
-    // Fetches all events or filtered events depending on active filters
+    // Fetches all events or filtered events depending on active filter
+    // Applies sorting and pagination
     const fetchEvents = async (customFilters = filters, customPage = pagination.page) => {
-        const hasActiveFilters = Object.values(customFilters).some((value) => String(value).trim() !== "");
+        const { sortBy, order, ...filterValues } = customFilters;
+
+        // Determines if any real filters are applied (excluding sorting)
+        const hasActiveFilters = Object.values(filterValues).some((value) => String(value).trim() !== "");
 
         const params = {
-            ...customFilters,
+            ...filterValues,
+            sortBy,
+            order,
             page: customPage,
-            pageSize: pagination.pageSize,
+            pageSize: pagination.pageSize
         };
 
         const response = hasActiveFilters ? await getFilteredEvents(params) : await getAllEvents(params);
@@ -135,14 +141,18 @@ export default function EventsPage() {
 
 
     /* =========================
-     Derived helper
-        Returns current user's role for a given event
+     Derived helpers
     ========================= */
+
+    // Returns current user's role for a given event
     const getRoleByEventId = (eventId) => myEvents[eventId] || null;
 
     // Split visible events into upcoming and past sections
     const upcomingEvents = events.filter((event) => event.status !== "past");
     const pastEvents = events.filter((event) => event.status === "past");
+ 
+    // Only collapse archives when the current page contains enough past events
+    const shouldCollapsePastEvents = pagination.totalPages > 1 && pastEvents.length >= pagination.pageSize;
 
     /* =========================
      Event membership actions
@@ -157,10 +167,9 @@ export default function EventsPage() {
 
 
     /* =========================
-     Filters input handler
-        Keep exact date exclusive with date range filters
+     Filter input handler
+        Updates filter state on user input
     ========================= */
-
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
 
@@ -169,13 +178,12 @@ export default function EventsPage() {
             [name]: value
         }));
     };
-
+    
 
     /* =========================
      Filters submit handler
         Applies the current filters to reload the events list
     ========================= */
-
     const handleFilterSubmit = async (e) => {
         e.preventDefault();
 
@@ -189,10 +197,24 @@ export default function EventsPage() {
 
 
     /* =========================
+     Sort handler
+        Updates sortBy and order using EVENT_SORT_MAP
+    ========================= */
+    const handleSortChange = (e) => {
+        const selected = EVENT_SORT_MAP[e.target.value];
+
+        setFilters((prev) => ({
+            ...prev,
+            sortBy: selected?.sortBy || "startDateTime",
+            order: selected?.order || "asc"
+        }));
+    };
+
+
+    /* =========================
      Filters reset handler
         Clears all filters and reloads all events
     ========================= */
-
     const handleResetFilters = async () => {
         const resetFilters = getDefaultEventFilters();
         setFilters(resetFilters);
@@ -360,9 +382,11 @@ export default function EventsPage() {
                     </FormField>
 
                     <FormField label="Sort events">
-                        <Select name="order" value={filters.order} onChange={handleFilterChange}>
-                            <option value="asc">Upcoming events first</option>
-                            <option value="desc">Latest events first</option>
+                        <Select name="sortBy" value={`${filters.sortBy}-${filters.order}`} onChange={handleSortChange}>
+                            <option value="startDateTime-asc">Soonest first</option>
+                            <option value="startDateTime-desc">Farthest first</option>
+                            <option value="title-asc">Title A-Z</option>
+                            <option value="title-desc">Title Z-A</option>
                         </Select>
                     </FormField>
                 </div>
@@ -420,11 +444,11 @@ export default function EventsPage() {
                                 <p className="section-subtitle">Events that have already ended.</p>
                             </div>
 
-                            <Button type="button" variant="outline" onClick={() => setShowPastEvents((prev) => !prev)}>{showPastEvents ? "Hide past events" : `Show past events (${pastEvents.length})`}</Button>
+                            {shouldCollapsePastEvents && (<Button type="button" variant="outline" onClick={() => setShowPastEvents((prev) => !prev)}>{showPastEvents ? "Hide past events" : `Show past events (${pastEvents.length})`}</Button>)}
                         </div>
 
 
-                        {showPastEvents && ( 
+                        {(!shouldCollapsePastEvents || showPastEvents) && (
                             pastEvents.length === 0 ? (
                                 <Card>
                                     <EmptyState>No past events found.</EmptyState>
@@ -442,7 +466,6 @@ export default function EventsPage() {
                                         />
                                     ))}
                                 </div>
-                        
                             )
                         )}
                     </section>

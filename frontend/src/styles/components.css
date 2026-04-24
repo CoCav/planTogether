@@ -291,7 +291,7 @@
 
 
 /* ==================================================
-   EVENT VIEW TABS
+   EVENTS VIEW TABS / MY EVENT VIEW TABS
    Secondary navigation for event list views
 ================================================== */
 
@@ -349,6 +349,11 @@
 .events-quick-actions {
     display: flex;
     gap: var(--space-2);
+}
+
+.events-view-actions {
+    display: flex;
+    align-items: center;
 }
 
 /* ==================================================

@@ -8,11 +8,10 @@ import Button from "../components/ui/Button";
 import Alert from "../components/ui/Alert";
 import EventCard from "../components/ui/EventCard";
 import MyEventsViewTabs from "../components/ui/MyEventsViewTabs.jsx";
+import Select from "../components/ui/Select";
 import EmptyState from "../components/ui/EmptyState";
 import LoadingState from "../components/ui/LoadingState";
 import Badge from "../components/ui/Badge";
-
-
 
 /* ==================================================
    MY EVENTS PAGE
@@ -24,6 +23,8 @@ export default function MyEventsPage() {
 
     // Events state: stores all user-related events
     const [myEvents, setMyEvents] = useState([]);
+
+    // Page loading state: controls loading scren while events are fetched
     const [loadingEvents, setLoadingEvents] = useState(true);
 
     // View state: controls active event view (created / created history / joined / joined history)
@@ -38,6 +39,34 @@ export default function MyEventsPage() {
     const createdEventsHistory = myEvents.filter((event) => event.role === "organizer" && event.status === "past");
     const joinedEvents = myEvents.filter((event) => event.role !== "organizer" && event.status !== "past");
     const joinedEventsHistory = myEvents.filter((event) => event.role !== "organizer" && event.status === "past");
+
+
+    /* =========================
+     Sort helpers
+    ========================= */
+
+    // Returns the default sort option for the current view
+    const getDefaultSortOption = (view) => view.includes("History") ? "startDateTime-desc" : "startDateTime-asc";
+
+    // Sort state: controls event ordering inside the current view
+    const [sortOption, setSortOption] = useState(() => getDefaultSortOption("created"));
+
+    // Returns date sort labels depending on the current view
+    const getSortLabels = () => {
+        if (activeView.includes("History")) {
+            return {
+                asc: "Oldest first",
+                desc: "Most recent"
+            };
+        }
+
+        return {
+            asc: "Soonest first",
+            desc: "Farthest first"
+        };
+    };
+
+    const sortLabels = getSortLabels();
 
 
     /* =========================
@@ -60,6 +89,29 @@ export default function MyEventsPage() {
     };
 
     const currentEvents = getCurrentEvents();
+
+    // Sorts current events based on the selected sort option
+    const sortedEvents = [...currentEvents].sort((a, b) => {
+        const [field, order] = sortOption.split("-");
+
+        let valA = a[field];
+        let valB = b[field];
+
+        if (field === "startDateTime") {
+            valA = new Date(valA);
+            valB = new Date(valB);
+        }
+
+        if (field === "title") {
+            valA = valA.toLowerCase();
+            valB = valB.toLowerCase();
+        }
+
+        if (valA < valB) return order === "asc" ? -1 : 1;
+        if (valA > valB) return order === "asc" ? 1 : -1;
+
+        return 0;
+    });
 
 
     /* =========================
@@ -145,16 +197,20 @@ export default function MyEventsPage() {
         }
     }, [message, error]);
 
+    // Resets sort option when switching between active and history views
+    useEffect(() => {
+        setSortOption(getDefaultSortOption(activeView));
+    }, [activeView]);
 
     /* =========================
-       Helpers
+       Event actions
     ========================= */
 
     // Returns the user's role for a specific event
     const getRoleByEventId = (eventId) =>
         myEvents.find((event) => event.id === eventId)?.role || null;
 
-    // Event actions with confirmation modal
+    // Provides leave handler with confirmation modal
     const { handleLeaveEvent } = useEventActionsWithConfirm({
         loadData: fetchMyEvents,
         setMessage,
@@ -162,7 +218,7 @@ export default function MyEventsPage() {
         getRoleByEventId
     });
 
-    
+
     /* =========================
        Main render
     ========================= */
@@ -184,20 +240,31 @@ export default function MyEventsPage() {
             ) : (
                 <>
                     {/* =========================
-                        EVENTS HEADER (like EventsPage)
+                        EVENTS HEADER
                     ========================= */}
                     <div className="events-header">
-                        <div className="events-header-top">
-                            <h2 className="section-title">
-                                {viewContent.title}
-                                <span className="results-count">({currentEvents.length})</span>
-                            </h2>
-                        </div>
+                        <div className="events-header-controls">
+                            <div className="events-header-top">
+                                <h2 className="section-title">
+                                    {viewContent.title}
+                                    <span className="results-count">({currentEvents.length})</span>
+                                </h2>
+                            </div>
 
-                        <p className="section-subtitle">{viewContent.subtitle}</p>
+                            <p className="section-subtitle">{viewContent.subtitle}</p>
 
-                        <div className="events-view-bar">
-                            <MyEventsViewTabs activeView={activeView} onChange={setActiveView}/>
+                            <div className="events-view-bar">
+                                <MyEventsViewTabs activeView={activeView} onChange={setActiveView}/>
+                
+                                <div className="events-view-actions">
+                                    <Select title="Sort events" value={sortOption} onChange={(e) => setSortOption(e.target.value)}>
+                                        <option value="startDateTime-asc">{sortLabels.asc}</option>
+                                        <option value="startDateTime-desc">{sortLabels.desc}</option>
+                                        <option value="title-asc">Title A-Z</option>
+                                        <option value="title-desc">Title Z-A</option>
+                                    </Select>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -209,7 +276,7 @@ export default function MyEventsPage() {
                             <EmptyState>{viewContent.emptyMessage}</EmptyState>
                         ) : (
                             <div className="events-grid">
-                                {currentEvents.map((event) => (
+                                {sortedEvents.map((event) => (
                                     <EventCard
                                         key={event.id}
                                         event={event}

@@ -38,11 +38,11 @@ const getMyEvents = async (req, res, next) => {
     try {
         const userId = req.user.userId;
 
-        const events = await eventMembershipService.listMyEvents(userId);
+        const result = await eventMembershipService.listMyEvents(userId, req.query);
 
         return res.status(200).json({
             message: 'Events retrieved successfully',
-            events
+            ...result
         });
     } catch (error) {
         return next(error);

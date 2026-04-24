@@ -3,6 +3,8 @@ const Event = require('../models/eventModel');
 const User = require('../models/userModel');
 const EventUserRole = require('../models/relations/eventUserRoleModel');
 const { assertEventNotPast, getEventStatus } = require('../utils/eventTime');
+const { getPaginationOptions } = require('../utils/pagination');
+
 
 const VALID_ROLES = ['organizer', 'co_organizer', 'participant'];
 
@@ -84,34 +86,72 @@ const leaveEvent = async ({ eventId, userId }) => {
     }
 };
 
-// Get all events for the current user
-const listMyEvents = async (userId) => {
+// Get all paginated events of the current user
+const listMyEvents = async (userId, query = {}) => {
     try {
+        const { view } = query;
+        const now = new Date();
 
         // Check if user exists
         const user = await User.findByPk(userId);
         if (!user) {
-            const error = new Error('User not found');
+            const error = new Error("User not found");
             error.statusCode = 404;
             throw error;
         }
 
-        // Get events via memberships
-        const memberships = await EventUserRole.findAll({
-            where: { userId },
+        /* =========================
+           View-based filters
+        ========================= */
+
+        const isHistoryView = view === "createdHistory" || view === "joinedHistory";
+
+        const roleFilter = !view ? undefined : view === "created" || view === "createdHistory" ? "organizer" : { [Op.in]: ["participant", "co_organizer"] };
+
+        const eventDateFilter = !view ? {} : isHistoryView ? { endDateTime: { [Op.lt]: now } } : { endDateTime: { [Op.gte]: now } };
+
+        /* =========================
+           Pagination + sorting
+        ========================= */
+
+        const paginationQuery = {
+            ...query,
+            sortBy: query.sortBy || "startDateTime",
+            order: query.order || (isHistoryView ? "desc" : "asc")
+        };
+
+        const {
+            page,
+            pageSize,
+            limit,
+            offset,
+            orderField,
+            orderDirection
+        } = getPaginationOptions(paginationQuery, ["startDateTime", "title", "createdAt"], "startDateTime", isHistoryView ? "DESC" : "ASC");
+
+        /* =========================
+           Query database
+        ========================= */
+
+        const { count, rows } = await EventUserRole.findAndCountAll({
+            where: {
+                userId,
+               ...(roleFilter && { role: roleFilter })
+            },
             include: [{
                 model: Event,
+                where: eventDateFilter,
                 attributes: [
-                    'id',
-                    'title',
-                    'type',
-                    'theme',
-                    'description',
-                    'startDateTime',
-                    'endDateTime',
-                    'mode',
-                    'location',
-                    'creatorId'
+                    "id",
+                    "title",
+                    "type",
+                    "theme",
+                    "description",
+                    "startDateTime",
+                    "endDateTime",
+                    "mode",
+                    "location",
+                    "creatorId"
                 ],
                 include: [
                     {
@@ -121,13 +161,14 @@ const listMyEvents = async (userId) => {
                     }
                 ]
             }],
-            order: [['createdAt', 'DESC']]
+            limit,
+            offset,
+            order: [[{ model: Event }, orderField, orderDirection]]
         });
 
-
-        // Adds participant count and derived event status
-        const membershipsWithEventData = await Promise.all(
-            memberships.map(async (membership) => {
+        // Add participant count and status to each event
+        const events = await Promise.all(
+            rows.map(async (membership) => {
                 const data = membership.toJSON();
 
                 const participantCount = await EventUserRole.count({
@@ -148,9 +189,18 @@ const listMyEvents = async (userId) => {
             })
         );
 
-        return membershipsWithEventData;
+        const totalEvents = count;
+
+        return {
+            page,
+            pageSize,
+            totalEvents,
+            totalPages: Math.ceil(totalEvents / pageSize),
+            events
+        };
+
     } catch (error) {
-        console.error('Error in listMyEvents service:', error);
+        console.error("Error in listMyEvents service:", error);
         throw error;
     }
 };

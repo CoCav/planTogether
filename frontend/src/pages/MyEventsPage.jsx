@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { getMyEvents } from "../api/eventMembershipApi";
 import { getMyEventsWithRole } from "../features/events/normalizeData";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
@@ -7,51 +6,49 @@ import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
 import Button from "../components/ui/Button";
 import Alert from "../components/ui/Alert";
 import EventCard from "../components/ui/EventCard";
-import MyEventsViewTabs from "../components/ui/MyEventsViewTabs.jsx";
+import MyEventsViewTabs from "../components/ui/MyEventsViewTabs";
 import Select from "../components/ui/Select";
 import EmptyState from "../components/ui/EmptyState";
 import LoadingState from "../components/ui/LoadingState";
-import Badge from "../components/ui/Badge";
 
 /* ==================================================
    MY EVENTS PAGE
-   Displays events created by the user and events joined by the user
+   Displays paginated events created or joined by the user
+   Uses backend filtering, sorting and pagination
 ================================================== */
 export default function MyEventsPage() {
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
-    // Events state: stores all user-related events
-    const [myEvents, setMyEvents] = useState([]);
+    // Events list state: stores current page events
+    const [events, setEvents] = useState([]);
 
-    // Page loading state: controls loading scren while events are fetched
-    const [loadingEvents, setLoadingEvents] = useState(true);
+    // Loading state: controls loading screen while events are fetched
+    const [loading, setLoading] = useState(true);
 
-    // View state: controls active event view (created / created history / joined / joined history)
+    // View state: controls active event view
     const [activeView, setActiveView] = useState("created");
 
-
-    /* =========================
-     Derived event collections
-       Split events depending on the user's role
-    ========================= */
-    const createdEvents = myEvents.filter((event) => event.role === "organizer" && event.status !== "past");
-    const createdEventsHistory = myEvents.filter((event) => event.role === "organizer" && event.status === "past");
-    const joinedEvents = myEvents.filter((event) => event.role !== "organizer" && event.status !== "past");
-    const joinedEventsHistory = myEvents.filter((event) => event.role !== "organizer" && event.status === "past");
+    // Sort state: maps UI sort option to backend sort params
+    const [sortOption, setSortOption] = useState("startDateTime-asc");
 
 
     /* =========================
-     Sort helpers
+     Pagination state
+       Controls current page and page size
     ========================= */
+    const [pagination, setPagination] = useState({
+        page: 1,
+        pageSize: 4,
+        totalPages: 1,
+        totalEvents: 0
+    });
 
-    // Returns the default sort option for the current view
-    const getDefaultSortOption = (view) => view.includes("History") ? "startDateTime-desc" : "startDateTime-asc";
 
-    // Sort state: controls event ordering inside the current view
-    const [sortOption, setSortOption] = useState(() => getDefaultSortOption("created"));
-
-    // Returns date sort labels depending on the current view
+    /* =========================
+     Sorting helpers
+        Defines user-friendly labels for sorting options based on the current active view (upcoming vs history)
+    ========================= */
     const getSortLabels = () => {
         if (activeView.includes("History")) {
             return {
@@ -66,123 +63,59 @@ export default function MyEventsPage() {
         };
     };
 
+    // Compute labels dynamically for the current view
     const sortLabels = getSortLabels();
 
 
     /* =========================
-     Current view data
-       Returns the event list matching the selected tab
-    ========================= */
-    const getCurrentEvents = () => {
-        switch (activeView) {
-            case "created":
-                return createdEvents;
-            case "createdHistory":
-                return createdEventsHistory;
-            case "joined":
-                return joinedEvents;
-            case "joinedHistory":
-                return joinedEventsHistory;
-            default:
-                return [];
-        }
-    };
-
-    const currentEvents = getCurrentEvents();
-
-    // Sorts current events based on the selected sort option
-    const sortedEvents = [...currentEvents].sort((a, b) => {
-        const [field, order] = sortOption.split("-");
-
-        let valA = a[field];
-        let valB = b[field];
-
-        if (field === "startDateTime") {
-            valA = new Date(valA);
-            valB = new Date(valB);
-        }
-
-        if (field === "title") {
-            valA = valA.toLowerCase();
-            valB = valB.toLowerCase();
-        }
-
-        if (valA < valB) return order === "asc" ? -1 : 1;
-        if (valA > valB) return order === "asc" ? 1 : -1;
-
-        return 0;
-    });
-
-
-    /* =========================
-     Current view labels
-       Returns title, subtitle and empty message for the selected tab
-    ========================= */
-    const getCurrentViewContent = () => {
-        switch (activeView) {
-            case "created":
-                return {
-                    title: "Created Events",
-                    subtitle: "Events you created as organizer.",
-                    emptyMessage: "No created events."
-                };
-            case "createdHistory":
-                return {
-                    title: "Created History",
-                    subtitle: "Explore past events you created.",
-                    emptyMessage: "No past created events."
-                };
-            case "joined":
-                return {
-                    title: "Joined Events",
-                    subtitle: "Events you joined as participant or co-organizer.",
-                    emptyMessage: "No joined events."
-                };
-            case "joinedHistory":
-                return {
-                    title: "Joined History",
-                    subtitle: "Explore past events you joined.",
-                    emptyMessage: "No past joined events."
-                };
-            default:
-                return {
-                    title: "My Events",
-                    subtitle: "View your events.",
-                    emptyMessage: "No events found."
-                };
-        }
-    };
-
-    const viewContent = getCurrentViewContent();
-
-    
-    /* =========================
      Data loading
-       Fetches and normalizes all events related to the current user
+       Fetches events for the selected view, page and sort option
     ========================= */
-    const fetchMyEvents = async () => {
+    const fetchMyEvents = async (
+        customPage = pagination.page,
+        customView = activeView,
+        customSortOption = sortOption
+    ) => {
         try {
-            setLoadingEvents(true);
+            setError("");
 
-            const response = await getMyEvents();
-            const normalizedEvents = getMyEventsWithRole(response);
-            setMyEvents(normalizedEvents);
+            const [sortBy, order] = customSortOption.split("-");
+
+            const response = await getMyEvents({
+                view: customView,
+                page: customPage,
+                pageSize: pagination.pageSize,
+                sortBy,
+                order
+            });
+
+            setEvents(getMyEventsWithRole(response));
+
+            setPagination((prev) => ({
+                ...prev,
+                page: response.data.page || 1,
+                pageSize: response.data.pageSize || prev.pageSize,
+                totalPages: response.data.totalPages || 1,
+                totalEvents: response.data.totalEvents || 0
+            }));
         } catch (error) {
             console.error("Error loading my events:", error);
-            setError("Unable to load your events");
+            setError("❌ Failed to load your events");
         } finally {
-            setLoadingEvents(false);
+            setLoading(false);
         }
     };
 
 
     /* =========================
      Effects
+        Handles initial data loading and UI feedback lifecycle
     ========================= */
 
-    // Load user events on page mount
+    // Initial data load: fetches first page of events when the component mounts
+    // Uses default view and sorting configuration
     useEffect(() => {
-        fetchMyEvents();
+        fetchMyEvents(1, activeView, sortOption);
     }, []);
 
     // Auto-clear feedback messages after delay
@@ -197,20 +130,14 @@ export default function MyEventsPage() {
         }
     }, [message, error]);
 
-    // Resets sort option when switching between active and history views
-    useEffect(() => {
-        setSortOption(getDefaultSortOption(activeView));
-    }, [activeView]);
 
     /* =========================
-       Event actions
+     Event actions
+        Provides shared leave behavior and retrieves the current user role for the selected event
     ========================= */
-
-    // Returns the user's role for a specific event
     const getRoleByEventId = (eventId) =>
-        myEvents.find((event) => event.id === eventId)?.role || null;
+        events.find((event) => event.id === eventId)?.role || null;
 
-    // Provides leave handler with confirmation modal
     const { handleLeaveEvent } = useEventActionsWithConfirm({
         loadData: fetchMyEvents,
         setMessage,
@@ -220,63 +147,123 @@ export default function MyEventsPage() {
 
 
     /* =========================
+     Interaction handlers
+        Keep UI state and backend data in sync when users change view, sorting, or pagination
+    ========================= */
+    const handleViewChange = async (nextView) => {
+        setActiveView(nextView);
+        await fetchMyEvents(1, nextView, sortOption);
+    };
+
+    const handleSortChange = async (e) => {
+        const nextSortOption = e.target.value;
+        setSortOption(nextSortOption);
+        await fetchMyEvents(1, activeView, nextSortOption);
+    };
+
+    const handlePreviousPage = async () => {
+        if (pagination.page <= 1) return;
+        await fetchMyEvents(pagination.page - 1);
+    };
+
+    const handleNextPage = async () => {
+        if (pagination.page >= pagination.totalPages) return;
+        await fetchMyEvents(pagination.page + 1);
+    };
+
+
+    /* =========================
+       View content
+        Returns the title, subtitle and empty state message matching the active My Events tab
+    ========================= */
+    const getViewContent = () => {
+        switch (activeView) {
+            case "created":
+                return {
+                    title: "Created Events",
+                    subtitle: "Events you created as organizer.",
+                    empty: "You haven’t created any events yet."
+                };
+            case "createdHistory":
+                return {
+                    title: "Created History",
+                    subtitle: "Explore past events you created.",
+                    empty: "No past created events."
+                };
+            case "joined":
+                return {
+                    title: "Joined Events",
+                    subtitle: "Events you joined.",
+                    empty: "You haven’t joined any events yet."
+                };
+            case "joinedHistory":
+                return {
+                    title: "Joined History",
+                    subtitle: "Explore past events you joined.",
+                    empty: "No past joined events."
+                };
+            default:
+                return {
+                    title: "My Events",
+                    subtitle: "",
+                    empty: "No events found."
+                };
+        }
+    };
+
+    const viewContent = getViewContent();
+
+
+    /* =========================
        Main render
     ========================= */
-
     return (
         <div className="container page-section">
             <div className="page-header">
                 <div>
                     <h1 className="page-title">My Events</h1>
-                    <p className="page-subtitle">View the events you created and the ones you joined.</p>
+                    <p className="page-subtitle">View the events you created and joined.</p>
                 </div>
             </div>
 
             {message && <Alert type="success">{message}</Alert>}
             {error && <Alert type="danger">{error}</Alert>}
 
-            {loadingEvents ? (
+            {loading ? (
                 <LoadingState>Loading events...</LoadingState>
             ) : (
                 <>
-                    {/* =========================
-                        EVENTS HEADER
-                    ========================= */}
                     <div className="events-header">
-                        <div className="events-header-controls">
-                            <div className="events-header-top">
-                                <h2 className="section-title">
-                                    {viewContent.title}
-                                    <span className="results-count">({currentEvents.length})</span>
-                                </h2>
-                            </div>
+                        <div className="events-header-top">
+                            <h2 className="section-title">
+                                {viewContent.title}
+                                <span className="results-count">({pagination.totalEvents})</span> 
+                            </h2>
 
-                            <p className="section-subtitle">{viewContent.subtitle}</p>
+                            {pagination.totalPages > 1 && (<span className="results-page-info">Page {pagination.page} of {pagination.totalPages}</span>)}
+                        </div>
 
-                            <div className="events-view-bar">
-                                <MyEventsViewTabs activeView={activeView} onChange={setActiveView}/>
-                
-                                <div className="events-view-actions">
-                                    <Select title="Sort events" value={sortOption} onChange={(e) => setSortOption(e.target.value)}>
-                                        <option value="startDateTime-asc">{sortLabels.asc}</option>
-                                        <option value="startDateTime-desc">{sortLabels.desc}</option>
-                                        <option value="title-asc">Title A-Z</option>
-                                        <option value="title-desc">Title Z-A</option>
-                                    </Select>
-                                </div>
+                        <p className="section-subtitle">{viewContent.subtitle}</p>
+                        <div className="events-view-bar">
+                            <MyEventsViewTabs activeView={activeView} onChange={handleViewChange}/>
+
+                            <div className="events-view-actions">
+                                <Select value={sortOption} onChange={handleSortChange}>
+                                    <option value="startDateTime-asc">{sortLabels.asc}</option>
+                                    <option value="startDateTime-desc">{sortLabels.desc}</option>
+                                    <option value="title-asc">Title A-Z</option>
+                                    <option value="title-desc">Title Z-A</option>
+                                </Select>
                             </div>
                         </div>
                     </div>
 
-                    {/* =========================
-                        EVENTS LIST
-                    ========================= */}
                     <section className="events-section">
-                        {currentEvents.length === 0 ? (
-                            <EmptyState>{viewContent.emptyMessage}</EmptyState>
+                        {events.length === 0 ? (
+                            <EmptyState>{viewContent.empty}</EmptyState>
                         ) : (
                             <div className="events-grid">
-                                {sortedEvents.map((event) => (
+                                {events.map((event) => (
                                     <EventCard
                                         key={event.id}
                                         event={event}
@@ -289,6 +276,14 @@ export default function MyEventsPage() {
                             </div>
                         )}
                     </section>
+
+                    {pagination.totalPages > 1 && (
+                        <div className="pagination">
+                            <Button type="button" variant="outline" onClick={handlePreviousPage} disabled={pagination.page === 1}>Previous</Button>
+                            <span className="pagination-info">Page {pagination.page} of {pagination.totalPages}</span>
+                            <Button type="button" variant="outline" onClick={handleNextPage} disabled={pagination.page === pagination.totalPages}>Next</Button>
+                        </div>
+                    )}
                 </>
             )}
         </div>

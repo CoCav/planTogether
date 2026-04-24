@@ -234,7 +234,9 @@ describe('Event Membership API', () => {
 
         const eventRes = await createEvent(creator.token, {
             title: 'User Events Test',
-            description: 'Testing get my events'
+            description: 'Testing get my events',
+            startDateTime: '2026-12-31T10:00:00.000Z',
+            endDateTime: '2026-12-31T12:00:00.000Z'
         });
 
         const eventId = eventRes.body.event.id;
@@ -326,6 +328,63 @@ describe('Event Membership API', () => {
 
         expect(eventMembership.Event).toHaveProperty('status');
     });
+
+    it('should paginate current user events by view', async () => {
+        const creator = await registerUser(
+            'Paginated Creator',
+            `paginatedcreator${Date.now()}@test.com`
+        );
+
+        await createEvent(creator.token, { title: 'Created Event A' });
+        await createEvent(creator.token, { title: 'Created Event B' });
+        await createEvent(creator.token, { title: 'Created Event C' });
+
+        const res = await request(app)
+            .get('/api/events/my-events')
+            .query({
+                view: 'created',
+                page: 1,
+                pageSize: 2
+            })
+            .set('Authorization', `Bearer ${creator.token}`);
+
+        expect(res.statusCode).toBe(200);
+        expect(Array.isArray(res.body.events)).toBe(true);
+        expect(res.body.events.length).toBe(2);
+        expect(res.body.totalEvents).toBe(3);
+        expect(res.body.totalPages).toBe(2);
+    });
+
+    it('should filter current user events by history view', async () => {
+        const creator = await registerUser(
+            'History Creator',
+            `historycreator${Date.now()}@test.com`
+        );
+
+        await createEvent(creator.token, {
+            title: 'Active Created Event',
+            startDateTime: '2026-12-31T10:00:00.000Z',
+            endDateTime: '2026-12-31T12:00:00.000Z'
+        });
+
+        await createEvent(creator.token, {
+            title: 'Past Created Event',
+            startDateTime: '2020-01-01T10:00:00.000Z',
+            endDateTime: '2020-01-01T12:00:00.000Z'
+        });
+
+        const res = await request(app)
+            .get('/api/events/my-events')
+            .query({ view: 'createdHistory' })
+            .set('Authorization', `Bearer ${creator.token}`);
+
+        expect(res.statusCode).toBe(200);
+        expect(Array.isArray(res.body.events)).toBe(true);
+        expect(res.body.events.length).toBe(1);
+        expect(res.body.events[0].Event.title).toBe('Past Created Event');
+        expect(res.body.events[0].Event.status).toBe('past');
+    });
+
 
     /* =========================
        Event members / organizers

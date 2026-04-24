@@ -1,7 +1,7 @@
 import api from "./axios";
 
 // Fetches all events related to the current authenticated user (include role information)
-export const getMyEvents = () => api.get("/events/my-events");
+export const getMyEvents = (params = {}) => api.get("/events/my-events", { params });
 
 // Joins an event
 export const joinEvent = (eventId) => api.post(`/events/${eventId}/members/join`);

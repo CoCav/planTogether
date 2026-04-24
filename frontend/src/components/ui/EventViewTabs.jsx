@@ -4,20 +4,26 @@
 ================================================== */
 
 export default function EventViewTabs({ activeView, onChange }) {
+    const views = [
+        { key: "all", label: "All", icon: "📋" },
+        { key: "upcoming", label: "Upcoming", icon: "📅" },
+        { key: "archives", label: "Archives", icon: "🗂️" }
+    ];
+
     return (
         <nav className="event-view-nav" aria-label="Event views">
-            
-            <button type="button" className={`event-view-nav-item ${activeView === "all" ? "active" : ""}`} onClick={() => onChange("all")}>
-                📋 All
-            </button>
-
-            <button type="button" className={`event-view-nav-item ${activeView === "upcoming" ? "active" : ""}`} onClick={() => onChange("upcoming")}>
-                📅 Upcoming
-            </button>
-
-            <button type="button" className={`event-view-nav-item ${activeView === "archives" ? "active" : ""}`} onClick={() => onChange("archives")}>
-                🗂️ Archives
-            </button>
+            {views.map((view) => (
+                <button
+                    key={view.key}
+                    type="button"
+                    className={`event-view-nav-item ${activeView === view.key ? "active" : ""}`}
+                    onClick={() => onChange(view.key)}
+                    aria-pressed={activeView === view.key}
+                >
+                    <span className="event-view-icon">{view.icon}</span>
+                    <span>{view.label}</span>
+                </button>
+            ))}
         </nav>
     );
 }

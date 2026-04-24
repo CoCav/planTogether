@@ -4,39 +4,6 @@
 ================================================== */
 
 /* ==================================================
-   RESULTS (EVENTS FILTERED) & PAGINATION 
-================================================== */
-.results-summary {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--space-3);
-    margin-bottom: var(--space-4);
-    flex-wrap: wrap;
-}
-
-.results-count {
-    font-weight: 600;
-    color: var(--color-text);
-}
-
-.results-page-info,
-.pagination-info {
-    font-size: var(--font-size-sm);
-    color: var(--color-text-muted);
-}
-
-.pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: var(--space-3);
-    margin-top: var(--space-5);
-    flex-wrap: wrap;
-}
-
-
-/* ==================================================
    HOME PAGE
 ================================================== */
 .hero-section {
@@ -200,8 +167,34 @@
     margin-bottom: var(--space-3);
 }
 
+
 /* ==================================================
-   EVENTS LIST & EVENT CARD
+   RESULTS (EVENTS FILTERED) & PAGINATION 
+================================================== */
+.results-count {
+    margin-left: var(--space-2);
+    color: var(--color-text-muted);
+    font-weight: 400;
+}
+
+.results-page-info,
+.pagination-info {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+    flex-wrap: wrap;
+}
+
+
+/* ==================================================
+   EVENTS LIST & EVENT PAGE
 ================================================== */
 .filter-card {
     margin-bottom: var(--space-5);
@@ -236,22 +229,31 @@
     border-bottom: 1px solid var(--color-border);
 }
 
-.past-events-section {
-    padding: var(--space-4);
-    border-radius: var(--radius-lg);
-    background: var(--color-surface);
-    box-shadow: var(--shadow-sm);
+.events-header {
+    margin: var(--space-5) 0 var(--space-4);
 }
 
-.section-header-with-action .btn {
-    flex-shrink: 0;
+.events-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-3);
 }
 
+/* OTHER GRID STYLE */
+/* .events-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-4);
+    align-items: stretch;
+} */
 
-.section-header-content {
+.events-grid {
     display: flex;
     flex-direction: column;
+    gap: var(--space-4);
 }
+
 
 /* ==================================================
    EVENT DETAILS PAGE

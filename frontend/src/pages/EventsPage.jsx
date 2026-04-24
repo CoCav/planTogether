@@ -404,47 +404,52 @@ export default function EventsPage() {
 
         {events.length === 0 ? (
             <Card>
-                <EmptyState>No events found.</EmptyState>
+                {visibleEvents.length === 0 && (
+                    <EmptyState
+                        title={activeView === "upcoming" ? "No upcoming events" : activeView === "archives" ? "No archived events" : "No events found"}
+                        description="Try adjusting your filters or check back later."
+                    />
+                )}
             </Card>
             ) : (
                 <>
-                    <div className="results-summary">
-                        <p className="results-count">{pagination.totalEvents} Event{pagination.totalEvents > 1 ? "s" : ""} have been found !</p>
-                        {pagination.totalPages > 1 && (<p className="results-page-info">Showing page {pagination.page} of {pagination.totalPages}</p>)}
-                    </div>
-            
+                    <div className="events-header">
+                        <div className="events-header-top">
+                            <h2 className="section-title">
+                                {activeView === "archives" ? "Archives" : activeView === "upcoming" ? "Upcoming Events" : "All Events"}
+                                <span className="results-count">({pagination.totalEvents})</span>
+                            </h2>
 
-                    {/* Event tabs navigation */}
-                    <EventViewTabs
-                        activeView={activeView}
-                        onChange={handleViewChange}
-                    />
-
-                    {/* Single dynamic section */}
-                    <div className="section-header">
-                        <h2 className="section-title">{activeView === "archives" ? "Archives" : activeView === "upcoming" ? "Upcoming Events" : "All Events"}</h2>
-                        <p className="section-subtitle">{activeView === "archives" ? "Events that have already ended." : activeView === "upcoming" ? "Events that are still open for participation." : "Browse all available events."}</p>
-                    </div>
-
-                    {visibleEvents.length === 0 ? (
-                        <Card>
-                            <EmptyState>{activeView === "archives" ? "No past events found." : "No upcoming events found."}</EmptyState>
-                        </Card>
-                    ) : (
-                        <div className="event-list">
-                            {visibleEvents.map((event) => (
-                                <EventCard
-                                    key={event.id}
-                                    event={event}
-                                    user={user}
-                                    role={myEvents[event.id] || null}
-                                    onJoin={handleJoinEvent}
-                                    onLeave={handleLeaveEvent}
-                                />
-                            ))}
+                            {pagination.totalPages > 1 && (<span className="results-page-info">Page {pagination.page} of {pagination.totalPages}</span>)}
                         </div>
-                    )}
 
+                        <p className="section-subtitle">{activeView === "archives" ? "Events that have already ended." : activeView === "upcoming" ? "Events that are still open for participation." : "Browse all available events."}</p>
+
+                        <EventViewTabs activeView={activeView} onChange={handleViewChange} />
+                    </div>
+
+                    <section className="events-section">
+                        {visibleEvents.length === 0 ? (
+                            <EmptyState
+                                title={activeView === "upcoming" ? "No upcoming events" : activeView === "archives" ? "No archived events" : "No events found"}
+                                description="Try adjusting your filters or check back later."
+                            />
+                        ) : (
+                            <div className="events-grid">
+                                {visibleEvents.map((event) => (
+                                    <EventCard
+                                        key={event.id}
+                                        event={event}
+                                        user={user}
+                                        role={getRoleByEventId(event.id)}
+                                        onJoin={handleJoinEvent}
+                                        onLeave={handleLeaveEvent}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </section>
+                    
                     {pagination.totalPages > 1 && (
                         <div className="pagination">
                             <Button type="button" variant="outline" onClick={handlePreviousPage} disabled={pagination.page === 1}>Previous</Button>

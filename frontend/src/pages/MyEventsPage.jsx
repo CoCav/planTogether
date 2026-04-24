@@ -5,11 +5,14 @@ import { getMyEventsWithRole } from "../features/events/normalizeData";
 import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
 
 import Button from "../components/ui/Button";
-import Card from "../components/ui/Card";
 import Alert from "../components/ui/Alert";
+import EventCard from "../components/ui/EventCard";
+import MyEventsViewTabs from "../components/ui/MyEventsViewTabs.jsx";
 import EmptyState from "../components/ui/EmptyState";
 import LoadingState from "../components/ui/LoadingState";
 import Badge from "../components/ui/Badge";
+
+
 
 /* ==================================================
    MY EVENTS PAGE
@@ -23,17 +26,86 @@ export default function MyEventsPage() {
     const [myEvents, setMyEvents] = useState([]);
     const [loadingEvents, setLoadingEvents] = useState(true);
 
+    // View state: controls active event view (created / created history / joined / joined history)
+    const [activeView, setActiveView] = useState("created");
+
 
     /* =========================
      Derived event collections
        Split events depending on the user's role
     ========================= */
-    const createdEvents = myEvents.filter((event) => event.role === "organizer");
-    const joinedEvents = myEvents.filter((event) => event.role !== "organizer");
+    const createdEvents = myEvents.filter((event) => event.role === "organizer" && event.status !== "past");
+    const createdEventsHistory = myEvents.filter((event) => event.role === "organizer" && event.status === "past");
+    const joinedEvents = myEvents.filter((event) => event.role !== "organizer" && event.status !== "past");
+    const joinedEventsHistory = myEvents.filter((event) => event.role !== "organizer" && event.status === "past");
 
 
     /* =========================
-     Data loading function
+     Current view data
+       Returns the event list matching the selected tab
+    ========================= */
+    const getCurrentEvents = () => {
+        switch (activeView) {
+            case "created":
+                return createdEvents;
+            case "createdHistory":
+                return createdEventsHistory;
+            case "joined":
+                return joinedEvents;
+            case "joinedHistory":
+                return joinedEventsHistory;
+            default:
+                return [];
+        }
+    };
+
+    const currentEvents = getCurrentEvents();
+
+
+    /* =========================
+     Current view labels
+       Returns title, subtitle and empty message for the selected tab
+    ========================= */
+    const getCurrentViewContent = () => {
+        switch (activeView) {
+            case "created":
+                return {
+                    title: "Created Events",
+                    subtitle: "Events you created as organizer.",
+                    emptyMessage: "No created events."
+                };
+            case "createdHistory":
+                return {
+                    title: "Created History",
+                    subtitle: "Explore past events you created.",
+                    emptyMessage: "No past created events."
+                };
+            case "joined":
+                return {
+                    title: "Joined Events",
+                    subtitle: "Events you joined as participant or co-organizer.",
+                    emptyMessage: "No joined events."
+                };
+            case "joinedHistory":
+                return {
+                    title: "Joined History",
+                    subtitle: "Explore past events you joined.",
+                    emptyMessage: "No past joined events."
+                };
+            default:
+                return {
+                    title: "My Events",
+                    subtitle: "View your events.",
+                    emptyMessage: "No events found."
+                };
+        }
+    };
+
+    const viewContent = getCurrentViewContent();
+
+    
+    /* =========================
+     Data loading
        Fetches and normalizes all events related to the current user
     ========================= */
     const fetchMyEvents = async () => {
@@ -90,7 +162,7 @@ export default function MyEventsPage() {
         getRoleByEventId
     });
 
-
+    
     /* =========================
        Main render
     ========================= */
@@ -110,67 +182,47 @@ export default function MyEventsPage() {
             {loadingEvents ? (
                 <LoadingState>Loading events...</LoadingState>
             ) : (
-                <div className="details-sections">
-
-                    {/* Created events */}
-                    <Card>
-                        <div className="section-header">
-                            <h2 className="section-title">Created Events</h2>
-                            <p className="section-subtitle">Events you created as organizer.</p>
+                <>
+                    {/* =========================
+                        EVENTS HEADER (like EventsPage)
+                    ========================= */}
+                    <div className="events-header">
+                        <div className="events-header-top">
+                            <h2 className="section-title">
+                                {viewContent.title}
+                                <span className="results-count">({currentEvents.length})</span>
+                            </h2>
                         </div>
 
-                        {createdEvents.length === 0 ? (
-                            <EmptyState>No created events.</EmptyState>
-                        ) : (
-                            <div className="member-list">
-                                {createdEvents.map((event) => (
-                                    <div key={event.id} className="member-row">
-                                        <div className="member-info">
-                                            <Link to={`/events/${event.id}`} className="event-title-link">
-                                                <span className="member-name">{event.title}</span>
-                                            </Link>
+                        <p className="section-subtitle">{viewContent.subtitle}</p>
 
-                                            <Badge role="organizer" />
-                                        </div>
-                                    </div>
+                        <div className="events-view-bar">
+                            <MyEventsViewTabs activeView={activeView} onChange={setActiveView}/>
+                        </div>
+                    </div>
+
+                    {/* =========================
+                        EVENTS LIST
+                    ========================= */}
+                    <section className="events-section">
+                        {currentEvents.length === 0 ? (
+                            <EmptyState>{viewContent.emptyMessage}</EmptyState>
+                        ) : (
+                            <div className="events-grid">
+                                {currentEvents.map((event) => (
+                                    <EventCard
+                                        key={event.id}
+                                        event={event}
+                                        user={true}
+                                        role={event.role}
+                                        onLeave={handleLeaveEvent}
+                                        variant="my-events"
+                                    />
                                 ))}
                             </div>
                         )}
-                    </Card>
-
-                    {/* Joined events */}
-                    <Card>
-                        <div className="section-header">
-                            <h2 className="section-title">Joined Events</h2>
-                            <p className="section-subtitle">Events you joined as participant or co-organizer.</p>
-                        </div>
-
-                        {joinedEvents.length === 0 ? (
-                            <EmptyState>No joined events.</EmptyState>
-                        ) : (
-                            <div className="member-list">
-                                {joinedEvents.map((event) => (
-                                    <div key={event.id} className="member-row">
-                                        <div className="member-info">
-                                            <Link to={`/events/${event.id}`} className="event-title-link">
-                                                <span className="member-name">{event.title}</span>
-                                            </Link>
-
-                                            {event.creatorName && (<span className="badge badge-organizer">👑 {event.creatorName}</span>)}
-
-                                            <Badge role={event.role} />
-                                        </div>
-
-                                        <div className="member-actions">
-                                            <Button type="button" variant="outline-danger" onClick={() => handleLeaveEvent(event.id)}>Leave</Button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </Card>
-
-                </div>
+                    </section>
+                </>
             )}
         </div>
     );

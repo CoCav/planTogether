@@ -264,6 +264,69 @@ describe('Event Membership API', () => {
         expect(res.statusCode).toBe(401);
     });
 
+    it('should include event status in current user events', async () => {
+        const creator = await registerUser(
+            'Status Creator',
+            `statuscreator${Date.now()}@test.com`
+        );
+
+        const eventRes = await createEvent(creator.token, {
+            title: 'Past Status Event',
+            startDateTime: '2020-01-01T10:00:00.000Z',
+            endDateTime: '2020-01-01T12:00:00.000Z'
+        }); 
+
+        const eventId = eventRes.body.event.id;
+
+        const res = await request(app)
+            .get('/api/events/my-events')
+            .set('Authorization', `Bearer ${creator.token}`);
+
+        expect(res.statusCode).toBe(200);
+        expect(Array.isArray(res.body.events)).toBe(true);
+
+        const eventMembership = res.body.events.find((item) => item.Event.id === eventId);
+
+        expect(eventMembership).toBeDefined();
+        expect(eventMembership.Event).toHaveProperty('status', 'past');
+    });
+
+    it('should include participant count and status in user events', async () => {
+        const creator = await registerUser(
+            'Count Creator',
+            `countcreator${Date.now()}@test.com`
+        );
+
+        const eventRes = await createEvent(creator.token, {title: 'Count Event'});
+
+        const eventId = eventRes.body.event.id;
+
+        const participant = await registerUser(
+            'Count Participant',
+            `countparticipant${Date.now()}@test.com`
+        );
+
+        // participant joins event
+        await request(app)
+            .post(`/api/events/${eventId}/members/join`)
+            .set('Authorization', `Bearer ${participant.token}`);
+
+        const res = await request(app)
+            .get('/api/events/my-events')
+            .set('Authorization', `Bearer ${creator.token}`);
+
+        expect(res.statusCode).toBe(200);
+
+        const eventMembership = res.body.events.find((item) => item.Event.id === eventId);
+
+        expect(eventMembership).toBeDefined();
+
+        expect(eventMembership.Event).toHaveProperty('participantCount');
+        expect(eventMembership.Event.participantCount).toBeGreaterThanOrEqual(1);
+
+        expect(eventMembership.Event).toHaveProperty('status');
+    });
+
     /* =========================
        Event members / organizers
     ========================= */

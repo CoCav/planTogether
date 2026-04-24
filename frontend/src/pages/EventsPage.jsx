@@ -14,7 +14,7 @@ import Badge from "../components/ui/Badge";
 import Select from "../components/ui/Select";
 import Input from "../components/ui/Input";
 import FormField from "../components/ui/FormField";
-import EventViewTabs from "../components/ui/EventViewTabs.jsx";
+import EventsViewTabs from "../components/ui/EventsViewTabs.jsx";
 import Alert from "../components/ui/Alert";
 import EmptyState from "../components/ui/EmptyState";
 import LoadingState from "../components/ui/LoadingState";
@@ -459,7 +459,7 @@ export default function EventsPage() {
             </p>
 
             <div className="events-view-bar">
-                <EventViewTabs activeView={activeView} onChange={handleViewChange} />
+                <EventsViewTabs activeView={activeView} onChange={handleViewChange} />
 
                 {activeView !== "archives" && (
                     <div className="events-quick-actions">

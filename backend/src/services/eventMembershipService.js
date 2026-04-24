@@ -1,8 +1,8 @@
-const { Op } = require('sequelize');
+const { Op, fn, col } = require('sequelize');
 const Event = require('../models/eventModel');
 const User = require('../models/userModel');
 const EventUserRole = require('../models/relations/eventUserRoleModel');
-const { assertEventNotPast } = require('../utils/eventTime');
+const { assertEventNotPast, getEventStatus } = require('../utils/eventTime');
 
 const VALID_ROLES = ['organizer', 'co_organizer', 'participant'];
 
@@ -124,8 +124,31 @@ const listMyEvents = async (userId) => {
             order: [['createdAt', 'DESC']]
         });
 
-        return memberships;
 
+        // Adds participant count and derived event status
+        const membershipsWithEventData = await Promise.all(
+            memberships.map(async (membership) => {
+                const data = membership.toJSON();
+
+                const participantCount = await EventUserRole.count({
+                    where: {
+                        eventId: data.Event.id,
+                        role: "participant"
+                    }
+                });
+
+                return {
+                    ...data,
+                    Event: {
+                        ...data.Event,
+                        participantCount,
+                        status: getEventStatus(data.Event)
+                    }
+                };
+            })
+        );
+
+        return membershipsWithEventData;
     } catch (error) {
         console.error('Error in listMyEvents service:', error);
         throw error;

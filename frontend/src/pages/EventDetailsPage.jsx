@@ -44,17 +44,20 @@ export default function EventDetailsPage() {
     // Check if current user is part of the event
     const isMember = !!myRole;
 
+    // Event status: prevents actions on archived / past events
+    const isPast = event?.status === "past";
+
     // Can join the event
-    const canJoin = user && !isMember;
+    const canJoin = user && !isPast && !isMember;
 
     // Can leave the event
-    const canLeave = user && isMember && myRole !== 'organizer';
+    const canLeave = user && !isPast && isMember && myRole !== 'organizer';
 
     // Can edit the event (organizer / co_organizer)
-    const canEdit = user && (myRole === 'organizer' || myRole === 'co_organizer');
+    const canEdit = user && !isPast && (myRole === 'organizer' || myRole === 'co_organizer');
 
     // Can delete the event (only organizer / creator)
-    const canDelete = user && myRole === 'organizer';
+    const canDelete = user && !isPast && myRole === 'organizer';
 
 
     /* =========================
@@ -138,10 +141,11 @@ export default function EventDetailsPage() {
         Determines which member management actions are allowed
     ========================= */
 
-    const canPromote = (person) => myRole === "organizer" && person.role === "participant" && person.id !== currentUserId;
-    const canDemote = (person) => myRole === "organizer" && person.role === "co_organizer" && person.id !== currentUserId;
+    const canPromote = (person) => !isPast && myRole === "organizer" && person.role === "participant" && person.id !== currentUserId;
+    const canDemote = (person) => !isPast && myRole === "organizer" && person.role === "co_organizer" && person.id !== currentUserId;
     
     const canRemove = (person) => {
+        if (isPast) return false;
         if (person.id === currentUserId) return false;
 
         if (myRole === "organizer") {
@@ -294,14 +298,18 @@ export default function EventDetailsPage() {
 
                     </div>
 
-                    {user && (
-                        <div className="event-details-header-actions">
-                            {canJoin && (<Button type="button" onClick={() => handleJoinEvent(event.id)}>Join the event</Button>)}
-                            {canLeave && (<Button type="button" variant="outline-danger" onClick={() => handleLeaveEvent(event.id)}>Leave the event</Button>)}
-                            {canEdit && (<Button type="button" variant="outline" onClick={() => navigate(`/events/${event.id}/edit`)}>Edit Event</Button>)}
-                            {canDelete && (<Button type="button" variant="danger" onClick={handleDeleteEvent}>Delete Event</Button>)}
-                        </div>
-                    )}
+                    <div className="event-details-header-actions">
+                        {isPast ? (
+                            <span className="event-status-label">Ended</span>
+                        ) : user ? (
+                            <>
+                                {canJoin && (<Button type="button" onClick={() => handleJoinEvent(event.id)}>Join the event</Button>)}
+                                {canLeave && (<Button type="button" variant="outline-danger" onClick={() => handleLeaveEvent(event.id)}>Leave the event</Button>)}
+                                {canEdit && (<Button type="button" variant="outline" onClick={() => navigate(`/events/${event.id}/edit`)}>Edit Event</Button>)}
+                                {canDelete && (<Button type="button" variant="danger" onClick={handleDeleteEvent}>Delete Event</Button>)}
+                            </>
+                        ) : null}
+                    </div>
                 </div>
 
                 <div className="event-info-grid">
@@ -373,10 +381,16 @@ export default function EventDetailsPage() {
                         <p className="section-subtitle">{formatCount(participantCount, "attendee")} {formatBe(participantCount)} attending this event.</p>
                     </div>
 
-                    {!user && (<Alert type="info">Login to join this event and interact with participants.</Alert>)}
+                    {!user && (
+                        <Alert type="info">
+                            {isPast ? "This event has ended." : "🔐 Login to join this event and interact with participants."}
+                        </Alert>
+                    )}
 
                     {participants.length === 0 ? (
-                        <EmptyState>No participants yet.</EmptyState>
+                        <EmptyState>
+                            {isPast ? "No one attended this event." : "No participants yet."}
+                        </EmptyState>
                     ) : (
                         <div className="member-list">
                             {participants.map((person) => (

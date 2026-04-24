@@ -774,7 +774,7 @@
    FOOTER
 ================================================== */
 .footer {
-    margin-top: var(--space-6);
+    margin-top: auto;
     padding: var(--space-5) 0;
     background: var(--color-surface);
     border-top: 1px solid var(--color-border);

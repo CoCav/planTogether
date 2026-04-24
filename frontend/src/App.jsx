@@ -4,11 +4,13 @@ import Footer from "./components/layout/Footer";
 
 function App() {
   return (
-    <>
+    <div className="app-layout">
       <Navbar />
-      <AppRouter />
+      <main className="app-main">
+        <AppRouter />
+      </main>
       <Footer/>
-    </>
+    </div>
   );
 }
 

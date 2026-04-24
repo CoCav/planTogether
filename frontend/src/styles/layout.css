@@ -2,6 +2,15 @@
    LAYOUT
     Shared structural styles for page containers and sections
 ================================================== */
+.app-layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-main {
+    flex: 1;
+}
 
 .container {
     max-width: 1100px;

@@ -14,10 +14,16 @@ import Badge from "../components/ui/Badge";
 import Select from "../components/ui/Select";
 import Input from "../components/ui/Input";
 import FormField from "../components/ui/FormField";
+import EventViewTabs from "../components/ui/EventViewTabs.jsx";
 import Alert from "../components/ui/Alert";
 import EmptyState from "../components/ui/EmptyState";
 import LoadingState from "../components/ui/LoadingState";
 
+/* ==================================================
+   EVENTS PAGE
+   Displays, filters, sorts and paginates events
+   Supports all / upcoming / archives views
+================================================== */
 export default function EventsPage() {
     const { user } = useAuth();
     const [message, setMessage] = useState("");
@@ -29,8 +35,8 @@ export default function EventsPage() {
     // Membership role state: stores current user role by event ID
     const [myEvents, setMyEvents] = useState({});
 
-    // Controls visibility of the past events section
-    const [showPastEvents, setShowPastEvents] = useState(false);
+    // View state: controls active event view (all / upcoming / archives)
+    const [activeView, setActiveView] = useState("all");
 
     // Page loading state: controls loading scren while events are fetched
     const [loading, setLoading] = useState(true);
@@ -38,8 +44,9 @@ export default function EventsPage() {
     // Filters state: controls all event filtering inputs
     const [filters, setFilters] = useState(getDefaultEventFilters);
 
+
     /* =========================
-    Pagination state
+     Pagination state
         Controls current page and page size
     ========================= */
     const [pagination, setPagination] = useState({
@@ -51,19 +58,23 @@ export default function EventsPage() {
 
 
     /* =========================
-        Data loading functions
+     Data loading
+        Fetches events, roles and pagination data
     ========================= */
 
-    // Fetches all events or filtered events depending on active filter
-    // Applies sorting and pagination
-    const fetchEvents = async (customFilters = filters, customPage = pagination.page) => {
+    // Fetches events according to active filters, sorting, pagination and view
+    const fetchEvents = async (customFilters = filters, customPage = pagination.page, customView = activeView) => {
         const { sortBy, order, ...filterValues } = customFilters;
 
-        // Determines if any real filters are applied (excluding sorting)
+        // Converts the active view into a backend status filter
+        const status = customView === "upcoming" ? "upcoming" : customView === "archives" ? "past" : "";
+
+        // Detects real filters only, excluding sorting fields
         const hasActiveFilters = Object.values(filterValues).some((value) => String(value).trim() !== "");
 
         const params = {
             ...filterValues,
+            ...(status && { status }),
             sortBy,
             order,
             page: customPage,
@@ -81,7 +92,7 @@ export default function EventsPage() {
         };
     };
 
-    // Fetches current user memberships and returns a role map indexed by event ID
+    // Fetches current user memberships and maps roles by event ID
     const fetchMyEvents = async () => {
         if (!user) return {};
 
@@ -93,13 +104,13 @@ export default function EventsPage() {
         return membershipMap;
     };
 
-    // Fetches visible events and current user memberships
-    const loadData = async (customFilters = filters, customPage = pagination.page) => {
+    // Fetches events and current user membership data
+    const loadData = async (customFilters = filters, customPage = pagination.page, customView = activeView) => {
         try {
             setError("");
             setLoading(true);
 
-            const result = await fetchEvents(customFilters, customPage);
+            const result = await fetchEvents(customFilters, customPage, customView);
 
             setEvents(result.events);
             setPagination((prev) => ({
@@ -124,7 +135,12 @@ export default function EventsPage() {
         }
     };
 
-    // Load initial user data or reload data when authentication state change
+
+    /* =========================
+     Effects
+    ========================= */
+
+    // Loads data on mount and when authentication state changes
     useEffect(() => {loadData()}, [user]);
 
     // Auto-clear feedback messages after delay
@@ -147,29 +163,22 @@ export default function EventsPage() {
     // Returns current user's role for a given event
     const getRoleByEventId = (eventId) => myEvents[eventId] || null;
 
-    // Split visible events into upcoming and past sections
-    const upcomingEvents = events.filter((event) => event.status !== "past");
-    const pastEvents = events.filter((event) => event.status === "past");
+    // Events are already filtered by the backend according to active view
+    const visibleEvents = events;
  
-    // Only collapse archives when the current page contains enough past events
-    const shouldCollapsePastEvents = pagination.totalPages > 1 && pastEvents.length >= pagination.pageSize;
 
     /* =========================
      Event membership actions
         Provides join / leave handlers with shared UX logic
     ========================= */
-    const { handleJoinEvent, handleLeaveEvent } = useEventActionsWithConfirm({
-        loadData,
-        setMessage,
-        setError,
-        getRoleByEventId,
-    });
+    const { handleJoinEvent, handleLeaveEvent } = useEventActionsWithConfirm({loadData, setMessage, setError, getRoleByEventId });
 
 
     /* =========================
-     Filter input handler
-        Updates filter state on user input
+     Handlers
     ========================= */
+
+    // Updates filter state on user input
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
 
@@ -179,11 +188,7 @@ export default function EventsPage() {
         }));
     };
     
-
-    /* =========================
-     Filters submit handler
-        Applies the current filters to reload the events list
-    ========================= */
+    // Applies current filters and resets pagination
     const handleFilterSubmit = async (e) => {
         e.preventDefault();
 
@@ -195,11 +200,7 @@ export default function EventsPage() {
         await loadData(filters, 1);
     };
 
-
-    /* =========================
-     Sort handler
-        Updates sortBy and order using EVENT_SORT_MAP
-    ========================= */
+    // Updates sorting fields using EVENT_SORT_MAP
     const handleSortChange = (e) => {
         const selected = EVENT_SORT_MAP[e.target.value];
 
@@ -210,11 +211,7 @@ export default function EventsPage() {
         }));
     };
 
-
-    /* =========================
-     Filters reset handler
-        Clears all filters and reloads all events
-    ========================= */
+    // Resets all filters and reloads events
     const handleResetFilters = async () => {
         const resetFilters = getDefaultEventFilters();
         setFilters(resetFilters);
@@ -227,31 +224,38 @@ export default function EventsPage() {
         await loadData(resetFilters, 1);
     };
     
+    // Changes active view and reloads events from page 1
+    const handleViewChange = async (nextView) => {
+        setActiveView(nextView);
 
-    /* =========================
-     Pagination handlers
-    ========================= */
+        setPagination((prev) => ({
+            ...prev,
+            page: 1
+        }));
+
+        await loadData(filters, 1, nextView);
+    };
+
+    // Pagination: loads previous page
     const handlePreviousPage = async () => {
         if (pagination.page <= 1) return;
         await loadData(filters, pagination.page - 1);
     };
 
+    // Pagination: loads next page
     const handleNextPage = async () => {
         if (pagination.page >= pagination.totalPages) return;
         await loadData(filters, pagination.page + 1);
     };
 
-
-    /* =========================
-     Quick date filters
-        Applies common date presets for easier browsing
-    ========================= */
+    // Applies today's date filter preset
     const handleTodayFilter = async () => {
         const nextFilters = getTodayEventFilters(filters);
         setFilters(nextFilters);
         await loadData(nextFilters);
     };
 
+    // Applies this weekend date filter preset
     const handleWeekendFilter = async () => {
         const nextFilters = getWeekendEventFilters(filters);
         setFilters(nextFilters);
@@ -408,67 +412,38 @@ export default function EventsPage() {
                         <p className="results-count">{pagination.totalEvents} Event{pagination.totalEvents > 1 ? "s" : ""} have been found !</p>
                         {pagination.totalPages > 1 && (<p className="results-page-info">Showing page {pagination.page} of {pagination.totalPages}</p>)}
                     </div>
+            
 
-                    {/* Upcoming events section */}
-                    <section className="events-section">
-                        <div className="section-header">
-                            <h2 className="section-title">Upcoming Events</h2>
-                            <p className="section-subtitle">Events that are still open for participation.</p>
+                    {/* Event tabs navigation */}
+                    <EventViewTabs
+                        activeView={activeView}
+                        onChange={handleViewChange}
+                    />
+
+                    {/* Single dynamic section */}
+                    <div className="section-header">
+                        <h2 className="section-title">{activeView === "archives" ? "Archives" : activeView === "upcoming" ? "Upcoming Events" : "All Events"}</h2>
+                        <p className="section-subtitle">{activeView === "archives" ? "Events that have already ended." : activeView === "upcoming" ? "Events that are still open for participation." : "Browse all available events."}</p>
+                    </div>
+
+                    {visibleEvents.length === 0 ? (
+                        <Card>
+                            <EmptyState>{activeView === "archives" ? "No past events found." : "No upcoming events found."}</EmptyState>
+                        </Card>
+                    ) : (
+                        <div className="event-list">
+                            {visibleEvents.map((event) => (
+                                <EventCard
+                                    key={event.id}
+                                    event={event}
+                                    user={user}
+                                    role={myEvents[event.id] || null}
+                                    onJoin={handleJoinEvent}
+                                    onLeave={handleLeaveEvent}
+                                />
+                            ))}
                         </div>
-
-                        {upcomingEvents.length === 0 ? (
-                            <Card>
-                                <EmptyState>No upcoming events found.</EmptyState>
-                            </Card>
-                        ) : (
-                            <div className="event-list">
-                                {upcomingEvents.map((event) => (
-                                    <EventCard
-                                        key={event.id}
-                                        event={event}
-                                        user={user}
-                                        role={myEvents[event.id] || null}
-                                        onJoin={handleJoinEvent}
-                                        onLeave={handleLeaveEvent}
-                                    />
-                                ))}
-                            </div>
-                        )}
-                    </section>
-
-                    {/* Past events section */}
-                    <section className="events-section past-events-section">
-                        <div className="section-header section-header-with-action">
-                            <div className="section-header-content">
-                                <h2 className="section-title">Archives</h2>
-                                <p className="section-subtitle">Events that have already ended.</p>
-                            </div>
-
-                            {shouldCollapsePastEvents && (<Button type="button" variant="outline" onClick={() => setShowPastEvents((prev) => !prev)}>{showPastEvents ? "Hide past events" : `Show past events (${pastEvents.length})`}</Button>)}
-                        </div>
-
-
-                        {(!shouldCollapsePastEvents || showPastEvents) && (
-                            pastEvents.length === 0 ? (
-                                <Card>
-                                    <EmptyState>No past events found.</EmptyState>
-                                </Card>
-                            ) : (
-                                <div className="event-list">
-                                    {pastEvents.map((event) => (
-                                        <EventCard
-                                            key={event.id}
-                                            event={event}
-                                            user={user}
-                                            role={myEvents[event.id] || null}
-                                            onJoin={handleJoinEvent}
-                                            onLeave={handleLeaveEvent}
-                                        />
-                                    ))}
-                                </div>
-                            )
-                        )}
-                    </section>
+                    )}
 
                     {pagination.totalPages > 1 && (
                         <div className="pagination">

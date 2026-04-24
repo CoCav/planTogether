@@ -4,6 +4,7 @@ const User = require('../models/userModel');
 const EventUserRole = require('../models/relations/eventUserRoleModel');
 const { getPaginationOptions } = require('../utils/pagination');
 const { assertEventNotPast, getEventStatus } = require('../utils/eventTime');
+const { applyStatusFilter } = require('../utils/eventQuery');
 
 // Create a new event and assign the creator as the organizer
 const createEvent = async (data, userId) => {
@@ -48,6 +49,12 @@ const createEvent = async (data, userId) => {
 // Get all events with pagination
 const getAllEvents = async (query) => {
     try {
+        const { status } = query;
+        const whereConditions = {};
+
+        // Apply backend status filter before pagination
+        applyStatusFilter(whereConditions, status);
+
         const {
             page,
             pageSize,
@@ -58,19 +65,18 @@ const getAllEvents = async (query) => {
         } = getPaginationOptions(query, ["startDateTime", "title", "creatorId", "createdAt"], "createdAt", "DESC");
 
         const { count, rows } = await Event.findAndCountAll({
+            where: whereConditions,
             limit,
             offset,
             order: [[orderField, orderDirection]],
             attributes: {
                 include: [[fn("COUNT", col("participants.id")), "participantCount"]]
             },
-            include: [
-                {
+            include: [{
                     model: User,
                     as: "creator",
                     attributes: ["id", "name"]
-                },
-                {
+                }, {
                     model: User,
                     as: "participants",
                     attributes: [],
@@ -78,7 +84,7 @@ const getAllEvents = async (query) => {
                         attributes: [],
                         where: { role: "participant" }
                     },
-                    required: false,
+                    required: false
                 }
             ],
             group: ["Event.id", "creator.id"],
@@ -144,11 +150,10 @@ const getEventById = async (id) => {
     }
 };
 
-// Filters events based on various criteria : date, creator, type, theme, location and keyword search
-// Sorted by ascending date
+// Filters events based on various criteria and supports pagination + sorting
 const getFilteredEvents = async (query) => {
     try {
-         const {
+        const {
             date,
             startDate,
             endDate,
@@ -157,37 +162,58 @@ const getFilteredEvents = async (query) => {
             theme,
             location,
             mode,
-            search
+            search,
+            status
         } = query;
-        
+
         const whereConditions = {};
 
-        //Filter by exact date
+        // Apply backend status filter before pagination
+        applyStatusFilter(whereConditions, status);
+
+        // Filter by exact date using event overlap logic
         if (date) {
             const start = new Date(`${date}T00:00:00.000`);
             const end = new Date(`${date}T23:59:59.999`);
-  
-            whereConditions[Op.and] = [ 
-                { startDateTime: {[Op.lte]: end} }, 
-                { endDateTime: {[Op.gte]: start} }
-            ];
+
+            if (!whereConditions[Op.and]) {
+                whereConditions[Op.and] = [];
+            }
+
+            whereConditions[Op.and].push(
+                { startDateTime: { [Op.lte]: end } },
+                { endDateTime: { [Op.gte]: start } }
+            );
         }
-        // Filter by range date using event overlap logic 
+
+        // Filter by date range using event overlap logic
         else if (startDate || endDate) {
             const start = startDate ? new Date(`${startDate}T00:00:00.000`) : null;
             const end = endDate ? new Date(`${endDate}T23:59:59.999`) : null;
 
-            if (start && end) whereConditions[Op.and] = [ 
-                    { startDateTime: {[Op.lte]: end} }, 
-                    { endDateTime: {[Op.gte]: start} }
-                ];
-            else if (start) whereConditions.startDateTime = { [Op.gte]: start };
-            else if (end) whereConditions.startDateTime = { [Op.lte]: end };
+            if (!whereConditions[Op.and]) {
+                whereConditions[Op.and] = [];
+            }
+
+            if (start && end) {
+                whereConditions[Op.and].push(
+                    { startDateTime: { [Op.lte]: end } },
+                    { endDateTime: { [Op.gte]: start } }
+                );
+            } else if (start) {
+                whereConditions[Op.and].push({
+                    startDateTime: { [Op.gte]: start }
+                });
+            } else if (end) {
+                whereConditions[Op.and].push({
+                    startDateTime: { [Op.lte]: end }
+                });
+            }
         }
 
         // Filter by creator/type/theme/mode/location
         if (creatorId) whereConditions.creatorId = parseInt(creatorId, 10);
-        if (mode) whereConditions.mode = String(mode).trim();;
+        if (mode) whereConditions.mode = String(mode).trim();
         if (type) whereConditions.type = { [Op.iLike]: `%${type}%` };
         if (theme) whereConditions.theme = { [Op.iLike]: `%${theme}%` };
         if (location) whereConditions.location = { [Op.iLike]: `%${location}%` };
@@ -196,11 +222,10 @@ const getFilteredEvents = async (query) => {
         if (search) {
             whereConditions[Op.or] = [
                 { title: { [Op.iLike]: `%${search}%` } },
-                { description: { [Op.iLike]: `%${search}%` } },
+                { description: { [Op.iLike]: `%${search}%` } }
             ];
-        } 
+        }
 
-        // Pagination and sorting
         const {
             page,
             pageSize,
@@ -210,7 +235,6 @@ const getFilteredEvents = async (query) => {
             orderDirection
         } = getPaginationOptions(query, ["startDateTime", "title", "creatorId", "createdAt"], "createdAt", "DESC");
 
-        // Query: fetch the filtered events with creator and participant count
         const { count, rows } = await Event.findAndCountAll({
             where: whereConditions,
             limit,
@@ -219,11 +243,10 @@ const getFilteredEvents = async (query) => {
             attributes: {
                 include: [[fn("COUNT", col("participants.id")), "participantCount"]]
             },
-            include: [
-                {
+            include: [{
                     model: User,
-                    as: 'creator',
-                    attributes: ['id', 'name']
+                    as: "creator",
+                    attributes: ["id", "name"]
                 }, {
                     model: User,
                     as: "participants",
@@ -252,11 +275,10 @@ const getFilteredEvents = async (query) => {
             }))
         };
     } catch (error) {
-        console.error('Error in filtering events:', error);
+        console.error("Error in filtering events:", error);
         throw error;
     }
-}
-
+};
 
 // ORGANIZER AND CO_ORGANIZER
 

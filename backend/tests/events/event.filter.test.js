@@ -72,7 +72,7 @@ describe('Event Filter API', () => {
             .set('Authorization', `Bearer ${token}`)
             .send(getValidEventPayload(overrides));
     };
-
+    
     /* =========================
        Filtering
     ========================= */
@@ -277,6 +277,64 @@ describe('Event Filter API', () => {
         expect(res.statusCode).toBe(200);
         expect(Array.isArray(res.body.events)).toBe(true);
         expect(res.body.events.length).toBe(0);
+    });
+
+    // Filter events by status: upcoming
+    it('should filter events by status upcoming', async () => {
+        const token = await registerAndGetToken(
+            'Upcoming Status User',
+            `upcomingstatus${Date.now()}@test.com`
+        );
+
+        await createEvent(token, {
+            title: 'Future Event',
+            startDateTime: '2026-12-31T10:00:00.000Z',
+            endDateTime: '2026-12-31T12:00:00.000Z'
+        });
+
+        await createEvent(token, {
+            title: 'Past Event',
+            startDateTime: '2020-01-01T10:00:00.000Z',
+            endDateTime: '2020-01-01T12:00:00.000Z'
+        });
+
+        const res = await request(app)
+            .get('/api/events/filtered')
+            .query({ status: 'upcoming' });
+
+        expect(res.statusCode).toBe(200);
+        expect(Array.isArray(res.body.events)).toBe(true);
+        expect(res.body.events.length).toBe(1);
+        expect(res.body.events[0].status).toBe('upcoming');
+    });
+
+    // Filter events by status: past
+    it('should filter events by status past', async () => {
+        const token = await registerAndGetToken(
+            'Past Status User',
+            `paststatus${Date.now()}@test.com`
+        );
+
+        await createEvent(token, {
+            title: 'Future Event',
+            startDateTime: '2026-12-31T10:00:00.000Z',
+            endDateTime: '2026-12-31T12:00:00.000Z'
+        });
+
+        await createEvent(token, {
+            title: 'Past Event',
+            startDateTime: '2020-01-01T10:00:00.000Z',
+            endDateTime: '2020-01-01T12:00:00.000Z'
+        });
+
+        const res = await request(app)
+            .get('/api/events/filtered')
+            .query({ status: 'past' });
+
+        expect(res.statusCode).toBe(200);
+        expect(Array.isArray(res.body.events)).toBe(true);
+        expect(res.body.events.length).toBe(1);
+        expect(res.body.events[0].status).toBe('past');
     });
 
     /* =========================

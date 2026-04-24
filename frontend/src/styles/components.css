@@ -337,6 +337,20 @@
     font-size: 14px;
 }
 
+.events-view-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+    flex-wrap: wrap;
+}
+
+.events-quick-actions {
+    display: flex;
+    gap: var(--space-2);
+}
+
 /* ==================================================
    PASSWORD RULES
 ================================================== */

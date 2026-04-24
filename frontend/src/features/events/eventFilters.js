@@ -29,7 +29,7 @@ export const getDefaultEventFilters = () => ({
     date: "",
     startDate: "",
     endDate: "",
-    sortBy: "startDateTime",
+    sortBy: "",
     order: "asc"
 });
 
@@ -43,6 +43,21 @@ export const EVENT_SORT_MAP = {
     "title-asc": { sortBy: "title", order: "asc" },
     "title-desc": { sortBy: "title", order: "desc" }
 };
+
+/* =========================
+   Sort labels
+   Maps sort options to UI labels depending on view
+========================= */
+export const getSortLabels = (view) => ({
+    "startDateTime-asc":
+        view === "archives" ? "Oldest first" : "Soonest first",
+
+    "startDateTime-desc":
+        view === "archives" ? "Most recent" : "Farthest first",
+
+    "title-asc": "Title A-Z",
+    "title-desc": "Title Z-A"
+});
 
 /* =========================
    Today filter
@@ -60,10 +75,10 @@ export const getTodayEventFilters = (currentFilters = {}) => {
 };
 
 /* =========================
-   Weekend filter
-   Returns filters for events happening this weekend
+   Current weekend range
+   Returns this weekend dates based on today's date
 ========================= */
-export const getWeekendEventFilters = (currentFilters = {}) => {
+export const getCurrentWeekendDateRange = () => {
     const now = new Date();
     const day = now.getDay(); // 0 = Sunday, 6 = Saturday
 
@@ -74,9 +89,35 @@ export const getWeekendEventFilters = (currentFilters = {}) => {
     sunday.setDate(saturday.getDate() + 1);
 
     return {
-        ...currentFilters,
-        date: "",
         startDate: formatDateForInput(saturday),
         endDate: formatDateForInput(sunday)
+    };
+};
+
+/* =========================
+   Current weekend active state
+   Checks if filters match this weekend exactly
+========================= */
+export const isCurrentWeekendFilterActive = (filters = {}) => {
+    const weekend = getCurrentWeekendDateRange();
+
+    return (
+        filters.startDate === weekend.startDate &&
+        filters.endDate === weekend.endDate
+    );
+};
+
+/* =========================
+   Weekend filter
+   Returns filters for events happening this weekend
+========================= */
+export const getWeekendEventFilters = (currentFilters = {}) => {
+    const weekend = getCurrentWeekendDateRange();
+
+    return {
+        ...currentFilters,
+        date: "",
+        startDate: weekend.startDate,
+        endDate: weekend.endDate
     };
 };

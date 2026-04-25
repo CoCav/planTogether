@@ -105,20 +105,78 @@ project-root
 │   └── server.js
 │
 ├── tests
-│   ├── auth
-│   │   ├── auth.test.js
-│   │   └── profile.test.js
+│   ├── controllers
+│   │   ├── authController.test.js
+│   │   ├── eventController.test.js
+│   │   └── eventMembershipController.test.js
 │   │
-│   ├── events
-│   │   ├── event.test.js
-│   │   ├── event.filter.test.js
-│   │   ├── event.permissions.test.js
-│   │   └── event.validation.test.js
+│   ├── integration
+│   │   ├── app
+│   │   │   └── app.test.js
+│   │   │
+│   │   ├── auth
+│   │   │   ├── login.test.js
+│   │   │   ├── logout.test.js
+│   │   │   ├── password.test.js
+│   │   │   ├── profile.test.js
+│   │   │   └── register.test.js
+│   │   │
+│   │   ├── events
+│   │   │   ├── create.test.js
+│   │   │   ├── delete.test.js
+│   │   │   ├── eventPermissions.test.js
+│   │   │   ├── eventRequestValidation.test.js
+│   │   │   ├── filter.test.js
+│   │   │   ├── getEvents.test.js
+│   │   │   └── update.test.js
+│   │   │
+│   │   └── eventMemberships
+│   │       ├── membersAndOrganizers.test.js
+│   │       ├── membershipPermissions.test.js
+│   │       ├── membershipRequestValidation.test.js
+│   │       ├── myEvents.test.js
+│   │       └── participation.test.js
+│   │ 
+│   ├── middlewares
+│   │   ├── authenticateToken.test.js
+│   │   ├── authorizeEvent.test.js
+│   │   ├── errorHandler.test.js
+│   │   ├── requireEventRole.test.js
+│   │   └── validateRequest.test.js
 │   │
-│   └── memberships
-│       ├── eventMembership.test.js
-│       ├── eventMembership.permissions.test.js
-│       └── eventMembership.validation.test.js
+│   ├── services
+│   │   ├── auth
+│   │   │   ├── loginUser.test.js
+│   │   │   ├── password.test.js
+│   │   │   ├── profile.test.js
+│   │   │   └── registerUser.test.js
+│   │   │
+│   │   ├── events
+│   │   │   ├── createEvent.test.js
+│   │   │   ├── deleteEventById.test.js
+│   │   │   ├── getAllEvents.test.js
+│   │   │   ├── getEventById.test.js
+│   │   │   ├── getFilteredEvents.test.js
+│   │   │   └── updateEventById.test.js
+│   │   │
+│   │   └── eventMemberships
+│   │       ├── joinEvent.test.js
+│   │       ├── leaveEvent.test.js
+│   │       ├── listMembers.test.js
+│   │       ├── listMyEvents.test.js
+│   │       ├── listOrganizers.test.js
+│   │       ├── removeMember.test.js
+│   │       └── updateMemberRole.test.js
+│   │
+│   ├── utils
+│   │   ├── eventQuery.test.js
+│   │   ├── eventTime.test.js
+│   │   └── pagination.test.js
+│   │
+│   └── validators
+│       ├── authValidator.test.js
+│       ├── eventRoleValidator.test.js
+│       └── eventValidator.test.js
 │
 ├── .env
 ├── .env.example
@@ -301,7 +359,9 @@ GET /api/events/filtered?date=2026-04-16
 
 ## 🧪 Testing
 
-The API includes a **comprehensive automated test suite** built with **Jest** and **Supertest**, ensuring reliability across core business logic and endpoints.
+The API includes a **comprehensive automated test suite** built with **Jest** and **Supertest**, covering both API behavior and internal application logic.
+
+These tests ensure the reliability, security, and maintainability of the application.
 
 Run all tests:
 
@@ -310,99 +370,98 @@ npm test
 ```
 
 ### Results
-- ✅ 9 test suites passing
-- ✅ 97 tests passing
-
-### Coverage
-
-#### Core features
-Très bonne section 👏 — elle est déjà claire, technique et crédible.
-On est sur une base équivalente au frontend, ce qui est parfait 💥
-
-👉 Je vais faire un polish structuré + alignement avec le frontend, pour un rendu vraiment propre.
-
-🔍 Ce qui est déjà excellent
-✔ outils mentionnés (Jest + Supertest)
-✔ coverage détaillée (très bon point 💥)
-✔ validation + edge cases (très pro)
-✔ résultats visibles
-
-👉 rien de fond à corriger
-
-🔧 Améliorations utiles
-1. Ajouter une phrase d’impact (important)
-
-👉 comme frontend → renforcer la crédibilité
-
-2. Structurer la section
-
-👉 actuellement tu as :
-
-Coverage includes
-Validation scenarios
-
-👉 on peut rendre ça plus lisible avec des sous-titres
-
-3. Harmoniser wording
-
-👉 ex :
-
-“Coverage includes”
-“Validation scenarios covered”
-
-👉 → unifier
-
-4. Améliorer la partie résultats
-
-👉 frontend = Results
-👉 ici = Current result
-
-👉 on aligne
-
-🚀 VERSION AMÉLIORÉE
-## 🧪 Testing
-
-The API includes a **comprehensive automated test suite** built with **Jest** and **Supertest**, ensuring reliability across core business logic and endpoints.
-
-Run all tests:
-
-
-npm test
-
+- 9 test suites
+- 97 tests
+- ✅ All passing
 
 ---
 
-### Results
+### Test Coverage
 
-- ✅ 9 test suites passing
-- ✅ 97 tests passing
+#### Integration Tests (API)
+
+These tests validate the full request lifecycle:
+
+```
+Request → Middleware → Controller → Service → Database → Response
+```
+
+They simulate real HTTP requests and cover all major API features.
+
+#### 🔐 Authentication
+
+- User registration
+- Login and JWT authentication
+- Logout
+- Profile retrieval and update
+- Password change
 
 ---
 
-### Coverage
+#### 📅 Events
 
-#### Core features
-
-- authentication flows (register, login, logout, profile, password update)
-- profile protection and update validation
-- event CRUD operations
-- event filtering, sorting, and pagination
-- event validation rules
-- event membership flows (join, leave, my events, members, organizers)
-- role-based permissions (organizer, co_organizer, participant)
+- Create, read, update, delete
+- Filtering and pagination
+- Event status (upcoming / past)
+- Role-based permissions:
+  - organizer
+  - co_organizer
+  - participant
+- Request validation
 
 ---
 
-#### Validation & edge cases
+#### 👥 Event Membership
 
-- invalid request bodies
-- invalid route parameters
-- duplicate joins
-- invalid role updates
-- invalid date ordering
-- invalid mode / location combinations
+- Join and leave events
+- Retrieve user events (`/my-events`)
+- List members and organizers
+- Role management:
+  - promote / demote members
+  - remove members
+- Role-based access control
+- Edge cases:
+  - joining twice
+  - leaving without membership
+  - invalid role updates
+  - request validation
 
-👉 This test suite ensures API stability, validates business rules, and prevents regressions across critical backend operations.
+---
+
+#### ⚙️ Application
+
+- Health check endpoint (`/api/health`)
+- Root endpoint
+- Global 404 handling
+
+---
+
+#### 🧩 Internal Module Tests
+
+These tests validate the internal logic of the application:
+
+- Controllers
+  - Request handling
+  - Response structure
+  - Error propagation
+
+- Services
+  - Business logic
+  - Data processing
+  - Rule enforcement
+
+- Middlewares
+  - Authentication (authenticateToken)
+  - Authorization (requireEventRole, authorizeEvent)
+  - Request validation (validateRequest)
+  - Error handling (errorHandler)
+
+- Validators
+  - Input validation using express-validator
+  - Edge cases and invalid payloads
+
+- Utils
+  - Shared helper functions
 
 ---
 

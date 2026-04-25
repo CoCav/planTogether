@@ -1,19 +1,27 @@
 const request = require('supertest');
-const app = require('../../src/app');
-const { initDB, sequelize, User, Event, EventUserRole } = require('../../src/models');
+const app = require('../../../src/app');
+const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
 
-/* ==================================================
-   EVENT MEMBERSHIP VALIDATION TESTS
-   Covers:
-   - cannot join the same event twice
-   - cannot leave an event without being a member
-   - cannot join a nonexistent event
-   - cannot leave a nonexistent event
-   - role update validator
-   - member removal validator
-================================================== */
+/**
+ * Events Membership Integration - Request Validation
+ *
+ * These tests validate event membership request validation via HTTP.
+ *
+ * What is tested:
+ * - Membership edge cases (duplicate join, leaving without membership)
+ * - Nonexistent event handling
+ * - Role update request validation
+ * - Member removal request validation
+ *
+ * Integration scope:
+ * → Auth middleware + Validators + Controller + Service + Database
+ *
+ * Goal:
+ * Ensure invalid membership requests are rejected correctly.
+*/
 
-describe('Event Membership Validation API', () => {
+describe('Event Membership Request Validation API', () => {
+
     /* =========================
        Test database lifecycle
     ========================= */
@@ -37,7 +45,7 @@ describe('Event Membership Validation API', () => {
     ========================= */
 
     const registerUser = async (name, email) => {
-        const registerRes = await request(app)
+        const res = await request(app)
             .post('/api/auth/register')
             .send({
                 name,
@@ -46,7 +54,7 @@ describe('Event Membership Validation API', () => {
             });
 
         return {
-            token: registerRes.body.token,
+            token: res.body.token,
             email
         };
     };
@@ -156,7 +164,7 @@ describe('Event Membership Validation API', () => {
     });
 
     /* =========================
-       Role update validator
+       Role update validation
     ========================= */
 
     it('should reject role update without newRole', async () => {
@@ -247,7 +255,7 @@ describe('Event Membership Validation API', () => {
     });
 
     /* =========================
-       Member removal validator
+       Member removal validation
     ========================= */
 
     it('should reject member removal with non-integer eventId', async () => {

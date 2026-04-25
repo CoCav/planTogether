@@ -12,8 +12,8 @@ const app = express();
 
 // Middleware to parse JSON bodies
 app.use(cors({
-  origin: process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:5173'],
-  credentials: true,
+    origin: process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:5173'],
+    credentials: true,
 }));
 
 app.use(express.json());
@@ -21,12 +21,12 @@ app.use(express.urlencoded({ extended: true }));
 
 // Health check route
 app.get('/api/health', (req, res) => {
-  return res.json({ ok: true, name: 'PlanTogether API' });
+    return res.json({ ok: true, name: 'PlanTogether API' });
 });
 
 // Simple root route
 app.get('/', (req, res) => {
-  res.send('PlanTogether is online !');
+    res.send('PlanTogether is online !');
 });
 
 // Routes (API)
@@ -36,7 +36,7 @@ app.use('/api/events', eventRoutes);
 
 
 app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+    res.status(404).json({ message: 'Route not found' });
 });
 
 // Manage errors

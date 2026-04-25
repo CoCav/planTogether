@@ -11,24 +11,36 @@ import MyEventsPage from "../../pages/MyEventsPage";
 const mockGetMyEvents = vi.fn();
 const mockHandleLeaveEvent = vi.fn();
 
-// API mock
 vi.mock("../../api/eventMembershipApi", () => ({
-    getMyEvents: () => mockGetMyEvents()
+    getMyEvents: (...args) => mockGetMyEvents(...args)
 }));
 
-// Normalize mock
 vi.mock("../../features/events/normalizeData", () => ({
     getMyEventsWithRole: (response) => response?.data?.events || []
 }));
 
-// Hook mock
 vi.mock("../../hooks/useEventActionsWithConfirm", () => ({
     default: () => ({
         handleLeaveEvent: mockHandleLeaveEvent
     })
 }));
 
-// UI mocks
+vi.mock("../../components/ui/EventCard", () => ({
+    default: ({ event, onLeave }) => (
+        <div>
+            <span>{event.title}</span>
+
+            {event.role !== "organizer" && event.status !== "past" && (
+                <button type="button" onClick={() => onLeave(event.id)}>
+                    Leave
+                </button>
+            )}
+
+            {event.status === "past" && <span>Ended</span>}
+        </div>
+    )
+}));
+
 vi.mock("../../components/ui/LoadingState", () => ({
     default: ({ children }) => <div>{children}</div>
 }));
@@ -37,13 +49,19 @@ vi.mock("../../components/ui/EmptyState", () => ({
     default: ({ children }) => <div>{children}</div>
 }));
 
-vi.mock("../../components/ui/Badge", () => ({
-    default: ({ role }) => <span>{role}</span>
-}));
+// ----------------------
+// Helpers
+// ----------------------
 
-// ----------------------
-// Helper
-// ----------------------
+const createResponse = ({ events = [], page = 1, pageSize = 4, totalPages = 1, totalEvents = events.length } = {}) => ({
+    data: {
+        events,
+        page,
+        pageSize,
+        totalPages,
+        totalEvents
+    }
+});
 
 function renderPage() {
     return render(
@@ -62,93 +80,182 @@ describe("MyEventsPage", () => {
         vi.clearAllMocks();
     });
 
-    it("should display loading state initially", async () => {
-        mockGetMyEvents.mockResolvedValue({
-            data: {
-                events: []
-            }
-        });
+    it("should display loading state initially", () => {
+        mockGetMyEvents.mockResolvedValue(createResponse());
 
         renderPage();
 
         expect(screen.getByText(/loading events/i)).toBeInTheDocument();
     });
 
-    it("should display created and joined events in separate sections", async () => {
-        mockGetMyEvents.mockResolvedValue({
-            data: {
+    it("should call API with default created view params", async () => {
+        mockGetMyEvents.mockResolvedValue(createResponse());
+
+        renderPage();
+
+        await waitFor(() => {
+            expect(mockGetMyEvents).toHaveBeenCalledWith({
+                view: "created",
+                page: 1,
+                pageSize: 4,
+                sortBy: "startDateTime",
+                order: "asc"
+            });
+        });
+    });
+
+    it("should display events returned by API", async () => {
+        mockGetMyEvents.mockResolvedValue(
+            createResponse({
                 events: [
-                    { id: 1, title: "Created Event", role: "organizer" },
                     {
-                        id: 2,
-                        title: "Joined Event",
-                        role: "participant",
-                        creatorName: "Alice"
+                        id: 1,
+                        title: "Created Event",
+                        role: "organizer",
+                        status: "upcoming"
                     }
-                ]
-            }
-        });
+                ],
+                totalEvents: 1
+            })
+        );
 
         renderPage();
 
-        await waitFor(() => {
-            expect(screen.getByText("Created Event")).toBeInTheDocument();
-            expect(screen.getByText("Joined Event")).toBeInTheDocument();
-        });
-
+        expect(await screen.findByText("Created Event")).toBeInTheDocument();
         expect(screen.getByText(/created events/i)).toBeInTheDocument();
-        expect(screen.getByText(/joined events/i)).toBeInTheDocument();
-        expect(screen.getByText(/👑 Alice/i)).toBeInTheDocument();
+        expect(screen.getByText("(1)")).toBeInTheDocument();
     });
 
-    it("should display empty states when user has no events", async () => {
-        mockGetMyEvents.mockResolvedValue({
-            data: {
-                events: []
-            }
-        });
+    it("should display empty state when current view has no events", async () => {
+        mockGetMyEvents.mockResolvedValue(createResponse());
 
         renderPage();
 
-        await waitFor(() => {
-            expect(screen.getByText(/no created events/i)).toBeInTheDocument();
-            expect(screen.getByText(/no joined events/i)).toBeInTheDocument();
-        });
+        expect(await screen.findByText(/you haven’t created any events yet/i)).toBeInTheDocument();
     });
 
-    it("should show leave button only for joined events", async () => {
-        mockGetMyEvents.mockResolvedValue({
-            data: {
-                events: [
-                    { id: 1, title: "Created Event", role: "organizer" },
-                    { id: 2, title: "Joined Event", role: "participant" }
-                ]
-            }
-        });
+    it("should change view when clicking Joined tab", async () => {
+        const user = userEvent.setup();
+
+        mockGetMyEvents
+            .mockResolvedValueOnce(createResponse())
+            .mockResolvedValueOnce(
+                createResponse({
+                    events: [
+                        {
+                            id: 2,
+                            title: "Joined Event",
+                            role: "participant",
+                            status: "upcoming"
+                        }
+                    ],
+                    totalEvents: 1
+                })
+            );
 
         renderPage();
 
+        await screen.findByText(/you haven’t created any events yet/i);
+
+        await user.click(screen.getByRole("button", { name: /^joined$/i }));
+
         await waitFor(() => {
-            expect(screen.getByText("Created Event")).toBeInTheDocument();
-            expect(screen.getByText("Joined Event")).toBeInTheDocument();
+            expect(mockGetMyEvents).toHaveBeenLastCalledWith({
+                view: "joined",
+                page: 1,
+                pageSize: 4,
+                sortBy: "startDateTime",
+                order: "asc"
+            });
         });
 
-        const leaveButtons = screen.getAllByRole("button", { name: /leave/i });
-        expect(leaveButtons).toHaveLength(1);
+        expect(await screen.findByText("Joined Event")).toBeInTheDocument();
+    });
+
+    it("should call API with sort params when changing sort option", async () => {
+        const user = userEvent.setup();
+
+        mockGetMyEvents
+            .mockResolvedValueOnce(createResponse())
+            .mockResolvedValueOnce(createResponse());
+
+        renderPage();
+
+        await screen.findByText(/you haven’t created any events yet/i);
+
+        await user.selectOptions(screen.getByRole("combobox"), "title-asc");
+
+        await waitFor(() => {
+            expect(mockGetMyEvents).toHaveBeenLastCalledWith({
+                view: "created",
+                page: 1,
+                pageSize: 4,
+                sortBy: "title",
+                order: "asc"
+            });
+        });
+    });
+
+    it("should go to next page", async () => {
+        const user = userEvent.setup();
+
+        mockGetMyEvents
+            .mockResolvedValueOnce(
+                createResponse({
+                    events: [{ id: 1, title: "Event Page 1", role: "organizer" }],
+                    page: 1,
+                    totalPages: 2,
+                    totalEvents: 5
+                })
+            )
+            .mockResolvedValueOnce(
+                createResponse({
+                    events: [{ id: 2, title: "Event Page 2", role: "organizer" }],
+                    page: 2,
+                    totalPages: 2,
+                    totalEvents: 5
+                })
+            );
+
+        renderPage();
+
+        expect(await screen.findByText("Event Page 1")).toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", { name: /next/i }));
+
+        await waitFor(() => {
+            expect(mockGetMyEvents).toHaveBeenLastCalledWith({
+                view: "created",
+                page: 2,
+                pageSize: 4,
+                sortBy: "startDateTime",
+                order: "asc"
+            });
+        });
+
+        expect(await screen.findByText("Event Page 2")).toBeInTheDocument();
     });
 
     it("should call handleLeaveEvent when clicking leave", async () => {
         const user = userEvent.setup();
 
-        mockGetMyEvents.mockResolvedValue({
-            data: {
-                events: [{ id: 2, title: "Joined Event", role: "participant" }]
-            }
-        });
+        mockGetMyEvents.mockResolvedValue(
+            createResponse({
+                events: [
+                    {
+                        id: 2,
+                        title: "Joined Event",
+                        role: "participant",
+                        status: "upcoming"
+                    }
+                ],
+                totalEvents: 1
+            })
+        );
 
         renderPage();
 
-        await waitFor(() => { expect(screen.getByText("Joined Event")).toBeInTheDocument() });
+        expect(await screen.findByText("Joined Event")).toBeInTheDocument();
 
         await user.click(screen.getByRole("button", { name: /leave/i }));
 
@@ -160,6 +267,6 @@ describe("MyEventsPage", () => {
 
         renderPage();
 
-        await waitFor(() => { expect(screen.getByText(/unable to load your events/i)).toBeInTheDocument() });
+        expect(await screen.findByText(/failed to load your events/i)).toBeInTheDocument();
     });
 });

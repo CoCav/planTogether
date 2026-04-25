@@ -10,11 +10,13 @@ import HomePage from "../../pages/HomePage";
 const mockGetAllEvents = vi.fn();
 const mockGetMyEvents = vi.fn();
 
-// Auth mock
+let mockAuthState = {
+    user: null
+};
+
+// Auth mock (dynamic)
 vi.mock("../../context/useAuth", () => ({
-    useAuth: () => ({
-        user: null
-    })
+    useAuth: () => mockAuthState
 }));
 
 // API mocks
@@ -29,12 +31,17 @@ vi.mock("../../api/eventMembershipApi", () => ({
 // Normalize mock
 vi.mock("../../features/events/normalizeData", () => ({
     getNormalizedEvents: (res) => res?.data?.events || [],
-    getMyEventsWithRole: () => []
+    getMyEventsWithRole: (res) => res?.data?.events || []
 }));
 
 // UI mocks
 vi.mock("../../components/ui/EventCard", () => ({
-    default: ({ event }) => <div>{event.title}</div>
+    default: ({ event, role }) => (
+        <div>
+            <span>{event.title}</span>
+            {role && <span>role: {role}</span>}
+        </div>
+    )
 }));
 
 vi.mock("../../components/ui/LoadingState", () => ({
@@ -76,9 +83,10 @@ function renderPage() {
 describe("HomePage", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        mockAuthState = { user: null };
     });
 
-    it("should render hero section and main actions", async () => {
+    it("should render hero section and main actions", () => {
         mockGetAllEvents.mockResolvedValue({ data: { events: [] } });
 
         renderPage();
@@ -87,9 +95,9 @@ describe("HomePage", () => {
 
         expect(screen.getByRole("button", { name: /browse events/i })).toBeInTheDocument();
         expect(screen.getByRole("button", { name: /create account/i })).toBeInTheDocument();
-  });
+    });
 
-    it("should display loading state", async () => {
+    it("should display loading state", () => {
         mockGetAllEvents.mockResolvedValue({ data: { events: [] } });
 
         renderPage();
@@ -122,7 +130,9 @@ describe("HomePage", () => {
 
         renderPage();
 
-        await waitFor(() => { expect(screen.getByText(/no events yet/i)).toBeInTheDocument() });
+        await waitFor(() => {
+            expect(screen.getByText(/no events yet/i)).toBeInTheDocument();
+        });
     });
 
     it("should display error message when API fails", async () => {
@@ -130,6 +140,70 @@ describe("HomePage", () => {
 
         renderPage();
 
-        await waitFor(() => { expect(screen.getByText(/failed to load events/i)).toBeInTheDocument() });
+        await waitFor(() => {
+            expect(screen.getByText(/failed to load events/i)).toBeInTheDocument();
+        });
+    });
+
+    it("should show create event action when user is authenticated", () => {
+        mockAuthState = {
+            user: { id: 1 }
+        };
+
+        mockGetAllEvents.mockResolvedValue({ data: { events: [] } });
+        mockGetMyEvents.mockResolvedValue({ data: { events: [] } });
+
+        renderPage();
+
+        expect(screen.getByRole("button", { name: /create event/i })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /create account/i })).not.toBeInTheDocument();
+    });
+
+    it("should load user memberships and pass role to event cards", async () => {
+        mockAuthState = {
+            user: { id: 1 }
+        };
+
+        mockGetAllEvents.mockResolvedValue({
+            data: {
+                events: [{ id: 1, title: "Joined Event" }]
+            }
+        });
+
+        mockGetMyEvents.mockResolvedValue({
+            data: {
+                events: [
+                    {
+                        id: 1,
+                        role: "participant"
+                    }
+                ]
+            }
+        });
+
+        renderPage();
+
+        expect(await screen.findByText("Joined Event")).toBeInTheDocument();
+        expect(screen.getByText(/role: participant/i)).toBeInTheDocument();
+    });
+
+    it("should display only the first 4 events", async () => {
+        mockGetAllEvents.mockResolvedValue({
+            data: {
+                events: [
+                    { id: 1, title: "Event 1" },
+                    { id: 2, title: "Event 2" },
+                    { id: 3, title: "Event 3" },
+                    { id: 4, title: "Event 4" },
+                    { id: 5, title: "Event 5" }
+                ]
+            }
+        });
+
+        renderPage();
+
+        expect(await screen.findByText("Event 1")).toBeInTheDocument();
+        expect(screen.getByText("Event 4")).toBeInTheDocument();
+        expect(screen.queryByText("Event 5")).not.toBeInTheDocument();
     });
 });

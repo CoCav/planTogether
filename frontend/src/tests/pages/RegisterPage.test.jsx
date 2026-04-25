@@ -38,9 +38,20 @@ vi.mock("../../api/authApi", () => ({
 vi.mock("../../features/auth/authValidation.js", () => ({
     validateRegisterForm: vi.fn((form) => {
         const errors = {};
+
         if (!form.name) errors.name = "Name is required";
         if (!form.email) errors.email = "Email is required";
-        if (!form.password) errors.password = "Password is required";
+
+        if (!form.password) {
+            errors.password = "Password is required";
+        } else if (form.password === "weak") {
+            errors.password = [
+                "Password must contain at least 6 characters",
+                "Password must contain at least 1 uppercase",
+                "Password must contain at least 1 number"
+            ];
+        }
+
         return errors;
     })
 }));
@@ -123,22 +134,35 @@ describe("RegisterPage", () => {
         expect(passwordInput).toHaveAttribute("type", "password");
     });
 
+    it("should display multiple password validation errors", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await user.type(screen.getByPlaceholderText(/your name/i), "John Doe");
+        await user.type(screen.getByPlaceholderText(/your email/i), "john@test.com");
+        await user.type(screen.getByPlaceholderText(/choose a password/i), "weak");
+
+        await user.click(screen.getByRole("button", { name: /^register$/i }));
+
+        expect(screen.getByText(/password must contain at least 6 characters/i)).toBeInTheDocument();
+        expect(screen.getByText(/password must contain at least 1 uppercase/i)).toBeInTheDocument();
+        expect(screen.getByText(/password must contain at least 1 number/i)).toBeInTheDocument();
+
+        expect(mockRegisterUser).not.toHaveBeenCalled();
+    });
+
     it("should register successfully and redirect", async () => {
         const user = userEvent.setup();
 
         mockRegisterUser.mockResolvedValue({ data: { token: "fake-token" } });
-
         mockLogin.mockResolvedValue();
 
         renderPage();
 
-        const nameInput = screen.getByPlaceholderText(/your name/i);
-        const emailInput = screen.getByPlaceholderText(/your email/i);
-        const passwordInput = screen.getByPlaceholderText(/choose a password/i);
-
-        await user.type(nameInput, "John Doe");
-        await user.type(emailInput, "john@test.com");
-        await user.type(passwordInput, "Password123");
+        await user.type(screen.getByPlaceholderText(/your name/i), "John Doe");
+        await user.type(screen.getByPlaceholderText(/your email/i), "john@test.com");
+        await user.type(screen.getByPlaceholderText(/choose a password/i), "Password123");
 
         await user.click(screen.getByRole("button", { name: /^register$/i }));
 
@@ -161,17 +185,15 @@ describe("RegisterPage", () => {
 
         renderPage();
 
-        const nameInput = screen.getByPlaceholderText(/your name/i);
-        const emailInput = screen.getByPlaceholderText(/your email/i);
-        const passwordInput = screen.getByPlaceholderText(/choose a password/i);
-
-        await user.type(nameInput, "John Doe");
-        await user.type(emailInput, "john@test.com");
-        await user.type(passwordInput, "Password123");
+        await user.type(screen.getByPlaceholderText(/your name/i), "John Doe");
+        await user.type(screen.getByPlaceholderText(/your email/i), "john@test.com");
+        await user.type(screen.getByPlaceholderText(/choose a password/i), "Password123");
 
         await user.click(screen.getByRole("button", { name: /^register$/i }));
 
-        await waitFor(() => { expect(screen.getByText(/unable to register\. please check your information\./i)).toBeInTheDocument() });
+        await waitFor(() => {
+            expect(screen.getByText(/unable to register\. please check your information\./i)).toBeInTheDocument();
+        });
 
         expect(mockLogin).not.toHaveBeenCalled();
         expect(mockNavigate).not.toHaveBeenCalled();

@@ -12,43 +12,45 @@ const mockNavigate = vi.fn();
 const mockLogin = vi.fn();
 const mockLoginUser = vi.fn();
 
+let mockLocationState = {
+    from: {
+        pathname: "/events/42/edit"
+    },
+};
+
 // Router mock
 vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual("react-router-dom");
+    const actual = await vi.importActual("react-router-dom");
 
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-    useLocation: () => ({
-      state: {
-        from: {
-          pathname: "/events/42/edit"
-        }
-      }
-    })
-  };
+    return {
+        ...actual,
+        useNavigate: () => mockNavigate,
+        useLocation: () => ({
+            state: mockLocationState
+        }),
+    };
 });
 
 // Auth context mock
 vi.mock("../../context/useAuth.js", () => ({
-  useAuth: () => ({
-    login: mockLogin
-  })
+    useAuth: () => ({
+        login: mockLogin
+    }),
 }));
 
 // API mock
 vi.mock("../../api/authApi", () => ({
-  loginUser: (...args) => mockLoginUser(...args)
+    loginUser: (...args) => mockLoginUser(...args)
 }));
 
 // Validation mock
 vi.mock("../../features/auth/authValidation.js", () => ({
-  validateLoginForm: vi.fn((form) => {
-    const errors = {};
-    if (!form.email) errors.email = "Email is required";
-    if (!form.password) errors.password = "Password is required";
-    return errors;
-  })
+    validateLoginForm: vi.fn((form) => {
+        const errors = {};
+        if (!form.email) errors.email = "Email is required";
+        if (!form.password) errors.password = "Password is required";
+        return errors;
+    }),
 }));
 
 // ----------------------
@@ -56,11 +58,11 @@ vi.mock("../../features/auth/authValidation.js", () => ({
 // ----------------------
 
 function renderPage() {
-  return render(
-    <MemoryRouter>
-      <LoginPage />
-    </MemoryRouter>
-  );
+    return render(
+        <MemoryRouter>
+            <LoginPage />
+        </MemoryRouter>
+    );
 }
 
 // ----------------------
@@ -68,104 +70,126 @@ function renderPage() {
 // ----------------------
 
 describe("LoginPage", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+    beforeEach(() => {
+        vi.clearAllMocks();
 
-  it("should render the login form", () => {
-    renderPage();
+        mockLocationState = {
+            from: {
+                pathname: "/events/42/edit"
+            },
+        };
+    });
 
-    expect(screen.getByRole("heading", { name: /login/i })).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/your email/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/your password/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^login$/i })).toBeInTheDocument();
-    expect(screen.getByRole("checkbox")).toBeInTheDocument();
-  });
+    it("should render the login form", () => {
+        renderPage();
 
-  it("should show validation errors when submitting empty form", async () => {
-    const user = userEvent.setup();
-    renderPage();
+        expect(screen.getByRole("heading", { name: /login/i })).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(/your email/i)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(/your password/i)).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /^login$/i })).toBeInTheDocument();
+        expect(screen.getByRole("checkbox")).toBeInTheDocument();
+    });
 
-    await user.click(screen.getByRole("button", { name: /^login$/i }));
+    it("should show validation errors when submitting empty form", async () => {
+        const user = userEvent.setup();
+        renderPage();
 
-    expect(screen.getByText(/email is required/i)).toBeInTheDocument();
-    expect(screen.getByText(/password is required/i)).toBeInTheDocument();
+        await user.click(screen.getByRole("button", { name: /^login$/i }));
 
-    expect(mockLoginUser).not.toHaveBeenCalled();
-  });
+        expect(screen.getByText(/email is required/i)).toBeInTheDocument();
+        expect(screen.getByText(/password is required/i)).toBeInTheDocument();
 
-  it("should toggle password visibility", async () => {
-    const user = userEvent.setup();
-    renderPage();
+        expect(mockLoginUser).not.toHaveBeenCalled();
+    });
 
-    const passwordInput = screen.getByPlaceholderText(/your password/i);
+    it("should toggle password visibility", async () => {
+        const user = userEvent.setup();
+        renderPage();
 
-    expect(passwordInput).toHaveAttribute("type", "password");
+        const passwordInput = screen.getByPlaceholderText(/your password/i);
+        expect(passwordInput).toHaveAttribute("type", "password");
 
-    await user.click(screen.getByRole("button", { name: /show/i }));
-    expect(passwordInput).toHaveAttribute("type", "text");
+        await user.click(screen.getByRole("button", { name: /show/i }));
+        expect(passwordInput).toHaveAttribute("type", "text");
 
-    await user.click(screen.getByRole("button", { name: /hide/i }));
-    expect(passwordInput).toHaveAttribute("type", "password");
-  });
+        await user.click(screen.getByRole("button", { name: /hide/i }));
+        expect(passwordInput).toHaveAttribute("type", "password");
+    });
 
-  it("should allow remember me to be checked", async () => {
-    const user = userEvent.setup();
-    renderPage();
+    it("should allow remember me to be checked", async () => {
+        const user = userEvent.setup();
+        renderPage();
 
-    const checkbox = screen.getByRole("checkbox");
+        const checkbox = screen.getByRole("checkbox");
+        expect(checkbox).not.toBeChecked();
 
-    expect(checkbox).not.toBeChecked();
+        await user.click(checkbox);
+        expect(checkbox).toBeChecked();
+    });
 
-    await user.click(checkbox);
+    it("should login successfully and redirect to previous page", async () => {
+        const user = userEvent.setup();
 
-    expect(checkbox).toBeChecked();
-  });
+        mockLoginUser.mockResolvedValue({ data: { token: "fake-token" } });
+        mockLogin.mockResolvedValue();
 
-  it("should login successfully and redirect to previous page", async () => {
-    const user = userEvent.setup();
+        renderPage();
 
-    mockLoginUser.mockResolvedValue({ data: { token: "fake-token" } });
+        await user.type(screen.getByPlaceholderText(/your email/i), "test@test.com");
+        await user.type(screen.getByPlaceholderText(/your password/i), "Password123");
 
-    mockLogin.mockResolvedValue();
+        await user.click(screen.getByRole("checkbox"));
+        await user.click(screen.getByRole("button", { name: /^login$/i }));
 
-    renderPage();
+        await waitFor(() => {
+            expect(mockLoginUser).toHaveBeenCalledWith({
+                email: "test@test.com",
+                password: "Password123"
+            });
+        });
 
-    const emailInput = screen.getByPlaceholderText(/your email/i);
-    const passwordInput = screen.getByPlaceholderText(/your password/i);
+        expect(mockLogin).toHaveBeenCalledWith("fake-token", true);
 
-    await user.type(emailInput, "test@test.com");
-    await user.type(passwordInput, "Password123");
+        expect(mockNavigate).toHaveBeenCalledWith("/events/42/edit", { replace: true });
+    });
 
-    await user.click(screen.getByRole("checkbox"));
+    it("should redirect to events page by default after login", async () => {
+        const user = userEvent.setup();
 
-    await user.click(screen.getByRole("button", { name: /^login$/i }));
+        mockLocationState = null;
 
-    await waitFor(() => { expect(mockLoginUser).toHaveBeenCalledWith({ email: "test@test.com", password: "Password123" }) });
+        mockLoginUser.mockResolvedValue({ data: { token: "fake-token" } });
+        mockLogin.mockResolvedValue();
 
-    expect(mockLogin).toHaveBeenCalledWith("fake-token", true);
+        renderPage();
 
-    expect(mockNavigate).toHaveBeenCalledWith("/events/42/edit", { replace: true });
-  });
+        await user.type(screen.getByPlaceholderText(/your email/i), "test@test.com");
+        await user.type(screen.getByPlaceholderText(/your password/i), "Password123");
 
-  it("should show an error message when login fails", async () => {
-    const user = userEvent.setup();
+        await user.click(screen.getByRole("button", { name: /^login$/i }));
 
-    mockLoginUser.mockRejectedValue(new Error("Login failed"));
+        await waitFor(() => {
+            expect(mockNavigate).toHaveBeenCalledWith("/events", { replace: true });
+        });
+    });
 
-    renderPage();
+    it("should show an error message when login fails", async () => {
+        const user = userEvent.setup();
 
-    const emailInput = screen.getByPlaceholderText(/your email/i);
-    const passwordInput = screen.getByPlaceholderText(/your password/i);
+        mockLoginUser.mockRejectedValue(new Error("Login failed"));
 
-    await user.type(emailInput, "test@test.com");
-    await user.type(passwordInput, "Password123");
+        renderPage();
 
-    await user.click(screen.getByRole("button", { name: /^login$/i }));
+        await user.type(screen.getByPlaceholderText(/your email/i), "test@test.com");
+        await user.type(screen.getByPlaceholderText(/your password/i), "Password123");
 
-    await waitFor(() => { expect(screen.getByText(/unable to login\. please check your credentials\./i)).toBeInTheDocument() });
+        await user.click(screen.getByRole("button", { name: /^login$/i }));
 
-    expect(mockLogin).not.toHaveBeenCalled();
-    expect(mockNavigate).not.toHaveBeenCalled();
-  });
+        await waitFor(() => {
+            expect(screen.getByText(/unable to login\. please check your credentials\./i)).toBeInTheDocument();
+        });
+
+        expect(mockLogin).not.toHaveBeenCalled();
+        expect(mockNavigate).not.toHaveBeenCalled();
+    });
 });

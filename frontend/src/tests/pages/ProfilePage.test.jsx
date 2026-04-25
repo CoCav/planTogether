@@ -12,15 +12,17 @@ const mockUpdateProfile = vi.fn();
 const mockChangePassword = vi.fn();
 const mockRefreshUser = vi.fn();
 
+let mockAuthState = {
+    user: {
+        name: "John Doe",
+        email: "john@test.com"
+    },
+    refreshUser: mockRefreshUser
+};
+
 // Auth mock
 vi.mock("../../context/useAuth", () => ({
-    useAuth: () => ({
-        user: {
-            name: "John Doe",
-            email: "john@test.com"
-        },
-        refreshUser: mockRefreshUser
-    })
+    useAuth: () => mockAuthState
 }));
 
 // API mock
@@ -33,8 +35,10 @@ vi.mock("../../api/authApi", () => ({
 vi.mock("../../features/auth/authValidation", () => ({
     validateProfileForm: vi.fn((form) => {
         const errors = {};
+
         if (!form.name) errors.name = "Name is required";
         if (!form.email) errors.email = "Email is required";
+
         return errors;
     }),
     validateChangePasswordForm: vi.fn(() => ({}))
@@ -64,6 +68,25 @@ function renderPage() {
 describe("ProfilePage", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+
+        mockAuthState = {
+            user: {
+                name: "John Doe",
+                email: "john@test.com"
+            },
+            refreshUser: mockRefreshUser
+        };
+    });
+
+    it("should show loading state when user is not available", () => {
+        mockAuthState = {
+            user: null,
+            refreshUser: mockRefreshUser
+        };
+
+        renderPage();
+
+        expect(screen.getByText(/loading profile/i)).toBeInTheDocument();
     });
 
     it("should display user profile data", () => {
@@ -75,6 +98,7 @@ describe("ProfilePage", () => {
 
     it("should show validation errors when profile form is empty", async () => {
         const user = userEvent.setup();
+
         renderPage();
 
         await user.clear(screen.getByDisplayValue("John Doe"));
@@ -88,6 +112,7 @@ describe("ProfilePage", () => {
 
     it("should update profile successfully", async () => {
         const user = userEvent.setup();
+
         mockUpdateProfile.mockResolvedValue({});
 
         renderPage();
@@ -95,7 +120,9 @@ describe("ProfilePage", () => {
         await user.type(screen.getByDisplayValue("John Doe"), " Updated");
         await user.click(screen.getByRole("button", { name: /update profile/i }));
 
-        await waitFor(() => { expect(mockUpdateProfile).toHaveBeenCalled() });
+        await waitFor(() => {
+            expect(mockUpdateProfile).toHaveBeenCalled();
+        });
 
         expect(mockRefreshUser).toHaveBeenCalled();
         expect(screen.getByText(/profile updated successfully/i)).toBeInTheDocument();
@@ -103,26 +130,28 @@ describe("ProfilePage", () => {
 
     it("should show error when profile update fails", async () => {
         const user = userEvent.setup();
+
         mockUpdateProfile.mockRejectedValue(new Error("API error"));
 
         renderPage();
 
         await user.click(screen.getByRole("button", { name: /update profile/i }));
 
-        await waitFor(() => { expect(screen.getByText(/unable to update profile/i)).toBeInTheDocument() });
+        expect(await screen.findByText(/unable to update profile/i)).toBeInTheDocument();
     });
 
-  // ----------------------
-  // Password tests
-  // ----------------------
+    // ----------------------
+    // Password tests
+    // ----------------------
 
     it("should show validation error when passwords do not match", async () => {
         const user = userEvent.setup();
+
         renderPage();
 
         await user.type(screen.getByPlaceholderText(/current password/i), "oldpass");
         await user.type(document.querySelector('input[name="newPassword"]'), "newpass");
-        await user.type(document.querySelector('input[name="confirmPassword"]'),"different");
+        await user.type(document.querySelector('input[name="confirmPassword"]'), "different");
 
         await user.click(screen.getByRole("button", { name: /update password/i }));
 
@@ -130,19 +159,55 @@ describe("ProfilePage", () => {
         expect(mockChangePassword).not.toHaveBeenCalled();
     });
 
+    it("should show validation error when new password matches current password", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await user.type(screen.getByPlaceholderText(/current password/i), "samepass");
+        await user.type(document.querySelector('input[name="newPassword"]'), "samepass");
+        await user.type(document.querySelector('input[name="confirmPassword"]'), "samepass");
+
+        await user.click(screen.getByRole("button", { name: /update password/i }));
+
+        expect(screen.getByText(/new password must be different from current password/i)).toBeInTheDocument();
+
+        expect(mockChangePassword).not.toHaveBeenCalled();
+    });
+
+    it("should show validation error when confirm password is empty", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await user.type(screen.getByPlaceholderText(/current password/i), "oldpass");
+        await user.type(document.querySelector('input[name="newPassword"]'), "newpass");
+
+        await user.click(screen.getByRole("button", { name: /update password/i }));
+
+        expect(screen.getByText(/confirm password is required/i)).toBeInTheDocument();
+        expect(mockChangePassword).not.toHaveBeenCalled();
+    });
+
     it("should update password successfully", async () => {
         const user = userEvent.setup();
+
         mockChangePassword.mockResolvedValue({});
 
         renderPage();
 
         await user.type(screen.getByPlaceholderText(/current password/i), "oldpass");
         await user.type(document.querySelector('input[name="newPassword"]'), "newpass");
-        await user.type(document.querySelector('input[name="confirmPassword"]'),"newpass");
+        await user.type(document.querySelector('input[name="confirmPassword"]'), "newpass");
 
         await user.click(screen.getByRole("button", { name: /update password/i }));
 
-        await waitFor(() => { expect(mockChangePassword).toHaveBeenCalled() });
+        await waitFor(() => {
+            expect(mockChangePassword).toHaveBeenCalledWith({
+                currentPassword: "oldpass",
+                newPassword: "newpass"
+            });
+        });
 
         expect(screen.getByText(/password updated successfully/i)).toBeInTheDocument();
     });
@@ -161,15 +226,37 @@ describe("ProfilePage", () => {
 
         await user.type(screen.getByPlaceholderText(/current password/i), "wrong");
         await user.type(document.querySelector('input[name="newPassword"]'), "newpass");
-        await user.type(document.querySelector('input[name="confirmPassword"]'),"newpass");
+        await user.type(document.querySelector('input[name="confirmPassword"]'), "newpass");
 
         await user.click(screen.getByRole("button", { name: /update password/i }));
 
-        await waitFor(() => { expect(screen.getByText(/wrong password/i)).toBeInTheDocument() });
+        expect(await screen.findByText(/wrong password/i)).toBeInTheDocument();
+    });
+
+    it("should show API error under new password when backend rejects it", async () => {
+        const user = userEvent.setup();
+
+        mockChangePassword.mockRejectedValue({
+            response: {
+                status: 400,
+                data: { message: "New password is too weak" }
+            }
+        });
+
+        renderPage();
+
+        await user.type(screen.getByPlaceholderText(/current password/i), "oldpass");
+        await user.type(document.querySelector('input[name="newPassword"]'), "weakpass");
+        await user.type(document.querySelector('input[name="confirmPassword"]'), "weakpass");
+
+        await user.click(screen.getByRole("button", { name: /update password/i }));
+
+        expect(await screen.findByText(/new password is too weak/i)).toBeInTheDocument();
     });
 
     it("should toggle password visibility", async () => {
         const user = userEvent.setup();
+
         renderPage();
 
         const passwordInput = screen.getByPlaceholderText(/current password/i);

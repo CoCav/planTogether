@@ -456,8 +456,6 @@ These tests validate the internal logic of the application independently from HT
 - **Utils**
   - Shared helper functions
 
----
-
 ### 🔁 Test Strategy
 
 - Integration tests run against the real Express application

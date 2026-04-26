@@ -14,7 +14,7 @@ PlanTogether helps users organize and collaborate on events efficiently through 
 ![Node](https://img.shields.io/badge/node-%3E%3D18-green)
 
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
-![Tests](https://img.shields.io/badge/tests-97%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-318%20tests-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-high-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)

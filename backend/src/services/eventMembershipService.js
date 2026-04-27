@@ -22,6 +22,29 @@ const joinEvent = async ({ eventId, userId }) => {
         // Check if event is in the past
         assertEventNotPast(event);
 
+        // Check registration deadline
+        if (event.registrationDeadline && new Date() > new Date(event.registrationDeadline)) {
+            const error = new Error('Registration period is over for this event');
+            error.statusCode = 409;
+            throw error;
+        }
+
+        // Check max participants limit
+        if (event.maxParticipants !== null) {
+            const participantCount = await EventUserRole.count({
+                where: {    
+                    eventId, 
+                    role: 'participant' 
+                }
+            });
+
+            if (participantCount >= event.maxParticipants) {
+                const error = new Error('Event has reached maximum number of participants');
+                error.statusCode = 409;
+                throw error;
+            }
+        }
+
         // Check if user already joined the event
         const existingMembership = await EventUserRole.findOne({ where: { eventId, userId } });
 
@@ -144,13 +167,15 @@ const listMyEvents = async (userId, query = {}) => {
                 attributes: [
                     "id",
                     "title",
+                    "description",   
                     "type",
                     "theme",
-                    "description",
+                     "mode",
+                    "location",
                     "startDateTime",
                     "endDateTime",
-                    "mode",
-                    "location",
+                    "maxParticipants",
+                    "registrationDeadline",
                     "creatorId"
                 ],
                 include: [

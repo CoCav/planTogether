@@ -100,11 +100,6 @@ describe('Update Event API', () => {
             });
 
         expect(res.statusCode).toBe(200);
-
-        /* =========================
-           Response structure
-        ========================= */
-
         expect(res.body).toHaveProperty('message', 'Event updated successfully');
         expect(res.body).toHaveProperty('event');
 
@@ -172,5 +167,53 @@ describe('Update Event API', () => {
             });
 
         expect(res.statusCode).toBe(403);
+    });
+
+    it('should allow an organizer to update participant limit and registration deadline', async () => {
+        const token = await registerAndGetToken(
+            'Limit Updater',
+            `limitupdater${Date.now()}@test.com`
+        );
+
+        const event = await createEvent(token);
+
+        const res = await request(app)
+            .put(`/api/events/${event.id}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                ...getValidEventPayload(),
+                maxParticipants: 50,
+                registrationDeadline: '2026-12-29T10:00:00.000Z'
+            });
+
+        expect(res.statusCode).toBe(200);
+
+        expect(res.body.event).toMatchObject({
+            id: event.id,
+            maxParticipants: 50
+        });
+
+        expect(new Date(res.body.event.registrationDeadline).toISOString())
+            .toBe('2026-12-29T10:00:00.000Z');
+    });
+
+    it('should reject update when registration deadline is after event start', async () => {
+        const token = await registerAndGetToken(
+            'Invalid Deadline Updater',
+            `invaliddeadlineupdate${Date.now()}@test.com`
+        );
+
+        const event = await createEvent(token);
+
+        const res = await request(app)
+            .put(`/api/events/${event.id}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                ...getValidEventPayload(),
+                registrationDeadline: '2026-12-31T11:00:00.000Z'
+            });
+
+        expect(res.statusCode).toBe(400);
+        expect(res.body.success).toBe(false);
     });
 });

@@ -18,7 +18,8 @@ jest.mock("../../../src/models/eventModel", () => ({
 
 jest.mock("../../../src/models/relations/eventUserRoleModel", () => ({
     findOne: jest.fn(),
-    create: jest.fn()
+    create: jest.fn(),
+    count: jest.fn()
 }));
 
 jest.mock("../../../src/utils/eventTime", () => ({
@@ -28,7 +29,7 @@ jest.mock("../../../src/utils/eventTime", () => ({
 describe("eventMembershipService - joinEvent", () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => {});
+        jest.spyOn(console, "error").mockImplementation(() => { });
     });
 
     afterEach(() => {
@@ -98,4 +99,44 @@ describe("eventMembershipService - joinEvent", () => {
 
         await expect(service.joinEvent({ eventId: 1, userId: 10 })).rejects.toMatchObject({ statusCode: 403 });
     });
+
+    it("should throw 409 if event is full", async () => {
+        assertEventNotPast.mockImplementation(() => {});
+
+        Event.findByPk.mockResolvedValue({
+            id: 1,
+            maxParticipants: 1,
+            registrationDeadline: null
+        });
+
+        EventUserRole.findOne.mockResolvedValue(null);
+        EventUserRole.count = jest.fn().mockResolvedValue(1);
+
+
+        await expect(
+            service.joinEvent({ eventId: 1, userId: 10 })
+        ).rejects.toMatchObject({
+            message: "Event has reached maximum number of participants",
+            statusCode: 409
+        });
+    });
+
+    it("should throw 409 if registration is closed", async () => {
+        assertEventNotPast.mockImplementation(() => {});
+
+        Event.findByPk.mockResolvedValue({
+            id: 1,
+            maxParticipants: null,
+            registrationDeadline: new Date(Date.now() - 1000)
+        });
+
+        await expect(
+            service.joinEvent({ eventId: 1, userId: 10 })
+        ).rejects.toMatchObject({
+            message: "Registration period is over for this event",
+            statusCode: 409
+        });
+    });
+
+
 });

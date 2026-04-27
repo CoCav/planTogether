@@ -3,11 +3,11 @@ const { body, param } = require('express-validator');
 // Validator for updating a member's role in an event
 const updateMemberRoleValidator = [
     param('eventId')
-        .isInt().withMessage('Event ID must be an integer')
+        .isInt({ min: 1 }).withMessage('Event ID must be a positive integer')
         .toInt(),
 
     param('userId')
-        .isInt().withMessage('User ID must be an integer')
+        .isInt({ min: 1 }).withMessage('User ID must be a positive integer')
         .toInt(),
 
     body('newRole')
@@ -21,11 +21,11 @@ const updateMemberRoleValidator = [
 // Validator for removing a member from an event
 const removeMemberValidator = [
     param('eventId')
-        .isInt().withMessage('Event ID must be an integer')
+        .isInt({ min: 1 }).withMessage('Event ID must be a positive integer')
         .toInt(),
 
     param('userId')
-        .isInt().withMessage('User ID must be an integer')
+        .isInt({ min: 1 }).withMessage('User ID must be a positive integer')
         .toInt()
 ];
 

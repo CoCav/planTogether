@@ -86,10 +86,6 @@ describe('Create Event API', () => {
 
         expect(res.statusCode).toBe(201);
 
-        /* =========================
-           Response structure
-        ========================= */
-
         expect(res.body).toHaveProperty('message', 'Event created successfully');
         expect(res.body).toHaveProperty('event');
 
@@ -126,5 +122,50 @@ describe('Create Event API', () => {
             mode: 'online',
             location: null
         });
+    });
+    
+    it('should create an event with a participant limit and registration deadline', async () => {
+        const token = await registerAndGetToken(
+            'Limited Event Creator',
+            `limitedevent${Date.now()}@test.com`
+        );
+
+        const res = await request(app)
+            .post('/api/events')
+            .set('Authorization', `Bearer ${token}`)
+            .send(
+                getValidEventPayload({
+                    maxParticipants: 25,
+                    registrationDeadline: '2026-12-29T10:00:00.000Z'
+                })
+            );
+
+        expect(res.statusCode).toBe(201);
+
+        expect(res.body.event).toMatchObject({
+            maxParticipants: 25
+        });
+
+        expect(new Date(res.body.event.registrationDeadline).toISOString())
+            .toBe('2026-12-29T10:00:00.000Z');
+    });
+
+    it('should reject event creation when registration deadline is after event start', async () => {
+        const token = await registerAndGetToken(
+            'Invalid Deadline Creator',
+            `invaliddeadline${Date.now()}@test.com`
+        );
+
+        const res = await request(app)
+            .post('/api/events')
+            .set('Authorization', `Bearer ${token}`)
+            .send(
+                getValidEventPayload({
+                    registrationDeadline: '2026-12-31T11:00:00.000Z'
+                })
+            );
+
+        expect(res.statusCode).toBe(400);
+        expect(res.body.success).toBe(false);
     });
 });

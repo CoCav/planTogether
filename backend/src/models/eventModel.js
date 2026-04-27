@@ -10,6 +10,11 @@ const Event = sequelize.define('Event', {
         autoIncrement: true
     },
 
+    creatorId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+
     title: {
         type: DataTypes.STRING,
         allowNull: false
@@ -17,16 +22,16 @@ const Event = sequelize.define('Event', {
 
     description: {
         type: DataTypes.TEXT,
-        allowNull: true
-    },
-
-    startDateTime: {
-        type: DataTypes.DATE,
         allowNull: false
     },
 
-    endDateTime: {
-        type: DataTypes.DATE,
+    type: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+
+    theme: {
+        type: DataTypes.STRING,
         allowNull: false
     },
 
@@ -41,18 +46,25 @@ const Event = sequelize.define('Event', {
         allowNull: true
     },
 
-    creatorId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
+    startDateTime: {
+        type: DataTypes.DATE,
+        allowNull: false
     },
 
-    type: {
-        type: DataTypes.STRING,
+    endDateTime: {
+        type: DataTypes.DATE,
+        allowNull: false
+    },
+
+    // Null means unlimited participants
+    maxParticipants: {
+        type: DataTypes.INTEGER,
         allowNull: true
     },
 
-    theme: {
-        type: DataTypes.STRING,
+    // Null means users can join until the event starts
+    registrationDeadline: {
+        type: DataTypes.DATE,
         allowNull: true
     }
 

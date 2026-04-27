@@ -39,7 +39,7 @@ describe("eventRoleValidator", () => {
             expect(result.isEmpty()).toBe(true);
         });
 
-        it("should fail if eventId is not an integer", async () => {
+        it("should fail if eventId is not a positive integer", async () => {
             const result = await runValidation(updateMemberRoleValidator, {
                 params: {
                     eventId: "abc",
@@ -53,13 +53,13 @@ describe("eventRoleValidator", () => {
             expect(result.array()).toEqual(
                 expect.arrayContaining([
                     expect.objectContaining({
-                        msg: "Event ID must be an integer"
+                        msg: "Event ID must be a positive integer"
                     })
                 ])
             );
         });
 
-        it("should fail if userId is not an integer", async () => {
+        it("should fail if userId is not a positive integer", async () => {
             const result = await runValidation(updateMemberRoleValidator, {
                 params: {
                     eventId: "1",
@@ -73,7 +73,7 @@ describe("eventRoleValidator", () => {
             expect(result.array()).toEqual(
                 expect.arrayContaining([
                     expect.objectContaining({
-                        msg: "User ID must be an integer"
+                        msg: "User ID must be a positive integer"
                     })
                 ])
             );
@@ -132,7 +132,7 @@ describe("eventRoleValidator", () => {
             expect(result.isEmpty()).toBe(true);
         });
 
-        it("should fail if eventId is not an integer", async () => {
+        it("should fail if eventId is not a positive integer", async () => {
             const result = await runValidation(removeMemberValidator, {
                 params: {
                     eventId: "abc",
@@ -143,13 +143,13 @@ describe("eventRoleValidator", () => {
             expect(result.array()).toEqual(
                 expect.arrayContaining([
                     expect.objectContaining({
-                        msg: "Event ID must be an integer"
+                        msg: "Event ID must be a positive integer"
                     })
                 ])
             );
         });
 
-        it("should fail if userId is not an integer", async () => {
+        it("should fail if userId is not a positive integer", async () => {
             const result = await runValidation(removeMemberValidator, {
                 params: {
                     eventId: "1",
@@ -160,7 +160,7 @@ describe("eventRoleValidator", () => {
             expect(result.array()).toEqual(
                 expect.arrayContaining([
                     expect.objectContaining({
-                        msg: "User ID must be an integer"
+                        msg: "User ID must be a positive integer"
                     })
                 ])
             );

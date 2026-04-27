@@ -10,7 +10,18 @@ const { applyStatusFilter } = require('../utils/eventQuery');
 const createEvent = async (data, userId) => {
     try {
         // Get all datas from an user while creating an event
-        const { title, description, startDateTime, endDateTime, mode, type, theme, location } = data;
+        const {
+            title,
+            description,
+            type,
+            theme,
+            mode,
+            location,
+            startDateTime,
+            endDateTime,
+            maxParticipants,
+            registrationDeadline
+        } = data;
 
         // Minimal safety validation (defensive layer)
         if (new Date(endDateTime) < new Date(startDateTime)) {
@@ -22,12 +33,14 @@ const createEvent = async (data, userId) => {
         const event = await Event.create({
             title,
             description,
-            startDateTime,
-            endDateTime,
-            mode,
-            location: mode === "online" ? null : location,
             type,
             theme,
+            mode,
+            location: mode === "online" ? null : location,
+            startDateTime,
+            endDateTime,
+            maxParticipants: maxParticipants ?? null,
+            registrationDeadline: registrationDeadline ?? null,
             creatorId: userId
         });
 
@@ -73,19 +86,19 @@ const getAllEvents = async (query) => {
                 include: [[fn("COUNT", col("participants.id")), "participantCount"]]
             },
             include: [{
-                    model: User,
-                    as: "creator",
-                    attributes: ["id", "name"]
-                }, {
-                    model: User,
-                    as: "participants",
+                model: User,
+                as: "creator",
+                attributes: ["id", "name"]
+            }, {
+                model: User,
+                as: "participants",
+                attributes: [],
+                through: {
                     attributes: [],
-                    through: {
-                        attributes: [],
-                        where: { role: "participant" }
-                    },
-                    required: false
-                }
+                    where: { role: "participant" }
+                },
+                required: false
+            }
             ],
             group: ["Event.id", "creator.id"],
             subQuery: false
@@ -114,23 +127,23 @@ const getEventById = async (id) => {
     try {
         const event = await Event.findOne({
             where: { id },
-            attributes: { 
-                include: [[fn("COUNT", col("participants.id")), "participantCount"]] 
+            attributes: {
+                include: [[fn("COUNT", col("participants.id")), "participantCount"]]
             },
             include: [{
-                    model: User,
-                    as: "creator",
-                    attributes: ["id", "name"]
-                }, {
-                    model: User,
-                    as: "participants",
+                model: User,
+                as: "creator",
+                attributes: ["id", "name"]
+            }, {
+                model: User,
+                as: "participants",
+                attributes: [],
+                through: {
                     attributes: [],
-                    through: {
-                        attributes: [],
-                        where: { role: "participant" }
-                    },
-                    required: false
-                }],
+                    where: { role: "participant" }
+                },
+                required: false
+            }],
             group: ["Event.id", "creator.id"]
         });
 
@@ -244,19 +257,19 @@ const getFilteredEvents = async (query) => {
                 include: [[fn("COUNT", col("participants.id")), "participantCount"]]
             },
             include: [{
-                    model: User,
-                    as: "creator",
-                    attributes: ["id", "name"]
-                }, {
-                    model: User,
-                    as: "participants",
+                model: User,
+                as: "creator",
+                attributes: ["id", "name"]
+            }, {
+                model: User,
+                as: "participants",
+                attributes: [],
+                through: {
                     attributes: [],
-                    through: {
-                        attributes: [],
-                        where: { role: "participant" }
-                    },
-                    required: false
-                }
+                    where: { role: "participant" }
+                },
+                required: false
+            }
             ],
             group: ["Event.id", "creator.id"],
             subQuery: false
@@ -300,12 +313,14 @@ const updateEventById = async (id, data) => {
         const {
             title,
             description,
-            startDateTime,
-            endDateTime,
-            mode,
             type,
             theme,
-            location 
+            mode,
+            location,
+            startDateTime,
+            endDateTime,
+            maxParticipants,
+            registrationDeadline
         } = data;
 
         // Minimal safety validation
@@ -317,15 +332,17 @@ const updateEventById = async (id, data) => {
             }
         }
 
-        const updatedData = { 
+        const updatedData = {
             title,
             description,
-            startDateTime,
-            endDateTime,
+            type,
+            theme,
             mode,
             location: mode === "online" ? null : location,
-            type,
-            theme
+            startDateTime,
+            endDateTime,
+            maxParticipants: maxParticipants ?? null,
+            registrationDeadline: registrationDeadline ?? null
         };
 
         await event.update(updatedData);

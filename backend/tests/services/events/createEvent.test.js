@@ -22,7 +22,7 @@ jest.mock("../../../src/models/relations/eventUserRoleModel", () => ({
 describe("eventService - createEvent", () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => {});
+        jest.spyOn(console, "error").mockImplementation(() => { });
     });
 
     afterEach(() => {
@@ -39,12 +39,12 @@ describe("eventService - createEvent", () => {
             {
                 title: "Test Event",
                 description: "Description",
-                startDateTime: "2026-12-20T10:00:00.000Z",
-                endDateTime: "2026-12-20T12:00:00.000Z",
+                type: "Meetup",
+                theme: "Tech",
                 mode: "in_person",
                 location: "Montreal",
-                type: "Meetup",
-                theme: "Tech"
+                startDateTime: "2026-12-20T10:00:00.000Z",
+                endDateTime: "2026-12-20T12:00:00.000Z"
             },
             10
         );
@@ -52,12 +52,14 @@ describe("eventService - createEvent", () => {
         expect(Event.create).toHaveBeenCalledWith({
             title: "Test Event",
             description: "Description",
-            startDateTime: "2026-12-20T10:00:00.000Z",
-            endDateTime: "2026-12-20T12:00:00.000Z",
-            mode: "in_person",
-            location: "Montreal",
             type: "Meetup",
             theme: "Tech",
+            mode: "in_person",
+            location: "Montreal",
+            startDateTime: "2026-12-20T10:00:00.000Z",
+            endDateTime: "2026-12-20T12:00:00.000Z",
+            maxParticipants: null,
+            registrationDeadline: null,
             creatorId: 10
         });
 
@@ -80,12 +82,12 @@ describe("eventService - createEvent", () => {
             {
                 title: "Online Event",
                 description: "Description",
-                startDateTime: "2026-12-20T10:00:00.000Z",
-                endDateTime: "2026-12-20T12:00:00.000Z",
+                type: "Workshop",
+                theme: "Remote",
                 mode: "online",
                 location: "Should be ignored",
-                type: "Workshop",
-                theme: "Remote"
+                startDateTime: "2026-12-20T10:00:00.000Z",
+                endDateTime: "2026-12-20T12:00:00.000Z"
             },
             10
         );
@@ -98,18 +100,48 @@ describe("eventService - createEvent", () => {
         );
     });
 
+    it("should create event with maxParticipants and registrationDeadline", async () => {
+        const event = { id: 3 };
+
+        Event.create.mockResolvedValue(event);
+        EventUserRole.create.mockResolvedValue({});
+
+        await eventService.createEvent(
+            {
+                title: "Test",
+                description: "Desc",
+                type: "Meetup",
+                theme: "Tech",
+                mode: "in_person",
+                location: "Paris",
+                startDateTime: "2026-12-20T10:00:00.000Z",
+                endDateTime: "2026-12-20T12:00:00.000Z",
+                maxParticipants: 5,
+                registrationDeadline: "2026-12-19T10:00:00.000Z"
+            },
+            10
+        );
+
+        expect(Event.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                maxParticipants: 5,
+                registrationDeadline: "2026-12-19T10:00:00.000Z"
+            })
+        );
+    });
+
     it("should throw 400 when end date is before start date", async () => {
         await expect(
             eventService.createEvent(
                 {
                     title: "Invalid Event",
                     description: "Description",
-                    startDateTime: "2026-12-20T12:00:00.000Z",
-                    endDateTime: "2026-12-20T10:00:00.000Z",
+                    type: "Meetup",
+                    theme: "Tech",
                     mode: "in_person",
                     location: "Montreal",
-                    type: "Meetup",
-                    theme: "Tech"
+                    startDateTime: "2026-12-20T12:00:00.000Z",
+                    endDateTime: "2026-12-20T10:00:00.000Z"
                 },
                 10
             )
@@ -130,12 +162,12 @@ describe("eventService - createEvent", () => {
                 {
                     title: "Test Event",
                     description: "Description",
-                    startDateTime: "2026-12-20T10:00:00.000Z",
-                    endDateTime: "2026-12-20T12:00:00.000Z",
+                    type: "Meetup",
+                    theme: "Tech",
                     mode: "in_person",
                     location: "Montreal",
-                    type: "Meetup",
-                    theme: "Tech"
+                    startDateTime: "2026-12-20T10:00:00.000Z",
+                    endDateTime: "2026-12-20T12:00:00.000Z"
                 },
                 10
             )

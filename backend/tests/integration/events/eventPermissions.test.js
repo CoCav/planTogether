@@ -64,12 +64,12 @@ describe('Event Permissions API', () => {
             .send({
                 title: 'Protected Event',
                 description: 'Test',
-                startDateTime: '2026-12-31T10:00:00.000Z',
-                endDateTime: '2026-12-31T12:00:00.000Z',
+                type: 'Meetup',
+                theme: 'Tech',
                 mode: 'in_person',
                 location: 'Montreal',
-                type: 'Meetup',
-                theme: 'Tech'
+                startDateTime: '2026-12-31T10:00:00.000Z',
+                endDateTime: '2026-12-31T12:00:00.000Z'
             });
 
         return res.body.event;
@@ -94,9 +94,12 @@ describe('Event Permissions API', () => {
             .set('Authorization', `Bearer ${participantToken}`)
             .send({
                 title: 'Hacked',
+                description: 'Hacked',
+                type: 'Meetup',
+                theme: 'Tech',
+                mode: 'in_person',
                 startDateTime: '2026-12-31T14:00:00.000Z',
-                endDateTime: '2026-12-31T16:00:00.000Z',
-                mode: 'in_person'
+                endDateTime: '2026-12-31T16:00:00.000Z'
             });
 
         expect(res.statusCode).toBe(403);
@@ -148,9 +151,12 @@ describe('Event Permissions API', () => {
             .set('Authorization', `Bearer ${coToken}`)
             .send({
                 title: 'Updated by Co',
+                description: 'Updated by Co',
+                type: 'Meetup',
+                theme: 'Tech',
+                mode: 'in_person',
                 startDateTime: '2026-12-31T14:00:00.000Z',
-                endDateTime: '2026-12-31T16:00:00.000Z',
-                mode: 'in_person'
+                endDateTime: '2026-12-31T16:00:00.000Z'
             });
 
         expect(res.statusCode).toBe(200);

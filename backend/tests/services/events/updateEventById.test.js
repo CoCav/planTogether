@@ -22,7 +22,7 @@ jest.mock("../../../src/utils/eventTime", () => ({
 describe("eventService - updateEventById", () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => {});
+        jest.spyOn(console, "error").mockImplementation(() => { });
     });
 
     afterEach(() => {
@@ -36,29 +36,31 @@ describe("eventService - updateEventById", () => {
         };
 
         Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => {});
+        assertEventNotPast.mockImplementation(() => { });
 
         const result = await eventService.updateEventById(1, {
             title: "Updated Event",
             description: "Updated description",
-            startDateTime: "2026-12-20T10:00:00.000Z",
-            endDateTime: "2026-12-20T12:00:00.000Z",
+            type: "Meetup",
+            theme: "Tech",
             mode: "in_person",
             location: "Montreal",
-            type: "Meetup",
-            theme: "Tech"
+            startDateTime: "2026-12-20T10:00:00.000Z",
+            endDateTime: "2026-12-20T12:00:00.000Z",
         });
 
         expect(assertEventNotPast).toHaveBeenCalledWith(event);
         expect(event.update).toHaveBeenCalledWith({
             title: "Updated Event",
             description: "Updated description",
-            startDateTime: "2026-12-20T10:00:00.000Z",
-            endDateTime: "2026-12-20T12:00:00.000Z",
+            type: "Meetup",
+            theme: "Tech",
             mode: "in_person",
             location: "Montreal",
-            type: "Meetup",
-            theme: "Tech"
+            startDateTime: "2026-12-20T10:00:00.000Z",
+            endDateTime: "2026-12-20T12:00:00.000Z",
+            maxParticipants: null,
+            registrationDeadline: null
         });
         expect(result).toBe(event);
     });
@@ -70,23 +72,53 @@ describe("eventService - updateEventById", () => {
         };
 
         Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => {});
+        assertEventNotPast.mockImplementation(() => { });
 
         await eventService.updateEventById(1, {
             title: "Online Event",
             description: "Updated description",
-            startDateTime: "2026-12-20T10:00:00.000Z",
-            endDateTime: "2026-12-20T12:00:00.000Z",
+            type: "Workshop",
+            theme: "Remote",
             mode: "online",
             location: "Montreal",
-            type: "Workshop",
-            theme: "Remote"
+            startDateTime: "2026-12-20T10:00:00.000Z",
+            endDateTime: "2026-12-20T12:00:00.000Z"
         });
 
         expect(event.update).toHaveBeenCalledWith(
             expect.objectContaining({
                 mode: "online",
                 location: null
+            })
+        );
+    });
+
+    it("should update maxParticipants and registrationDeadline", async () => {
+        const event = {
+            id: 1,
+            update: jest.fn().mockResolvedValue()
+        };
+
+        Event.findByPk.mockResolvedValue(event);
+        assertEventNotPast.mockImplementation(() => { });
+
+        await eventService.updateEventById(1, {
+            title: "Updated",
+            description: "Updated",
+            type: "Meetup",
+            theme: "Tech",
+            mode: "in_person",
+            location: "Paris",
+            startDateTime: "2026-12-20T10:00:00.000Z",
+            endDateTime: "2026-12-20T12:00:00.000Z",
+            maxParticipants: 10,
+            registrationDeadline: "2026-12-19T10:00:00.000Z"
+        });
+
+        expect(event.update).toHaveBeenCalledWith(
+            expect.objectContaining({
+                maxParticipants: 10,
+                registrationDeadline: "2026-12-19T10:00:00.000Z"
             })
         );
     });
@@ -138,7 +170,7 @@ describe("eventService - updateEventById", () => {
         };
 
         Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => {});
+        assertEventNotPast.mockImplementation(() => { });
 
         await expect(
             eventService.updateEventById(1, {
@@ -156,6 +188,6 @@ describe("eventService - updateEventById", () => {
     it("should forward database errors", async () => {
         Event.findByPk.mockRejectedValue(new Error("DB error"));
 
-        await expect(eventService.updateEventById(1, {title: "Updated Event"})).rejects.toThrow("DB error");
+        await expect(eventService.updateEventById(1, { title: "Updated Event" })).rejects.toThrow("DB error");
     });
 });

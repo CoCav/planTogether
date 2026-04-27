@@ -165,7 +165,7 @@ describe("eventValidator", () => {
             expect(result.array()).toEqual(
                 expect.arrayContaining([
                     expect.objectContaining({
-                        msg: "ID of the event must be an integer"
+                        msg: "Event ID must be a positive integer"
                     })
                 ])
             );
@@ -229,7 +229,7 @@ describe("eventValidator", () => {
             expect(result.array()).toEqual(
                 expect.arrayContaining([
                     expect.objectContaining({
-                        msg: "Event ID must be an integer"
+                        msg: "Event ID must be a positive integer"
                     })
                 ])
             );

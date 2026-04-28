@@ -1,12 +1,20 @@
 /* ==================================================
-   EMPTY STATE COMPONENT
-   Displays a fallback message when no data is available
+   EMPTY STATE
+   Reusable component displayed when no data is available
 ================================================== */
-export default function EmptyState({ children }) {
 
-    /* =========================
-       Render empty state
-       Shows a simple placeholder message
-    ========================= */
-    return <p className="empty-state">{children}</p>;
+export default function EmptyState({ title, description, icon, children }) {
+    return (
+        <div className="empty-state">
+            {icon && <div className="empty-state-icon">{icon}</div>}
+
+            {title ? (
+                <h3 className="empty-state-title">{title}</h3>
+            ) : (
+                children
+            )}
+
+            {description && (<p className="empty-state-description">{description}</p>)}
+        </div>
+    );
 }

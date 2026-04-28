@@ -25,12 +25,15 @@ export default function CreateEventPage() {
         description: "",
         type: "",
         theme: "",
+        mode: "in_person",
+        location: "",
         startDate: "",
         startTime: "",
         endDate: "",
         endTime: "",
-        mode: "in_person",
-        location: "",
+        maxParticipants: "",
+        registrationDeadlineOption: "none",
+        registrationDeadlineCustom: ""
     });
 
 
@@ -69,14 +72,47 @@ export default function CreateEventPage() {
         }));
     };
 
-    
+
     /* =========================
-     Datetime builder
-        Combines separate date and time fields into ISO strings
+     Builders
     ========================= */
+
+    // Datetime builder
+    // Combines separate date and time inputs
+    // Used for startDateTime and endDateTime payload fields
     const buildDateTime = (date, time) => {
         if (!date || !time) return "";
         return new Date(`${date}T${time}`).toISOString();
+    };
+
+    // Registration deadline builder
+    // Computes the registrationDeadline based on the selected option
+    // - "day_before": 24h before event start
+    // - "two_days_before": 48h before event start
+    // - "custom": user-defined datetime
+    // - "none": no deadline (returns null)
+    const buildRegistrationDeadline = () => {
+        if (!form.startDate || !form.startTime) return null;
+
+        const eventStart = new Date(`${form.startDate}T${form.startTime}`);
+
+        if (isNaN(eventStart.getTime())) return null;
+
+        switch (form.registrationDeadlineOption) {
+            case "day_before":
+                return new Date(eventStart.getTime() - 24 * 60 * 60 * 1000).toISOString();
+
+            case "two_days_before":
+                return new Date(eventStart.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString();
+
+            case "custom":
+                return form.registrationDeadlineCustom
+                    ? new Date(form.registrationDeadlineCustom).toISOString()
+                    : null;
+
+            default:
+                return null;
+        }
     };
 
 
@@ -89,7 +125,7 @@ export default function CreateEventPage() {
         setError("");
 
         const validationErrors = validateEventForm(form);
-        
+
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
             return;
@@ -105,9 +141,11 @@ export default function CreateEventPage() {
                 type: form.type,
                 theme: form.theme,
                 mode: form.mode,
+                location: isOnlineEvent ? null : form.location,
                 startDateTime: buildDateTime(form.startDate, form.startTime),
                 endDateTime: buildDateTime(form.endDate, form.endTime),
-                location: isOnlineEvent ? null : form.location,
+                maxParticipants: form.maxParticipants ? Number(form.maxParticipants) : null,
+                registrationDeadline: buildRegistrationDeadline()
             };
 
             await createEvent(payload);
@@ -176,10 +214,35 @@ export default function CreateEventPage() {
                         </FormField>
 
                         <FormField label="Mode">
-                            <Select name="mode" value={form.mode} onChange={handleChange}> 
+                            <Select name="mode" value={form.mode} onChange={handleChange}>
                                 <option value="in_person">In person</option>
                                 <option value="online">Online</option>
                             </Select>
+                        </FormField>
+
+                        {!isOnlineEvent && (
+                            <FormField label="Location">
+                                <Input
+                                    type="text"
+                                    name="location"
+                                    placeholder="Event location"
+                                    value={form.location}
+                                    onChange={handleChange}
+                                    className={errors.location ? "error" : ""}
+                                />
+                                {errors.location && <p className="field-error">{errors.location}</p>}
+                            </FormField>
+                        )}
+
+                        <FormField label="Participant limit (optional)">
+                            <Input
+                                type="number"
+                                name="maxParticipants"
+                                placeholder="No limit"
+                                value={form.maxParticipants}
+                                onChange={handleChange}
+                                min={1}
+                            />
                         </FormField>
 
                         <FormField label="Description" className="form-field-full">
@@ -193,20 +256,6 @@ export default function CreateEventPage() {
                             />
                             {errors.description && <p className="field-error">{errors.description}</p>}
                         </FormField>
-
-                        {!isOnlineEvent && (
-                            <FormField label="Location">
-                                <Input
-                                    type="text"
-                                    name="location"
-                                    placeholder="Event location"
-                                    value={form.location}
-                                    onChange={handleChange}
-                                    className={errors.location ? "error" : ""}
-                            />
-                                {errors.location && <p className="field-error">{errors.location}</p>}
-                            </FormField>
-                        )}
 
                         <FormField label="Start date">
                             <Input
@@ -229,7 +278,7 @@ export default function CreateEventPage() {
                             {errors.startTime && <p className="field-error">{errors.startTime}</p>}
                         </FormField>
 
-                         <FormField label="End date">
+                        <FormField label="End date">
                             <Input
                                 type="date"
                                 name="endDate"
@@ -249,6 +298,27 @@ export default function CreateEventPage() {
                             />
                             {errors.endTime && <p className="field-error">{errors.endTime}</p>}
                         </FormField>
+
+
+                        <FormField label="Registration deadline">
+                            <Select name="registrationDeadlineOption" value={form.registrationDeadlineOption} onChange={handleChange}>
+                                <option value="none">No deadline</option>
+                                <option value="day_before">1 day before event</option>
+                                <option value="two_days_before">2 days before event</option>
+                                <option value="custom">Custom date</option>
+                            </Select>
+                        </FormField>
+
+                        {form.registrationDeadlineOption === "custom" && (
+                            <FormField label="Custom deadline">
+                                <Input
+                                    type="datetime-local"
+                                    name="registrationDeadlineCustom"
+                                    value={form.registrationDeadlineCustom}
+                                    onChange={handleChange}
+                                />
+                            </FormField>
+                        )}
                     </div>
 
                     <div className="form-actions">

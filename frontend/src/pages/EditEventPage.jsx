@@ -32,12 +32,15 @@ export default function EditEventPage() {
         description: "",
         type: "",
         theme: "",
+        mode: "in_person",
+        location: "",
         startDate: "",
         startTime: "",
         endDate: "",
         endTime: "",
-        mode: "in_person",
-        location: "",
+        maxParticipants: "",
+        registrationDeadlineOption: "none",
+        registrationDeadlineCustom: ""
     });
 
 
@@ -75,6 +78,9 @@ export default function EditEventPage() {
                     startTime: start ? start.toISOString().slice(11, 16) : "",
                     endDate: end ? end.toISOString().slice(0, 10) : "",
                     endTime: end ? end.toISOString().slice(11, 16) : "",
+                    maxParticipants: event.maxParticipants || "",
+                    registrationDeadlineOption: "none",
+                    registrationDeadlineCustom: event.registrationDeadline ? new Date(event.registrationDeadline).toISOString().slice(0, 16) : ""
                 });
             } catch (error) {
                 console.error("Error loading event:", error);
@@ -84,7 +90,8 @@ export default function EditEventPage() {
             }
         };
 
-    fetchEvent();}, [eventId]);
+        fetchEvent();
+    }, [eventId]);
 
 
     /* =========================
@@ -117,12 +124,45 @@ export default function EditEventPage() {
 
 
     /* =========================
-     Datetime builder
-        Combines separate date and time fields into ISO strings
+     Builders
     ========================= */
+
+    // Datetime builder
+    // Combines separate date and time inputs
+    // Used for startDateTime and endDateTime payload fields
     const buildDateTime = (date, time) => {
         if (!date || !time) return "";
         return new Date(`${date}T${time}`).toISOString();
+    };
+
+    // Registration deadline builder
+    // Computes the registrationDeadline based on the selected option
+    // - "day_before": 24h before event start
+    // - "two_days_before": 48h before event start
+    // - "custom": user-defined datetime
+    // - "none": no deadline (returns null)
+    const buildRegistrationDeadline = () => {
+        if (!form.startDate || !form.startTime) return null;
+
+        const eventStart = new Date(`${form.startDate}T${form.startTime}`);
+
+        if (isNaN(eventStart.getTime())) return null;
+
+        switch (form.registrationDeadlineOption) {
+            case "day_before":
+                return new Date(eventStart.getTime() - 24 * 60 * 60 * 1000).toISOString();
+
+            case "two_days_before":
+                return new Date(eventStart.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString();
+
+            case "custom":
+                return form.registrationDeadlineCustom
+                    ? new Date(form.registrationDeadlineCustom).toISOString()
+                    : null;
+
+            default:
+                return null;
+        }
     };
 
 
@@ -151,14 +191,16 @@ export default function EditEventPage() {
                 type: form.type,
                 theme: form.theme,
                 mode: form.mode,
+                location: isOnlineEvent ? null : form.location,
                 startDateTime: buildDateTime(form.startDate, form.startTime),
                 endDateTime: buildDateTime(form.endDate, form.endTime),
-                location: isOnlineEvent ? null : form.location,
+                maxParticipants: form.maxParticipants ? Number(form.maxParticipants) : null,
+                registrationDeadline: buildRegistrationDeadline()
             };
 
             await updateEvent(eventId, payload);
             setMessage("✅ Event updated successfully");
-            navigate(`/events/${eventId}`, {replace: true});
+            navigate(`/events/${eventId}`, { replace: true });
         } catch (error) {
             console.error("Error updating event:", error);
             setError("Unable to update event");
@@ -201,58 +243,46 @@ export default function EditEventPage() {
                 <form onSubmit={handleSubmit} className="event-form">
                     <div className="form-grid">
                         <FormField label="Title">
-                            <Input 
-                                type="text" 
-                                name="title" 
-                                value={form.title} 
-                                onChange={handleChange} 
-                                placeholder="Event title" 
+                            <Input
+                                type="text"
+                                name="title"
+                                value={form.title}
+                                onChange={handleChange}
+                                placeholder="Event title"
                                 className={errors.title ? "error" : ""}
                             />
                             {errors.title && <p className="field-error">{errors.title}</p>}
                         </FormField>
 
                         <FormField label="Type">
-                            <Input 
-                                type="text" 
-                                name="type" 
-                                value={form.type} 
-                                onChange={handleChange} 
-                                placeholder="Event type" 
+                            <Input
+                                type="text"
+                                name="type"
+                                value={form.type}
+                                onChange={handleChange}
+                                placeholder="Event type"
                                 className={errors.type ? "error" : ""}
                             />
                             {errors.type && <p className="field-error">{errors.type}</p>}
-                         </FormField>
+                        </FormField>
 
                         <FormField label="Theme">
-                            <Input 
-                                type="text" 
-                                name="theme" 
-                                value={form.theme} 
-                                onChange={handleChange} 
-                                placeholder="Event theme" 
+                            <Input
+                                type="text"
+                                name="theme"
+                                value={form.theme}
+                                onChange={handleChange}
+                                placeholder="Event theme"
                                 className={errors.theme ? "error" : ""}
                             />
                             {errors.theme && <p className="field-error">{errors.theme}</p>}
                         </FormField>
 
                         <FormField label="Mode">
-                            <Select name="mode" value={form.mode} onChange={handleChange}> 
+                            <Select name="mode" value={form.mode} onChange={handleChange}>
                                 <option value="in_person">In person</option>
                                 <option value="online">Online</option>
                             </Select>
-                        </FormField>
-
-                        <FormField label="Description" className="form-field-full">
-                            <TextArea
-                               name="description"
-                               value={form.description}
-                               onChange={handleChange}
-                               placeholder="Describe your event (what, where, for who...)"
-                               rows={5}
-                               className={errors.description ? "error" : ""}
-                             />
-                            {errors.description && <p className="field-error">{errors.description}</p>}
                         </FormField>
 
                         {!isOnlineEvent && (
@@ -264,10 +294,33 @@ export default function EditEventPage() {
                                     value={form.location}
                                     onChange={handleChange}
                                     className={errors.location ? "error" : ""}
-                             />
-                            {errors.location && <p className="field-error">{errors.location}</p>}
+                                />
+                                {errors.location && <p className="field-error">{errors.location}</p>}
                             </FormField>
                         )}
+
+                        <FormField label="Participant limit (optional)">
+                            <Input
+                                type="number"
+                                name="maxParticipants"
+                                placeholder="No limit"
+                                value={form.maxParticipants}
+                                onChange={handleChange}
+                                min={1}
+                            />
+                        </FormField>
+
+                        <FormField label="Description" className="form-field-full">
+                            <TextArea
+                                name="description"
+                                value={form.description}
+                                onChange={handleChange}
+                                placeholder="Describe your event (what, where, for who...)"
+                                rows={5}
+                                className={errors.description ? "error" : ""}
+                            />
+                            {errors.description && <p className="field-error">{errors.description}</p>}
+                        </FormField>
 
                         <FormField label="Start date">
                             <Input
@@ -275,8 +328,8 @@ export default function EditEventPage() {
                                 name="startDate"
                                 value={form.startDate}
                                 onChange={handleChange}
-                               className={errors.startDate ? "error" : ""}
-                             />
+                                className={errors.startDate ? "error" : ""}
+                            />
                             {errors.startDate && <p className="field-error">{errors.startDate}</p>}
                         </FormField>
                         <FormField label="Start time">
@@ -285,19 +338,19 @@ export default function EditEventPage() {
                                 name="startTime"
                                 value={form.startTime}
                                 onChange={handleChange}
-                               className={errors.startTime ? "error" : ""}
-                             />
+                                className={errors.startTime ? "error" : ""}
+                            />
                             {errors.startTime && <p className="field-error">{errors.startTime}</p>}
                         </FormField>
 
-                         <FormField label="End date">
+                        <FormField label="End date">
                             <Input
                                 type="date"
                                 name="endDate"
                                 value={form.endDate}
                                 onChange={handleChange}
-                               className={errors.endDate ? "error" : ""}
-                             />
+                                className={errors.endDate ? "error" : ""}
+                            />
                             {errors.endDate && <p className="field-error">{errors.endDate}</p>}
                         </FormField>
                         <FormField label="End time">
@@ -306,9 +359,22 @@ export default function EditEventPage() {
                                 name="endTime"
                                 value={form.endTime}
                                 onChange={handleChange}
-                               className={errors.endTime ? "error" : ""}
-                             />
+                                className={errors.endTime ? "error" : ""}
+                            />
                             {errors.endTime && <p className="field-error">{errors.endTime}</p>}
+                        </FormField>
+
+                        <FormField label="Registration deadline">
+                            <Select
+                                name="registrationDeadlineOption"
+                                value={form.registrationDeadlineOption}
+                                onChange={handleChange}
+                            >
+                                <option value="none">No deadline</option>
+                                <option value="day_before">1 day before event</option>
+                                <option value="two_days_before">2 days before event</option>
+                                <option value="custom">Custom date</option>
+                            </Select>
                         </FormField>
                     </div>
 

@@ -4,7 +4,7 @@ const User = require('../models/userModel');
 const EventUserRole = require('../models/relations/eventUserRoleModel');
 const { getPaginationOptions } = require('../utils/pagination');
 const { assertEventNotPast, getEventStatus } = require('../utils/eventTime');
-const { applyStatusFilter } = require('../utils/eventQuery');
+const { applyStatusFilter, applyEventQueryFilters } = require('../utils/eventQueryFilters');
 
 // Create a new event and assign the creator as the organizer
 const createEvent = async (data, userId) => {
@@ -23,7 +23,7 @@ const createEvent = async (data, userId) => {
             registrationDeadline
         } = data;
 
-        // Minimal safety validation (defensive layer)
+        // Minimal safety validation
         if (new Date(endDateTime) < new Date(startDateTime)) {
             const error = new Error("End date must be after start date");
             error.statusCode = 400;
@@ -62,6 +62,7 @@ const createEvent = async (data, userId) => {
 // Get all events with pagination
 const getAllEvents = async (query) => {
     try {
+        
         const { status } = query;
         const whereConditions = {};
 
@@ -166,78 +167,9 @@ const getEventById = async (id) => {
 // Filters events based on various criteria and supports pagination + sorting
 const getFilteredEvents = async (query) => {
     try {
-        const {
-            date,
-            startDate,
-            endDate,
-            creatorId,
-            type,
-            theme,
-            location,
-            mode,
-            search,
-            status
-        } = query;
 
         const whereConditions = {};
-
-        // Apply backend status filter before pagination
-        applyStatusFilter(whereConditions, status);
-
-        // Filter by exact date using event overlap logic
-        if (date) {
-            const start = new Date(`${date}T00:00:00.000`);
-            const end = new Date(`${date}T23:59:59.999`);
-
-            if (!whereConditions[Op.and]) {
-                whereConditions[Op.and] = [];
-            }
-
-            whereConditions[Op.and].push(
-                { startDateTime: { [Op.lte]: end } },
-                { endDateTime: { [Op.gte]: start } }
-            );
-        }
-
-        // Filter by date range using event overlap logic
-        else if (startDate || endDate) {
-            const start = startDate ? new Date(`${startDate}T00:00:00.000`) : null;
-            const end = endDate ? new Date(`${endDate}T23:59:59.999`) : null;
-
-            if (!whereConditions[Op.and]) {
-                whereConditions[Op.and] = [];
-            }
-
-            if (start && end) {
-                whereConditions[Op.and].push(
-                    { startDateTime: { [Op.lte]: end } },
-                    { endDateTime: { [Op.gte]: start } }
-                );
-            } else if (start) {
-                whereConditions[Op.and].push({
-                    startDateTime: { [Op.gte]: start }
-                });
-            } else if (end) {
-                whereConditions[Op.and].push({
-                    startDateTime: { [Op.lte]: end }
-                });
-            }
-        }
-
-        // Filter by creator/type/theme/mode/location
-        if (creatorId) whereConditions.creatorId = parseInt(creatorId, 10);
-        if (mode) whereConditions.mode = String(mode).trim();
-        if (type) whereConditions.type = { [Op.iLike]: `%${type}%` };
-        if (theme) whereConditions.theme = { [Op.iLike]: `%${theme}%` };
-        if (location) whereConditions.location = { [Op.iLike]: `%${location}%` };
-
-        // Search in title or description
-        if (search) {
-            whereConditions[Op.or] = [
-                { title: { [Op.iLike]: `%${search}%` } },
-                { description: { [Op.iLike]: `%${search}%` } }
-            ];
-        }
+        applyEventQueryFilters(whereConditions, query);
 
         const {
             page,

@@ -9,17 +9,21 @@ import useEventActionsWithConfirm from "../hooks/events/useEventActionsWithConfi
 import usePagination from "../hooks/pagination/usePagination.js";
 import { fetchAllPaginated } from "../utils/fetchAllPaginated.js";
 
+import EventsFilterCard from "../components/events/EventsFilterCard";
+import EventsViewTabs from "../components/events/EventsViewTabs.jsx";
+import EventCard from "../components/events/EventCard.jsx";
+
 import Button from "../components/ui/Button";
-import EventCard from "../components/ui/EventCard";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 import Select from "../components/ui/Select";
 import Input from "../components/ui/Input";
 import FormField from "../components/ui/FormField";
-import EventsViewTabs from "../components/ui/EventsViewTabs.jsx";
 import Alert from "../components/ui/Alert";
 import EmptyState from "../components/ui/EmptyState";
 import LoadingState from "../components/ui/LoadingState";
+
+import Pagination from "../components/ui/Pagination.jsx";
 
 /* ==================================================
    EVENTS PAGE
@@ -113,7 +117,7 @@ export default function EventsPage() {
             page: response.data.page || 1,
             pageSize: response.data.pageSize || pagination.pageSize,
             totalPages: response.data.totalPages || 1,
-            totalEvents: response.data.totalEvents || 0,
+            totalEvents: response.data.totalEvents || 0
         };
     };
 
@@ -330,124 +334,22 @@ export default function EventsPage() {
             {error && <Alert type="danger">{error}</Alert>}
 
             {/* =========================
-            FILTER CARD
-        ========================= */}
-            <Card className="filter-card">
-                {/* Header */}
-                <div className="filter-card-header">
-                    <div>
-                        <h2 className="section-title">Filters</h2>
-                        <p className="section-subtitle">Refine events by search, category, location, date, or sorting.</p>
-                    </div>
-
-                    <Button type="button" variant="outline" onClick={() => setShowFilters((prev) => !prev)}>{showFilters ? "Hide filters" : "Show filters"}</Button>
-                </div>
-
-                {/* Collapsible content */}
-                {showFilters && (
-                    <>
-                        {/* Form */}
-                        <form onSubmit={handleFilterSubmit} className="filter-form">
-                            <div className="form-grid">
-
-                                <FormField label="Search">
-                                    <Input
-                                        name="search"
-                                        value={filters.search}
-                                        onChange={handleFilterChange}
-                                        placeholder="Search events..."
-                                    />
-                                </FormField>
-
-                                <FormField label="Type">
-                                    <Input
-                                        name="type"
-                                        value={filters.type}
-                                        onChange={handleFilterChange}
-                                        placeholder="Workshop, Meetup..."
-                                    />
-                                </FormField>
-
-                                <FormField label="Theme">
-                                    <Input
-                                        name="theme"
-                                        value={filters.theme}
-                                        onChange={handleFilterChange}
-                                        placeholder="Tech, Music..."
-                                    />
-                                </FormField>
-
-                                <FormField label="Mode">
-                                    <Select name="mode" value={filters.mode} onChange={handleFilterChange}>
-                                        <option value="">All</option>
-                                        <option value="online">Online</option>
-                                        <option value="in_person">In person</option>
-                                    </Select>
-                                </FormField>
-
-                                <FormField label="Location">
-                                    <Input
-                                        name="location"
-                                        value={filters.location}
-                                        onChange={handleFilterChange}
-                                        placeholder="City or place..."
-                                    />
-                                </FormField>
-
-                                <FormField label="Date">
-                                    <Input
-                                        type="date"
-                                        name="date"
-                                        value={filters.date}
-                                        onChange={handleFilterChange}
-                                    />
-                                </FormField>
-
-                                <FormField label="Start date">
-                                    <Input
-                                        type="date"
-                                        name="startDate"
-                                        value={filters.startDate}
-                                        onChange={handleFilterChange}
-                                    />
-                                </FormField>
-
-                                <FormField label="End date">
-                                    <Input
-                                        type="date"
-                                        name="endDate"
-                                        value={filters.endDate}
-                                        onChange={handleFilterChange}
-                                    />
-                                </FormField>
-
-                                <FormField label="Sort by">
-                                    <Select
-                                        name="sortBy"
-                                        value={`${filters.sortBy || "startDateTime"}-${filters.order || "asc"}`}
-                                        onChange={handleSortChange}
-                                    >
-                                        {Object.entries(sortLabels).map(([value, label]) => (
-                                            <option key={value} value={value}>{label}</option>
-                                        ))}
-                                    </Select>
-                                </FormField>
-                            </div>
-
-                            <div className="form-actions">
-                                <Button type="submit">Apply filters</Button>
-                                <Button type="button" variant="outline" onClick={handleResetFilters}>Reset</Button>
-                            </div>
-                        </form>
-                    </>
-                )}
-            </Card>
-
-
+                FILTER CARD
+            ========================= */}
+            <EventsFilterCard
+                filters={filters}
+                showFilters={showFilters}
+                sortLabels={sortLabels}
+                onToggleFilters={() => setShowFilters((prev) => !prev)}
+                onFilterChange={handleFilterChange}
+                onFilterSubmit={handleFilterSubmit}
+                onSortChange={handleSortChange}
+                onResetFilters={handleResetFilters}
+            />
 
             {/* =========================
             EVENTS HEADER
-        ========================= */}
+            ========================= */}
             <div className="events-header">
                 <div className="events-header-top">
                     <h2 className="section-title">
@@ -509,13 +411,12 @@ export default function EventsPage() {
             {/* =========================
             PAGINATION
             ========================= */}
-            {pagination.totalPages > 1 && (
-                <div className="pagination">
-                    <Button type="button" variant="outline" onClick={handlePreviousPage} disabled={pagination.page === 1}>Previous</Button>
-                    <span className="pagination-info">Page {pagination.page} of {pagination.totalPages}</span>
-                    <Button type="button" variant="outline" onClick={handleNextPage} disabled={pagination.page === pagination.totalPages}>Next</Button>
-                </div>
-            )}
+            <Pagination
+                page={pagination.page}
+                totalPages={pagination.totalPages}
+                onPrevious={handlePreviousPage}
+                onNext={handleNextPage}
+            />
         </div>
     );
 }

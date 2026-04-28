@@ -6,9 +6,10 @@ import { getMyEvents } from "../api/eventMembershipApi";
 import { getNormalizedEvents, getMyEventsWithRole } from "../features/events/normalizeData.js";
 import useEventActionsWithConfirm from "../hooks/events/useEventManagementActions.js";
 
+import EventCard from "../components/events/EventCard.jsx";
+
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
-import EventCard from "../components/ui/EventCard.jsx";
 import EmptyState from "../components/ui/EmptyState";
 import LoadingState from "../components/ui/LoadingState";
 import Alert from "../components/ui/Alert";

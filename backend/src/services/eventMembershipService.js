@@ -2,6 +2,7 @@ const { Op, fn, col } = require('sequelize');
 const Event = require('../models/eventModel');
 const User = require('../models/userModel');
 const EventUserRole = require('../models/relations/eventUserRoleModel');
+const { applyEventQueryFilters } = require("../utils/eventQueryFilters");
 const { assertEventNotPast, getEventStatus } = require('../utils/eventTime');
 const { getPaginationOptions } = require('../utils/pagination');
 
@@ -32,9 +33,9 @@ const joinEvent = async ({ eventId, userId }) => {
         // Check max participants limit
         if (event.maxParticipants !== null) {
             const participantCount = await EventUserRole.count({
-                where: {    
-                    eventId, 
-                    role: 'participant' 
+                where: {
+                    eventId,
+                    role: 'participant'
                 }
             });
 
@@ -133,6 +134,15 @@ const listMyEvents = async (userId, query = {}) => {
 
         const eventDateFilter = !view ? {} : isHistoryView ? { endDateTime: { [Op.lt]: now } } : { endDateTime: { [Op.gte]: now } };
 
+
+        /* =========================
+         Event filters
+            Applies common query filters (search, type, theme, location, date, etc.)
+        ========================= */
+
+        const eventFilter = { ...eventDateFilter };
+        applyEventQueryFilters(eventFilter, query, { includeStatus: false });
+
         /* =========================
            Pagination + sorting
         ========================= */
@@ -159,18 +169,18 @@ const listMyEvents = async (userId, query = {}) => {
         const { count, rows } = await EventUserRole.findAndCountAll({
             where: {
                 userId,
-               ...(roleFilter && { role: roleFilter })
+                ...(roleFilter && { role: roleFilter })
             },
             include: [{
                 model: Event,
-                where: eventDateFilter,
+                where: eventFilter,
                 attributes: [
                     "id",
                     "title",
-                    "description",   
+                    "description",
                     "type",
                     "theme",
-                     "mode",
+                    "mode",
                     "location",
                     "startDateTime",
                     "endDateTime",
@@ -371,7 +381,7 @@ const removeMember = async ({ eventId, userId, requestingUserId }) => {
             where: { eventId, userId }
         });
 
-        if (!membership) { 
+        if (!membership) {
             const error = new Error('User is not a member of this event');
             error.statusCode = 404;
             throw error;

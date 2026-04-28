@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { deleteEvent } from "../api/eventApi";
-import {updateMemberRole, removeEventMember} from "../api/eventMembershipApi";
+import { deleteEvent } from "../../api/eventApi";
+import {updateMemberRole, removeEventMember} from "../../api/eventMembershipApi";
 
 /* ==================================================
    EVENT MANAGEMENT ACTIONS HOOK

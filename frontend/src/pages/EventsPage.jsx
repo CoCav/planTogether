@@ -5,7 +5,9 @@ import { getAllEvents, getFilteredEvents } from "../api/eventApi";
 import { getMyEvents } from "../api/eventMembershipApi";
 import { getNormalizedEvents, getMyEventsWithRole } from "../features/events/normalizeData.js";
 import { getDefaultEventFilters, EVENT_SORT_MAP, getSortLabels, getTodayEventFilters, getWeekendEventFilters, isCurrentWeekendFilterActive } from "../features/events/eventFilters";
-import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
+import useEventActionsWithConfirm from "../hooks/events/useEventActionsWithConfirm.js";
+import usePagination from "../hooks/pagination/usePagination.js";
+import { fetchAllPaginated } from "../utils/fetchAllPaginated.js";
 
 import Button from "../components/ui/Button";
 import EventCard from "../components/ui/EventCard";
@@ -56,6 +58,13 @@ export default function EventsPage() {
         pageSize: 4,
         totalPages: 1,
         totalEvents: 0
+    });
+
+    // Pagination actions : Handles previous / next page navigation
+    const { handlePreviousPage, handleNextPage } = usePagination({
+        page: pagination.page,
+        totalPages: pagination.totalPages,
+        onPageChange: (nextPage) => loadData(filters, nextPage),
     });
 
 
@@ -112,11 +121,18 @@ export default function EventsPage() {
     const fetchMyEvents = async () => {
         if (!user) return {};
 
-        const response = await getMyEvents();
-        const membershipEvents = getMyEventsWithRole(response);
+        const membershipEvents = await fetchAllPaginated({
+            fetchPage: getMyEvents,
+            normalizePage: getMyEventsWithRole,
+            pageSize: 10,
+        });
 
         const membershipMap = {};
-        membershipEvents.forEach((item) => {membershipMap[item.id] = item.role});
+
+        membershipEvents.forEach((item) => {
+            membershipMap[item.id] = item.role;
+        });
+
         return membershipMap;
     };
 
@@ -156,17 +172,17 @@ export default function EventsPage() {
     ========================= */
 
     // Loads data on mount and when authentication state changes
-    useEffect(() => {loadData()}, [user]);
+    useEffect(() => { loadData() }, [user]);
 
     // Auto-clear feedback messages after delay
     useEffect(() => {
         if (message || error) {
             const timer = setTimeout(() => {
-            setMessage("");
-            setError("");
-        }, 3000);
+                setMessage("");
+                setError("");
+            }, 3000);
 
-        return () => clearTimeout(timer);
+            return () => clearTimeout(timer);
         }
     }, [message, error]);
 
@@ -176,7 +192,10 @@ export default function EventsPage() {
     ========================= */
 
     // Returns current user's role for a given event
-    const getRoleByEventId = (eventId) => myEvents[eventId] || null;
+    const getRoleByEventId = (event) => {
+        if (event.creatorId === user?.userId) return "organizer";
+        return myEvents[event.id] || null;
+    };
 
     // Events are already filtered by the backend according to active view
     const visibleEvents = events;
@@ -185,7 +204,7 @@ export default function EventsPage() {
     const sortLabels = getSortLabels(activeView);
 
     // Event membership actions: provides join / leave handlers
-    const { handleJoinEvent, handleLeaveEvent } = useEventActionsWithConfirm({loadData, setMessage, setError, getRoleByEventId });
+    const { handleJoinEvent, handleLeaveEvent } = useEventActionsWithConfirm({ loadData, setMessage, setError, getRoleByEventId });
 
 
     /* =========================
@@ -201,7 +220,7 @@ export default function EventsPage() {
             [name]: value
         }));
     };
-    
+
     // Applies current filters and resets pagination
     const handleFilterSubmit = async (e) => {
         e.preventDefault();
@@ -245,10 +264,10 @@ export default function EventsPage() {
 
         await loadData(resetFilters, 1);
     };
-    
+
     // Changes active view and reloads events from page 1
     const handleViewChange = async (nextView) => {
-        const nextFilters = nextView === "archives" ? {...filters, date: "", startDate: "", endDate: ""} : filters;
+        const nextFilters = nextView === "archives" ? { ...filters, date: "", startDate: "", endDate: "" } : filters;
 
         setActiveView(nextView);
         setFilters(nextFilters);
@@ -261,22 +280,10 @@ export default function EventsPage() {
         await loadData(nextFilters, 1, nextView);
     };
 
-    // Pagination: loads previous page
-    const handlePreviousPage = async () => {
-        if (pagination.page <= 1) return;
-        await loadData(filters, pagination.page - 1);
-    };
-
-    // Pagination: loads next page
-    const handleNextPage = async () => {
-        if (pagination.page >= pagination.totalPages) return;
-        await loadData(filters, pagination.page + 1);
-    };
-
     // Applies today's date filter preset
     const handleTodayFilter = async () => {
         const isAlreadyActive = Boolean(filters.date);
-        const nextFilters = isAlreadyActive ? {...filters,  date: ""} : getTodayEventFilters(filters);
+        const nextFilters = isAlreadyActive ? { ...filters, date: "" } : getTodayEventFilters(filters);
 
         setFilters(nextFilters);
         await loadData(nextFilters, 1)
@@ -285,7 +292,7 @@ export default function EventsPage() {
     // Applies this weekend date filter preset
     const handleWeekendFilter = async () => {
         const isAlreadyActive = isCurrentWeekendFilterActive(filters);
-        const nextFilters = isAlreadyActive ? {...filters, startDate: "", endDate: ""} : getWeekendEventFilters(filters);
+        const nextFilters = isAlreadyActive ? { ...filters, startDate: "", endDate: "" } : getWeekendEventFilters(filters);
 
         setFilters(nextFilters);
         await loadData(nextFilters, 1);
@@ -309,206 +316,206 @@ export default function EventsPage() {
     ========================= */
 
     return (
-    <div className="container page-section">
-        <div className="page-header">
-            <div>
-                <h1 className="page-title">Events</h1>
-                <p className="page-subtitle">Discover events, join communities, and manage your participation.</p>
+        <div className="container page-section">
+            <div className="page-header">
+                <div>
+                    <h1 className="page-title">Events</h1>
+                    <p className="page-subtitle">Discover events, join communities, and manage your participation.</p>
+                </div>
+                <Link to="/events/create" className="btn btn-primary">Create Event</Link>
             </div>
-            <Link to="/events/create" className="btn btn-primary">Create Event</Link>
-        </div>
 
-        {!user && (<Alert type="info">🔐 Login to join events and manage your participation.</Alert>)}
-        {message && <Alert type="success">{message}</Alert>}
-        {error && <Alert type="danger">{error}</Alert>}
+            {!user && (<Alert type="info">🔐 Login to join events and manage your participation.</Alert>)}
+            {message && <Alert type="success">{message}</Alert>}
+            {error && <Alert type="danger">{error}</Alert>}
 
-        {/* =========================
+            {/* =========================
             FILTER CARD
         ========================= */}
-        <Card className="filter-card">
-            {/* Header */}
-            <div className="filter-card-header">
-                <div>
-                    <h2 className="section-title">Filters</h2>
-                    <p className="section-subtitle">Refine events by search, category, location, date, or sorting.</p>
+            <Card className="filter-card">
+                {/* Header */}
+                <div className="filter-card-header">
+                    <div>
+                        <h2 className="section-title">Filters</h2>
+                        <p className="section-subtitle">Refine events by search, category, location, date, or sorting.</p>
+                    </div>
+
+                    <Button type="button" variant="outline" onClick={() => setShowFilters((prev) => !prev)}>{showFilters ? "Hide filters" : "Show filters"}</Button>
                 </div>
 
-                <Button type="button" variant="outline" onClick={() => setShowFilters((prev) => !prev)}>{showFilters ? "Hide filters" : "Show filters"}</Button>
-            </div>
+                {/* Collapsible content */}
+                {showFilters && (
+                    <>
+                        {/* Form */}
+                        <form onSubmit={handleFilterSubmit} className="filter-form">
+                            <div className="form-grid">
 
-            {/* Collapsible content */}
-            {showFilters && (
-                <>
-                    {/* Form */}
-                    <form onSubmit={handleFilterSubmit} className="filter-form">
-                        <div className="form-grid">
+                                <FormField label="Search">
+                                    <Input
+                                        name="search"
+                                        value={filters.search}
+                                        onChange={handleFilterChange}
+                                        placeholder="Search events..."
+                                    />
+                                </FormField>
 
-                            <FormField label="Search">
-                                <Input
-                                    name="search"
-                                    value={filters.search}
-                                    onChange={handleFilterChange}
-                                    placeholder="Search events..."
-                                />
-                            </FormField>
+                                <FormField label="Type">
+                                    <Input
+                                        name="type"
+                                        value={filters.type}
+                                        onChange={handleFilterChange}
+                                        placeholder="Workshop, Meetup..."
+                                    />
+                                </FormField>
 
-                            <FormField label="Type">
-                                <Input
-                                    name="type"
-                                    value={filters.type}
-                                    onChange={handleFilterChange}
-                                    placeholder="Workshop, Meetup..."
-                                />
-                            </FormField>
+                                <FormField label="Theme">
+                                    <Input
+                                        name="theme"
+                                        value={filters.theme}
+                                        onChange={handleFilterChange}
+                                        placeholder="Tech, Music..."
+                                    />
+                                </FormField>
 
-                            <FormField label="Theme">
-                                <Input
-                                    name="theme"
-                                    value={filters.theme}
-                                    onChange={handleFilterChange}
-                                    placeholder="Tech, Music..."
-                                />
-                            </FormField>
+                                <FormField label="Mode">
+                                    <Select name="mode" value={filters.mode} onChange={handleFilterChange}>
+                                        <option value="">All</option>
+                                        <option value="online">Online</option>
+                                        <option value="in_person">In person</option>
+                                    </Select>
+                                </FormField>
 
-                            <FormField label="Mode">
-                                <Select name="mode" value={filters.mode} onChange={handleFilterChange}>
-                                    <option value="">All</option>
-                                    <option value="online">Online</option>
-                                    <option value="in_person">In person</option>
-                                </Select>
-                            </FormField>
+                                <FormField label="Location">
+                                    <Input
+                                        name="location"
+                                        value={filters.location}
+                                        onChange={handleFilterChange}
+                                        placeholder="City or place..."
+                                    />
+                                </FormField>
 
-                            <FormField label="Location">
-                                <Input
-                                    name="location"
-                                    value={filters.location}
-                                    onChange={handleFilterChange}
-                                    placeholder="City or place..."
-                                />
-                            </FormField>
+                                <FormField label="Date">
+                                    <Input
+                                        type="date"
+                                        name="date"
+                                        value={filters.date}
+                                        onChange={handleFilterChange}
+                                    />
+                                </FormField>
 
-                            <FormField label="Date">
-                                <Input
-                                    type="date"
-                                    name="date"
-                                    value={filters.date}
-                                    onChange={handleFilterChange}
-                                />
-                            </FormField>
+                                <FormField label="Start date">
+                                    <Input
+                                        type="date"
+                                        name="startDate"
+                                        value={filters.startDate}
+                                        onChange={handleFilterChange}
+                                    />
+                                </FormField>
 
-                            <FormField label="Start date">
-                                <Input
-                                    type="date"
-                                    name="startDate"
-                                    value={filters.startDate}
-                                    onChange={handleFilterChange}
-                                />
-                            </FormField>
+                                <FormField label="End date">
+                                    <Input
+                                        type="date"
+                                        name="endDate"
+                                        value={filters.endDate}
+                                        onChange={handleFilterChange}
+                                    />
+                                </FormField>
 
-                            <FormField label="End date">
-                                <Input
-                                    type="date"
-                                    name="endDate"
-                                    value={filters.endDate}
-                                    onChange={handleFilterChange}
-                                />
-                            </FormField>
-
-                            <FormField label="Sort by">
-                                <Select 
-                                    name="sortBy" 
-                                    value={`${filters.sortBy || "startDateTime"}-${filters.order || "asc"}`}
-                                    onChange={handleSortChange}
+                                <FormField label="Sort by">
+                                    <Select
+                                        name="sortBy"
+                                        value={`${filters.sortBy || "startDateTime"}-${filters.order || "asc"}`}
+                                        onChange={handleSortChange}
                                     >
-                                    {Object.entries(sortLabels).map(([value, label]) => (
-                                        <option key={value} value={value}>{label}</option>
-                                    ))}
-                                </Select>
-                            </FormField>
-                        </div>
+                                        {Object.entries(sortLabels).map(([value, label]) => (
+                                            <option key={value} value={value}>{label}</option>
+                                        ))}
+                                    </Select>
+                                </FormField>
+                            </div>
 
-                        <div className="form-actions">
-                            <Button type="submit">Apply filters</Button>
-                            <Button type="button" variant="outline" onClick={handleResetFilters}>Reset</Button>
-                        </div>
-                    </form>
-                </>
-            )}
-        </Card>
+                            <div className="form-actions">
+                                <Button type="submit">Apply filters</Button>
+                                <Button type="button" variant="outline" onClick={handleResetFilters}>Reset</Button>
+                            </div>
+                        </form>
+                    </>
+                )}
+            </Card>
 
 
 
-        {/* =========================
+            {/* =========================
             EVENTS HEADER
         ========================= */}
-        <div className="events-header">
-            <div className="events-header-top">
-                <h2 className="section-title">
-                    {activeView === "archives" ? "Archives" : activeView === "upcoming" ? "Upcoming Events" : "All Events"}
-                    <span className="results-count">({pagination.totalEvents})</span>
-                </h2>
+            <div className="events-header">
+                <div className="events-header-top">
+                    <h2 className="section-title">
+                        {activeView === "archives" ? "Archives" : activeView === "upcoming" ? "Upcoming Events" : "All Events"}
+                        <span className="results-count">({pagination.totalEvents})</span>
+                    </h2>
 
-                {pagination.totalPages > 1 && (<span className="results-page-info">Page {pagination.page} of {pagination.totalPages}</span>)}
+                    {pagination.totalPages > 1 && (<span className="results-page-info">Page {pagination.page} of {pagination.totalPages}</span>)}
+                </div>
+
+                <p className="section-subtitle">
+                    {activeView === "archives" ? "Explore past events."
+                        : activeView === "upcoming" ? "Discover upcoming events and plan ahead."
+                            : "Browse all events and refine your search."
+                    }
+                </p>
+
+                <div className="events-view-bar">
+                    <EventsViewTabs activeView={activeView} onChange={handleViewChange} />
+
+                    {activeView !== "archives" && (
+                        <div className="events-quick-actions">
+                            <Button type="button" variant={filters.date ? "filter-active" : "outline-primary"} onClick={handleTodayFilter}>Today</Button>
+                            <Button type="button" variant={isCurrentWeekendFilterActive(filters) ? "filter-active" : "outline-primary"} onClick={handleWeekendFilter}>This Weekend</Button>
+                        </div>
+                    )}
+
+                </div>
             </div>
 
-            <p className="section-subtitle">
-                {activeView === "archives" ? "Explore past events."
-                    : activeView === "upcoming" ? "Discover upcoming events and plan ahead."
-                    : "Browse all events and refine your search."
-                }
-            </p>
-
-            <div className="events-view-bar">
-                <EventsViewTabs activeView={activeView} onChange={handleViewChange} />
-
-                {activeView !== "archives" && (
-                    <div className="events-quick-actions">
-                        <Button type="button" variant={filters.date ? "filter-active" : "outline-primary"} onClick={handleTodayFilter}>Today</Button>
-                        <Button type="button" variant={isCurrentWeekendFilterActive(filters) ? "filter-active" : "outline-primary"} onClick={handleWeekendFilter}>This Weekend</Button>
+            {/* =========================
+            EVENTS LIST
+            ========================= */}
+            <section className="events-section">
+                {visibleEvents.length === 0 ? (
+                    <EmptyState>
+                        {filters.date ? "No events are scheduled for today."
+                            : filters.startDate || filters.endDate ? "No events are scheduled for this weekend."
+                                : activeView === "upcoming" ? "No upcoming events."
+                                    : activeView === "archives" ? "No archived events."
+                                        : "No events found."}
+                    </EmptyState>
+                ) : (
+                    <div className="events-grid">
+                        {visibleEvents.map((event) => (
+                            <EventCard
+                                key={event.id}
+                                event={event}
+                                user={user}
+                                role={getRoleByEventId(event)}
+                                onJoin={handleJoinEvent}
+                                onLeave={handleLeaveEvent}
+                            />
+                        ))}
                     </div>
                 )}
+            </section>
 
-            </div>
-        </div>
-
-        {/* =========================
-            EVENTS LIST
-        ========================= */}
-        <section className="events-section">
-            {visibleEvents.length === 0 ? (
-                <EmptyState>
-                    {filters.date ? "No events are scheduled for today." 
-                    : filters.startDate || filters.endDate ? "No events are scheduled for this weekend."
-                    : activeView === "upcoming" ? "No upcoming events."
-                    : activeView === "archives" ? "No archived events."
-                    : "No events found."}
-                </EmptyState>
-            ) : (
-                <div className="events-grid">
-                    {visibleEvents.map((event) => (
-                        <EventCard
-                            key={event.id}
-                            event={event}
-                            user={user}
-                            role={getRoleByEventId(event.id)}
-                            onJoin={handleJoinEvent}
-                            onLeave={handleLeaveEvent}
-                        />
-                    ))}
+            {/* =========================
+            PAGINATION
+            ========================= */}
+            {pagination.totalPages > 1 && (
+                <div className="pagination">
+                    <Button type="button" variant="outline" onClick={handlePreviousPage} disabled={pagination.page === 1}>Previous</Button>
+                    <span className="pagination-info">Page {pagination.page} of {pagination.totalPages}</span>
+                    <Button type="button" variant="outline" onClick={handleNextPage} disabled={pagination.page === pagination.totalPages}>Next</Button>
                 </div>
             )}
-        </section>
-
-        {/* =========================
-            PAGINATION
-        ========================= */}
-        {pagination.totalPages > 1 && (
-            <div className="pagination">
-                <Button type="button" variant="outline" onClick={handlePreviousPage} disabled={pagination.page === 1}>Previous</Button>
-                <span className="pagination-info">Page {pagination.page} of {pagination.totalPages}</span>
-                <Button type="button" variant="outline" onClick={handleNextPage} disabled={pagination.page === pagination.totalPages}>Next</Button>
-            </div>
-        )}
-    </div>
+        </div>
     );
 }

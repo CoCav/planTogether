@@ -5,9 +5,9 @@ import { getEventById } from "../api/eventApi";
 import { getEventMembers, getEventOrganizers } from "../api/eventMembershipApi.js";
 import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../features/events/normalizeData.js";
 import { formatEventDateRange, formatCount, formatBe, formatTime } from "../utils/format.js";
-import useEventManagementActions from "../hooks/useEventManagementActions.js";
-import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm.js";
-import useEventPermissions from "../hooks/useEventPermissions.js";
+import useEventManagementActions from "../hooks/events/useEventManagementActions";
+import useEventActionsWithConfirm from "../hooks/events/useEventActionsWithConfirm";
+import useEventPermissions from "../hooks/events/useEventPermissions";
 
 import Button from "../components/ui/Button.jsx";
 import Card from "../components/ui/Card.jsx";

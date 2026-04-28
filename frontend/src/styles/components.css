@@ -277,6 +277,10 @@
     color: var(--color-text-muted);
 }
 
+.text-danger {
+    color: var(--color-danger)
+}
+
 .event-type-badge {
     display: inline-flex;
     align-items: center;

@@ -4,7 +4,7 @@ import { useAuth } from "../context/useAuth.js";
 import { getAllEvents } from "../api/eventApi"
 import { getMyEvents } from "../api/eventMembershipApi";
 import { getNormalizedEvents, getMyEventsWithRole } from "../features/events/normalizeData.js";
-import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
+import useEventActionsWithConfirm from "../hooks/events/useEventManagementActions.js";
 
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";

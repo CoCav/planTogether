@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getMyEvents } from "../api/eventMembershipApi";
 import { getMyEventsWithRole } from "../features/events/normalizeData";
-import useEventActionsWithConfirm from "../hooks/useEventActionsWithConfirm";
+import useEventActionsWithConfirm from "../hooks/events/useEventActionsWithConfirm";
 
 import Button from "../components/ui/Button";
 import Alert from "../components/ui/Alert";

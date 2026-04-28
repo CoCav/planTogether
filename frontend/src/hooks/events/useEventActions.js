@@ -17,7 +17,7 @@
    pages/components free of API side-effects.
 ================================================== */
 
-import { joinEvent, leaveEvent } from "../api/eventMembershipApi";
+import { joinEvent, leaveEvent } from "../../api/eventMembershipApi";
 
 export default function useEventActions({ loadData, setMessage, setError, getRoleByEventId }) {
 

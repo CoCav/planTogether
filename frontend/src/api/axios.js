@@ -1,10 +1,14 @@
 import axios from "axios";
 import { getToken } from "../features/auth/token";
 
-/**
- * Axios instance used across the frontend application.
- * Handles base API URL and automatically injects the JWT token.
- */
+/* ==================================================
+   AXIOS INSTANCE
+   Shared Axios client used by all frontend API calls
+
+   Handles:
+   - base API URL
+   - JWT authorization header
+================================================== */
 
 // Creates a reusable Axios instance for all API requests
 const api = axios.create({

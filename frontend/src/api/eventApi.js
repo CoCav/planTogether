@@ -1,5 +1,10 @@
 import api from "./axios";
 
+/* ==================================================
+   EVENT API
+   Handles event CRUD and event listing requests
+================================================== */
+
 // Fetches all public events
 export const getAllEvents = (params = {}) => api.get("/events", { params });
 

@@ -1,5 +1,10 @@
 import api from "./axios";
 
+/* ==================================================
+   EVENT MEMBERSHIP API
+   Handles event membership and role management requests
+================================================== */
+
 // Fetches all events related to the current authenticated user (include role information)
 export const getMyEvents = (params = {}) => api.get("/events/my-events", { params });
 
@@ -19,4 +24,4 @@ export const getEventOrganizers = (eventId) => api.get(`/events/${eventId}/organ
 export const updateMemberRole = (eventId, userId, newRole) => api.put(`/events/${eventId}/members/${userId}/role`, { newRole });
 
 // Removes a member from an event
-export const removeEventMember = (eventId, userId) => api.delete(`/events/${eventId}/members/${userId}`); 
+export const removeEventMember = (eventId, userId) => api.delete(`/events/${eventId}/members/${userId}`);

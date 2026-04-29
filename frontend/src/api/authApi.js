@@ -1,5 +1,10 @@
 import api from "./axios";
 
+/* ==================================================
+   AUTH API
+   Handles authentication and profile requests
+================================================== */
+
 // Register a new user
 export const registerUser = (userData) => api.post("/auth/register", userData);
 

@@ -1,11 +1,46 @@
 /* ==================================================
    AUTH VALIDATION
-   Frontend validation helpers aligned with backend rules
+   Provides frontend validation helpers for auth forms
+
+   Covers:
+   - register form
+   - login form
+   - profile update
+   - password change
 ================================================== */
+
+/* =========================
+   Shared helpers
+========================= */
+
+const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
+
+const validatePasswordRules = (password) => {
+    const errors = [];
+
+    if (password.length < 6) {
+        errors.push("At least 6 characters");
+    }
+
+    if (!/\d/.test(password)) {
+        errors.push("At least 1 number");
+    }
+
+    if (!/[A-Z]/.test(password)) {
+        errors.push("At least 1 uppercase letter");
+    }
+
+    if (!/[a-z]/.test(password)) {
+        errors.push("At least 1 lowercase letter");
+    }
+
+    return errors;
+};
 
 /* =========================
    Register validation
 ========================= */
+
 export const validateRegisterForm = ({ name, email, password }) => {
     const errors = {};
 
@@ -15,30 +50,14 @@ export const validateRegisterForm = ({ name, email, password }) => {
 
     if (!email.trim()) {
         errors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
+    } else if (!isValidEmail(email)) {
         errors.email = "Invalid email";
     }
 
     if (!password) {
         errors.password = "Password is required";
     } else {
-        const passwordErrors = [];
-
-        if (password.length < 6) {
-            passwordErrors.push("At least 6 characters");
-        }
-
-        if (!/\d/.test(password)) {
-            passwordErrors.push("At least 1 number");
-        }
-
-        if (!/[A-Z]/.test(password)) {
-            passwordErrors.push("At least 1 uppercase letter");
-        }
-
-        if (!/[a-z]/.test(password)) {
-            passwordErrors.push("At least 1 lowercase letter");
-        }
+        const passwordErrors = validatePasswordRules(password);
 
         if (passwordErrors.length > 0) {
             errors.password = passwordErrors;
@@ -51,12 +70,13 @@ export const validateRegisterForm = ({ name, email, password }) => {
 /* =========================
    Login validation
 ========================= */
+
 export const validateLoginForm = ({ email, password }) => {
     const errors = {};
 
     if (!email.trim()) {
         errors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
+    } else if (!isValidEmail(email)) {
         errors.email = "Invalid email";
     }
 
@@ -70,6 +90,7 @@ export const validateLoginForm = ({ email, password }) => {
 /* =========================
    Profile validation
 ========================= */
+
 export const validateProfileForm = ({ name, email }) => {
     const errors = {};
 
@@ -81,7 +102,7 @@ export const validateProfileForm = ({ name, email }) => {
 
     if (!email.trim()) {
         errors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
+    } else if (!isValidEmail(email)) {
         errors.email = "Invalid email";
     }
 
@@ -91,6 +112,7 @@ export const validateProfileForm = ({ name, email }) => {
 /* =========================
    Change password validation
 ========================= */
+
 export const validateChangePasswordForm = ({ currentPassword, newPassword, confirmPassword }) => {
     const errors = {};
 
@@ -101,26 +123,12 @@ export const validateChangePasswordForm = ({ currentPassword, newPassword, confi
     if (!newPassword) {
         errors.newPassword = "New password is required";
     } else {
-        const passwordErrors = [];
-
-        if (newPassword.length < 6) {
-            passwordErrors.push("At least 6 characters");
-        }
-
-        if (!/\d/.test(newPassword)) {
-            passwordErrors.push("At least 1 number");
-        }
-
-        if (!/[A-Z]/.test(newPassword)) {
-            passwordErrors.push("At least 1 uppercase letter");
-        }
-
-        if (!/[a-z]/.test(newPassword)) {
-            passwordErrors.push("At least 1 lowercase letter");
-        }
+        const passwordErrors = validatePasswordRules(newPassword);
 
         if (currentPassword && currentPassword === newPassword) {
-            passwordErrors.push("New password must be different from current password");
+            passwordErrors.push(
+                "New password must be different from current password"
+            );
         }
 
         if (passwordErrors.length > 0) {
@@ -131,7 +139,8 @@ export const validateChangePasswordForm = ({ currentPassword, newPassword, confi
     if (!confirmPassword) {
         errors.confirmPassword = "Confirm password is required";
     } else if (newPassword && confirmPassword !== newPassword) {
-        errors.confirmPassword = "Passwords do not match. Please check again.";
+        errors.confirmPassword =
+            "Passwords do not match. Please check again.";
     }
 
     return errors;

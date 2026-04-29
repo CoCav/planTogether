@@ -1,68 +1,50 @@
-export const validateEventForm = ({ title, type, theme, description, startDate, startTime, endDate, endTime, mode, location }, options = {} ) => {
+/* ==================================================
+   EVENT VALIDATION
+   Provides frontend validation for create/edit event forms
+
+   Handles:
+   - required event fields
+   - start/end date logic
+   - in-person location requirement
+================================================== */
+
+const getDateTime = (date, time) => new Date(`${date}T${time}`);
+
+const getTodayInputDate = () => new Date().toISOString().split("T")[0];
+
+export const validateEventForm = ({ title, type, theme, description, startDate, startTime, endDate, endTime, mode, location }, options = {}) => {
     const { allowPastStart = false } = options;
     const errors = {};
 
-    if (!title?.trim()) {
-        errors.title = "Title is required";
-    }
+    if (!title?.trim()) errors.title = "Title is required";
+    if (!type?.trim()) errors.type = "Type is required";
+    if (!theme?.trim()) errors.theme = "Theme is required";
+    if (!description?.trim()) errors.description = "Description is required";
 
-    if (!type?.trim()) {
-        errors.type = "Type is required";
-    }
+    if (!startDate) errors.startDate = "Start date is required";
+    if (!startTime) errors.startTime = "Start time is required";
+    if (!endDate) errors.endDate = "End date is required";
+    if (!endTime) errors.endTime = "End time is required";
 
-    if (!theme?.trim()) {
-        errors.theme = "Theme is required";
-    }
-
-    if (!description?.trim()) {
-        errors.description = "Description is required";
-    }
-
-    if (!startDate) {
-        errors.startDate = "Start date is required";
-    }
-
-    if (!startTime) {
-        errors.startTime = "Start time is required";
-    }
-
-    if (!endDate) {
-        errors.endDate = "End date is required";
-    }
-
-    if (!endTime) {
-        errors.endTime = "End time is required";
-    }
-
-    /* ---------- Start date/time validation ---------- */
     if (!allowPastStart && startDate && startTime) {
         const now = new Date();
-        const start = new Date(`${startDate}T${startTime}`);
+        const start = getDateTime(startDate, startTime);
+        const today = getTodayInputDate();
 
-        // Get today's date in YYYY-MM-DD format for comparison
-        const today = new Date().toISOString().split("T")[0];
-
-        // Case 1: Start date is before today
         if (startDate < today) {
             errors.startDate = "Start date cannot be in the past";
-        }
-        // Case 2: Same day but time is in the past
-        else if (startDate === today && start < now) {
+        } else if (startDate === today && start < now) {
             errors.startTime = "Start time cannot be in the past";
         }
     }
 
-    /* ---------- End date/time validation ---------- */
     if (startDate && startTime && endDate && endTime) {
-        const start = new Date(`${startDate}T${startTime}`);
-        const end = new Date(`${endDate}T${endTime}`);
+        const start = getDateTime(startDate, startTime);
+        const end = getDateTime(endDate, endTime);
 
-        // Case 1: End date is before start date
         if (endDate < startDate) {
             errors.endDate = "End date must be after start date";
-        }
-        // Case 2: Same day but end time is before or equal to start time
-        else if (startDate === endDate && end <= start) {
+        } else if (startDate === endDate && end <= start) {
             errors.endTime = "End time must be after start time";
         }
     }

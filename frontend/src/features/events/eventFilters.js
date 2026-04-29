@@ -1,13 +1,13 @@
-/* ===========================================================
-   EVENT FILTER UTILS
-   Helpers for building event filter presets and sort options
-============================================================== */
+/* ==================================================
+   EVENT FILTERS
+   Provides event filter defaults, presets and sort options
 
-/* =========================
-   Local date formatter
-   Converts a Date object to YYYY-MM-DD format using local timezone
-   Avoids UTC issues caused by toISOString for date inputs
-========================= */
+   Handles:
+   - default filter values
+   - sort mapping and labels
+   - quick date filters
+================================================== */
+
 const formatDateForInput = (date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -16,10 +16,6 @@ const formatDateForInput = (date) => {
     return `${year}-${month}-${day}`;
 };
 
-/* =========================
-   Default filters
-   Returns the default filter object used by the Events page
-========================= */
 export const getDefaultEventFilters = () => ({
     search: "",
     type: "",
@@ -33,10 +29,6 @@ export const getDefaultEventFilters = () => ({
     order: "asc"
 });
 
-/* =========================
-   Sort mapping
-   Maps sort options to backend sortBy + order
-========================= */
 export const EVENT_SORT_MAP = {
     "startDateTime-asc": { sortBy: "startDateTime", order: "asc" },
     "startDateTime-desc": { sortBy: "startDateTime", order: "desc" },
@@ -44,25 +36,13 @@ export const EVENT_SORT_MAP = {
     "title-desc": { sortBy: "title", order: "desc" }
 };
 
-/* =========================
-   Sort labels
-   Maps sort options to UI labels depending on view
-========================= */
 export const getSortLabels = (view) => ({
-    "startDateTime-asc":
-        view === "archives" ? "Oldest first" : "Soonest first",
-
-    "startDateTime-desc":
-        view === "archives" ? "Most recent" : "Farthest first",
-
+    "startDateTime-asc": view === "archives" ? "Oldest first" : "Soonest first",
+    "startDateTime-desc": view === "archives" ? "Most recent" : "Farthest first",
     "title-asc": "Title A-Z",
     "title-desc": "Title Z-A"
 });
 
-/* =========================
-   Today filter
-   Returns filters for events happening today
-========================= */
 export const getTodayEventFilters = (currentFilters = {}) => {
     const today = formatDateForInput(new Date());
 
@@ -74,10 +54,6 @@ export const getTodayEventFilters = (currentFilters = {}) => {
     };
 };
 
-/* =========================
-   Current weekend range
-   Returns this weekend dates based on today's date
-========================= */
 export const getCurrentWeekendDateRange = () => {
     const now = new Date();
     const day = now.getDay(); // 0 = Sunday, 6 = Saturday
@@ -94,10 +70,6 @@ export const getCurrentWeekendDateRange = () => {
     };
 };
 
-/* =========================
-   Current weekend active state
-   Checks if filters match this weekend exactly
-========================= */
 export const isCurrentWeekendFilterActive = (filters = {}) => {
     const weekend = getCurrentWeekendDateRange();
 
@@ -107,10 +79,6 @@ export const isCurrentWeekendFilterActive = (filters = {}) => {
     );
 };
 
-/* =========================
-   Weekend filter
-   Returns filters for events happening this weekend
-========================= */
 export const getWeekendEventFilters = (currentFilters = {}) => {
     const weekend = getCurrentWeekendDateRange();
 

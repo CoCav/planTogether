@@ -1,9 +1,14 @@
-/* ==================================================
-   DATA NORMALIZATION
-   Transforms backend data into frontend-friendly format
-================================================== */
-
 import { extractApiData } from "../../utils/extractApiData";
+
+/* ==================================================
+   EVENT DATA NORMALIZATION
+   Converts backend event responses into frontend-friendly data
+
+   Handles:
+   - event objects
+   - member / organizer role data
+   - API response extraction
+================================================== */
 
 // Normalizes a single event object
 // Ensures that all expected fields are present with default values
@@ -18,7 +23,7 @@ export const normalizeEvent = (event = {}) => ({
     startDateTime: event.startDateTime || null,
     endDateTime: event.endDateTime || null,
     creatorId: event.creatorId || null,
-    creatorName: event.creator?.name || "", 
+    creatorName: event.creator?.name || "",
     maxParticipants: event.maxParticipants === null || event.maxParticipants === undefined ? null : Number(event.maxParticipants),
     registrationDeadline: event.registrationDeadline || null,
     participantCount: Number(event.participantCount) || 0,
@@ -30,7 +35,7 @@ export const normalizeEvent = (event = {}) => ({
 // Normalizes an array of events
 export const normalizeEvents = (events = []) => Array.isArray(events) ? events.map(normalizeEvent) : [];
 
-// Normalizes user-role data (members / organizers) 
+// Normalizes user-role data (members / organizers)
 export const normalizeUserRoleData = (items = []) =>
     items.map((item) => ({
         id: item.User.id,
@@ -38,22 +43,22 @@ export const normalizeUserRoleData = (items = []) =>
         email: item.User.email,
         role: item.role,
     })
-);
+    );
 
 // Extracts and normalizes events from a response like GET /events or GET /events/filtered
 export const getNormalizedEvents = (response = {}) => normalizeEvents(extractApiData(response, "events"));
 
 // Extracts and normalizes events related to the current user (includes role(s))
 export const getMyEventsWithRole = (response = {}) => {
-  const items = response.data.events || [];
-  return items.map((item) => {
-    const event = normalizeEvent(item.Event || item);
+    const items = response.data.events || [];
+    return items.map((item) => {
+        const event = normalizeEvent(item.Event || item);
 
-    return {
-        ...event,
-        role: item.role || "participant",
-    };
-  });
+        return {
+            ...event,
+            role: item.role || "participant",
+        };
+    });
 }
 // Extracts and normalizes a single event from a response like GET /events/:id
 export const getNormalizedEvent = (response = {}) => normalizeEvent(extractApiData(response, "event"));

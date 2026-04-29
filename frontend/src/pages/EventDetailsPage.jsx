@@ -1,33 +1,32 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { getEventById } from "../api/eventApi";
 import { getEventMembers, getEventOrganizers } from "../api/eventMembershipApi.js";
 import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../features/events/normalizeData.js";
 import { formatEventDateRange, formatCount, formatBe, formatTime } from "../utils/format.js";
+
 import useEventManagementActions from "../hooks/events/useEventManagementActions";
 import useEventActionsWithConfirm from "../hooks/events/useEventActionsWithConfirm";
 import useEventPermissions from "../hooks/events/useEventPermissions";
 
+import EventMemberList from "../components/events/EventMemberList.jsx";
+
 import Button from "../components/ui/Button.jsx";
 import Card from "../components/ui/Card.jsx";
-import Badge from "../components/ui/Badge.jsx";
 import Alert from "../components/ui/Alert.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
-import LoadingState from "../components/ui/LoadingState.jsx";
+import PageLoading from "../components/ui/PageLoading.jsx";
 
 /* ==================================================
    EVENT DETAILS PAGE
-   Displays detailed information about a specific event,
-   including participants and organizers.
+   Displays detailed information about a single event.
 
-   Allows users to:
-   - Join or leave the event
-   - Edit or delete the event if authorized
-   - Manage members by promoting, demoting, or removing them
-
-   Uses centralized permission logic via useEventPermissions
-   to control UI actions based on user role and event state.
+   Supports:
+   - join / leave actions
+   - edit / delete actions
+   - organizer and participant management
+   - role-based UI permissions
 ================================================== */
 
 export default function EventDetailsPage() {
@@ -38,18 +37,20 @@ export default function EventDetailsPage() {
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
-    // Event details states: stores event data and related memberships
+    // Stores event details returned by the backend
     const [event, setEvent] = useState(null);
+
+    // Stores event membership collections
     const [members, setMembers] = useState([]);
     const [organizers, setOrganizers] = useState([]);
 
-    // Page loading state: controls loading screen while data is fetched
+    // Controls full-page loading state
     const [loading, setLoading] = useState(true);
 
 
     /* =========================
-     Derived collections
-        Splits visible members into organizers and participants
+       Derived member data
+       Computes participants and section counts
     ========================= */
 
     const participants = members.filter((person) => person.role === "participant");
@@ -58,29 +59,30 @@ export default function EventDetailsPage() {
 
 
     /* =========================
-     Event permissions
-        Centralizes action visibility and role-based permissions
+       Event permissions
+       Centralizes role-based UI visibility
     ========================= */
 
     const { myRole, isPast, canJoin, canLeave, canEdit, canDelete, canPromote, canDemote, canRemove, joinDisabledReason } = useEventPermissions({ user, event, members, organizers });
 
-    // Returns the current role for shared event action hooks
+    // In this page there is only one event, so the current role is enough
     const getRoleByEventId = () => myRole;
 
 
+
     /* =========================
-        Data loading functions
+       Event data loading
+       Fetches event details, organizers and members
     ========================= */
 
-    // Fetches event details, organizer(s), and participants
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         try {
             setError("");
             setLoading(true);
 
             const [eventRes, organizersRes] = await Promise.all([
                 getEventById(eventId),
-                getEventOrganizers(eventId),
+                getEventOrganizers(eventId)
             ]);
 
             setEvent(getNormalizedEvent(eventRes));
@@ -94,15 +96,23 @@ export default function EventDetailsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [eventId]);
 
-    // Waits for auth state before fetching event data
+    /* =========================
+       Initial data loading
+       Waits for authentication state before loading
+    ========================= */
+
     useEffect(() => {
         if (authLoading) return;
         loadData();
-    }, [eventId, user, authLoading]);
+    }, [authLoading, loadData]);
 
-    // Auto-clears feedback messages after delay
+    /* =========================
+       Feedback cleanup
+       Clears success/error messages automatically
+    ========================= */
+
     useEffect(() => {
         if (message || error) {
             const timer = setTimeout(() => {
@@ -116,42 +126,39 @@ export default function EventDetailsPage() {
 
 
     /* =========================
-     Event actions
+       Event actions
+       Membership and management operations
     ========================= */
 
-    // Membership actions (join / leave with confirmation)
     const { handleJoinEvent, handleLeaveEvent } = useEventActionsWithConfirm({ loadData, setMessage, setError, getRoleByEventId });
 
-    // Management actions (promote, demote, remove, delete)
     const { handlePromote, handleDemote, handleDeleteEvent, handleRemoveMember } = useEventManagementActions({ eventId, loadData, setMessage, setError });
 
 
     /* =========================
-        Loading render
+       Loading state
     ========================= */
 
     if (loading) {
-        return (
-            <div className="container page-section">
-                <LoadingState>Loading event details...</LoadingState>
-            </div>
-        );
+        return <PageLoading>Loading event details...</PageLoading>;
     }
 
+
     /* =========================
-     Empty render
-        Handles missing or deleted event state
+       Empty state
+       Handles missing or deleted event
     ========================= */
 
     if (!event) {
         return (
             <div className="container page-section">
                 <Card>
-                    <EmptyState>Event not found.</EmptyState>
+                    <EmptyState title="Event not found." />
                 </Card>
             </div>
         );
     }
+
 
     /* =========================
        Main render
@@ -161,7 +168,7 @@ export default function EventDetailsPage() {
         <div className="container page-section">
             <div className="page-header">
                 <div>
-                    <p className="page-subtitle">View event details, manage attendance, and organize members.</p>
+                    <p className="page-subtitle"> View event details, manage attendance, and organize members.</p>
                 </div>
             </div>
 
@@ -182,7 +189,9 @@ export default function EventDetailsPage() {
                             <>
                                 {canJoin && (<Button type="button" onClick={() => handleJoinEvent(event.id)}>Join the event</Button>)}
                                 {!canJoin && joinDisabledReason && (<Button type="button" disabled>{joinDisabledReason}</Button>)}
+
                                 {canLeave && (<Button type="button" variant="outline-danger" onClick={() => handleLeaveEvent(event.id)}>Leave the event</Button>)}
+
                                 {canEdit && (<Button type="button" variant="outline" onClick={() => navigate(`/events/${event.id}/edit`)}>Edit Event</Button>)}
                                 {canDelete && (<Button type="button" variant="danger" onClick={handleDeleteEvent}>Delete Event</Button>)}
                             </>
@@ -191,8 +200,6 @@ export default function EventDetailsPage() {
                 </div>
 
                 <div className="event-info-grid">
-
-
                     <div className="event-info-card">
                         <span className="event-info-label">🏷️ Type</span>
                         <span className="event-info-value">{event.type || "N/A"}</span>
@@ -216,9 +223,7 @@ export default function EventDetailsPage() {
                     {event.maxParticipants && (
                         <div className="event-info-card">
                             <span className="event-info-label">👥 Capacity</span>
-                            <span className="event-info-value">
-                                {event.participantCount} / {event.maxParticipants}
-                            </span>
+                            <span className="event-info-value">{event.participantCount} / {event.maxParticipants}</span>
                         </div>
                     )}
 
@@ -235,9 +240,7 @@ export default function EventDetailsPage() {
                     {event.registrationDeadline && (
                         <div className="event-info-card">
                             <span className="event-info-label">⏳ Registration deadline</span>
-                            <span className="event-info-value">
-                                {formatEventDateRange(event.registrationDeadline, event.registrationDeadline)}
-                            </span>
+                            <span className="event-info-value">{formatEventDateRange(event.registrationDeadline, event.registrationDeadline)}</span>
                         </div>
                     )}
                 </div>
@@ -245,68 +248,42 @@ export default function EventDetailsPage() {
 
             <div className="details-sections">
                 <Card>
-                    <div className="section-header">
-                        <h2 className="section-title">👑 Event Team</h2>
-                        <p className="section-subtitle">{formatCount(organizersCount, "member")} {formatBe(organizersCount)} managing this event.</p>
-                    </div>
-
-                    {organizers.length === 0 ? (
-                        <EmptyState>No team members.</EmptyState>
-                    ) : (
-                        <div className="member-list">
-                            {organizers.map((person) => (
-                                <div key={person.id} className="member-row">
-                                    <div className="member-info">
-                                        <span className="member-name">{person.name}</span>
-                                        <Badge role={person.role} />
-                                    </div>
-
-                                    {user && (
-                                        <div className="member-actions">
-                                            {canDemote(person) && (<Button type="button" variant="outline" onClick={() => handleDemote(person.id)}>Demote</Button>)}
-                                            {canRemove(person) && (<Button type="button" variant="danger" onClick={() => handleRemoveMember(person.id)}>Remove</Button>)}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                    <EventMemberList
+                        title="👑 Event Team"
+                        subtitle={`${formatCount(organizersCount, "member")} ${formatBe(organizersCount)} managing this event.`}
+                        members={organizers}
+                        emptyMessage="No team members."
+                        showActions={Boolean(user)}
+                        renderActions={(person) => (
+                            <>
+                                {canDemote(person) && (<Button type="button" variant="outline" onClick={() => handleDemote(person.id)}>Demote</Button>)}
+                                {canRemove(person) && (<Button type="button" variant="danger" onClick={() => handleRemoveMember(person.id)}>Remove</Button>)}
+                            </>
+                        )}
+                    />
                 </Card>
 
                 <Card>
-                    <div className="section-header">
-                        <h2 className="section-title">👥 {participantCount} Attendee{participantCount > 1 ? "s" : ""}</h2>
-                        <p className="section-subtitle">{formatCount(participantCount, "attendee")} {formatBe(participantCount)} attending this event.</p>
-                    </div>
+                    <EventMemberList
+                        title={`👥 ${participantCount} Attendee${participantCount > 1 ? "s" : ""}`}
+                        subtitle={`${formatCount(participantCount, "attendee")} ${formatBe(participantCount)} attending this event.`}
+                        members={participants}
+                        emptyMessage={isPast ? "No one attended this event." : "No participants yet."}
+                        showActions={Boolean(user)}
+                        renderActions={(person) => (
+                            <>
+                                {canPromote(person) && (
+                                    <Button type="button" variant="outline" onClick={() => handlePromote(person.id)}>Promote</Button>)}
+
+                                {canRemove(person) && (<Button type="button" variant="danger" onClick={() => handleRemoveMember(person.id)}>Remove</Button>)}
+                            </>
+                        )}
+                    />
 
                     {!user && (
                         <Alert type="info">
                             {isPast ? "This event has ended." : "🔐 Login to join this event and interact with participants."}
                         </Alert>
-                    )}
-
-                    {participants.length === 0 ? (
-                        <EmptyState>
-                            {isPast ? "No one attended this event." : "No participants yet."}
-                        </EmptyState>
-                    ) : (
-                        <div className="member-list">
-                            {participants.map((person) => (
-                                <div key={person.id} className="member-row">
-                                    <div className="member-info">
-                                        <span className="member-name">{person.name}</span>
-                                        <Badge role={person.role} />
-                                    </div>
-
-                                    {user && (
-                                        <div className="member-actions">
-                                            {canPromote(person) && (<Button type="button" variant="outline" onClick={() => handlePromote(person.id)}>Promote</Button>)}
-                                            {canRemove(person) && (<Button type="button" variant="danger" onClick={() => handleRemoveMember(person.id)}>Remove</Button>)}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
                     )}
                 </Card>
             </div>

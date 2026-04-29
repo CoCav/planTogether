@@ -1,12 +1,16 @@
 /* ==================================================
-   BADGE COMPONENT
-   Displays a styled label based on user role
-   or custom variant and content
+   BADGE
+   Displays a styled label for roles or custom variants
+
+   Supports:
+   - role-based badges
+   - custom variant and label
 ================================================== */
+
 export default function Badge({ role, variant, label, children, className = "" }) {
 
     /* =========================
-       Initialize values
+     Initialize values
        - label: displayed text
        - variant: visual style
     ========================= */
@@ -14,7 +18,7 @@ export default function Badge({ role, variant, label, children, className = "" }
     let badgeVariant = variant || "";
 
     /* =========================
-       Role-based configuration
+     Role-based configuration
        Defines default label and style
     ========================= */
     if (role) {
@@ -36,13 +40,12 @@ export default function Badge({ role, variant, label, children, className = "" }
     }
 
     /* =========================
-       Safety check
+     Safety check
        Prevent rendering if missing data
     ========================= */
     if (!badgeLabel || !badgeVariant) return null;
 
-    /* =========================
-       Render badge
-    ========================= */
-    return <span className={`badge badge-${badgeVariant} ${className}`.trim()}>{badgeLabel}</span>
+    return (
+        <span className={`badge badge-${badgeVariant} ${className}`.trim()}>{badgeLabel}</span>
+    );
 }

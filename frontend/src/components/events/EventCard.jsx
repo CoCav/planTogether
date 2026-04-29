@@ -1,9 +1,3 @@
-/* ==================================================
-   EVENT CARD
-   Reusable component to display an event preview
-   Used in both HomePage and EventsPage
-================================================== */
-
 import { Link, useNavigate } from "react-router-dom";
 import { formatEventDateRange, formatTime, formatCount } from "../../utils/format";
 
@@ -14,20 +8,28 @@ import Card from "../ui/Card";
 import Alert from "../ui/Alert";
 import Badge from "../ui/Badge";
 
+/* ==================================================
+   EVENT CARD
+   Reusable component to display an event preview
+   Used in both HomePage and EventsPage
+================================================== */
+
 export default function EventCard({ event, user, role = null, onJoin, onLeave }) {
 
     const navigate = useNavigate();
 
     /* =========================
-     Simulated membership data
-        Adapts role into structures expected
-        by useEventPermissions
+     Membership data adapter
+        Converts the current role into the members / organizers
+        shape expected by useEventPermissions
     ========================= */
     const organizers = role === "organizer" || role === "co_organizer" ? [{ id: user?.userId, role }] : [];
     const members = role === "participant" ? [{ id: user?.userId, role }] : [];
 
+
     /* =========================
      Permissions
+        Computes available actions and event state
     ========================= */
 
     const { isPast, isEventFull, canJoin, canLeave, joinDisabledReason } = useEventPermissions({ user, event, members, organizers });
@@ -35,6 +37,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
 
     const isFull = event.maxParticipants && event.participantCount >= event.maxParticipants;
 
+    
     /* =========================
      Navigation
     ========================= */

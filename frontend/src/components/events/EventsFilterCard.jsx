@@ -6,13 +6,12 @@ import FormField from "../ui/FormField";
 
 /* ==================================================
    EVENTS FILTER CARD
-   --------------------------------------------------
-   Displays filter form for events search, sorting
-   and quick filtering.
+   Reusable filter form for event listing pages
 
-   Goal:
-   Extract filtering UI from EventsPage to keep it clean
-   and reusable.
+   Handles:
+   - search and category filters
+   - date filters
+   - sorting controls
 ================================================== */
 
 export default function EventsFilterCard({filters, showFilters, sortLabels, onToggleFilters, onFilterChange, onFilterSubmit, onSortChange, onResetFilters }) {

@@ -1,14 +1,19 @@
 /* ==================================================
-   TEXTAREA COMPONENT
-   Reusable textarea field for longer text input
-================================================== */
-export default function Textarea({ className = "", rows = 4, ...props }) {
+   TEXTAREA
+   Reusable styled textarea for longer input
 
-    /* =========================
-       Render textarea
-       - Applies base textarea styles
-       - Uses a default row count
-       - Forwards all native textarea attributes
-    ========================= */
-    return <textarea className={`textarea ${className}`.trim()} rows={rows} {...props}/>
+   Handles:
+   - base styling
+   - error state
+   - default rows
+================================================== */
+
+export default function TextArea({ className = "", error = false, rows = 4, ...props }) {
+    return (
+        <textarea
+            className={`textarea ${error ? "error" : ""} ${className}`.trim()}
+            rows={rows}
+            {...props}
+        />
+    );
 }

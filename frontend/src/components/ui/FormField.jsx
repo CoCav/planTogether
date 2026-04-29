@@ -1,19 +1,21 @@
 /* ==================================================
-   FORM FIELD COMPONENT
-   Wraps a form control with its associated label
-================================================== */
-export default function FormField({ label, children, className = "" }) {
+   FORM FIELD
+   Wraps a form control with label and validation error
 
-    /* =========================
-       Render form field
-       - Applies base field layout
-       - Displays label above the control
-       - Renders any input, textarea or custom child
-    ========================= */
+   Supports:
+   - custom field content
+   - optional error message
+   - custom classes
+================================================== */
+
+export default function FormField({label, error, children, className = ""}) {
     return (
         <div className={`form-field ${className}`.trim()}>
             <label className="form-label">{label}</label>
+
             {children}
+
+            {error && <p className="field-error">{error}</p>}
         </div>
     );
 }

@@ -8,7 +8,7 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import FormField from "../components/ui/FormField";
 import Input from "../components/ui/Input";
-import PasswordRules from "../components/ui/PasswordRules";
+import PasswordRequirements from "../components/auth/PasswordRequirements";
 import Alert from "../components/ui/Alert";
 import LoadingState from "../components/ui/LoadingState";
 

@@ -1,23 +1,16 @@
+import Badge from "../ui/Badge.jsx";
+import EmptyState from "../ui/EmptyState.jsx";
+
 /* ==================================================
    EVENT MEMBER LIST
-   Displays event members with optional role-based actions
+   Displays event members with optional actions
 
    Used for:
    - event organizers / team
    - event participants / attendees
 ================================================== */
 
-import Badge from "../ui/Badge.jsx";
-import EmptyState from "../ui/EmptyState.jsx";
-
-export default function EventMemberList({
-    title,
-    subtitle,
-    members = [],
-    emptyMessage = "No members found.",
-    showActions = true,
-    renderActions,
-}) {
+export default function EventMemberList({ title, subtitle, members = [], emptyMessage = "No members found.", showActions = true, renderActions }) {
     return (
         <>
             <div className="section-header">

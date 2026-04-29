@@ -1,15 +1,18 @@
 /* ==================================================
-   INPUT COMPONENT
-   Reusable input field for forms
-   Supports all native input attributes
-================================================== */
-export default function Input({ className = "", ...props }) {
+   INPUT
+   Reusable styled input field for forms
 
-    /* =========================
-       Render input field
-       - Applies base input styles
-       - Merges optional custom classes
-       - Forwards all native attributes
-    ========================= */
-    return <input className={`input ${className}`.trim()}{...props}/>
+   Handles:
+   - base input styling
+   - error styling
+   - native input attributes
+================================================== */
+
+export default function Input({ className = "", error = false, ...props }) {
+    return (
+        <input
+            className={`input ${error ? "error" : ""} ${className}`.trim()}
+            {...props}
+        />
+    );
 }

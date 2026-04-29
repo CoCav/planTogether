@@ -4,14 +4,24 @@ import { useAuth } from "../../context/useAuth";
 
 import Button from "../ui/Button";
 
+/* ==================================================
+   NAVBAR
+   Main application navigation bar
+
+   Handles:
+   - primary navigation links
+   - user authentication state
+   - user dropdown menu (profile, logout)
+================================================== */
+
 export default function Navbar() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
 
-    // User menu state : controls dropdown visibility
+    // Controls user dropdown visibility
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
-    // Dropdown ref : Used to detect outside clicks
+    // Reference used to detect outside clicks
     const userMenuRef = useRef(null);
 
     /* =========================
@@ -19,18 +29,13 @@ export default function Navbar() {
     ========================= */
     useEffect(() => {
         const handleClickOutside = (event) => {
-        if (
-            userMenuRef.current &&
-            !userMenuRef.current.contains(event.target)
-        ) {
+        if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
             setIsUserMenuOpen(false);
-        }
-        };
+        }};
 
         document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-        };
+
+        return () => {document.removeEventListener("mousedown", handleClickOutside) };
     }, []);
 
     /* =========================
@@ -51,7 +56,7 @@ export default function Navbar() {
                 {/* Main navigation */}
                 <nav className="navbar-links">
                     <NavLink to="/events" end className={({ isActive }) => `navbar-link link-underline link-color-hover ${isActive ? "active" : ""}`.trim()}>Events</NavLink>
-
+                    
                     {user && (<NavLink to="/events/create" className={({ isActive }) => `navbar-link link-underline link-color-hover ${isActive ? "active" : ""}`.trim()}>Create event</NavLink>)}
                 </nav>
 

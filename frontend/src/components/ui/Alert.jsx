@@ -1,19 +1,21 @@
 /* ==================================================
-   ALERT COMPONENT
-   Displays contextual messages (info, success, error)
-================================================== */
-export default function Alert({ children, type = "info", className = "" }) {
+   ALERT
+   Displays contextual feedback messages
 
-    /* =========================
-       Compute CSS classes
-       - Base alert styles
-       - Type-based variant
-    ========================= */
+   Variants:
+   - info
+   - success
+   - danger
+================================================== */
+
+export default function Alert({ children, type = "info", className = "", role }) {
     const classes = `alert alert-${type} ${className}`.trim();
 
-    /* =========================
-       Render alert message
-    ========================= */
-    return <div className={classes}>{children}</div>
+    const alertRole = role || (type === "danger" ? "alert" : "status");
 
+    return (
+        <div className={classes} role={alertRole}>
+            {children}
+        </div>
+    );
 }

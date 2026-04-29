@@ -1,13 +1,14 @@
 /* ==================================================
-   LOADING STATE COMPONENT
+   LOADING STATE
    Displays a loading message while content is being fetched
+
+   Supports:
+   - default loading text
+   - custom loading message
 ================================================== */
 
 export default function LoadingState({ children = "Loading..." }) {
-
-    /* =========================
-       Render loading state
-       Shows a default or custom loading message
-    ========================= */
-    return <div className="loading-state">{children}</div>;
+    return (
+        <div className="loading-state">{children}</div>
+    );
 }

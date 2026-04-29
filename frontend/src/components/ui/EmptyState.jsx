@@ -1,6 +1,11 @@
 /* ==================================================
    EMPTY STATE
-   Reusable component displayed when no data is available
+   Displays a reusable empty state when no data is available
+
+   Supports:
+   - title and description
+   - optional icon
+   - fallback children content
 ================================================== */
 
 export default function EmptyState({ title, description, icon, children }) {

@@ -1,9 +1,12 @@
 /* ==================================================
-   CARD COMPONENT
+   CARD
    Generic container used to wrap content sections
-   Supports custom classes and forwards all props
-   (e.g. onClick, id, data attributes)
+
+   Supports:
+   - custom classes
+   - forwarded DOM props
 ================================================== */
+
 export default function Card({ children, className = "", ...props }) {
 
     /* =========================
@@ -12,5 +15,7 @@ export default function Card({ children, className = "", ...props }) {
        - Merges optional custom classes
        - Forwards all additional props
     ========================= */
-    return <div className={`card ${className}`.trim()} {...props}>{children}</div>
+    return (
+        <div className={`card ${className}`.trim()} {...props}>{children}</div>
+    );
 }

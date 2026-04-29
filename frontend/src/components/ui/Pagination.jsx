@@ -1,9 +1,13 @@
+import Button from "./Button";
+
 /* ==================================================
    PAGINATION
-   Reusable pagination controls for paginated lists
-================================================== */
+   Displays navigation controls for paginated data
 
-import Button from "./Button";
+   Handles:
+   - previous / next navigation
+   - current page display
+================================================== */
 
 export default function Pagination({page, totalPages, onPrevious, onNext}) {
     if (totalPages <= 1) return null;

@@ -1,20 +1,15 @@
-/* ==================================================
-   PAGE LOADING COMPONENT
-   --------------------------------------------------
-   Displays a full-page loading state.
-
-   Wraps LoadingState with layout styling used across pages
-   to ensure consistent spacing and alignment.
-================================================== */
-
 import LoadingState from "./LoadingState";
 
-export default function PageLoading({ children = "Loading..." }) {
+/* ==================================================
+   PAGE LOADING
+   Displays a full-page loading state
 
-    /* =========================
-       Render full-page loader
-       Applies container + page spacing
-    ========================= */
+   Wraps:
+   - LoadingState
+   - page layout spacing
+================================================== */
+
+export default function PageLoading({ children = "Loading..." }) {
 
     return (
         <div className="container page-section">

@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth.js";
-import { getAllEvents } from "../api/eventApi"
+import { getAllEvents } from "../api/eventApi";
 import { getMyEvents } from "../api/eventMembershipApi";
 import { getNormalizedEvents, getMyEventsWithRole } from "../features/events/normalizeData.js";
-import useEventActionsWithConfirm from "../hooks/events/useEventManagementActions.js";
+
+import useEventActionsWithConfirm from "../hooks/events/useEventActionsWithConfirm.js";
 
 import EventCard from "../components/events/EventCard.jsx";
 
@@ -14,30 +15,70 @@ import EmptyState from "../components/ui/EmptyState";
 import LoadingState from "../components/ui/LoadingState";
 import Alert from "../components/ui/Alert";
 
+const MAX_HOME_EVENTS = 4;
+
+/* ==================================================
+   HOME PAGE
+   Displays the landing page with:
+   - hero section
+   - feature highlights
+   - latest events preview
+================================================== */
+
 export default function HomePage() {
     const { user } = useAuth();
+
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
-    // Events preview state: stores homepage event preview
+    // Stores latest events shown on the homepage
     const [events, setEvents] = useState([]);
-    const [loadingEvents, setLoadingEvents] = useState(true);
 
-    // Membership role state: stores current user role by event ID
+    // Stores current user's role by event ID
     const [myEvents, setMyEvents] = useState({});
+
+    // Controls latest events loading state
+    const [loadingEvents, setLoadingEvents] = useState(true);
 
 
     /* =========================
-     Load homepage data
+       User membership fetching
+       Builds eventId → role map for EventCard
     ========================= */
 
-    // Fetches visible events and current user memberships
-    const loadData = async () => {
+    const fetchMyEvents = useCallback(async () => {
+        if (!user) return {};
+
+        const response = await getMyEvents();
+        const membershipEvents = getMyEventsWithRole(response);
+
+        const membershipMap = {};
+
+        membershipEvents.forEach((item) => {
+            membershipMap[item.id] = item.role;
+        });
+
+        return membershipMap;
+    }, [user]);
+
+
+    /* =========================
+       Homepage data loading
+       Fetches latest events and user roles
+    ========================= */
+
+    const loadData = useCallback(async () => {
         try {
             setError("");
             setLoadingEvents(true);
 
-            const response = await getAllEvents();
+            const response = await getAllEvents({
+                page: 1,
+                pageSize: MAX_HOME_EVENTS,
+                sortBy: "createdAt",
+                order: "desc"
+            });
+
             setEvents(getNormalizedEvents(response));
 
             if (user) {
@@ -47,59 +88,55 @@ export default function HomePage() {
                 setMyEvents({});
             }
         } catch (error) {
-            console.error("Error fetching events:", error);
+            console.error("Error fetching homepage events:", error);
             setError("❌ Failed to load events");
         } finally {
             setLoadingEvents(false);
         }
-    };
+    }, [user, fetchMyEvents]);
 
-    // Fetches current user memberships and returns a role map indexed by event ID
-      const fetchMyEvents = async () => {
-        if (!user) return {};
-  
-        const response = await getMyEvents();
-        const membershipEvents = getMyEventsWithRole(response);
-  
-        const membershipMap = {};
-        membershipEvents.forEach((item) => {membershipMap[item.id] = item.role});
-        return membershipMap;
-    };
 
-    // Load initial user data or reload data when authentication state change
-    useEffect(() => {loadData()}, [user]);
+    /* =========================
+       Homepage data lifecycle
+       Reloads preview data when auth state changes
+    ========================= */
 
-    // Auto-clear feedback messages after delay
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
+
+
+    /* =========================
+       Feedback cleanup
+       Clears success/error messages automatically
+    ========================= */
+
     useEffect(() => {
         if (message || error) {
             const timer = setTimeout(() => {
-            setMessage("");
-            setError("");
-        }, 3000);
+                setMessage("");
+                setError("");
+            }, 3000);
 
-        return () => clearTimeout(timer);
+            return () => clearTimeout(timer);
         }
     }, [message, error]);
 
-    const MAX_HOME_EVENTS = 4;
-    const previewEvents = events.slice(0, MAX_HOME_EVENTS);
 
     /* =========================
-     Derived helper
-        returns current user's role for a given event
+       Derived helpers
+       Computes event role for the current user
     ========================= */
+
     const getRoleByEventId = (eventId) => myEvents[eventId] || null;
-    
+
+
     /* =========================
-     Event membership actions
-        Provides join / leave handlers with shared UX logic
+       Event actions
+       Handles join / leave operations
     ========================= */
-    const { handleJoinEvent, handleLeaveEvent } = useEventActionsWithConfirm({
-        loadData,
-        setMessage,
-        setError,
-        getRoleByEventId,
-    });
+
+    const { handleJoinEvent, handleLeaveEvent } = useEventActionsWithConfirm({loadData, setMessage, setError, getRoleByEventId});
 
 
     /* =========================
@@ -108,14 +145,12 @@ export default function HomePage() {
 
     return (
         <div className="container page-section">
-
             {/* =========================
                 Hero section
             ========================= */}
             <section className="hero-section">
                 <div className="hero-container">
-
-                     <div className="hero-top-row">
+                    <div className="hero-top-row">
                         <p className="hero-eyebrow">Plan events together</p>
                     </div>
 
@@ -139,7 +174,6 @@ export default function HomePage() {
                             )}
                         </div>
                     </div>
-
                 </div>
             </section>
 
@@ -176,7 +210,7 @@ export default function HomePage() {
             </section>
 
             {/* =========================
-                Recently added events preview
+                Latest events preview
             ========================= */}
             <section className="home-section">
                 <div className="section-header">
@@ -184,15 +218,16 @@ export default function HomePage() {
                     <p className="section-subtitle">Discover the most recently created events on PlanTogether.</p>
                 </div>
 
+                {message && <Alert type="success">{message}</Alert>}
                 {error && <Alert type="danger">{error}</Alert>}
 
                 {loadingEvents ? (
                     <LoadingState>Loading events...</LoadingState>
-                ) : previewEvents.length === 0 ? (
+                ) : events.length === 0 ? (
                     <EmptyState>No events yet.</EmptyState>
                 ) : (
                     <div className="event-list">
-                        {previewEvents.map((event) => (
+                        {events.map((event) => (
                             <EventCard
                                 key={event.id}
                                 event={event}

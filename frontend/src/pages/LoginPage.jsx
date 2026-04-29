@@ -4,31 +4,45 @@ import { useAuth } from "../context/useAuth.js";
 import { loginUser } from "../api/authApi";
 import { validateLoginForm } from "../features/auth/authValidation.js";
 
+import AuthPasswordField from "../components/auth/AuthPasswordField.jsx";
+
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import FormField from "../components/ui/FormField";
 import Input from "../components/ui/Input";
 import Alert from "../components/ui/Alert";
 
+/* ==================================================
+   LOGIN PAGE
+   Handles user authentication
+
+   Features:
+   - login form validation
+   - password visibility toggle
+   - remember me option
+================================================== */
+
 export default function LoginPage() {
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+
+    // Determines redirect destination after login
     const from = location.state?.from?.pathname || "/events";
 
     const [error, setError] = useState("");
     const [errors, setErrors] = useState({});
 
-    // Password visibility state: controls show / hide password
+    // Controls password visibility
     const [showPassword, setShowPassword] = useState(false);
 
-    // Session persistance state: stores token in localStorage when "Remember me" is enabled
+    // Stores session persistence choice
     const [rememberMe, setRememberMe] = useState(false);
 
-    // Submit loading state: controls login button loading
+    // Controls submit loading state
     const [submitting, setSubmitting] = useState(false);
 
-    // Login form state: user credentials input
+    // Login form state
     const [form, setForm] = useState({
         email: "",
         password: ""
@@ -36,16 +50,16 @@ export default function LoginPage() {
 
 
     /* =========================
-     Input change handler
-        Updates email / password
+        Form input handling
+        Updates credentials and clears field errors
     ========================= */
     const handleChange = (e) => {
         const { name, value } = e.target;
 
-        setForm({
-            ...form,
+        setForm((prev) => ({
+            ...prev,
             [name]: value
-        });
+        }));
 
         setErrors((prev) => ({
             ...prev,
@@ -55,15 +69,16 @@ export default function LoginPage() {
 
 
     /* =========================
-     Login submit handler
-        Authenticates user and stores
-        token depending on rememberMe
+        Form submission
+        Validates credentials, logs user in and redirects
     ========================= */
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
 
         const validationErrors = validateLoginForm(form);
+
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
             return;
@@ -85,7 +100,7 @@ export default function LoginPage() {
         }
     };
 
-    
+
     /* =========================
        Main render
     ========================= */
@@ -104,40 +119,35 @@ export default function LoginPage() {
             <Card className="auth-card">
                 <form onSubmit={handleSubmit} className="event-form">
                     <div className="auth-form-grid">
-                        <FormField label="Email">
+
+                        <FormField label="Email" error={errors.email}>
                             <Input
                                 type="email"
                                 name="email"
                                 placeholder="Your email"
                                 value={form.email}
                                 onChange={handleChange}
-                                className={errors.email ? "error" : ""}
+                                error={errors.email}
                             />
-                            {errors.email && <p className="field-error">{errors.email}</p>}
                         </FormField>
 
-                        <FormField label="Password">
-                            <div className="password-row">
-                                <Input
-                                    type={showPassword ? "text" : "password"}
-                                    name="password"
-                                    placeholder="Your password"
-                                    value={form.password}
-                                    onChange={handleChange}
-                                    className={errors.password ? "error" : ""}
-                                />
-
-                                <Button type="button" variant="outline" onClick={() => setShowPassword((prev) => !prev)}>{showPassword ? "Hide" : "Show"}</Button>
-                            </div>
-                            {errors.password && <p className="field-error">{errors.password}</p>}
-                        </FormField>
+                        <AuthPasswordField
+                            label="Password"
+                            name="password"
+                            value={form.password}
+                            placeholder="Your password"
+                            error={errors.password}
+                            visible={showPassword}
+                            onChange={handleChange}
+                            onToggle={() => setShowPassword((prev) => !prev)}
+                        />
                     </div>
 
                     <label className="checkbox-row">
                         <input
                             type="checkbox"
-                           checked={rememberMe}
-                           onChange={(e) => setRememberMe(e.target.checked)}
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
                         />
                         <span>Remember me</span>
                     </label>
@@ -146,7 +156,8 @@ export default function LoginPage() {
                         <Button type="submit" loading={submitting}>Login</Button>
                     </div>
 
-                    <p className="auth-footer text-muted">Don't have an account?{" "}
+                    <p className="auth-footer text-muted">
+                        Don't have an account?{" "}
                         <Link to="/register" className="link-inline">Register</Link>
                     </p>
                 </form>

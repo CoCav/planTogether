@@ -15,13 +15,13 @@ export default function Button({ children, type = "button", variant = "primary",
         - Base button styles
         - Variant-based styling
         - Optional custom classes
-      ========================= */
+    ========================= */
     const classes = `btn btn-${variant} ${className}`.trim();
 
     /* =========================
      Derived state
         - Disable button when loading
-      ========================= */
+    ========================= */
     const isDisabled = disabled || loading;
 
     return (

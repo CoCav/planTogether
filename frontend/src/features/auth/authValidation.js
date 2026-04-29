@@ -91,7 +91,7 @@ export const validateProfileForm = ({ name, email }) => {
 /* =========================
    Change password validation
 ========================= */
-export const validateChangePasswordForm = ({ currentPassword, newPassword }) => {
+export const validateChangePasswordForm = ({ currentPassword, newPassword, confirmPassword }) => {
     const errors = {};
 
     if (!currentPassword) {
@@ -119,9 +119,19 @@ export const validateChangePasswordForm = ({ currentPassword, newPassword }) => 
             passwordErrors.push("At least 1 lowercase letter");
         }
 
+        if (currentPassword && currentPassword === newPassword) {
+            passwordErrors.push("New password must be different from current password");
+        }
+
         if (passwordErrors.length > 0) {
             errors.newPassword = passwordErrors;
         }
+    }
+
+    if (!confirmPassword) {
+        errors.confirmPassword = "Confirm password is required";
+    } else if (newPassword && confirmPassword !== newPassword) {
+        errors.confirmPassword = "Passwords do not match. Please check again.";
     }
 
     return errors;

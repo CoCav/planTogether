@@ -4,44 +4,48 @@ import { useAuth } from "../context/useAuth";
 import { updateProfile, changePassword } from "../api/authApi";
 import { validateProfileForm, validateChangePasswordForm } from "../features/auth/authValidation";
 
-import Button from "../components/ui/Button";
-import Card from "../components/ui/Card";
-import FormField from "../components/ui/FormField";
-import Input from "../components/ui/Input";
+import UserProfileForm from "../components/auth/UserProfileForm";
+import ChangePasswordForm from "../components/auth/ChangePasswordForm";
 import PasswordRequirements from "../components/auth/PasswordRequirements";
+
+import Card from "../components/ui/Card";
 import Alert from "../components/ui/Alert";
-import LoadingState from "../components/ui/LoadingState";
+import PageLoading from "../components/ui/PageLoading";
 
 /* ==================================================
    PROFILE PAGE
-   Allows the user to update profile information 
+   Allows the user to update profile information
    and change their password
 ================================================== */
+
 export default function ProfilePage() {
     const { user, refreshUser } = useAuth();
+
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
+
+    // Stores validation errors for each profile form section
     const [profileErrors, setProfileErrors] = useState({});
     const [passwordErrors, setPasswordErrors] = useState({});
 
-    // Submit loading states: controls button loading UX
+    // Controls submit loading states for each form
     const [profileSubmitting, setProfileSubmitting] = useState(false);
     const [passwordSubmitting, setPasswordSubmitting] = useState(false);
 
-    // Profile form state : personal information form
+    // Stores editable profile information
     const [profileForm, setProfileForm] = useState({
         name: user?.name ?? "",
         email: user?.email ?? ""
     });
 
-    // Password form state: change password form
+    // Stores password update fields
     const [passwordForm, setPasswordForm] = useState({
         currentPassword: "",
         newPassword: "",
         confirmPassword: ""
     });
 
-    // Password visibily state: toggles show / hide password inputs
+    // Controls password visibility by field
     const [showPasswords, setShowPasswords] = useState({
         currentPassword: false,
         newPassword: false,
@@ -50,12 +54,13 @@ export default function ProfilePage() {
 
 
     /* =========================
-     Effect
-        Auto-clear feedback messages after delay
+        Feedback cleanup
+        Clears success/error messages automatically
     ========================= */
+
     useEffect(() => {
         if (message || error) {
-                const timer = setTimeout(() => {
+            const timer = setTimeout(() => {
                 setMessage("");
                 setError("");
             }, 3000);
@@ -66,16 +71,17 @@ export default function ProfilePage() {
 
 
     /* =========================
-     Inputs handlers
+        Profile form handling
+        Updates profile fields and clears field errors
     ========================= */
-    
+
     const handleProfileChange = (e) => {
         const { name, value } = e.target;
 
-        setProfileForm({
-            ...profileForm,
+        setProfileForm((prev) => ({
+            ...prev,
             [name]: value
-        });
+        }));
 
         setProfileErrors((prev) => ({
             ...prev,
@@ -83,20 +89,26 @@ export default function ProfilePage() {
         }));
     };
 
+
+    /* =========================
+        Password form handling
+        Updates password fields and clears field errors
+    ========================= */
+
     const handlePasswordChange = (e) => {
         const { name, value } = e.target;
 
-        setPasswordForm({
-            ...passwordForm,
+        setPasswordForm((prev) => ({
+            ...prev,
             [name]: value
-        });
+        }));
+
         setPasswordErrors((prev) => ({
             ...prev,
             [name]: undefined
         }));
     };
 
-    // Toggles visibility of a specific password field
     const togglePasswordVisibility = (field) => {
         setShowPasswords((prev) => ({
             ...prev,
@@ -106,7 +118,8 @@ export default function ProfilePage() {
 
 
     /* =========================
-       Form submit handlers
+        Profile submission
+        Validates and updates user profile information
     ========================= */
 
     const handleProfileSubmit = async (e) => {
@@ -115,11 +128,12 @@ export default function ProfilePage() {
         setError("");
 
         const validationErrors = validateProfileForm(profileForm);
+
         if (Object.keys(validationErrors).length > 0) {
             setProfileErrors(validationErrors);
             return;
         }
-        
+
         setProfileErrors({});
         setProfileSubmitting(true);
 
@@ -135,24 +149,18 @@ export default function ProfilePage() {
         }
     };
 
+
+    /* =========================
+        Password submission
+        Validates and updates user password
+    ========================= */
+
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
         setMessage("");
         setError("");
 
         const validationErrors = validateChangePasswordForm(passwordForm);
-
-        if (passwordForm.currentPassword && passwordForm.newPassword && passwordForm.currentPassword === passwordForm.newPassword) {
-            validationErrors.newPassword = "New password must be different from current password";
-        }
-        
-        if (!passwordForm.confirmPassword) {
-            validationErrors.confirmPassword = "Confirm password is required";
-        }
-
-        if (passwordForm.newPassword && passwordForm.confirmPassword && passwordForm.newPassword !== passwordForm.confirmPassword) {
-            validationErrors.confirmPassword = "Passwords do not match. Please check again.";
-        }
 
         if (Object.keys(validationErrors).length > 0) {
             setPasswordErrors(validationErrors);
@@ -163,7 +171,11 @@ export default function ProfilePage() {
         setPasswordSubmitting(true);
 
         try {
-            await changePassword({currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword});
+            await changePassword({
+                currentPassword: passwordForm.currentPassword,
+                newPassword: passwordForm.newPassword
+            });
+
             setMessage("✅ Password updated successfully");
 
             setPasswordForm({
@@ -174,24 +186,25 @@ export default function ProfilePage() {
         } catch (error) {
             console.error("Error updating password:", error);
             const status = error.response?.status;
-            const message = error.response?.data?.message || "Unable to update password";
+            const errorMessage = error.response?.data?.message || "Unable to update password";
 
             if (status === 401) {
                 setPasswordErrors((prev) => ({
                     ...prev,
-                    currentPassword: message
+                    currentPassword: errorMessage
                 }));
                 return;
-            } else if (status === 400 && message.toLowerCase().includes("new password")) {
+            }
+
+            if (status === 400 && errorMessage.toLowerCase().includes("new password")) {
                 setPasswordErrors((prev) => ({
                     ...prev,
-                    newPassword: message
+                    newPassword: errorMessage
                 }));
                 return;
-            } 
-            
-            setError(`${message}`);
+            }
 
+            setError(errorMessage);
         } finally {
             setPasswordSubmitting(false);
         }
@@ -199,18 +212,14 @@ export default function ProfilePage() {
 
 
     /* =========================
-       Conditional rendering
+       Loading state
     ========================= */
 
     if (!user) {
-        return (
-            <div className="container page-section">
-                <LoadingState>Loading profile...</LoadingState>
-            </div>
-        );
+        return <PageLoading>Loading profile...</PageLoading>;
     }
 
-    
+
     /* =========================
        Main render
     ========================= */
@@ -234,37 +243,13 @@ export default function ProfilePage() {
                         <p className="section-subtitle">Update your public account details.</p>
                     </div>
 
-                    <form onSubmit={handleProfileSubmit} className="event-form">
-                        <div className="form-grid">
-                            <FormField label="Name">
-                                <Input
-                                    type="text"
-                                    name="name"
-                                    value={profileForm.name}
-                                    onChange={handleProfileChange}
-                                    placeholder="Your name"
-                                    className={profileErrors.name ? "error" : ""}
-                                />
-                                {profileErrors.name && <p className="field-error">{profileErrors.name}</p>}
-                            </FormField>
-
-                            <FormField label="Email">
-                                <Input
-                                    type="email"
-                                    name="email"
-                                    value={profileForm.email}
-                                    onChange={handleProfileChange}
-                                    placeholder="Your email"
-                                    className={profileErrors.email ? "error" : ""}
-                                />
-                                {profileErrors.email && <p className="field-error">{profileErrors.email}</p>}
-                            </FormField>
-                        </div>
-
-                        <div className="form-actions">
-                            <Button type="submit" loading={profileSubmitting}>Update Profile</Button>
-                        </div>
-                    </form>
+                    <UserProfileForm
+                        form={profileForm}
+                        errors={profileErrors}
+                        submitting={profileSubmitting}
+                        onChange={handleProfileChange}
+                        onSubmit={handleProfileSubmit}
+                    />
                 </Card>
 
                 <Card>
@@ -273,66 +258,15 @@ export default function ProfilePage() {
                         <p className="section-subtitle">Update your password securely.</p>
                     </div>
 
-                    <form onSubmit={handlePasswordSubmit} className="event-form">
-                        <div className="password-fields">
-                            <FormField label="Current password">
-                                <div className="password-row">
-                                    <Input
-                                        type={showPasswords.currentPassword ? "text" : "password"}
-                                        name="currentPassword"
-                                        value={passwordForm.currentPassword}
-                                        onChange={handlePasswordChange}
-                                        placeholder="Current password"
-                                        className={passwordErrors.currentPassword ? "error" : ""}
-                                    />
-                                    <Button type="button" variant="outline" onClick={() => togglePasswordVisibility("currentPassword")}>{showPasswords.currentPassword ? "Hide" : "Show"}</Button>
-                                </div>
-                                {passwordErrors.currentPassword && <p className="field-error">{passwordErrors.currentPassword}</p>}
-                            </FormField>
-
-                            <FormField label="New password">
-                                <div className="password-row">
-                                    <Input
-                                        type={showPasswords.newPassword ? "text" : "password"}
-                                        name="newPassword"
-                                        value={passwordForm.newPassword}
-                                        onChange={handlePasswordChange}
-                                        placeholder="New password"
-                                        className={passwordErrors.newPassword ? "error" : ""}
-                                    />
-                                    <Button type="button" variant="outline" onClick={() => togglePasswordVisibility("newPassword")}>{showPasswords.newPassword ? "Hide" : "Show"}</Button>
-                                </div>
-
-                                {Array.isArray(passwordErrors.newPassword) ? (
-                                    <ul className="field-error-list">
-                                        {passwordErrors.newPassword.map((error) => (<li key={error} className="field-error">{error}</li>))}
-                                    </ul>
-                                ) : (
-                                    passwordErrors.newPassword && <p className="field-error">{passwordErrors.newPassword}</p>
-                                )}
-                                <PasswordRules password={passwordForm.newPassword}/>
-                            </FormField>
-
-                            <FormField label="Confirm new password">
-                                <div className="password-row">
-                                    <Input
-                                        type={showPasswords.confirmPassword ? "text" : "password"}
-                                        name="confirmPassword"
-                                        value={passwordForm.confirmPassword}
-                                        onChange={handlePasswordChange}
-                                        placeholder="Confirm new password"
-                                        className={passwordErrors.confirmPassword ? "error" : ""}
-                                    />
-                                    <Button type="button" variant="outline" onClick={() => togglePasswordVisibility("confirmPassword")}>{showPasswords.confirmPassword ? "Hide" : "Show"}</Button>
-                                </div>
-                                 {passwordErrors.confirmPassword && <p className="field-error">{passwordErrors.confirmPassword}</p>}
-                            </FormField>
-                        </div>
-
-                        <div className="form-actions">
-                            <Button type="submit" loading={passwordSubmitting}>Update Password</Button>
-                        </div>
-                    </form>
+                    <ChangePasswordForm
+                        form={passwordForm}
+                        errors={passwordErrors}
+                        showPasswords={showPasswords}
+                        submitting={passwordSubmitting}
+                        onChange={handlePasswordChange}
+                        onSubmit={handlePasswordSubmit}
+                        onTogglePassword={togglePasswordVisibility}
+                    />
                 </Card>
             </div>
         </div>

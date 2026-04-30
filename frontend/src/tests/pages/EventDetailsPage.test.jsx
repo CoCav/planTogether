@@ -176,6 +176,49 @@ describe("EventDetailsPage", () => {
         expect(mockNavigate).toHaveBeenCalledWith("/events");
     });
 
+    it("does not delete event when deletion is cancelled", async () => {
+        const user = userEvent.setup();
+
+        vi.spyOn(window, "confirm").mockReturnValue(false);
+
+        setupApi({
+            organizers: [{ id: 1, role: "organizer", name: "John" }]
+        });
+
+        renderPage();
+
+        await screen.findByRole("button", { name: /delete event/i });
+
+        await user.click(screen.getByRole("button", { name: /delete event/i }));
+
+        expect(mockDeleteEvent).not.toHaveBeenCalled();
+        expect(mockNavigate).not.toHaveBeenCalledWith("/events");
+    });
+
+    it("shows error when deleting event fails", async () => {
+        const user = userEvent.setup();
+
+        vi.spyOn(window, "confirm").mockReturnValue(true);
+
+        setupApi({
+            organizers: [{ id: 1, role: "organizer", name: "John" }]
+        });
+
+        mockDeleteEvent.mockRejectedValue(new Error("API error"));
+
+        renderPage();
+
+        await screen.findByRole("button", { name: /delete event/i });
+
+        await user.click(screen.getByRole("button", { name: /delete event/i }));
+
+        expect(
+            await screen.findByText(/unable to delete event/i)
+        ).toBeInTheDocument();
+
+        expect(mockNavigate).not.toHaveBeenCalledWith("/events");
+    });
+
     it("shows ended label and hides event actions for past event", async () => {
         setupApi({
             event: {
@@ -255,6 +298,48 @@ describe("EventDetailsPage", () => {
         renderPage();
 
         expect(await screen.findByText(/login to join this event/i)).toBeInTheDocument();
+    });
+
+    it("shows login alert for unauthenticated user and no join button", async () => {
+        mockAuthState = {
+            user: null,
+            loading: false
+        };
+
+        setupApi({
+            event: {
+                ...mockEvent,
+                status: "upcoming"
+            },
+            organizers: [{ id: 2, role: "organizer", name: "Alice" }],
+            members: []
+        });
+
+        renderPage();
+
+        expect(await screen.findByText(/login to join this event/i)).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /join/i })).not.toBeInTheDocument();
+    });
+
+
+    it("shows disabled full state when event has reached participant limit", async () => {
+        setupApi({
+            event: {
+                ...mockEvent,
+                participantCount: 10,
+                maxParticipants: 10,
+                status: "upcoming"
+            },
+            organizers: [{ id: 2, role: "organizer", name: "Alice" }],
+            members: []
+        });
+
+        renderPage();
+
+        const fullButton = await screen.findByRole("button", { name: /event full/i });
+
+        expect(fullButton).toBeDisabled();
+        expect(screen.queryByRole("button", { name: /join/i })).not.toBeInTheDocument();
     });
 
     it("promotes participant when organizer clicks Promote", async () => {

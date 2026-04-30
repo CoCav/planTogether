@@ -219,6 +219,47 @@ describe("EventsPage", () => {
         });
     });
 
+    it("applies Today quick filter", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await screen.findByText(/no events found/i);
+
+        await user.click(screen.getByRole("button", { name: /today/i }));
+
+        await waitFor(() => {
+            expect(mockGetFilteredEvents).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    date: expect.any(String),
+                    page: 1,
+                    pageSize: 4
+                })
+            );
+        });
+    });
+
+    it("applies This Weekend quick filter", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await screen.findByText(/no events found/i);
+
+        await user.click(screen.getByRole("button", { name: /this weekend/i }));
+
+        await waitFor(() => {
+            expect(mockGetFilteredEvents).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    startDate: expect.any(String),
+                    endDate: expect.any(String),
+                    page: 1,
+                    pageSize: 4
+                })
+            );
+        });
+    });
+
     it("goes to next page", async () => {
         const user = userEvent.setup();
 
@@ -245,6 +286,52 @@ describe("EventsPage", () => {
                 })
             );
         });
+    });
+
+    it("keeps filters when moving to next page", async () => {
+        const user = userEvent.setup();
+
+        mockGetFilteredEvents
+            .mockResolvedValueOnce(
+                createResponse({
+                    events: [{ id: 1, title: "Filtered Page 1" }],
+                    page: 1,
+                    totalPages: 2,
+                    totalEvents: 5
+                })
+            )
+            .mockResolvedValueOnce(
+                createResponse({
+                    events: [{ id: 2, title: "Filtered Page 2" }],
+                    page: 2,
+                    totalPages: 2,
+                    totalEvents: 5
+                })
+            );
+
+        renderPage();
+
+        await screen.findByText(/no events found/i);
+
+        await user.click(screen.getByRole("button", { name: /show filters/i }));
+        await user.type(screen.getByPlaceholderText(/search events/i), "music");
+        await user.click(screen.getByRole("button", { name: /apply filters/i }));
+
+        expect(await screen.findByText("Filtered Page 1")).toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", { name: /next/i }));
+
+        await waitFor(() => {
+            expect(mockGetFilteredEvents).toHaveBeenLastCalledWith(
+                expect.objectContaining({
+                    search: "music",
+                    page: 2,
+                    pageSize: 4
+                })
+            );
+        });
+
+        expect(await screen.findByText("Filtered Page 2")).toBeInTheDocument();
     });
 
     it("shows login alert when user is not authenticated", async () => {

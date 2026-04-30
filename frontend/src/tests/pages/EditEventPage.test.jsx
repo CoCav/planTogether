@@ -223,6 +223,37 @@ describe("EditEventPage", () => {
         expect(payload.registrationDeadline).toBeTruthy();
     });
 
+    it("builds custom registration deadline when custom option is selected", async () => {
+        const user = userEvent.setup();
+
+        mockGetEventById.mockResolvedValue(mockEventResponse);
+        mockUpdateEvent.mockResolvedValue({ data: { success: true } });
+
+        const { container } = renderPage();
+
+        await waitForFormToLoad();
+
+        await user.selectOptions(
+            getField(container, "registrationDeadlineOption"),
+            "custom"
+        );
+
+        const customDeadlineInput = getField(container, "registrationDeadlineCustom");
+
+        await user.type(customDeadlineInput, "2026-12-19T18:00");
+
+        await user.click(screen.getByRole("button", { name: /update event/i }));
+
+        await waitFor(() => {
+            expect(mockUpdateEvent).toHaveBeenCalledTimes(1);
+        });
+
+        const payload = mockUpdateEvent.mock.calls[0][1];
+
+        expect(payload.registrationDeadline).not.toBeNull();
+        expect(payload.registrationDeadline).toContain("2026-12-19");
+    });
+
     it("shows loading state while submitting", async () => {
         const user = userEvent.setup();
         mockGetEventById.mockResolvedValue(mockEventResponse);

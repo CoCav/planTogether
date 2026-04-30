@@ -159,6 +159,64 @@ describe("MyEventsPage", () => {
         });
     });
 
+    it("changes view when clicking Created History tab", async () => {
+        const user = userEvent.setup();
+
+        mockGetMyEvents
+            .mockResolvedValueOnce(createResponse())
+            .mockResolvedValue(createResponse());
+
+        renderPage();
+
+        await screen.findByText(/no upcoming events/i);
+
+        await user.click(screen.getByRole("button", { name: /^created history$/i }));
+
+        expect(screen.getByRole("heading", { name: /created history/i })).toBeInTheDocument();
+
+        expect(screen.getByRole("button", { name: /^created history$/i })).toHaveClass("active");
+
+        await waitFor(() => {
+            expect(
+                hasMyEventsCall({
+                    view: "createdHistory",
+                    page: 1,
+                    sortBy: "startDateTime",
+                    order: "desc"
+                })
+            ).toBe(true);
+        });
+    });
+
+    it("changes view when clicking Joined History tab", async () => {
+        const user = userEvent.setup();
+
+        mockGetMyEvents
+            .mockResolvedValueOnce(createResponse())
+            .mockResolvedValue(createResponse());
+
+        renderPage();
+
+        await screen.findByText(/no upcoming events/i);
+
+        await user.click(screen.getByRole("button", { name: /^joined history$/i }));
+
+        expect(screen.getByRole("heading", { name: /joined history/i })).toBeInTheDocument();
+
+        expect(screen.getByRole("button", { name: /^joined history$/i })).toHaveClass("active");
+
+        await waitFor(() => {
+            expect(
+                hasMyEventsCall({
+                    view: "joinedHistory",
+                    page: 1,
+                    sortBy: "startDateTime",
+                    order: "desc"
+                })
+            ).toBe(true);
+        });
+    });
+
     it("calls API with sort params when applying filters", async () => {
         const user = userEvent.setup();
 
@@ -241,6 +299,67 @@ describe("MyEventsPage", () => {
         });
 
         expect(await screen.findByText("Event Page 2")).toBeInTheDocument();
+    });
+
+    it("displays mixed event roles with pagination", async () => {
+        const user = userEvent.setup();
+
+        mockGetMyEvents
+            .mockResolvedValueOnce(
+                createResponse({
+                    events: [
+                        {
+                            id: 1,
+                            title: "Created Mixed Event",
+                            role: "organizer",
+                            status: "upcoming"
+                        },
+                        {
+                            id: 2,
+                            title: "Joined Mixed Event",
+                            role: "participant",
+                            status: "upcoming"
+                        }
+                    ],
+                    page: 1,
+                    totalPages: 2,
+                    totalEvents: 6
+                })
+            )
+            .mockResolvedValueOnce(
+                createResponse({
+                    events: [
+                        {
+                            id: 3,
+                            title: "Second Page Event",
+                            role: "co_organizer",
+                            status: "upcoming"
+                        }
+                    ],
+                    page: 2,
+                    totalPages: 2,
+                    totalEvents: 6
+                })
+            );
+
+        renderPage();
+
+        expect(await screen.findByText("Created Mixed Event")).toBeInTheDocument();
+        expect(screen.getByText("Joined Mixed Event")).toBeInTheDocument();
+        expect(screen.getByText("(6)")).toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", { name: /next/i }));
+
+        await waitFor(() => {
+            expect(
+                hasMyEventsCall({
+                    page: 2,
+                    pageSize: 4
+                })
+            ).toBe(true);
+        });
+
+        expect(await screen.findByText("Second Page Event")).toBeInTheDocument();
     });
 
     it("calls handleLeaveEvent when clicking leave", async () => {

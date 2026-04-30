@@ -1,12 +1,21 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import EventsPage from "../../pages/EventsPage";
 
+/* ==================================================
+   EVENTS PAGE TESTS
+   Tests event listing, filters, views and pagination
+================================================== */
+
 const mockGetAllEvents = vi.fn();
 const mockGetFilteredEvents = vi.fn();
 const mockGetMyEvents = vi.fn();
+
+let mockAuthState = {
+    user: { userId: 1 }
+};
 
 vi.mock("../../api/eventApi", () => ({
     getAllEvents: (...args) => mockGetAllEvents(...args),
@@ -18,9 +27,7 @@ vi.mock("../../api/eventMembershipApi", () => ({
 }));
 
 vi.mock("../../context/useAuth", () => ({
-    useAuth: () => ({
-        user: { id: 1 }
-    })
+    useAuth: () => mockAuthState
 }));
 
 vi.mock("../../features/events/normalizeData.js", () => ({
@@ -28,19 +35,11 @@ vi.mock("../../features/events/normalizeData.js", () => ({
     getMyEventsWithRole: () => []
 }));
 
-vi.mock("../../components/ui/EventCard", () => ({
+vi.mock("../../components/events/EventCard", () => ({
     default: ({ event }) => <div>{event.title}</div>
 }));
 
-vi.mock("../../components/ui/LoadingState", () => ({
-    default: ({ children }) => <div>{children}</div>
-}));
-
-vi.mock("../../components/ui/EmptyState", () => ({
-    default: ({ children }) => <div>{children}</div>
-}));
-
-const createResponse = ({ events = [], page = 1,  pageSize = 4, totalPages = 1, totalEvents = events.length } = {}) => ({
+const createResponse = ({ events = [], page = 1, pageSize = 4, totalPages = 1, totalEvents = events.length } = {}) => ({
     data: {
         events,
         page,
@@ -50,29 +49,33 @@ const createResponse = ({ events = [], page = 1,  pageSize = 4, totalPages = 1, 
     }
 });
 
-function renderPage() {
-    return render(
+const renderPage = () =>
+    render(
         <MemoryRouter>
             <EventsPage />
         </MemoryRouter>
     );
-}
 
 describe("EventsPage", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+
+        mockAuthState = {
+            user: { userId: 1 }
+        };
+
         mockGetAllEvents.mockResolvedValue(createResponse());
         mockGetFilteredEvents.mockResolvedValue(createResponse());
         mockGetMyEvents.mockResolvedValue({ data: { events: [] } });
     });
 
-    it("should display loading state initially", () => {
+    it("displays loading state initially", () => {
         renderPage();
 
         expect(screen.getByText(/loading events/i)).toBeInTheDocument();
     });
 
-    it("should display events when API returns data", async () => {
+    it("displays events when API returns data", async () => {
         mockGetAllEvents.mockResolvedValue(
             createResponse({
                 events: [
@@ -90,13 +93,13 @@ describe("EventsPage", () => {
         expect(screen.getByText("(2)")).toBeInTheDocument();
     });
 
-    it("should display empty state when no events", async () => {
+    it("displays empty state when no events are returned", async () => {
         renderPage();
 
         expect(await screen.findByText(/no events found/i)).toBeInTheDocument();
     });
 
-    it("should call events API on load with default params", async () => {
+    it("calls events API on load with default params", async () => {
         renderPage();
 
         await waitFor(() => {
@@ -109,7 +112,7 @@ describe("EventsPage", () => {
         });
     });
 
-    it("should switch to upcoming view", async () => {
+    it("switches to upcoming view", async () => {
         const user = userEvent.setup();
 
         mockGetAllEvents.mockResolvedValue(
@@ -121,18 +124,22 @@ describe("EventsPage", () => {
 
         renderPage();
 
-        await screen.findByText("Upcoming Event");
+        expect(await screen.findByText("Upcoming Event")).toBeInTheDocument();
 
         await user.click(screen.getByRole("button", { name: /upcoming/i }));
 
         await waitFor(() => {
-            expect(mockGetAllEvents).toHaveBeenCalled();
+            expect(mockGetAllEvents).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    status: "upcoming",
+                    page: 1,
+                    pageSize: 4
+                })
+            );
         });
-
-        expect(await screen.findByText("Upcoming Event")).toBeInTheDocument();
     });
 
-    it("should switch to archives view", async () => {
+    it("switches to archives view", async () => {
         const user = userEvent.setup();
 
         mockGetAllEvents.mockResolvedValue(
@@ -144,18 +151,22 @@ describe("EventsPage", () => {
 
         renderPage();
 
-        await screen.findByText("Past Event");
+        expect(await screen.findByText("Past Event")).toBeInTheDocument();
 
         await user.click(screen.getByRole("button", { name: /archives/i }));
 
         await waitFor(() => {
-            expect(mockGetAllEvents).toHaveBeenCalled();
+            expect(mockGetAllEvents).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    status: "past",
+                    page: 1,
+                    pageSize: 4
+                })
+            );
         });
-
-        expect(await screen.findByText("Past Event")).toBeInTheDocument();
     });
 
-    it("should apply filters using filtered API", async () => {
+    it("applies filters using filtered API", async () => {
         const user = userEvent.setup();
 
         mockGetFilteredEvents.mockResolvedValue(
@@ -186,7 +197,29 @@ describe("EventsPage", () => {
         expect(await screen.findByText("Filtered Event")).toBeInTheDocument();
     });
 
-    it("should go to next page", async () => {
+    it("resets filters", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await screen.findByText(/no events found/i);
+
+        await user.click(screen.getByRole("button", { name: /show filters/i }));
+        await user.type(screen.getByPlaceholderText(/search events/i), "music");
+        await user.click(screen.getByRole("button", { name: /reset/i }));
+
+        await waitFor(() => {
+            expect(mockGetAllEvents).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    search: "",
+                    page: 1,
+                    pageSize: 4
+                })
+            );
+        });
+    });
+
+    it("goes to next page", async () => {
         const user = userEvent.setup();
 
         mockGetAllEvents.mockResolvedValue(
@@ -205,7 +238,22 @@ describe("EventsPage", () => {
         await user.click(screen.getByRole("button", { name: /next/i }));
 
         await waitFor(() => {
-            expect(mockGetAllEvents).toHaveBeenCalled();
+            expect(mockGetAllEvents).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    page: 2,
+                    pageSize: 4
+                })
+            );
         });
+    });
+
+    it("shows login alert when user is not authenticated", async () => {
+        mockAuthState = {
+            user: null
+        };
+
+        renderPage();
+
+        expect(await screen.findByText(/login to join events/i)).toBeInTheDocument();
     });
 });

@@ -1,31 +1,30 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import CreateEventPage from "../../pages/CreateEventPage";
 
-// ----------------------
-// Mocks
-// ----------------------
+/* ==================================================
+   CREATE EVENT PAGE TESTS
+   Tests event creation flow and form behavior
+================================================== */
 
 const mockNavigate = vi.fn();
 const mockCreateEvent = vi.fn();
 
-// Router mock
 vi.mock("react-router-dom", async () => {
     const actual = await vi.importActual("react-router-dom");
+
     return {
         ...actual,
-        useNavigate: () => mockNavigate
+        useNavigate: () => mockNavigate,
     };
 });
 
-// API mock
 vi.mock("../../api/eventApi", () => ({
-    createEvent: (...args) => mockCreateEvent(...args)
+    createEvent: (...args) => mockCreateEvent(...args),
 }));
 
-// Validation mock
 vi.mock("../../features/events/eventValidation", () => ({
     validateEventForm: vi.fn((form) => {
         const errors = {};
@@ -38,51 +37,62 @@ vi.mock("../../features/events/eventValidation", () => ({
         if (!form.startTime) errors.startTime = "Start time is required";
         if (!form.endDate) errors.endDate = "End date is required";
         if (!form.endTime) errors.endTime = "End time is required";
+
         if (form.mode === "in_person" && !form.location) {
             errors.location = "Location is required";
         }
 
         return errors;
-    })
+    }),
 }));
 
-// ----------------------
-// Helper
-// ----------------------
-
-function renderPage() {
-    return render(
+const renderPage = () =>
+    render(
         <MemoryRouter>
             <CreateEventPage />
         </MemoryRouter>
     );
-}
 
-// ----------------------
-// Tests
-// ----------------------
+const getField = (container, name) =>
+    container.querySelector(`[name="${name}"]`);
+
+const fillRequiredForm = async (user, container) => {
+    await user.type(getField(container, "title"), "Tech Meetup");
+    await user.type(getField(container, "type"), "Meetup");
+    await user.type(getField(container, "theme"), "Technology");
+    await user.type(getField(container, "description"), "A great event");
+    await user.type(getField(container, "location"), "Montreal");
+
+    await user.type(getField(container, "startDate"), "2026-12-20");
+    await user.type(getField(container, "startTime"), "10:00");
+    await user.type(getField(container, "endDate"), "2026-12-20");
+    await user.type(getField(container, "endTime"), "12:00");
+};
 
 describe("CreateEventPage", () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it("should render the create event form", () => {
-        renderPage();
+    it("renders the create event page", () => {
+        const { container } = renderPage();
 
         expect(screen.getByRole("heading", { name: /create event/i })).toBeInTheDocument();
-        expect(screen.getByPlaceholderText(/event title/i)).toBeInTheDocument();
-        expect(screen.getByPlaceholderText(/event type/i)).toBeInTheDocument();
-        expect(screen.getByPlaceholderText(/event theme/i)).toBeInTheDocument();
-        expect(screen.getByPlaceholderText(/describe your event/i)).toBeInTheDocument();
-        expect(screen.getByPlaceholderText(/event location/i)).toBeInTheDocument();
+
+        expect(getField(container, "title")).toBeInTheDocument();
+        expect(getField(container, "type")).toBeInTheDocument();
+        expect(getField(container, "theme")).toBeInTheDocument();
+        expect(getField(container, "description")).toBeInTheDocument();
+        expect(getField(container, "location")).toBeInTheDocument();
 
         expect(screen.getByRole("button", { name: /create event/i })).toBeInTheDocument();
+
         expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
     });
 
-    it("should show validation errors when submitting empty form", async () => {
+    it("shows validation errors when submitting empty form", async () => {
         const user = userEvent.setup();
+
         renderPage();
 
         await user.click(screen.getByRole("button", { name: /create event/i }));
@@ -100,33 +110,24 @@ describe("CreateEventPage", () => {
         expect(mockCreateEvent).not.toHaveBeenCalled();
     });
 
-    it("should hide location field when mode is online", async () => {
+    it("hides location field when mode is online", async () => {
         const user = userEvent.setup();
-        renderPage();
+        const { container } = renderPage();
 
-        expect(screen.getByPlaceholderText(/event location/i)).toBeInTheDocument();
+        expect(getField(container, "location")).toBeInTheDocument();
 
-        await user.selectOptions(screen.getByRole("combobox"), "online");
+        await user.selectOptions(getField(container, "mode"), "online");
 
-        expect(screen.queryByPlaceholderText(/event location/i)).not.toBeInTheDocument();
+        expect(getField(container, "location")).not.toBeInTheDocument();
     });
 
-    it("should create an in-person event and redirect", async () => {
+    it("creates an in-person event and redirects", async () => {
         const user = userEvent.setup();
         mockCreateEvent.mockResolvedValue({ data: { id: 1 } });
 
-        renderPage();
+        const { container } = renderPage();
 
-        await user.type(screen.getByPlaceholderText(/event title/i), "Tech Meetup");
-        await user.type(screen.getByPlaceholderText(/event type/i), "Meetup");
-        await user.type(screen.getByPlaceholderText(/event theme/i), "Technology");
-        await user.type(screen.getByPlaceholderText(/describe your event/i), "A great event");
-        await user.type(screen.getByPlaceholderText(/event location/i), "Montreal");
-
-        await user.type(document.querySelector('input[name="startDate"]'), "2026-12-20");
-        await user.type(document.querySelector('input[name="startTime"]'), "10:00");
-        await user.type(document.querySelector('input[name="endDate"]'), "2026-12-20");
-        await user.type(document.querySelector('input[name="endTime"]'), "12:00");
+        await fillRequiredForm(user, container);
 
         await user.click(screen.getByRole("button", { name: /create event/i }));
 
@@ -136,30 +137,28 @@ describe("CreateEventPage", () => {
 
         const payload = mockCreateEvent.mock.calls[0][0];
 
-        expect(payload.mode).toBe("in_person");
-        expect(payload.location).toBe("Montreal");
-        expect(payload.startDateTime).toContain("2026-12-20");
+        expect(payload).toMatchObject({
+            title: "Tech Meetup",
+            type: "Meetup",
+            theme: "Technology",
+            description: "A great event",
+            mode: "in_person",
+            location: "Montreal"
+        });
 
+        expect(payload.startDateTime).toContain("2026-12-20");
+        expect(payload.endDateTime).toContain("2026-12-20");
         expect(mockNavigate).toHaveBeenCalledWith("/events");
     });
 
-    it("should create an online event with null location", async () => {
+    it("creates an online event with null location", async () => {
         const user = userEvent.setup();
         mockCreateEvent.mockResolvedValue({ data: { id: 2 } });
 
-        renderPage();
+        const { container } = renderPage();
 
-        await user.type(screen.getByPlaceholderText(/event title/i), "Online Event");
-        await user.type(screen.getByPlaceholderText(/event type/i), "Workshop");
-        await user.type(screen.getByPlaceholderText(/event theme/i), "Learning");
-        await user.type(screen.getByPlaceholderText(/describe your event/i), "Online only");
-
-        await user.selectOptions(screen.getByRole("combobox"), "online");
-
-        await user.type(document.querySelector('input[name="startDate"]'), "2026-12-21");
-        await user.type(document.querySelector('input[name="startTime"]'), "14:00");
-        await user.type(document.querySelector('input[name="endDate"]'), "2026-12-21");
-        await user.type(document.querySelector('input[name="endTime"]'), "16:00");
+        await fillRequiredForm(user, container);
+        await user.selectOptions(getField(container, "mode"), "online");
 
         await user.click(screen.getByRole("button", { name: /create event/i }));
 
@@ -171,28 +170,17 @@ describe("CreateEventPage", () => {
 
         expect(payload.mode).toBe("online");
         expect(payload.location).toBeNull();
-
         expect(mockNavigate).toHaveBeenCalledWith("/events");
     });
 
-    it("should clear location when switching to online mode", async () => {
+    it("clears location when switching to online mode", async () => {
         const user = userEvent.setup();
         mockCreateEvent.mockResolvedValue({ data: { id: 3 } });
 
-        renderPage();
+        const { container } = renderPage();
 
-        await user.type(screen.getByPlaceholderText(/event title/i), "Online Event");
-        await user.type(screen.getByPlaceholderText(/event type/i), "Workshop");
-        await user.type(screen.getByPlaceholderText(/event theme/i), "Tech");
-        await user.type(screen.getByPlaceholderText(/describe your event/i), "Online session");
-        await user.type(screen.getByPlaceholderText(/event location/i), "Montreal");
-
-        await user.selectOptions(screen.getByRole("combobox"), "online");
-
-        await user.type(document.querySelector('input[name="startDate"]'), "2026-12-21");
-        await user.type(document.querySelector('input[name="startTime"]'), "14:00");
-        await user.type(document.querySelector('input[name="endDate"]'), "2026-12-21");
-        await user.type(document.querySelector('input[name="endTime"]'), "16:00");
+        await fillRequiredForm(user, container);
+        await user.selectOptions(getField(container, "mode"), "online");
 
         await user.click(screen.getByRole("button", { name: /create event/i }));
 
@@ -206,23 +194,57 @@ describe("CreateEventPage", () => {
         expect(payload.location).toBeNull();
     });
 
-    it("should show error message when event creation fails", async () => {
+    it("builds registration deadline when option is selected", async () => {
+        const user = userEvent.setup();
+        mockCreateEvent.mockResolvedValue({ data: { id: 4 } });
+
+        const { container } = renderPage();
+
+        await fillRequiredForm(user, container);
+        await user.selectOptions(
+            getField(container, "registrationDeadlineOption"),
+            "day_before"
+        );
+
+        await user.click(screen.getByRole("button", { name: /create event/i }));
+
+        await waitFor(() => {
+            expect(mockCreateEvent).toHaveBeenCalledTimes(1);
+        });
+
+        const payload = mockCreateEvent.mock.calls[0][0];
+
+        expect(payload.registrationDeadline).toBeTruthy();
+    });
+
+    it("shows loading state while submitting", async () => {
+        const user = userEvent.setup();
+
+        let resolveRequest;
+        mockCreateEvent.mockImplementation(
+            () =>
+                new Promise((resolve) => {
+                    resolveRequest = resolve;
+                })
+        );
+
+        const { container } = renderPage();
+
+        await fillRequiredForm(user, container);
+        await user.click(screen.getByRole("button", { name: /create event/i }));
+
+        expect(screen.getByRole("button", { name: /loading/i })).toBeDisabled();
+
+        resolveRequest({ data: { id: 1 } });
+    });
+
+    it("shows error message when event creation fails", async () => {
         const user = userEvent.setup();
         mockCreateEvent.mockRejectedValue(new Error("API error"));
 
-        renderPage();
+        const { container } = renderPage();
 
-        await user.type(screen.getByPlaceholderText(/event title/i), "Test");
-        await user.type(screen.getByPlaceholderText(/event type/i), "Test");
-        await user.type(screen.getByPlaceholderText(/event theme/i), "Test");
-        await user.type(screen.getByPlaceholderText(/describe your event/i), "Test");
-        await user.type(screen.getByPlaceholderText(/event location/i), "Test");
-
-        await user.type(document.querySelector('input[name="startDate"]'), "2026-12-20");
-        await user.type(document.querySelector('input[name="startTime"]'), "10:00");
-        await user.type(document.querySelector('input[name="endDate"]'), "2026-12-20");
-        await user.type(document.querySelector('input[name="endTime"]'), "12:00");
-
+        await fillRequiredForm(user, container);
         await user.click(screen.getByRole("button", { name: /create event/i }));
 
         await waitFor(() => {
@@ -232,8 +254,9 @@ describe("CreateEventPage", () => {
         expect(mockNavigate).not.toHaveBeenCalled();
     });
 
-    it("should navigate back to events when clicking cancel", async () => {
+    it("navigates back to events when clicking cancel", async () => {
         const user = userEvent.setup();
+
         renderPage();
 
         await user.click(screen.getByRole("button", { name: /cancel/i }));

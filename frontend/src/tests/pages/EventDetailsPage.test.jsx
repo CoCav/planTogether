@@ -1,12 +1,13 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import EventDetailsPage from "../../pages/EventDetailsPage";
 
-// ----------------------
-// Mocks
-// ----------------------
+/* ==================================================
+   EVENT DETAILS PAGE TESTS
+   Tests event details, permissions and member actions
+================================================== */
 
 const mockNavigate = vi.fn();
 const mockGetEventById = vi.fn();
@@ -21,7 +22,6 @@ let mockAuthState = {
     loading: false
 };
 
-// Router mock
 vi.mock("react-router-dom", async () => {
     const actual = await vi.importActual("react-router-dom");
 
@@ -32,12 +32,10 @@ vi.mock("react-router-dom", async () => {
     };
 });
 
-// Auth mock
 vi.mock("../../context/useAuth", () => ({
     useAuth: () => mockAuthState
 }));
 
-// API mocks
 vi.mock("../../api/eventApi", () => ({
     getEventById: (...args) => mockGetEventById(...args),
     deleteEvent: (...args) => mockDeleteEvent(...args)
@@ -50,57 +48,18 @@ vi.mock("../../api/eventMembershipApi", () => ({
     removeEventMember: (...args) => mockRemoveEventMember(...args)
 }));
 
-// Normalize mock
 vi.mock("../../features/events/normalizeData", () => ({
     getNormalizedEvent: (res) => res.data.event,
     getNormalizedMembers: (res) => res.data.members || [],
     getNormalizedOrganizers: (res) => res.data.organizers || []
 }));
 
-// Hook mock
-vi.mock("../../hooks/useEventActionsWithConfirm", () => ({
-    default: () => ({
-        handleJoinEvent: vi.fn(),
-        handleLeaveEvent: vi.fn()
-    })
-}));
-
-// Format mock
 vi.mock("../../utils/format", () => ({
     formatEventDateRange: () => "Dec 20, 2026",
     formatTime: () => "10:00",
     formatCount: (count, label) => `${count} ${label}${count > 1 ? "s" : ""}`,
     formatBe: (count) => (count === 1 ? "is" : "are")
 }));
-
-// UI mocks
-vi.mock("../../components/ui/LoadingState", () => ({
-    default: ({ children }) => <div>{children}</div>
-}));
-
-vi.mock("../../components/ui/EmptyState", () => ({
-    default: ({ children }) => <div>{children}</div>
-}));
-
-vi.mock("../../components/ui/Card", () => ({
-    default: ({ children }) => <div>{children}</div>
-}));
-
-vi.mock("../../components/ui/Button", () => ({
-    default: ({ children, ...props }) => <button {...props}>{children}</button>
-}));
-
-vi.mock("../../components/ui/Badge", () => ({
-    default: ({ role }) => <span>{role}</span>
-}));
-
-vi.mock("../../components/ui/Alert", () => ({
-    default: ({ children }) => <div>{children}</div>
-}));
-
-// ----------------------
-// Helpers
-// ----------------------
 
 const mockEvent = {
     id: 1,
@@ -116,23 +75,18 @@ const mockEvent = {
     status: "upcoming"
 };
 
-function setupApi({ event = mockEvent, organizers = [], members = [] } = {}) {
-    mockGetEventById.mockResolvedValue({data: { event } });
+const setupApi = ({ event = mockEvent, organizers = [], members = [] } = {}) => {
+    mockGetEventById.mockResolvedValue({ data: { event } });
     mockGetEventOrganizers.mockResolvedValue({ data: { organizers } });
-    mockGetEventMembers.mockResolvedValue({data: { members } });
-}
+    mockGetEventMembers.mockResolvedValue({ data: { members } });
+};
 
-function renderPage() {
-    return render(
+const renderPage = () =>
+    render(
         <MemoryRouter>
             <EventDetailsPage />
         </MemoryRouter>
     );
-}
-
-// ----------------------
-// Tests
-// ----------------------
 
 describe("EventDetailsPage", () => {
     beforeEach(() => {
@@ -144,7 +98,7 @@ describe("EventDetailsPage", () => {
         };
     });
 
-    it("should display loading state initially", () => {
+    it("displays loading state initially", () => {
         setupApi();
 
         renderPage();
@@ -152,7 +106,7 @@ describe("EventDetailsPage", () => {
         expect(screen.getByText(/loading event details/i)).toBeInTheDocument();
     });
 
-    it("should display event details", async () => {
+    it("displays event details", async () => {
         setupApi({
             organizers: [{ id: 1, name: "John", role: "organizer" }]
         });
@@ -166,7 +120,7 @@ describe("EventDetailsPage", () => {
         expect(screen.getByText("Tech")).toBeInTheDocument();
     });
 
-    it("should show empty state when event not found", async () => {
+    it("shows empty state when event is not found", async () => {
         setupApi({
             event: null
         });
@@ -176,7 +130,7 @@ describe("EventDetailsPage", () => {
         expect(await screen.findByText(/event not found/i)).toBeInTheDocument();
     });
 
-    it("should show fallback when API fails", async () => {
+    it("shows fallback when API fails", async () => {
         mockGetEventById.mockRejectedValue(new Error("API error"));
         mockGetEventOrganizers.mockResolvedValue({ data: { organizers: [] } });
         mockGetEventMembers.mockResolvedValue({ data: { members: [] } });
@@ -186,7 +140,7 @@ describe("EventDetailsPage", () => {
         expect(await screen.findByText(/event not found/i)).toBeInTheDocument();
     });
 
-    it("should show delete and edit buttons for organizer on active event", async () => {
+    it("shows edit and delete buttons for organizer on active event", async () => {
         setupApi({
             organizers: [{ id: 1, role: "organizer", name: "John" }]
         });
@@ -194,10 +148,11 @@ describe("EventDetailsPage", () => {
         renderPage();
 
         expect(await screen.findByRole("button", { name: /delete event/i })).toBeInTheDocument();
+
         expect(screen.getByRole("button", { name: /edit event/i })).toBeInTheDocument();
     });
 
-    it("should delete event and redirect", async () => {
+    it("deletes event and redirects", async () => {
         const user = userEvent.setup();
 
         vi.spyOn(window, "confirm").mockReturnValue(true);
@@ -221,7 +176,7 @@ describe("EventDetailsPage", () => {
         expect(mockNavigate).toHaveBeenCalledWith("/events");
     });
 
-    it("should show Ended and hide event actions for past event", async () => {
+    it("shows ended label and hides event actions for past event", async () => {
         setupApi({
             event: {
                 ...mockEvent,
@@ -240,7 +195,7 @@ describe("EventDetailsPage", () => {
         expect(screen.queryByRole("button", { name: /delete event/i })).not.toBeInTheDocument();
     });
 
-    it("should show past attendee empty state when no one attended", async () => {
+    it("shows past attendee empty state when no one attended", async () => {
         setupApi({
             event: {
                 ...mockEvent,
@@ -256,7 +211,7 @@ describe("EventDetailsPage", () => {
         expect(await screen.findByText(/no one attended this event/i)).toBeInTheDocument();
     });
 
-    it("should show active attendee empty state when there are no participants", async () => {
+    it("shows active attendee empty state when there are no participants", async () => {
         setupApi({
             organizers: [{ id: 1, role: "organizer", name: "John" }],
             members: []
@@ -267,7 +222,7 @@ describe("EventDetailsPage", () => {
         expect(await screen.findByText(/no participants yet/i)).toBeInTheDocument();
     });
 
-    it("should show ended login alert for unauthenticated user on past event", async () => {
+    it("shows ended login alert for unauthenticated user on past event", async () => {
         mockAuthState = {
             user: null,
             loading: false
@@ -287,7 +242,7 @@ describe("EventDetailsPage", () => {
         expect(screen.queryByText(/login to join this event/i)).not.toBeInTheDocument();
     });
 
-    it("should show login alert for unauthenticated user on active event", async () => {
+    it("shows login alert for unauthenticated user on active event", async () => {
         mockAuthState = {
             user: null,
             loading: false
@@ -302,7 +257,7 @@ describe("EventDetailsPage", () => {
         expect(await screen.findByText(/login to join this event/i)).toBeInTheDocument();
     });
 
-    it("should promote participant when organizer clicks Promote", async () => {
+    it("promotes participant when organizer clicks Promote", async () => {
         const user = userEvent.setup();
 
         setupApi({
@@ -321,7 +276,7 @@ describe("EventDetailsPage", () => {
         expect(mockUpdateMemberRole).toHaveBeenCalledWith("1", 2, "co_organizer");
     });
 
-    it("should demote co-organizer when organizer clicks Demote", async () => {
+    it("demotes co-organizer when organizer clicks Demote", async () => {
         const user = userEvent.setup();
 
         setupApi({
@@ -343,7 +298,7 @@ describe("EventDetailsPage", () => {
         expect(mockUpdateMemberRole).toHaveBeenCalledWith("1", 2, "participant");
     });
 
-    it("should remove participant when organizer confirms removal", async () => {
+    it("removes participant when organizer confirms removal", async () => {
         const user = userEvent.setup();
 
         vi.spyOn(window, "confirm").mockReturnValue(true);
@@ -364,7 +319,7 @@ describe("EventDetailsPage", () => {
         expect(mockRemoveEventMember).toHaveBeenCalledWith("1", 2);
     });
 
-    it("should not remove participant when removal is cancelled", async () => {
+    it("does not remove participant when removal is cancelled", async () => {
         const user = userEvent.setup();
 
         vi.spyOn(window, "confirm").mockReturnValue(false);
@@ -383,11 +338,11 @@ describe("EventDetailsPage", () => {
         expect(mockRemoveEventMember).not.toHaveBeenCalled();
     });
 
-    it("should allow co-organizer to remove participant but not promote", async () => {
+    it("allows co-organizer to remove participant but not promote", async () => {
         setupApi({
             organizers: [
                 { id: 1, role: "co_organizer", name: "John" },
-                { id: 3, role: "organizer", name: "Main Organizer" }
+                { id: 3, role: "organizer", name: "Main Organizer" },
             ],
             members: [{ id: 2, name: "Alice", role: "participant" }]
         });
@@ -400,7 +355,7 @@ describe("EventDetailsPage", () => {
         expect(screen.queryByRole("button", { name: /promote/i })).not.toBeInTheDocument();
     });
 
-    it("should hide member management actions for past event", async () => {
+    it("hides member management actions for past event", async () => {
         setupApi({
             event: {
                 ...mockEvent,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getEventsEmptyState } from "../../../features/events/eventEmptyStates";
+import { getEventsEmptyState } from "../../../features/events/eventEmptyState";
 
 /* ==================================================
    EVENT EMPTY STATES TESTS

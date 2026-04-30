@@ -1,18 +1,18 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import RegisterPage from "../../pages/RegisterPage";
 
-// ----------------------
-// Mocks
-// ----------------------
+/* ==================================================
+   REGISTER PAGE TESTS
+   Tests register form validation, account creation and redirect
+================================================== */
 
 const mockNavigate = vi.fn();
 const mockLogin = vi.fn();
 const mockRegisterUser = vi.fn();
 
-// Router mock
 vi.mock("react-router-dom", async () => {
     const actual = await vi.importActual("react-router-dom");
 
@@ -22,20 +22,17 @@ vi.mock("react-router-dom", async () => {
     };
 });
 
-// Auth context mock
-vi.mock("../../context/useAuth.js", () => ({
+vi.mock("../../context/useAuth", () => ({
     useAuth: () => ({
         login: mockLogin
     })
 }));
 
-// API mock
 vi.mock("../../api/authApi", () => ({
     registerUser: (...args) => mockRegisterUser(...args)
 }));
 
-// Validation mock
-vi.mock("../../features/auth/authValidation.js", () => ({
+vi.mock("../../features/auth/authValidation", () => ({
     validateRegisterForm: vi.fn((form) => {
         const errors = {};
 
@@ -56,41 +53,38 @@ vi.mock("../../features/auth/authValidation.js", () => ({
     })
 }));
 
-// ----------------------
-// Helper
-// ----------------------
-
-function renderPage() {
-    return render(
+const renderPage = () =>
+    render(
         <MemoryRouter>
             <RegisterPage />
         </MemoryRouter>
     );
-}
 
-// ----------------------
-// Tests
-// ----------------------
+const fillRegisterForm = async (user, { name = "John Doe", email = "john@test.com", password = "Password123" } = {}) => {
+    await user.type(screen.getByPlaceholderText(/your name/i), name);
+    await user.type(screen.getByPlaceholderText(/your email/i), email);
+    await user.type(screen.getByPlaceholderText(/choose a password/i), password);
+};
 
 describe("RegisterPage", () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it("should render the register form", () => {
+    it("renders the register form", () => {
         renderPage();
 
         expect(screen.getByRole("heading", { name: /register/i })).toBeInTheDocument();
-
         expect(screen.getByPlaceholderText(/your name/i)).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/your email/i)).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/choose a password/i)).toBeInTheDocument();
-
         expect(screen.getByRole("button", { name: /^register$/i })).toBeInTheDocument();
+        expect(screen.getByRole("link", { name: /login/i })).toBeInTheDocument();
     });
 
-    it("should show validation errors when submitting empty form", async () => {
+    it("shows validation errors when submitting empty form", async () => {
         const user = userEvent.setup();
+
         renderPage();
 
         await user.click(screen.getByRole("button", { name: /^register$/i }));
@@ -98,12 +92,26 @@ describe("RegisterPage", () => {
         expect(screen.getByText(/name is required/i)).toBeInTheDocument();
         expect(screen.getByText(/email is required/i)).toBeInTheDocument();
         expect(screen.getByText(/password is required/i)).toBeInTheDocument();
-
         expect(mockRegisterUser).not.toHaveBeenCalled();
     });
 
-    it("should update input values when typing", async () => {
+    it("clears field error when user edits input", async () => {
         const user = userEvent.setup();
+
+        renderPage();
+
+        await user.click(screen.getByRole("button", { name: /^register$/i }));
+
+        expect(screen.getByText(/name is required/i)).toBeInTheDocument();
+
+        await user.type(screen.getByPlaceholderText(/your name/i), "John Doe");
+
+        expect(screen.queryByText(/name is required/i)).not.toBeInTheDocument();
+    });
+
+    it("updates input values when typing", async () => {
+        const user = userEvent.setup();
+
         renderPage();
 
         const nameInput = screen.getByPlaceholderText(/your name/i);
@@ -119,8 +127,9 @@ describe("RegisterPage", () => {
         expect(passwordInput).toHaveValue("Password123");
     });
 
-    it("should toggle password visibility", async () => {
+    it("toggles password visibility", async () => {
         const user = userEvent.setup();
+
         renderPage();
 
         const passwordInput = screen.getByPlaceholderText(/choose a password/i);
@@ -134,25 +143,36 @@ describe("RegisterPage", () => {
         expect(passwordInput).toHaveAttribute("type", "password");
     });
 
-    it("should display multiple password validation errors", async () => {
+    it("displays password requirements", () => {
+        renderPage();
+
+        expect(screen.getByText(/your password must contain at least/i)).toBeInTheDocument();
+        expect(screen.getByText(/6 characters/i)).toBeInTheDocument();
+        expect(screen.getByText(/1 uppercase/i)).toBeInTheDocument();
+        expect(screen.getByText(/1 number/i)).toBeInTheDocument();
+    });
+
+    it("displays multiple password validation errors", async () => {
         const user = userEvent.setup();
 
         renderPage();
 
-        await user.type(screen.getByPlaceholderText(/your name/i), "John Doe");
-        await user.type(screen.getByPlaceholderText(/your email/i), "john@test.com");
-        await user.type(screen.getByPlaceholderText(/choose a password/i), "weak");
+        await fillRegisterForm(user, {
+            password: "weak"
+        });
 
         await user.click(screen.getByRole("button", { name: /^register$/i }));
 
         expect(screen.getByText(/password must contain at least 6 characters/i)).toBeInTheDocument();
+
         expect(screen.getByText(/password must contain at least 1 uppercase/i)).toBeInTheDocument();
+
         expect(screen.getByText(/password must contain at least 1 number/i)).toBeInTheDocument();
 
         expect(mockRegisterUser).not.toHaveBeenCalled();
     });
 
-    it("should register successfully and redirect", async () => {
+    it("registers successfully and redirects", async () => {
         const user = userEvent.setup();
 
         mockRegisterUser.mockResolvedValue({ data: { token: "fake-token" } });
@@ -160,10 +180,7 @@ describe("RegisterPage", () => {
 
         renderPage();
 
-        await user.type(screen.getByPlaceholderText(/your name/i), "John Doe");
-        await user.type(screen.getByPlaceholderText(/your email/i), "john@test.com");
-        await user.type(screen.getByPlaceholderText(/choose a password/i), "Password123");
-
+        await fillRegisterForm(user);
         await user.click(screen.getByRole("button", { name: /^register$/i }));
 
         await waitFor(() => {
@@ -178,22 +195,38 @@ describe("RegisterPage", () => {
         expect(mockNavigate).toHaveBeenCalledWith("/events");
     });
 
-    it("should show error message when register fails", async () => {
+    it("shows loading state while submitting", async () => {
+        const user = userEvent.setup();
+
+        let resolveRequest;
+        mockRegisterUser.mockImplementation(
+            () =>
+                new Promise((resolve) => {
+                    resolveRequest = resolve;
+                })
+        );
+
+        renderPage();
+
+        await fillRegisterForm(user);
+        await user.click(screen.getByRole("button", { name: /^register$/i }));
+
+        expect(screen.getByRole("button", { name: /loading/i })).toBeDisabled();
+
+        resolveRequest({ data: { token: "fake-token" } });
+    });
+
+    it("shows error message when register fails", async () => {
         const user = userEvent.setup();
 
         mockRegisterUser.mockRejectedValue(new Error("Register failed"));
 
         renderPage();
 
-        await user.type(screen.getByPlaceholderText(/your name/i), "John Doe");
-        await user.type(screen.getByPlaceholderText(/your email/i), "john@test.com");
-        await user.type(screen.getByPlaceholderText(/choose a password/i), "Password123");
-
+        await fillRegisterForm(user);
         await user.click(screen.getByRole("button", { name: /^register$/i }));
 
-        await waitFor(() => {
-            expect(screen.getByText(/unable to register\. please check your information\./i)).toBeInTheDocument();
-        });
+        expect(await screen.findByText(/unable to register\. please check your information\./i)).toBeInTheDocument();
 
         expect(mockLogin).not.toHaveBeenCalled();
         expect(mockNavigate).not.toHaveBeenCalled();

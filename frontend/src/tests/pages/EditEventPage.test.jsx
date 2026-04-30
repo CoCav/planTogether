@@ -1,20 +1,21 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import EditEventPage from "../../pages/EditEventPage";
 
-// ----------------------
-// Mocks
-// ----------------------
+/* ==================================================
+   EDIT EVENT PAGE TESTS
+   Tests event loading, editing and update flow
+================================================== */
 
 const mockNavigate = vi.fn();
 const mockGetEventById = vi.fn();
 const mockUpdateEvent = vi.fn();
 
-// Router mock
 vi.mock("react-router-dom", async () => {
     const actual = await vi.importActual("react-router-dom");
+
     return {
         ...actual,
         useNavigate: () => mockNavigate,
@@ -24,13 +25,11 @@ vi.mock("react-router-dom", async () => {
     };
 });
 
-// API mock
 vi.mock("../../api/eventApi", () => ({
     getEventById: (...args) => mockGetEventById(...args),
     updateEvent: (...args) => mockUpdateEvent(...args)
 }));
 
-// Validation mock
 vi.mock("../../features/events/eventValidation", () => ({
     validateEventForm: vi.fn((form) => {
         const errors = {};
@@ -43,25 +42,14 @@ vi.mock("../../features/events/eventValidation", () => ({
         if (!form.startTime) errors.startTime = "Start time is required";
         if (!form.endDate) errors.endDate = "End date is required";
         if (!form.endTime) errors.endTime = "End time is required";
+
         if (form.mode === "in_person" && !form.location) {
             errors.location = "Location is required";
         }
 
         return errors;
-    })
+    }),
 }));
-
-// ----------------------
-// Helper
-// ----------------------
-
-function renderPage() {
-    return render(
-        <MemoryRouter>
-            <EditEventPage />
-        </MemoryRouter>
-    );
-}
 
 const mockEventResponse = {
     data: {
@@ -74,21 +62,33 @@ const mockEventResponse = {
             mode: "in_person",
             location: "Montreal",
             startDateTime: "2026-12-20T10:00:00.000Z",
-            endDateTime: "2026-12-20T12:00:00.000Z"
-        }
-    }
+            endDateTime: "2026-12-20T12:00:00.000Z",
+            maxParticipants: 10,
+            registrationDeadline: null
+        },
+    },
 };
 
-// ----------------------
-// Tests
-// ----------------------
+const renderPage = () =>
+    render(
+        <MemoryRouter>
+            <EditEventPage />
+        </MemoryRouter>
+    );
+
+const getField = (container, name) =>
+    container.querySelector(`[name="${name}"]`);
+
+const waitForFormToLoad = async () => {
+    await screen.findByDisplayValue("Original Event");
+};
 
 describe("EditEventPage", () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it("should display loading state initially", () => {
+    it("displays loading state initially", () => {
         mockGetEventById.mockResolvedValue(mockEventResponse);
 
         renderPage();
@@ -96,73 +96,64 @@ describe("EditEventPage", () => {
         expect(screen.getByText(/loading event form/i)).toBeInTheDocument();
     });
 
-    it("should load and display existing event data", async () => {
+    it("loads and displays existing event data", async () => {
         mockGetEventById.mockResolvedValue(mockEventResponse);
 
         renderPage();
 
-        await waitFor(() => {
-            expect(screen.getByDisplayValue("Original Event")).toBeInTheDocument();
-            expect(screen.getByDisplayValue("Original description")).toBeInTheDocument();
-            expect(screen.getByDisplayValue("Meetup")).toBeInTheDocument();
-            expect(screen.getByDisplayValue("Technology")).toBeInTheDocument();
-            expect(screen.getByDisplayValue("Montreal")).toBeInTheDocument();
-        });
+        await waitForFormToLoad();
+
+        expect(screen.getByDisplayValue("Original Event")).toBeInTheDocument();
+        expect(screen.getByDisplayValue("Original description")).toBeInTheDocument();
+        expect(screen.getByDisplayValue("Meetup")).toBeInTheDocument();
+        expect(screen.getByDisplayValue("Technology")).toBeInTheDocument();
+        expect(screen.getByDisplayValue("Montreal")).toBeInTheDocument();
     });
 
-    it("should show validation errors when submitting invalid form", async () => {
+    it("shows validation errors when submitting invalid form", async () => {
         const user = userEvent.setup();
         mockGetEventById.mockResolvedValue(mockEventResponse);
 
-        renderPage();
+        const { container } = renderPage();
 
-        await waitFor(() => {
-            expect(screen.getByDisplayValue("Original Event")).toBeInTheDocument();
-        });
+        await waitForFormToLoad();
 
-        const titleInput = screen.getByPlaceholderText(/event title/i);
-        await user.clear(titleInput);
-
+        await user.clear(getField(container, "title"));
         await user.click(screen.getByRole("button", { name: /update event/i }));
 
         expect(screen.getByText(/title is required/i)).toBeInTheDocument();
         expect(mockUpdateEvent).not.toHaveBeenCalled();
     });
 
-    it("should hide location field when mode is online", async () => {
+    it("hides location field when mode is online", async () => {
         const user = userEvent.setup();
         mockGetEventById.mockResolvedValue(mockEventResponse);
 
-        renderPage();
+        const { container } = renderPage();
 
-        await waitFor(() => {
-            expect(screen.getByPlaceholderText(/event location/i)).toBeInTheDocument();
-        });
+        await waitForFormToLoad();
 
-        await user.selectOptions(screen.getByRole("combobox"), "online");
+        expect(getField(container, "location")).toBeInTheDocument();
 
-        expect(screen.queryByPlaceholderText(/event location/i)).not.toBeInTheDocument();
+        await user.selectOptions(getField(container, "mode"), "online");
+
+        expect(getField(container, "location")).not.toBeInTheDocument();
     });
 
-    it("should update event and redirect to event details", async () => {
+    it("updates event and redirects to event details", async () => {
         const user = userEvent.setup();
         mockGetEventById.mockResolvedValue(mockEventResponse);
         mockUpdateEvent.mockResolvedValue({ data: { success: true } });
 
-        renderPage();
+        const { container } = renderPage();
 
-        await waitFor(() => {
-            expect(screen.getByDisplayValue("Original Event")).toBeInTheDocument();
-        });
+        await waitForFormToLoad();
 
-        const titleInput = screen.getByPlaceholderText(/event title/i);
-        const descriptionInput = screen.getByPlaceholderText(/describe your event/i);
+        await user.clear(getField(container, "title"));
+        await user.type(getField(container, "title"), "Updated Event");
 
-        await user.clear(titleInput);
-        await user.type(titleInput, "Updated Event");
-
-        await user.clear(descriptionInput);
-        await user.type(descriptionInput, "Updated description");
+        await user.clear(getField(container, "description"));
+        await user.type(getField(container, "description"), "Updated description");
 
         await user.click(screen.getByRole("button", { name: /update event/i }));
 
@@ -173,101 +164,121 @@ describe("EditEventPage", () => {
         const [eventId, payload] = mockUpdateEvent.mock.calls[0];
 
         expect(eventId).toBe("42");
-        expect(payload.title).toBe("Updated Event");
-        expect(payload.description).toBe("Updated description");
-        expect(payload.mode).toBe("in_person");
-        expect(payload.location).toBe("Montreal");
+        expect(payload).toMatchObject({
+            title: "Updated Event",
+            description: "Updated description",
+            mode: "in_person",
+            location: "Montreal"
+        });
 
-        expect(mockNavigate).toHaveBeenCalledWith("/events/42", { replace: true });
+        expect(mockNavigate).toHaveBeenCalledWith("/events/42", {
+            replace: true
+        });
     });
 
-    it("should update online event with null location", async () => {
+    it("updates online event with null location", async () => {
         const user = userEvent.setup();
         mockGetEventById.mockResolvedValue(mockEventResponse);
         mockUpdateEvent.mockResolvedValue({ data: { success: true } });
 
-        renderPage();
+        const { container } = renderPage();
 
-        await waitFor(() => {
-            expect(screen.getByDisplayValue("Original Event")).toBeInTheDocument();
-        });
+        await waitForFormToLoad();
 
-        await user.selectOptions(screen.getByRole("combobox"), "online");
+        await user.selectOptions(getField(container, "mode"), "online");
         await user.click(screen.getByRole("button", { name: /update event/i }));
 
         await waitFor(() => {
             expect(mockUpdateEvent).toHaveBeenCalledTimes(1);
         });
 
-        const [, payload] = mockUpdateEvent.mock.calls[0];
+        const payload = mockUpdateEvent.mock.calls[0][1];
 
         expect(payload.mode).toBe("online");
         expect(payload.location).toBeNull();
     });
 
-    it("should clear location when switching to online mode", async () => {
+    it("builds registration deadline when option is selected", async () => {
         const user = userEvent.setup();
         mockGetEventById.mockResolvedValue(mockEventResponse);
         mockUpdateEvent.mockResolvedValue({ data: { success: true } });
 
-        renderPage();
+        const { container } = renderPage();
 
-        await waitFor(() => {
-            expect(screen.getByDisplayValue("Original Event")).toBeInTheDocument();
-        });
+        await waitForFormToLoad();
 
-        await user.selectOptions(screen.getByRole("combobox"), "online");
+        await user.selectOptions(
+            getField(container, "registrationDeadlineOption"),
+            "day_before"
+        );
+
         await user.click(screen.getByRole("button", { name: /update event/i }));
 
         await waitFor(() => {
             expect(mockUpdateEvent).toHaveBeenCalledTimes(1);
         });
 
-        const [, payload] = mockUpdateEvent.mock.calls[0];
+        const payload = mockUpdateEvent.mock.calls[0][1];
 
-        expect(payload.mode).toBe("online");
-        expect(payload.location).toBeNull();
+        expect(payload.registrationDeadline).toBeTruthy();
     });
 
-    it("should show error message when loading event fails", async () => {
+    it("shows loading state while submitting", async () => {
+        const user = userEvent.setup();
+        mockGetEventById.mockResolvedValue(mockEventResponse);
+
+        let resolveRequest;
+        mockUpdateEvent.mockImplementation(
+            () =>
+                new Promise((resolve) => {
+                    resolveRequest = resolve;
+                })
+        );
+
+        renderPage();
+
+        await waitForFormToLoad();
+
+        await user.click(screen.getByRole("button", { name: /update event/i }));
+
+        expect(screen.getByRole("button", { name: /loading/i })).toBeDisabled();
+
+        resolveRequest({ data: { success: true } });
+    });
+
+    it("shows error message when loading event fails", async () => {
         mockGetEventById.mockRejectedValue(new Error("API error"));
 
         renderPage();
 
-        await waitFor(() => {
-            expect(screen.getByText(/unable to load event/i)).toBeInTheDocument();
-        });
+        expect(await screen.findByText(/unable to load event/i)).toBeInTheDocument();
     });
 
-    it("should show error message when update fails", async () => {
+    it("shows error message when update fails", async () => {
         const user = userEvent.setup();
         mockGetEventById.mockResolvedValue(mockEventResponse);
         mockUpdateEvent.mockRejectedValue(new Error("API error"));
 
         renderPage();
 
-        await waitFor(() => {
-            expect(screen.getByDisplayValue("Original Event")).toBeInTheDocument();
-        });
+        await waitForFormToLoad();
 
         await user.click(screen.getByRole("button", { name: /update event/i }));
 
-        await waitFor(() => {
-            expect(screen.getByText(/unable to update event/i)).toBeInTheDocument();
-        });
+        expect(await screen.findByText(/unable to update event/i)).toBeInTheDocument();
 
-        expect(mockNavigate).not.toHaveBeenCalledWith("/events/42", { replace: true });
+        expect(mockNavigate).not.toHaveBeenCalledWith("/events/42", {
+            replace: true
+        });
     });
 
-    it("should navigate back when clicking cancel", async () => {
+    it("navigates back when clicking cancel", async () => {
         const user = userEvent.setup();
         mockGetEventById.mockResolvedValue(mockEventResponse);
 
         renderPage();
 
-        await waitFor(() => {
-            expect(screen.getByDisplayValue("Original Event")).toBeInTheDocument();
-        });
+        await waitForFormToLoad();
 
         await user.click(screen.getByRole("button", { name: /cancel/i }));
 

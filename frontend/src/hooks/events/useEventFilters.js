@@ -1,36 +1,27 @@
-/* ==================================================
-   EVENT FILTERS HOOK
-   --------------------------------------------------
-   Centralizes React state and handlers for event filters.
-
-   This hook handles:
-   - filter form state
-   - filter panel visibility
-   - sort changes
-   - reset filters
-   - quick filters such as Today and This Weekend
-
-   Goal:
-   Keep event pages clean by extracting shared filter
-   state and interaction logic.
-================================================== */
-
 import { useState } from "react";
 import { getDefaultEventFilters, EVENT_SORT_MAP, getSortLabels, getTodayEventFilters, getWeekendEventFilters, isCurrentWeekendFilterActive } from "../../features/events/eventFilters";
 
-export default function useEventFilters({ activeView, loadData, resetPage }) {
-    // Filters state: controls all event filtering inputs
-    const [filters, setFilters] = useState(getDefaultEventFilters);
+/* ==================================================
+   EVENT FILTERS HOOK
+   Manages shared event filter state and handlers
 
-    // Filters visibility state: controls whether filter form is expanded or collapsed
+   Handles:
+   - filter form state
+   - filter panel visibility
+   - sorting
+   - quick filters
+   - pagination reset on filter changes
+================================================== */
+
+export default function useEventFilters({ activeView, loadData, resetPage }) {
+    const [filters, setFilters] = useState(getDefaultEventFilters);
     const [showFilters, setShowFilters] = useState(false);
 
-    // Dynamic sort labels: adapts sorting labels depending on the active view
     const sortLabels = getSortLabels(activeView);
 
     /* =========================
-       Filter input handler
-       Updates filter state on user input
+       Filter input changes
+       Updates filter form values
     ========================= */
 
     const handleFilterChange = (e) => {
@@ -38,13 +29,13 @@ export default function useEventFilters({ activeView, loadData, resetPage }) {
 
         setFilters((prev) => ({
             ...prev,
-            [name]: value,
+            [name]: value
         }));
     };
 
     /* =========================
-       Filter submit handler
-       Applies current filters and resets pagination
+       Filter submit
+       Applies filters and reloads first page
     ========================= */
 
     const handleFilterSubmit = async (e) => {
@@ -63,8 +54,8 @@ export default function useEventFilters({ activeView, loadData, resetPage }) {
     };
 
     /* =========================
-       Sort handler
-       Maps selected UI option to backend sort params
+       Sort changes
+       Maps UI sort value to backend params
     ========================= */
 
     const handleSortChange = (e) => {
@@ -78,8 +69,8 @@ export default function useEventFilters({ activeView, loadData, resetPage }) {
     };
 
     /* =========================
-       Reset handler
-       Clears filters and reloads first page
+       Reset filters
+       Restores default filters and reloads first page
     ========================= */
 
     const handleResetFilters = async () => {

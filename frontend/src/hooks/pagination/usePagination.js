@@ -1,23 +1,17 @@
 /* ==================================================
    PAGINATION HOOK
-   --------------------------------------------------
-   Centralizes pagination navigation logic for pages
-   that fetch paginated data.
+   Centralizes pagination navigation logic
 
-   This hook handles:
-   - Previous page navigation
-   - Next page navigation
-   - Boundary checks for first and last page
-
-   Goal:
-   Avoid duplicating pagination handlers across pages
-   while keeping data loading logic inside each page.
+   Handles:
+   - previous page navigation
+   - next page navigation
+   - first / last page boundaries
 ================================================== */
 
-export default function usePagination({page, totalPages, onPageChange}) {
+export default function usePagination({ page, totalPages, onPageChange }) {
     /* =========================
-     Previous page
-        Loads the previous page if available
+       Previous page
+       Loads previous page when available
     ========================= */
 
     const handlePreviousPage = async () => {
@@ -26,8 +20,8 @@ export default function usePagination({page, totalPages, onPageChange}) {
     };
 
     /* =========================
-     Next page
-        Loads the next page if available
+       Next page
+       Loads next page when available
     ========================= */
 
     const handleNextPage = async () => {
@@ -35,5 +29,5 @@ export default function usePagination({page, totalPages, onPageChange}) {
         await onPageChange(page + 1);
     };
 
-    return {handlePreviousPage, handleNextPage};
+    return { handlePreviousPage, handleNextPage };
 }

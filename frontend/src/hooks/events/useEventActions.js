@@ -1,30 +1,19 @@
-/* ==================================================
-   EVENT ACTIONS HOOK
-   --------------------------------------------------
-   Centralizes basic event membership actions.
-
-   This hook handles:
-   - Joining an event
-   - Leaving an event
-
-   It ensures:
-   - Consistent feedback messages
-   - Consistent error handling
-   - Data refresh after each successful action
-
-   Goal:
-   Execute event membership actions while keeping
-   pages/components free of API side-effects.
-================================================== */
-
 import { joinEvent, leaveEvent } from "../../api/eventMembershipApi";
 
-export default function useEventActions({ loadData, setMessage, setError, getRoleByEventId }) {
+/* ==================================================
+   EVENT ACTIONS HOOK
+   Handles basic event membership actions
 
+   Actions:
+   - join event
+   - leave event
+   - refresh data after success
+================================================== */
+
+export default function useEventActions({ loadData, setMessage, setError, getRoleByEventId }) {
     /* =========================
-     Join event handler
-        Adds the current user as a participant
-        and refreshes event data
+       Join event
+       Adds current user as participant
     ========================= */
 
     const handleJoinEvent = async (eventId) => {
@@ -36,18 +25,15 @@ export default function useEventActions({ loadData, setMessage, setError, getRol
             setMessage("✅ Successfully joined event!");
 
             await loadData();
-
         } catch (error) {
             console.error("Error joining event:", error);
             setError("❌ Unable to join event");
         }
     };
 
-
     /* =========================
-     Leave event handler
-        Removes the current user from the event,
-        unless they are the main organizer
+       Leave event
+       Removes current user unless they are organizer
     ========================= */
 
     const handleLeaveEvent = async (eventId) => {
@@ -66,12 +52,11 @@ export default function useEventActions({ loadData, setMessage, setError, getRol
             setMessage("👋 Successfully left event");
 
             await loadData();
-
         } catch (error) {
             console.error("Error leaving event:", error);
             setError("❌ Unable to leave event");
         }
     };
 
-    return {handleJoinEvent,  handleLeaveEvent};
+    return { handleJoinEvent, handleLeaveEvent };
 }

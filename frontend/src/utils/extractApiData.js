@@ -1,17 +1,13 @@
 /* ==================================================
    API RESPONSE HELPER
-   Extracts useful data from API responses
-   Supports both raw Axios responses and already-unwrapped payloads
+   Extracts data from API responses
+
+   Supports:
+   - raw Axios responses
+   - already-unwrapped payloads
+   - optional key-based extraction
 ================================================== */
 
-/* =========================
-   Extract API data
-   - Supports raw Axios responses: response.data
-   - Supports already-unwrapped payloads
-   - Returns payload[key] when a key is provided
-   - Returns the full payload otherwise
-   - Falls back to an empty array if nothing usable is found
-========================= */
 export const extractApiData = (response = {}, key = "") => {
     // Support both Axios responses and already-unwrapped payloads
     const payload = response?.data ?? response;

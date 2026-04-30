@@ -1,10 +1,13 @@
 /* ==================================================
    FETCH ALL PAGINATED
-   Fetches all pages from a paginated API endpoint
-   and returns a single merged array
+   Fetches and merges all pages from a paginated endpoint
+
+   Requires:
+   - fetchPage: function that fetches one page
+   - normalizePage: function that extracts items from one page
 ================================================== */
 
-export const fetchAllPaginated = async ({fetchPage, normalizePage, pageSize = 10 }) => {
+export const fetchAllPaginated = async ({ fetchPage, normalizePage, pageSize = 10 }) => {
     let currentPage = 1;
     let totalPages = 1;
     const allItems = [];
@@ -12,10 +15,11 @@ export const fetchAllPaginated = async ({fetchPage, normalizePage, pageSize = 10
     while (currentPage <= totalPages) {
         const response = await fetchPage({
             page: currentPage,
-            pageSize,
+            pageSize
         });
 
         const items = normalizePage(response);
+
         allItems.push(...items);
 
         totalPages = response.data.totalPages || 1;

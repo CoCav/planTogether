@@ -1,6 +1,13 @@
 /* ==================================================
-   THEME TOKENS
-    Global design variables used across the app
+   THEME
+   Global design variables used across the app
+
+   Includes:
+   - colors
+   - spacing
+   - radius
+   - shadows
+   - typography
 ================================================== */
 
 :root {

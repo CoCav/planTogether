@@ -1,0 +1,225 @@
+/* ==================================================
+   NAVIGATION
+   Navbar and footer styles shared across the app
+================================================== */
+
+/* ==================================================
+   NAVBAR
+================================================== */
+.navbar {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.navbar-inner {
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+}
+
+.navbar-brand {
+    font-size: var(--font-size-lg);
+    font-weight: 800;
+    color: var(--color-primary);
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.navbar-links {
+    flex: 1;
+    margin-left: var(--space-5);
+}
+
+.navbar-link {
+    color: var(--color-text);
+    text-decoration: none;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.navbar-link.active {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.navbar-links,
+.navbar-auth-group,
+.navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.navbar-user-menu {
+    position: relative;
+}
+
+.navbar-user-trigger {
+    gap: 6px;
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    color: var(--color-primary);
+}
+
+.navbar-user-trigger:hover:not(:disabled) {
+    background: #e0e7ff;
+    border-color: #a5b4fc;
+    color: var(--color-primary-hover);
+}
+
+.navbar-user-trigger:focus-visible,
+.navbar-dropdown-item:focus-visible,
+.navbar-link:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.navbar-caret {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    transition: transform 0.2s ease;
+}
+
+.navbar-user-trigger[aria-expanded="true"] .navbar-caret {
+    transform: rotate(180deg);
+}
+
+.navbar-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 180px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+    animation: DropdownIn 0.16s ease forwards;
+}
+
+@keyframes DropdownIn {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.navbar-dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    text-align: left;
+    text-decoration: none;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+}
+
+.navbar-dropdown-item:hover {
+    background: #f3f4f6;
+}
+
+.navbar-dropdown-danger {
+    color: var(--color-danger);
+}
+
+
+/* ==================================================
+   RESPONSIVE NAVBAR
+================================================== */
+@media (max-width: 768px) {
+    .navbar-inner {
+        flex-wrap: wrap;
+        align-items: flex-start;
+        padding: var(--space-3) 0;
+    }
+
+    .navbar-links {
+        width: 100%;
+        margin-left: 0;
+        margin-top: var(--space-2);
+    }
+
+    .navbar-actions {
+        width: 100%;
+        justify-content: flex-start;
+        margin-top: var(--space-2);
+    }
+
+    .navbar-dropdown {
+        right: auto;
+        left: 0;
+    }
+}
+
+/* ==================================================
+   FOOTER
+================================================== */
+.footer {
+    margin-top: auto;
+    padding: var(--space-5) 0;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+}
+
+.footer-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.footer-logo {
+    font-weight: 700;
+    font-size: var(--font-size-base);
+    color: var(--color-primary);
+}
+
+.footer-links {
+    display: flex;
+    gap: var(--space-4);
+}
+
+.footer-link {
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+    transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+    color: var(--color-primary);
+}
+
+.footer-meta {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+}
+
+/* ==================================================
+   RESPONSIVE FOOTER
+================================================== */
+@media (max-width: 768px) {
+    .footer-inner {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .footer-links {
+        flex-wrap: wrap;
+    }
+}

@@ -7,7 +7,7 @@ import EventForm from "../components/events/EventForm";
 
 import Card from "../components/ui/Card";
 import Alert from "../components/ui/Alert";
-import PageLoading from "../components/ui/PageLoading";
+import PageLoader from "../components/ui/PageLoader";
 
 /* ==================================================
    EDIT EVENT PAGE
@@ -220,7 +220,7 @@ export default function EditEventPage() {
     ========================= */
 
     if (loading) {
-        return <PageLoading>Loading event form...</PageLoading>;
+        return <PageLoader>Loading event form...</PageLoader>;
     }
 
 

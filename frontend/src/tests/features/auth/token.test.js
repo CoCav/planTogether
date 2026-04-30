@@ -1,5 +1,10 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { getToken, setToken, removeToken } from "../../../features/auth/token";
+import { beforeEach, describe, expect, it } from "vitest";
+import { getToken, removeToken, setToken } from "../../../features/auth/token";
+
+/* ==================================================
+   AUTH TOKEN TESTS
+   Tests JWT token storage helpers
+================================================== */
 
 describe("token utils", () => {
     beforeEach(() => {
@@ -7,34 +12,34 @@ describe("token utils", () => {
         localStorage.clear();
     });
 
-    it("should store token in sessionStorage by default", () => {
+    it("stores token in sessionStorage by default", () => {
         setToken("session-token");
 
         expect(sessionStorage.getItem("token")).toBe("session-token");
         expect(localStorage.getItem("token")).toBeNull();
     });
 
-    it("should store token in localStorage when remember is true", () => {
+    it("stores token in localStorage when remember is true", () => {
         setToken("local-token", true);
 
         expect(localStorage.getItem("token")).toBe("local-token");
         expect(sessionStorage.getItem("token")).toBeNull();
     });
 
-    it("should get token from sessionStorage first", () => {
+    it("gets token from sessionStorage first", () => {
         sessionStorage.setItem("token", "session-token");
         localStorage.setItem("token", "local-token");
 
         expect(getToken()).toBe("session-token");
     });
 
-    it("should fallback to localStorage when sessionStorage has no token", () => {
+    it("falls back to localStorage when sessionStorage has no token", () => {
         localStorage.setItem("token", "local-token");
 
         expect(getToken()).toBe("local-token");
     });
 
-    it("should remove token from both storages", () => {
+    it("removes token from both storages", () => {
         sessionStorage.setItem("token", "session-token");
         localStorage.setItem("token", "local-token");
 

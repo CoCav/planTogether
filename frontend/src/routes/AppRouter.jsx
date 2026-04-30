@@ -10,7 +10,7 @@ import EventsPage from "../pages/EventsPage";
 import CreateEventPage from "../pages/CreateEventPage.jsx";
 import EventDetailsPage from "../pages/EventDetailsPage";
 import EditEventPage from "../pages/EditEventPage.jsx";
-import PageLoading from "../components/ui/PageLoading.jsx";
+import PageLoading from "../components/ui/PageLoader.jsx";
 
 /* ==================================================
    APP ROUTER

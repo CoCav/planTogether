@@ -1,8 +1,13 @@
-import { describe, it, expect } from "vitest";
-import { validateRegisterForm, validateLoginForm, validateProfileForm, validateChangePasswordForm } from "../../../features/auth/authValidation";
+import { describe, expect, it } from "vitest";
+import { validateChangePasswordForm, validateLoginForm, validateProfileForm, validateRegisterForm } from "../../../features/auth/authValidation";
+
+/* ==================================================
+   AUTH VALIDATION TESTS
+   Tests frontend validation helpers for auth forms
+================================================== */
 
 describe("authValidation", () => {
-    it("should validate required register fields", () => {
+    it("validates required register fields", () => {
         const errors = validateRegisterForm({
             name: "",
             email: "",
@@ -14,7 +19,7 @@ describe("authValidation", () => {
         expect(errors.password).toBe("Password is required");
     });
 
-    it("should validate register email format", () => {
+    it("validates register email format", () => {
         const errors = validateRegisterForm({
             name: "John",
             email: "invalid",
@@ -24,7 +29,7 @@ describe("authValidation", () => {
         expect(errors.email).toBe("Invalid email");
     });
 
-    it("should validate register password rules", () => {
+    it("validates register password rules", () => {
         const errors = validateRegisterForm({
             name: "John",
             email: "john@test.com",
@@ -38,7 +43,7 @@ describe("authValidation", () => {
         ]);
     });
 
-    it("should return no register errors for valid data", () => {
+    it("returns no register errors for valid data", () => {
         const errors = validateRegisterForm({
             name: "John",
             email: "john@test.com",
@@ -48,7 +53,7 @@ describe("authValidation", () => {
         expect(errors).toEqual({});
     });
 
-    it("should validate login fields", () => {
+    it("validates required login fields", () => {
         const errors = validateLoginForm({
             email: "",
             password: ""
@@ -58,7 +63,7 @@ describe("authValidation", () => {
         expect(errors.password).toBe("Password is required");
     });
 
-    it("should validate login email format", () => {
+    it("validates login email format", () => {
         const errors = validateLoginForm({
             email: "invalid",
             password: "Password1"
@@ -67,7 +72,7 @@ describe("authValidation", () => {
         expect(errors.email).toBe("Invalid email");
     });
 
-    it("should return no login errors for valid data", () => {
+    it("returns no login errors for valid data", () => {
         const errors = validateLoginForm({
             email: "john@test.com",
             password: "Password1"
@@ -76,7 +81,7 @@ describe("authValidation", () => {
         expect(errors).toEqual({});
     });
 
-    it("should validate required profile fields", () => {
+    it("validates required profile fields", () => {
         const errors = validateProfileForm({
             name: "",
             email: ""
@@ -86,7 +91,7 @@ describe("authValidation", () => {
         expect(errors.email).toBe("Email is required");
     });
 
-    it("should validate minimum profile name length", () => {
+    it("validates minimum profile name length", () => {
         const errors = validateProfileForm({
             name: "J",
             email: "john@test.com"
@@ -95,7 +100,7 @@ describe("authValidation", () => {
         expect(errors.name).toBe("Name must be at least 2 characters long");
     });
 
-    it("should validate profile email format", () => {
+    it("validates profile email format", () => {
         const errors = validateProfileForm({
             name: "John",
             email: "invalid"
@@ -104,7 +109,7 @@ describe("authValidation", () => {
         expect(errors.email).toBe("Invalid email");
     });
 
-    it("should return no profile errors for valid data", () => {
+    it("returns no profile errors for valid data", () => {
         const errors = validateProfileForm({
             name: "John",
             email: "john@test.com"
@@ -113,20 +118,23 @@ describe("authValidation", () => {
         expect(errors).toEqual({});
     });
 
-    it("should validate change password required fields", () => {
+    it("validates change password required fields", () => {
         const errors = validateChangePasswordForm({
             currentPassword: "",
-            newPassword: ""
+            newPassword: "",
+            confirmPassword: ""
         });
 
         expect(errors.currentPassword).toBe("Current password is required");
         expect(errors.newPassword).toBe("New password is required");
+        expect(errors.confirmPassword).toBe("Confirm password is required");
     });
 
-    it("should validate new password rules", () => {
+    it("validates new password rules", () => {
         const errors = validateChangePasswordForm({
             currentPassword: "OldPassword1",
-            newPassword: "abc"
+            newPassword: "abc",
+            confirmPassword: "abc"
         });
 
         expect(errors.newPassword).toEqual([
@@ -136,10 +144,31 @@ describe("authValidation", () => {
         ]);
     });
 
-    it("should return no change password errors for valid data", () => {
+    it("validates that new password is different from current password", () => {
+        const errors = validateChangePasswordForm({
+            currentPassword: "Password1",
+            newPassword: "Password1",
+            confirmPassword: "Password1"
+        });
+
+        expect(errors.newPassword).toContain("New password must be different from current password");
+    });
+
+    it("validates password confirmation mismatch", () => {
         const errors = validateChangePasswordForm({
             currentPassword: "OldPassword1",
-            newPassword: "NewPassword1"
+            newPassword: "NewPassword1",
+            confirmPassword: "DifferentPassword1"
+        });
+
+        expect(errors.confirmPassword).toBe("Passwords do not match. Please check again.");
+    });
+
+    it("returns no change password errors for valid data", () => {
+        const errors = validateChangePasswordForm({
+            currentPassword: "OldPassword1",
+            newPassword: "NewPassword1",
+            confirmPassword: "NewPassword1"
         });
 
         expect(errors).toEqual({});

@@ -10,7 +10,7 @@ import PasswordRequirements from "../components/auth/PasswordRequirements";
 
 import Card from "../components/ui/Card";
 import Alert from "../components/ui/Alert";
-import PageLoading from "../components/ui/PageLoading";
+import PageLoader from "../components/ui/PageLoader";
 
 /* ==================================================
    PROFILE PAGE
@@ -216,7 +216,7 @@ export default function ProfilePage() {
     ========================= */
 
     if (!user) {
-        return <PageLoading>Loading profile...</PageLoading>;
+        return <PageLoader>Loading profile...</PageLoader>;
     }
 
 

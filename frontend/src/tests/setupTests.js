@@ -1,21 +1,23 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
-import { beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest";
 
-// ----------------------
-// Global test setup
-// ----------------------
+/* ==================================================
+   TEST SETUP
+   Applies global test configuration
+
+   Handles:
+   - jest-dom matchers
+   - DOM cleanup
+   - console noise suppression
+================================================== */
 
 beforeEach(() => {
-    // Silence console noise during tests
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => { });
+    vi.spyOn(console, "warn").mockImplementation(() => { });
 });
 
 afterEach(() => {
-    // Cleanup DOM
     cleanup();
-
-    // Restore mocks
     vi.restoreAllMocks();
 });

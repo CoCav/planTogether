@@ -1,5 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { getDefaultEventFilters, EVENT_SORT_MAP, getSortLabels, getTodayEventFilters, getCurrentWeekendDateRange, isCurrentWeekendFilterActive, getWeekendEventFilters } from "../../../features/events/eventFilters";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { EVENT_SORT_MAP, getCurrentWeekendDateRange, getDefaultEventFilters, getSortLabels, getTodayEventFilters, getWeekendEventFilters, isCurrentWeekendFilterActive } from "../../../features/events/eventFilters";
+
+/* ==================================================
+   EVENT FILTERS TESTS
+   Tests filter defaults, sort options and quick filters
+================================================== */
 
 describe("eventFilters", () => {
     beforeEach(() => {

@@ -1,20 +1,19 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import AppRouter from "../../routes/AppRouter";
 
-// ----------------------
-// Mocks
-// ----------------------
+/* ==================================================
+   APP ROUTER TESTS
+   Tests public and protected route behavior
+================================================== */
 
 const mockUseAuth = vi.fn();
 
-// Auth mock
 vi.mock("../../context/useAuth.js", () => ({
     useAuth: () => mockUseAuth()
 }));
 
-// Page mocks
 vi.mock("../../pages/ProfilePage.jsx", () => ({
     default: () => <div>Profile Page</div>
 }));
@@ -27,28 +26,19 @@ vi.mock("../../pages/HomePage", () => ({
     default: () => <div>Home Page</div>
 }));
 
-// ----------------------
-// Helper
-// ----------------------
-
-function renderWithRouter(initialRoute) {
-    return render(
+const renderWithRouter = (initialRoute) =>
+    render(
         <MemoryRouter initialEntries={[initialRoute]}>
             <AppRouter />
         </MemoryRouter>
     );
-}
-
-// ----------------------
-// Tests
-// ----------------------
 
 describe("AppRouter / ProtectedRoute", () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it("should render protected page when user is authenticated", () => {
+    it("renders protected page when user is authenticated", () => {
         mockUseAuth.mockReturnValue({
             user: { id: 1 },
             loading: false
@@ -59,7 +49,7 @@ describe("AppRouter / ProtectedRoute", () => {
         expect(screen.getByText("Profile Page")).toBeInTheDocument();
     });
 
-    it("should redirect to login when user is not authenticated", () => {
+    it("redirects to login when user is not authenticated", () => {
         mockUseAuth.mockReturnValue({
             user: null,
             loading: false
@@ -70,7 +60,7 @@ describe("AppRouter / ProtectedRoute", () => {
         expect(screen.getByText("Login Page")).toBeInTheDocument();
     });
 
-    it("should show loading state", () => {
+    it("shows loading state while auth is loading", () => {
         mockUseAuth.mockReturnValue({
             user: null,
             loading: true
@@ -81,7 +71,7 @@ describe("AppRouter / ProtectedRoute", () => {
         expect(screen.getByText(/loading/i)).toBeInTheDocument();
     });
 
-    it("should allow access to public route", () => {
+    it("allows access to public routes", () => {
         mockUseAuth.mockReturnValue({
             user: null,
             loading: false

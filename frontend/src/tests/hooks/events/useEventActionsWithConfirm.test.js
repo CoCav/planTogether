@@ -1,24 +1,21 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { renderHook, act } from "@testing-library/react";
-import useEventActionsWithConfirm from "../../hooks/useEventActionsWithConfirm";
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import useEventActionsWithConfirm from "../../../hooks/events/useEventActionsWithConfirm";
 
-// ----------------------
-// Mocks
-// ----------------------
+/* ==================================================
+   USE EVENT ACTIONS WITH CONFIRM TESTS
+   Tests confirmation layer for leave actions
+================================================== */
 
 const mockHandleJoinEvent = vi.fn();
 const mockHandleLeaveEvent = vi.fn();
 
-vi.mock("../../hooks/useEventActions", () => ({
+vi.mock("../../../hooks/events/useEventActions", () => ({
     default: () => ({
         handleJoinEvent: mockHandleJoinEvent,
         handleLeaveEvent: mockHandleLeaveEvent
     })
 }));
-
-// ----------------------
-// Helpers
-// ----------------------
 
 const setupHook = (overrides = {}) => {
     const props = {
@@ -37,16 +34,12 @@ const setupHook = (overrides = {}) => {
     };
 };
 
-// ----------------------
-// Tests
-// ----------------------
-
 describe("useEventActionsWithConfirm", () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it("should expose handleJoinEvent from useEventActions", async () => {
+    it("exposes handleJoinEvent from useEventActions", async () => {
         const { result } = setupHook();
 
         await act(async () => {
@@ -56,7 +49,7 @@ describe("useEventActionsWithConfirm", () => {
         expect(mockHandleJoinEvent).toHaveBeenCalledWith(1);
     });
 
-    it("should call handleLeaveEvent when user confirms", async () => {
+    it("calls handleLeaveEvent when user confirms", async () => {
         vi.spyOn(window, "confirm").mockReturnValue(true);
 
         const { result } = setupHook();
@@ -65,13 +58,11 @@ describe("useEventActionsWithConfirm", () => {
             await result.current.handleLeaveEvent(1);
         });
 
-        expect(window.confirm).toHaveBeenCalledWith(
-            "Are you sure you want to leave this event?"
-        );
+        expect(window.confirm).toHaveBeenCalledWith("Are you sure you want to leave this event?");
         expect(mockHandleLeaveEvent).toHaveBeenCalledWith(1);
     });
 
-    it("should not call handleLeaveEvent when user cancels", async () => {
+    it("does not call handleLeaveEvent when user cancels", async () => {
         vi.spyOn(window, "confirm").mockReturnValue(false);
 
         const { result } = setupHook();
@@ -83,7 +74,7 @@ describe("useEventActionsWithConfirm", () => {
         expect(mockHandleLeaveEvent).not.toHaveBeenCalled();
     });
 
-    it("should show co-organizer warning message before leaving", async () => {
+    it("shows co-organizer warning before leaving", async () => {
         vi.spyOn(window, "confirm").mockReturnValue(true);
 
         const { result } = setupHook({
@@ -94,9 +85,7 @@ describe("useEventActionsWithConfirm", () => {
             await result.current.handleLeaveEvent(1);
         });
 
-        expect(window.confirm).toHaveBeenCalledWith(
-            "Are you sure you want to leave this event? You will lose your co-organizer role and will rejoin later as a participant."
-        );
+        expect(window.confirm).toHaveBeenCalledWith("Are you sure you want to leave this event? You will lose your co-organizer role and will rejoin later as a participant.");
         expect(mockHandleLeaveEvent).toHaveBeenCalledWith(1);
     });
 });

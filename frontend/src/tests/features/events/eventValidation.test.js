@@ -1,5 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { validateEventForm } from "../../../features/events/eventValidation";
+
+/* ==================================================
+   EVENT VALIDATION TESTS
+   Tests create/edit event form validation
+================================================== */
 
 const validForm = {
     title: "Test Event",

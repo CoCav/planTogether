@@ -16,7 +16,7 @@ import Button from "../components/ui/Button.jsx";
 import Card from "../components/ui/Card.jsx";
 import Alert from "../components/ui/Alert.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
-import PageLoading from "../components/ui/PageLoading.jsx";
+import PageLoader from "../components/ui/PageLoader.jsx";
 
 /* ==================================================
    EVENT DETAILS PAGE
@@ -140,7 +140,7 @@ export default function EventDetailsPage() {
     ========================= */
 
     if (loading) {
-        return <PageLoading>Loading event details...</PageLoading>;
+        return <PageLoader>Loading event details...</PageLoader>;
     }
 
 

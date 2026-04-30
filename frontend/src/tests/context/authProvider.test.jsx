@@ -1,10 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { useContext } from "react";
 import AuthProvider from "../../context/authProvider";
 import { AuthContext } from "../../context/authContext";
 
-// Mocks
+/* ==================================================
+   AUTH PROVIDER TESTS
+   Tests auth initialization and context actions
+================================================== */
+
 const mockGetProfile = vi.fn();
 const mockLogoutUser = vi.fn();
 const mockGetToken = vi.fn();
@@ -22,7 +26,6 @@ vi.mock("../../features/auth/token", () => ({
     removeToken: () => mockRemoveToken()
 }));
 
-// Helper component to access context
 function TestComponent() {
     const { user, loading, login, logout, refreshUser } = useContext(AuthContext);
 
@@ -30,6 +33,7 @@ function TestComponent() {
         <div>
             <span data-testid="user">{user ? user.name : "no-user"}</span>
             <span data-testid="loading">{loading ? "loading" : "done"}</span>
+
             <button onClick={() => login("token")}>login</button>
             <button onClick={() => logout()}>logout</button>
             <button onClick={() => refreshUser()}>refresh</button>
@@ -37,54 +41,47 @@ function TestComponent() {
     );
 }
 
+const renderAuthProvider = () =>
+    render(
+        <AuthProvider>
+            <TestComponent />
+        </AuthProvider>
+    );
+
 describe("AuthProvider", () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it("should initialize without token", async () => {
+    it("initializes without token", async () => {
         mockGetToken.mockReturnValue(null);
 
-        render(
-            <AuthProvider>
-                <TestComponent />
-            </AuthProvider>
-        );
+        renderAuthProvider();
 
         await waitFor(() => {
-            expect(screen.getByTestId("loading").textContent).toBe("done");
+            expect(screen.getByTestId("loading")).toHaveTextContent("done");
         });
 
-        expect(screen.getByTestId("user").textContent).toBe("no-user");
+        expect(screen.getByTestId("user")).toHaveTextContent("no-user");
     });
 
-    it("should fetch profile when token exists", async () => {
+    it("fetches profile when token exists", async () => {
         mockGetToken.mockReturnValue("token");
         mockGetProfile.mockResolvedValue({
             data: { user: { name: "John" } }
         });
 
-        render(
-            <AuthProvider>
-                <TestComponent />
-            </AuthProvider>
-        );
+        renderAuthProvider();
 
-        await waitFor(() => {
-            expect(screen.getByText("John")).toBeInTheDocument();
-        });
+        expect(await screen.findByText("John")).toBeInTheDocument();
     });
 
-    it("should login and set user", async () => {
+    it("logs in and stores user", async () => {
         mockGetProfile.mockResolvedValue({
             data: { user: { name: "John" } }
         });
 
-        render(
-            <AuthProvider>
-                <TestComponent />
-            </AuthProvider>
-        );
+        renderAuthProvider();
 
         screen.getByText("login").click();
 
@@ -94,35 +91,23 @@ describe("AuthProvider", () => {
         });
     });
 
-    it("should logout and clear user", async () => {
-        mockGetProfile.mockResolvedValue({
-            data: { user: { name: "John" } }
-        });
-
-        render(
-            <AuthProvider>
-                <TestComponent />
-            </AuthProvider>
-        );
+    it("logs out and clears user", async () => {
+        renderAuthProvider();
 
         screen.getByText("logout").click();
 
         await waitFor(() => {
             expect(mockRemoveToken).toHaveBeenCalled();
-            expect(screen.getByTestId("user").textContent).toBe("no-user");
+            expect(screen.getByTestId("user")).toHaveTextContent("no-user");
         });
     });
 
-    it("should refresh user", async () => {
+    it("refreshes user", async () => {
         mockGetProfile.mockResolvedValue({
             data: { user: { name: "John" } }
         });
 
-        render(
-            <AuthProvider>
-                <TestComponent />
-            </AuthProvider>
-        );
+        renderAuthProvider();
 
         screen.getByText("refresh").click();
 
@@ -131,19 +116,15 @@ describe("AuthProvider", () => {
         });
     });
 
-    it("should handle profile fetch error", async () => {
+    it("clears auth state when profile fetch fails", async () => {
         mockGetToken.mockReturnValue("token");
         mockGetProfile.mockRejectedValue(new Error("fail"));
 
-        render(
-            <AuthProvider>
-                <TestComponent />
-            </AuthProvider>
-        );
+        renderAuthProvider();
 
         await waitFor(() => {
             expect(mockRemoveToken).toHaveBeenCalled();
-            expect(screen.getByTestId("user").textContent).toBe("no-user");
+            expect(screen.getByTestId("user")).toHaveTextContent("no-user");
         });
     });
 });

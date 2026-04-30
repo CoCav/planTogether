@@ -1,9 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+/* ==================================================
+   AXIOS INSTANCE TESTS
+   Tests JWT authorization header injection
+================================================== */
 
 const mockGetToken = vi.fn();
 
 vi.mock("../../features/auth/token", () => ({
-    getToken: () => mockGetToken()
+    getToken: () => mockGetToken(),
 }));
 
 describe("axios instance", () => {
@@ -12,12 +17,16 @@ describe("axios instance", () => {
         vi.clearAllMocks();
     });
 
-    it("should attach Authorization header when token exists", async () => {
-        mockGetToken.mockReturnValue("fake-token");
-
+    const getRequestInterceptor = async () => {
         const api = (await import("../../api/axios")).default;
 
-        const interceptor = api.interceptors.request.handlers[0].fulfilled;
+        return api.interceptors.request.handlers[0].fulfilled;
+    };
+
+    it("attaches Authorization header when token exists", async () => {
+        mockGetToken.mockReturnValue("fake-token");
+
+        const interceptor = await getRequestInterceptor();
 
         const config = interceptor({
             headers: {}
@@ -26,12 +35,10 @@ describe("axios instance", () => {
         expect(config.headers.Authorization).toBe("Bearer fake-token");
     });
 
-    it("should not attach Authorization header when token does not exist", async () => {
+    it("does not attach Authorization header when token is missing", async () => {
         mockGetToken.mockReturnValue(null);
 
-        const api = (await import("../../api/axios")).default;
-
-        const interceptor = api.interceptors.request.handlers[0].fulfilled;
+        const interceptor = await getRequestInterceptor();
 
         const config = interceptor({
             headers: {}
@@ -40,12 +47,10 @@ describe("axios instance", () => {
         expect(config.headers.Authorization).toBeUndefined();
     });
 
-    it("should create headers object when token exists and headers are missing", async () => {
+    it("creates headers object when token exists and headers are missing", async () => {
         mockGetToken.mockReturnValue("fake-token");
 
-        const api = (await import("../../api/axios")).default;
-
-        const interceptor = api.interceptors.request.handlers[0].fulfilled;
+        const interceptor = await getRequestInterceptor();
 
         const config = interceptor({});
 

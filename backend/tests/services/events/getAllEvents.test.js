@@ -1,6 +1,6 @@
 const Event = require("../../../src/models/eventModel");
 const { getPaginationOptions } = require("../../../src/utils/pagination");
-const { applyStatusFilter } = require("../../../src/utils/eventQuery");
+const { applyStatusFilter } = require("../../../src/utils/eventQueryFilters");
 const { getEventStatus } = require("../../../src/utils/eventTime");
 
 const eventService = require("../../../src/services/eventService");
@@ -18,13 +18,13 @@ jest.mock("../../../src/models/eventModel", () => ({
 }));
 
 jest.mock("../../../src/utils/pagination");
-jest.mock("../../../src/utils/eventQuery");
+jest.mock("../../../src/utils/eventQueryFilters");
 jest.mock("../../../src/utils/eventTime");
 
 describe("eventService - getAllEvents", () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => {});
+        jest.spyOn(console, "error").mockImplementation(() => { });
     });
 
     afterEach(() => {
@@ -45,7 +45,7 @@ describe("eventService - getAllEvents", () => {
             orderDirection: "DESC"
         });
 
-        applyStatusFilter.mockImplementation(() => {});
+        applyStatusFilter.mockImplementation(() => { });
         getEventStatus.mockReturnValue("upcoming");
 
         Event.findAndCountAll.mockResolvedValue({

@@ -1,10 +1,15 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Select from "../../../components/ui/Select";
 
+/* ==================================================
+   SELECT TESTS
+   Tests select rendering, error state and icon behavior
+================================================== */
+
 describe("Select", () => {
-    it("should render options", () => {
+    it("renders options", () => {
         render(
             <Select>
                 <option value="1">Option 1</option>
@@ -14,14 +19,21 @@ describe("Select", () => {
         expect(screen.getByText("Option 1")).toBeInTheDocument();
     });
 
-    it("should apply custom class", () => {
+    it("applies custom class to wrapper", () => {
         const { container } = render(<Select className="custom" />);
 
         expect(container.firstChild).toHaveClass("select-wrapper");
         expect(container.firstChild).toHaveClass("custom");
     });
 
-    it("should toggle icon state on focus and blur", async () => {
+    it("applies error class to wrapper and select", () => {
+        const { container } = render(<Select error />);
+
+        expect(container.firstChild).toHaveClass("error");
+        expect(screen.getByRole("combobox")).toHaveClass("error");
+    });
+
+    it("toggles icon state on focus and blur", async () => {
         const user = userEvent.setup();
 
         render(

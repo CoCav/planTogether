@@ -12,7 +12,7 @@ import Input from "../ui/Input";
    - validation error display
 ================================================== */
 
-export default function ProfileInfoForm({ form, errors, submitting, onChange, onSubmit }) {
+export default function UserProfileForm({ form, errors, submitting, onChange, onSubmit }) {
     return (
         <form onSubmit={onSubmit} className="event-form">
             <div className="form-grid">

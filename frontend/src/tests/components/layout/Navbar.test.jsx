@@ -1,10 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import Navbar from "../../../components/layout/Navbar";
 
-// Mocks
+/* ==================================================
+   NAVBAR TESTS
+   Tests public navigation, user menu and logout flow
+================================================== */
+
 let mockUser = null;
 const mockLogout = vi.fn();
 const mockNavigate = vi.fn();
@@ -18,28 +22,27 @@ vi.mock("../../../context/useAuth", () => ({
 
 vi.mock("react-router-dom", async () => {
     const actual = await vi.importActual("react-router-dom");
+
     return {
         ...actual,
         useNavigate: () => mockNavigate
     };
 });
 
-function renderNavbar() {
-    return render(
+const renderNavbar = () =>
+    render(
         <MemoryRouter>
             <Navbar />
         </MemoryRouter>
     );
-}
 
 describe("Navbar", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        mockUser = null;
     });
 
-    it("should render public navigation when not authenticated", () => {
-        mockUser = null;
-
+    it("renders public navigation when user is not authenticated", () => {
         renderNavbar();
 
         expect(screen.getByText("Login")).toBeInTheDocument();
@@ -47,7 +50,7 @@ describe("Navbar", () => {
         expect(screen.queryByText("Create event")).not.toBeInTheDocument();
     });
 
-    it("should render user navigation when authenticated", () => {
+    it("renders user navigation when user is authenticated", () => {
         mockUser = { name: "John" };
 
         renderNavbar();
@@ -56,32 +59,36 @@ describe("Navbar", () => {
         expect(screen.getByText("Create event")).toBeInTheDocument();
     });
 
-    it("should open and close user menu", async () => {
+    it("opens and closes user menu", async () => {
         const user = userEvent.setup();
         mockUser = { name: "John" };
 
         renderNavbar();
 
-        const trigger = screen.getByRole("button", { name: /open user menu/i });
+        const trigger = screen.getByRole("button", {
+            name: /open user menu/i
+        });
 
         await user.click(trigger);
 
         expect(screen.getByText("My Profile")).toBeInTheDocument();
 
-        await user.click(document.body); // outside click
+        await user.click(document.body);
 
         await waitFor(() => {
             expect(screen.queryByText("My Profile")).not.toBeInTheDocument();
         });
     });
 
-    it("should logout and redirect", async () => {
+    it("logs out and redirects to home", async () => {
         const user = userEvent.setup();
         mockUser = { name: "John" };
 
         renderNavbar();
 
-        const trigger = screen.getByRole("button", { name: /open user menu/i });
+        const trigger = screen.getByRole("button", {
+            name: /open user menu/i
+        });
 
         await user.click(trigger);
         await user.click(screen.getByText("Logout"));

@@ -18,7 +18,7 @@ export default function EventViewTabs({ activeView, onChange }) {
     return (
         <nav className="event-view-nav" aria-label="Event views">
             {views.map((view) => (
-                <button skey={view.key} type="button" className={`event-view-nav-item ${activeView === view.key ? "active" : ""}`} onClick={() => onChange(view.key)} aria-pressed={activeView === view.key}>
+                <button key={view.key} type="button" className={`event-view-nav-item ${activeView === view.key ? "active" : ""}`} onClick={() => onChange(view.key)} aria-pressed={activeView === view.key}>
                     <span className="event-view-icon">{view.icon}</span>
                     <span>{view.label}</span>
                 </button>

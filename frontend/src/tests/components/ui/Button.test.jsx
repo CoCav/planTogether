@@ -1,34 +1,41 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Button from "../../../components/ui/Button";
 
+/* ==================================================
+   BUTTON TESTS
+   Tests button variants, states and click behavior
+================================================== */
+
 describe("Button", () => {
-    it("should render children", () => {
+    it("renders children", () => {
         render(<Button>Click me</Button>);
 
         expect(screen.getByRole("button", { name: /click me/i })).toBeInTheDocument();
     });
 
-    it("should apply variant class", () => {
+    it("applies variant class", () => {
         render(<Button variant="danger">Delete</Button>);
 
-        expect(screen.getByRole("button", { name: /delete/i })).toHaveClass("btn-danger");
+        expect(screen.getByRole("button", { name: /delete/i })).toHaveClass(
+            "btn-danger"
+        );
     });
 
-    it("should be disabled when disabled is true", () => {
+    it("is disabled when disabled is true", () => {
         render(<Button disabled>Submit</Button>);
 
         expect(screen.getByRole("button", { name: /submit/i })).toBeDisabled();
     });
 
-    it("should show loading text and be disabled when loading", () => {
+    it("shows loading text and disables button when loading", () => {
         render(<Button loading>Submit</Button>);
 
         expect(screen.getByRole("button", { name: /loading/i })).toBeDisabled();
     });
 
-    it("should call onClick when clicked", async () => {
+    it("calls onClick when clicked", async () => {
         const user = userEvent.setup();
         const onClick = vi.fn();
 
@@ -39,7 +46,7 @@ describe("Button", () => {
         expect(onClick).toHaveBeenCalledTimes(1);
     });
 
-    it("should not call onClick when disabled", async () => {
+    it("does not call onClick when disabled", async () => {
         const user = userEvent.setup();
         const onClick = vi.fn();
 

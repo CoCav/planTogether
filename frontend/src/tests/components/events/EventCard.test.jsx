@@ -1,0 +1,147 @@
+import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import EventCard from "../../../components/events/EventCard";
+
+/* ==================================================
+   EVENT CARD TESTS
+   Tests event preview rendering and actions
+================================================== */
+
+vi.mock("../../../utils/format", () => ({
+    formatEventDateRange: () => "Apr 24",
+    formatTime: () => "10:00",
+    formatCount: (count) => `${count} participants`
+}));
+
+const baseEvent = {
+    id: 1,
+    title: "Test Event",
+    description: "Test description",
+    startDateTime: "2026-04-24T10:00:00Z",
+    endDateTime: "2026-04-24T12:00:00Z",
+    participantCount: 3,
+    mode: "online",
+    creatorName: "Alice",
+    status: "upcoming"
+};
+
+const renderCard = (props = {}) =>
+    render(
+        <MemoryRouter>
+            <EventCard
+                event={baseEvent}
+                user={{ userId: 1 }}
+                {...props}
+            />
+        </MemoryRouter>
+    );
+
+describe("EventCard", () => {
+    it("displays event information", () => {
+        renderCard();
+
+        expect(screen.getByText("Test Event")).toBeInTheDocument();
+        expect(screen.getByText("Test description")).toBeInTheDocument();
+        expect(screen.getByText(/3 participants/i)).toBeInTheDocument();
+        expect(screen.getByText(/online/i)).toBeInTheDocument();
+    });
+
+    it("shows ended label when event is past", () => {
+        renderCard({
+            event: {
+                ...baseEvent,
+                status: "past"
+            }
+        });
+
+        expect(screen.getByText(/ended/i)).toBeInTheDocument();
+    });
+
+    it("shows join button for authenticated non-member", () => {
+        renderCard({
+            role: null
+        });
+
+        expect(screen.getByRole("button", { name: /join the event/i })).toBeInTheDocument();
+    });
+
+    it("shows leave button for participant", () => {
+        renderCard({
+            role: "participant"
+        });
+
+        expect(screen.getByRole("button", { name: /leave the event/i })).toBeInTheDocument();
+    });
+
+    it("does not show leave button for organizer", () => {
+        renderCard({
+            role: "organizer"
+        });
+
+        expect(screen.queryByRole("button", { name: /leave the event/i })).not.toBeInTheDocument();
+    });
+
+    it("shows login message when user is not authenticated", () => {
+        render(
+            <MemoryRouter>
+                <EventCard event={baseEvent} user={null} />
+            </MemoryRouter>
+        );
+
+        expect(screen.getByText(/login to join/i)).toBeInTheDocument();
+    });
+
+    it("does not show join or leave buttons when event is past", () => {
+        renderCard({
+            event: {
+                ...baseEvent,
+                status: "past"
+            },
+            role: "participant"
+        });
+
+        expect(screen.queryByRole("button", { name: /join the event/i })).not.toBeInTheDocument();
+
+        expect(screen.queryByRole("button", { name: /leave the event/i })).not.toBeInTheDocument();
+    });
+
+    it("calls onJoin when clicking join", () => {
+        const onJoin = vi.fn();
+
+        renderCard({
+            role: null,
+            onJoin
+        });
+
+        fireEvent.click(screen.getByRole("button", { name: /join the event/i }));
+
+        expect(onJoin).toHaveBeenCalledWith(1);
+    });
+
+    it("calls onLeave when clicking leave", () => {
+        const onLeave = vi.fn();
+
+        renderCard({
+            role: "participant",
+            onLeave
+        });
+
+        fireEvent.click(screen.getByRole("button", { name: /leave the event/i }));
+
+        expect(onLeave).toHaveBeenCalledWith(1);
+    });
+
+    it("shows full state when event has reached participant limit", () => {
+        renderCard({
+            event: {
+                ...baseEvent,
+                maxParticipants: 3,
+                participantCount: 3
+            }
+        });
+
+        expect(screen.getByRole("button", { name: /event full/i })).toBeDisabled();
+        expect(screen.getByText("👥 3 / 3")).toHaveClass("text-danger");
+    });
+});

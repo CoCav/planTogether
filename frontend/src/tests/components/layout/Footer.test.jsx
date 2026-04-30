@@ -1,9 +1,13 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import Footer from "../../../components/layout/Footer";
 
-// Mock auth
+/* ==================================================
+   FOOTER TESTS
+   Tests public and authenticated footer links
+================================================== */
+
 let mockUser = null;
 
 vi.mock("../../../context/useAuth", () => ({
@@ -12,16 +16,15 @@ vi.mock("../../../context/useAuth", () => ({
     })
 }));
 
-function renderFooter() {
-    return render(
+const renderFooter = () =>
+    render(
         <MemoryRouter>
             <Footer />
         </MemoryRouter>
     );
-}
 
 describe("Footer", () => {
-    it("should render public links", () => {
+    it("renders public links", () => {
         mockUser = null;
 
         renderFooter();
@@ -30,7 +33,7 @@ describe("Footer", () => {
         expect(screen.getByText("Events")).toBeInTheDocument();
     });
 
-    it("should NOT render private links when not authenticated", () => {
+    it("does not render private links when user is not authenticated", () => {
         mockUser = null;
 
         renderFooter();
@@ -39,7 +42,7 @@ describe("Footer", () => {
         expect(screen.queryByText("Profile")).not.toBeInTheDocument();
     });
 
-    it("should render private links when user is authenticated", () => {
+    it("renders private links when user is authenticated", () => {
         mockUser = { name: "John" };
 
         renderFooter();

@@ -9,7 +9,8 @@ PlanTogether is a collaborative event management platform where users can create
 
 ![Vitest](https://img.shields.io/badge/Test-Vitest-6E9F18)
 ![RTL](https://img.shields.io/badge/Test-React%20Testing%20Library-E33332)
-![Tests](https://img.shields.io/badge/tests-211%20tests-brightgreen)
+![Tests](https://img.shields.io/badge/tests-363%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-93.86%25%20statements%20%7C%2089.98%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -21,11 +22,11 @@ It provides a modern, responsive, and user-friendly interface that integrates wi
 
 Users can:
 
-- Browse and filter events  
-- Authenticate securely (login, register, profile management)  
-- Create, update, and manage events  
-- Join and leave events  
-- Interact with features based on their role  
+- Browse and filter events
+- Authenticate securely (login, register, profile management)
+- Create, update, and manage events
+- Join and leave events
+- Interact with features based on their role
 
 The application focuses on **usability, role-based interactions, and reliability**, ensuring a smooth and consistent user experience across all core features.
 
@@ -37,13 +38,13 @@ The frontend provides a complete interface for interacting with the PlanTogether
 
 It allows users to:
 
-- Authenticate securely using JWT  
-- Browse, filter, and manage events  
-- Join and leave events  
-- Manage roles within events (`organizer`, `co_organizer`, `participant`)  
-- Update their profile and password  
-- Manage session behavior with a "Remember me" feature  
-- Access a personal dashboard (events created and joined)  
+- Authenticate securely using JWT
+- Browse, filter, and manage events
+- Join and leave events
+- Manage roles within events (`organizer`, `co_organizer`, `participant`)
+- Update their profile and password
+- Manage session behavior with a "Remember me" feature
+- Access a personal dashboard (events created and joined)
 
 The application is designed to deliver a smooth and intuitive user experience, with clear navigation and role-based interactions across all features.
 
@@ -57,27 +58,27 @@ The frontend is built using modern and efficient tools to ensure performance, sc
 
 ### Core Technologies
 
-- **React** – component-based UI library  
-- **Vite** – fast development server and build tool  
-- **React Router** – client-side routing and navigation  
-- **Axios** – HTTP client for API communication  
+- **React** – component-based UI library
+- **Vite** – fast development server and build tool
+- **React Router** – client-side routing and navigation
+- **Axios** – HTTP client for API communication
 
 ### State & Logic
 
-- **Context API** – global state management (authentication)  
-- **Custom hooks** – reusable business logic (e.g., membership actions)  
-- **Session / Local Storage** – token persistence and session handling  
+- **Context API** – global state management (authentication)
+- **Custom hooks** – reusable business logic (e.g., membership actions)
+- **Session / Local Storage** – token persistence and session handling
 
 ### Testing
 
-- **Vitest** – unit and component testing  
-- **React Testing Library** – testing user interactions and UI behavior  
+- **Vitest** – unit and component testing
+- **React Testing Library** – testing user interactions and UI behavior
 
 ### Additional Testing Utilities
 
-- **@testing-library/jest-dom**  
-- **@testing-library/user-event**  
-- **jsdom**  
+- **@testing-library/jest-dom**
+- **@testing-library/user-event**
+- **jsdom**
 
 ---
 
@@ -97,6 +98,25 @@ src
 │   └── eventMembershipApi.js
 │
 ├── components
+│   ├── auth
+│   │   ├── AuthPasswordField.jsx
+│   │   ├── ChangePasswordForm.jsx
+│   │   ├── PasswordRequirements.jsx
+│   │   └── UserProfileForm.jsx
+│   │
+│   ├── events
+│   │   ├── EventCard.jsx
+│   │   ├── EventForm.jsx
+│   │   ├── EventMemberList.jsx
+│   │   ├── EventsFiltersCard.jsx
+│   │   ├── EventsViewTabs.jsx
+│   │   └── MyEventsViewTabs.jsx
+│   │
+│   ├── layout
+│   │   ├── Navbar.jsx
+│   │   └── Footer.jsx
+│   │
+│   │
 │   ├── layout
 │   │   ├── Navbar.jsx
 │   │   └── Footer.jsx
@@ -107,13 +127,11 @@ src
 │       ├── Button.jsx
 │       ├── Card.jsx
 │       ├── EmptyState.jsx
-│       ├── EventCard.jsx
-│       ├── EventViewTabs.jsx
 │       ├── FormField.jsx
 │       ├── Input.jsx
 │       ├── LoadingState.jsx
-│       ├── MyEventsViewTabs.jsx
-│       ├── PasswordRules.jsx
+│       ├── PageLoader.jsx
+│       ├── Pagination.jsx
 │       ├── Select.jsx
 │       └── TextArea.jsx
 │
@@ -128,13 +146,21 @@ src
 │   │   └── token.js
 │   │
 │   └── events
+│       ├── eventEmptyState.js
 │       ├── eventFilters.js
 │       ├── eventValidation.js
 │       └── normalizeData.js
 │
 ├── hooks
-│   ├── useEventActions.jsx
-│   └── useEventActionsWithConfirm.js
+│   ├── events
+│   │   ├── useEventActions.js
+│   │   ├── useEventActionsWithConfirm.js
+│   │   ├── useEventFilters.js
+│   │   ├── useEventManagementWithActions.js
+│   │   └── useEventPermissions.js
+│   │
+│   └── pagination
+│       └── usePagination.js
 │
 ├── pages
 │   ├── CreateEventPage.jsx
@@ -155,6 +181,7 @@ src
 │   ├── components.css
 │   ├── helpers.css
 │   ├── layout.css
+│   ├── navigation.css
 │   ├── pages.css
 │   └── theme.css
 │
@@ -162,18 +189,37 @@ src
 │   ├── api
 │   │   └── axios.test.jsx
 │   ├── components
+│   │   ├── auth
+│   │   │   ├── AuthPasswordField.test.jsx
+│   │   │   ├── ChangePasswordForm.test.jsx
+│   │   │   ├── PasswordRequirements.test.jsx
+│   │   │   └── UserProfileForm.test.jsx
+│   │   │
+│   │   ├── events
+│   │   │   ├── EventCard.test.jsx
+│   │   │   ├── EventForm.test.jsx
+│   │   │   ├── EventMemberList.test.jsx
+│   │   │   ├── EventsFiltersCard.test.jsx
+│   │   │   ├── EventsViewTabs.test.jsx
+│   │   │   └── MyEventsViewTabs.test.jsx
+│   │   │
 │   │   ├── layout
 │   │   │   ├── Navbar.test.jsx
 │   │   │   └── Footer.test.jsx
 │   │   │
 │   │   └── ui
+│   │       ├── Alert.test.jsx
 │   │       ├── Badge.test.jsx
 │   │       ├── Button.test.jsx
-│   │       ├── EventCard.test.jsx
-│   │       ├── EventViewTabs.test.jsx
-│   │       ├── MyEventsViewTabs.test.jsx
-│   │       ├── PasswordRules.test.jsx
-│   │       └── Select.test.jsx
+│   │       ├── Card.test.jsx
+│   │       ├── EmptyState.test.jsx
+│   │       ├── FormField.test.jsx
+│   │       ├── Input.test.jsx
+│   │       ├── LoadingState.test.jsx
+│   │       ├── PageLoader.test.jsx
+│   │       ├── Pagination.test.jsx
+│   │       ├── Select.test.jsx
+│   │       └── TextArea.test.jsx
 │   │
 │   ├── context
 │   │   └── authProvider.test.jsx
@@ -184,13 +230,21 @@ src
 │   │   │   └── token.test.jsx
 │   │   │
 │   │   └── events
+│   │       ├── emptyState.test.jsx
 │   │       ├── eventFilters.test.jsx
 │   │       ├── eventValidation.test.jsx
 │   │       └── normalizeData.test.jsx
 │   │
 │   ├── hooks
-│   │   ├── useEventActions.test.jsx
-│   │   └── useEventActionsWithConfirm.test.jsx
+│   │   ├── events
+│   │   │   ├── useEventsActions.test.jsx
+│   │   │   ├── useEventsActionsWithConfirm.test.jsx
+│   │   │   ├── useEventFilters.test.jsx
+│   │   │   ├── useEventManagementActions.test.jsx
+│   │   │   └── useEventPermissions.test.jsx
+│   │   │
+│   │   └── pagination
+│   │       └── usePagination.test.jsx
 │   │
 │   ├── pages
 │   │   ├── CreateEventPage.test.jsx
@@ -208,12 +262,14 @@ src
 │   │
 │   ├── utils
 │   │   ├── extractApiData.test.jsx
+│   │   ├── fetchAllPaginated.test.jsx
 │   │   └── format.test.jsx
 │   │
 │   └── setupTests.js
 │
 ├── utils
 │   ├── extractApiData.js
+│   ├── fetchAllPaginated.js
 │   └── format.js
 │
 ├── App.jsx
@@ -229,55 +285,55 @@ This structure improves reusability, simplifies testing and debugging, and makes
 
 ### 🔐 Authentication
 
-- Login and register  
-- Authenticate using JWT  
-- Access protected routes  
-- Redirect to the originally requested page after login  
-- Persist sessions with a "Remember me" feature  
+- Login and register
+- Authenticate using JWT
+- Access protected routes
+- Redirect to the originally requested page after login
+- Persist sessions with a "Remember me" feature
 
 ### 👤 User Profile
 
-- View profile information  
-- Update name and email  
-- Change password with validation  
-- Automatically refresh the UI after updates  
-- Display clear and contextual error messages  
+- View profile information
+- Update name and email
+- Change password with validation
+- Automatically refresh the UI after updates
+- Display clear and contextual error messages
 
 ### 📅 Event Management
 
-- View all events  
-- Create events  
-- Edit events  
-- Delete events  
+- View all events
+- Create events
+- Edit events
+- Delete events
 
 Additional features:
 
-- Strong frontend validation aligned with backend rules  
-- Date and time validation (no past start date, end date after start date)  
-- Dynamic UI behavior based on event state and user role  
+- Strong frontend validation aligned with backend rules
+- Date and time validation (no past start date, end date after start date)
+- Dynamic UI behavior based on event state and user role
 
 ### 👥 My Events
 
-- View created events  
-- View joined events  
-- Leave events directly from the interface  
+- View created events
+- View joined events
+- Leave events directly from the interface
 
 ### 🔍 Event Filtering
 
 Users can filter events using:
 
-- Keyword search (title and description)  
-- Type  
-- Theme  
-- Location  
-- Exact date  
-- Date range  
+- Keyword search (title and description)
+- Type
+- Theme
+- Location
+- Exact date
+- Date range
 
 UI behavior:
 
-- Selecting an exact date disables the date range inputs  
-- Multiple filters can be combined  
-- Resetting filters reloads all events  
+- Selecting an exact date disables the date range inputs
+- Multiple filters can be combined
+- Resetting filters reloads all events
 
 ### 🎭 Role System
 
@@ -329,11 +385,21 @@ These tests ensure UI reliability, reduce regressions, and validate the most imp
 npm run test:run
 ```
 
+### ▶️ Run Tests with coverage
+
+```bash
+npx vitest run --coverage
+```
+
 ### 📊 Results
 
-- 30 test suites
-- 211 tests
+- 51 test suites
+- 363 tests
 - ✅ All passing
+- 93.86% statements coverage
+- 89.98% branch coverage
+- 85.49% functions coverage
+- 96.83% lines coverage
 
 ---
 
@@ -375,6 +441,9 @@ The frontend test suite covers multiple layers of the application:
 - Event validation helpers
 - API data extraction and formatting utilities
 - Custom event action hooks
+- Paginated data fetching utility (`fetchAllPaginated`)
+
+---
 
 ### 🔁 Test Strategy
 
@@ -383,6 +452,7 @@ The frontend test suite covers multiple layers of the application:
 - Routing behavior is tested through the app router
 - Authentication and protected access flows are validated
 - Tests cover success, loading, empty, and error states
+- Critical utilities (pagination, filtering) are tested in isolation
 
 ---
 
@@ -443,19 +513,19 @@ This setup ensures seamless communication between the frontend and backend, whil
 
 ### 🔧 Features & UI
 
-- Added **MyEventsPage** with a dashboard (created vs joined events)  
-- Refactored **ProfilePage** to improve separation of concerns  
-- Improved routing protection using **ProtectedRoute**  
-- Enhanced redirect behavior after login  
-- Improved error handling using backend responses  
-- Added **PasswordRules** component for better validation feedback  
-- Strengthened form validation aligned with backend rules  
+- Added **MyEventsPage** with a dashboard (created vs joined events)
+- Refactored **ProfilePage** to improve separation of concerns
+- Improved routing protection using **ProtectedRoute**
+- Enhanced redirect behavior after login
+- Improved error handling using backend responses
+- Added **PasswordRules** component for better validation feedback
+- Strengthened form validation aligned with backend rules
 
 ### 🧪 Testing
 
-- Added comprehensive frontend test coverage using **Vitest** and **React Testing Library**  
-- Implemented tests for all main pages and routing system  
-- Added global test setup for cleanup and mock handling  
+- Added comprehensive frontend test coverage using **Vitest** and **React Testing Library**
+- Implemented tests for all main pages and routing system
+- Added global test setup for cleanup and mock handling
 
 ---
 
@@ -467,7 +537,7 @@ This setup ensures seamless communication between the frontend and backend, whil
 | Features        | ✅ Complete |
 | Routing         | ✅ Complete |
 | API Integration | ✅ Complete |
-| Testing         | ✅ 211 tests (30 test suites) |
+| Testing         | ✅ 363 tests (51 test suites) |
 | UX Improvements | 🚧 Ongoing |
 
 ---
@@ -476,13 +546,13 @@ This setup ensures seamless communication between the frontend and backend, whil
 
 ### 🚀 Features & UX
 
-- Add notifications and reminder features  
-- Enhance mobile responsiveness across devices  
-- Improve accessibility (labels, semantic structure, ARIA support)  
+- Add notifications and reminder features
+- Enhance mobile responsiveness across devices
+- Improve accessibility (labels, semantic structure, ARIA support)
 
 ### 🧪 Testing
 
-- Extend test coverage to lower-level reusable UI components  
-- Add end-to-end (E2E) testing for complete user journeys  
+- Extend test coverage to lower-level reusable UI components
+- Add end-to-end (E2E) testing for complete user journeys
 
 ---

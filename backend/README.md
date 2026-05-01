@@ -14,8 +14,9 @@ PlanTogether helps users organize and collaborate on events efficiently through 
 ![Node](https://img.shields.io/badge/node-%3E%3D18-green)
 
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
-![Tests](https://img.shields.io/badge/tests-318%20tests-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-high-brightgreen)
+![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
+![Tests](https://img.shields.io/badge/tests-333%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-99.2%25%20statements%20%7C%2093.23%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -58,15 +59,15 @@ The API enforces strict validation rules and authorization logic to ensure **dat
 
 The backend is built using robust and scalable technologies to ensure performance, security, and maintainability:
 
-- **Node.js** – JavaScript runtime environment  
-- **Express** – web framework for building REST APIs  
-- **PostgreSQL** – relational database system  
-- **Sequelize** – ORM for database modeling and queries  
-- **JSON Web Tokens (JWT)** – secure stateless authentication  
-- **Express Validator** – request validation and input sanitization  
-- **Jest & Supertest** – unit and integration testing  
-- **Middleware architecture** – authentication, validation, and authorization layers  
-- **MVC pattern** – modular and maintainable application structure  
+- **Node.js** – JavaScript runtime environment
+- **Express** – web framework for building REST APIs
+- **PostgreSQL** – relational database system
+- **Sequelize** – ORM for database modeling and queries
+- **JSON Web Tokens (JWT)** – secure stateless authentication
+- **Express Validator** – request validation and input sanitization
+- **Jest & Supertest** – unit and integration testing
+- **Middleware architecture** – authentication, validation, and authorization layers
+- **MVC pattern** – modular and maintainable application structure
 
 ---
 
@@ -109,6 +110,11 @@ project-root
 │   │   ├── authService.js
 │   │   ├── eventService.js
 │   │   └── eventMembershipService.js
+│   │
+│   ├── utils
+│   │   ├── eventQueryFilters.js
+│   │   ├── eventTime.js
+│   │   └── pagination.js
 │   │
 │   ├── validators
 │   │   ├── authValidator.js
@@ -183,7 +189,7 @@ project-root
 │   │       └── updateMemberRole.test.js
 │   │
 │   ├── utils
-│   │   ├── eventQuery.test.js
+│   │   ├── eventQueryFilters.test.js
 │   │   ├── eventTime.test.js
 │   │   └── pagination.test.js
 │   │
@@ -381,11 +387,21 @@ These tests ensure the reliability, security, and long-term maintainability of t
 npm test
 ```
 
+### ▶️ Run Tests with coverage
+
+```bash
+npm run test:coverage
+```
+
 ### 📊 Results
 
 - 49 test suites
-- 318 tests
+- 333 tests
 - ✅ All passing
+- 99.2% statements coverage
+- 93.23% branch coverage
+- 100% functions coverage
+- 99.33% lines coverage
 
 ---
 
@@ -455,13 +471,17 @@ These tests validate the internal logic of the application independently from HT
 
 - **Utils**
   - Shared helper functions
+  - Event query filtering logic (status, date, search, pagination)
+
+---
 
 ### 🔁 Test Strategy
 
 - Integration tests run against the real Express application
 - No mocking is used for API flows
-- A test database is used for isolation
+- A dedicated test database ensures isolation
 - Each test is independent and cleans up its data
+- Internal modules are tested in isolation for robustness and maintainability
 
 ---
 
@@ -471,30 +491,30 @@ The API implements multiple security layers to protect sensitive data and enforc
 
 ### 🔑 Authentication
 
-- JWT-based authentication using Bearer tokens  
-- Protected routes require a valid authentication token  
-- Password updates require current password verification  
+- JWT-based authentication using Bearer tokens
+- Protected routes require a valid authentication token
+- Password updates require current password verification
 
 ### 🛡️ Authorization
 
-- Role-based access control (`organizer`, `co_organizer`, `participant`, `guest`)  
-- Middleware-based permission checks (`requireEventRole`, `authorizeEvent`)  
-- Fine-grained access control for event and membership actions  
+- Role-based access control (`organizer`, `co_organizer`, `participant`, `guest`)
+- Middleware-based permission checks (`requireEventRole`, `authorizeEvent`)
+- Fine-grained access control for event and membership actions
 
 ### 🧾 Input Validation
 
-- Request validation using **express-validator**  
-- Sanitization of incoming data to prevent malformed or malicious input  
+- Request validation using **express-validator**
+- Sanitization of incoming data to prevent malformed or malicious input
 
 ### 🔒 Data Protection
 
-- Password hashing using **bcrypt**  
-- Sensitive fields (e.g., passwords) excluded via Sequelize scopes  
+- Password hashing using **bcrypt**
+- Sensitive fields (e.g., passwords) excluded via Sequelize scopes
 
 ### ⚙️ Additional Security Measures
 
-- SQL injection protection via Sequelize ORM parameterized queries  
-- Centralized error handling with consistent and safe API responses  
+- SQL injection protection via Sequelize ORM parameterized queries
+- Centralized error handling with consistent and safe API responses
 
 These mechanisms ensure secure data handling and prevent unauthorized access throughout the API.
 
@@ -652,17 +672,17 @@ DELETE /api/events/:eventId/members/:userId
 
 ### 🔧 API & Features
 
-- Standardized API error handling with a centralized error middleware  
-- Strengthened event validation (required fields, date consistency)  
-- Enhanced event filtering (search, date range, sorting, pagination)  
-- Included event creator details in API responses  
+- Standardized API error handling with a centralized error middleware
+- Strengthened event validation (required fields, date consistency)
+- Enhanced event filtering (search, date range, sorting, pagination)
+- Included event creator details in API responses
 
 ### 🧪 Testing
 
-- Refactored test architecture for improved clarity and maintainability  
-- Expanded test coverage across authentication, events, and memberships  
-- Added integration tests to validate full API workflows  
-- Improved overall API reliability through automated testing  
+- Refactored test architecture for improved clarity and maintainability
+- Expanded test coverage across authentication, events, and memberships
+- Added integration tests to validate full API workflows
+- Improved overall API reliability through automated testing
 
 ---
 
@@ -674,7 +694,7 @@ DELETE /api/events/:eventId/members/:userId
 | Architecture     | ✅ Modular & scalable |
 | Authentication   | ✅ Complete (login, logout, profile, password update) |
 | Authorization    | ✅ Advanced role-based system |
-| Testing          | ✅ 318 tests (49 test suites) |
+| Testing          | ✅ 333 tests (49 test suites) |
 | Frontend         | 🔗 Connected & functional |
 
 ---
@@ -683,13 +703,13 @@ DELETE /api/events/:eventId/members/:userId
 
 ### 🚀 Features
 
-- Add an event invitation system (invite users via email or shareable link)  
-- Implement email notifications (event updates, invitations, reminders)  
-- Support public and private events with fine-grained access control  
+- Add an event invitation system (invite users via email or shareable link)
+- Implement email notifications (event updates, invitations, reminders)
+- Support public and private events with fine-grained access control
 
 ### ⚙️ Infrastructure & Deployment
 
-- Deploy the API using Docker and a cloud provider  
+- Deploy the API using Docker and a cloud provider
 - Improve environment-based configuration for production
 
 ---

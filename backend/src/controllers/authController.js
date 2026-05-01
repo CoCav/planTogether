@@ -6,24 +6,25 @@ const register = async (req, res, next) => {
     try {
 
         // Get all datas from the new user
-        const { name, email, password } = req.body;
+        const { name, email, password, avatarUrl } = req.body;
 
         // Create a new user
-        const { user, token } = await authService.registerUser({ name, email, password });
+        const { user, token } = await authService.registerUser({ name, email, password, avatarUrl });
 
         res.status(201).json({
             message: "User registered successfully",
             user: {
                 userId: user.id,
                 name: user.name,
-                email: user.email
+                email: user.email,
+                avatarUrl: user.avatarUrl
             },
 
             token
         });
 
     } catch (error) {
-       return next(error);
+        return next(error);
     }
 };
 
@@ -67,7 +68,8 @@ const getUserByID = async (req, res, next) => {
             user: {
                 userId: user.id,
                 name: user.name,
-                email: user.email
+                email: user.email,
+                avatarUrl: user.avatarUrl || null
             }
         });
 
@@ -79,7 +81,6 @@ const getUserByID = async (req, res, next) => {
 // Update a user by ID - profile
 const updateUserByID = async (req, res, next) => {
     try {
-
         // Get user ID & all new datas from the user
         const userId = req.user.userId;
         const updatedData = req.body;
@@ -88,11 +89,12 @@ const updateUserByID = async (req, res, next) => {
         const user = await authService.updateUserProfileByID(userId, updatedData);
 
         return res.status(200).json({
-            message: 'User profile updated successfully',
+            message: "User profile updated successfully",
             user: {
                 userId: user.id,
                 name: user.name,
-                email: user.email
+                email: user.email,
+                avatarUrl: user.avatarUrl
             }
         });
 

@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 
 // Create a new user and generate a JWT token
-const registerUser = async ({ name, email, password }) => {
+const registerUser = async ({ name, email, password, avatarUrl }) => {
     try {
 
         const normalizedEmail = String(email).toLowerCase().trim();
@@ -22,7 +22,8 @@ const registerUser = async ({ name, email, password }) => {
         const user = await User.create({
             name,
             email: normalizedEmail,
-            password: hashedPassword
+            password: hashedPassword,
+            avatarUrl: avatarUrl || null
         });
 
         // Generate JWT token
@@ -93,28 +94,31 @@ const getUserProfileByID = async (userId) => {
 // Update the profile of an user by their ID
 const updateUserProfileByID = async (userId, updatedData) => {
     try {
-        
         const user = await User.findByPk(userId);
 
         // Check if user exists in the database
         if (!user) {
-            const error = new Error('User not found');
+            const error = new Error("User not found");
             error.statusCode = 404;
             throw error;
         }
 
-        const { name, email } = updatedData;
+        const { name, email, avatarUrl } = updatedData;
 
         // Update user fields if provided
         if (name) user.name = name;
         if (email) user.email = String(email).toLowerCase().trim();
 
+        if (avatarUrl !== undefined) {
+            user.avatarUrl = avatarUrl || null;
+        }
+
         try {
             await user.save();
         } catch (err) {
             // Handle unique email conflict cleanly
-            if (err.name === 'SequelizeUniqueConstraintError') {
-                const error = new Error('Email already in use');
+            if (err.name === "SequelizeUniqueConstraintError") {
+                const error = new Error("Email already in use");
                 error.statusCode = 409;
                 throw error;
             }
@@ -140,7 +144,7 @@ const changeUserPasswordByID = async (userId, currentPassword, newPassword) => {
             error.statusCode = 404;
             throw error;
         }
-        
+
         // Verify current password
         const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
 

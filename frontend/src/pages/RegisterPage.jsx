@@ -41,7 +41,8 @@ export default function RegisterPage() {
     const [form, setForm] = useState({
         name: "",
         email: "",
-        password: ""
+        password: "",
+        avatar: null
     });
 
 
@@ -65,6 +66,20 @@ export default function RegisterPage() {
     };
 
 
+    const handleFileChange = (e) => {
+        const file = e.target.files?.[0] || null;
+
+        setForm((prev) => ({
+            ...prev,
+            avatar: file
+        }));
+
+        setErrors((prev) => ({
+            ...prev,
+            avatar: undefined
+        }));
+    };
+
     /* =========================
         Form submission
         Validates form, creates account and logs user in
@@ -74,6 +89,7 @@ export default function RegisterPage() {
         e.preventDefault();
         setError("");
 
+        // Validate form (avatar included)
         const validationErrors = validateRegisterForm(form);
 
         if (Object.keys(validationErrors).length > 0) {
@@ -85,11 +101,28 @@ export default function RegisterPage() {
         setSubmitting(true);
 
         try {
-            const response = await registerUser(form);
+            // Build FormData for multipart/form-data request
+            const formData = new FormData();
+
+            formData.append("name", form.name);
+            formData.append("email", form.email);
+            formData.append("password", form.password);
+
+            // Append avatar file only if present
+            if (form.avatar) {
+                formData.append("avatar", form.avatar);
+            }
+
+            // Call API
+            const response = await registerUser(formData);
             const token = response.data.token;
 
+            // Auto login
             await login(token);
+
+            // Redirect
             navigate("/events");
+
         } catch (err) {
             console.error("Register error:", err);
             setError("Unable to register. Please check your information.");
@@ -97,7 +130,6 @@ export default function RegisterPage() {
             setSubmitting(false);
         }
     };
-
 
     /* =========================
        Main render
@@ -117,6 +149,16 @@ export default function RegisterPage() {
             <Card className="auth-card">
                 <form onSubmit={handleSubmit} className="event-form">
                     <div className="auth-form-grid">
+
+                        <FormField label="Avatar (optional)" error={errors.avatarUrl}>
+                            <Input
+                                type="file"
+                                name="avatar"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                error={errors.avatarUrl}
+                            />
+                        </FormField>
 
                         <FormField label="Name" error={errors.name}>
                             <Input

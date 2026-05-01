@@ -10,6 +10,12 @@ const eventMembershipRoutes = require('./routes/eventMembershipRoutes');
 
 const app = express();
 
+const path = require("path");
+
+// Serve uploaded files (avatars, event images, etc.)
+// Makes files accessible via /uploads/... URL
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
 // Middleware to parse JSON bodies
 app.use(cors({
     origin: process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:5173'],

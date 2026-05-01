@@ -1,15 +1,26 @@
-// USER CONTROL
 const authService = require('../services/authService');
+
+/* ==================================================
+   REGISTER CONTROLLER
+================================================== */
 
 // Register a new user
 const register = async (req, res, next) => {
     try {
-
         // Get all datas from the new user
-        const { name, email, password, avatarUrl } = req.body;
+        const { name, email, password } = req.body;
+
+        // Build avatar if a file was uploaded via multer
+        // Otherwise, keep it null (frontend will handle default avatar)
+        const avatar = req.file ? `/uploads/avatars/${req.file.filename}` : null;
 
         // Create a new user
-        const { user, token } = await authService.registerUser({ name, email, password, avatarUrl });
+        const { user, token } = await authService.registerUser({
+            name,
+            email,
+            password,
+            avatar
+        });
 
         res.status(201).json({
             message: "User registered successfully",
@@ -17,7 +28,7 @@ const register = async (req, res, next) => {
                 userId: user.id,
                 name: user.name,
                 email: user.email,
-                avatarUrl: user.avatarUrl
+                avatar: user.avatar
             },
 
             token
@@ -43,7 +54,8 @@ const login = async (req, res, next) => {
             user: {
                 userId: user.id,
                 name: user.name,
-                email: user.email
+                email: user.email,
+                avatar: user.avatar
             },
             token
         });
@@ -69,7 +81,7 @@ const getUserByID = async (req, res, next) => {
                 userId: user.id,
                 name: user.name,
                 email: user.email,
-                avatarUrl: user.avatarUrl || null
+                avatar: user.avatar || null
             }
         });
 
@@ -83,7 +95,14 @@ const updateUserByID = async (req, res, next) => {
     try {
         // Get user ID & all new datas from the user
         const userId = req.user.userId;
-        const updatedData = req.body;
+        const updatedData = {
+            ...req.body
+        };
+
+        // If a new avatar file is uploaded, override avatar
+        if (req.file) {
+            updatedData.avatar = `/uploads/avatars/${req.file.filename}`;
+        }
 
         // Update the user's new datas as datas
         const user = await authService.updateUserProfileByID(userId, updatedData);
@@ -94,7 +113,7 @@ const updateUserByID = async (req, res, next) => {
                 userId: user.id,
                 name: user.name,
                 email: user.email,
-                avatarUrl: user.avatarUrl
+                avatar: user.avatar
             }
         });
 

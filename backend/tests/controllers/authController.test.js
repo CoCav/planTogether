@@ -3,8 +3,8 @@ const authService = require("../../src/services/authService");
 
 jest.mock("../../src/services/authService");
 
-const createMocks = ({ body = {}, user = { userId: 1 }} = {}) => {
-    const req = { body, user };
+const createMocks = ({ body = {}, user = { userId: 1 }, file } = {}) => {
+    const req = { body, user, file };
 
     const res = {
         status: jest.fn().mockReturnThis(),
@@ -19,7 +19,8 @@ const createMocks = ({ body = {}, user = { userId: 1 }} = {}) => {
 const mockUser = {
     id: 1,
     name: "John Doe",
-    email: "john@test.com"
+    email: "john@test.com",
+    avatar: null
 };
 
 describe("authController", () => {
@@ -47,7 +48,8 @@ describe("authController", () => {
             expect(authService.registerUser).toHaveBeenCalledWith({
                 name: "John Doe",
                 email: "john@test.com",
-                password: "Password1"
+                password: "Password1",
+                avatar: null
             });
 
             expect(res.status).toHaveBeenCalledWith(201);
@@ -56,7 +58,50 @@ describe("authController", () => {
                 user: {
                     userId: 1,
                     name: "John Doe",
-                    email: "john@test.com"
+                    email: "john@test.com",
+                    avatar: null
+                },
+                token: "fake-token"
+            });
+        });
+
+        it("should register user with uploaded avatar", async () => {
+            const { req, res, next } = createMocks({
+                body: {
+                    name: "John Doe",
+                    email: "john@test.com",
+                    password: "Password1"
+                },
+                file: {
+                    filename: "avatar-test.png"
+                }
+            });
+
+            authService.registerUser.mockResolvedValue({
+                user: {
+                    ...mockUser,
+                    avatar: "/uploads/avatars/avatar-test.png"
+                },
+                token: "fake-token"
+            });
+
+            await authController.register(req, res, next);
+
+            expect(authService.registerUser).toHaveBeenCalledWith({
+                name: "John Doe",
+                email: "john@test.com",
+                password: "Password1",
+                avatar: "/uploads/avatars/avatar-test.png"
+            });
+
+            expect(res.status).toHaveBeenCalledWith(201);
+            expect(res.json).toHaveBeenCalledWith({
+                message: "User registered successfully",
+                user: {
+                    userId: 1,
+                    name: "John Doe",
+                    email: "john@test.com",
+                    avatar: "/uploads/avatars/avatar-test.png"
                 },
                 token: "fake-token"
             });
@@ -107,7 +152,8 @@ describe("authController", () => {
                 user: {
                     userId: 1,
                     name: "John Doe",
-                    email: "john@test.com"
+                    email: "john@test.com",
+                    avatar: null
                 },
                 token: "fake-token"
             });
@@ -147,7 +193,8 @@ describe("authController", () => {
                 user: {
                     userId: 1,
                     name: "John Doe",
-                    email: "john@test.com"
+                    email: "john@test.com",
+                    avatar: null
                 }
             });
         });
@@ -177,7 +224,8 @@ describe("authController", () => {
             const updatedUser = {
                 id: 1,
                 name: "Updated",
-                email: "updated@test.com"
+                email: "updated@test.com",
+                avatar: null
             };
 
             authService.updateUserProfileByID.mockResolvedValue(updatedUser);
@@ -195,7 +243,49 @@ describe("authController", () => {
                 user: {
                     userId: 1,
                     name: "Updated",
+                    email: "updated@test.com",
+                    avatar: null
+                }
+            });
+        });
+
+        it("should update authenticated user profile with uploaded avatar", async () => {
+            const { req, res, next } = createMocks({
+                user: { userId: 1 },
+                body: {
+                    name: "Updated",
                     email: "updated@test.com"
+                },
+                file: {
+                    filename: "avatar-updated.png"
+                }
+            });
+
+            const updatedUser = {
+                id: 1,
+                name: "Updated",
+                email: "updated@test.com",
+                avatar: "/uploads/avatars/avatar-updated.png"
+            };
+
+            authService.updateUserProfileByID.mockResolvedValue(updatedUser);
+
+            await authController.updateUserByID(req, res, next);
+
+            expect(authService.updateUserProfileByID).toHaveBeenCalledWith(1, {
+                name: "Updated",
+                email: "updated@test.com",
+                avatar: "/uploads/avatars/avatar-updated.png"
+            });
+
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith({
+                message: "User profile updated successfully",
+                user: {
+                    userId: 1,
+                    name: "Updated",
+                    email: "updated@test.com",
+                    avatar: "/uploads/avatars/avatar-updated.png"
                 }
             });
         });

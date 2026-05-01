@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 
 // Create a new user and generate a JWT token
-const registerUser = async ({ name, email, password, avatarUrl }) => {
+const registerUser = async ({ name, email, password, avatar }) => {
     try {
 
         const normalizedEmail = String(email).toLowerCase().trim();
@@ -23,7 +23,7 @@ const registerUser = async ({ name, email, password, avatarUrl }) => {
             name,
             email: normalizedEmail,
             password: hashedPassword,
-            avatarUrl: avatarUrl || null
+            avatar: avatar || null
         });
 
         // Generate JWT token
@@ -103,14 +103,14 @@ const updateUserProfileByID = async (userId, updatedData) => {
             throw error;
         }
 
-        const { name, email, avatarUrl } = updatedData;
+        const { name, email, avatar } = updatedData;
 
         // Update user fields if provided
         if (name) user.name = name;
         if (email) user.email = String(email).toLowerCase().trim();
 
-        if (avatarUrl !== undefined) {
-            user.avatarUrl = avatarUrl || null;
+        if (avatar !== undefined) {
+            user.avatar = avatar || null;
         }
 
         try {

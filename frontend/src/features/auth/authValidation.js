@@ -37,11 +37,28 @@ const validatePasswordRules = (password) => {
     return errors;
 };
 
+const validateAvatarFile = (avatar) => {
+    if (!avatar) return null;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    const maxSize = 2 * 1024 * 1024;
+
+    if (!allowedTypes.includes(avatar.type)) {
+        return "Avatar must be an image file";
+    }
+
+    if (avatar.size > maxSize) {
+        return "Avatar must be less than 2MB";
+    }
+
+    return null;
+};
+
 /* =========================
    Register validation
 ========================= */
 
-export const validateRegisterForm = ({ name, email, password }) => {
+export const validateRegisterForm = ({ name, email, password, avatar }) => {
     const errors = {};
 
     if (!name.trim()) {
@@ -64,6 +81,11 @@ export const validateRegisterForm = ({ name, email, password }) => {
         }
     }
 
+    const avatarError = validateAvatarFile(avatar);
+
+    if (avatarError) {
+        errors.avatar = avatarError;
+    }
     return errors;
 };
 
@@ -91,7 +113,7 @@ export const validateLoginForm = ({ email, password }) => {
    Profile validation
 ========================= */
 
-export const validateProfileForm = ({ name, email }) => {
+export const validateProfileForm = ({ name, email, avatar }) => {
     const errors = {};
 
     if (!name.trim()) {
@@ -104,6 +126,12 @@ export const validateProfileForm = ({ name, email }) => {
         errors.email = "Email is required";
     } else if (!isValidEmail(email)) {
         errors.email = "Invalid email";
+    }
+
+    const avatarError = validateAvatarFile(avatar);
+
+    if (avatarError) {
+        errors.avatar = avatarError;
     }
 
     return errors;

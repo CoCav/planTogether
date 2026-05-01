@@ -24,6 +24,9 @@ build/
 # Coverage
 coverage/
 
+# Uploads
+uploads/
+
 # Cache
 .nyc_output/
 

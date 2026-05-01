@@ -17,11 +17,7 @@ const registerValidator = [
         .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
         .matches(/\d/).withMessage('Password must contain a number')
         .matches(/[A-Z]/).withMessage('Password must contain an uppercase letter')
-        .matches(/[a-z]/).withMessage('Password must contain a lowercase letter'),
-
-    body('avatarUrl')
-        .optional({ checkFalsy: true })
-        .isURL().withMessage('Avatar URL must be valid')
+        .matches(/[a-z]/).withMessage('Password must contain a lowercase letter')
 ];
 
 // Validator for user login
@@ -47,11 +43,7 @@ const updateProfileValidator = [
         .optional()
         .trim()
         .isEmail().withMessage('Invalid email')
-        .normalizeEmail(),
-
-    body('avatarUrl')
-        .optional({ checkFalsy: true })
-        .isURL().withMessage('Avatar URL must be valid')
+        .normalizeEmail()
 ];
 
 const changePasswordValidator = [

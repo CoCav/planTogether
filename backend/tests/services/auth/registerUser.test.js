@@ -25,7 +25,8 @@ describe("authService - registerUser", () => {
     const mockUser = {
         id: 1,
         name: "John Doe",
-        email: "john@test.com"
+        email: "john@test.com",
+        avatar: null
     };
 
     beforeEach(() => {
@@ -50,8 +51,41 @@ describe("authService - registerUser", () => {
             where: { email: "john@test.com" }
         });
 
+        expect(User.create).toHaveBeenCalledWith({
+            name: "John",
+            email: "john@test.com",
+            password: "hashed-password",
+            avatar: null
+        });
+
         expect(result.token).toBe("fake-token");
         expect(result.user).toBe(mockUser);
+    });
+
+    it("should register a user with avatar", async () => {
+        const userWithAvatar = {
+            ...mockUser,
+            avatar: "/uploads/avatars/avatar-test.png"
+        };
+
+        User.findOne.mockResolvedValue(null);
+        User.create.mockResolvedValue(userWithAvatar);
+
+        const result = await authService.registerUser({
+            name: "John",
+            email: " JOHN@TEST.COM ",
+            password: "Password123",
+            avatar: "/uploads/avatars/avatar-test.png"
+        });
+
+        expect(User.create).toHaveBeenCalledWith({
+            name: "John",
+            email: "john@test.com",
+            password: "hashed-password",
+            avatar: "/uploads/avatars/avatar-test.png"
+        });
+
+        expect(result.user).toBe(userWithAvatar);
     });
 
     it("should throw if email already exists", async () => {

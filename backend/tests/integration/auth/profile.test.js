@@ -1,6 +1,6 @@
-const request = require('supertest');
-const app = require('../../../src/app');
-const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
+const request = require("supertest");
+const app = require("../../../src/app");
+const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
 
 /**
  * Auth Integration - Profile
@@ -10,9 +10,10 @@ const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/
  * What is tested:
  * - Access control using JWT authentication
  * - Profile retrieval for authenticated users
- * - Profile update behavior (name + email)
- * - Validation errors (invalid email, empty fields)
- * - Business rules (duplicate email)
+ * - Profile update behavior
+ * - Optional avatar upload
+ * - Validation errors
+ * - Business rules
  *
  * Integration scope:
  * → Validators + Auth middleware + Controller + Service + Database
@@ -22,12 +23,7 @@ const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/
  * and correctly persisted in the database.
 */
 
-describe('Profile API', () => {
-
-    /* =========================
-       Test database lifecycle
-    ========================= */
-
+describe("Profile API", () => {
     beforeAll(async () => {
         await initDB();
     });
@@ -42,205 +38,229 @@ describe('Profile API', () => {
         await sequelize.close();
     });
 
-    /* =========================
-       Profile retrieval
-    ========================= */
-
-    describe('GET /api/auth/profile', () => {
-
-        it('should get the profile of an authenticated user', async () => {
+    describe("GET /api/auth/profile", () => {
+        it("should get the profile of an authenticated user", async () => {
             const email = `profile${Date.now()}@test.com`;
 
             const registerRes = await request(app)
-                .post('/api/auth/register')
+                .post("/api/auth/register")
                 .send({
-                    name: 'Profile User',
+                    name: "Profile User",
                     email,
-                    password: 'Password123'
+                    password: "Password123"
                 });
 
             const token = registerRes.body.token;
 
             const res = await request(app)
-                .get('/api/auth/profile')
-                .set('Authorization', `Bearer ${token}`);
+                .get("/api/auth/profile")
+                .set("Authorization", `Bearer ${token}`);
 
             expect(res.statusCode).toBe(200);
 
-            /* =========================
-               Response structure
-            ========================= */
-
-            expect(res.body).toHaveProperty('message', 'User profile retrieved successfully');
-            expect(res.body).toHaveProperty('user');
+            expect(res.body).toHaveProperty("message", "User profile retrieved successfully");
+            expect(res.body).toHaveProperty("user");
 
             expect(res.body.user).toMatchObject({
-                name: 'Profile User',
-                email
+                name: "Profile User",
+                email,
+                avatar: null
             });
 
-            expect(res.body.user).not.toHaveProperty('password');
+            expect(res.body.user).not.toHaveProperty("password");
         });
 
-        it('should reject access without token', async () => {
-            const res = await request(app).get('/api/auth/profile');
+        it("should reject access without token", async () => {
+            const res = await request(app).get("/api/auth/profile");
 
             expect(res.statusCode).toBe(401);
         });
 
-        it('should reject access with invalid token', async () => {
+        it("should reject access with invalid token", async () => {
             const res = await request(app)
-                .get('/api/auth/profile')
-                .set('Authorization', 'Bearer invalid-token');
+                .get("/api/auth/profile")
+                .set("Authorization", "Bearer invalid-token");
 
             expect(res.statusCode).toBe(401);
         });
     });
 
-    /* =========================
-       Profile update
-    ========================= */
-
-    describe('PUT /api/auth/profile', () => {
-
-        it('should update the profile of an authenticated user', async () => {
+    describe("PUT /api/auth/profile", () => {
+        it("should update the profile of an authenticated user", async () => {
             const originalEmail = `profileupdate${Date.now()}@test.com`;
             const updatedEmail = `updatedprofile${Date.now()}@test.com`;
 
             const registerRes = await request(app)
-                .post('/api/auth/register')
+                .post("/api/auth/register")
                 .send({
-                    name: 'Profile User',
+                    name: "Profile User",
                     email: originalEmail,
-                    password: 'Password123'
+                    password: "Password123"
                 });
 
             const token = registerRes.body.token;
 
             const res = await request(app)
-                .put('/api/auth/profile')
-                .set('Authorization', `Bearer ${token}`)
+                .put("/api/auth/profile")
+                .set("Authorization", `Bearer ${token}`)
                 .send({
-                    name: 'Updated Name',
+                    name: "Updated Name",
                     email: updatedEmail
                 });
 
             expect(res.statusCode).toBe(200);
 
-            expect(res.body).toHaveProperty('message', 'User profile updated successfully');
-            expect(res.body).toHaveProperty('user');
+            expect(res.body).toHaveProperty("message", "User profile updated successfully");
+            expect(res.body).toHaveProperty("user");
 
             expect(res.body.user).toMatchObject({
-                name: 'Updated Name',
-                email: updatedEmail
+                name: "Updated Name",
+                email: updatedEmail,
+                avatar: null
             });
 
-            expect(res.body.user).not.toHaveProperty('password');
-
-            /* =========================
-               Verify persisted changes
-            ========================= */
+            expect(res.body.user).not.toHaveProperty("password");
 
             const profileRes = await request(app)
-                .get('/api/auth/profile')
-                .set('Authorization', `Bearer ${token}`);
+                .get("/api/auth/profile")
+                .set("Authorization", `Bearer ${token}`);
 
-            expect(profileRes.body.user.name).toBe('Updated Name');
+            expect(profileRes.body.user.name).toBe("Updated Name");
             expect(profileRes.body.user.email).toBe(updatedEmail);
+            expect(profileRes.body.user.avatar).toBeNull();
         });
 
-        it('should reject update without token', async () => {
-            const res = await request(app)
-                .put('/api/auth/profile')
-                .send({
-                    name: 'Updated Name',
-                    email: `updated${Date.now()}@test.com`
-                });
+        it("should update the profile avatar of an authenticated user", async () => {
+            const email = `avatarprofile${Date.now()}@test.com`;
 
-            expect(res.statusCode).toBe(401);
-        });
-
-        it('should reject update with invalid token', async () => {
-            const res = await request(app)
-                .put('/api/auth/profile')
-                .set('Authorization', 'Bearer invalid-token')
-                .send({
-                    name: 'Updated Name',
-                    email: `updated${Date.now()}@test.com`
-                });
-
-            expect(res.statusCode).toBe(401);
-        });
-
-        it('should reject invalid email', async () => {
             const registerRes = await request(app)
-                .post('/api/auth/register')
+                .post("/api/auth/register")
                 .send({
-                    name: 'Profile Validation User',
+                    name: "Avatar Profile User",
+                    email,
+                    password: "Password123"
+                });
+
+            const token = registerRes.body.token;
+
+            const res = await request(app)
+                .put("/api/auth/profile")
+                .set("Authorization", `Bearer ${token}`)
+                .field("name", "Avatar Updated")
+                .field("email", email)
+                .attach("avatar", Buffer.from("fake image content"), {
+                    filename: "avatar.png",
+                    contentType: "image/png"
+                });
+
+            expect(res.statusCode).toBe(200);
+
+            expect(res.body.user).toMatchObject({
+                name: "Avatar Updated",
+                email
+            });
+
+            expect(res.body.user.avatar).toMatch(/^\/uploads\/avatars\/avatar-/);
+
+            const profileRes = await request(app)
+                .get("/api/auth/profile")
+                .set("Authorization", `Bearer ${token}`);
+
+            expect(profileRes.body.user.avatar).toBe(res.body.user.avatar);
+        });
+
+        it("should reject update without token", async () => {
+            const res = await request(app)
+                .put("/api/auth/profile")
+                .send({
+                    name: "Updated Name",
+                    email: `updated${Date.now()}@test.com`
+                });
+
+            expect(res.statusCode).toBe(401);
+        });
+
+        it("should reject update with invalid token", async () => {
+            const res = await request(app)
+                .put("/api/auth/profile")
+                .set("Authorization", "Bearer invalid-token")
+                .send({
+                    name: "Updated Name",
+                    email: `updated${Date.now()}@test.com`
+                });
+
+            expect(res.statusCode).toBe(401);
+        });
+
+        it("should reject invalid email", async () => {
+            const registerRes = await request(app)
+                .post("/api/auth/register")
+                .send({
+                    name: "Profile Validation User",
                     email: `profileval${Date.now()}@test.com`,
-                    password: 'Password123'
+                    password: "Password123"
                 });
 
             const token = registerRes.body.token;
 
             const res = await request(app)
-                .put('/api/auth/profile')
-                .set('Authorization', `Bearer ${token}`)
+                .put("/api/auth/profile")
+                .set("Authorization", `Bearer ${token}`)
                 .send({
-                    name: 'Updated Name',
-                    email: 'invalid-email'
+                    name: "Updated Name",
+                    email: "invalid-email"
                 });
 
             expect(res.statusCode).toBe(400);
         });
 
-        it('should reject empty fields', async () => {
+        it("should reject empty fields", async () => {
             const registerRes = await request(app)
-                .post('/api/auth/register')
+                .post("/api/auth/register")
                 .send({
-                    name: 'Empty Field User',
+                    name: "Empty Field User",
                     email: `empty${Date.now()}@test.com`,
-                    password: 'Password123'
+                    password: "Password123"
                 });
 
             const token = registerRes.body.token;
 
             const res = await request(app)
-                .put('/api/auth/profile')
-                .set('Authorization', `Bearer ${token}`)
+                .put("/api/auth/profile")
+                .set("Authorization", `Bearer ${token}`)
                 .send({
-                    name: '',
-                    email: ''
+                    name: "",
+                    email: ""
                 });
 
             expect(res.statusCode).toBe(400);
         });
 
-        it('should reject duplicate email', async () => {
+        it("should reject duplicate email", async () => {
             const firstEmail = `first${Date.now()}@test.com`;
             const secondEmail = `second${Date.now()}@test.com`;
 
-            await request(app).post('/api/auth/register').send({
-                name: 'First User',
+            await request(app).post("/api/auth/register").send({
+                name: "First User",
                 email: firstEmail,
-                password: 'Password123'
+                password: "Password123"
             });
 
             const secondRegisterRes = await request(app)
-                .post('/api/auth/register')
+                .post("/api/auth/register")
                 .send({
-                    name: 'Second User',
+                    name: "Second User",
                     email: secondEmail,
-                    password: 'Password123'
+                    password: "Password123"
                 });
 
             const token = secondRegisterRes.body.token;
 
             const res = await request(app)
-                .put('/api/auth/profile')
-                .set('Authorization', `Bearer ${token}`)
+                .put("/api/auth/profile")
+                .set("Authorization", `Bearer ${token}`)
                 .send({
-                    name: 'Updated Name',
+                    name: "Updated Name",
                     email: firstEmail
                 });
 

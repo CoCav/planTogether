@@ -32,7 +32,7 @@ const User = sequelize.define('User', {
         allowNull: false
     },
 
-    avatarUrl: {
+    avatar: {
         type: DataTypes.STRING,
         allowNull: true
     }

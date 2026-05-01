@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { validateChangePasswordForm, validateLoginForm, validateProfileForm, validateRegisterForm } from "../../../features/auth/authValidation";
+import {
+    validateChangePasswordForm,
+    validateLoginForm,
+    validateProfileForm,
+    validateRegisterForm
+} from "../../../features/auth/authValidation";
 
 /* ==================================================
    AUTH VALIDATION TESTS
@@ -7,11 +12,31 @@ import { validateChangePasswordForm, validateLoginForm, validateProfileForm, val
 ================================================== */
 
 describe("authValidation", () => {
+
+    /* =========================
+       Helpers
+    ========================= */
+
+    const validAvatar = new File(["avatar"], "avatar.png", { type: "image/png" });
+
+    const invalidAvatar = new File(["avatar"], "avatar.txt", { type: "text/plain" });
+
+    const largeAvatar = new File(
+        [new Uint8Array(2 * 1024 * 1024 + 1)],
+        "large.png",
+        { type: "image/png" }
+    );
+
+    /* =========================
+       REGISTER
+    ========================= */
+
     it("validates required register fields", () => {
         const errors = validateRegisterForm({
             name: "",
             email: "",
-            password: ""
+            password: "",
+            avatar: null
         });
 
         expect(errors.name).toBe("Name is required");
@@ -23,7 +48,8 @@ describe("authValidation", () => {
         const errors = validateRegisterForm({
             name: "John",
             email: "invalid",
-            password: "Password1"
+            password: "Password1",
+            avatar: null
         });
 
         expect(errors.email).toBe("Invalid email");
@@ -33,7 +59,8 @@ describe("authValidation", () => {
         const errors = validateRegisterForm({
             name: "John",
             email: "john@test.com",
-            password: "abc"
+            password: "abc",
+            avatar: null
         });
 
         expect(errors.password).toEqual([
@@ -43,15 +70,42 @@ describe("authValidation", () => {
         ]);
     });
 
+    it("validates register avatar type", () => {
+        const errors = validateRegisterForm({
+            name: "John",
+            email: "john@test.com",
+            password: "Password1",
+            avatar: invalidAvatar
+        });
+
+        expect(errors.avatar).toBe("Avatar must be an image file");
+    });
+
+    it("validates register avatar size", () => {
+        const errors = validateRegisterForm({
+            name: "John",
+            email: "john@test.com",
+            password: "Password1",
+            avatar: largeAvatar
+        });
+
+        expect(errors.avatar).toBe("Avatar must be less than 2MB");
+    });
+
     it("returns no register errors for valid data", () => {
         const errors = validateRegisterForm({
             name: "John",
             email: "john@test.com",
-            password: "Password1"
+            password: "Password1",
+            avatar: validAvatar
         });
 
         expect(errors).toEqual({});
     });
+
+    /* =========================
+       LOGIN
+    ========================= */
 
     it("validates required login fields", () => {
         const errors = validateLoginForm({
@@ -81,10 +135,15 @@ describe("authValidation", () => {
         expect(errors).toEqual({});
     });
 
+    /* =========================
+       PROFILE
+    ========================= */
+
     it("validates required profile fields", () => {
         const errors = validateProfileForm({
             name: "",
-            email: ""
+            email: "",
+            avatar: null
         });
 
         expect(errors.name).toBe("Name is required");
@@ -94,7 +153,8 @@ describe("authValidation", () => {
     it("validates minimum profile name length", () => {
         const errors = validateProfileForm({
             name: "J",
-            email: "john@test.com"
+            email: "john@test.com",
+            avatar: null
         });
 
         expect(errors.name).toBe("Name must be at least 2 characters long");
@@ -103,20 +163,46 @@ describe("authValidation", () => {
     it("validates profile email format", () => {
         const errors = validateProfileForm({
             name: "John",
-            email: "invalid"
+            email: "invalid",
+            avatar: null
         });
 
         expect(errors.email).toBe("Invalid email");
     });
 
+    it("validates profile avatar type", () => {
+        const errors = validateProfileForm({
+            name: "John",
+            email: "john@test.com",
+            avatar: invalidAvatar
+        });
+
+        expect(errors.avatar).toBe("Avatar must be an image file");
+    });
+
+    it("validates profile avatar size", () => {
+        const errors = validateProfileForm({
+            name: "John",
+            email: "john@test.com",
+            avatar: largeAvatar
+        });
+
+        expect(errors.avatar).toBe("Avatar must be less than 2MB");
+    });
+
     it("returns no profile errors for valid data", () => {
         const errors = validateProfileForm({
             name: "John",
-            email: "john@test.com"
+            email: "john@test.com",
+            avatar: validAvatar
         });
 
         expect(errors).toEqual({});
     });
+
+    /* =========================
+       CHANGE PASSWORD
+    ========================= */
 
     it("validates change password required fields", () => {
         const errors = validateChangePasswordForm({

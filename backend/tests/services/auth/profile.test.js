@@ -15,15 +15,18 @@ jest.mock("../../../src/models/userModel", () => ({
 }));
 
 describe("authService - profile", () => {
-    const user = {
-        id: 1,
-        name: "John",
-        email: "john@test.com",
-        save: jest.fn()
-    };
+    let user;
 
     beforeEach(() => {
         jest.clearAllMocks();
+
+        user = {
+            id: 1,
+            name: "John",
+            email: "john@test.com",
+            avatar: null,
+            save: jest.fn()
+        };
     });
 
     describe("getUserProfileByID", () => {
@@ -53,6 +56,31 @@ describe("authService - profile", () => {
 
             expect(user.name).toBe("Updated");
             expect(user.email).toBe("updated@test.com");
+            expect(user.save).toHaveBeenCalled();
+            expect(result).toBe(user);
+        });
+
+        it("should update user avatar when provided", async () => {
+            User.findByPk.mockResolvedValue(user);
+
+            const result = await authService.updateUserProfileByID(1, {
+                avatar: "/uploads/avatars/avatar-test.png"
+            });
+
+            expect(user.avatar).toBe("/uploads/avatars/avatar-test.png");
+            expect(user.save).toHaveBeenCalled();
+            expect(result).toBe(user);
+        });
+
+        it("should clear user avatar when empty string is provided", async () => {
+            user.avatar = "/uploads/avatars/old-avatar.png";
+            User.findByPk.mockResolvedValue(user);
+
+            const result = await authService.updateUserProfileByID(1, {
+                avatar: ""
+            });
+
+            expect(user.avatar).toBeNull();
             expect(user.save).toHaveBeenCalled();
             expect(result).toBe(user);
         });

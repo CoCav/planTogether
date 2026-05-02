@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, NavLink } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
+import { getAvatar } from "../../utils/getAvatar";
 
 import Button from "../ui/Button";
 
@@ -24,18 +25,22 @@ export default function Navbar() {
     // Reference used to detect outside clicks
     const userMenuRef = useRef(null);
 
+    // Resolve the correct avatar source for the current user (fallback to null if not authenticated)
+    const avatar = user ? getAvatar(user.avatar) : null;
+
     /* =========================
         Close dropdown on outside click
     ========================= */
     useEffect(() => {
         const handleClickOutside = (event) => {
-        if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-            setIsUserMenuOpen(false);
-        }};
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+                setIsUserMenuOpen(false);
+            }
+        };
 
         document.addEventListener("mousedown", handleClickOutside);
 
-        return () => {document.removeEventListener("mousedown", handleClickOutside) };
+        return () => { document.removeEventListener("mousedown", handleClickOutside) };
     }, []);
 
     /* =========================
@@ -56,7 +61,7 @@ export default function Navbar() {
                 {/* Main navigation */}
                 <nav className="navbar-links">
                     <NavLink to="/events" end className={({ isActive }) => `navbar-link link-underline link-color-hover ${isActive ? "active" : ""}`.trim()}>Events</NavLink>
-                    
+
                     {user && (<NavLink to="/events/create" className={({ isActive }) => `navbar-link link-underline link-color-hover ${isActive ? "active" : ""}`.trim()}>Create event</NavLink>)}
                 </nav>
 
@@ -64,9 +69,20 @@ export default function Navbar() {
                 <div className="navbar-actions">
                     {user ? (
                         <div className="navbar-user-menu" ref={userMenuRef}>
-                            <button type="button" className="btn btn-outline navbar-user-trigger" onClick={() => setIsUserMenuOpen((prev) => !prev)} aria-expanded={isUserMenuOpen} aria-haspopup="menu" aria-label="Open user menu">
-                                    <span>{user.name}</span>
-                                    <span className="navbar-caret">▾</span>
+                            <button
+                                type="button"
+                                className="btn btn-outline navbar-user-trigger"
+                                onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                                aria-expanded={isUserMenuOpen}
+                                aria-haspopup="menu"
+                                aria-label={`Open ${user.name} menu`}
+                            >
+                                <img
+                                    src={avatar}
+                                    alt={`${user.name} avatar`}
+                                    className="navbar-avatar"
+                                />
+                                <span className="navbar-caret">▾</span>
                             </button>
 
                             {isUserMenuOpen && (
@@ -83,7 +99,7 @@ export default function Navbar() {
 
                             <Link to="/register">
                                 <button type="button" className="btn btn-primary">Register</button>
-                             </Link>
+                            </Link>
                         </div>
                     )}
                 </div>

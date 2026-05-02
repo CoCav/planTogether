@@ -51,22 +51,31 @@ describe("Navbar", () => {
     });
 
     it("renders user navigation when user is authenticated", () => {
-        mockUser = { name: "John" };
+        mockUser = {
+            name: "John",
+            avatar: null
+        };
 
         renderNavbar();
 
-        expect(screen.getByText("John")).toBeInTheDocument();
         expect(screen.getByText("Create event")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /open john menu/i })).toBeInTheDocument();
+        expect(screen.getByAltText("John avatar")).toBeInTheDocument();
+        expect(screen.queryByText("John")).not.toBeInTheDocument();
     });
 
     it("opens and closes user menu", async () => {
         const user = userEvent.setup();
-        mockUser = { name: "John" };
+
+        mockUser = {
+            name: "John",
+            avatar: null
+        };
 
         renderNavbar();
 
         const trigger = screen.getByRole("button", {
-            name: /open user menu/i
+            name: /open john menu/i
         });
 
         await user.click(trigger);
@@ -82,12 +91,16 @@ describe("Navbar", () => {
 
     it("logs out and redirects to home", async () => {
         const user = userEvent.setup();
-        mockUser = { name: "John" };
+
+        mockUser = {
+            name: "John",
+            avatar: null
+        };
 
         renderNavbar();
 
         const trigger = screen.getByRole("button", {
-            name: /open user menu/i
+            name: /open john menu/i
         });
 
         await user.click(trigger);

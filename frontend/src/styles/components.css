@@ -68,7 +68,7 @@
 
 .btn-outline-danger {
     background: transparent;
-    border:1px solid var(--color-border);
+    border: 1px solid var(--color-border);
     color: #dc2626;
 }
 
@@ -152,7 +152,6 @@
     padding: var(--space-6);
 }
 
-
 /* ==================================================
    CARD
 ================================================== */
@@ -183,10 +182,6 @@
     gap: var(--space-2);
 }
 
-.form-field-full {
-    grid-column: 1 / -1;
-}
-
 .form-label {
     font-size: var(--font-size-sm);
     font-weight: 600;
@@ -195,8 +190,73 @@
 
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: 1fr;
     gap: var(--space-4);
+}
+
+.avatar-input-hidden {
+    display: none;
+}
+
+.avatar-form-field {
+    grid-column: 1 / -1;
+}
+
+.avatar-upload {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+
+.avatar-upload-btn {
+    cursor: pointer;
+}
+
+.avatar-input-hint,
+.avatar-preview-size {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+}
+
+.avatar-preview-card {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    margin-top: var(--space-2);
+}
+
+.avatar-preview {
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.avatar-preview-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.avatar-preview-name {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.avatar-remove-btn {
+    flex-shrink: 0;
 }
 
 .form-actions {
@@ -349,10 +409,11 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     color: var(--color-text-muted);
     transition: color 0.2s ease;
     opacity: 0.7;
+    margin-top: var(--space-1);
 }
 
 .password-rule.valid {
@@ -368,14 +429,11 @@
 }
 
 .password-rules {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
     margin-top: var(--space-1);
 }
 
 .password-rules-title {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     color: var(--color-text-muted);
     margin-bottom: 4px;
 }

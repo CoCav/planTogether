@@ -6,7 +6,7 @@ import ProfilePage from "../../pages/ProfilePage";
 
 /* ==================================================
    PROFILE PAGE TESTS
-   Tests profile update and password change flows
+   Tests profile update, avatar upload and password flows
 ================================================== */
 
 const mockUpdateProfile = vi.fn();
@@ -16,7 +16,8 @@ const mockRefreshUser = vi.fn();
 let mockAuthState = {
     user: {
         name: "John Doe",
-        email: "john@test.com"
+        email: "john@test.com",
+        avatar: null
     },
     refreshUser: mockRefreshUser
 };
@@ -36,6 +37,10 @@ vi.mock("../../features/auth/authValidation", () => ({
 
         if (!form.name) errors.name = "Name is required";
         if (!form.email) errors.email = "Email is required";
+
+        if (form.avatar?.type === "text/plain") {
+            errors.avatar = "Avatar must be an image file";
+        }
 
         return errors;
     }),
@@ -76,8 +81,7 @@ const renderPage = () =>
         </MemoryRouter>
     );
 
-const getPasswordField = (name) =>
-    document.querySelector(`input[name="${name}"]`);
+const getPasswordField = (name) => document.querySelector(`input[name="${name}"]`);
 
 const fillPasswordForm = async (user, { currentPassword = "oldpass", newPassword = "newpass", confirmPassword = "newpass" } = {}) => {
     await user.type(getPasswordField("currentPassword"), currentPassword);
@@ -85,14 +89,24 @@ const fillPasswordForm = async (user, { currentPassword = "oldpass", newPassword
     await user.type(getPasswordField("confirmPassword"), confirmPassword);
 };
 
+const selectAvatar = async (user, file = new File(["avatar"], "avatar.png", { type: "image/png" })) => {
+    await user.upload(screen.getByLabelText(/choose file/i), file);
+
+    return file;
+};
+
 describe("ProfilePage", () => {
     beforeEach(() => {
         vi.clearAllMocks();
 
+        globalThis.URL.createObjectURL = vi.fn(() => "blob:avatar-preview");
+        globalThis.URL.revokeObjectURL = vi.fn();
+
         mockAuthState = {
             user: {
                 name: "John Doe",
-                email: "john@test.com"
+                email: "john@test.com",
+                avatar: null
             },
             refreshUser: mockRefreshUser
         };
@@ -114,6 +128,34 @@ describe("ProfilePage", () => {
 
         expect(screen.getByDisplayValue("John Doe")).toBeInTheDocument();
         expect(screen.getByDisplayValue("john@test.com")).toBeInTheDocument();
+        expect(screen.getByText(/choose file/i)).toBeInTheDocument();
+    });
+
+    it("shows avatar preview when selecting a valid file", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await selectAvatar(user);
+
+        expect(screen.getByAltText(/avatar preview/i)).toHaveAttribute(
+            "src",
+            "blob:avatar-preview"
+        );
+        expect(screen.getByText("avatar.png")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /remove/i })).toBeInTheDocument();
+    });
+
+    it("removes selected avatar when clicking remove", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await selectAvatar(user);
+        await user.click(screen.getByRole("button", { name: /remove/i }));
+
+        expect(screen.queryByAltText(/avatar preview/i)).not.toBeInTheDocument();
+        expect(screen.queryByText("avatar.png")).not.toBeInTheDocument();
     });
 
     it("shows validation errors when profile form is empty", async () => {
@@ -157,14 +199,42 @@ describe("ProfilePage", () => {
         await user.click(screen.getByRole("button", { name: /update profile/i }));
 
         await waitFor(() => {
-            expect(mockUpdateProfile).toHaveBeenCalledWith({
-                name: "John Doe Updated",
-                email: "john@test.com"
-            });
+            expect(mockUpdateProfile).toHaveBeenCalledWith(expect.any(FormData));
         });
+
+        const formData = mockUpdateProfile.mock.calls[0][0];
+
+        expect(formData.get("name")).toBe("John Doe Updated");
+        expect(formData.get("email")).toBe("john@test.com");
+        expect(formData.get("avatar")).toBeNull();
 
         expect(mockRefreshUser).toHaveBeenCalled();
         expect(screen.getByText(/profile updated successfully/i)).toBeInTheDocument();
+    });
+
+    it("updates profile successfully with avatar", async () => {
+        const user = userEvent.setup();
+        const avatar = new File(["avatar"], "avatar.png", { type: "image/png" });
+
+        mockUpdateProfile.mockResolvedValue({});
+        mockRefreshUser.mockResolvedValue({});
+
+        renderPage();
+
+        await selectAvatar(user, avatar);
+        await user.click(screen.getByRole("button", { name: /update profile/i }));
+
+        await waitFor(() => {
+            expect(mockUpdateProfile).toHaveBeenCalledWith(expect.any(FormData));
+        });
+
+        const formData = mockUpdateProfile.mock.calls[0][0];
+
+        expect(formData.get("name")).toBe("John Doe");
+        expect(formData.get("email")).toBe("john@test.com");
+        expect(formData.get("avatar")).toBe(avatar);
+
+        expect(mockRefreshUser).toHaveBeenCalled();
     });
 
     it("shows loading state while updating profile", async () => {
@@ -229,9 +299,7 @@ describe("ProfilePage", () => {
 
         await user.click(screen.getByRole("button", { name: /update password/i }));
 
-        expect(
-            screen.getByText(/new password must be different from current password/i)
-        ).toBeInTheDocument();
+        expect(screen.getByText(/new password must be different from current password/i)).toBeInTheDocument();
 
         expect(mockChangePassword).not.toHaveBeenCalled();
     });

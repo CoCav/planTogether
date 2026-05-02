@@ -4,13 +4,12 @@ import { useAuth } from "../context/useAuth";
 import { registerUser } from "../api/authApi";
 import { validateRegisterForm } from "../features/auth/authValidation";
 
+import AuthFormFields from "../components/auth/AuthFormFields";
 import AuthPasswordField from "../components/auth/AuthPasswordField";
 import PasswordRequirements from "../components/auth/PasswordRequirements";
 
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
-import FormField from "../components/ui/FormField";
-import Input from "../components/ui/Input";
 import Alert from "../components/ui/Alert";
 
 /* ==================================================
@@ -19,6 +18,7 @@ import Alert from "../components/ui/Alert";
 
    Handles:
    - registration form validation
+   - optional avatar upload
    - password requirements display
    - password visibility toggle
    - automatic login after registration
@@ -45,10 +45,9 @@ export default function RegisterPage() {
         avatar: null
     });
 
-
     /* =========================
-        Form input handling
-        Updates form values and clears field errors
+       Text input handling
+       Updates form values and clears field errors
     ========================= */
 
     const handleChange = (e) => {
@@ -65,6 +64,10 @@ export default function RegisterPage() {
         }));
     };
 
+    /* =========================
+       Avatar input handling
+       Stores selected file and clears avatar error
+    ========================= */
 
     const handleFileChange = (e) => {
         const file = e.target.files?.[0] || null;
@@ -80,16 +83,28 @@ export default function RegisterPage() {
         }));
     };
 
+    const handleRemoveAvatar = () => {
+        setForm((prev) => ({
+            ...prev,
+            avatar: null
+        }));
+
+        setErrors((prev) => ({
+            ...prev,
+            avatar: undefined
+        }));
+    };
+
     /* =========================
-        Form submission
-        Validates form, creates account and logs user in
+       Form submission
+       Validates form, sends multipart data,
+       creates account and logs user in
     ========================= */
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
 
-        // Validate form (avatar included)
         const validationErrors = validateRegisterForm(form);
 
         if (Object.keys(validationErrors).length > 0) {
@@ -101,26 +116,20 @@ export default function RegisterPage() {
         setSubmitting(true);
 
         try {
-            // Build FormData for multipart/form-data request
             const formData = new FormData();
 
             formData.append("name", form.name);
             formData.append("email", form.email);
             formData.append("password", form.password);
 
-            // Append avatar file only if present
             if (form.avatar) {
                 formData.append("avatar", form.avatar);
             }
 
-            // Call API
             const response = await registerUser(formData);
             const token = response.data.token;
 
-            // Auto login
             await login(token);
-
-            // Redirect
             navigate("/events");
 
         } catch (err) {
@@ -149,38 +158,13 @@ export default function RegisterPage() {
             <Card className="auth-card">
                 <form onSubmit={handleSubmit} className="event-form">
                     <div className="auth-form-grid">
-
-                        <FormField label="Avatar (optional)" error={errors.avatarUrl}>
-                            <Input
-                                type="file"
-                                name="avatar"
-                                accept="image/*"
-                                onChange={handleFileChange}
-                                error={errors.avatarUrl}
-                            />
-                        </FormField>
-
-                        <FormField label="Name" error={errors.name}>
-                            <Input
-                                type="text"
-                                name="name"
-                                placeholder="Your name"
-                                value={form.name}
-                                onChange={handleChange}
-                                error={errors.name}
-                            />
-                        </FormField>
-
-                        <FormField label="Email" error={errors.email}>
-                            <Input
-                                type="email"
-                                name="email"
-                                placeholder="Your email"
-                                value={form.email}
-                                onChange={handleChange}
-                                error={errors.email}
-                            />
-                        </FormField>
+                        <AuthFormFields
+                            form={form}
+                            errors={errors}
+                            onChange={handleChange}
+                            onFileChange={handleFileChange}
+                            onRemoveFile={handleRemoveAvatar}
+                        />
 
                         <AuthPasswordField
                             label="Password"

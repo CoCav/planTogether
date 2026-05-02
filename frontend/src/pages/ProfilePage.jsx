@@ -1,15 +1,14 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { updateProfile, changePassword } from "../api/authApi";
 import { validateProfileForm, validateChangePasswordForm } from "../features/auth/authValidation";
 
-import UserProfileForm from "../components/auth/UserProfileForm";
+import AuthFormFields from "../components/auth/AuthFormFields";
 import ChangePasswordForm from "../components/auth/ChangePasswordForm";
-import PasswordRequirements from "../components/auth/PasswordRequirements";
 
-import Card from "../components/ui/Card";
 import Alert from "../components/ui/Alert";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
 import PageLoader from "../components/ui/PageLoader";
 
 /* ==================================================
@@ -35,7 +34,8 @@ export default function ProfilePage() {
     // Stores editable profile information
     const [profileForm, setProfileForm] = useState({
         name: user?.name ?? "",
-        email: user?.email ?? ""
+        email: user?.email ?? "",
+        avatar: null
     });
 
     // Stores password update fields
@@ -75,7 +75,7 @@ export default function ProfilePage() {
         Updates profile fields and clears field errors
     ========================= */
 
-    const handleProfileChange = (e) => {
+    const handleChange = (e) => {
         const { name, value } = e.target;
 
         setProfileForm((prev) => ({
@@ -89,6 +89,36 @@ export default function ProfilePage() {
         }));
     };
 
+
+    /* =========================
+        Avatar input handling
+        Stores selected file and clears avatar error
+    ========================= */
+    const handleFileChange = (e) => {
+        const file = e.target.files?.[0] || null;
+
+        setProfileForm((prev) => ({
+            ...prev,
+            avatar: file
+        }));
+
+        setProfileErrors((prev) => ({
+            ...prev,
+            avatar: undefined
+        }));
+    };
+
+    const handleRemoveAvatar = () => {
+        setProfileForm((prev) => ({
+            ...prev,
+            avatar: null
+        }));
+
+        setProfileErrors((prev) => ({
+            ...prev,
+            avatar: undefined
+        }));
+    };
 
     /* =========================
         Password form handling
@@ -138,9 +168,20 @@ export default function ProfilePage() {
         setProfileSubmitting(true);
 
         try {
-            await updateProfile(profileForm);
+            const formData = new FormData();
+
+            formData.append("name", profileForm.name);
+            formData.append("email", profileForm.email);
+
+            if (profileForm.avatar) {
+                formData.append("avatar", profileForm.avatar);
+            }
+
+            await updateProfile(formData);
             await refreshUser();
+
             setMessage("✅ Profile updated successfully");
+
         } catch (error) {
             console.error("Error updating profile:", error);
             setError("❌ Unable to update profile");
@@ -243,13 +284,21 @@ export default function ProfilePage() {
                         <p className="section-subtitle">Update your public account details.</p>
                     </div>
 
-                    <UserProfileForm
-                        form={profileForm}
-                        errors={profileErrors}
-                        submitting={profileSubmitting}
-                        onChange={handleProfileChange}
-                        onSubmit={handleProfileSubmit}
-                    />
+                    <form onSubmit={handleProfileSubmit} className="event-form">
+
+                        <AuthFormFields
+                            form={profileForm}
+                            errors={profileErrors}
+                            onChange={handleChange}
+                            onFileChange={handleFileChange}
+                            onRemoveFile={handleRemoveAvatar}
+                        />
+
+                        <div className="form-actions">
+                            <Button type="submit" loading={profileSubmitting}>Update Profile</Button>
+                        </div>
+                    </form>
+
                 </Card>
 
                 <Card>

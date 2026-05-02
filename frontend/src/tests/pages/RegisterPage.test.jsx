@@ -6,7 +6,8 @@ import RegisterPage from "../../pages/RegisterPage";
 
 /* ==================================================
    REGISTER PAGE TESTS
-   Tests register form validation, account creation and redirect
+   Tests register form validation, avatar upload,
+   account creation and redirect
 ================================================== */
 
 const mockNavigate = vi.fn();
@@ -49,6 +50,10 @@ vi.mock("../../features/auth/authValidation", () => ({
             ];
         }
 
+        if (form.avatar?.type === "text/plain") {
+            errors.avatar = "Avatar must be an image file";
+        }
+
         return errors;
     })
 }));
@@ -66,15 +71,26 @@ const fillRegisterForm = async (user, { name = "John Doe", email = "john@test.co
     await user.type(screen.getByPlaceholderText(/choose a password/i), password);
 };
 
+const selectAvatar = async (user, file = new File(["avatar"], "avatar.png", { type: "image/png" })) => {
+    await user.upload(screen.getByLabelText(/choose file/i), file);
+
+    return file;
+};
+
 describe("RegisterPage", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+
+        globalThis.URL.createObjectURL = vi.fn(() => "blob:avatar-preview");
+        globalThis.URL.revokeObjectURL = vi.fn();
     });
 
     it("renders the register form", () => {
         renderPage();
 
         expect(screen.getByRole("heading", { name: /register/i })).toBeInTheDocument();
+        expect(screen.getByText(/choose file/i)).toBeInTheDocument();
+        expect(screen.getByText(/optional.*max 2mb.*jpg.*png.*webp.*gif/i)).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/your name/i)).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/your email/i)).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/choose a password/i)).toBeInTheDocument();
@@ -93,6 +109,33 @@ describe("RegisterPage", () => {
         expect(screen.getByText(/email is required/i)).toBeInTheDocument();
         expect(screen.getByText(/password is required/i)).toBeInTheDocument();
         expect(mockRegisterUser).not.toHaveBeenCalled();
+    });
+
+    it("shows avatar preview when selecting a valid file", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await selectAvatar(user);
+
+        expect(screen.getByAltText(/avatar preview/i)).toHaveAttribute(
+            "src",
+            "blob:avatar-preview"
+        );
+        expect(screen.getByText("avatar.png")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /remove/i })).toBeInTheDocument();
+    });
+
+    it("removes selected avatar when clicking remove", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await selectAvatar(user);
+        await user.click(screen.getByRole("button", { name: /remove/i }));
+
+        expect(screen.queryByAltText(/avatar preview/i)).not.toBeInTheDocument();
+        expect(screen.queryByText("avatar.png")).not.toBeInTheDocument();
     });
 
     it("clears field error when user edits input", async () => {
@@ -164,9 +207,7 @@ describe("RegisterPage", () => {
         await user.click(screen.getByRole("button", { name: /^register$/i }));
 
         expect(screen.getByText(/password must contain at least 6 characters/i)).toBeInTheDocument();
-
         expect(screen.getByText(/password must contain at least 1 uppercase/i)).toBeInTheDocument();
-
         expect(screen.getByText(/password must contain at least 1 number/i)).toBeInTheDocument();
 
         expect(mockRegisterUser).not.toHaveBeenCalled();
@@ -184,13 +225,40 @@ describe("RegisterPage", () => {
         await user.click(screen.getByRole("button", { name: /^register$/i }));
 
         await waitFor(() => {
-            expect(mockRegisterUser).toHaveBeenCalledWith({
-                name: "John Doe",
-                email: "john@test.com",
-                password: "Password123"
-            });
+            expect(mockRegisterUser).toHaveBeenCalledWith(expect.any(FormData));
         });
 
+        const formData = mockRegisterUser.mock.calls[0][0];
+
+        expect(formData.get("name")).toBe("John Doe");
+        expect(formData.get("email")).toBe("john@test.com");
+        expect(formData.get("password")).toBe("Password123");
+        expect(formData.get("avatar")).toBeNull();
+
+        expect(mockLogin).toHaveBeenCalledWith("fake-token");
+        expect(mockNavigate).toHaveBeenCalledWith("/events");
+    });
+
+    it("registers successfully with avatar", async () => {
+        const user = userEvent.setup();
+        const avatar = new File(["avatar"], "avatar.png", { type: "image/png" });
+
+        mockRegisterUser.mockResolvedValue({ data: { token: "fake-token" } });
+        mockLogin.mockResolvedValue();
+
+        renderPage();
+
+        await selectAvatar(user, avatar);
+        await fillRegisterForm(user);
+        await user.click(screen.getByRole("button", { name: /^register$/i }));
+
+        await waitFor(() => {
+            expect(mockRegisterUser).toHaveBeenCalledWith(expect.any(FormData));
+        });
+
+        const formData = mockRegisterUser.mock.calls[0][0];
+
+        expect(formData.get("avatar")).toBe(avatar);
         expect(mockLogin).toHaveBeenCalledWith("fake-token");
         expect(mockNavigate).toHaveBeenCalledWith("/events");
     });

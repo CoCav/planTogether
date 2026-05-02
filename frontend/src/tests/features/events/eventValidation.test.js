@@ -6,6 +6,20 @@ import { validateEventForm } from "../../../features/events/eventValidation";
    Tests create/edit event form validation
 ================================================== */
 
+const validImage = new File(["event image"], "event.png", {
+    type: "image/png"
+});
+
+const invalidImage = new File(["event image"], "event.txt", {
+    type: "text/plain"
+});
+
+const largeImage = new File(
+    [new Uint8Array(3 * 1024 * 1024 + 1)],
+    "large.png",
+    { type: "image/png" }
+);
+
 const validForm = {
     title: "Test Event",
     type: "Meetup",
@@ -16,7 +30,9 @@ const validForm = {
     endDate: "2026-12-20",
     endTime: "12:00",
     mode: "in_person",
-    location: "Montreal"
+    location: "Montreal",
+    image: null,
+    currentImage: null
 };
 
 describe("eventValidation", () => {
@@ -31,6 +47,13 @@ describe("eventValidation", () => {
 
     it("should return no errors for a valid in-person event", () => {
         expect(validateEventForm(validForm)).toEqual({});
+    });
+
+    it("should return no errors for a valid event with image", () => {
+        expect(validateEventForm({
+            ...validForm,
+            image: validImage
+        })).toEqual({});
     });
 
     it("should require main text fields", () => {
@@ -146,5 +169,23 @@ describe("eventValidation", () => {
         });
 
         expect(errors.location).toBeUndefined();
+    });
+
+    it("should reject invalid event image type", () => {
+        const errors = validateEventForm({
+            ...validForm,
+            image: invalidImage
+        });
+
+        expect(errors.image).toBe("Event image must be an image file");
+    });
+
+    it("should reject event image larger than 3MB", () => {
+        const errors = validateEventForm({
+            ...validForm,
+            image: largeImage
+        });
+
+        expect(errors.image).toBe("Event image must be less than 3MB");
     });
 });

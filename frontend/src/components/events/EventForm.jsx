@@ -1,25 +1,95 @@
-
+import { useEffect, useMemo } from "react";
 import Input from "../ui/Input";
 import Select from "../ui/Select";
 import TextArea from "../ui/TextArea";
 import FormField from "../ui/FormField";
 import Button from "../ui/Button";
+import { getEventImage } from "../../utils/getEventImage";
 
 /* ==================================================
    EVENT FORM
    Shared form for creating and editing events
 
    Handles:
-   - event input fields (title, dates, mode, etc.)
+   - event input fields
+   - optional event image upload
    - validation error display
-   - conditional UI (online mode, custom deadline)
+   - conditional UI
 ================================================== */
 
-export default function EventForm({ form, errors, onChange, onSubmit, submitting, isEdit = false, isOnlineEvent, showCustomDeadline, onCancel }) {
+export default function EventForm({ form, errors, onChange, onFileChange, onRemoveFile, onSubmit, submitting, isEdit = false, isOnlineEvent, showCustomDeadline, onCancel }) {
+
+    const selectedImagePreview = useMemo(() => {
+        if (!form.image) return null;
+
+        return URL.createObjectURL(form.image);
+    }, [form.image]);
+
+    useEffect(() => {
+        return () => {
+            if (selectedImagePreview) {
+                URL.revokeObjectURL(selectedImagePreview);
+            }
+        };
+    }, [selectedImagePreview]);
+
+    const eventImagePreview = selectedImagePreview || getEventImage(form.currentImage);
+
+    const getFileNameFromPath = (path) => {
+        if (!path) return "";
+        return path.split("/").pop();
+    };
+
     return (
         <form onSubmit={onSubmit} className="event-form">
-            <div className="form-grid">
+            <div className="event-image-section">
+                <FormField label="Event image (optional)" error={errors.image}>
+                    <div className="event-image-upload">
+                        <label className="btn btn-outline event-image-upload-btn">
+                            Choose file
+                            <input
+                                type="file"
+                                name="image"
+                                accept="image/*"
+                                onChange={onFileChange}
+                                className="event-image-input-hidden"
+                            />
+                        </label>
 
+                        <span className="event-image-input-hint">Optional • Max 3MB • JPG, PNG, WEBP or GIF</span>
+                    </div>
+
+                    {eventImagePreview && (
+                        <div className="event-image-preview-card">
+                            <img
+                                src={eventImagePreview}
+                                alt="Event preview"
+                                className="event-image-preview"
+                            />
+
+                            <div className="event-image-preview-info">
+                                {form.image ? (
+                                    <>
+                                        <span className="event-image-preview-name">{form.image.name}</span>
+                                        <span className="event-image-preview-size">{(form.image.size / 1024).toFixed(1)} KB</span>
+                                    </>
+                                ) : form.currentImage ? (
+                                    <>
+                                        <span className="event-image-preview-name">{getFileNameFromPath(form.currentImage)}</span>
+                                        <span className="event-image-preview-size">Uploaded image</span>
+                                    </>
+                                ) : (
+                                    <span className="event-image-preview-name"> Default event image</span>
+                                )}
+                            </div>
+
+                            <button type="button" className="btn btn-outline-danger event-image-remove-btn" onClick={onRemoveFile}>Remove</button>
+                        </div>
+                    )}
+                </FormField>
+            </div>
+
+            <div className="form-grid">
                 <FormField label="Title" error={errors.title}>
                     <Input
                         name="title"
@@ -74,7 +144,7 @@ export default function EventForm({ form, errors, onChange, onSubmit, submitting
                     />
                 </FormField>
 
-                <FormField label="Description" className="form-field-full"  error={errors.description}>
+                <FormField label="Description" className="form-field-full" error={errors.description}>
                     <TextArea
                         name="description"
                         value={form.description}

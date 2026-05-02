@@ -6,13 +6,31 @@
    - required event fields
    - start/end date logic
    - in-person location requirement
+   - event image validation
 ================================================== */
 
 const getDateTime = (date, time) => new Date(`${date}T${time}`);
 
 const getTodayInputDate = () => new Date().toISOString().split("T")[0];
 
-export const validateEventForm = ({ title, type, theme, description, startDate, startTime, endDate, endTime, mode, location }, options = {}) => {
+const validateEventImageFile = (image) => {
+    if (!image) return null;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    const maxSize = 3 * 1024 * 1024;
+
+    if (!allowedTypes.includes(image.type)) {
+        return "Event image must be an image file";
+    }
+
+    if (image.size > maxSize) {
+        return "Event image must be less than 3MB";
+    }
+
+    return null;
+};
+
+export const validateEventForm = ({ title, type, theme, description, startDate, startTime, endDate, endTime, mode, location, image }, options = {}) => {
     const { allowPastStart = false } = options;
     const errors = {};
 
@@ -51,6 +69,12 @@ export const validateEventForm = ({ title, type, theme, description, startDate, 
 
     if (mode === "in_person" && !location?.trim()) {
         errors.location = "Location is required for in-person events";
+    }
+
+    const imageError = validateEventImageFile(image);
+
+    if (imageError) {
+        errors.image = imageError;
     }
 
     return errors;

@@ -37,7 +37,9 @@ export default function CreateEventPage() {
         endTime: "",
         maxParticipants: "",
         registrationDeadlineOption: "none",
-        registrationDeadlineCustom: ""
+        registrationDeadlineCustom: "",
+        image: null,
+        currentImage: null
     });
 
 
@@ -48,7 +50,6 @@ export default function CreateEventPage() {
 
     const isOnlineEvent = form.mode === "online";
     const showCustomDeadline = form.registrationDeadlineOption === "custom";
-
 
     /* =========================
        Form input handling
@@ -79,7 +80,71 @@ export default function CreateEventPage() {
         }));
     };
 
-    
+
+    /* =========================
+       Image input handling
+       Stores selected file and clears avatar error
+    ========================= */
+
+    const handleFileChange = (e) => {
+        const file = e.target.files?.[0] || null;
+
+        setForm((prev) => ({
+            ...prev,
+            image: file
+        }));
+
+        setErrors((prev) => ({
+            ...prev,
+            image: undefined
+        }));
+    };
+
+    const handleRemoveImage = () => {
+        setForm((prev) => ({
+            ...prev,
+            image: null,
+            currentImage: null
+        }));
+
+        setErrors((prev) => ({
+            ...prev,
+            image: undefined
+        }));
+    };
+
+    /* =========================
+        Form submission
+        Validates form and creates the event
+    ========================= */
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+
+        const validationErrors = validateEventForm(form);
+
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
+
+        setErrors({});
+        setSubmitting(true);
+
+        try {
+            await createEvent(buildFormData());
+            navigate("/events");
+        } catch (error) {
+            console.error("Error creating event:", error);
+            setError("Failed to create event");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+
+
     /* =========================
        Payload builders
        Converts form values into API-ready payload data
@@ -104,55 +169,42 @@ export default function CreateEventPage() {
                 return new Date(eventStart.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString();
 
             case "custom":
-                return form.registrationDeadlineCustom ? new Date(form.registrationDeadlineCustom).toISOString() : null;
+                return form.registrationDeadlineCustom
+                    ? new Date(form.registrationDeadlineCustom).toISOString()
+                    : null;
 
             default:
                 return null;
         }
     };
 
-    const buildPayload = () => ({
-        title: form.title,
-        description: form.description,
-        type: form.type,
-        theme: form.theme,
-        mode: form.mode,
-        location: isOnlineEvent ? null : form.location,
-        startDateTime: buildDateTime(form.startDate, form.startTime),
-        endDateTime: buildDateTime(form.endDate, form.endTime),
-        maxParticipants: form.maxParticipants ? Number(form.maxParticipants) : null,
-        registrationDeadline: buildRegistrationDeadline()
-    });
+    const buildFormData = () => {
+        const formData = new FormData();
 
+        formData.append("title", form.title);
+        formData.append("description", form.description);
+        formData.append("type", form.type);
+        formData.append("theme", form.theme);
+        formData.append("mode", form.mode);
+        formData.append("location", isOnlineEvent ? "" : form.location);
+        formData.append("startDateTime", buildDateTime(form.startDate, form.startTime));
+        formData.append("endDateTime", buildDateTime(form.endDate, form.endTime));
 
-    /* =========================
-       Form submission
-       Validates form and creates the event
-    ========================= */
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError("");
-
-        const validationErrors = validateEventForm(form);
-
-        if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
-            return;
+        if (form.maxParticipants) {
+            formData.append("maxParticipants", form.maxParticipants);
         }
 
-        setErrors({});
-        setSubmitting(true);
+        const registrationDeadline = buildRegistrationDeadline();
 
-        try {
-            await createEvent(buildPayload());
-            navigate("/events");
-        } catch (error) {
-            console.error("Error creating event:", error);
-            setError("Failed to create event");
-        } finally {
-            setSubmitting(false);
+        if (registrationDeadline) {
+            formData.append("registrationDeadline", registrationDeadline);
         }
+
+        if (form.image) {
+            formData.append("image", form.image);
+        }
+
+        return formData;
     };
 
 
@@ -176,6 +228,8 @@ export default function CreateEventPage() {
                     form={form}
                     errors={errors}
                     onChange={handleChange}
+                    onFileChange={handleFileChange}
+                    onRemoveFile={handleRemoveImage}
                     onSubmit={handleSubmit}
                     submitting={submitting}
                     isOnlineEvent={isOnlineEvent}

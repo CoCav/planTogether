@@ -43,7 +43,9 @@ export default function EditEventPage() {
         endTime: "",
         maxParticipants: "",
         registrationDeadlineOption: "none",
-        registrationDeadlineCustom: ""
+        registrationDeadlineCustom: "",
+        image: null,
+        currentImage: null
     });
 
 
@@ -57,60 +59,9 @@ export default function EditEventPage() {
 
 
     /* =========================
-       Event form loading
-       Fetches current event and pre-fills form values
-    ========================= */
-
-    const loadEvent = useCallback(async () => {
-        try {
-            setLoading(true);
-            setError("");
-
-            const response = await getEventById(eventId);
-            const event = response.data.event;
-
-            const start = event.startDateTime ? new Date(event.startDateTime) : null;
-            const end = event.endDateTime ? new Date(event.endDateTime) : null;
-
-            setForm({
-                title: event.title || "",
-                description: event.description || "",
-                type: event.type || "",
-                theme: event.theme || "",
-                mode: event.mode || "in_person",
-                location: event.location || "",
-                startDate: start ? start.toISOString().slice(0, 10) : "",
-                startTime: start ? start.toISOString().slice(11, 16) : "",
-                endDate: end ? end.toISOString().slice(0, 10) : "",
-                endTime: end ? end.toISOString().slice(11, 16) : "",
-                maxParticipants: event.maxParticipants || "",
-                registrationDeadlineOption: event.registrationDeadline ? "custom" : "none",
-                registrationDeadlineCustom: event.registrationDeadline ? new Date(event.registrationDeadline).toISOString().slice(0, 16) : ""
-            });
-        } catch (error) {
-            console.error("Error loading event:", error);
-            setError("❌ Unable to load event");
-        } finally {
-            setLoading(false);
-        }
-    }, [eventId]);
-
-
-    /* =========================
-       Initial event loading
-    ========================= */
-
-    useEffect(() => {
-        loadEvent();
-    }, [loadEvent]);
-
-
-
-    /* =========================
        Form input handling
        Updates form values and clears field errors
     ========================= */
-
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -137,6 +88,124 @@ export default function EditEventPage() {
 
 
     /* =========================
+       Image input handling
+       Stores selected file and clears avatar error
+    ========================= */
+
+    const handleFileChange = (e) => {
+        const file = e.target.files?.[0] || null;
+
+        setForm((prev) => ({
+            ...prev,
+            image: file
+        }));
+
+        setErrors((prev) => ({
+            ...prev,
+            image: undefined
+        }));
+    };
+
+    const handleRemoveImage = () => {
+        setForm((prev) => ({
+            ...prev,
+            image: null,
+            currentImage: null
+        }));
+
+        setErrors((prev) => ({
+            ...prev,
+            image: undefined
+        }));
+    };
+
+
+    /* =========================
+       Form submission
+       Validates form and updates the event
+    ========================= */
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+        setMessage("");
+
+        const validationErrors = validateEventForm(form, {
+            allowPastStart: true
+        });
+
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
+
+        setErrors({});
+        setSubmitting(true);
+
+        try {
+            await updateEvent(eventId, buildFormData());
+            setMessage("✅ Event updated successfully");
+            navigate(`/events/${eventId}`, { replace: true });
+        } catch (error) {
+            console.error("Error updating event:", error);
+            setError("Unable to update event");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+
+    /* =========================
+       Event form loading
+       Fetches current event and pre-fills form values
+    ========================= */
+    const loadEvent = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError("");
+
+            const response = await getEventById(eventId);
+            const event = response.data.event;
+
+            const start = event.startDateTime ? new Date(event.startDateTime) : null;
+            const end = event.endDateTime ? new Date(event.endDateTime) : null;
+
+            setForm({
+                title: event.title || "",
+                description: event.description || "",
+                type: event.type || "",
+                theme: event.theme || "",
+                mode: event.mode || "in_person",
+                location: event.location || "",
+                startDate: start ? start.toISOString().slice(0, 10) : "",
+                startTime: start ? start.toISOString().slice(11, 16) : "",
+                endDate: end ? end.toISOString().slice(0, 10) : "",
+                endTime: end ? end.toISOString().slice(11, 16) : "",
+                maxParticipants: event.maxParticipants || "",
+                registrationDeadlineOption: event.registrationDeadline ? "custom" : "none",
+                registrationDeadlineCustom: event.registrationDeadline ? new Date(event.registrationDeadline).toISOString().slice(0, 16) : "",
+                image: null,
+                currentImage: event.image || null
+            });
+        } catch (error) {
+            console.error("Error loading event:", error);
+            setError("❌ Unable to load event");
+        } finally {
+            setLoading(false);
+        }
+    }, [eventId]);
+
+
+    /* =========================
+       Initial event loading
+    ========================= */
+
+    useEffect(() => {
+        loadEvent();
+    }, [loadEvent]);
+
+
+    /* =========================
        Payload builders
        Converts form values into API-ready payload data
     ========================= */
@@ -160,58 +229,42 @@ export default function EditEventPage() {
                 return new Date(eventStart.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString();
 
             case "custom":
-                return form.registrationDeadlineCustom ? new Date(form.registrationDeadlineCustom).toISOString() : null;
+                return form.registrationDeadlineCustom
+                    ? new Date(form.registrationDeadlineCustom).toISOString()
+                    : null;
 
             default:
                 return null;
         }
     };
 
-    const buildPayload = () => ({
-        title: form.title,
-        description: form.description,
-        type: form.type,
-        theme: form.theme,
-        mode: form.mode,
-        location: isOnlineEvent ? null : form.location,
-        startDateTime: buildDateTime(form.startDate, form.startTime),
-        endDateTime: buildDateTime(form.endDate, form.endTime),
-        maxParticipants: form.maxParticipants ? Number(form.maxParticipants) : null,
-        registrationDeadline: buildRegistrationDeadline()
-    });
+    const buildFormData = () => {
+        const formData = new FormData();
 
+        formData.append("title", form.title);
+        formData.append("description", form.description);
+        formData.append("type", form.type);
+        formData.append("theme", form.theme);
+        formData.append("mode", form.mode);
+        formData.append("location", isOnlineEvent ? "" : form.location);
+        formData.append("startDateTime", buildDateTime(form.startDate, form.startTime));
+        formData.append("endDateTime", buildDateTime(form.endDate, form.endTime));
 
-    /* =========================
-       Form submission
-       Validates form and updates the event
-    ========================= */
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError("");
-
-        const validationErrors = validateEventForm(form, {
-            allowPastStart: true,
-        });
-
-        if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
-            return;
+        if (form.maxParticipants) {
+            formData.append("maxParticipants", form.maxParticipants);
         }
 
-        setErrors({});
-        setSubmitting(true);
+        const registrationDeadline = buildRegistrationDeadline();
 
-        try {
-            await updateEvent(eventId, buildPayload());
-            setMessage("✅ Event updated successfully");
-            navigate(`/events/${eventId}`, { replace: true });
-        } catch (error) {
-            console.error("Error updating event:", error);
-            setError("Unable to update event");
-        } finally {
-            setSubmitting(false);
+        if (registrationDeadline) {
+            formData.append("registrationDeadline", registrationDeadline);
         }
+
+        if (form.image) {
+            formData.append("image", form.image);
+        }
+
+        return formData;
     };
 
 
@@ -245,6 +298,8 @@ export default function EditEventPage() {
                     form={form}
                     errors={errors}
                     onChange={handleChange}
+                    onFileChange={handleFileChange}
+                    onRemoveFile={handleRemoveImage}
                     onSubmit={handleSubmit}
                     submitting={submitting}
                     isEdit

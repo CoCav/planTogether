@@ -20,7 +20,8 @@ const createEvent = async (data, userId) => {
             startDateTime,
             endDateTime,
             maxParticipants,
-            registrationDeadline
+            registrationDeadline,
+            image
         } = data;
 
         // Minimal safety validation
@@ -41,6 +42,7 @@ const createEvent = async (data, userId) => {
             endDateTime,
             maxParticipants: maxParticipants ?? null,
             registrationDeadline: registrationDeadline ?? null,
+            image: image ?? null,
             creatorId: userId
         });
 
@@ -62,7 +64,7 @@ const createEvent = async (data, userId) => {
 // Get all events with pagination
 const getAllEvents = async (query) => {
     try {
-        
+
         const { status } = query;
         const whereConditions = {};
 
@@ -252,7 +254,8 @@ const updateEventById = async (id, data) => {
             startDateTime,
             endDateTime,
             maxParticipants,
-            registrationDeadline
+            registrationDeadline,
+            image
         } = data;
 
         // Minimal safety validation
@@ -274,7 +277,8 @@ const updateEventById = async (id, data) => {
             startDateTime,
             endDateTime,
             maxParticipants: maxParticipants ?? null,
-            registrationDeadline: registrationDeadline ?? null
+            registrationDeadline: registrationDeadline ?? null,
+            image: image !== undefined ? image : event.image
         };
 
         await event.update(updatedData);

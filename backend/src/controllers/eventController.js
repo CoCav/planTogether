@@ -3,7 +3,15 @@ const eventService = require('../services/eventService');
 // Create a new event
 const createEvent = async (req, res, next) => {
     try {
-        const event = await eventService.createEvent(req.body, req.user.userId);
+        const image = req.file ? `/uploads/events/${req.file.filename}` : null;
+
+        const event = await eventService.createEvent(
+            {
+                ...req.body,
+                image
+            },
+            req.user.userId
+        );
 
         return res.status(201).json({
             message: "Event created successfully",
@@ -49,7 +57,7 @@ const getEvent = async (req, res, next) => {
 
 // Get filtered events
 const getFilteredEvents = async (req, res, next) => {
-  try {
+    try {
         const result = await eventService.getFilteredEvents(req.query);
         return res.status(200).json(result);
 
@@ -63,7 +71,15 @@ const getFilteredEvents = async (req, res, next) => {
 // Update an event
 const updateEvent = async (req, res, next) => {
     try {
-        const updatedEvent = await eventService.updateEventById(req.params.eventId, req.body);
+        const image = req.file ? `/uploads/events/${req.file.filename}` : undefined;
+
+        const updatedEvent = await eventService.updateEventById(
+            req.params.eventId,
+            {
+                ...req.body,
+                image
+            }
+        );
 
         return res.status(200).json({
             message: 'Event updated successfully',

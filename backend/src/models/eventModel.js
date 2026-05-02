@@ -66,8 +66,12 @@ const Event = sequelize.define('Event', {
     registrationDeadline: {
         type: DataTypes.DATE,
         allowNull: true
-    }
+    },
 
+    image: {
+        type: DataTypes.STRING,
+        allowNull: true
+    }
 }, {
 
     tableName: "events",

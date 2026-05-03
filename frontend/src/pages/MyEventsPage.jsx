@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
+
 import { getMyEvents } from "../api/eventMembershipApi";
+
 import { getMyEventsWithRole } from "../features/events/normalizeData";
+import { MY_EVENT_VIEWS, getViewContent } from "../features/events/eventViewConfig";
 import { getDefaultEventFilters } from "../features/events/eventFilters";
 import { getEventsEmptyState } from "../features/events/eventEmptyState.js";
 
@@ -9,9 +12,9 @@ import useEventActionsWithConfirm from "../hooks/events/useEventActionsWithConfi
 import useEventFilters from "../hooks/events/useEventFilters.js";
 import usePagination from "../hooks/pagination/usePagination.js";
 
-import MyEventsViewTabs from "../components/events/MyEventsViewTabs.jsx";
+import EventsFilterCard from "../components/events/EventsFilterCard";
+import EventsViewTabs from "../components/events/EventsViewTabs.jsx";
 import EventCard from "../components/events/EventCard.jsx";
-import EventsFilterCard from "../components/events/EventsFilterCard.jsx";
 
 import Button from "../components/ui/Button";
 import Alert from "../components/ui/Alert";
@@ -36,19 +39,17 @@ import Pagination from "../components/ui/Pagination.jsx";
 export default function MyEventsPage() {
     const { user } = useAuth();
 
+    /* =========================
+       Local state
+       Stores page feedback, events, roles, view and loading state
+    ========================= */
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
-
-    // Stores events returned by the backend
     const [events, setEvents] = useState([]);
-
-    // Controls current My Events view
     const [activeView, setActiveView] = useState("created");
-
-    // Controls loading screen
     const [loading, setLoading] = useState(true);
 
-    
+
     /* =========================
        Pagination state
        Tracks current page and total results
@@ -63,31 +64,24 @@ export default function MyEventsPage() {
 
 
     /* =========================
-       My events data fetching
-       Fetches current user events with:
-       - view
-       - filters
-       - sorting
-       - pagination
+       Main data loading
+       Fetches paginated user events for the selected view
     ========================= */
-
     const loadData = useCallback(
-        async (customFilters = getDefaultEventFilters(), customPage = 1, customView = activeView) => {
+        async (customFilters = getDefaultEventFilters(), customPage = 1, customView = "created") => {
             try {
                 setError("");
 
-                let { sortBy, order, ...filterValues } = customFilters;
+                const view = getViewContent(MY_EVENT_VIEWS, customView);
 
-                const isHistoryView = customView.includes("History");
+                let { sortBy, order, ...filters } = customFilters;
 
-                if (!sortBy) {
-                    sortBy = "startDateTime";
-                    order = isHistoryView ? "desc" : "asc";
-                }
+                sortBy = sortBy || view.defaultSortBy;
+                order = order || view.defaultOrder;
 
                 const response = await getMyEvents({
                     view: customView,
-                    ...filterValues,
+                    ...filters,
                     page: customPage,
                     pageSize: pagination.pageSize,
                     sortBy,
@@ -110,43 +104,55 @@ export default function MyEventsPage() {
                 setLoading(false);
             }
         },
-        [activeView, pagination.pageSize]
+        [pagination.pageSize]
     );
 
 
     /* =========================
        Event filters
-       Shared filter state and handlers
+       Provides filter state and quick filter actions
     ========================= */
-
-    const {filters, setFilters, showFilters, setShowFilters, sortLabels, isCurrentWeekendFilterActive, handleFilterChange, handleFilterSubmit, handleSortChange, handleResetFilters, handleTodayFilter, handleWeekendFilter } = useEventFilters({
-        activeView: activeView.includes("History") ? "archives" : "upcoming",
-        loadData: (nextFilters, nextPage) =>
-            loadData(nextFilters, nextPage, activeView),
+    const {
+        filters,
+        setFilters,
+        showFilters,
+        setShowFilters,
+        sortLabels,
+        isCurrentWeekendFilterActive,
+        handleFilterChange,
+        handleFilterSubmit,
+        handleSortChange,
+        handleResetFilters,
+        handleTodayFilter,
+        handleWeekendFilter
+    } = useEventFilters({
+        activeView,
+        loadData,
         resetPage: () =>
             setPagination((prev) => ({
                 ...prev,
                 page: 1
-            })),
+            }))
     });
 
-    const emptyState = getEventsEmptyState({filters, activeView: activeView.includes("History") ? "archives" : "upcoming"});
+    const emptyState = getEventsEmptyState({ filters, activeView });
 
 
     /* =========================
-       Pagination controls
+        Pagination controls
+       Loads the selected page while preserving filters and view
     ========================= */
-
     const { handlePreviousPage, handleNextPage } = usePagination({
         page: pagination.page,
         totalPages: pagination.totalPages,
         onPageChange: (nextPage) => loadData(filters, nextPage, activeView),
     });
 
+
     /* =========================
        Initial data loading
+       Loads the default public events view
     ========================= */
-
     useEffect(() => {
         loadData(getDefaultEventFilters(), 1, "created");
     }, [loadData]);
@@ -154,9 +160,8 @@ export default function MyEventsPage() {
 
     /* =========================
        Feedback cleanup
-       Clears success/error messages automatically
+       Automatically clears success and error messages
     ========================= */
-
     useEffect(() => {
         if (message || error) {
             const timer = setTimeout(() => {
@@ -178,68 +183,25 @@ export default function MyEventsPage() {
 
 
     /* =========================
-       Event actions
-       Handles leave operation
-    ========================= */
-    
-    const { handleLeaveEvent } = useEventActionsWithConfirm({loadData, setMessage, setError, getRoleByEventId});
+        Event actions
+       Handles join / leave operations and reloads data
+   ========================= */
+    const { handleLeaveEvent } = useEventActionsWithConfirm({
+        loadData,
+        setMessage,
+        setError,
+        getRoleByEventId
+    });
 
 
     /* =========================
-       View content
-       Returns title, subtitle and empty message
-       based on the selected tab
+       View switching
+       Updates active tab, resets pagination and reloads events
     ========================= */
-
-    const getViewContent = () => {
-        switch (activeView) {
-            case "created":
-                return {
-                    title: "Created Events",
-                    subtitle: "Events you created as organizer.",
-                    empty: "You haven’t created any events yet."
-                };
-
-            case "createdHistory":
-                return {
-                    title: "Created History",
-                    subtitle: "Explore past events you created.",
-                    empty: "No past created events."
-                };
-
-            case "joined":
-                return {
-                    title: "Joined Events",
-                    subtitle: "Events you joined.",
-                    empty: "You haven’t joined any events yet."
-                };
-
-            case "joinedHistory":
-                return {
-                    title: "Joined History",
-                    subtitle: "Explore past events you joined.",
-                    empty: "No past joined events."
-                };
-
-            default:
-                return {
-                    title: "My Events",
-                    subtitle: "",
-                    empty: "No events found."
-                };
-        }
-    };
-
-    const viewContent = getViewContent();
-
-
-    /* =========================
-       View handler
-       Changes active tab and reloads first page
-    ========================= */
-
     const handleViewChange = async (nextView) => {
-        const nextFilters = nextView.includes("History") ? { ...filters, date: "", startDate: "", endDate: "" } : filters;
+        const nextViewContent = getViewContent(MY_EVENT_VIEWS, nextView);
+
+        const nextFilters = nextViewContent.clearDateFiltersOnEnter ? { ...filters, date: "", startDate: "", endDate: "" } : filters;
 
         setActiveView(nextView);
         setFilters(nextFilters);
@@ -264,6 +226,14 @@ export default function MyEventsPage() {
             </div>
         );
     }
+
+
+    /* =========================
+       Derived UI state
+       Prepares display data for render
+    ========================= */
+    const viewContent = getViewContent(MY_EVENT_VIEWS, activeView);
+    const showPaginationInfo = pagination.totalPages > 1;
 
 
     /* =========================
@@ -300,21 +270,24 @@ export default function MyEventsPage() {
                         <span className="results-count">({pagination.totalEvents})</span>
                     </h2>
 
-                    {pagination.totalPages > 1 && (<span className="results-page-info">Page {pagination.page} of {pagination.totalPages}</span>)}
+                    {showPaginationInfo && (
+                        <span className="results-page-info">Page {pagination.page} of {pagination.totalPages}</span>
+                    )}
                 </div>
 
                 <p className="section-subtitle">{viewContent.subtitle}</p>
 
                 <div className="events-view-bar">
-                    <MyEventsViewTabs
+                    <EventsViewTabs
+                        views={MY_EVENT_VIEWS}
                         activeView={activeView}
                         onChange={handleViewChange}
                     />
 
-                    {!activeView.includes("History") && (
+                    {viewContent.showQuickActions && (
                         <div className="events-quick-actions">
-                            <Button type="button" variant={ filters.date ? "filter-active" : "outline-primary"} onClick={handleTodayFilter}>Today</Button>
-                            <Button type="button" variant={ isCurrentWeekendFilterActive(filters) ? "filter-active" : "outline-primary"} onClick={handleWeekendFilter}>This Weekend</Button>
+                            <Button type="button" variant={filters.date ? "filter-active" : "outline-primary"} onClick={handleTodayFilter}>Today</Button>
+                            <Button type="button" variant={isCurrentWeekendFilterActive(filters) ? "filter-active" : "outline-primary"} onClick={handleWeekendFilter}>This Weekend</Button>
                         </div>
                     )}
                 </div>

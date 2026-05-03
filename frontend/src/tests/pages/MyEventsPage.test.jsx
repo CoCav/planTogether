@@ -39,7 +39,9 @@ vi.mock("../../components/events/EventCard", () => ({
         <div>
             <span>{event.title}</span>
 
-            {event.role !== "organizer" && event.status !== "past" && (<button type="button" onClick={() => onLeave(event.id)}>Leave</button>)}
+            {event.role !== "organizer" && event.status !== "past" && (
+                <button type="button" onClick={() => onLeave(event.id)}>Leave</button>
+            )}
 
             {event.status === "past" && <span>Ended</span>}
         </div>
@@ -63,19 +65,23 @@ const renderPage = () =>
         </MemoryRouter>
     );
 
-const getMyEventsCalls = () => mockGetMyEvents.mock.calls.map(([params]) => params);
+const getLastMyEventsCall = () =>
+    mockGetMyEvents.mock.calls.at(-1)?.[0];
 
-const hasMyEventsCall = (expectedParams) =>
-    getMyEventsCalls().some((params) =>
-        Object.entries(expectedParams).every(
-            ([key, value]) => params[key] === value
-        )
+const expectLastMyEventsCall = async (expectedParams) => {
+    await waitFor(() => {
+        expect(getLastMyEventsCall()).toMatchObject(expectedParams);
+    });
+};
+
+const getTabButton = (label) =>
+    screen.getAllByRole("button").find((btn) =>
+        btn.textContent.includes(label)
     );
 
 describe("MyEventsPage", () => {
     beforeEach(() => {
-        mockGetMyEvents.mockReset();
-        mockHandleLeaveEvent.mockReset();
+        vi.clearAllMocks();
 
         mockAuthState = {
             user: { userId: 1 }
@@ -94,15 +100,15 @@ describe("MyEventsPage", () => {
         renderPage();
 
         await waitFor(() => {
-            expect(
-                hasMyEventsCall({
+            expect(mockGetMyEvents).toHaveBeenCalledWith(
+                expect.objectContaining({
                     view: "created",
                     page: 1,
                     pageSize: 4,
                     sortBy: "startDateTime",
                     order: "asc"
                 })
-            ).toBe(true);
+            );
         });
     });
 
@@ -131,7 +137,7 @@ describe("MyEventsPage", () => {
     it("displays empty state when current view has no events", async () => {
         renderPage();
 
-        expect(await screen.findByText(/no upcoming events/i)).toBeInTheDocument();
+        expect(await screen.findByText(/no events found/i)).toBeInTheDocument();
     });
 
     it("changes view when clicking Joined tab", async () => {
@@ -143,19 +149,17 @@ describe("MyEventsPage", () => {
 
         renderPage();
 
-        await screen.findByText(/no upcoming events/i);
+        await screen.findByText(/no events found/i);
 
-        await user.click(screen.getByRole("button", { name: /^joined$/i }));
+        await user.click(getTabButton("Joined"));
 
         expect(await screen.findByText(/joined events/i)).toBeInTheDocument();
 
-        await waitFor(() => {
-            expect(
-                hasMyEventsCall({
-                    view: "joined",
-                    page: 1
-                })
-            ).toBe(true);
+        await expectLastMyEventsCall({
+            view: "joined",
+            page: 1,
+            sortBy: "startDateTime",
+            order: "asc"
         });
     });
 
@@ -168,23 +172,19 @@ describe("MyEventsPage", () => {
 
         renderPage();
 
-        await screen.findByText(/no upcoming events/i);
+        await screen.findByText(/no events found/i);
 
-        await user.click(screen.getByRole("button", { name: /^created history$/i }));
+        await user.click(getTabButton("Created History"));
 
         expect(screen.getByRole("heading", { name: /created history/i })).toBeInTheDocument();
 
-        expect(screen.getByRole("button", { name: /^created history$/i })).toHaveClass("active");
+        expect(getTabButton("Created History")).toHaveClass("active");
 
-        await waitFor(() => {
-            expect(
-                hasMyEventsCall({
-                    view: "createdHistory",
-                    page: 1,
-                    sortBy: "startDateTime",
-                    order: "desc"
-                })
-            ).toBe(true);
+        await expectLastMyEventsCall({
+            view: "createdHistory",
+            page: 1,
+            sortBy: "startDateTime",
+            order: "asc"
         });
     });
 
@@ -197,23 +197,21 @@ describe("MyEventsPage", () => {
 
         renderPage();
 
-        await screen.findByText(/no upcoming events/i);
+        await screen.findByText(/no events found/i);
 
-        await user.click(screen.getByRole("button", { name: /^joined history$/i }));
+        await user.click(getTabButton("Joined History"));
 
-        expect(screen.getByRole("heading", { name: /joined history/i })).toBeInTheDocument();
+        expect(
+            screen.getByRole("heading", { name: /joined history/i })
+        ).toBeInTheDocument();
 
-        expect(screen.getByRole("button", { name: /^joined history$/i })).toHaveClass("active");
+        expect(getTabButton("Joined History")).toHaveClass("active");
 
-        await waitFor(() => {
-            expect(
-                hasMyEventsCall({
-                    view: "joinedHistory",
-                    page: 1,
-                    sortBy: "startDateTime",
-                    order: "desc"
-                })
-            ).toBe(true);
+        await expectLastMyEventsCall({
+            view: "joinedHistory",
+            page: 1,
+            sortBy: "startDateTime",
+            order: "asc"
         });
     });
 
@@ -226,7 +224,7 @@ describe("MyEventsPage", () => {
 
         renderPage();
 
-        await screen.findByText(/no upcoming events/i);
+        await screen.findByText(/no events found/i);
 
         await user.click(screen.getByRole("button", { name: /show filters/i }));
 
@@ -235,15 +233,11 @@ describe("MyEventsPage", () => {
 
         await user.click(screen.getByRole("button", { name: /apply filters/i }));
 
-        await waitFor(() => {
-            expect(
-                hasMyEventsCall({
-                    view: "created",
-                    page: 1,
-                    sortBy: "title",
-                    order: "asc"
-                })
-            ).toBe(true);
+        await expectLastMyEventsCall({
+            view: "created",
+            page: 1,
+            sortBy: "title",
+            order: "asc"
         });
     });
 
@@ -288,14 +282,10 @@ describe("MyEventsPage", () => {
 
         await user.click(screen.getByRole("button", { name: /next/i }));
 
-        await waitFor(() => {
-            expect(
-                hasMyEventsCall({
-                    view: "created",
-                    page: 2,
-                    pageSize: 4
-                })
-            ).toBe(true);
+        await expectLastMyEventsCall({
+            view: "created",
+            page: 2,
+            pageSize: 4
         });
 
         expect(await screen.findByText("Event Page 2")).toBeInTheDocument();
@@ -350,13 +340,9 @@ describe("MyEventsPage", () => {
 
         await user.click(screen.getByRole("button", { name: /next/i }));
 
-        await waitFor(() => {
-            expect(
-                hasMyEventsCall({
-                    page: 2,
-                    pageSize: 4
-                })
-            ).toBe(true);
+        await expectLastMyEventsCall({
+            page: 2,
+            pageSize: 4
         });
 
         expect(await screen.findByText("Second Page Event")).toBeInTheDocument();

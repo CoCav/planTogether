@@ -7,43 +7,47 @@ import EventViewTabs from "../../../components/events/EventsViewTabs";
    Tests event list view navigation tabs
 ================================================== */
 
+const views = [
+    { key: "all", label: "All", icon: "📋" },
+    { key: "upcoming", label: "Upcoming", icon: "📅" },
+    { key: "archives", label: "Archives", icon: "🗂️" }
+];
+
+const getTabButton = (label) =>
+    screen.getAllByRole("button").find((button) =>
+        button.textContent.includes(label)
+    );
+
 describe("EventViewTabs", () => {
     it("renders all view tabs", () => {
-        render(<EventViewTabs activeView="all" onChange={vi.fn()} />);
+        render(<EventViewTabs views={views} activeView="all" onChange={vi.fn()} />);
 
-        expect(screen.getByRole("button", { name: /all/i })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /upcoming/i })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /archives/i })).toBeInTheDocument();
+        expect(getTabButton("All")).toBeInTheDocument();
+        expect(getTabButton("Upcoming")).toBeInTheDocument();
+        expect(getTabButton("Archives")).toBeInTheDocument();
     });
 
     it("applies active class to selected tab", () => {
-        render(<EventViewTabs activeView="upcoming" onChange={vi.fn()} />);
+        render(<EventViewTabs views={views} activeView="upcoming" onChange={vi.fn()} />);
 
-        expect(screen.getByRole("button", { name: /upcoming/i })).toHaveClass("active");
-        expect(screen.getByRole("button", { name: /all/i })).not.toHaveClass("active");
-        expect(screen.getByRole("button", { name: /archives/i })).not.toHaveClass("active");
+        expect(getTabButton("Upcoming")).toHaveClass("active");
+        expect(getTabButton("All")).not.toHaveClass("active");
+        expect(getTabButton("Archives")).not.toHaveClass("active");
     });
 
     it("sets aria-pressed on selected tab", () => {
-        render(<EventViewTabs activeView="archives" onChange={vi.fn()} />);
+        render(<EventViewTabs views={views} activeView="archives" onChange={vi.fn()} />);
 
-        expect(screen.getByRole("button", { name: /archives/i })).toHaveAttribute(
-            "aria-pressed",
-            "true"
-        );
-
-        expect(screen.getByRole("button", { name: /all/i })).toHaveAttribute(
-            "aria-pressed",
-            "false"
-        );
+        expect(getTabButton("Archives")).toHaveAttribute("aria-pressed", "true");
+        expect(getTabButton("All")).toHaveAttribute("aria-pressed", "false");
     });
 
     it("calls onChange with selected view when clicking a tab", () => {
         const onChange = vi.fn();
 
-        render(<EventViewTabs activeView="all" onChange={onChange} />);
+        render(<EventViewTabs views={views} activeView="all" onChange={onChange} />);
 
-        fireEvent.click(screen.getByRole("button", { name: /archives/i }));
+        fireEvent.click(getTabButton("Archives"));
 
         expect(onChange).toHaveBeenCalledWith("archives");
     });

@@ -3,7 +3,7 @@ import useEventPermissions from "../../../hooks/events/useEventPermissions";
 
 /* ==================================================
    USE EVENT PERMISSIONS TESTS
-   Tests event role and permission logic
+   Tests event role, permissions, and UI visibility logic
 ================================================== */
 
 describe("useEventPermissions", () => {
@@ -16,12 +16,15 @@ describe("useEventPermissions", () => {
         registrationDeadline: null
     };
 
+    /* =========================
+       Role resolution
+    ========================= */
+
     it("resolves organizer role from organizers list", () => {
         const result = useEventPermissions({
             user,
             event: baseEvent,
-            organizers: [{ id: 1, role: "organizer" }],
-            members: []
+            organizers: [{ id: 1, role: "organizer" }]
         });
 
         expect(result.myRole).toBe("organizer");
@@ -32,7 +35,6 @@ describe("useEventPermissions", () => {
         const result = useEventPermissions({
             user,
             event: baseEvent,
-            organizers: [],
             members: [{ id: 1, role: "participant" }]
         });
 
@@ -40,7 +42,11 @@ describe("useEventPermissions", () => {
         expect(result.isMember).toBe(true);
     });
 
-    it("allows a guest user to do nothing", () => {
+    /* =========================
+       Guest user behavior
+    ========================= */
+
+    it("prevents guest user from interacting", () => {
         const result = useEventPermissions({
             user: null,
             event: baseEvent
@@ -50,19 +56,24 @@ describe("useEventPermissions", () => {
         expect(result.canLeave).toBe(false);
         expect(result.canEdit).toBe(false);
         expect(result.canDelete).toBe(false);
-        expect(result.joinDisabledReason).toBeNull();
+
+        expect(result.showLoginPrompt).toBe(true);
+        expect(result.showEventFullButton).toBe(false);
     });
 
-    it("allows authenticated non-member to join available event", () => {
+    /* =========================
+       Join logic
+    ========================= */
+
+    it("allows authenticated non-member to join", () => {
         const result = useEventPermissions({
             user,
-            event: baseEvent,
-            members: [],
-            organizers: []
+            event: baseEvent
         });
 
         expect(result.canJoin).toBe(true);
-        expect(result.joinDisabledReason).toBeNull();
+        expect(result.showJoinButton).toBe(true);
+        expect(result.showEventFullButton).toBe(false);
     });
 
     it("prevents joining a full event", () => {
@@ -77,6 +88,8 @@ describe("useEventPermissions", () => {
 
         expect(result.isEventFull).toBe(true);
         expect(result.canJoin).toBe(false);
+        expect(result.showEventFullButton).toBe(true);
+        expect(result.showJoinButton).toBe(false);
         expect(result.joinDisabledReason).toBe("Event full");
     });
 
@@ -91,17 +104,18 @@ describe("useEventPermissions", () => {
 
         expect(result.isRegistrationClosed).toBe(true);
         expect(result.canJoin).toBe(false);
+        expect(result.showRegistrationClosedButton).toBe(true);
+        expect(result.showJoinButton).toBe(false);
         expect(result.joinDisabledReason).toBe("Registration closed");
     });
 
-    it("prevents actions on past events", () => {
+    it("prevents all actions on past events", () => {
         const result = useEventPermissions({
             user,
             event: {
                 ...baseEvent,
                 status: "past"
-            },
-            organizers: [{ id: 1, role: "organizer" }]
+            }
         });
 
         expect(result.isPast).toBe(true);
@@ -109,8 +123,15 @@ describe("useEventPermissions", () => {
         expect(result.canLeave).toBe(false);
         expect(result.canEdit).toBe(false);
         expect(result.canDelete).toBe(false);
+
+        expect(result.showEventFullButton).toBe(false);
+        expect(result.showLoginPrompt).toBe(false);
         expect(result.joinDisabledReason).toBe("Event ended");
     });
+
+    /* =========================
+       Role permissions
+    ========================= */
 
     it("allows participant to leave but not edit or delete", () => {
         const result = useEventPermissions({
@@ -148,7 +169,60 @@ describe("useEventPermissions", () => {
         expect(result.canDelete).toBe(false);
     });
 
-    it("allows organizer to promote participants and demote co-organizers", () => {
+    /* =========================
+       Event full behavior
+    ========================= */
+
+    it("shows event full button for unauthenticated users", () => {
+        const result = useEventPermissions({
+            user: null,
+            event: {
+                ...baseEvent,
+                participantCount: 5,
+                maxParticipants: 5
+            }
+        });
+
+        expect(result.showEventFullButton).toBe(true);
+        expect(result.showLoginPrompt).toBe(false);
+    });
+
+    it("shows event full without removing organizer actions", () => {
+        const result = useEventPermissions({
+            user,
+            event: {
+                ...baseEvent,
+                participantCount: 5,
+                maxParticipants: 5
+            },
+            organizers: [{ id: 1, role: "organizer" }]
+        });
+
+        expect(result.showEventFullButton).toBe(true);
+        expect(result.canEdit).toBe(true);
+        expect(result.canDelete).toBe(true);
+    });
+
+    it("shows event full without removing participant leave action", () => {
+        const result = useEventPermissions({
+            user,
+            event: {
+                ...baseEvent,
+                participantCount: 5,
+                maxParticipants: 5
+            },
+            members: [{ id: 1, role: "participant" }]
+        });
+
+        expect(result.showEventFullButton).toBe(true);
+        expect(result.canLeave).toBe(true);
+    });
+
+    /* =========================
+       Member management
+    ========================= */
+
+    it("allows organizer to promote and demote", () => {
         const result = useEventPermissions({
             user,
             event: baseEvent,
@@ -159,7 +233,7 @@ describe("useEventPermissions", () => {
         expect(result.canDemote({ id: 2, role: "co_organizer" })).toBe(true);
     });
 
-    it("prevents organizer from promoting or demoting themselves", () => {
+    it("prevents self promotion/demotion", () => {
         const result = useEventPermissions({
             user,
             event: baseEvent,

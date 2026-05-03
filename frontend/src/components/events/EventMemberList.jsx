@@ -1,5 +1,6 @@
 import Badge from "../ui/Badge.jsx";
 import EmptyState from "../ui/EmptyState.jsx";
+import Alert from "../ui/Alert.jsx";
 
 /* ==================================================
    EVENT MEMBER LIST
@@ -10,13 +11,19 @@ import EmptyState from "../ui/EmptyState.jsx";
    - event participants / attendees
 ================================================== */
 
-export default function EventMemberList({ title, subtitle, members = [], emptyMessage = "No members found.", showActions = true, renderActions }) {
+export default function EventMemberList({ title, subtitle, members = [], emptyMessage = "No members found.", showActions = true, headerMessage = null, renderActions }) {
     return (
         <>
             <div className="section-header">
                 <h2 className="section-title">{title}</h2>
                 {subtitle && <p className="section-subtitle">{subtitle}</p>}
             </div>
+
+            {headerMessage && (
+                <Alert type="info">
+                    {headerMessage}
+                </Alert>
+            )}
 
             {members.length === 0 ? (
                 <EmptyState>{emptyMessage}</EmptyState>

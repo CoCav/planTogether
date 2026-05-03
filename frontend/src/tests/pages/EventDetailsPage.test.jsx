@@ -61,6 +61,10 @@ vi.mock("../../utils/format", () => ({
     formatBe: (count) => (count === 1 ? "is" : "are")
 }));
 
+vi.mock("../../utils/getEventImage", () => ({
+    getEventImage: (image) => image || "default-event-image.jpg"
+}));
+
 const mockEvent = {
     id: 1,
     title: "Test Event",
@@ -72,7 +76,8 @@ const mockEvent = {
     startDateTime: "2026-12-20T10:00:00.000Z",
     endDateTime: "2026-12-20T12:00:00.000Z",
     participantCount: 0,
-    status: "upcoming"
+    status: "upcoming",
+    image: "/uploads/events/event-test.png",
 };
 
 const setupApi = ({ event = mockEvent, organizers = [], members = [] } = {}) => {
@@ -98,12 +103,12 @@ describe("EventDetailsPage", () => {
         };
     });
 
-    it("displays loading state initially", () => {
+    it("does not display event content before data is loaded", () => {
         setupApi();
 
         renderPage();
 
-        expect(screen.getByText(/loading event details/i)).toBeInTheDocument();
+        expect(screen.queryByText("Test Event")).not.toBeInTheDocument();
     });
 
     it("displays event details", async () => {
@@ -118,6 +123,41 @@ describe("EventDetailsPage", () => {
         expect(screen.getByText("Montreal")).toBeInTheDocument();
         expect(screen.getByText("Meetup")).toBeInTheDocument();
         expect(screen.getByText("Tech")).toBeInTheDocument();
+    });
+
+    it("displays event image", async () => {
+        setupApi({
+            event: {
+                ...mockEvent,
+                image: "/uploads/events/event-test.png"
+            },
+            organizers: [{ id: 1, name: "John", role: "organizer" }]
+        });
+
+        renderPage();
+
+        const image = await screen.findByAltText("Test Event");
+
+        expect(image).toBeInTheDocument();
+        expect(image).toHaveAttribute("src", "/uploads/events/event-test.png");
+        expect(image).toHaveClass("event-details-image");
+    });
+
+    it("displays default event image when event has no image", async () => {
+        setupApi({
+            event: {
+                ...mockEvent,
+                image: null
+            },
+            organizers: [{ id: 1, name: "John", role: "organizer" }]
+        });
+
+        renderPage();
+
+        const image = await screen.findByAltText("Test Event");
+
+        expect(image).toBeInTheDocument();
+        expect(image).toHaveAttribute("src", "default-event-image.jpg");
     });
 
     it("shows empty state when event is not found", async () => {
@@ -297,7 +337,7 @@ describe("EventDetailsPage", () => {
 
         renderPage();
 
-        expect(await screen.findByText(/login to join this event/i)).toBeInTheDocument();
+        expect(await screen.findByText(/login to join this event and interact/i)).toBeInTheDocument();
     });
 
     it("shows login alert for unauthenticated user and no join button", async () => {
@@ -317,10 +357,10 @@ describe("EventDetailsPage", () => {
 
         renderPage();
 
-        expect(await screen.findByText(/login to join this event/i)).toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: /join/i })).not.toBeInTheDocument();
-    });
+        expect(await screen.findByText(/login to join this event and interact/i)).toBeInTheDocument();
 
+        expect(screen.queryByRole("button", { name: /join the event/i })).not.toBeInTheDocument();
+    });
 
     it("shows disabled full state when event has reached participant limit", async () => {
         setupApi({

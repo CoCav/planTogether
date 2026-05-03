@@ -82,6 +82,7 @@ export default function Navbar() {
                                     alt={`${user.name} avatar`}
                                     className="navbar-avatar"
                                 />
+                                {/* <span>{user.name}</span> */}
                                 <span className="navbar-caret">▾</span>
                             </button>
 

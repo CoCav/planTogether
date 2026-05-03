@@ -7,48 +7,101 @@
    - event state checks
    - event action permissions
    - member management permissions
+   - UI visibility helpers
 ================================================== */
 
 export default function useEventPermissions({ user, event, members = [], organizers = [] }) {
     const currentUserId = user?.userId;
 
     /* =========================
-       Role resolution
-       Finds current user's role in the event
+        Role resolution
+        Finds current user's role in the event
     ========================= */
 
-    const myRole = organizers.find((person) => person.id === currentUserId)?.role || members.find((person) => person.id === currentUserId)?.role || null;
+    const myRole =
+        organizers.find((person) => person.id === currentUserId)?.role ||
+        members.find((person) => person.id === currentUserId)?.role ||
+        null;
 
     const isMember = Boolean(myRole);
+    const isOrganizer = myRole === "organizer";
+    const isCoOrganizer = myRole === "co_organizer";
+    const isParticipant = myRole === "participant";
 
     /* =========================
-       Event state
-       Computes event availability constraints
+        Event state
+        Computes event availability constraints
     ========================= */
 
     const isPast = event?.status === "past";
+
     const participantCount = event?.participantCount ?? 0;
     const maxParticipants = event?.maxParticipants ?? null;
     const registrationDeadline = event?.registrationDeadline ?? null;
 
-    const hasParticipantLimit = maxParticipants !== null && maxParticipants !== undefined;
+    const hasParticipantLimit =
+        maxParticipants !== null &&
+        maxParticipants !== undefined &&
+        maxParticipants !== "";
 
-    const isEventFull = hasParticipantLimit && participantCount >= Number(maxParticipants);
+    const isEventFull =
+        hasParticipantLimit &&
+        participantCount >= Number(maxParticipants);
 
-    const isRegistrationClosed = Boolean(registrationDeadline) && new Date(registrationDeadline).getTime() <= Date.now();
+    const isRegistrationClosed =
+        Boolean(registrationDeadline) &&
+        new Date(registrationDeadline).getTime() <= Date.now();
 
     /* =========================
-       Event action permissions
-       Controls join / leave / edit / delete buttons
+        Event actions permissions
+        Controls join / leave / edit / delete buttons
     ========================= */
 
-    const canJoin = Boolean(user) && !isPast && !isMember && !isEventFull && !isRegistrationClosed;
+    const canJoin =
+        Boolean(user) &&
+        !isPast &&
+        !isMember &&
+        !isEventFull &&
+        !isRegistrationClosed;
 
-    const canLeave = Boolean(user) && !isPast && isMember && myRole !== "organizer";
+    const canLeave =
+        Boolean(user) &&
+        !isPast &&
+        isMember &&
+        !isOrganizer;
 
-    const canEdit = Boolean(user) && !isPast && (myRole === "organizer" || myRole === "co_organizer");
+    const canEdit =
+        Boolean(user) &&
+        !isPast &&
+        (isOrganizer || isCoOrganizer);
 
-    const canDelete = Boolean(user) && !isPast && myRole === "organizer";
+    const canDelete =
+        Boolean(user) &&
+        !isPast &&
+        isOrganizer;
+
+    /* =========================
+       UI visibility helpers
+    ========================= */
+
+    const showEventFullButton =
+        !isPast &&
+        isEventFull;
+
+    const showJoinButton =
+        canJoin;
+
+    const showLoginPrompt =
+        !user &&
+        !isPast &&
+        !isEventFull;
+
+    const showRegistrationClosedButton =
+        Boolean(user) &&
+        !isPast &&
+        !isMember &&
+        !isEventFull &&
+        isRegistrationClosed;
 
     const joinDisabledReason = (() => {
         if (!user) return null;
@@ -65,26 +118,57 @@ export default function useEventPermissions({ user, event, members = [], organiz
        Controls promote / demote / remove actions
     ========================= */
 
-    const canPromote = (person) => !isPast && myRole === "organizer" && person.role === "participant" && person.id !== currentUserId;
+    const canPromote = (person) =>
+        !isPast &&
+        isOrganizer &&
+        person.role === "participant" &&
+        person.id !== currentUserId;
 
-    const canDemote = (person) => !isPast && myRole === "organizer" && person.role === "co_organizer" && person.id !== currentUserId;
+    const canDemote = (person) =>
+        !isPast &&
+        isOrganizer &&
+        person.role === "co_organizer" &&
+        person.id !== currentUserId;
 
     const canRemove = (person) => {
         if (isPast) return false;
         if (person.id === currentUserId) return false;
 
-        if (myRole === "organizer") {
-            return (
-                person.role === "participant" || person.role === "co_organizer"
-            );
+        if (isOrganizer) {
+            return person.role === "participant" || person.role === "co_organizer";
         }
 
-        if (myRole === "co_organizer") {
+        if (isCoOrganizer) {
             return person.role === "participant";
         }
 
         return false;
     };
 
-    return { currentUserId, myRole, isMember, isPast, isEventFull, isRegistrationClosed, canJoin, canLeave, canEdit, canDelete, canPromote, canDemote, canRemove, joinDisabledReason };
+    return {
+        currentUserId,
+        myRole,
+        isMember,
+        isOrganizer,
+        isCoOrganizer,
+        isParticipant,
+        isPast,
+        isEventFull,
+        isRegistrationClosed,
+
+        canJoin,
+        canLeave,
+        canEdit,
+        canDelete,
+        canPromote,
+        canDemote,
+        canRemove,
+
+        showEventFullButton,
+        showJoinButton,
+        showLoginPrompt,
+        showRegistrationClosedButton,
+
+        joinDisabledReason
+    };
 }

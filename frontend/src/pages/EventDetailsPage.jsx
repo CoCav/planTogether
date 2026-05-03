@@ -5,6 +5,7 @@ import { getEventById } from "../api/eventApi";
 import { getEventMembers, getEventOrganizers } from "../api/eventMembershipApi.js";
 import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../features/events/normalizeData.js";
 import { formatEventDateRange, formatCount, formatBe, formatTime } from "../utils/format.js";
+import { getEventImage } from "../utils/getEventImage.js";
 
 import useEventManagementActions from "../hooks/events/useEventManagementActions";
 import useEventActionsWithConfirm from "../hooks/events/useEventActionsWithConfirm";
@@ -63,11 +64,23 @@ export default function EventDetailsPage() {
        Centralizes role-based UI visibility
     ========================= */
 
-    const { myRole, isPast, canJoin, canLeave, canEdit, canDelete, canPromote, canDemote, canRemove, joinDisabledReason } = useEventPermissions({ user, event, members, organizers });
+    const {
+        myRole,
+        isPast,
+        canLeave,
+        canEdit,
+        canDelete,
+        canPromote,
+        canDemote,
+        canRemove,
+        showEventFullButton,
+        showJoinButton,
+        showLoginPrompt,
+        showRegistrationClosedButton
+    } = useEventPermissions({ user, event, members, organizers });
 
     // In this page there is only one event, so the current role is enough
     const getRoleByEventId = () => myRole;
-
 
 
     /* =========================
@@ -98,6 +111,7 @@ export default function EventDetailsPage() {
         }
     }, [eventId]);
 
+
     /* =========================
        Initial data loading
        Waits for authentication state before loading
@@ -107,6 +121,7 @@ export default function EventDetailsPage() {
         if (authLoading) return;
         loadData();
     }, [authLoading, loadData]);
+
 
     /* =========================
        Feedback cleanup
@@ -136,17 +151,8 @@ export default function EventDetailsPage() {
 
 
     /* =========================
-       Loading state
-    ========================= */
-
-    if (loading) {
-        return <PageLoader>Loading event details...</PageLoader>;
-    }
-
-
-    /* =========================
-       Empty state
-       Handles missing or deleted event
+        Empty state
+        Handles missing or deleted event
     ========================= */
 
     if (!event) {
@@ -157,6 +163,43 @@ export default function EventDetailsPage() {
                 </Card>
             </div>
         );
+    }
+
+
+    /* =========================
+       Display-ready event data
+       Formats raw event values once before rendering
+    ========================= */
+
+    /* ---------- Image ---------- */
+    const eventImageSrc = getEventImage(event.image);
+
+    /* ---------- Text content ---------- */
+    const eventDescription = event.description || "No description provided.";
+    const eventType = event.type || "N/A";
+    const eventTheme = event.theme || "N/A";
+
+    /* ---------- Date & time ---------- */
+    const eventDate = formatEventDateRange(event.startDateTime, event.endDateTime);
+    const eventTime = `${formatTime(event.startDateTime)} → ${formatTime(event.endDateTime)}`;
+
+    /* ---------- Location ---------- */
+    const eventMode = event.mode === "online" ? "Online" : "In person";
+    const eventLocation = event.mode === "online" ? "Online" : event.location || "N/A";
+
+    /* ---------- Capacity ---------- */
+    const capacityDisplay = event.maxParticipants ? `${event.participantCount} / ${event.maxParticipants}` : null;
+
+    /* ---------- Registration ---------- */
+    const eventDeadline = event.registrationDeadline ? formatEventDateRange(event.registrationDeadline, event.registrationDeadline) : null;
+
+
+    /* =========================
+        Loading state
+    ========================= */
+
+    if (loading) {
+        return <PageLoader>Loading event details...</PageLoader>;
     }
 
 
@@ -179,68 +222,97 @@ export default function EventDetailsPage() {
                 <div className="event-details-header">
                     <div className="event-details-header-main">
                         <h1 className="page-title">{event.title}</h1>
-                        <p className="event-subtitle">{event.description || "No description provided."}</p>
                     </div>
 
                     <div className="event-details-header-actions">
                         {isPast ? (
                             <span className="event-status-label">Ended</span>
-                        ) : user ? (
+                        ) : (
                             <>
-                                {canJoin && (<Button type="button" onClick={() => handleJoinEvent(event.id)}>Join the event</Button>)}
-                                {!canJoin && joinDisabledReason && (<Button type="button" disabled>{joinDisabledReason}</Button>)}
+                                {showEventFullButton && (
+                                    <Button type="button" disabled>Event full</Button>
+                                )}
 
-                                {canLeave && (<Button type="button" variant="outline-danger" onClick={() => handleLeaveEvent(event.id)}>Leave the event</Button>)}
+                                {showJoinButton && (
+                                    <Button type="button" onClick={() => handleJoinEvent(event.id)}>Join the event</Button>
+                                )}
 
-                                {canEdit && (<Button type="button" variant="outline" onClick={() => navigate(`/events/${event.id}/edit`)}>Edit Event</Button>)}
-                                {canDelete && (<Button type="button" variant="danger" onClick={handleDeleteEvent}>Delete Event</Button>)}
+                                {showRegistrationClosedButton && (
+                                    <Button type="button" disabled>Registration closed</Button>
+                                )}
+
+                                {canLeave && (
+                                    <Button type="button" variant="outline-danger" onClick={() => handleLeaveEvent(event.id)}>Leave the event</Button>
+                                )}
+
+                                {canEdit && (
+                                    <Button type="button" variant="outline" onClick={() => navigate(`/events/${event.id}/edit`)}>Edit Event</Button>
+                                )}
+
+                                {canDelete && (
+                                    <Button type="button" variant="danger" onClick={handleDeleteEvent}>Delete Event</Button>
+                                )}
+
+                                {showLoginPrompt && (
+                                    <Alert type="info">🔐 Login to join this event.</Alert>
+                                )}
                             </>
-                        ) : null}
+                        )}
                     </div>
                 </div>
+
+                <div className="event-details-image-wrapper">
+                    <img
+                        src={eventImageSrc}
+                        alt={event.title}
+                        className="event-details-image"
+                    />
+                </div>
+
+                <p className="event-details-description ">{eventDescription}</p>
 
                 <div className="event-info-grid">
                     <div className="event-info-card">
                         <span className="event-info-label">🏷️ Type</span>
-                        <span className="event-info-value">{event.type || "N/A"}</span>
+                        <span className="event-info-value">{eventType}</span>
                     </div>
 
                     <div className="event-info-card">
                         <span className="event-info-label">🎯 Theme</span>
-                        <span className="event-info-value">{event.theme || "N/A"}</span>
+                        <span className="event-info-value">{eventTheme}</span>
                     </div>
 
                     <div className="event-info-card">
                         <span className="event-info-label">📍 Mode</span>
-                        <span className="event-info-value">{event.mode === "online" ? "Online" : "In person"}</span>
+                        <span className="event-info-value">{eventMode}</span>
                     </div>
 
                     <div className="event-info-card">
                         <span className="event-info-label">📍 Location</span>
-                        <span className="event-info-value">{event.mode === "online" ? "Online" : event.location || "N/A"}</span>
+                        <span className="event-info-value">{eventLocation}</span>
                     </div>
 
-                    {event.maxParticipants && (
+                    {capacityDisplay && (
                         <div className="event-info-card">
                             <span className="event-info-label">👥 Capacity</span>
-                            <span className="event-info-value">{event.participantCount} / {event.maxParticipants}</span>
+                            <span className="event-info-value">{capacityDisplay}</span>
                         </div>
                     )}
 
                     <div className="event-info-card">
                         <span className="event-info-label">📅 Date</span>
-                        <span className="event-info-value">{formatEventDateRange(event.startDateTime, event.endDateTime)}</span>
+                        <span className="event-info-value">{eventDate}</span>
                     </div>
 
                     <div className="event-info-card">
                         <span className="event-info-label">🕒 Time</span>
-                        <span className="event-info-value">{formatTime(event.startDateTime)} → {formatTime(event.endDateTime)}</span>
+                        <span className="event-info-value">{eventTime}</span>
                     </div>
 
                     {event.registrationDeadline && (
                         <div className="event-info-card">
                             <span className="event-info-label">⏳ Registration deadline</span>
-                            <span className="event-info-value">{formatEventDateRange(event.registrationDeadline, event.registrationDeadline)}</span>
+                            <span className="event-info-value">{eventDeadline}</span>
                         </div>
                     )}
                 </div>
@@ -256,8 +328,12 @@ export default function EventDetailsPage() {
                         showActions={Boolean(user)}
                         renderActions={(person) => (
                             <>
-                                {canDemote(person) && (<Button type="button" variant="outline" onClick={() => handleDemote(person.id)}>Demote</Button>)}
-                                {canRemove(person) && (<Button type="button" variant="danger" onClick={() => handleRemoveMember(person.id)}>Remove</Button>)}
+                                {canDemote(person) && (
+                                    <Button type="button" variant="outline" onClick={() => handleDemote(person.id)}>Demote</Button>
+                                )}
+                                {canRemove(person) && (
+                                    <Button type="button" variant="danger" onClick={() => handleRemoveMember(person.id)}>Remove</Button>
+                                )}
                             </>
                         )}
                     />
@@ -270,21 +346,25 @@ export default function EventDetailsPage() {
                         members={participants}
                         emptyMessage={isPast ? "No one attended this event." : "No participants yet."}
                         showActions={Boolean(user)}
+                        headerMessage={
+                            !user
+                                ? isPast
+                                    ? "This event has ended."
+                                    : "🔐 Login to join this event and interact with participants."
+                                : null
+                        }
                         renderActions={(person) => (
                             <>
                                 {canPromote(person) && (
-                                    <Button type="button" variant="outline" onClick={() => handlePromote(person.id)}>Promote</Button>)}
+                                    <Button type="button" variant="outline" onClick={() => handlePromote(person.id)}>Promote</Button>
+                                )}
 
-                                {canRemove(person) && (<Button type="button" variant="danger" onClick={() => handleRemoveMember(person.id)}>Remove</Button>)}
+                                {canRemove(person) && (
+                                    <Button type="button" variant="danger" onClick={() => handleRemoveMember(person.id)}>Remove</Button>
+                                )}
                             </>
                         )}
                     />
-
-                    {!user && (
-                        <Alert type="info">
-                            {isPast ? "This event has ended." : "🔐 Login to join this event and interact with participants."}
-                        </Alert>
-                    )}
                 </Card>
             </div>
         </div>

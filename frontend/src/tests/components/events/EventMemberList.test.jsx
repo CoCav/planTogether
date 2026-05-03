@@ -79,4 +79,21 @@ describe("EventMemberList", () => {
         expect(screen.queryByText(/remove alice/i)).not.toBeInTheDocument();
         expect(renderActions).not.toHaveBeenCalled();
     });
+
+    it("renders header message below the section header", () => {
+        render(
+            <EventMemberList
+                title="Attendees"
+                subtitle="People attending this event"
+                members={[]}
+                emptyMessage="No participants yet."
+                headerMessage="🔐 Login to join this event and interact with participants."
+            />
+        );
+
+        expect(screen.getByText("Attendees")).toBeInTheDocument();
+        expect(screen.getByText("People attending this event")).toBeInTheDocument();
+        expect(screen.getByText("🔐 Login to join this event and interact with participants.")).toBeInTheDocument();
+        expect(screen.getByText("No participants yet.")).toBeInTheDocument();
+    });
 });

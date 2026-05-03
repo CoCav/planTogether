@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth.js";
+
 import { getAllEvents } from "../api/eventApi";
 import { getMyEvents } from "../api/eventMembershipApi";
 import { getNormalizedEvents, getMyEventsWithRole } from "../features/events/normalizeData.js";
@@ -28,45 +29,38 @@ const MAX_HOME_EVENTS = 4;
 export default function HomePage() {
     const { user } = useAuth();
 
+    /* =========================
+       Local state
+       Stores page feedback, events, roles and loading state
+    ========================= */
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
-
-    // Stores latest events shown on the homepage
     const [events, setEvents] = useState([]);
-
-    // Stores current user's role by event ID
     const [myEvents, setMyEvents] = useState({});
-
-    // Controls latest events loading state
     const [loadingEvents, setLoadingEvents] = useState(true);
 
 
     /* =========================
-       User membership fetching
-       Builds eventId → role map for EventCard
+       Data helpers
+       Converts membership events into eventId → role map
     ========================= */
-
-    const fetchMyEvents = useCallback(async () => {
-        if (!user) return {};
-
-        const response = await getMyEvents();
-        const membershipEvents = getMyEventsWithRole(response);
-
+    const buildMembershipMap = (membershipEvents = []) => {
         const membershipMap = {};
 
         membershipEvents.forEach((item) => {
+            if (!item || !item.id) return;
+
             membershipMap[item.id] = item.role;
         });
 
         return membershipMap;
-    }, [user]);
+    };
 
 
     /* =========================
-       Homepage data loading
-       Fetches latest events and user roles
+       Main data loading
+       Fetches latest events and current user roles for cards
     ========================= */
-
     const loadData = useCallback(async () => {
         try {
             setError("");
@@ -81,26 +75,28 @@ export default function HomePage() {
 
             setEvents(getNormalizedEvents(response));
 
-            if (user) {
-                const membershipMap = await fetchMyEvents();
-                setMyEvents(membershipMap);
-            } else {
+            if (!user) {
                 setMyEvents({});
+                return;
             }
+
+            const membershipResponse = await getMyEvents();
+            const membershipEvents = getMyEventsWithRole(membershipResponse);
+
+            setMyEvents(buildMembershipMap(membershipEvents));
         } catch (error) {
             console.error("Error fetching homepage events:", error);
             setError("❌ Failed to load events");
         } finally {
             setLoadingEvents(false);
         }
-    }, [user, fetchMyEvents]);
+    }, [user]);
 
 
     /* =========================
-       Homepage data lifecycle
-       Reloads preview data when auth state changes
+       Initial data loading
+       Loads latest homepage events
     ========================= */
-
     useEffect(() => {
         loadData();
     }, [loadData]);
@@ -108,9 +104,8 @@ export default function HomePage() {
 
     /* =========================
        Feedback cleanup
-       Clears success/error messages automatically
+       Automatically clears success and error messages
     ========================= */
-
     useEffect(() => {
         if (message || error) {
             const timer = setTimeout(() => {
@@ -124,19 +119,34 @@ export default function HomePage() {
 
 
     /* =========================
-       Derived helpers
-       Computes event role for the current user
+       Role resolution
+       Resolves current user's role for each event card
     ========================= */
+    const getRoleByEventId = (eventOrId) => {
+        if (!user) return null;
 
-    const getRoleByEventId = (eventId) => myEvents[eventId] || null;
+        const event = typeof eventOrId === "object" ? eventOrId : events.find((item) => item.id === eventOrId);
+
+        if (!event) return null;
+
+        if (event.creatorId === user.userId) {
+            return "organizer";
+        }
+
+        return myEvents[event.id] || null;
+    };
 
 
     /* =========================
        Event actions
-       Handles join / leave operations
+       Handles join / leave operations and reloads data
     ========================= */
-
-    const { handleJoinEvent, handleLeaveEvent } = useEventActionsWithConfirm({loadData, setMessage, setError, getRoleByEventId});
+    const { handleJoinEvent, handleLeaveEvent } = useEventActionsWithConfirm({
+        loadData,
+        setMessage,
+        setError,
+        getRoleByEventId
+    });
 
 
     /* =========================
@@ -145,9 +155,7 @@ export default function HomePage() {
 
     return (
         <div className="container page-section">
-            {/* =========================
-                Hero section
-            ========================= */}
+
             <section className="hero-section">
                 <div className="hero-container">
                     <div className="hero-top-row">
@@ -177,9 +185,6 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* =========================
-                Features section
-            ========================= */}
             <section className="home-section">
                 <div className="section-header">
                     <h2 className="section-title">Why PlanTogether?</h2>
@@ -209,9 +214,6 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* =========================
-                Latest events preview
-            ========================= */}
             <section className="home-section">
                 <div className="section-header">
                     <h2 className="section-title">Latest Events</h2>
@@ -232,7 +234,7 @@ export default function HomePage() {
                                 key={event.id}
                                 event={event}
                                 user={user}
-                                role={myEvents[event.id] || null}
+                                role={getRoleByEventId(event)}
                                 onJoin={handleJoinEvent}
                                 onLeave={handleLeaveEvent}
                             />

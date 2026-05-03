@@ -6,12 +6,13 @@ import EventsPage from "../../pages/EventsPage";
 
 /* ==================================================
    EVENTS PAGE TESTS
-   Tests event listing, filters, views and pagination
+   Tests event listing, filters, views, roles and pagination
 ================================================== */
 
 const mockGetAllEvents = vi.fn();
 const mockGetFilteredEvents = vi.fn();
 const mockGetMyEvents = vi.fn();
+const mockGetMyEventsWithRole = vi.fn(() => []);
 
 let mockAuthState = {
     user: { userId: 1 }
@@ -32,14 +33,25 @@ vi.mock("../../context/useAuth", () => ({
 
 vi.mock("../../features/events/normalizeData.js", () => ({
     getNormalizedEvents: (response) => response?.data?.events || [],
-    getMyEventsWithRole: () => []
+    getMyEventsWithRole: (...args) => mockGetMyEventsWithRole(...args)
 }));
 
 vi.mock("../../components/events/EventCard", () => ({
-    default: ({ event }) => <div>{event.title}</div>
+    default: ({ event, role }) => (
+        <div>
+            <span>{event.title}</span>
+            <span data-testid={`event-role-${event.id}`}>{role || "none"}</span>
+        </div>
+    )
 }));
 
-const createResponse = ({ events = [], page = 1, pageSize = 4, totalPages = 1, totalEvents = events.length } = {}) => ({
+const createResponse = ({
+    events = [],
+    page = 1,
+    pageSize = 4,
+    totalPages = 1,
+    totalEvents = events.length
+} = {}) => ({
     data: {
         events,
         page,
@@ -67,6 +79,7 @@ describe("EventsPage", () => {
         mockGetAllEvents.mockResolvedValue(createResponse());
         mockGetFilteredEvents.mockResolvedValue(createResponse());
         mockGetMyEvents.mockResolvedValue({ data: { events: [] } });
+        mockGetMyEventsWithRole.mockReturnValue([]);
     });
 
     it("displays loading state initially", () => {
@@ -79,8 +92,8 @@ describe("EventsPage", () => {
         mockGetAllEvents.mockResolvedValue(
             createResponse({
                 events: [
-                    { id: 1, title: "Event 1" },
-                    { id: 2, title: "Event 2" }
+                    { id: 1, title: "Event 1", creatorId: 2 },
+                    { id: 2, title: "Event 2", creatorId: 2 }
                 ],
                 totalEvents: 2
             })
@@ -117,7 +130,7 @@ describe("EventsPage", () => {
 
         mockGetAllEvents.mockResolvedValue(
             createResponse({
-                events: [{ id: 3, title: "Upcoming Event" }],
+                events: [{ id: 3, title: "Upcoming Event", creatorId: 2 }],
                 totalEvents: 1
             })
         );
@@ -144,7 +157,7 @@ describe("EventsPage", () => {
 
         mockGetAllEvents.mockResolvedValue(
             createResponse({
-                events: [{ id: 4, title: "Past Event" }],
+                events: [{ id: 4, title: "Past Event", creatorId: 2 }],
                 totalEvents: 1
             })
         );
@@ -171,7 +184,7 @@ describe("EventsPage", () => {
 
         mockGetFilteredEvents.mockResolvedValue(
             createResponse({
-                events: [{ id: 5, title: "Filtered Event" }],
+                events: [{ id: 5, title: "Filtered Event", creatorId: 2 }],
                 totalEvents: 1
             })
         );
@@ -265,7 +278,7 @@ describe("EventsPage", () => {
 
         mockGetAllEvents.mockResolvedValue(
             createResponse({
-                events: [{ id: 1, title: "Event Page 1" }],
+                events: [{ id: 1, title: "Event Page 1", creatorId: 2 }],
                 page: 1,
                 totalPages: 2,
                 totalEvents: 5
@@ -294,7 +307,7 @@ describe("EventsPage", () => {
         mockGetFilteredEvents
             .mockResolvedValueOnce(
                 createResponse({
-                    events: [{ id: 1, title: "Filtered Page 1" }],
+                    events: [{ id: 1, title: "Filtered Page 1", creatorId: 2 }],
                     page: 1,
                     totalPages: 2,
                     totalEvents: 5
@@ -302,7 +315,7 @@ describe("EventsPage", () => {
             )
             .mockResolvedValueOnce(
                 createResponse({
-                    events: [{ id: 2, title: "Filtered Page 2" }],
+                    events: [{ id: 2, title: "Filtered Page 2", creatorId: 2 }],
                     page: 2,
                     totalPages: 2,
                     totalEvents: 5
@@ -342,5 +355,52 @@ describe("EventsPage", () => {
         renderPage();
 
         expect(await screen.findByText(/login to join events/i)).toBeInTheDocument();
+    });
+
+    it("passes organizer role to EventCard when current user is event creator", async () => {
+        mockGetAllEvents.mockResolvedValue(
+            createResponse({
+                events: [
+                    {
+                        id: 10,
+                        title: "Created Event",
+                        creatorId: 1
+                    }
+                ],
+                totalEvents: 1
+            })
+        );
+
+        renderPage();
+
+        expect(await screen.findByText("Created Event")).toBeInTheDocument();
+        expect(screen.getByTestId("event-role-10")).toHaveTextContent("organizer");
+    });
+
+    it("passes membership role to EventCard from current user events", async () => {
+        mockGetAllEvents.mockResolvedValue(
+            createResponse({
+                events: [
+                    {
+                        id: 20,
+                        title: "Joined Event",
+                        creatorId: 99
+                    }
+                ],
+                totalEvents: 1
+            })
+        );
+
+        mockGetMyEventsWithRole.mockReturnValue([
+            {
+                id: 20,
+                role: "participant"
+            }
+        ]);
+
+        renderPage();
+
+        expect(await screen.findByText("Joined Event")).toBeInTheDocument();
+        expect(screen.getByTestId("event-role-20")).toHaveTextContent("participant");
     });
 });

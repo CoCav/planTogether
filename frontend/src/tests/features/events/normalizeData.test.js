@@ -16,16 +16,42 @@ describe("normalizeData", () => {
             description: "",
             mode: "in_person",
             location: "",
+            creatorId: null,
             creatorName: "",
+            image: null,
             participantCount: 0,
             status: "upcoming"
         });
     });
 
+    it("normalizes event image", () => {
+        const event = normalizeEvent({
+            id: 1,
+            image: "/uploads/events/event-test.png"
+        });
+
+        expect(event.image).toBe("/uploads/events/event-test.png");
+    });
+
+    it("normalizes creator name from nested object or fallback creatorName", () => {
+        expect(
+            normalizeEvent({
+                id: 1,
+                creator: { name: "Alice" }
+            }).creatorName
+        ).toBe("Alice");
+
+        expect(
+            normalizeEvent({
+                id: 2,
+                creatorName: "Bob"
+            }).creatorName
+        ).toBe("Bob");
+    });
+
     it("normalizes participantCount as a number", () => {
         const event = normalizeEvent({
             id: 1,
-            title: "Test Event",
             participantCount: "3"
         });
 
@@ -47,17 +73,6 @@ describe("normalizeData", () => {
         expect(event.maxParticipants).toBeNull();
     });
 
-    it("normalizes creator name from nested object", () => {
-        const event = normalizeEvent({
-            id: 1,
-            creator: {
-                name: "Alice"
-            }
-        });
-
-        expect(event.creatorName).toBe("Alice");
-    });
-
     it("normalizes an array of events", () => {
         const events = normalizeEvents([
             { id: 1, title: "Event 1" },
@@ -77,7 +92,7 @@ describe("normalizeData", () => {
     it("extracts and normalizes events from API response", () => {
         const response = {
             data: {
-                events: [{ id: 1, title: "Event 1" }]
+                events: [{ id: 1, title: "Event 1", image: "/uploads/events/event.png" }]
             }
         };
 
@@ -85,6 +100,7 @@ describe("normalizeData", () => {
 
         expect(events).toHaveLength(1);
         expect(events[0].title).toBe("Event 1");
+        expect(events[0].image).toBe("/uploads/events/event.png");
     });
 
     it("extracts and normalizes a single event from API response", () => {
@@ -110,6 +126,7 @@ describe("normalizeData", () => {
                             title: "Created Event",
                             status: "upcoming",
                             participantCount: 2,
+                            image: "/uploads/events/created.png",
                             creator: {
                                 name: "Alice"
                             }
@@ -128,7 +145,8 @@ describe("normalizeData", () => {
             role: "organizer",
             status: "upcoming",
             participantCount: 2,
-            creatorName: "Alice"
+            creatorName: "Alice",
+            image: "/uploads/events/created.png"
         });
     });
 
@@ -149,6 +167,34 @@ describe("normalizeData", () => {
         const events = getMyEventsWithRole(response);
 
         expect(events[0].role).toBe("participant");
+    });
+
+    it("filters invalid my events safely", () => {
+        const response = {
+            data: {
+                events: [
+                    null,
+                    undefined,
+                    {
+                        Event: null,
+                        role: "participant"
+                    },
+                    {
+                        Event: {
+                            id: 3,
+                            title: "Valid Event"
+                        },
+                        role: "participant"
+                    }
+                ]
+            }
+        };
+
+        const events = getMyEventsWithRole(response);
+
+        expect(events).toHaveLength(1);
+        expect(events[0].id).toBe(3);
+        expect(events[0].title).toBe("Valid Event");
     });
 
     it("normalizes members", () => {

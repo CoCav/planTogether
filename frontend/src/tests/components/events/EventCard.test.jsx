@@ -5,7 +5,7 @@ import EventCard from "../../../components/events/EventCard";
 
 /* ==================================================
    EVENT CARD TESTS
-   Tests event preview rendering and actions
+   Tests event preview rendering, permissions and actions
 ================================================== */
 
 vi.mock("../../../utils/format", () => ({
@@ -28,16 +28,21 @@ const baseEvent = {
     mode: "online",
     creatorName: "Alice",
     status: "upcoming",
-    image: "/uploads/events/event-test.png",
+    image: "/uploads/events/event-test.png"
 };
 
 const renderCard = (props = {}) =>
     render(
         <MemoryRouter>
             <EventCard
-                event={baseEvent}
-                user={{ userId: 1 }}
-                {...props}
+                event={{
+                    ...baseEvent,
+                    ...(props.event || {})
+                }}
+                user={props.user === undefined ? { userId: 1 } : props.user}
+                role={props.role}
+                onJoin={props.onJoin}
+                onLeave={props.onLeave}
             />
         </MemoryRouter>
     );
@@ -65,7 +70,6 @@ describe("EventCard", () => {
     it("displays default event image when event has no image", () => {
         renderCard({
             event: {
-                ...baseEvent,
                 image: null
             }
         });
@@ -79,7 +83,6 @@ describe("EventCard", () => {
     it("shows ended label when event is past", () => {
         renderCard({
             event: {
-                ...baseEvent,
                 status: "past"
             }
         });
@@ -93,6 +96,22 @@ describe("EventCard", () => {
         });
 
         expect(screen.getByRole("button", { name: /join the event/i })).toBeInTheDocument();
+    });
+
+    it("does not show join button for organizer", () => {
+        renderCard({
+            role: "organizer"
+        });
+
+        expect(screen.queryByRole("button", { name: /join the event/i })).not.toBeInTheDocument();
+    });
+
+    it("does not show join button for co-organizer", () => {
+        renderCard({
+            role: "co_organizer"
+        });
+
+        expect(screen.queryByRole("button", { name: /join the event/i })).not.toBeInTheDocument();
     });
 
     it("shows leave button for participant", () => {
@@ -112,11 +131,10 @@ describe("EventCard", () => {
     });
 
     it("shows login message when user is not authenticated", () => {
-        render(
-            <MemoryRouter>
-                <EventCard event={baseEvent} user={null} />
-            </MemoryRouter>
-        );
+        renderCard({
+            user: null,
+            role: null
+        });
 
         expect(screen.getByText(/login to join/i)).toBeInTheDocument();
     });
@@ -124,14 +142,12 @@ describe("EventCard", () => {
     it("does not show join or leave buttons when event is past", () => {
         renderCard({
             event: {
-                ...baseEvent,
                 status: "past"
             },
             role: "participant"
         });
 
         expect(screen.queryByRole("button", { name: /join the event/i })).not.toBeInTheDocument();
-
         expect(screen.queryByRole("button", { name: /leave the event/i })).not.toBeInTheDocument();
     });
 
@@ -164,7 +180,6 @@ describe("EventCard", () => {
     it("shows full state when event has reached participant limit", () => {
         renderCard({
             event: {
-                ...baseEvent,
                 maxParticipants: 3,
                 participantCount: 3
             }
@@ -172,5 +187,18 @@ describe("EventCard", () => {
 
         expect(screen.getByRole("button", { name: /event full/i })).toBeDisabled();
         expect(screen.getByText("👥 3 / 3")).toHaveClass("text-danger");
+    });
+
+    it("shows full state without hiding participant leave action", () => {
+        renderCard({
+            role: "participant",
+            event: {
+                maxParticipants: 3,
+                participantCount: 3
+            }
+        });
+
+        expect(screen.getByRole("button", { name: /event full/i })).toBeDisabled();
+        expect(screen.getByRole("button", { name: /leave the event/i })).toBeInTheDocument();
     });
 });

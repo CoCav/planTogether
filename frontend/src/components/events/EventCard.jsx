@@ -24,19 +24,29 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
         Converts the current role into the members / organizers
         shape expected by useEventPermissions
     ========================= */
-    const organizers = role === "organizer" || role === "co_organizer" ? [{ id: user?.userId, role }] : [];
-    const members = role === "participant" ? [{ id: user?.userId, role }] : [];
+    const isOrganizer = role === "organizer";
+    const isCoOrganizer = role === "co_organizer"
+    const isParticipant = role === "participant";
 
+    const organizers = isOrganizer || isCoOrganizer ? [{ id: user?.userId, role }] : [];
+    const members = isParticipant ? [{ id: user?.userId, role }] : [];
+
+    const shouldShowOrganizerInline = !isOrganizer;
 
     /* =========================
      Permissions
         Computes available actions and event state
     ========================= */
 
-    const { isPast, isEventFull, canJoin, canLeave, joinDisabledReason } = useEventPermissions({ user, event, members, organizers });
-    const shouldShowOrganizerInline = !user || role !== "organizer";
-
-    const isFull = event.maxParticipants && event.participantCount >= event.maxParticipants;
+    const {
+        isPast,
+        isEventFull,
+        canLeave,
+        showEventFullButton,
+        showJoinButton,
+        showLoginPrompt,
+        showRegistrationClosedButton
+    } = useEventPermissions({ user, event, members, organizers });
 
 
     /* =========================
@@ -70,11 +80,25 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                         <span className="event-status-label">Ended</span>
                     ) : (
                         <>
-                            {isEventFull && (<Button type="button" disabled>Event full</Button>)}
-                            {user && canLeave && (<Button type="button" variant="outline-danger" onClick={() => onLeave?.(event.id)}>Leave the event</Button>)}
-                            {user && !isEventFull && canJoin && (<Button type="button" onClick={() => onJoin?.(event.id)}>Join the event</Button>)}
-                            {user && !isEventFull && !canJoin && joinDisabledReason && (<Button type="button" disabled>{joinDisabledReason}</Button>)}
-                            {!user && !isEventFull && (<Alert type="info">🔐 Login to join</Alert>)}
+                            {showEventFullButton && (
+                                <Button type="button" disabled>Event full</Button>
+                            )}
+
+                            {canLeave && (
+                                <Button type="button" variant="outline-danger" onClick={() => onLeave?.(event.id)}>Leave the event</Button>
+                            )}
+
+                            {showJoinButton && (
+                                <Button type="button" onClick={() => onJoin?.(event.id)}>Join the event</Button>
+                            )}
+
+                            {showRegistrationClosedButton && (
+                                <Button type="button" disabled>Registration closed</Button>
+                            )}
+
+                            {showLoginPrompt && (
+                                <Alert type="info">🔐 Login to join</Alert>
+                            )}
                         </>
                     )}
                 </div>
@@ -92,7 +116,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
 
             <div className="event-meta">
                 {event.maxParticipants ? (
-                    <span className={`event-meta-item ${isFull ? "text-danger" : ""}`}>👥 {event.participantCount} / {event.maxParticipants}</span>
+                    <span className={`event-meta-item ${isEventFull ? "text-danger" : ""}`}>👥 {event.participantCount} / {event.maxParticipants}</span>
                 ) : (
                     <span className="event-meta-item">👥 {formatCount(event.participantCount, "participant")}</span>
                 )}

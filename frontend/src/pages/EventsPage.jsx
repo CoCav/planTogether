@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+
 import { getAllEvents, getFilteredEvents } from "../api/eventApi";
 import { getMyEvents } from "../api/eventMembershipApi";
+
 import { getNormalizedEvents, getMyEventsWithRole } from "../features/events/normalizeData.js";
 import { getEventsEmptyState } from "../features/events/eventEmptyState.js";
 import { getDefaultEventFilters } from "../features/events/eventFilters";
@@ -10,6 +12,7 @@ import { getDefaultEventFilters } from "../features/events/eventFilters";
 import useEventActionsWithConfirm from "../hooks/events/useEventActionsWithConfirm.js";
 import useEventFilters from "../hooks/events/useEventFilters.js";
 import usePagination from "../hooks/pagination/usePagination.js";
+
 import { fetchAllPaginated } from "../utils/fetchAllPaginated.js";
 
 import EventsFilterCard from "../components/events/EventsFilterCard";
@@ -128,6 +131,8 @@ export default function EventsPage() {
         const membershipMap = {};
 
         membershipEvents.forEach((item) => {
+            if (!item || !item.id) return;
+
             membershipMap[item.id] = item.role;
         });
 
@@ -176,20 +181,31 @@ export default function EventsPage() {
        Shared filter state and handlers
     ========================= */
 
-    const {filters, setFilters, showFilters, setShowFilters, sortLabels, isCurrentWeekendFilterActive, handleFilterChange, handleFilterSubmit, handleSortChange, handleResetFilters, handleTodayFilter, handleWeekendFilter } = useEventFilters({
-        activeView,
-        loadData,
-        resetPage: () =>
+    const {
+        filters,
+        setFilters,
+        showFilters,
+        setShowFilters,
+        sortLabels,
+        isCurrentWeekendFilterActive,
+        handleFilterChange,
+        handleFilterSubmit,
+        handleSortChange,
+        handleResetFilters,
+        handleTodayFilter,
+        handleWeekendFilter
+    } = useEventFilters({
+        activeView, loadData, resetPage: () =>
             setPagination((prev) => ({
                 ...prev,
                 page: 1
-            })),
+            }))
     });
 
     const emptyState = getEventsEmptyState({ filters, activeView });
 
     /* =========================
-       Pagination controls
+       Pagination
     ========================= */
 
     const { handlePreviousPage, handleNextPage } = usePagination({
@@ -228,7 +244,12 @@ export default function EventsPage() {
     ========================= */
 
     const getRoleByEventId = (event) => {
-        if (event.creatorId === user?.userId) return "organizer";
+        if (!user) return null;
+
+        if (event.creatorId === user.userId) {
+            return "organizer";
+        }
+
         return myEvents[event.id] || null;
     };
 
@@ -237,7 +258,7 @@ export default function EventsPage() {
        Handles join / leave operations
     ========================= */
 
-    const { handleJoinEvent, handleLeaveEvent } = useEventActionsWithConfirm({loadData, setMessage, setError, getRoleByEventId});
+    const { handleJoinEvent, handleLeaveEvent } = useEventActionsWithConfirm({ loadData, setMessage, setError, getRoleByEventId });
 
     /* =========================
        View handler
@@ -245,7 +266,7 @@ export default function EventsPage() {
     ========================= */
 
     const handleViewChange = async (nextView) => {
-        const nextFilters =  nextView === "archives" ? { ...filters, date: "", startDate: "", endDate: "" } : filters;
+        const nextFilters = nextView === "archives" ? { ...filters, date: "", startDate: "", endDate: "" } : filters;
 
         setActiveView(nextView);
         setFilters(nextFilters);
@@ -257,6 +278,28 @@ export default function EventsPage() {
 
         await loadData(nextFilters, 1, nextView);
     };
+
+    /* =========================
+        Display-ready page data
+        Keeps render JSX readable and avoids nested conditions
+    ========================= */
+
+    const pageTitle =
+        activeView === "archives"
+            ? "Archives"
+            : activeView === "upcoming"
+                ? "Upcoming Events"
+                : "All Events";
+
+    const pageSubtitle =
+        activeView === "archives"
+            ? "Explore past events."
+            : activeView === "upcoming"
+                ? "Discover upcoming events and plan ahead."
+                : "Browse all events and refine your search.";
+
+    const showQuickActions = activeView !== "archives";
+    const showPaginationInfo = pagination.totalPages > 1;
 
     /* =========================
        Loading state
@@ -304,21 +347,16 @@ export default function EventsPage() {
             <div className="events-header">
                 <div className="events-header-top">
                     <h2 className="section-title">
-                        {activeView === "archives"
-                            ? "Archives" : activeView === "upcoming"
-                            ? "Upcoming Events" : "All Events"}
-
+                        {pageTitle}
                         <span className="results-count">({pagination.totalEvents})</span>
                     </h2>
 
-                    {pagination.totalPages > 1 && (<span className="results-page-info">Page {pagination.page} of {pagination.totalPages}</span>)}
+                    {showPaginationInfo && (
+                        <span className="results-page-info">Page {pagination.page} of {pagination.totalPages}</span>
+                    )}
                 </div>
 
-                <p className="section-subtitle">
-                    {activeView === "archives"
-                        ? "Explore past events." : activeView === "upcoming"
-                        ? "Discover upcoming events and plan ahead." : "Browse all events and refine your search."}
-                </p>
+                <p className="section-subtitle">{pageSubtitle}</p>
 
                 <div className="events-view-bar">
                     <EventsViewTabs
@@ -326,7 +364,7 @@ export default function EventsPage() {
                         onChange={handleViewChange}
                     />
 
-                    {activeView !== "archives" && (
+                    {showQuickActions && (
                         <div className="events-quick-actions">
                             <Button type="button" variant={filters.date ? "filter-active" : "outline-primary"} onClick={handleTodayFilter}>Today</Button>
                             <Button type="button" variant={isCurrentWeekendFilterActive(filters) ? "filter-active" : "outline-primary"} onClick={handleWeekendFilter}>This Weekend</Button>

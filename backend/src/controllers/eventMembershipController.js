@@ -1,5 +1,9 @@
 const eventMembershipService = require('../services/eventMembershipService');
 
+/* ==================================================
+   EVENT MEMBERSHIP CONTROLLER
+================================================== */
+
 // User joins an event
 const joinEvent = async (req, res, next) => {
     try {

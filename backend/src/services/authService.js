@@ -2,6 +2,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
+const deleteUploadedFile = require("../utils/deleteUploadedFile");
 
 // Create a new user and generate a JWT token
 const registerUser = async ({ name, email, password, avatar }) => {
@@ -103,6 +104,7 @@ const updateUserProfileByID = async (userId, updatedData) => {
             throw error;
         }
 
+        const oldAvatar = user.avatar;
         const { name, email, avatar } = updatedData;
 
         // Update user fields if provided
@@ -115,6 +117,10 @@ const updateUserProfileByID = async (userId, updatedData) => {
 
         try {
             await user.save();
+
+            if (avatar !== undefined && avatar && oldAvatar && oldAvatar !== avatar) {
+                await deleteUploadedFile(oldAvatar);
+            }
         } catch (err) {
             // Handle unique email conflict cleanly
             if (err.name === "SequelizeUniqueConstraintError") {

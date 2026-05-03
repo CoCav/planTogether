@@ -1,5 +1,9 @@
 const eventService = require('../services/eventService');
 
+/* ==================================================
+   EVENT CONTROLLER
+================================================== */
+
 // Create a new event
 const createEvent = async (req, res, next) => {
     try {

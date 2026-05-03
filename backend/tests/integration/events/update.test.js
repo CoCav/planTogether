@@ -1,6 +1,8 @@
 const request = require('supertest');
 const app = require('../../../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
+const fs = require("fs");
+const path = require("path");
 
 /**
  * Events Integration - Update Event
@@ -107,6 +109,57 @@ describe('Update Event API', () => {
             id: event.id,
             title: 'Updated Title'
         });
+    });
+
+    it("should delete old event image file when image is replaced", async () => {
+        const token = await registerAndGetToken(
+            "Image Replace Organizer",
+            `imagereplace${Date.now()}@test.com`
+        );
+
+        const createRes = await request(app)
+            .post("/api/events")
+            .set("Authorization", `Bearer ${token}`)
+            .field("title", "Event With Image")
+            .field("description", "This event has an image")
+            .field("startDateTime", "2026-12-31T10:00:00.000Z")
+            .field("endDateTime", "2026-12-31T12:00:00.000Z")
+            .field("mode", "in_person")
+            .field("location", "Montreal")
+            .field("type", "Meetup")
+            .field("theme", "Technology")
+            .attach("image", Buffer.from("old event image content"), {
+                filename: "old-event.png",
+                contentType: "image/png"
+            });
+
+        const event = createRes.body.event;
+        const oldImage = event.image;
+        const oldImagePath = path.join(__dirname, "../../../", oldImage);
+
+        expect(fs.existsSync(oldImagePath)).toBe(true);
+
+        const res = await request(app)
+            .put(`/api/events/${event.id}`)
+            .set("Authorization", `Bearer ${token}`)
+            .field("title", "Event With New Image")
+            .field("description", "This event has a new image")
+            .field("startDateTime", "2026-12-31T10:00:00.000Z")
+            .field("endDateTime", "2026-12-31T12:00:00.000Z")
+            .field("mode", "in_person")
+            .field("location", "Montreal")
+            .field("type", "Meetup")
+            .field("theme", "Technology")
+            .attach("image", Buffer.from("new event image content"), {
+                filename: "new-event.png",
+                contentType: "image/png"
+            });
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.event.image).toMatch(/^\/uploads\/events\/event-/);
+        expect(res.body.event.image).not.toBe(oldImage);
+
+        expect(fs.existsSync(oldImagePath)).toBe(false);
     });
 
     /* =========================

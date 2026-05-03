@@ -1,4 +1,5 @@
 const User = require("../../../src/models/userModel");
+const deleteUploadedFile = require("../../../src/utils/deleteUploadedFile");
 
 const authService = require("../../../src/services/authService");
 
@@ -14,6 +15,8 @@ jest.mock("../../../src/models/userModel", () => ({
     findByPk: jest.fn()
 }));
 
+jest.mock("../../../src/utils/deleteUploadedFile", () => jest.fn());
+
 describe("authService - profile", () => {
     let user;
 
@@ -27,6 +30,8 @@ describe("authService - profile", () => {
             avatar: null,
             save: jest.fn()
         };
+
+        deleteUploadedFile.mockResolvedValue();
     });
 
     describe("getUserProfileByID", () => {
@@ -83,6 +88,41 @@ describe("authService - profile", () => {
             expect(user.avatar).toBeNull();
             expect(user.save).toHaveBeenCalled();
             expect(result).toBe(user);
+        });
+
+        it("should delete old avatar when new avatar is provided", async () => {
+            user.avatar = "/uploads/avatars/old-avatar.png";
+            User.findByPk.mockResolvedValue(user);
+
+            await authService.updateUserProfileByID(1, {
+                avatar: "/uploads/avatars/new-avatar.png"
+            });
+
+            expect(user.avatar).toBe("/uploads/avatars/new-avatar.png");
+            expect(deleteUploadedFile).toHaveBeenCalledWith("/uploads/avatars/old-avatar.png");
+        });
+
+        it("should not delete avatar when avatar is unchanged", async () => {
+            user.avatar = "/uploads/avatars/avatar-test.png";
+            User.findByPk.mockResolvedValue(user);
+
+            await authService.updateUserProfileByID(1, {
+                avatar: "/uploads/avatars/avatar-test.png"
+            });
+
+            expect(deleteUploadedFile).not.toHaveBeenCalled();
+        });
+
+        it("should not delete avatar when avatar is cleared", async () => {
+            user.avatar = "/uploads/avatars/old-avatar.png";
+            User.findByPk.mockResolvedValue(user);
+
+            await authService.updateUserProfileByID(1, {
+                avatar: ""
+            });
+
+            expect(user.avatar).toBeNull();
+            expect(deleteUploadedFile).not.toHaveBeenCalled();
         });
 
         it("should throw if user not found", async () => {

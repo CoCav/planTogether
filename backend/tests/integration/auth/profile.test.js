@@ -1,6 +1,8 @@
 const request = require("supertest");
 const app = require("../../../src/app");
 const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
+const fs = require("fs");
+const path = require("path");
 
 /**
  * Auth Integration - Profile
@@ -167,6 +169,43 @@ describe("Profile API", () => {
                 .set("Authorization", `Bearer ${token}`);
 
             expect(profileRes.body.user.avatar).toBe(res.body.user.avatar);
+        });
+
+        it("should delete old avatar file when avatar is replaced", async () => {
+            const email = `replaceavatar${Date.now()}@test.com`;
+
+            const registerRes = await request(app)
+                .post("/api/auth/register")
+                .field("name", "Avatar Replace User")
+                .field("email", email)
+                .field("password", "Password123")
+                .attach("avatar", Buffer.from("old avatar content"), {
+                    filename: "old-avatar.png",
+                    contentType: "image/png"
+                });
+
+            const token = registerRes.body.token;
+            const oldAvatar = registerRes.body.user.avatar;
+
+            const oldAvatarPath = path.join(__dirname, "../../../", oldAvatar);
+
+            expect(fs.existsSync(oldAvatarPath)).toBe(true);
+
+            const res = await request(app)
+                .put("/api/auth/profile")
+                .set("Authorization", `Bearer ${token}`)
+                .field("name", "Avatar Replace User")
+                .field("email", email)
+                .attach("avatar", Buffer.from("new avatar content"), {
+                    filename: "new-avatar.png",
+                    contentType: "image/png"
+                });
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.user.avatar).toMatch(/^\/uploads\/avatars\/avatar-/);
+            expect(res.body.user.avatar).not.toBe(oldAvatar);
+
+            expect(fs.existsSync(oldAvatarPath)).toBe(false);
         });
 
         it("should reject update without token", async () => {

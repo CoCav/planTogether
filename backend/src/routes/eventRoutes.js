@@ -3,7 +3,7 @@ const router = express.Router();
 
 const eventController = require('../controllers/eventController');
 const { authenticateToken } = require('../middlewares/authenticateToken');
-const uploadEventImage = require('../middlewares/uploadEventImage');
+const { uploadEventImage } = require('../middlewares/uploadFile');
 const validateRequest = require('../middlewares/validateRequest');
 const { requireEventRole } = require('../middlewares/requireEventRole');
 const { createEventValidator, updateEventValidator, eventIdParamValidator } = require('../validators/eventValidator');

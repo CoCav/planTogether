@@ -5,6 +5,7 @@ const EventUserRole = require('../models/relations/eventUserRoleModel');
 const { getPaginationOptions } = require('../utils/pagination');
 const { assertEventNotPast, getEventStatus } = require('../utils/eventTime');
 const { applyStatusFilter, applyEventQueryFilters } = require('../utils/eventQueryFilters');
+const deleteUploadedFile = require("../utils/deleteUploadedFile");
 
 // Create a new event and assign the creator as the organizer
 const createEvent = async (data, userId) => {
@@ -244,6 +245,8 @@ const updateEventById = async (id, data) => {
         // Check if event is in the past
         assertEventNotPast(event);
 
+        const oldImage = event.image;
+
         const {
             title,
             description,
@@ -282,6 +285,10 @@ const updateEventById = async (id, data) => {
         };
 
         await event.update(updatedData);
+
+        if (image !== undefined && image && oldImage && oldImage !== image) {
+            await deleteUploadedFile(oldImage);
+        }
         return event;
 
     } catch (error) {

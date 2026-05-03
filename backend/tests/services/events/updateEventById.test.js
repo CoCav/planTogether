@@ -1,5 +1,6 @@
 const Event = require("../../../src/models/eventModel");
 const { assertEventNotPast } = require("../../../src/utils/eventTime");
+const deleteUploadedFile = require("../../../src/utils/deleteUploadedFile");
 
 const eventService = require("../../../src/services/eventService");
 
@@ -18,6 +19,8 @@ jest.mock("../../../src/models/eventModel", () => ({
 jest.mock("../../../src/utils/eventTime", () => ({
     assertEventNotPast: jest.fn()
 }));
+
+jest.mock("../../../src/utils/deleteUploadedFile", () => jest.fn());
 
 describe("eventService - updateEventById", () => {
     beforeEach(() => {
@@ -47,6 +50,7 @@ describe("eventService - updateEventById", () => {
             location: "Montreal",
             startDateTime: "2026-12-20T10:00:00.000Z",
             endDateTime: "2026-12-20T12:00:00.000Z",
+            image: null
         });
 
         expect(assertEventNotPast).toHaveBeenCalledWith(event);
@@ -60,7 +64,8 @@ describe("eventService - updateEventById", () => {
             startDateTime: "2026-12-20T10:00:00.000Z",
             endDateTime: "2026-12-20T12:00:00.000Z",
             maxParticipants: null,
-            registrationDeadline: null
+            registrationDeadline: null,
+            image: null
         });
         expect(result).toBe(event);
     });
@@ -82,7 +87,8 @@ describe("eventService - updateEventById", () => {
             mode: "online",
             location: "Montreal",
             startDateTime: "2026-12-20T10:00:00.000Z",
-            endDateTime: "2026-12-20T12:00:00.000Z"
+            endDateTime: "2026-12-20T12:00:00.000Z",
+            image: null
         });
 
         expect(event.update).toHaveBeenCalledWith(
@@ -112,7 +118,8 @@ describe("eventService - updateEventById", () => {
             startDateTime: "2026-12-20T10:00:00.000Z",
             endDateTime: "2026-12-20T12:00:00.000Z",
             maxParticipants: 10,
-            registrationDeadline: "2026-12-19T10:00:00.000Z"
+            registrationDeadline: "2026-12-19T10:00:00.000Z",
+            image: null
         });
 
         expect(event.update).toHaveBeenCalledWith(
@@ -183,6 +190,77 @@ describe("eventService - updateEventById", () => {
         });
 
         expect(event.update).not.toHaveBeenCalled();
+    });
+
+    it("should update event image and delete old image", async () => {
+        const event = {
+            id: 1,
+            image: "/uploads/events/old-event.png",
+            update: jest.fn().mockResolvedValue()
+        };
+
+        Event.findByPk.mockResolvedValue(event);
+        assertEventNotPast.mockImplementation(() => { });
+
+        await eventService.updateEventById(1, {
+            title: "Updated Event",
+            description: "Updated description",
+            type: "Meetup",
+            theme: "Tech",
+            mode: "in_person",
+            location: "Montreal",
+            startDateTime: "2026-12-20T10:00:00.000Z",
+            endDateTime: "2026-12-20T12:00:00.000Z",
+            image: "/uploads/events/new-event.png"
+        });
+
+        expect(event.update).toHaveBeenCalledWith(
+            expect.objectContaining({
+                image: "/uploads/events/new-event.png"
+            })
+        );
+
+        expect(deleteUploadedFile).toHaveBeenCalledWith("/uploads/events/old-event.png");
+    });
+
+    it("should keep existing image when no new image is provided", async () => {
+        const event = {
+            id: 1,
+            image: "/uploads/events/current-event.png",
+            update: jest.fn().mockResolvedValue()
+        };
+
+        Event.findByPk.mockResolvedValue(event);
+        assertEventNotPast.mockImplementation(() => { });
+
+        await eventService.updateEventById(1, {
+            title: "Updated Event"
+        });
+
+        expect(event.update).toHaveBeenCalledWith(
+            expect.objectContaining({
+                image: "/uploads/events/current-event.png"
+            })
+        );
+
+        expect(deleteUploadedFile).not.toHaveBeenCalled();
+    });
+
+    it("should not delete image when new image is same as old image", async () => {
+        const event = {
+            id: 1,
+            image: "/uploads/events/same-event.png",
+            update: jest.fn().mockResolvedValue()
+        };
+
+        Event.findByPk.mockResolvedValue(event);
+        assertEventNotPast.mockImplementation(() => { });
+
+        await eventService.updateEventById(1, {
+            image: "/uploads/events/same-event.png"
+        });
+
+        expect(deleteUploadedFile).not.toHaveBeenCalled();
     });
 
     it("should forward database errors", async () => {

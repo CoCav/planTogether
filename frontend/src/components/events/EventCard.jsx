@@ -1,6 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
 import { formatEventDateRange, formatTime, formatCount } from "../../utils/format";
+import defaultEventImage from "../../assets/pexels-jrdb99-19683874.jpg";
 import { getEventImage } from "../../utils/getEventImage";
+
+
 
 import useEventPermissions from "../../hooks/events/useEventPermissions";
 
@@ -107,6 +110,9 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
             <div className="event-card-image-wrapper">
                 <img
                     src={getEventImage(event.image)}
+                    onError={(e) => {
+                        e.currentTarget.src = defaultEventImage;
+                    }}
                     alt={event.title}
                     className="event-card-image"
                 />

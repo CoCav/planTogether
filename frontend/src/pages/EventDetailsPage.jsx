@@ -5,6 +5,8 @@ import { getEventById } from "../api/eventApi";
 import { getEventMembers, getEventOrganizers } from "../api/eventMembershipApi.js";
 import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../features/events/normalizeData.js";
 import { formatEventDateRange, formatCount, formatBe, formatTime } from "../utils/format.js";
+
+import defaultEventImage from "../assets/pexels-jrdb99-19683874.jpg";
 import { getEventImage } from "../utils/getEventImage.js";
 
 import useEventManagementActions from "../hooks/events/useEventManagementActions";
@@ -171,9 +173,6 @@ export default function EventDetailsPage() {
        Formats raw event values once before rendering
     ========================= */
 
-    /* ---------- Image ---------- */
-    const eventImageSrc = getEventImage(event.image);
-
     /* ---------- Text content ---------- */
     const eventDescription = event.description || "No description provided.";
     const eventType = event.type || "N/A";
@@ -263,7 +262,10 @@ export default function EventDetailsPage() {
 
                 <div className="event-details-image-wrapper">
                     <img
-                        src={eventImageSrc}
+                        src={getEventImage(event.image)}
+                        onError={(e) => {
+                            e.currentTarget.src = defaultEventImage;
+                        }}
                         alt={event.title}
                         className="event-details-image"
                     />

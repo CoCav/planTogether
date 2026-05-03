@@ -90,6 +90,21 @@ describe("EventCard", () => {
         expect(screen.getByText(/ended/i)).toBeInTheDocument();
     });
 
+    it("falls back to default event image when image fails to load", () => {
+        renderCard({
+            event: {
+                ...baseEvent,
+                image: "/uploads/events/missing.png"
+            }
+        });
+
+        const image = screen.getByAltText("Test Event");
+
+        fireEvent.error(image);
+
+        expect(image.src).toContain("pexels-jrdb99-19683874.jpg");
+    });
+
     it("shows join button for authenticated non-member", () => {
         renderCard({
             role: null

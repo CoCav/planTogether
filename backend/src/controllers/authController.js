@@ -28,7 +28,7 @@ const register = async (req, res, next) => {
                 userId: user.id,
                 name: user.name,
                 email: user.email,
-                avatar: user.avatar
+                avatar: user.avatar || null
             },
 
             token
@@ -55,7 +55,7 @@ const login = async (req, res, next) => {
                 userId: user.id,
                 name: user.name,
                 email: user.email,
-                avatar: user.avatar
+                avatar: user.avatar || null
             },
             token
         });
@@ -113,7 +113,7 @@ const updateUserByID = async (req, res, next) => {
                 userId: user.id,
                 name: user.name,
                 email: user.email,
-                avatar: user.avatar
+                avatar: user.avatar || null
             }
         });
 

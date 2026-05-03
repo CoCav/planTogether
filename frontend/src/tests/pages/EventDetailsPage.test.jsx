@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import EventDetailsPage from "../../pages/EventDetailsPage";
@@ -158,6 +158,26 @@ describe("EventDetailsPage", () => {
 
         expect(image).toBeInTheDocument();
         expect(image).toHaveAttribute("src", "default-event-image.jpg");
+    });
+
+    it("falls back to default event image when image fails to load", async () => {
+        setupApi({
+            event: {
+                ...mockEvent,
+                image: "/uploads/events/missing-image.png"
+            },
+            organizers: [{ id: 1, name: "John", role: "organizer" }]
+        });
+
+        renderPage();
+
+        const image = await screen.findByAltText("Test Event");
+
+        expect(image).toBeInTheDocument();
+
+        fireEvent.error(image);
+
+        expect(image.getAttribute("src")).toContain("pexels-jrdb99-19683874.jpg");
     });
 
     it("shows empty state when event is not found", async () => {

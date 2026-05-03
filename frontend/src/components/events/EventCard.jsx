@@ -1,9 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { formatEventDateRange, formatTime, formatCount } from "../../utils/format";
 import defaultEventImage from "../../assets/pexels-jrdb99-19683874.jpg";
-import { getEventImage } from "../../utils/getEventImage";
-
-
+import { getEventImage } from "../../utils/getUploadedFile";
 
 import useEventPermissions from "../../hooks/events/useEventPermissions";
 

@@ -4,7 +4,7 @@ import Select from "../ui/Select";
 import TextArea from "../ui/TextArea";
 import FormField from "../ui/FormField";
 import Button from "../ui/Button";
-import { getEventImage } from "../../utils/getEventImage";
+import { getEventImage } from "../../utils/getUploadedFile.js";
 
 /* ==================================================
    EVENT FORM

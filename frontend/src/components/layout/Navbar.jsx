@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, NavLink } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
-import { getAvatar } from "../../utils/getAvatar";
+
+import { getAvatar } from "../../utils/getUploadedFile";
 
 import Button from "../ui/Button";
 

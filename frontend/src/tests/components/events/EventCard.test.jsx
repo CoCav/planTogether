@@ -14,7 +14,7 @@ vi.mock("../../../utils/format", () => ({
     formatCount: (count) => `${count} participants`
 }));
 
-vi.mock("../../../utils/getEventImage", () => ({
+vi.mock("../../../utils/getUploadedFile.js", () => ({
     getEventImage: (image) => image || "default-event-image.jpg"
 }));
 

@@ -61,8 +61,9 @@ vi.mock("../../utils/format", () => ({
     formatBe: (count) => (count === 1 ? "is" : "are")
 }));
 
-vi.mock("../../utils/getEventImage", () => ({
-    getEventImage: (image) => image || "default-event-image.jpg"
+vi.mock("../../utils/getUploadedFile.js", () => ({
+    getEventImage: (image) => image || "default-event-image.jpg",
+    defaultEventImage: "default-event-image.jpg"
 }));
 
 const mockEvent = {
@@ -177,7 +178,7 @@ describe("EventDetailsPage", () => {
 
         fireEvent.error(image);
 
-        expect(image.getAttribute("src")).toContain("pexels-jrdb99-19683874.jpg");
+        expect(image).toHaveAttribute("src", "default-event-image.jpg");
     });
 
     it("shows empty state when event is not found", async () => {

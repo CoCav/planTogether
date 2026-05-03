@@ -14,6 +14,10 @@ vi.mock("../../../utils/format", () => ({
     formatCount: (count) => `${count} participants`
 }));
 
+vi.mock("../../../utils/getEventImage", () => ({
+    getEventImage: (image) => image || "default-event-image.jpg"
+}));
+
 const baseEvent = {
     id: 1,
     title: "Test Event",
@@ -23,7 +27,8 @@ const baseEvent = {
     participantCount: 3,
     mode: "online",
     creatorName: "Alice",
-    status: "upcoming"
+    status: "upcoming",
+    image: "/uploads/events/event-test.png",
 };
 
 const renderCard = (props = {}) =>
@@ -45,6 +50,30 @@ describe("EventCard", () => {
         expect(screen.getByText("Test description")).toBeInTheDocument();
         expect(screen.getByText(/3 participants/i)).toBeInTheDocument();
         expect(screen.getByText(/online/i)).toBeInTheDocument();
+    });
+
+    it("displays event image", () => {
+        renderCard();
+
+        const image = screen.getByAltText("Test Event");
+
+        expect(image).toBeInTheDocument();
+        expect(image).toHaveAttribute("src", "/uploads/events/event-test.png");
+        expect(image).toHaveClass("event-card-image");
+    });
+
+    it("displays default event image when event has no image", () => {
+        renderCard({
+            event: {
+                ...baseEvent,
+                image: null
+            }
+        });
+
+        const image = screen.getByAltText("Test Event");
+
+        expect(image).toBeInTheDocument();
+        expect(image).toHaveAttribute("src", "default-event-image.jpg");
     });
 
     it("shows ended label when event is past", () => {

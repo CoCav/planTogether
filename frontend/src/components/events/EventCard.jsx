@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { formatEventDateRange, formatTime, formatCount } from "../../utils/format";
+import { getEventImage } from "../../utils/getEventImage";
 
 import useEventPermissions from "../../hooks/events/useEventPermissions";
 
@@ -37,7 +38,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
 
     const isFull = event.maxParticipants && event.participantCount >= event.maxParticipants;
 
-    
+
     /* =========================
      Navigation
     ========================= */
@@ -52,7 +53,6 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
     return (
         <Card className="event-card event-card-clickable" onClick={handleCardClick}>
             <div className="event-card-header">
-
                 <div className="event-header-left">
                     <Link to={`/events/${event.id}`} className="event-title-link">
                         <h3 className="event-title">{event.title}</h3>
@@ -78,6 +78,14 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                         </>
                     )}
                 </div>
+            </div>
+
+            <div className="event-card-image-wrapper">
+                <img
+                    src={getEventImage(event.image)}
+                    alt={event.title}
+                    className="event-card-image"
+                />
             </div>
 
             <p className="event-description">{event.description || "No description provided."}</p>

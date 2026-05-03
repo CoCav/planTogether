@@ -2,7 +2,7 @@ const { uploadAvatar, uploadEventImage } = require("../../src/middlewares/upload
 
 /* ==================================================
    UPLOAD FILE MIDDLEWARE TESTS
-   Tests reusable multer upload handlers configuration
+   Tests reusable Multer upload handlers configuration
 ================================================== */
 
 describe("uploadFile", () => {
@@ -22,5 +22,13 @@ describe("uploadFile", () => {
 
         expect(typeof avatarMiddleware).toBe("function");
         expect(typeof eventImageMiddleware).toBe("function");
+    });
+
+    it("sets avatar upload file size limit to 2MB", () => {
+        expect(uploadAvatar.limits.fileSize).toBe(2 * 1024 * 1024);
+    });
+
+    it("sets event image upload file size limit to 3MB", () => {
+        expect(uploadEventImage.limits.fileSize).toBe(3 * 1024 * 1024);
     });
 });

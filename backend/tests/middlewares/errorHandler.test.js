@@ -1,4 +1,10 @@
+const multer = require("multer");
 const errorHandler = require("../../src/middlewares/errorHandler");
+
+/* ==================================================
+   ERROR HANDLER MIDDLEWARE TESTS
+   Tests centralized API error formatting
+================================================== */
 
 const createMocks = () => {
     const req = {};
@@ -16,13 +22,41 @@ describe("errorHandler middleware", () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => {});
+        jest.spyOn(console, "error").mockImplementation(() => { });
         process.env.NODE_ENV = "test";
     });
 
     afterEach(() => {
         console.error.mockRestore();
         process.env.NODE_ENV = originalEnv;
+    });
+
+    it("should handle Multer file size errors", () => {
+        const { req, res, next } = createMocks();
+
+        const error = new multer.MulterError("LIMIT_FILE_SIZE");
+
+        errorHandler(error, req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+            success: false,
+            message: "File too large. Maximum size exceeded."
+        });
+    });
+
+    it("should handle generic Multer errors", () => {
+        const { req, res, next } = createMocks();
+
+        const error = new multer.MulterError("LIMIT_UNEXPECTED_FILE");
+
+        errorHandler(error, req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+            success: false,
+            message: "Unexpected field"
+        });
     });
 
     it("should handle generic errors with statusCode", () => {

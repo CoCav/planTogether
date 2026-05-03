@@ -4,7 +4,22 @@ const fs = require("fs");
 
 /* ==================================================
    UPLOAD FILE MIDDLEWARE
-   Creates reusable multer upload handlers for file (avatar/event image)
+   Provides reusable Multer configurations for avatar/image uploads
+
+   Handles:
+   - dynamic upload directories (avatars, events, etc.)
+   - automatic folder creation if missing
+   - unique file naming to prevent collisions
+   - file type validation (images only)
+   - file size limits per use case
+
+   Usage:
+   - uploadAvatar → for user profile images
+   - uploadEventImage → for event-related images
+
+   Notes:
+   - returns Multer instances (use with .single("field"))
+   - works with global errorHandler for upload errors
 ================================================== */
 
 const createImageUpload = ({ folder, prefix, maxSize }) => {
@@ -31,7 +46,9 @@ const createImageUpload = ({ folder, prefix, maxSize }) => {
         const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
         if (!allowedTypes.includes(file.mimetype)) {
-            return cb(new Error("Only image files are allowed"), false);
+            const error = new Error("Only image files are allowed");
+            error.statusCode = 400;
+            return cb(error, false);
         }
 
         cb(null, true);

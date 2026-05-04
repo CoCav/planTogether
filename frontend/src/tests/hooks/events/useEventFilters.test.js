@@ -96,7 +96,8 @@ describe("useEventFilters", () => {
                 sortBy: "startDateTime",
                 order: "asc"
             }),
-            1
+            1,
+            "all"
         );
     });
 
@@ -140,7 +141,8 @@ describe("useEventFilters", () => {
                 sortBy: "",
                 order: "asc"
             }),
-            1
+            1,
+            "all"
         );
     });
 
@@ -162,7 +164,8 @@ describe("useEventFilters", () => {
                 sortBy: "",
                 order: "asc"
             }),
-            1
+            1,
+            "all"
         );
 
         await act(async () => {
@@ -190,7 +193,8 @@ describe("useEventFilters", () => {
                 sortBy: "",
                 order: "asc"
             }),
-            1
+            1,
+            "all"
         );
 
         await act(async () => {
@@ -206,5 +210,21 @@ describe("useEventFilters", () => {
 
         expect(result.current.sortLabels["startDateTime-asc"]).toBe("Oldest first");
         expect(result.current.sortLabels["startDateTime-desc"]).toBe("Most recent");
+    });
+
+    it("passes activeView to loadData", async () => {
+        const { result } = setupHook("upcoming");
+
+        await act(async () => {
+            await result.current.handleFilterSubmit({
+                preventDefault: vi.fn()
+            });
+        });
+
+        expect(loadData).toHaveBeenCalledWith(
+            expect.any(Object),
+            1,
+            "upcoming"
+        );
     });
 });

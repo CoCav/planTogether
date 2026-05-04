@@ -50,7 +50,7 @@ export default function useEventFilters({ activeView, loadData, resetPage }) {
         setFilters(nextFilters);
         resetPage?.();
 
-        await loadData(nextFilters, 1);
+        await loadData(nextFilters, 1, activeView);
     };
 
     /* =========================
@@ -79,7 +79,7 @@ export default function useEventFilters({ activeView, loadData, resetPage }) {
         setFilters(resetFilters);
         resetPage?.();
 
-        await loadData(resetFilters, 1);
+        await loadData(resetFilters, 1, activeView);
     };
 
     /* =========================
@@ -95,7 +95,7 @@ export default function useEventFilters({ activeView, loadData, resetPage }) {
         setFilters(nextFilters);
         resetPage?.();
 
-        await loadData(nextFilters, 1);
+        await loadData(nextFilters, 1, activeView);
     };
 
     /* =========================
@@ -111,7 +111,7 @@ export default function useEventFilters({ activeView, loadData, resetPage }) {
         setFilters(nextFilters);
         resetPage?.();
 
-        await loadData(nextFilters, 1);
+        await loadData(nextFilters, 1, activeView);
     };
 
     return { filters, setFilters, showFilters, setShowFilters, sortLabels, isCurrentWeekendFilterActive, handleFilterChange, handleFilterSubmit, handleSortChange, handleResetFilters, handleTodayFilter, handleWeekendFilter };

@@ -86,7 +86,7 @@ export default function AuthFormFields({ form, errors, onChange, onFileChange, o
     };
 
     return (
-        <div className="form-grid">
+        <div className="form-stack">
             {showAvatar && (
                 <FormField label="Avatar (optional)" error={errors.avatar} className="avatar-form-field">
                     <div className={`avatar-upload-panel ${isDragging ? "drag-active" : ""}`}

@@ -31,6 +31,7 @@ describe("useEventFilters", () => {
 
         expect(result.current.filters).toEqual({
             search: "",
+            creator: "",
             type: "",
             theme: "",
             mode: "",

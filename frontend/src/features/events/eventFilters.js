@@ -18,6 +18,7 @@ const formatDateForInput = (date) => {
 
 export const getDefaultEventFilters = () => ({
     search: "",
+    creator: "",
     type: "",
     theme: "",
     mode: "",

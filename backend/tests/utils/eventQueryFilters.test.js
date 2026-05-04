@@ -7,7 +7,7 @@ const { Op } = require("sequelize");
  *
  * Tests event query filter helpers.
  *
- * Ensures status, date and basic filters are correctly applied.
+ * Ensures status, date, creator and basic filters are correctly applied.
 */
 
 describe("applyStatusFilter", () => {
@@ -63,6 +63,16 @@ describe("applyBasicEventFilters", () => {
         expect(where.creatorId).toBe(5);
     });
 
+    it("should apply creator name filter", () => {
+        const where = {};
+
+        applyBasicEventFilters(where, { creator: "john" });
+
+        expect(where["$creator.name$"]).toEqual({
+            [Op.iLike]: "%john%"
+        });
+    });
+
     it("should apply mode filter", () => {
         const where = {};
 
@@ -116,13 +126,17 @@ describe("applyEventQueryFilters", () => {
             status: "upcoming",
             search: "music",
             mode: "online",
-            creatorId: "5"
+            creatorId: "5",
+            creator: "john"
         });
 
         expect(where[Op.and]).toBeDefined();
         expect(where[Op.or]).toBeDefined();
         expect(where.mode).toBe("online");
         expect(where.creatorId).toBe(5);
+        expect(where["$creator.name$"]).toEqual({
+            [Op.iLike]: "%john%"
+        });
     });
 
     it("should skip status when includeStatus is false", () => {

@@ -19,6 +19,7 @@ describe("eventFilters", () => {
     it("should return default event filters", () => {
         expect(getDefaultEventFilters()).toEqual({
             search: "",
+            creator: "",
             type: "",
             theme: "",
             mode: "",

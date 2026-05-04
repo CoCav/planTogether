@@ -87,6 +87,7 @@ const applyDateFilters = (whereConditions, { date, startDate, endDate }) => {
 const applyBasicEventFilters = (whereConditions, query = {}) => {
     const {
         creatorId,
+        creator,
         type,
         theme,
         location,
@@ -95,6 +96,13 @@ const applyBasicEventFilters = (whereConditions, query = {}) => {
     } = query;
 
     if (creatorId) whereConditions.creatorId = parseInt(creatorId, 10);
+
+    if (creator) {
+        whereConditions["$creator.name$"] = {
+            [Op.iLike]: `%${String(creator).trim()}%`
+        };
+    }
+
     if (mode) whereConditions.mode = String(mode).trim();
     if (type) whereConditions.type = { [Op.iLike]: `%${type}%` };
     if (theme) whereConditions.theme = { [Op.iLike]: `%${theme}%` };
@@ -125,4 +133,4 @@ const applyEventQueryFilters = (whereConditions, query = {}, options = {}) => {
     return whereConditions;
 };
 
-module.exports = {addAndCondition, applyStatusFilter, applyDateFilters, applyBasicEventFilters, applyEventQueryFilters };
+module.exports = { addAndCondition, applyStatusFilter, applyDateFilters, applyBasicEventFilters, applyEventQueryFilters };

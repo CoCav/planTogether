@@ -9,6 +9,7 @@ import EventsFilterCard from "../../../components/events/EventsFilterCard";
 
 const filters = {
     search: "",
+    creator: "",
     type: "",
     theme: "",
     mode: "",
@@ -60,6 +61,7 @@ describe("EventsFilterCard", () => {
         renderFilterCard({ showFilters: true });
 
         expect(screen.getByPlaceholderText(/search events/i)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(/search by creator/i)).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/workshop, meetup/i)).toBeInTheDocument();
         expect(screen.getByText("Soonest first")).toBeInTheDocument();
     });
@@ -84,6 +86,21 @@ describe("EventsFilterCard", () => {
 
         fireEvent.change(screen.getByPlaceholderText(/search events/i), {
             target: { value: "music" }
+        });
+
+        expect(onFilterChange).toHaveBeenCalled();
+    });
+
+    it("calls onFilterChange when creator input changes", () => {
+        const onFilterChange = vi.fn();
+
+        renderFilterCard({
+            showFilters: true,
+            onFilterChange
+        });
+
+        fireEvent.change(screen.getByPlaceholderText(/search by creator/i), {
+            target: { value: "john" }
         });
 
         expect(onFilterChange).toHaveBeenCalled();

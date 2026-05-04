@@ -14,7 +14,7 @@ import FormField from "../ui/FormField";
    - sorting controls
 ================================================== */
 
-export default function EventsFilterCard({filters, showFilters, sortLabels, onToggleFilters, onFilterChange, onFilterSubmit, onSortChange, onResetFilters }) {
+export default function EventsFilterCard({ filters, showFilters, sortLabels, onToggleFilters, onFilterChange, onFilterSubmit, onSortChange, onResetFilters }) {
 
     return (
         <Card className="filter-card">
@@ -25,7 +25,7 @@ export default function EventsFilterCard({filters, showFilters, sortLabels, onTo
             <div className="filter-card-header">
                 <div>
                     <h2 className="section-title">Filters</h2>
-                    <p className="section-subtitle">Refine events by search, category, location, date, or sorting.</p>
+                    <p className="section-subtitle">Refine events by search, creator, category, location, date, or sorting.</p>
                 </div>
 
                 <Button type="button" variant="outline" onClick={onToggleFilters}>{showFilters ? "Hide filters" : "Show filters"}</Button>
@@ -45,6 +45,15 @@ export default function EventsFilterCard({filters, showFilters, sortLabels, onTo
                                 value={filters.search}
                                 onChange={onFilterChange}
                                 placeholder="Search events..."
+                            />
+                        </FormField>
+
+                        <FormField label="Creator">
+                            <Input
+                                name="creator"
+                                value={filters.creator}
+                                onChange={onFilterChange}
+                                placeholder="Search by creator..."
                             />
                         </FormField>
 

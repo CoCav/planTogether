@@ -79,8 +79,9 @@ describe("EventForm", () => {
     it("renders event image upload", () => {
         renderComponent();
 
+        expect(screen.getByText(/drag & drop an image here/i)).toBeInTheDocument();
+        expect(screen.getByText(/max 3mb.*jpg.*png.*webp.*gif/i)).toBeInTheDocument();
         expect(screen.getByText(/choose file/i)).toBeInTheDocument();
-        expect(screen.getByText(/optional.*max 3mb.*jpg.*png.*webp.*gif/i)).toBeInTheDocument();
     });
 
     it("calls onFileChange when selecting an event image", () => {
@@ -90,6 +91,17 @@ describe("EventForm", () => {
 
         fireEvent.change(fileInput, {
             target: { files: [validImage] }
+        });
+
+        expect(defaultProps.onFileChange).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls onFileChange when dropping an event image", () => {
+        renderComponent();
+        fireEvent.drop(screen.getByText(/drag & drop an image here/i).closest(".event-image-upload-panel"), {
+            dataTransfer: {
+                files: [validImage]
+            }
         });
 
         expect(defaultProps.onFileChange).toHaveBeenCalledTimes(1);
@@ -122,8 +134,9 @@ describe("EventForm", () => {
         });
 
         expect(screen.getByAltText("Event preview")).toBeInTheDocument();
-        expect(screen.getByText("event-current.png")).toBeInTheDocument();
-        expect(screen.getByText(/uploaded image/i)).toBeInTheDocument();
+        expect(screen.getByText(/existing image/i)).toBeInTheDocument();
+        expect(screen.getByText(/uploaded previously/i)).toBeInTheDocument();
+
         expect(screen.getByRole("button", { name: /remove/i })).toBeInTheDocument();
     });
 

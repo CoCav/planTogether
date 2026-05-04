@@ -20,14 +20,15 @@ import PageLoader from "../components/ui/PageLoader";
 export default function ProfilePage() {
     const { user, refreshUser } = useAuth();
 
+    /* =========================
+       Local state
+       Stores pages feedback, form values,
+       validation errors and loadings states
+    ========================= */
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
-
-    // Stores validation errors for each profile form section
     const [profileErrors, setProfileErrors] = useState({});
     const [passwordErrors, setPasswordErrors] = useState({});
-
-    // Controls submit loading states for each form
     const [profileSubmitting, setProfileSubmitting] = useState(false);
     const [passwordSubmitting, setPasswordSubmitting] = useState(false);
 
@@ -35,7 +36,8 @@ export default function ProfilePage() {
     const [profileForm, setProfileForm] = useState({
         name: user?.name ?? "",
         email: user?.email ?? "",
-        avatar: null
+        avatar: null,
+        currentAvatar: null
     });
 
     // Stores password update fields
@@ -54,10 +56,25 @@ export default function ProfilePage() {
 
 
     /* =========================
-        Feedback cleanup
-        Clears success/error messages automatically
+        Profile data sync
+        Fills the form when user data is loaded or refreshed
     ========================= */
+    useEffect(() => {
+        if (!user) return;
 
+        setProfileForm({
+            name: user.name ?? "",
+            email: user.email ?? "",
+            avatar: null,
+            currentAvatar: user.avatar || null
+        });
+    }, [user]);
+
+
+    /* =========================
+        Feedback cleanup
+        Automatically clears success and error messages
+    ========================= */
     useEffect(() => {
         if (message || error) {
             const timer = setTimeout(() => {
@@ -74,7 +91,6 @@ export default function ProfilePage() {
         Profile form handling
         Updates profile fields and clears field errors
     ========================= */
-
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -92,7 +108,7 @@ export default function ProfilePage() {
 
     /* =========================
         Avatar input handling
-        Stores selected file and clears avatar error
+        Stores selected file or removes avatar files
     ========================= */
     const handleFileChange = (e) => {
         const file = e.target.files?.[0] || null;
@@ -111,7 +127,8 @@ export default function ProfilePage() {
     const handleRemoveAvatar = () => {
         setProfileForm((prev) => ({
             ...prev,
-            avatar: null
+            avatar: null,
+            currentAvatar: null
         }));
 
         setProfileErrors((prev) => ({
@@ -122,9 +139,9 @@ export default function ProfilePage() {
 
     /* =========================
         Password form handling
-        Updates password fields and clears field errors
+        Updates password fields, clears errors,
+        and controls password visibility
     ========================= */
-
     const handlePasswordChange = (e) => {
         const { name, value } = e.target;
 
@@ -151,7 +168,6 @@ export default function ProfilePage() {
         Profile submission
         Validates and updates user profile information
     ========================= */
-
     const handleProfileSubmit = async (e) => {
         e.preventDefault();
         setMessage("");
@@ -195,7 +211,6 @@ export default function ProfilePage() {
         Password submission
         Validates and updates user password
     ========================= */
-
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
         setMessage("");

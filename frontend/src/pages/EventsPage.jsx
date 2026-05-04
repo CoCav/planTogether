@@ -40,7 +40,8 @@ export default function EventsPage() {
 
     /* =========================
        Local state
-       Stores page feedback, events, roles, view and loading state
+       Stores page feedback, events,
+       roles, view and loading state
     ========================= */
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");

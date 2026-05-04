@@ -178,7 +178,6 @@ export default function MyEventsPage() {
        Role helper
        Resolves current user's role for each event
     ========================= */
-
     const getRoleByEventId = (eventId) => events.find((event) => event.id === eventId)?.role || null;
 
 

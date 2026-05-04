@@ -72,7 +72,8 @@ describe("EditEventPage", () => {
         await screen.findByDisplayValue("Original Event");
 
         expect(screen.getByAltText(/event preview/i)).toBeInTheDocument();
-        expect(screen.getByText("event-current.png")).toBeInTheDocument();
+        expect(screen.getByText(/existing image/i)).toBeInTheDocument();
+        expect(screen.getByText(/uploaded previously/i)).toBeInTheDocument();
     });
 
     it("updates event (FormData)", async () => {

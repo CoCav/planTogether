@@ -90,7 +90,8 @@ describe("RegisterPage", () => {
 
         expect(screen.getByRole("heading", { name: /register/i })).toBeInTheDocument();
         expect(screen.getByText(/choose file/i)).toBeInTheDocument();
-        expect(screen.getByText(/optional.*max 2mb.*jpg.*png.*webp.*gif/i)).toBeInTheDocument();
+        expect(screen.getByText(/drag & drop an avatar here/i)).toBeInTheDocument();
+        expect(screen.getByText(/max 2mb.*jpg.*png.*webp.*gif/i)).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/your name/i)).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/your email/i)).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/choose a password/i)).toBeInTheDocument();

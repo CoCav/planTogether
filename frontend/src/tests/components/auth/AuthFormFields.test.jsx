@@ -59,8 +59,9 @@ describe("AuthFormFields", () => {
     it("renders avatar upload when showAvatar is true", () => {
         renderComponent({ showAvatar: true });
 
+        expect(screen.getByText(/drag & drop an avatar here/i)).toBeInTheDocument();
+        expect(screen.getByText(/max 2mb.*jpg.*png.*webp.*gif/i)).toBeInTheDocument();
         expect(screen.getByText(/choose file/i)).toBeInTheDocument();
-        expect(screen.getByText(/optional.*max 2mb.*jpg.*png.*webp.*gif/i)).toBeInTheDocument();
     });
 
     it("does not render avatar upload when showAvatar is false", () => {
@@ -68,6 +69,18 @@ describe("AuthFormFields", () => {
 
         expect(screen.queryByText(/choose file/i)).not.toBeInTheDocument();
         expect(screen.queryByText(/optional.*max 2mb/i)).not.toBeInTheDocument();
+    });
+
+    it("calls onFileChange when dropping an avatar", () => {
+        renderComponent({ showAvatar: true });
+
+        fireEvent.drop(screen.getByText(/drag & drop an avatar here/i).closest(".avatar-upload-panel"), {
+            dataTransfer: {
+                files: [validAvatar]
+            }
+        });
+
+        expect(defaultProps.onFileChange).toHaveBeenCalledTimes(1);
     });
 
     it("calls onChange when name changes", () => {
@@ -118,6 +131,20 @@ describe("AuthFormFields", () => {
 
         expect(screen.getByText("avatar.png")).toBeInTheDocument();
         expect(screen.getByText(/kb/i)).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /remove/i })).toBeInTheDocument();
+    });
+
+    it("shows current avatar preview when editing existing avatar", () => {
+        renderComponent({
+            form: {
+                currentAvatar: "/uploads/avatars/avatar-current.png"
+            }
+        });
+
+        expect(screen.getByAltText("Avatar preview")).toBeInTheDocument();
+        expect(screen.getByText(/existing avatar/i)).toBeInTheDocument();
+        expect(screen.getByText(/uploaded previously/i)).toBeInTheDocument();
+
         expect(screen.getByRole("button", { name: /remove/i })).toBeInTheDocument();
     });
 

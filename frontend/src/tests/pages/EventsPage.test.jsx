@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import EventsPage from "../../pages/EventsPage";
 
 /* ==================================================
@@ -61,10 +61,17 @@ const createResponse = ({
     }
 });
 
-const renderPage = () =>
+const LocationDisplay = () => {
+    const location = useLocation();
+
+    return <span data-testid="location-search">{location.search}</span>;
+};
+
+const renderPage = (initialEntry = "/events") =>
     render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={[initialEntry]}>
             <EventsPage />
+            <LocationDisplay />
         </MemoryRouter>
     );
 
@@ -345,6 +352,59 @@ describe("EventsPage", () => {
         });
 
         expect(await screen.findByText("Filtered Page 2")).toBeInTheDocument();
+    });
+
+    it("updates URL when applying filters", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await screen.findByText(/no events found/i);
+
+        await user.click(screen.getByRole("button", { name: /show filters/i }));
+        await user.type(screen.getByPlaceholderText(/search events/i), "music");
+        await user.click(screen.getByRole("button", { name: /apply filters/i }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId("location-search")).toHaveTextContent("search=music");
+        });
+    });
+
+    it("updates URL when switching view", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await screen.findByText(/no events found/i);
+
+        await user.click(screen.getByRole("button", { name: /upcoming/i }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId("location-search")).toHaveTextContent("view=upcoming");
+        });
+    });
+
+    it("updates URL when moving to next page", async () => {
+        const user = userEvent.setup();
+
+        mockGetAllEvents.mockResolvedValue(
+            createResponse({
+                events: [{ id: 1, title: "Event Page 1", creatorId: 2 }],
+                page: 1,
+                totalPages: 2,
+                totalEvents: 5
+            })
+        );
+
+        renderPage();
+
+        expect(await screen.findByText("Event Page 1")).toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", { name: /next/i }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId("location-search")).toHaveTextContent("page=2");
+        });
     });
 
     it("shows login alert when user is not authenticated", async () => {

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 
 import { getAllEvents, getFilteredEvents } from "../api/eventApi";
@@ -8,6 +8,7 @@ import { getMyEvents } from "../api/eventMembershipApi";
 import { getNormalizedEvents, getMyEventsWithRole } from "../features/events/normalizeData.js";
 import { PUBLIC_EVENT_VIEWS, getViewContent } from "../features/events/eventViewConfig";
 import { getDefaultEventFilters } from "../features/events/eventFilters";
+import { buildSearchParams, getInitialFiltersFromUrl, getInitialPageFromUrl, getInitialViewFromUrl } from "../features/events/eventQueryParams";
 import { getEventsEmptyState } from "../features/events/eventEmptyState.js";
 
 import useEventActionsWithConfirm from "../hooks/events/useEventActionsWithConfirm.js";
@@ -37,6 +38,15 @@ import Pagination from "../components/ui/Pagination.jsx";
 
 export default function EventsPage() {
     const { user } = useAuth();
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    /* =========================
+        URL initial state
+        Reads view, page and filters from query params
+    ========================= */
+    const initialView = useMemo(() => getInitialViewFromUrl(searchParams, PUBLIC_EVENT_VIEWS), [searchParams]);
+    const initialPage = useMemo(() => getInitialPageFromUrl(searchParams), [searchParams]);
+    const initialFilters = useMemo(() => getInitialFiltersFromUrl(searchParams), [searchParams]);
 
     /* =========================
        Local state
@@ -47,16 +57,15 @@ export default function EventsPage() {
     const [error, setError] = useState("");
     const [events, setEvents] = useState([]);
     const [myEvents, setMyEvents] = useState({});
-    const [activeView, setActiveView] = useState("all");
+    const [activeView, setActiveView] = useState(initialView);
     const [loading, setLoading] = useState(true);
-
 
     /* =========================
        Pagination state
        Tracks current page and total results
     ========================= */
     const [pagination, setPagination] = useState({
-        page: 1,
+        page: initialPage,
         pageSize: 4,
         totalPages: 1,
         totalEvents: 0
@@ -136,8 +145,30 @@ export default function EventsPage() {
         } finally {
             setLoading(false);
         }
+
+    }, [pagination.pageSize, user]);
+
+
+    /* =========================
+        URL synchronization
+        Keeps filters, page and view reflected in the URL
+    ========================= */
+    const syncUrl = useCallback((nextFilters, nextPage, nextView) => {
+        setSearchParams(buildSearchParams(nextFilters, nextPage, nextView));
     },
-        [pagination.pageSize, user]
+        [setSearchParams]
+    );
+
+
+    /* =========================
+       Data loading with URL sync
+       Updates query params before loading events
+    ========================= */
+    const loadDataAndSyncUrl = useCallback(async (nextFilters, nextPage = 1, nextView = activeView) => {
+        syncUrl(nextFilters, nextPage, nextView);
+        await loadData(nextFilters, nextPage, nextView);
+    },
+        [activeView, loadData, syncUrl]
     );
 
 
@@ -160,7 +191,8 @@ export default function EventsPage() {
         handleWeekendFilter
     } = useEventFilters({
         activeView,
-        loadData,
+        loadData: loadDataAndSyncUrl,
+        initialFilters,
         resetPage: () =>
             setPagination((prev) => ({
                 ...prev,
@@ -178,18 +210,27 @@ export default function EventsPage() {
     const { handlePreviousPage, handleNextPage } = usePagination({
         page: pagination.page,
         totalPages: pagination.totalPages,
-        onPageChange: (nextPage) => loadData(filters, nextPage, activeView)
+        onPageChange: (nextPage) => loadDataAndSyncUrl(filters, nextPage, activeView)
     });
 
 
     /* =========================
-       Initial data loading
-       Loads the default public events view
-    ========================= */
-    useEffect(() => {
-        loadData(getDefaultEventFilters(), 1, "all");
-    }, [loadData]);
+        Initial data loading (run once)
+        Loads events from URL-derived state (filters, page, view)
 
+        Uses a ref guard to prevent multiple executions:
+            - avoids React StrictMode double calls in development
+            - avoids re-runs caused by unstable dependencies (URL params)
+    ========================= */
+    const hasLoadedRef = useRef(false);
+
+    useEffect(() => {
+        if (hasLoadedRef.current) return;
+
+        hasLoadedRef.current = true;
+
+        loadData(initialFilters, initialPage, initialView);
+    }, [loadData, initialFilters, initialPage, initialView]);
 
     /* =========================
        Feedback cleanup
@@ -251,7 +292,7 @@ export default function EventsPage() {
             page: 1
         }));
 
-        await loadData(nextFilters, 1, nextView);
+        await loadDataAndSyncUrl(nextFilters, 1, nextView);
     };
 
 
@@ -261,7 +302,6 @@ export default function EventsPage() {
     ========================= */
     const viewContent = getViewContent(PUBLIC_EVENT_VIEWS, activeView);
     const showPaginationInfo = pagination.totalPages > 1;
-
 
     /* =========================
        Loading state

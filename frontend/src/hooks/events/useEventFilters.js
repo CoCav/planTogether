@@ -13,8 +13,8 @@ import { getDefaultEventFilters, EVENT_SORT_MAP, getSortLabels, getTodayEventFil
    - pagination reset on filter changes
 ================================================== */
 
-export default function useEventFilters({ activeView, loadData, resetPage }) {
-    const [filters, setFilters] = useState(getDefaultEventFilters);
+export default function useEventFilters({ activeView, loadData, resetPage, initialFilters = getDefaultEventFilters() }) {
+    const [filters, setFilters] = useState(initialFilters);
     const [showFilters, setShowFilters] = useState(false);
 
     const sortLabels = getSortLabels(activeView);

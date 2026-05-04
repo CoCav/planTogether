@@ -1,3 +1,4 @@
+
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import useEventFilters from "../../../hooks/events/useEventFilters";
@@ -24,7 +25,12 @@ describe("useEventFilters", () => {
         vi.clearAllMocks();
     });
 
-    const setupHook = (activeView = "all") => renderHook(() => useEventFilters({ activeView, loadData, resetPage }));
+    const setupHook = (activeView = "all", customInitialFilters = null) => renderHook(() => useEventFilters({
+        activeView,
+        loadData,
+        resetPage,
+        ...(customInitialFilters && { initialFilters: customInitialFilters })
+    }));
 
     it("initializes with default filters and hidden filter panel", () => {
         const { result } = setupHook();
@@ -226,5 +232,28 @@ describe("useEventFilters", () => {
             1,
             "upcoming"
         );
+    });
+
+    it("initializes with provided initial filters", () => {
+        const { result } = setupHook("upcoming", {
+            search: "music",
+            creator: "John",
+            type: "",
+            theme: "",
+            mode: "",
+            location: "",
+            date: "",
+            startDate: "",
+            endDate: "",
+            sortBy: "title",
+            order: "desc"
+        });
+
+        expect(result.current.filters).toMatchObject({
+            search: "music",
+            creator: "John",
+            sortBy: "title",
+            order: "desc"
+        });
     });
 });

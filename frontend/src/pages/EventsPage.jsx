@@ -44,7 +44,7 @@ export default function EventsPage() {
         URL initial state
         Reads view, page and filters from query params
     ========================= */
-    const initialView = useMemo(() => getInitialViewFromUrl(searchParams, PUBLIC_EVENT_VIEWS), [searchParams]);
+    const initialView = useMemo(() => getInitialViewFromUrl(searchParams, PUBLIC_EVENT_VIEWS, "all"), [searchParams]);
     const initialPage = useMemo(() => getInitialPageFromUrl(searchParams), [searchParams]);
     const initialFilters = useMemo(() => getInitialFiltersFromUrl(searchParams), [searchParams]);
 
@@ -58,7 +58,9 @@ export default function EventsPage() {
     const [events, setEvents] = useState([]);
     const [myEvents, setMyEvents] = useState({});
     const [activeView, setActiveView] = useState(initialView);
-    const [loading, setLoading] = useState(true);
+
+    const [initialLoading, setInitialLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
 
     /* =========================
        Pagination state
@@ -96,6 +98,7 @@ export default function EventsPage() {
     const loadData = useCallback(async (customFilters = getDefaultEventFilters(), customPage = 1, customView = "all") => {
         try {
             setError("");
+            setLoading(true);
 
             const view = getViewContent(PUBLIC_EVENT_VIEWS, customView);
 
@@ -144,6 +147,7 @@ export default function EventsPage() {
             setError("❌ Failed to load events");
         } finally {
             setLoading(false);
+            setInitialLoading(false);
         }
 
     }, [pagination.pageSize, user]);
@@ -307,7 +311,7 @@ export default function EventsPage() {
        Loading state
     ========================= */
 
-    if (loading) {
+    if (initialLoading) {
         return (
             <div className="container page-section">
                 <LoadingState>Loading events...</LoadingState>
@@ -388,7 +392,9 @@ export default function EventsPage() {
             </div>
 
             <section className="events-section">
-                {events.length === 0 ? (
+                {loading ? (
+                    <LoadingState>Refreshing events...</LoadingState>
+                ) : events.length === 0 ? (
                     <EmptyState
                         title={emptyState.title || viewContent.empty}
                         description={emptyState.description}

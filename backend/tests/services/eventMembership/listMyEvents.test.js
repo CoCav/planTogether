@@ -2,6 +2,7 @@ const EventUserRole = require("../../../src/models/relations/eventUserRoleModel"
 const Event = require("../../../src/models/eventModel");
 const User = require("../../../src/models/userModel");
 
+const { applyEventQueryFilters, buildCreatorInclude } = require("../../../src/utils/eventQueryFilters");
 const { getPaginationOptions } = require("../../../src/utils/pagination");
 const { getEventStatus } = require("../../../src/utils/eventTime");
 
@@ -30,10 +31,24 @@ jest.mock("../../../src/models/userModel", () => ({
 jest.mock("../../../src/utils/pagination");
 jest.mock("../../../src/utils/eventTime");
 
+jest.mock("../../../src/utils/eventQueryFilters", () => ({
+    applyEventQueryFilters: jest.fn(),
+    buildCreatorInclude: jest.fn()
+}));
+
 describe("eventMembershipService - listMyEvents", () => {
+
+    applyEventQueryFilters.mockImplementation((where) => where);
+
+    buildCreatorInclude.mockReturnValue({
+        model: User,
+        as: "creator",
+        attributes: ["id", "name"]
+    });
+
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => {});
+        jest.spyOn(console, "error").mockImplementation(() => { });
     });
 
     afterEach(() => {
@@ -92,6 +107,24 @@ describe("eventMembershipService - listMyEvents", () => {
         });
     });
 
+    it("should apply creator filter through creator include", async () => {
+        User.findByPk.mockResolvedValue({ id: 1 });
+
+        getPaginationOptions.mockReturnValue(pagination);
+
+        EventUserRole.findAndCountAll.mockResolvedValue({
+            count: 0,
+            rows: []
+        });
+
+        await service.listMyEvents(1, {
+            view: "joined",
+            creator: "john"
+        });
+
+        expect(buildCreatorInclude).toHaveBeenCalledWith(User, "john");
+    });
+
     it("should apply role filter for created view", async () => {
         User.findByPk.mockResolvedValue({ id: 1 });
 
@@ -141,6 +174,31 @@ describe("eventMembershipService - listMyEvents", () => {
         const args = EventUserRole.findAndCountAll.mock.calls[0][0];
 
         expect(args.include[0].where.endDateTime[Op.lt]).toBeDefined();
+    });
+
+    it("should not pass creator to generic event filters", async () => {
+        User.findByPk.mockResolvedValue({ id: 1 });
+
+        getPaginationOptions.mockReturnValue(pagination);
+
+        EventUserRole.findAndCountAll.mockResolvedValue({
+            count: 0,
+            rows: []
+        });
+
+        await service.listMyEvents(1, {
+            view: "joined",
+            creator: "john",
+            search: "music"
+        });
+
+        expect(applyEventQueryFilters).toHaveBeenCalledWith(
+            expect.any(Object),
+            expect.not.objectContaining({
+                creator: "john"
+            }),
+            { includeStatus: false }
+        );
     });
 
     it("should throw 404 if user not found", async () => {

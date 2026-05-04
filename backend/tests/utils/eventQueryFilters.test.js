@@ -1,4 +1,4 @@
-const { applyStatusFilter, applyDateFilters, applyBasicEventFilters, applyEventQueryFilters } = require("../../src/utils/eventQueryFilters");
+const { applyStatusFilter, applyDateFilters, applyBasicEventFilters, applyEventQueryFilters, buildCreatorInclude } = require("../../src/utils/eventQueryFilters");
 
 const { Op } = require("sequelize");
 
@@ -63,16 +63,6 @@ describe("applyBasicEventFilters", () => {
         expect(where.creatorId).toBe(5);
     });
 
-    it("should apply creator name filter", () => {
-        const where = {};
-
-        applyBasicEventFilters(where, { creator: "john" });
-
-        expect(where["$creator.name$"]).toEqual({
-            [Op.iLike]: "%john%"
-        });
-    });
-
     it("should apply mode filter", () => {
         const where = {};
 
@@ -126,16 +116,38 @@ describe("applyEventQueryFilters", () => {
             status: "upcoming",
             search: "music",
             mode: "online",
-            creatorId: "5",
-            creator: "john"
+            creatorId: "5"
         });
 
         expect(where[Op.and]).toBeDefined();
         expect(where[Op.or]).toBeDefined();
         expect(where.mode).toBe("online");
         expect(where.creatorId).toBe(5);
-        expect(where["$creator.name$"]).toEqual({
-            [Op.iLike]: "%john%"
+    });
+
+    describe("buildCreatorInclude", () => {
+        const User = { name: "UserModel" };
+
+        it("should build creator include without filter", () => {
+            expect(buildCreatorInclude(User)).toEqual({
+                model: User,
+                as: "creator",
+                attributes: ["id", "name"]
+            });
+        });
+
+        it("should build creator include with name filter", () => {
+            expect(buildCreatorInclude(User, "john")).toEqual({
+                model: User,
+                as: "creator",
+                attributes: ["id", "name"],
+                where: {
+                    name: {
+                        [Op.iLike]: "%john%"
+                    }
+                },
+                required: true
+            });
         });
     });
 

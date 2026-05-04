@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import MyEventsPage from "../../pages/MyEventsPage";
 
 /* ==================================================
@@ -58,10 +58,17 @@ const createResponse = ({ events = [], page = 1, pageSize = 4, totalPages = 1, t
     }
 });
 
-const renderPage = () =>
+const LocationDisplay = () => {
+    const location = useLocation();
+
+    return <span data-testid="location-search">{location.search}</span>;
+};
+
+const renderPage = (initialEntry = "/my-events") =>
     render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={[initialEntry]}>
             <MyEventsPage />
+            <LocationDisplay />
         </MemoryRouter>
     );
 
@@ -137,7 +144,7 @@ describe("MyEventsPage", () => {
     it("displays empty state when current view has no events", async () => {
         renderPage();
 
-        expect(await screen.findByText(/no events found/i)).toBeInTheDocument();
+        expect(await screen.findByText(/no created events/i)).toBeInTheDocument();
     });
 
     it("changes view when clicking Joined tab", async () => {
@@ -149,11 +156,11 @@ describe("MyEventsPage", () => {
 
         renderPage();
 
-        await screen.findByText(/no events found/i);
+        await screen.findByText(/no created events/i);
 
         await user.click(getTabButton("Joined"));
 
-        expect(await screen.findByText(/joined events/i)).toBeInTheDocument();
+        expect(await screen.findByRole("heading", { level: 2, name: /joined events/i })).toBeInTheDocument();
 
         await expectLastMyEventsCall({
             view: "joined",
@@ -172,11 +179,11 @@ describe("MyEventsPage", () => {
 
         renderPage();
 
-        await screen.findByText(/no events found/i);
+        await screen.findByText(/no created events/i);
 
         await user.click(getTabButton("Created History"));
 
-        expect(screen.getByRole("heading", { name: /created history/i })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { level: 2, name: /created history/i })).toBeInTheDocument();
 
         expect(getTabButton("Created History")).toHaveClass("active");
 
@@ -197,13 +204,11 @@ describe("MyEventsPage", () => {
 
         renderPage();
 
-        await screen.findByText(/no events found/i);
+        await screen.findByText(/no created events/i);
 
         await user.click(getTabButton("Joined History"));
 
-        expect(
-            screen.getByRole("heading", { name: /joined history/i })
-        ).toBeInTheDocument();
+        expect(screen.getByRole("heading", { level: 2, name: /joined history/i })).toBeInTheDocument();
 
         expect(getTabButton("Joined History")).toHaveClass("active");
 
@@ -224,7 +229,7 @@ describe("MyEventsPage", () => {
 
         renderPage();
 
-        await screen.findByText(/no events found/i);
+        await screen.findByText(/no created events/i);
 
         await user.click(screen.getByRole("button", { name: /show filters/i }));
 
@@ -238,6 +243,81 @@ describe("MyEventsPage", () => {
             page: 1,
             sortBy: "title",
             order: "asc"
+        });
+    });
+
+    it("loads events from URL query params", async () => {
+        renderPage("/my-events?view=joined&creator=Luffy&page=2");
+
+        await waitFor(() => {
+            expect(mockGetMyEvents).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    view: "joined",
+                    creator: "Luffy",
+                    page: 2,
+                    pageSize: 4
+                })
+            );
+        });
+    });
+
+    it("updates URL when switching view", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await screen.findByText(/no created events/i);
+
+        await user.click(getTabButton("Joined"));
+
+        await waitFor(() => {
+            expect(screen.getByTestId("location-search")).toHaveTextContent("view=joined");
+        });
+    });
+
+    it("updates URL when applying filters", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await screen.findByText(/no created events/i);
+
+        await user.click(screen.getByRole("button", { name: /show filters/i }));
+        await user.type(screen.getByPlaceholderText(/search by creator/i), "Luffy");
+        await user.click(screen.getByRole("button", { name: /apply filters/i }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId("location-search")).toHaveTextContent("creator=Luffy");
+        });
+    });
+
+    it("updates URL when moving to next page", async () => {
+        const user = userEvent.setup();
+
+        mockGetMyEvents.mockResolvedValue(
+            createResponse({
+                events: [
+                    {
+                        id: 1,
+                        title: "Event Page 1",
+                        role: "organizer",
+                        status: "upcoming"
+                    }
+                ],
+                page: 1,
+                totalPages: 2,
+                totalEvents: 5
+            })
+        );
+
+        renderPage();
+
+        expect(await screen.findByText("Event Page 1")).toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", { name: /next/i }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId("location-search")).toHaveTextContent("page=2");
         });
     });
 

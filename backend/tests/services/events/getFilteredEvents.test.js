@@ -1,6 +1,7 @@
 const Event = require("../../../src/models/eventModel");
+
 const { getPaginationOptions } = require("../../../src/utils/pagination");
-const { applyEventQueryFilters } = require("../../../src/utils/eventQueryFilters");
+const { applyEventQueryFilters, buildCreatorInclude } = require("../../../src/utils/eventQueryFilters");
 const { getEventStatus } = require("../../../src/utils/eventTime");
 
 const eventService = require("../../../src/services/eventService");
@@ -21,7 +22,8 @@ jest.mock("../../../src/models/eventModel", () => ({
 jest.mock("../../../src/utils/pagination");
 
 jest.mock("../../../src/utils/eventQueryFilters", () => ({
-    applyEventQueryFilters: jest.fn()
+    applyEventQueryFilters: jest.fn(),
+    buildCreatorInclude: jest.fn()
 }));
 
 jest.mock("../../../src/utils/eventTime");
@@ -36,6 +38,12 @@ describe("eventService - getFilteredEvents", () => {
         orderField: "createdAt",
         orderDirection: "DESC"
     };
+
+    buildCreatorInclude.mockReturnValue({
+        model: {},
+        as: "creator",
+        attributes: ["id", "name"]
+    });
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -92,6 +100,14 @@ describe("eventService - getFilteredEvents", () => {
             id: 1,
             status: "upcoming"
         });
+    });
+
+    it("should include creator filter when creator query is provided", async () => {
+        Event.findAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+
+        await eventService.getFilteredEvents({ creator: "john" });
+
+        expect(buildCreatorInclude).toHaveBeenCalledWith(expect.anything(), "john");
     });
 
     it("should handle grouped count array", async () => {

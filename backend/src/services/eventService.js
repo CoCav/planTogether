@@ -4,7 +4,7 @@ const User = require('../models/userModel');
 const EventUserRole = require('../models/relations/eventUserRoleModel');
 const { getPaginationOptions } = require('../utils/pagination');
 const { assertEventNotPast, getEventStatus } = require('../utils/eventTime');
-const { applyStatusFilter, applyEventQueryFilters } = require('../utils/eventQueryFilters');
+const { applyStatusFilter, applyEventQueryFilters, buildCreatorInclude } = require('../utils/eventQueryFilters');
 const deleteUploadedFile = require("../utils/deleteUploadedFile");
 
 // Create a new event and assign the creator as the organizer
@@ -89,20 +89,20 @@ const getAllEvents = async (query) => {
             attributes: {
                 include: [[fn("COUNT", col("participants.id")), "participantCount"]]
             },
-            include: [{
-                model: User,
-                as: "creator",
-                attributes: ["id", "name"]
-            }, {
-                model: User,
-                as: "participants",
-                attributes: [],
-                through: {
+            include: [
+                // Creator filtering handled here (not in whereConditions)
+                buildCreatorInclude(User, query.creator),
+
+                {
+                    model: User,
+                    as: "participants",
                     attributes: [],
-                    where: { role: "participant" }
-                },
-                required: false
-            }
+                    through: {
+                        attributes: [],
+                        where: { role: "participant" }
+                    },
+                    required: false
+                }
             ],
             group: ["Event.id", "creator.id"],
             subQuery: false
@@ -167,13 +167,26 @@ const getEventById = async (id) => {
     }
 };
 
-// Filters events based on various criteria and supports pagination + sorting
+/* =========================
+   Filters events
+   Applies:
+   - query filters (search, type, theme, etc.)
+   - creator filtering (via include)
+   - pagination and sorting
+========================= */
 const getFilteredEvents = async (query) => {
     try {
 
+        /* =========================
+           Where conditions
+           Applies generic filters
+        ========================= */
         const whereConditions = {};
         applyEventQueryFilters(whereConditions, query);
 
+        /* =========================
+           Pagination + sorting
+        ========================= */
         const {
             page,
             pageSize,
@@ -181,8 +194,19 @@ const getFilteredEvents = async (query) => {
             offset,
             orderField,
             orderDirection
-        } = getPaginationOptions(query, ["startDateTime", "title", "creatorId", "createdAt"], "createdAt", "DESC");
+        } = getPaginationOptions(
+            query,
+            ["startDateTime", "title", "creatorId", "createdAt"],
+            "createdAt",
+            "DESC"
+        );
 
+        /* =========================
+           Query database
+           Includes:
+           - creator (with optional filtering)
+           - participants (for count)
+        ========================= */
         const { count, rows } = await Event.findAndCountAll({
             where: whereConditions,
             limit,
@@ -191,20 +215,20 @@ const getFilteredEvents = async (query) => {
             attributes: {
                 include: [[fn("COUNT", col("participants.id")), "participantCount"]]
             },
-            include: [{
-                model: User,
-                as: "creator",
-                attributes: ["id", "name"]
-            }, {
-                model: User,
-                as: "participants",
-                attributes: [],
-                through: {
+            include: [
+                // Creator filtering handled here
+                buildCreatorInclude(User, query.creator),
+
+                {
+                    model: User,
+                    as: "participants",
                     attributes: [],
-                    where: { role: "participant" }
-                },
-                required: false
-            }
+                    through: {
+                        attributes: [],
+                        where: { role: "participant" }
+                    },
+                    required: false
+                }
             ],
             group: ["Event.id", "creator.id"],
             subQuery: false
@@ -222,6 +246,7 @@ const getFilteredEvents = async (query) => {
                 status: getEventStatus(event)
             }))
         };
+
     } catch (error) {
         console.error("Error in filtering events:", error);
         throw error;

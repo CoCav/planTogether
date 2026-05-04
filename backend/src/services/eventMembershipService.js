@@ -2,7 +2,7 @@ const { Op, fn, col } = require('sequelize');
 const Event = require('../models/eventModel');
 const User = require('../models/userModel');
 const EventUserRole = require('../models/relations/eventUserRoleModel');
-const { applyEventQueryFilters } = require("../utils/eventQueryFilters");
+const { applyEventQueryFilters, buildCreatorInclude } = require("../utils/eventQueryFilters");
 const { assertEventNotPast, getEventStatus } = require('../utils/eventTime');
 const { getPaginationOptions } = require('../utils/pagination');
 
@@ -126,25 +126,51 @@ const listMyEvents = async (userId, query = {}) => {
 
         /* =========================
            View-based filters
+           Determines:
+           - which roles to include (organizer vs participant)
+           - whether to show upcoming or past events
         ========================= */
 
         const isHistoryView = view === "createdHistory" || view === "joinedHistory";
 
-        const roleFilter = !view ? undefined : view === "created" || view === "createdHistory" ? "organizer" : { [Op.in]: ["participant", "co_organizer"] };
+        // Role filter based on active tab
+        const roleFilter = !view
+            ? undefined
+            : view === "created" || view === "createdHistory"
+                ? "organizer"
+                : { [Op.in]: ["participant", "co_organizer"] };
 
-        const eventDateFilter = !view ? {} : isHistoryView ? { endDateTime: { [Op.lt]: now } } : { endDateTime: { [Op.gte]: now } };
+        // Date filter based on active tab
+        const eventDateFilter = !view
+            ? {}
+            : isHistoryView
+                ? { endDateTime: { [Op.lt]: now } }   // past events
+                : { endDateTime: { [Op.gte]: now } }; // upcoming events
 
 
         /* =========================
-         Event filters
-            Applies common query filters (search, type, theme, location, date, etc.)
+           Event filters
+           Applies common filters:
+           - search
+           - type / theme / location / mode
+           - date filters (today / range)
+
+           Note:
+           - creator is handled separately in include
         ========================= */
 
+        const { creator, ...eventQuery } = query;
+
         const eventFilter = { ...eventDateFilter };
-        applyEventQueryFilters(eventFilter, query, { includeStatus: false });
+        applyEventQueryFilters(eventFilter, eventQuery, { includeStatus: false });
+
 
         /* =========================
            Pagination + sorting
+           Handles:
+           - page / pageSize
+           - sorting (asc/desc)
+           - default sort depending on view
         ========================= */
 
         const paginationQuery = {
@@ -160,10 +186,20 @@ const listMyEvents = async (userId, query = {}) => {
             offset,
             orderField,
             orderDirection
-        } = getPaginationOptions(paginationQuery, ["startDateTime", "title", "createdAt"], "startDateTime", isHistoryView ? "DESC" : "ASC");
+        } = getPaginationOptions(
+            paginationQuery,
+            ["startDateTime", "title", "createdAt"],
+            "startDateTime",
+            isHistoryView ? "DESC" : "ASC"
+        );
+
 
         /* =========================
            Query database
+           Retrieves:
+           - user memberships
+           - related events
+           - creator (with optional filtering)
         ========================= */
 
         const { count, rows } = await EventUserRole.findAndCountAll({
@@ -189,11 +225,8 @@ const listMyEvents = async (userId, query = {}) => {
                     "creatorId"
                 ],
                 include: [
-                    {
-                        model: User,
-                        as: "creator",
-                        attributes: ["id", "name"]
-                    }
+                    // Creator filtering handled here (not in whereConditions)
+                    buildCreatorInclude(User, creator)
                 ]
             }],
             limit,
@@ -201,7 +234,14 @@ const listMyEvents = async (userId, query = {}) => {
             order: [[{ model: Event }, orderField, orderDirection]]
         });
 
-        // Add participant count and status to each event
+
+        /* =========================
+           Data enrichment
+           Adds:
+           - participant count
+           - computed event status (upcoming / past)
+        ========================= */
+
         const events = await Promise.all(
             rows.map(async (membership) => {
                 const data = membership.toJSON();

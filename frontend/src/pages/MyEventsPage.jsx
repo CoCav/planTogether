@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 
 import { getMyEvents } from "../api/eventMembershipApi";
@@ -6,6 +7,7 @@ import { getMyEvents } from "../api/eventMembershipApi";
 import { getMyEventsWithRole } from "../features/events/normalizeData";
 import { MY_EVENT_VIEWS, getViewContent } from "../features/events/eventViewConfig";
 import { getDefaultEventFilters } from "../features/events/eventFilters";
+import { buildSearchParams, getInitialFiltersFromUrl, getInitialPageFromUrl, getInitialViewFromUrl } from "../features/events/eventQueryParams";
 import { getEventsEmptyState } from "../features/events/eventEmptyState.js";
 
 import useEventActionsWithConfirm from "../hooks/events/useEventActionsWithConfirm";
@@ -38,6 +40,16 @@ import Pagination from "../components/ui/Pagination.jsx";
 
 export default function MyEventsPage() {
     const { user } = useAuth();
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    /* =========================
+        URL initial state
+        Reads view, page and filters from query params
+    ========================= */
+    const initialView = useMemo(() => getInitialViewFromUrl(searchParams, MY_EVENT_VIEWS, "created"), [searchParams]);
+    const initialPage = useMemo(() => getInitialPageFromUrl(searchParams), [searchParams]);
+    const initialFilters = useMemo(() => getInitialFiltersFromUrl(searchParams), [searchParams]);
+
 
     /* =========================
        Local state
@@ -46,8 +58,10 @@ export default function MyEventsPage() {
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
     const [events, setEvents] = useState([]);
-    const [activeView, setActiveView] = useState("created");
-    const [loading, setLoading] = useState(true);
+    const [activeView, setActiveView] = useState(initialView);
+
+    const [initialLoading, setInitialLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
 
 
     /* =========================
@@ -56,7 +70,7 @@ export default function MyEventsPage() {
     ========================= */
 
     const [pagination, setPagination] = useState({
-        page: 1,
+        page: initialPage,
         pageSize: 4,
         totalPages: 1,
         totalEvents: 0
@@ -71,6 +85,7 @@ export default function MyEventsPage() {
         async (customFilters = getDefaultEventFilters(), customPage = 1, customView = "created") => {
             try {
                 setError("");
+                setLoading(true);
 
                 const view = getViewContent(MY_EVENT_VIEWS, customView);
 
@@ -102,9 +117,33 @@ export default function MyEventsPage() {
                 setError("❌ Failed to load your events");
             } finally {
                 setLoading(false);
+                setInitialLoading(false);
             }
         },
         [pagination.pageSize]
+    );
+
+
+    /* =========================
+        URL synchronization
+        Keeps filters, page and view reflected in the URL
+    ========================= */
+    const syncUrl = useCallback((nextFilters, nextPage, nextView) => {
+        setSearchParams(buildSearchParams(nextFilters, nextPage, nextView));
+    },
+        [setSearchParams]
+    );
+
+
+    /* =========================
+       Data loading with URL sync
+       Updates query params before loading events
+    ========================= */
+    const loadDataAndSyncUrl = useCallback(async (nextFilters, nextPage = 1, nextView = activeView) => {
+        syncUrl(nextFilters, nextPage, nextView);
+        await loadData(nextFilters, nextPage, nextView);
+    },
+        [activeView, loadData, syncUrl]
     );
 
 
@@ -127,7 +166,8 @@ export default function MyEventsPage() {
         handleWeekendFilter
     } = useEventFilters({
         activeView,
-        loadData,
+        loadData: loadDataAndSyncUrl,
+        initialFilters,
         resetPage: () =>
             setPagination((prev) => ({
                 ...prev,
@@ -145,17 +185,28 @@ export default function MyEventsPage() {
     const { handlePreviousPage, handleNextPage } = usePagination({
         page: pagination.page,
         totalPages: pagination.totalPages,
-        onPageChange: (nextPage) => loadData(filters, nextPage, activeView),
+        onPageChange: (nextPage) => loadDataAndSyncUrl(filters, nextPage, activeView)
+
     });
 
-
     /* =========================
-       Initial data loading
-       Loads the default public events view
+        Initial data loading (run once)
+        Loads events from URL-derived state (filters, page, view)
+
+        Uses a ref guard to prevent multiple executions:
+            - avoids React StrictMode double calls in development
+            - avoids re-runs caused by unstable dependencies (URL params)
     ========================= */
+    const hasLoadedRef = useRef(false);
+
     useEffect(() => {
-        loadData(getDefaultEventFilters(), 1, "created");
-    }, [loadData]);
+        if (hasLoadedRef.current) return;
+
+        hasLoadedRef.current = true;
+
+        loadData(initialFilters, initialPage, initialView);
+    }, [loadData, initialFilters, initialPage, initialView]);
+
 
 
     /* =========================
@@ -186,7 +237,7 @@ export default function MyEventsPage() {
        Handles join / leave operations and reloads data
    ========================= */
     const { handleLeaveEvent } = useEventActionsWithConfirm({
-        loadData,
+        loadData: loadDataAndSyncUrl,
         setMessage,
         setError,
         getRoleByEventId
@@ -210,29 +261,29 @@ export default function MyEventsPage() {
             page: 1
         }));
 
-        await loadData(nextFilters, 1, nextView);
+        await loadDataAndSyncUrl(nextFilters, 1, nextView);
     };
+
+    /* =========================
+           Derived UI state
+           Prepares display data for render
+    ========================= */
+    const viewContent = getViewContent(MY_EVENT_VIEWS, activeView);
+    const showPaginationInfo = pagination.totalPages > 1;
+
 
 
     /* =========================
        Loading state
     ========================= */
 
-    if (loading) {
+    if (initialLoading) {
         return (
             <div className="container page-section">
                 <LoadingState>Loading events...</LoadingState>
             </div>
         );
     }
-
-
-    /* =========================
-       Derived UI state
-       Prepares display data for render
-    ========================= */
-    const viewContent = getViewContent(MY_EVENT_VIEWS, activeView);
-    const showPaginationInfo = pagination.totalPages > 1;
 
 
     /* =========================
@@ -293,7 +344,9 @@ export default function MyEventsPage() {
             </div>
 
             <section className="events-section">
-                {events.length === 0 ? (
+                {loading ? (
+                    <LoadingState>Refreshing events...</LoadingState>
+                ) : events.length === 0 ? (
                     <EmptyState
                         title={emptyState.title || viewContent.empty}
                         description={emptyState.description}

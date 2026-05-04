@@ -7,12 +7,21 @@ import { getEventsEmptyState } from "../../../features/events/eventEmptyState";
 ================================================== */
 
 describe("eventEmptyStates", () => {
-    it("returns today empty state when date filter is active", () => {
+
+    it("returns filter-based empty state when filters are active", () => {
+        const state = getEventsEmptyState({
+            filters: { search: "music" }
+        });
+
+        expect(state.title).toBe("No events match your filters.");
+    });
+
+    it("returns date empty state when date filter is active", () => {
         const state = getEventsEmptyState({
             filters: { date: "2026-04-25" }
         });
 
-        expect(state.title).toBe("No events are scheduled for today.");
+        expect(state.title).toBe("No events are scheduled for this date.");
     });
 
     it("returns date range empty state when range filter is active", () => {
@@ -43,5 +52,21 @@ describe("eventEmptyStates", () => {
         const state = getEventsEmptyState({});
 
         expect(state.title).toBe("No events found.");
+    });
+
+    it("returns created empty state", () => {
+        const state = getEventsEmptyState({
+            activeView: "created"
+        });
+
+        expect(state.title).toBe("No created events.");
+    });
+
+    it("returns joined empty state", () => {
+        const state = getEventsEmptyState({
+            activeView: "joined"
+        });
+
+        expect(state.title).toBe("No joined events.");
     });
 });

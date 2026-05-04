@@ -27,10 +27,10 @@ export const FILTER_QUERY_KEYS = [
 /* =========================
    View from URL
 ========================= */
-export const getInitialViewFromUrl = (searchParams, views) => {
+export const getInitialViewFromUrl = (searchParams, views, fallbackView = "all") => {
     const view = searchParams.get("view");
 
-    return views.some((item) => item.key === view) ? view : "all";
+    return views.some((item) => item.key === view) ? view : fallbackView;
 };
 
 /* =========================

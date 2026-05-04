@@ -354,6 +354,21 @@ describe("EventsPage", () => {
         expect(await screen.findByText("Filtered Page 2")).toBeInTheDocument();
     });
 
+    it("loads events from URL query params", async () => {
+        renderPage("/events?view=upcoming&creator=Luffy&page=2");
+
+        await waitFor(() => {
+            expect(mockGetFilteredEvents).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    creator: "Luffy",
+                    status: "upcoming",
+                    page: 2,
+                    pageSize: 4
+                })
+            );
+        });
+    });
+
     it("updates URL when applying filters", async () => {
         const user = userEvent.setup();
 

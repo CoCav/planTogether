@@ -135,10 +135,10 @@ describe('My Events API', () => {
         expect(res.statusCode).toBe(200);
         expect(Array.isArray(res.body.events)).toBe(true);
 
-        const eventMembership = res.body.events.find((item) => item.Event.id === eventId);
+        const eventMembership = res.body.events.find((item) => item.event.id === eventId);
 
         expect(eventMembership).toBeDefined();
-        expect(eventMembership.Event).toHaveProperty('status', 'past');
+        expect(eventMembership.event).toHaveProperty('status', 'past');
     });
 
     it('should include participant count and status in user events', async () => {
@@ -168,12 +168,12 @@ describe('My Events API', () => {
 
         expect(res.statusCode).toBe(200);
 
-        const eventMembership = res.body.events.find((item) => item.Event.id === eventId);
+        const eventMembership = res.body.events.find((item) => item.event.id === eventId);
 
         expect(eventMembership).toBeDefined();
-        expect(eventMembership.Event).toHaveProperty('participantCount');
-        expect(eventMembership.Event.participantCount).toBeGreaterThanOrEqual(1);
-        expect(eventMembership.Event).toHaveProperty('status');
+        expect(eventMembership.event).toHaveProperty('participantCount');
+        expect(eventMembership.event.participantCount).toBeGreaterThanOrEqual(1);
+        expect(eventMembership.event).toHaveProperty('status');
     });
 
     /* =========================
@@ -232,7 +232,7 @@ describe('My Events API', () => {
         expect(res.statusCode).toBe(200);
         expect(Array.isArray(res.body.events)).toBe(true);
         expect(res.body.events.length).toBe(1);
-        expect(res.body.events[0].Event.title).toBe('Past Created Event');
-        expect(res.body.events[0].Event.status).toBe('past');
+        expect(res.body.events[0].event.title).toBe('Past Created Event');
+        expect(res.body.events[0].event.status).toBe('past');
     });
 });

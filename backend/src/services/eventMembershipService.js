@@ -1,26 +1,46 @@
-const { Op, fn, col } = require('sequelize');
+const { Op } = require('sequelize');
+
 const Event = require('../models/eventModel');
 const User = require('../models/userModel');
 const EventUserRole = require('../models/relations/eventUserRoleModel');
+
 const { applyEventQueryFilters, buildCreatorInclude } = require("../utils/eventQueryFilters");
 const { assertEventNotPast, getEventStatus } = require('../utils/eventTime');
 const { getPaginationOptions } = require('../utils/pagination');
 
-
+// Valid roles for event members
 const VALID_ROLES = ['organizer', 'co_organizer', 'participant'];
+
+/* ==================================================
+   EVENT MEMBERSHIP SERVICE
+
+   Handles:
+   - joining and leaving events
+   - retrieving user events (created / joined)
+   - managing event members and roles
+   - enforcing business rules (capacity, roles, time)
+
+   Notes:
+   - uses EventUserRole as join table
+   - all event references use alias "event"
+================================================== */
+
+/* ==================================================
+   JOIN / LEAVE EVENTS
+================================================== */
 
 // User joins an event
 const joinEvent = async ({ eventId, userId }) => {
     try {
-        // Check if event exists
         const event = await Event.findByPk(eventId);
+
         if (!event) {
             const error = new Error('Event not found');
             error.statusCode = 404;
             throw error;
         }
 
-        // Check if event is in the past
+        // Prevent joining past events
         assertEventNotPast(event);
 
         // Check registration deadline
@@ -33,10 +53,7 @@ const joinEvent = async ({ eventId, userId }) => {
         // Check max participants limit
         if (event.maxParticipants !== null) {
             const participantCount = await EventUserRole.count({
-                where: {
-                    eventId,
-                    role: 'participant'
-                }
+                where: { eventId, role: 'participant' }
             });
 
             if (participantCount >= event.maxParticipants) {
@@ -46,7 +63,7 @@ const joinEvent = async ({ eventId, userId }) => {
             }
         }
 
-        // Check if user already joined the event
+        // Prevent duplicate join
         const existingMembership = await EventUserRole.findOne({ where: { eventId, userId } });
 
         if (existingMembership) {
@@ -55,14 +72,12 @@ const joinEvent = async ({ eventId, userId }) => {
             throw error;
         }
 
-        // Add user to event as participant
-        const membership = await EventUserRole.create({
+        // Create membership
+        return await EventUserRole.create({
             eventId,
             userId,
             role: 'participant'
         });
-
-        return membership;
 
     } catch (error) {
         console.error('Error in joinEvent service:', error);
@@ -70,21 +85,20 @@ const joinEvent = async ({ eventId, userId }) => {
     }
 };
 
+
 // User leaves an event
 const leaveEvent = async ({ eventId, userId }) => {
     try {
-        // Check if event exists
         const event = await Event.findByPk(eventId);
+
         if (!event) {
             const error = new Error('Event not found');
             error.statusCode = 404;
             throw error;
         }
 
-        // Check if event is in the past
         assertEventNotPast(event);
 
-        // Check if membership exists
         const membership = await EventUserRole.findOne({ where: { eventId, userId } });
 
         if (!membership) {
@@ -93,16 +107,14 @@ const leaveEvent = async ({ eventId, userId }) => {
             throw error;
         }
 
-        // Prevent organizer from leaving their own event
+        // Prevent organizer from leaving
         if (membership.role === "organizer") {
             const error = new Error("Organizers cannot leave their own event");
             error.statusCode = 403;
             throw error;
         }
 
-        // Remove membership
         await membership.destroy();
-        return;
 
     } catch (error) {
         console.error('Error in leaveEvent service:', error);
@@ -110,14 +122,19 @@ const leaveEvent = async ({ eventId, userId }) => {
     }
 };
 
+
+/* ==================================================
+   LIST USER EVENTS (MAIN COMPLEX LOGIC)
+================================================== */
+
 // Get all paginated events of the current user
 const listMyEvents = async (userId, query = {}) => {
     try {
         const { view } = query;
         const now = new Date();
 
-        // Check if user exists
         const user = await User.findByPk(userId);
+
         if (!user) {
             const error = new Error("User not found");
             error.statusCode = 404;
@@ -126,37 +143,25 @@ const listMyEvents = async (userId, query = {}) => {
 
         /* =========================
            View-based filters
-           Determines:
-           - which roles to include (organizer vs participant)
-           - whether to show upcoming or past events
         ========================= */
 
         const isHistoryView = view === "createdHistory" || view === "joinedHistory";
 
-        // Role filter based on active tab
         const roleFilter = !view
             ? undefined
             : view === "created" || view === "createdHistory"
                 ? "organizer"
                 : { [Op.in]: ["participant", "co_organizer"] };
 
-        // Date filter based on active tab
         const eventDateFilter = !view
             ? {}
             : isHistoryView
-                ? { endDateTime: { [Op.lt]: now } }   // past events
-                : { endDateTime: { [Op.gte]: now } }; // upcoming events
+                ? { endDateTime: { [Op.lt]: now } }
+                : { endDateTime: { [Op.gte]: now } };
 
 
         /* =========================
            Event filters
-           Applies common filters:
-           - search
-           - type / theme / location / mode
-           - date filters (today / range)
-
-           Note:
-           - creator is handled separately in include
         ========================= */
 
         const { creator, ...eventQuery } = query;
@@ -166,11 +171,7 @@ const listMyEvents = async (userId, query = {}) => {
 
 
         /* =========================
-           Pagination + sorting
-           Handles:
-           - page / pageSize
-           - sorting (asc/desc)
-           - default sort depending on view
+           Pagination
         ========================= */
 
         const paginationQuery = {
@@ -196,10 +197,6 @@ const listMyEvents = async (userId, query = {}) => {
 
         /* =========================
            Query database
-           Retrieves:
-           - user memberships
-           - related events
-           - creator (with optional filtering)
         ========================= */
 
         const { count, rows } = await EventUserRole.findAndCountAll({
@@ -209,6 +206,7 @@ const listMyEvents = async (userId, query = {}) => {
             },
             include: [{
                 model: Event,
+                as: "event",
                 where: eventFilter,
                 attributes: [
                     "id",
@@ -225,21 +223,17 @@ const listMyEvents = async (userId, query = {}) => {
                     "creatorId"
                 ],
                 include: [
-                    // Creator filtering handled here (not in whereConditions)
                     buildCreatorInclude(User, creator)
                 ]
             }],
             limit,
             offset,
-            order: [[{ model: Event }, orderField, orderDirection]]
+            order: [[{ model: Event, as: "event" }, orderField, orderDirection]]
         });
 
 
         /* =========================
            Data enrichment
-           Adds:
-           - participant count
-           - computed event status (upcoming / past)
         ========================= */
 
         const events = await Promise.all(
@@ -248,29 +242,27 @@ const listMyEvents = async (userId, query = {}) => {
 
                 const participantCount = await EventUserRole.count({
                     where: {
-                        eventId: data.Event.id,
+                        eventId: data.event.id,
                         role: "participant"
                     }
                 });
 
                 return {
                     ...data,
-                    Event: {
-                        ...data.Event,
+                    event: {
+                        ...data.event,
                         participantCount,
-                        status: getEventStatus(data.Event)
+                        status: getEventStatus(data.event)
                     }
                 };
             })
         );
 
-        const totalEvents = count;
-
         return {
             page,
             pageSize,
-            totalEvents,
-            totalPages: Math.ceil(totalEvents / pageSize),
+            totalEvents: count,
+            totalPages: Math.ceil(count / pageSize),
             events
         };
 
@@ -280,20 +272,23 @@ const listMyEvents = async (userId, query = {}) => {
     }
 };
 
+
+/* ==================================================
+   MEMBERS / ORGANIZER / CO-ORGANIZERS
+================================================== */
+
 // Get all members of an event
 const listMembers = async (eventId) => {
     try {
-
-        // Check if event exists
         const event = await Event.findByPk(eventId);
+
         if (!event) {
             const error = new Error('Event not found');
             error.statusCode = 404;
             throw error;
         }
 
-        // Get all memberships with user info
-        const memberships = await EventUserRole.findAll({
+        return await EventUserRole.findAll({
             where: { eventId },
             include: [{
                 model: User,
@@ -302,33 +297,28 @@ const listMembers = async (eventId) => {
             order: [['createdAt', 'ASC']]
         });
 
-        return memberships;
-
     } catch (error) {
         console.error('Error in listMembers service:', error);
         throw error;
     }
 };
 
-// Get organizers and co_organizers of an event
+
+// Get organizer / co_organizer(s) of an event
 const listOrganizers = async (eventId) => {
     try {
-
-        // Check if event exists
         const event = await Event.findByPk(eventId);
+
         if (!event) {
             const error = new Error('Event not found');
             error.statusCode = 404;
             throw error;
         }
 
-        // Get organizers & co_organizers
-        const organizers = await EventUserRole.findAll({
+        return await EventUserRole.findAll({
             where: {
                 eventId,
-                role: {
-                    [Op.in]: ['organizer', 'co_organizer']
-                }
+                role: { [Op.in]: ['organizer', 'co_organizer'] }
             },
             include: [{
                 model: User,
@@ -337,42 +327,37 @@ const listOrganizers = async (eventId) => {
             order: [['role', 'ASC'], ['createdAt', 'ASC']]
         });
 
-        return organizers;
-
     } catch (error) {
         console.error('Error in listOrganizers service:', error);
         throw error;
     }
 };
 
-// Update a user's role in an event
-// Authorization is mainly handled by middleware, but core business rules
-// are enforced here as a safety layer.
+
+/* ==================================================
+   ROLE MANAGEMENT
+================================================== */
+
+// Update member role
 const updateMemberRole = async ({ eventId, userId, newRole }) => {
     try {
-
-        // Check if event exists
         const event = await Event.findByPk(eventId);
+
         if (!event) {
             const error = new Error('Event not found');
             error.statusCode = 404;
             throw error;
         }
 
-        // Check if event is in the past
         assertEventNotPast(event);
 
-        // Validate role
         if (!VALID_ROLES.includes(newRole)) {
             const error = new Error('Invalid role provided');
             error.statusCode = 400;
             throw error;
         }
 
-        // Check if membership exists
-        const membership = await EventUserRole.findOne({
-            where: { eventId, userId }
-        });
+        const membership = await EventUserRole.findOne({ where: { eventId, userId } });
 
         if (!membership) {
             const error = new Error('User is not a member of this event');
@@ -380,14 +365,12 @@ const updateMemberRole = async ({ eventId, userId, newRole }) => {
             throw error;
         }
 
-        // Prevent useless update
         if (membership.role === newRole) {
             const error = new Error('User already has this role');
             error.statusCode = 400;
             throw error;
         }
 
-        // Update role
         membership.role = newRole;
         await membership.save();
 
@@ -399,27 +382,21 @@ const updateMemberRole = async ({ eventId, userId, newRole }) => {
     }
 };
 
-// Remove a member from an event
-// Authorization is partly handled by middleware, but role hierarchy
-// and protected member rules are enforced here.
-const removeMember = async ({ eventId, userId, requestingUserId }) => {
-    try {
 
-        // Check if event exists
+// Remove member
+const removeMember = async ({ eventId, userId }) => {
+    try {
         const event = await Event.findByPk(eventId);
+
         if (!event) {
             const error = new Error('Event not found');
             error.statusCode = 404;
             throw error;
         }
 
-        // Check if event is in the past
         assertEventNotPast(event);
 
-        // Check if membership exists
-        const membership = await EventUserRole.findOne({
-            where: { eventId, userId }
-        });
+        const membership = await EventUserRole.findOne({ where: { eventId, userId } });
 
         if (!membership) {
             const error = new Error('User is not a member of this event');
@@ -427,9 +404,7 @@ const removeMember = async ({ eventId, userId, requestingUserId }) => {
             throw error;
         }
 
-        // Remove membership
         await membership.destroy();
-        return;
 
     } catch (error) {
         console.error('Error in removeMember service:', error);
@@ -437,4 +412,4 @@ const removeMember = async ({ eventId, userId, requestingUserId }) => {
     }
 };
 
-module.exports = { joinEvent, leaveEvent, listMembers, listOrganizers, updateMemberRole, removeMember, listMyEvents };
+module.exports = { joinEvent, leaveEvent, listMyEvents, listMembers, listOrganizers, updateMemberRole, removeMember };

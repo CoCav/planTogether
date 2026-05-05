@@ -73,7 +73,7 @@ describe("eventMembershipService - listMyEvents", () => {
         const membership = {
             toJSON: () => ({
                 id: 1,
-                Event: { id: 100, title: "Event" }
+                event: { id: 100, title: "Event" }
             })
         };
 
@@ -96,7 +96,7 @@ describe("eventMembershipService - listMyEvents", () => {
             events: [
                 {
                     id: 1,
-                    Event: {
+                    event: {
                         id: 100,
                         title: "Event",
                         participantCount: 5,

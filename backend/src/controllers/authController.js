@@ -1,7 +1,7 @@
 const authService = require('../services/authService');
 
 /* ==================================================
-   USER CONTROLLER
+   AUTH CONTROLLER
 ================================================== */
 
 // Register a new user

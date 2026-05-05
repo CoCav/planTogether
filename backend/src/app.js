@@ -7,6 +7,7 @@ const errorHandler = require('./middlewares/errorHandler');
 const authRoutes = require('./routes/authRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const eventMembershipRoutes = require('./routes/eventMembershipRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventMembershipRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/users', userRoutes);
 
 
 app.use((req, res) => {

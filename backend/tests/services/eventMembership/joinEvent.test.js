@@ -1,16 +1,26 @@
+/* ==================================================
+   EVENT MEMBERSHIP SERVICE - JOIN EVENT TESTS
+
+   Tests:
+   - successful event join
+   - missing event rejection
+   - duplicate membership rejection
+   - past event rejection
+   - full event rejection
+   - closed registration rejection
+
+   Ensures:
+   - users can join only valid events
+   - participant limits are enforced
+   - registration deadlines are enforced
+   - past event rules are respected
+================================================== */
+
 const Event = require("../../../src/models/eventModel");
 const EventUserRole = require("../../../src/models/relations/eventUserRoleModel");
 const { assertEventNotPast } = require("../../../src/utils/eventTime");
 
 const service = require("../../../src/services/eventMembershipService");
-
-/**
- * Event Membership - Join Event
- *
- * Tests joining an event.
- *
- * Ensures users can join only valid and available events.
-*/
 
 jest.mock("../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
@@ -53,6 +63,7 @@ describe("eventMembershipService - joinEvent", () => {
         });
 
         expect(assertEventNotPast).toHaveBeenCalled();
+
         expect(EventUserRole.create).toHaveBeenCalledWith({
             eventId: 1,
             userId: 10,
@@ -62,7 +73,7 @@ describe("eventMembershipService - joinEvent", () => {
         expect(result.role).toBe("participant");
     });
 
-    it("should throw 404 if event not found", async () => {
+    it("should throw 404 if event is not found", async () => {
         Event.findByPk.mockResolvedValue(null);
 
         await expect(
@@ -73,7 +84,7 @@ describe("eventMembershipService - joinEvent", () => {
         });
     });
 
-    it("should throw 409 if already joined", async () => {
+    it("should throw 409 if user already joined", async () => {
         Event.findByPk.mockResolvedValue({ id: 1 });
 
         EventUserRole.findOne.mockResolvedValue({ id: 1 });
@@ -87,10 +98,10 @@ describe("eventMembershipService - joinEvent", () => {
         expect(EventUserRole.create).not.toHaveBeenCalled();
     });
 
-    it("should block past event", async () => {
+    it("should block joining a past event", async () => {
         Event.findByPk.mockResolvedValue({ id: 1 });
 
-        const error = new Error("past");
+        const error = new Error("No action is allowed on a past event");
         error.statusCode = 403;
 
         assertEventNotPast.mockImplementation(() => {
@@ -101,7 +112,7 @@ describe("eventMembershipService - joinEvent", () => {
     });
 
     it("should throw 409 if event is full", async () => {
-        assertEventNotPast.mockImplementation(() => {});
+        assertEventNotPast.mockImplementation(() => { });
 
         Event.findByPk.mockResolvedValue({
             id: 1,
@@ -110,8 +121,7 @@ describe("eventMembershipService - joinEvent", () => {
         });
 
         EventUserRole.findOne.mockResolvedValue(null);
-        EventUserRole.count = jest.fn().mockResolvedValue(1);
-
+        EventUserRole.count.mockResolvedValue(1);
 
         await expect(
             service.joinEvent({ eventId: 1, userId: 10 })
@@ -122,13 +132,15 @@ describe("eventMembershipService - joinEvent", () => {
     });
 
     it("should throw 409 if registration is closed", async () => {
-        assertEventNotPast.mockImplementation(() => {});
+        assertEventNotPast.mockImplementation(() => { });
 
         Event.findByPk.mockResolvedValue({
             id: 1,
             maxParticipants: null,
             registrationDeadline: new Date(Date.now() - 1000)
         });
+
+        EventUserRole.findOne.mockResolvedValue(null);
 
         await expect(
             service.joinEvent({ eventId: 1, userId: 10 })
@@ -137,6 +149,4 @@ describe("eventMembershipService - joinEvent", () => {
             statusCode: 409
         });
     });
-
-
 });

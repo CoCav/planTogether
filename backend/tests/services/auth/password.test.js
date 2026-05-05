@@ -1,15 +1,23 @@
+/* ==================================================
+   AUTH SERVICE - CHANGE PASSWORD TESTS
+
+   Tests:
+   - successful password update
+   - missing user rejection
+   - invalid current password rejection
+   - same password rejection
+   - password hashing before save
+
+   Ensures:
+   - password updates follow security rules
+   - current password verification is enforced
+   - passwords are always hashed before persistence
+================================================== */
+
 const bcrypt = require("bcrypt");
 const User = require("../../../src/models/userModel");
 
 const authService = require("../../../src/services/authService");
-
-/**
- * Auth Service - Password
- *
- * Tests password update logic.
- *
- * Ensures password rules and security checks are enforced.
-*/
 
 jest.mock("bcrypt");
 
@@ -34,8 +42,8 @@ describe("authService - changeUserPasswordByID", () => {
         });
 
         bcrypt.compare
-            .mockResolvedValueOnce(true)
-            .mockResolvedValueOnce(false);
+            .mockResolvedValueOnce(true) // Current password matches
+            .mockResolvedValueOnce(false); // New password differs
 
         bcrypt.hash.mockResolvedValue("new-hash");
 
@@ -45,29 +53,41 @@ describe("authService - changeUserPasswordByID", () => {
         expect(user.save).toHaveBeenCalled();
     });
 
-    it("should throw if user not found", async () => {
+    it("should hash new password before saving", async () => {
+        User.scope.mockReturnValue({
+            findByPk: jest.fn().mockResolvedValue(user)
+        });
+
+        bcrypt.compare
+            .mockResolvedValueOnce(true)
+            .mockResolvedValueOnce(false);
+
+        bcrypt.hash.mockResolvedValue("new-hash");
+
+        await authService.changeUserPasswordByID(1, "old", "new");
+
+        expect(bcrypt.hash).toHaveBeenCalledWith("new", 10);
+    });
+
+    it("should throw if user is not found", async () => {
         User.scope.mockReturnValue({
             findByPk: jest.fn().mockResolvedValue(null)
         });
 
-        await expect(
-            authService.changeUserPasswordByID(1, "a", "b")
-        ).rejects.toMatchObject({ statusCode: 404 });
+        await expect(authService.changeUserPasswordByID(1, "a", "b")).rejects.toMatchObject({ statusCode: 404 });
     });
 
-    it("should throw if current password invalid", async () => {
+    it("should throw if current password is invalid", async () => {
         User.scope.mockReturnValue({
             findByPk: jest.fn().mockResolvedValue(user)
         });
 
         bcrypt.compare.mockResolvedValueOnce(false);
 
-        await expect(
-            authService.changeUserPasswordByID(1, "a", "b")
-        ).rejects.toMatchObject({ statusCode: 401 });
+        await expect(authService.changeUserPasswordByID(1, "a", "b")).rejects.toMatchObject({ statusCode: 401 });
     });
 
-    it("should throw if same password", async () => {
+    it("should throw if new password is identical to current password", async () => {
         User.scope.mockReturnValue({
             findByPk: jest.fn().mockResolvedValue(user)
         });
@@ -76,8 +96,6 @@ describe("authService - changeUserPasswordByID", () => {
             .mockResolvedValueOnce(true)
             .mockResolvedValueOnce(true);
 
-        await expect(
-            authService.changeUserPasswordByID(1, "a", "a")
-        ).rejects.toMatchObject({ statusCode: 400 });
+        await expect(authService.changeUserPasswordByID(1, "a", "a")).rejects.toMatchObject({ statusCode: 400 });
     });
 });

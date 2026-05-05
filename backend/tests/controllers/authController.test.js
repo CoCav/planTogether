@@ -1,8 +1,27 @@
+/* ==================================================
+   AUTH CONTROLLER TESTS
+
+   Tests:
+   - user registration
+   - user login
+   - authenticated profile retrieval
+   - profile updates
+   - password updates
+   - logout responses
+
+   Ensures:
+   - controllers call services correctly
+   - HTTP responses are properly formatted
+   - uploaded avatars are handled correctly
+   - errors are forwarded to next()
+================================================== */
+
 const authController = require("../../src/controllers/authController");
 const authService = require("../../src/services/authService");
 
 jest.mock("../../src/services/authService");
 
+// Create mocked Express request/response objects
 const createMocks = ({ body = {}, user = { userId: 1 }, file } = {}) => {
     const req = { body, user, file };
 
@@ -27,6 +46,10 @@ describe("authController", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
+
+    /* =============================
+       REGISTER
+    ============================= */
 
     describe("register", () => {
         it("should register user and return token", async () => {
@@ -125,6 +148,10 @@ describe("authController", () => {
         });
     });
 
+    /* =============================
+       LOGIN
+    ============================= */
+
     describe("login", () => {
         it("should login user and return token", async () => {
             const { req, res, next } = createMocks({
@@ -175,6 +202,10 @@ describe("authController", () => {
             expect(next).toHaveBeenCalledWith(error);
         });
     });
+
+    /* =============================
+       PROFILE
+    ============================= */
 
     describe("getUserByID", () => {
         it("should return authenticated user profile", async () => {
@@ -301,6 +332,10 @@ describe("authController", () => {
             expect(next).toHaveBeenCalledWith(error);
         });
     });
+
+    /* =============================
+       PASSWORD / LOGOUT
+    ============================= */
 
     describe("changePassword", () => {
         it("should change authenticated user password", async () => {

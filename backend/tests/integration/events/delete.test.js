@@ -1,32 +1,24 @@
+/* ==================================================
+   EVENTS INTEGRATION - DELETE EVENT
+
+   Tests:
+   - organizer event deletion
+   - authentication requirement
+   - nonexistent event deletion rejection
+   - past event deletion rejection
+
+   Ensures:
+   - only authorized users can delete events
+   - role middleware protects delete route
+   - business rules prevent deleting past events
+   - deleted events are no longer retrievable
+================================================== */
+
 const request = require('supertest');
 const app = require('../../../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
 
-/**
- * Events Integration - Delete Event
- *
- * These tests validate event deletion behavior via HTTP.
- *
- * What is tested:
- * - JWT authentication for protected delete routes
- * - Organizer permission through event role middleware
- * - Successful event deletion
- * - Rejection of unauthenticated requests
- * - Rejection of deletions on nonexistent or past events
- *
- * Integration scope:
- * → Auth middleware + Role middleware + Controller + Service + Database
- *
- * Goal:
- * Ensure events can only be deleted by authorized users
- * and only when business rules allow it.
-*/
-
 describe('Delete Event API', () => {
-
-    /* =========================
-       Test database lifecycle
-    ========================= */
 
     beforeAll(async () => {
         await initDB();
@@ -42,10 +34,11 @@ describe('Delete Event API', () => {
         await sequelize.close();
     });
 
-    /* =========================
-       Helpers
-    ========================= */
+    /* =============================
+       HELPERS
+    ============================= */
 
+    // Register a test user and return auth token
     const registerAndGetToken = async (name, email) => {
         const res = await request(app)
             .post('/api/auth/register')
@@ -58,6 +51,7 @@ describe('Delete Event API', () => {
         return res.body.token;
     };
 
+    // Generate a valid event payload
     const getValidEventPayload = (overrides = {}) => ({
         title: 'Test Event',
         description: 'This is a test event',
@@ -70,6 +64,7 @@ describe('Delete Event API', () => {
         ...overrides
     });
 
+    // Create a test event
     const createEvent = async (token, overrides = {}) => {
         const res = await request(app)
             .post('/api/events')
@@ -79,9 +74,9 @@ describe('Delete Event API', () => {
         return res.body.event;
     };
 
-    /* =========================
-       Event deletion
-    ========================= */
+    /* =============================
+       EVENT DELETION
+    ============================= */
 
     it('should allow an organizer to delete an event', async () => {
         const token = await registerAndGetToken(
@@ -98,18 +93,14 @@ describe('Delete Event API', () => {
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty('message', 'Event deleted successfully');
 
-        /* =========================
-           Verify deletion
-        ========================= */
-
         const getRes = await request(app).get(`/api/events/${event.id}`);
 
         expect(getRes.statusCode).toBe(404);
     });
 
-    /* =========================
-       Authentication errors
-    ========================= */
+    /* =============================
+       AUTHENTICATION ERRORS
+    ============================= */
 
     it('should reject event deletion without token', async () => {
         const token = await registerAndGetToken(
@@ -124,9 +115,9 @@ describe('Delete Event API', () => {
         expect(res.statusCode).toBe(401);
     });
 
-    /* =========================
-       Authorization and business rules
-    ========================= */
+    /* =============================
+       BUSINESS RULES
+    ============================= */
 
     it('should reject deleting a nonexistent event', async () => {
         const token = await registerAndGetToken(
@@ -141,7 +132,7 @@ describe('Delete Event API', () => {
         expect(res.statusCode).toBe(403);
     });
 
-    it('should NOT allow deleting a past event', async () => {
+    it('should not allow deleting a past event', async () => {
         const token = await registerAndGetToken(
             'Past Event Deleter',
             `pastdelete${Date.now()}@test.com`

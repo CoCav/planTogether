@@ -1,25 +1,46 @@
-// services/authService.js
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+
 const User = require('../models/userModel');
 const deleteUploadedFile = require("../utils/deleteUploadedFile");
 
-// Create a new user and generate a JWT token
+/* ==================================================
+   AUTH SERVICE
+
+   Handles:
+   - user registration
+   - user login
+   - authenticated profile retrieval
+   - profile update
+   - password update
+
+   Notes:
+   - passwords are hashed with bcrypt
+   - JWT payload stores userId only
+   - avatar file cleanup is handled after profile update
+================================================== */
+
+/* =============================
+   REGISTER / LOGIN
+============================= */
+
+// Register a new user
 const registerUser = async ({ name, email, password, avatar }) => {
     try {
-
         const normalizedEmail = String(email).toLowerCase().trim();
 
-        // Check if user already exists in the database
+        // Prevent duplicate email registration
         const existingUser = await User.findOne({ where: { email: normalizedEmail } });
+
         if (existingUser) {
             const error = new Error('Email already in use');
             error.statusCode = 409;
             throw error;
         }
 
-        // Hash password with bcrypt & create the user
+        // Hash password before saving user
         const hashedPassword = await bcrypt.hash(password, 10);
+
         const user = await User.create({
             name,
             email: normalizedEmail,
@@ -27,8 +48,12 @@ const registerUser = async ({ name, email, password, avatar }) => {
             avatar: avatar || null
         });
 
-        // Generate JWT token
-        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+        // Generate authentication token
+        const token = jwt.sign(
+            { userId: user.id },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
 
         return { user, token };
 
@@ -38,30 +63,37 @@ const registerUser = async ({ name, email, password, avatar }) => {
     }
 };
 
-// Login an existing user and return a JWT token
+
+// Login an existing user
 const loginUser = async ({ email, password }) => {
     try {
-
         const normalizedEmail = String(email).toLowerCase().trim();
 
-        // Check if user exists in the database and include the password
-        const user = await User.scope('withPassword').findOne({ where: { email: normalizedEmail } });
+        // Password is included only for login verification
+        const user = await User.scope('withPassword').findOne({
+            where: { email: normalizedEmail }
+        });
+
         if (!user) {
             const error = new Error('Invalid email or invalid password');
             error.statusCode = 401;
             throw error;
         }
 
-        // Compare password with hashed password
+        // Compare provided password with hashed password
         const isPasswordValid = await bcrypt.compare(password, user.password);
+
         if (!isPasswordValid) {
             const error = new Error('Invalid email or invalid password');
             error.statusCode = 401;
             throw error;
         }
 
-        // Generate JWT token
-        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+        const token = jwt.sign(
+            { userId: user.id },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
 
         return { user, token };
 
@@ -71,13 +103,16 @@ const loginUser = async ({ email, password }) => {
     }
 };
 
-// Get the profile of an user by their ID
+
+/* =============================
+   PROFILE
+============================= */
+
+// Get authenticated user profile
 const getUserProfileByID = async (userId) => {
     try {
-
         const user = await User.findByPk(userId);
 
-        // Check if user exists in the database
         if (!user) {
             const error = new Error('User not found');
             error.statusCode = 404;
@@ -92,12 +127,12 @@ const getUserProfileByID = async (userId) => {
     }
 };
 
-// Update the profile of an user by their ID
+
+// Update authenticated user profile
 const updateUserProfileByID = async (userId, updatedData) => {
     try {
         const user = await User.findByPk(userId);
 
-        // Check if user exists in the database
         if (!user) {
             const error = new Error("User not found");
             error.statusCode = 404;
@@ -107,10 +142,11 @@ const updateUserProfileByID = async (userId, updatedData) => {
         const oldAvatar = user.avatar;
         const { name, email, avatar } = updatedData;
 
-        // Update user fields if provided
+        // Update only provided fields
         if (name) user.name = name;
         if (email) user.email = String(email).toLowerCase().trim();
 
+        // Avatar can be updated, cleared, or left unchanged
         if (avatar !== undefined) {
             user.avatar = avatar || null;
         }
@@ -118,16 +154,19 @@ const updateUserProfileByID = async (userId, updatedData) => {
         try {
             await user.save();
 
+            // Delete previous avatar only after successful DB update
             if (avatar !== undefined && avatar && oldAvatar && oldAvatar !== avatar) {
                 await deleteUploadedFile(oldAvatar);
             }
+
         } catch (err) {
-            // Handle unique email conflict cleanly
+            // Convert Sequelize unique constraint into API-friendly error
             if (err.name === "SequelizeUniqueConstraintError") {
                 const error = new Error("Email already in use");
                 error.statusCode = 409;
                 throw error;
             }
+
             throw err;
         }
 
@@ -139,19 +178,23 @@ const updateUserProfileByID = async (userId, updatedData) => {
     }
 };
 
-// Change the password of a connected user
+
+/* =============================
+   PASSWORD
+============================= */
+
+// Change authenticated user password
 const changeUserPasswordByID = async (userId, currentPassword, newPassword) => {
     try {
         const user = await User.scope("withPassword").findByPk(userId);
 
-        // Check if user exists in the database
         if (!user) {
             const error = new Error("User not found");
             error.statusCode = 404;
             throw error;
         }
 
-        // Verify current password
+        // Verify current password before allowing update
         const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
 
         if (!isPasswordValid) {
@@ -169,11 +212,10 @@ const changeUserPasswordByID = async (userId, currentPassword, newPassword) => {
             throw error;
         }
 
-        // Hash and save new password
+        // Save hashed new password
         user.password = await bcrypt.hash(newPassword, 10);
         await user.save();
 
-        return;
     } catch (error) {
         console.error(`Error changing user password: ${error.message}`);
         throw error;

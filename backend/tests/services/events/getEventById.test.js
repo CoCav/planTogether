@@ -1,15 +1,22 @@
+/* ==================================================
+   EVENT SERVICE - GET EVENT BY ID TESTS
+
+   Tests:
+   - successful event retrieval
+   - event status enrichment
+   - missing event rejection
+   - database error forwarding
+
+   Ensures:
+   - single events are retrieved correctly
+   - computed status is added before response
+   - missing events return a 404 error
+================================================== */
+
 const Event = require("../../../src/models/eventModel");
 const { getEventStatus } = require("../../../src/utils/eventTime");
 
 const eventService = require("../../../src/services/eventService");
-
-/**
- * Event Service - Get Event By ID
- *
- * Tests retrieval of a single event.
- *
- * Ensures correct data is returned or a 404 is thrown.
-*/
 
 jest.mock("../../../src/models/eventModel", () => ({
     findOne: jest.fn()
@@ -22,7 +29,7 @@ jest.mock("../../../src/utils/eventTime", () => ({
 describe("eventService - getEventById", () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => {});
+        jest.spyOn(console, "error").mockImplementation(() => { });
     });
 
     afterEach(() => {
@@ -43,6 +50,7 @@ describe("eventService - getEventById", () => {
         const result = await eventService.getEventById(1);
 
         expect(Event.findOne).toHaveBeenCalled();
+
         expect(result).toEqual({
             id: 1,
             title: "Test Event",
@@ -53,7 +61,9 @@ describe("eventService - getEventById", () => {
     it("should throw 404 when event is not found", async () => {
         Event.findOne.mockResolvedValue(null);
 
-        await expect(eventService.getEventById(999)).rejects.toMatchObject({
+        await expect(
+            eventService.getEventById(999)
+        ).rejects.toMatchObject({
             message: "Event not found",
             statusCode: 404
         });

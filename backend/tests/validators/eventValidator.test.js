@@ -1,17 +1,24 @@
+/* ==================================================
+   EVENT VALIDATOR TESTS
+
+   Tests:
+   - event creation validation
+   - event update validation
+   - eventId param validation
+   - date order validation
+   - mode and location validation
+
+   Ensures:
+   - invalid event payloads are rejected early
+   - required event fields are enforced
+   - event dates and route params are validated
+================================================== */
+
 const { validationResult } = require("express-validator");
 
 const { createEventValidator, updateEventValidator, eventIdParamValidator } = require("../../src/validators/eventValidator");
 
-/**
- * Event Validator
- *
- * Verifies validation rules for event creation, update,
- * and eventId route parameters.
- *
- * Ensures invalid event data is rejected before reaching controllers.
-*/
-
-// Helper to simulate Express request validation
+// Run express-validator rules against mocked request params/body
 const runValidation = async (validators, { params = {}, body = {} } = {}) => {
     const req = { params, body };
 

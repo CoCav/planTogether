@@ -1,29 +1,23 @@
+/* ==================================================
+   EVENTS INTEGRATION - PERMISSIONS
+
+   Tests:
+   - participant update restriction
+   - participant delete restriction
+   - co-organizer update permission
+   - co-organizer delete restriction
+
+   Ensures:
+   - event actions are restricted by role
+   - participants cannot manage events
+   - co-organizers can update but cannot delete events
+================================================== */
+
 const request = require('supertest');
 const app = require('../../../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
 
-/**
- * Events Integration - Permissions 
- *
- * These tests validate role-based access control for events.
- *
- * What is tested:
- * - Participant cannot update or delete an event
- * - Co-organizer can update but cannot delete
- * - Organizer permissions enforced correctly
- *
- * Integration scope:
- * → Auth middleware + Role middleware + Controller + Database
- *
- * Goal:
- * Ensure event actions are restricted based on user roles.
-*/
-
 describe('Event Permissions API', () => {
-
-    /* =========================
-       Test database lifecycle
-    ========================= */
 
     beforeAll(async () => {
         await initDB();
@@ -39,24 +33,28 @@ describe('Event Permissions API', () => {
         await sequelize.close();
     });
 
-    /* =========================
-       Helpers
-    ========================= */
+    /* =============================
+       HELPERS
+    ============================= */
 
+    // Register a test user and return auth token
     const registerAndGetToken = async (name, email) => {
         const res = await request(app).post('/api/auth/register').send({
             name,
             email,
             password: 'Password123'
         });
+
         return res.body.token;
     };
 
+    // Retrieve user ID from database using email
     const getUserIdByEmail = async (email) => {
         const user = await User.findOne({ where: { email } });
         return user.id;
     };
 
+    // Create a test event
     const createEvent = async (token) => {
         const res = await request(app)
             .post('/api/events')
@@ -75,9 +73,9 @@ describe('Event Permissions API', () => {
         return res.body.event;
     };
 
-    /* =========================
-       Participant restrictions
-    ========================= */
+    /* =============================
+       PARTICIPANT RESTRICTIONS
+    ============================= */
 
     it('should prevent participant from updating an event', async () => {
         const organizerToken = await registerAndGetToken('Org', `org${Date.now()}@test.com`);
@@ -122,9 +120,9 @@ describe('Event Permissions API', () => {
         expect(res.statusCode).toBe(403);
     });
 
-    /* =========================
-       Co-organizer permissions
-    ========================= */
+    /* =============================
+       CO-ORGANIZER PERMISSIONS
+    ============================= */
 
     it('should allow co_organizer to update an event', async () => {
         const organizerEmail = `orgu${Date.now()}@test.com`;

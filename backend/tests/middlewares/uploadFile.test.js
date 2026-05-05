@@ -1,22 +1,33 @@
-const { uploadAvatar, uploadEventImage } = require("../../src/middlewares/uploadFile");
-
 /* ==================================================
    UPLOAD FILE MIDDLEWARE TESTS
-   Tests reusable Multer upload handlers configuration
+
+   Tests:
+   - avatar uploader export
+   - event image uploader export
+   - Multer single-file middleware creation
+   - avatar file size limit
+   - event image file size limit
+
+   Ensures:
+   - reusable upload middlewares are configured
+   - upload handlers expose expected Multer APIs
+   - upload size limits match application rules
 ================================================== */
 
-describe("uploadFile", () => {
-    it("exports avatar and event image upload middlewares", () => {
+const { uploadAvatar, uploadEventImage } = require("../../src/middlewares/uploadFile");
+
+describe("uploadFile middleware", () => {
+    it("should export avatar and event image upload middlewares", () => {
         expect(uploadAvatar).toBeDefined();
         expect(uploadEventImage).toBeDefined();
     });
 
-    it("creates multer middleware functions", () => {
+    it("should expose multer single middleware factory", () => {
         expect(typeof uploadAvatar.single).toBe("function");
         expect(typeof uploadEventImage.single).toBe("function");
     });
 
-    it("creates upload handlers for avatar and event image fields", () => {
+    it("should create upload handlers for avatar and event image fields", () => {
         const avatarMiddleware = uploadAvatar.single("avatar");
         const eventImageMiddleware = uploadEventImage.single("image");
 
@@ -24,11 +35,11 @@ describe("uploadFile", () => {
         expect(typeof eventImageMiddleware).toBe("function");
     });
 
-    it("sets avatar upload file size limit to 2MB", () => {
+    it("should set avatar upload file size limit to 2MB", () => {
         expect(uploadAvatar.limits.fileSize).toBe(2 * 1024 * 1024);
     });
 
-    it("sets event image upload file size limit to 3MB", () => {
+    it("should set event image upload file size limit to 3MB", () => {
         expect(uploadEventImage.limits.fileSize).toBe(3 * 1024 * 1024);
     });
 });

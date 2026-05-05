@@ -1,30 +1,23 @@
+/* ==================================================
+   EVENT MEMBERSHIP INTEGRATION - MEMBERS & ORGANIZERS
+
+   Tests:
+   - event members retrieval
+   - event organizers retrieval
+   - public access to membership endpoints
+   - organizer assignment to event creator
+
+   Ensures:
+   - membership endpoints return structured data
+   - public endpoints work without authentication
+   - creator is automatically assigned organizer role
+================================================== */
+
 const request = require('supertest');
 const app = require('../../../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
 
-/**
- * Events Membership Integration - Members & Organizers
- *
- * These tests validate event membership listing endpoints.
- *
- * What is tested:
- * - Retrieving event members
- * - Retrieving event organizers
- * - Public access (no authentication required)
- * - Automatic organizer assignment to event creator
- *
- * Integration scope:
- * → Controller + Service + Database
- *
- * Goal:
- * Ensure event membership data is correctly exposed and structured.
-*/
-
 describe('Event Members & Organizers API', () => {
-
-    /* =========================
-       Test database lifecycle
-    ========================= */
 
     beforeAll(async () => {
         await initDB();
@@ -40,10 +33,11 @@ describe('Event Members & Organizers API', () => {
         await sequelize.close();
     });
 
-    /* =========================
-       Helpers
-    ========================= */
+    /* =============================
+       HELPERS
+    ============================= */
 
+    // Register a test user
     const registerUser = async (name, email) => {
         const res = await request(app).post('/api/auth/register').send({
             name,
@@ -57,6 +51,7 @@ describe('Event Members & Organizers API', () => {
         };
     };
 
+    // Create a test event
     const createEvent = async (token, overrides = {}) => {
         return request(app)
             .post('/api/events')
@@ -74,9 +69,9 @@ describe('Event Members & Organizers API', () => {
             });
     };
 
-    /* =========================
-       Members
-    ========================= */
+    /* =============================
+       MEMBERS
+    ============================= */
 
     it('should get members of an event', async () => {
         const creator = await registerUser(
@@ -119,9 +114,9 @@ describe('Event Members & Organizers API', () => {
         expect(res.body).toHaveProperty('members');
     });
 
-    /* =========================
-       Organizers
-    ========================= */
+    /* =============================
+       ORGANIZER
+    ============================= */
 
     it('should get organizers of an event', async () => {
         const creator = await registerUser(
@@ -155,9 +150,9 @@ describe('Event Members & Organizers API', () => {
         expect(res.body).toHaveProperty('organizers');
     });
 
-    /* =========================
-       Organizer assignment
-    ========================= */
+    /* =============================
+       ORGANIZER ASSIGNMENT
+    ============================= */
 
     it('should assign organizer role to the event creator', async () => {
         const creatorEmail = `mainorganizer${Date.now()}@test.com`;

@@ -1,32 +1,27 @@
+/* ==================================================
+   AUTH INTEGRATION - PASSWORD
+
+   Tests:
+   - successful password update
+   - missing token rejection
+   - invalid token rejection
+   - wrong current password rejection
+   - same password rejection
+   - weak new password rejection
+   - login with new password after update
+
+   Ensures:
+   - authentication middleware protects password update
+   - current password is verified
+   - new password rules are enforced
+   - password update is persisted correctly
+================================================== */
+
 const request = require('supertest');
 const app = require('../../../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
 
-/**
- * Auth Integration - Password
- *
- * These tests validate the password change flow via HTTP.
- *
- * What is tested:
- * - JWT authentication
- * - Current password verification
- * - New password validation (strength rules)
- * - Password update persistence in database
- * - Login behavior after password change
- *
- * Integration scope:
- * → Middleware + Controller + Service + Database
- *
- * Goal:
- * Ensure password updates are secure and correctly enforced.
-*/
-
 describe('Password API', () => {
-
-    /* =========================
-       Test database lifecycle
-    ========================= */
-
     beforeAll(async () => {
         await initDB();
     });
@@ -41,9 +36,9 @@ describe('Password API', () => {
         await sequelize.close();
     });
 
-    /* =========================
-       Successful password update
-    ========================= */
+    /* =============================
+       PASSWORD UPDATE SUCCESS
+    ============================= */
 
     it('should change password correctly', async () => {
         const email = `pass${Date.now()}@test.com`;
@@ -68,9 +63,9 @@ describe('Password API', () => {
         expect(res.body).toHaveProperty('message', 'Password updated successfully');
     });
 
-    /* =========================
-       Authentication errors
-    ========================= */
+    /* =============================
+       AUTHENTICATION ERRORS
+    ============================= */
 
     it('should reject without token', async () => {
         const res = await request(app)
@@ -95,9 +90,9 @@ describe('Password API', () => {
         expect(res.statusCode).toBe(401);
     });
 
-    /* =========================
-       Business rule validation
-    ========================= */
+    /* =============================
+       BUSINESS RULES
+    ============================= */
 
     it('should reject wrong current password', async () => {
         const registerRes = await request(app).post('/api/auth/register').send({
@@ -119,10 +114,6 @@ describe('Password API', () => {
         expect(res.statusCode).toBe(401);
     });
 
-    /* =========================
-       Password validation errors
-    ========================= */
-
     it('should reject same password', async () => {
         const registerRes = await request(app).post('/api/auth/register').send({
             name: 'User',
@@ -142,6 +133,10 @@ describe('Password API', () => {
 
         expect(res.statusCode).toBe(400);
     });
+
+    /* =============================
+       VALIDATION ERRORS
+    ============================= */
 
     it('should reject weak new password', async () => {
         const registerRes = await request(app).post('/api/auth/register').send({
@@ -163,9 +158,9 @@ describe('Password API', () => {
         expect(res.statusCode).toBe(400);
     });
 
-    /* =========================
-       Verify password change
-    ========================= */
+    /* =============================
+       PASSWORD PERSISTENCE
+    ============================= */
 
     it('should allow login with new password and reject old one', async () => {
         const email = `verify${Date.now()}@test.com`;

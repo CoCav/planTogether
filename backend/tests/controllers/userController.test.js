@@ -2,8 +2,8 @@
    USER CONTROLLER TESTS
 
    Tests:
-   - public user profile endpoint
-   - public user events endpoint
+   - public user profile retrieval
+   - public user events retrieval
 
    Ensures:
    - controller calls service correctly
@@ -16,7 +16,7 @@ const userService = require("../../src/services/userService");
 
 jest.mock("../../src/services/userService");
 
-// Helper to simulate Express req/res/next
+// Create mocked Express request/response objects
 const createMocks = ({ params = { id: 1 } } = {}) => {
     const req = { params };
 
@@ -35,11 +35,11 @@ describe("userController", () => {
         jest.clearAllMocks();
     });
 
-    // =============================
-    // getPublicUserProfile
-    // =============================
-    describe("getPublicUserProfile", () => {
+    /* =============================
+       PUBLIC PROFILE
+    ============================= */
 
+    describe("getPublicUserProfile", () => {
         it("should return public user profile", async () => {
             const { req, res, next } = createMocks();
 
@@ -75,11 +75,11 @@ describe("userController", () => {
         });
     });
 
-    // =============================
-    // getPublicUserEvents
-    // =============================
-    describe("getPublicUserEvents", () => {
+    /* =============================
+       PUBLIC USER EVENTS
+    ============================= */
 
+    describe("getPublicUserEvents", () => {
         it("should return public user events", async () => {
             const { req, res, next } = createMocks();
 

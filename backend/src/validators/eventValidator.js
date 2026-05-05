@@ -1,6 +1,21 @@
 const { body, param } = require('express-validator');
 
-// Validator to ensure registration deadline is before event start date and time
+/* ==================================================
+   EVENT VALIDATORS
+
+   Handles:
+   - event creation validation
+   - event update validation
+   - event ID param validation
+   - date consistency checks
+
+   Notes:
+   - validateRequest must run after these validators
+   - registration deadline must be before event start date
+   - in-person events require a location
+================================================== */
+
+// Validate registration deadline against event start date
 const registrationDeadlineValidator = (value, { req }) => {
     if (!value) return true;
 
@@ -14,7 +29,12 @@ const registrationDeadlineValidator = (value, { req }) => {
     return true;
 };
 
-// Validator for creating a new event
+
+/* =============================
+   CREATE EVENT
+============================= */
+
+// Validate event creation data
 const createEventValidator = [
     body('title')
         .trim()
@@ -46,6 +66,7 @@ const createEventValidator = [
         .trim()
         .isString().withMessage('Location must be a string')
         .custom((value, { req }) => {
+            // In-person events must have a non-empty location
             if (req.body.mode === 'in_person' && !value?.trim()) {
                 throw new Error('Location is required for in-person events');
             }
@@ -85,7 +106,12 @@ const createEventValidator = [
         .custom(registrationDeadlineValidator)
 ];
 
-// Validator for updating an existing event
+
+/* =============================
+   UPDATE EVENT
+============================= */
+
+// Validate event update data
 const updateEventValidator = [
     param('eventId')
         .isInt({ min: 1 }).withMessage('Event ID must be a positive integer')
@@ -121,6 +147,7 @@ const updateEventValidator = [
         .trim()
         .isString().withMessage('Location must be a string')
         .custom((value, { req }) => {
+            // In-person events must keep a valid location
             if (req.body.mode === 'in_person' && !value?.trim()) {
                 throw new Error('Location is required for in-person events');
             }
@@ -160,7 +187,12 @@ const updateEventValidator = [
         .custom(registrationDeadlineValidator)
 ];
 
-// Validator for eventId parameter
+
+/* =============================
+   PARAMS
+============================= */
+
+// Validate event ID route param
 const eventIdParamValidator = [
     param('eventId')
         .isInt({ min: 1 }).withMessage('Event ID must be a positive integer')

@@ -1,8 +1,26 @@
+/* ==================================================
+   REQUIRE EVENT ROLE MIDDLEWARE TESTS
+
+   Tests:
+   - missing event ID rejection
+   - missing membership rejection
+   - insufficient role rejection
+   - allowed role authorization
+   - membership query parameters
+   - unexpected database errors
+
+   Ensures:
+   - event role permissions are enforced
+   - membership is attached to req when authorized
+   - next() is called only for allowed roles
+================================================== */
+
 const { requireEventRole } = require("../../src/middlewares/requireEventRole");
 const EventUserRole = require("../../src/models/relations/eventUserRoleModel");
 
 jest.mock("../../src/models/relations/eventUserRoleModel");
 
+// Create mocked Express request/response objects
 const createMocks = ({ eventId = "1", userId = 1 } = {}) => {
     const req = {
         params: { eventId },
@@ -46,9 +64,7 @@ describe("requireEventRole middleware", () => {
         await middleware(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(403);
-        expect(res.json).toHaveBeenCalledWith({
-            message: "Forbidden: insufficient event role"
-        });
+        expect(res.json).toHaveBeenCalledWith({ message: "Forbidden: insufficient event role" });
         expect(next).not.toHaveBeenCalled();
     });
 
@@ -110,7 +126,7 @@ describe("requireEventRole middleware", () => {
     it("should return 500 on unexpected error", async () => {
         const { req, res, next } = createMocks();
 
-        jest.spyOn(console, "error").mockImplementation(() => {});
+        jest.spyOn(console, "error").mockImplementation(() => { });
         EventUserRole.findOne.mockRejectedValue(new Error("DB error"));
 
         const middleware = requireEventRole(["organizer"]);

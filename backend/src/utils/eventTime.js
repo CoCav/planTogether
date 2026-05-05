@@ -1,43 +1,27 @@
 /* ==================================================
-   EVENT TIME HELPERS
-   Centralizes all time-based business rules for events
+   EVENT TIME
+
+   Handles:
+   - event status computation (past / upcoming)
+   - time-based business rules enforcement
+
+   Notes:
+   - centralizes all time logic to avoid duplication
 ================================================== */
 
-/**
- * Business rule:
- * An event is considered "past" when its endDateTime
- * is strictly earlier than the current date and time.
- *
- * Once an event is past, no action is allowed:
- * - join is forbidden
- * - leave is forbidden
- * - role updates are forbidden
- * - member removal is forbidden
- * - event update is forbidden
- * - event deletion is forbidden
- *
- * This file exists to:
- * - avoid duplicating date comparison logic
- * - ensure consistent behavior across services
- * - keep business rules explicit and maintainable
- */
-
-
-// Returns true if the given event has already ended.
+// Check if event has already ended
 const isEventPast = (event) => {
-    if (!event || !event.endDateTime) {
-        return false;
-    }
+    if (!event || !event.endDateTime) return false;
 
     return new Date(event.endDateTime) < new Date();
 };
 
-// Returns the current status of an event.
+// Get event status
 const getEventStatus = (event) => {
     return isEventPast(event) ? 'past' : 'upcoming';
 };
 
-// Throws an error if the event is already past.
+// Prevent actions on past events
 const assertEventNotPast = (event) => {
     if (isEventPast(event)) {
         const error = new Error("No action is allowed on a past event");

@@ -1,29 +1,31 @@
+/* ==================================================
+   AUTH INTEGRATION - PROFILE
+
+   Tests:
+   - authenticated profile retrieval
+   - missing token rejection
+   - invalid token rejection
+   - profile update
+   - avatar upload update
+   - old avatar file deletion
+   - invalid update rejection
+   - duplicate email rejection
+
+   Ensures:
+   - profile routes are protected
+   - profile updates are persisted
+   - avatar uploads are stored correctly
+   - replaced avatar files are cleaned up
+   - password is never exposed
+================================================== */
+
 const request = require("supertest");
 const app = require("../../../src/app");
 const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
-const fs = require("fs");
-const path = require("path");
 
-/**
- * Auth Integration - Profile
- *
- * These tests validate user profile endpoints via HTTP.
- *
- * What is tested:
- * - Access control using JWT authentication
- * - Profile retrieval for authenticated users
- * - Profile update behavior
- * - Optional avatar upload
- * - Validation errors
- * - Business rules
- *
- * Integration scope:
- * → Validators + Auth middleware + Controller + Service + Database
- *
- * Goal:
- * Ensure user profile operations are secure, validated,
- * and correctly persisted in the database.
-*/
+const fs = require("fs");
+const path = require("path")
+
 
 describe("Profile API", () => {
     beforeAll(async () => {

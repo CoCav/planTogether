@@ -1,17 +1,26 @@
+/* ==================================================
+   AUTH SERVICE - REGISTER USER TESTS
+
+   Tests:
+   - successful registration
+   - avatar registration
+   - duplicate email rejection
+   - password hashing
+   - JWT token generation
+   - email normalization
+
+   Ensures:
+   - users are created correctly
+   - passwords are hashed before persistence
+   - duplicate emails are rejected
+   - JWT tokens are generated after registration
+================================================== */
+
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../../../src/models/userModel");
 
 const authService = require("../../../src/services/authService");
-
-/**
- * Auth Service - Register User
- *
- * Tests user registration logic.
- *
- * Ensures users are correctly created and validation rules
- * are enforced at the service level.
-*/
 
 jest.mock("bcrypt");
 jest.mock("jsonwebtoken");
@@ -31,6 +40,7 @@ describe("authService - registerUser", () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+
         process.env.JWT_SECRET = "test-secret";
 
         bcrypt.hash.mockResolvedValue("hashed-password");
@@ -48,7 +58,9 @@ describe("authService - registerUser", () => {
         });
 
         expect(User.findOne).toHaveBeenCalledWith({
-            where: { email: "john@test.com" }
+            where: {
+                email: "john@test.com"
+            }
         });
 
         expect(User.create).toHaveBeenCalledWith({
@@ -60,6 +72,36 @@ describe("authService - registerUser", () => {
 
         expect(result.token).toBe("fake-token");
         expect(result.user).toBe(mockUser);
+    });
+
+    it("should normalize email before user creation", async () => {
+        User.findOne.mockResolvedValue(null);
+        User.create.mockResolvedValue(mockUser);
+
+        await authService.registerUser({
+            name: "John",
+            email: " JOHN@TEST.COM ",
+            password: "Password123"
+        });
+
+        expect(User.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                email: "john@test.com"
+            })
+        );
+    });
+
+    it("should hash password before creating user", async () => {
+        User.findOne.mockResolvedValue(null);
+        User.create.mockResolvedValue(mockUser);
+
+        await authService.registerUser({
+            name: "John",
+            email: "john@test.com",
+            password: "Password123"
+        });
+
+        expect(bcrypt.hash).toHaveBeenCalledWith("Password123", 10);
     });
 
     it("should register a user with avatar", async () => {

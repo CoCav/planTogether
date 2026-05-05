@@ -1,31 +1,23 @@
+/* ==================================================
+   EVENT MEMBERSHIP INTEGRATION - PARTICIPATION
+
+   Tests:
+   - joining an event
+   - leaving an event
+   - authentication requirement
+   - past event restrictions
+
+   Ensures:
+   - authenticated users can join and leave events
+   - unauthenticated users are rejected
+   - actions on past events are forbidden
+================================================== */
 
 const request = require('supertest');
 const app = require('../../../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
 
-/**
- * Events Membership Integration - Participation
- *
- * These tests validate joining and leaving events.
- *
- * What is tested:
- * - Joining an event
- * - Leaving an event
- * - Authentication requirements
- * - Business rules (past events)
- *
- * Integration scope:
- * → Auth middleware + Controller + Service + Database
- *
- * Goal:
- * Ensure users can correctly join and leave events.
-*/
-
 describe('Event Participation API', () => {
-
-    /* =========================
-       Test database lifecycle
-    ========================= */
 
     beforeAll(async () => {
         await initDB();
@@ -41,10 +33,11 @@ describe('Event Participation API', () => {
         await sequelize.close();
     });
 
-    /* =========================
-       Helpers
-    ========================= */
+    /* =============================
+       HELPERS
+    ============================= */
 
+    // Register a test user and return auth token
     const registerUser = async (name, email) => {
         const res = await request(app).post('/api/auth/register').send({
             name,
@@ -55,6 +48,7 @@ describe('Event Participation API', () => {
         return res.body.token;
     };
 
+    // Create a test event
     const createEvent = async (token, overrides = {}) => {
         return request(app)
             .post('/api/events')
@@ -72,9 +66,9 @@ describe('Event Participation API', () => {
             });
     };
 
-    /* =========================
-       Join event
-    ========================= */
+    /* =============================
+       JOIN EVENT
+    ============================= */
 
     it('should allow an authenticated user to join an event', async () => {
         const creatorToken = await registerUser('Creator', `c${Date.now()}@test.com`);
@@ -99,7 +93,7 @@ describe('Event Participation API', () => {
         expect(res.statusCode).toBe(401);
     });
 
-    it('should NOT allow joining a past event', async () => {
+    it('should not allow joining a past event', async () => {
         const creatorToken = await registerUser('Creator', `c${Date.now()}@test.com`);
 
         const eventRes = await createEvent(creatorToken, {
@@ -116,9 +110,9 @@ describe('Event Participation API', () => {
         expect(res.statusCode).toBe(403);
     });
 
-    /* =========================
-       Leave event
-    ========================= */
+    /* =============================
+       LEAVE EVENT
+    ============================= */
 
     it('should allow a user to leave an event', async () => {
         const creatorToken = await registerUser('Creator', `c${Date.now()}@test.com`);
@@ -147,7 +141,7 @@ describe('Event Participation API', () => {
         expect(res.statusCode).toBe(401);
     });
 
-    it('should NOT allow leaving a past event', async () => {
+    it('should not allow leaving a past event', async () => {
         const creatorToken = await registerUser('Creator', `c${Date.now()}@test.com`);
 
         const eventRes = await createEvent(creatorToken, {

@@ -1,31 +1,23 @@
+/* ==================================================
+   EVENTS INTEGRATION - CREATE EVENT
+
+   Tests:
+   - authenticated event creation
+   - online event creation without location
+   - participant limit and registration deadline
+   - invalid registration deadline rejection
+
+   Ensures:
+   - protected event creation requires authentication
+   - validators, controller, service and database work together
+   - event creation rules are correctly enforced
+================================================== */
+
 const request = require('supertest');
 const app = require('../../../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
 
-/**
- * Events Integration - Create Event
- *
- * These tests validate event creation via HTTP.
- *
- * What is tested:
- * - JWT authentication for protected event creation
- * - Event creation through the real Express route
- * - Controller and service execution
- * - Database persistence
- * - Online event behavior without location
- *
- * Integration scope:
- * → Auth middleware + Validators + Controller + Service + Database
- *
- * Goal:
- * Ensure authenticated users can create valid events correctly.
-*/
-
 describe('Create Event API', () => {
-
-    /* =========================
-       Test database lifecycle
-    ========================= */
 
     beforeAll(async () => {
         await initDB();
@@ -41,10 +33,11 @@ describe('Create Event API', () => {
         await sequelize.close();
     });
 
-    /* =========================
-       Helpers
-    ========================= */
+    /* =============================
+       HELPERS
+    ============================= */
 
+    // Register a test user and return auth token
     const registerAndGetToken = async (name, email) => {
         const registerRes = await request(app)
             .post('/api/auth/register')
@@ -57,6 +50,7 @@ describe('Create Event API', () => {
         return registerRes.body.token;
     };
 
+    // Generate a valid event payload
     const getValidEventPayload = (overrides = {}) => ({
         title: 'Test Event',
         description: 'This is a test event',
@@ -69,9 +63,9 @@ describe('Create Event API', () => {
         ...overrides
     });
 
-    /* =========================
-       Event creation
-    ========================= */
+    /* =============================
+       EVENT CREATION
+    ============================= */
 
     it('should create an event for an authenticated user', async () => {
         const token = await registerAndGetToken(
@@ -123,7 +117,7 @@ describe('Create Event API', () => {
             location: null
         });
     });
-    
+
     it('should create an event with a participant limit and registration deadline', async () => {
         const token = await registerAndGetToken(
             'Limited Event Creator',
@@ -149,6 +143,10 @@ describe('Create Event API', () => {
         expect(new Date(res.body.event.registrationDeadline).toISOString())
             .toBe('2026-12-29T10:00:00.000Z');
     });
+
+    /* =============================
+       VALIDATION ERRORS
+    ============================= */
 
     it('should reject event creation when registration deadline is after event start', async () => {
         const token = await registerAndGetToken(

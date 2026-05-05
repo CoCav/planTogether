@@ -4,29 +4,27 @@ const fs = require("fs");
 
 /* ==================================================
    UPLOAD FILE MIDDLEWARE
-   Provides reusable Multer configurations for avatar/image uploads
 
    Handles:
-   - dynamic upload directories (avatars, events, etc.)
-   - automatic folder creation if missing
-   - unique file naming to prevent collisions
-   - file type validation (images only)
-   - file size limits per use case
-
-   Usage:
-   - uploadAvatar → for user profile images
-   - uploadEventImage → for event-related images
+   - reusable image upload configuration
+   - avatar uploads
+   - event image uploads
+   - upload folder creation
+   - image-only validation
+   - upload size limits
 
    Notes:
-   - returns Multer instances (use with .single("field"))
-   - works with global errorHandler for upload errors
+   - files are stored under UPLOAD_DIR or "uploads"
+   - upload errors are handled by the global error handler
 ================================================== */
 
 const baseUploadDir = process.env.UPLOAD_DIR || "uploads";
 
+// Create a reusable Multer image uploader
 const createImageUpload = ({ folder, prefix, maxSize }) => {
     const uploadDir = path.join(__dirname, "../../", baseUploadDir, folder);
 
+    // Ensure target upload folder exists before saving files
     if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -38,6 +36,8 @@ const createImageUpload = ({ folder, prefix, maxSize }) => {
 
         filename: (req, file, cb) => {
             const ext = path.extname(file.originalname);
+
+            // Prefix + timestamp + random number prevents filename collisions
             const uniqueName = `${prefix}-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
 
             cb(null, uniqueName);
@@ -47,6 +47,7 @@ const createImageUpload = ({ folder, prefix, maxSize }) => {
     const fileFilter = (req, file, cb) => {
         const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
+        // Reject non-image uploads before storage
         if (!allowedTypes.includes(file.mimetype)) {
             const error = new Error("Only image files are allowed");
             error.statusCode = 400;
@@ -65,12 +66,14 @@ const createImageUpload = ({ folder, prefix, maxSize }) => {
     });
 };
 
+// Avatar upload configuration
 const uploadAvatar = createImageUpload({
     folder: "avatars",
     prefix: "avatar",
     maxSize: 2 * 1024 * 1024
 });
 
+// Event image upload configuration
 const uploadEventImage = createImageUpload({
     folder: "events",
     prefix: "event",

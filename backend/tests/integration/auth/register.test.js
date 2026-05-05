@@ -1,27 +1,24 @@
+/* ==================================================
+   AUTH INTEGRATION - REGISTER
+
+   Tests:
+   - successful user registration
+   - avatar upload during registration
+   - missing fields rejection
+   - invalid email rejection
+   - weak password rejection
+   - duplicate email rejection
+
+   Ensures:
+   - full registration pipeline works end-to-end
+   - uploaded avatar paths are returned correctly
+   - password is never exposed
+   - database persistence works correctly
+================================================== */
+
 const request = require("supertest");
 const app = require("../../../src/app");
 const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
-
-/**
- * Auth Integration - Register
- *
- * These tests validate the full user registration flow via HTTP.
- *
- * What is tested:
- * - Incoming request validation
- * - Optional avatar upload
- * - Controller handling
- * - Service logic
- * - Database persistence
- *
- * These are integration tests:
- * → No mocking is used
- * → The real Express app is executed
- * → The test database is used
- *
- * Goal:
- * Ensure the entire registration pipeline works correctly end-to-end.
-*/
 
 describe("Register API", () => {
     beforeAll(async () => {
@@ -38,6 +35,10 @@ describe("Register API", () => {
         await sequelize.close();
     });
 
+    /* =============================
+       REGISTER SUCCESS
+    ============================= */
+
     it("should register a new user", async () => {
         const email = `test${Date.now()}@test.com`;
 
@@ -50,7 +51,6 @@ describe("Register API", () => {
             });
 
         expect(res.statusCode).toBe(201);
-
         expect(res.body).toHaveProperty("message", "User registered successfully");
         expect(res.body).toHaveProperty("token");
         expect(res.body).toHaveProperty("user");
@@ -78,8 +78,8 @@ describe("Register API", () => {
             });
 
         expect(res.statusCode).toBe(201);
-
         expect(res.body).toHaveProperty("token");
+
         expect(res.body.user).toMatchObject({
             name: "Avatar User",
             email
@@ -88,6 +88,10 @@ describe("Register API", () => {
         expect(res.body.user.avatar).toMatch(/^\/uploads\/avatars\/avatar-/);
         expect(res.body.user).not.toHaveProperty("password");
     });
+
+    /* =============================
+       VALIDATION ERRORS
+    ============================= */
 
     it("should reject registration with missing fields", async () => {
         const res = await request(app)
@@ -120,6 +124,10 @@ describe("Register API", () => {
 
         expect(res.statusCode).toBe(400);
     });
+
+    /* =============================
+       BUSINESS RULES
+    ============================= */
 
     it("should reject duplicate email", async () => {
         const email = `duplicate${Date.now()}@test.com`;

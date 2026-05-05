@@ -1,26 +1,22 @@
-const request = require("supertest");
-const app = require("../../../src/app");
-const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
-
 /* ==================================================
    USER INTEGRATION - GET PUBLIC USER PROFILE
 
-   These tests validate public user profile retrieval via HTTP.
+   Tests:
+   - authenticated public profile retrieval
+   - invalid user ID validation
+   - authentication protection
+   - nonexistent user handling
+   - sensitive data protection
 
-   What is tested:
-   - Authenticated user can view another user's profile
-   - Request validation (invalid ID)
-   - Authentication protection
-   - Handling of nonexistent users
-   - Response structure and data privacy
-
-   Integration scope:
-   → Routes + Middleware + Controller + Service + Database
-
-   Goal:
-   Ensure the public user profile endpoint works correctly
-   end-to-end and does not expose sensitive data.
+   Ensures:
+   - public user profiles are correctly retrieved
+   - private user fields are never exposed
+   - authentication and validators protect the route
 ================================================== */
+
+const request = require("supertest");
+const app = require("../../../src/app");
+const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
 
 describe("Get Public User Profile API", () => {
 
@@ -38,10 +34,11 @@ describe("Get Public User Profile API", () => {
         await sequelize.close();
     });
 
-    /* =========================
-       Helpers
-    ========================= */
+    /* =============================
+       HELPERS
+    ============================= */
 
+    // Register a test user and return auth token
     const registerAndGetToken = async (name, email) => {
         const res = await request(app)
             .post("/api/auth/register")
@@ -54,9 +51,9 @@ describe("Get Public User Profile API", () => {
         return res.body.token;
     };
 
-    /* =========================
-       Tests
-    ========================= */
+    /* =============================
+       PUBLIC PROFILE RETRIEVAL
+    ============================= */
 
     it("should get public user profile when authenticated", async () => {
         const token = await registerAndGetToken(
@@ -85,13 +82,17 @@ describe("Get Public User Profile API", () => {
             avatar: "/uploads/avatars/test.png"
         });
 
-        // 🔒 Ensure sensitive data is NOT exposed
+        // Ensure sensitive data is never exposed publicly
         expect(res.body.user).not.toHaveProperty("id");
         expect(res.body.user).not.toHaveProperty("email");
         expect(res.body.user).not.toHaveProperty("password");
         expect(res.body.user).not.toHaveProperty("createdAt");
         expect(res.body.user).not.toHaveProperty("updatedAt");
     });
+
+    /* =============================
+       AUTHENTICATION & VALIDATION
+    ============================= */
 
     it("should reject unauthenticated request", async () => {
         const user = await User.create({

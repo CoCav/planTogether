@@ -1,16 +1,22 @@
+/* ==================================================
+   EVENT MEMBERSHIP SERVICE - LIST MEMBERS TESTS
+
+   Tests:
+   - successful member listing
+   - missing event rejection
+   - database error forwarding
+
+   Ensures:
+   - event members are retrieved with user data
+   - missing events are rejected before membership query
+   - database errors are not swallowed
+================================================== */
+
 const Event = require("../../../src/models/eventModel");
 const User = require("../../../src/models/userModel");
 const EventUserRole = require("../../../src/models/relations/eventUserRoleModel");
 
 const service = require("../../../src/services/eventMembershipService");
-
-/**
- * Event Membership - List Members
- *
- * Tests retrieval of event participants.
- *
- * Ensures members are correctly fetched with user data.
-*/
 
 jest.mock("../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
@@ -25,7 +31,7 @@ jest.mock("../../../src/models/relations/eventUserRoleModel", () => ({
 describe("eventMembershipService - listMembers", () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => {});
+        jest.spyOn(console, "error").mockImplementation(() => { });
     });
 
     afterEach(() => {
@@ -33,7 +39,9 @@ describe("eventMembershipService - listMembers", () => {
     });
 
     it("should list event members", async () => {
-        const memberships = [{ id: 1, role: "participant" }];
+        const memberships = [
+            { id: 1, role: "participant" }
+        ];
 
         Event.findByPk.mockResolvedValue({ id: 1 });
         EventUserRole.findAll.mockResolvedValue(memberships);
@@ -41,6 +49,7 @@ describe("eventMembershipService - listMembers", () => {
         const result = await service.listMembers(1);
 
         expect(Event.findByPk).toHaveBeenCalledWith(1);
+
         expect(EventUserRole.findAll).toHaveBeenCalledWith({
             where: { eventId: 1 },
             include: [{
@@ -56,7 +65,9 @@ describe("eventMembershipService - listMembers", () => {
     it("should throw 404 if event is not found", async () => {
         Event.findByPk.mockResolvedValue(null);
 
-        await expect(service.listMembers(999)).rejects.toMatchObject({
+        await expect(
+            service.listMembers(999)
+        ).rejects.toMatchObject({
             message: "Event not found",
             statusCode: 404
         });

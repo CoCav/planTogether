@@ -1,28 +1,25 @@
+/* ==================================================
+   APP INTEGRATION TESTS
+
+   Tests:
+   - health check endpoint
+   - root endpoint
+   - unknown route handling
+
+   Ensures:
+   - global app routes respond correctly
+   - 404 fallback handler works as expected
+   - Express app can be tested without starting server
+================================================== */
+
 const request = require('supertest');
 const app = require('../../../src/app');
 
-/**
- * App Integration
- *
- * These tests validate global Express app behavior.
- *
- * What is tested:
- * - Health check endpoint
- * - Root endpoint
- * - Unknown route handling
- *
- * Integration scope:
- * → Express app + global routes + 404 handler
- *
- * Goal:
- * Ensure the API responds correctly at the application level.
-*/
-
 describe('App API', () => {
 
-    /* =========================
-       Health check
-    ========================= */
+    /* =============================
+       HEALTH CHECK
+    ============================= */
 
     it('should return API health status', async () => {
         const res = await request(app).get('/api/health');
@@ -34,9 +31,10 @@ describe('App API', () => {
         });
     });
 
-    /* =========================
-       Root route
-    ========================= */
+
+    /* =============================
+       ROOT ROUTE
+    ============================= */
 
     it('should return root message', async () => {
         const res = await request(app).get('/');
@@ -45,9 +43,10 @@ describe('App API', () => {
         expect(res.text).toBe('PlanTogether is online !');
     });
 
-    /* =========================
-       Unknown route
-    ========================= */
+
+    /* =============================
+       UNKNOWN ROUTE
+    ============================= */
 
     it('should return 404 for unknown route', async () => {
         const res = await request(app).get('/api/unknown');

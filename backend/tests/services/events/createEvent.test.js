@@ -1,25 +1,34 @@
+/* ==================================================
+   EVENT SERVICE - CREATE EVENT TESTS
+
+   Tests:
+   - successful event creation
+   - automatic organizer membership creation
+   - online event location normalization
+   - missing required dates rejection
+   - invalid date order rejection
+   - database error forwarding
+
+   Ensures:
+   - events are created with valid data
+   - creators are automatically linked as organizers
+   - business rules are enforced before persistence
+================================================== */
+
 const Event = require("../../../src/models/eventModel");
-const { assertEventNotPast } = require("../../../src/utils/eventTime");
+const EventUserRole = require("../../../src/models/relations/eventUserRoleModel");
 
 const eventService = require("../../../src/services/eventService");
 
-/**
- * Event Service - Update Event By ID
- *
- * Tests event update logic.
- *
- * Ensures only valid updates are applied and business rules are enforced.
-*/
-
 jest.mock("../../../src/models/eventModel", () => ({
-    findByPk: jest.fn()
+    create: jest.fn()
 }));
 
-jest.mock("../../../src/utils/eventTime", () => ({
-    assertEventNotPast: jest.fn()
+jest.mock("../../../src/models/relations/eventUserRoleModel", () => ({
+    create: jest.fn()
 }));
 
-describe("eventService - updateEventById", () => {
+describe("eventService - createEvent", () => {
     beforeEach(() => {
         jest.clearAllMocks();
         jest.spyOn(console, "error").mockImplementation(() => { });
@@ -29,31 +38,28 @@ describe("eventService - updateEventById", () => {
         console.error.mockRestore();
     });
 
-    it("should update an in-person event without changing image", async () => {
-        const event = {
-            id: 1,
-            image: null,
-            update: jest.fn().mockResolvedValue()
-        };
+    it("should create an in-person event and organizer membership", async () => {
+        const event = { id: 1, title: "Test Event" };
 
-        Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => { });
+        Event.create.mockResolvedValue(event);
+        EventUserRole.create.mockResolvedValue({});
 
-        const result = await eventService.updateEventById(1, {
-            title: "Updated Event",
-            description: "Updated description",
+        const result = await eventService.createEvent({
+            title: "Test Event",
+            description: "Description",
             type: "Meetup",
             theme: "Tech",
             mode: "in_person",
             location: "Montreal",
             startDateTime: "2026-12-20T10:00:00.000Z",
             endDateTime: "2026-12-20T12:00:00.000Z",
-        });
+            image: null
+        }, 10);
 
-        expect(assertEventNotPast).toHaveBeenCalledWith(event);
-        expect(event.update).toHaveBeenCalledWith({
-            title: "Updated Event",
-            description: "Updated description",
+        expect(Event.create).toHaveBeenCalledWith({
+            creatorId: 10,
+            title: "Test Event",
+            description: "Description",
             type: "Meetup",
             theme: "Tech",
             mode: "in_person",
@@ -64,109 +70,50 @@ describe("eventService - updateEventById", () => {
             registrationDeadline: null,
             image: null
         });
+
+        expect(EventUserRole.create).toHaveBeenCalledWith({
+            eventId: 1,
+            userId: 10,
+            role: "organizer"
+        });
+
         expect(result).toBe(event);
     });
 
-    it("should update an event image", async () => {
-        const event = {
-            id: 1,
-            image: "/uploads/events/old-image.png",
-            update: jest.fn().mockResolvedValue()
-        };
+    it("should create an online event with null location", async () => {
+        const event = { id: 1, title: "Online Event" };
 
-        Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => { });
+        Event.create.mockResolvedValue(event);
+        EventUserRole.create.mockResolvedValue({});
 
-        await eventService.updateEventById(1, {
-            title: "Updated Event",
-            description: "Updated description",
-            type: "Meetup",
-            theme: "Tech",
-            mode: "in_person",
-            location: "Montreal",
-            startDateTime: "2026-12-20T10:00:00.000Z",
-            endDateTime: "2026-12-20T12:00:00.000Z",
-            image: "/uploads/events/new-image.png"
-        });
-
-        expect(event.update).toHaveBeenCalledWith(
-            expect.objectContaining({
-                image: "/uploads/events/new-image.png"
-            })
-        );
-    });
-
-    it("should keep existing image when no new image is provided", async () => {
-        const event = {
-            id: 1,
-            image: "/uploads/events/existing-image.png",
-            update: jest.fn().mockResolvedValue()
-        };
-
-        Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => { });
-
-        await eventService.updateEventById(1, {
-            title: "Updated Event",
-            description: "Updated description",
-            type: "Meetup",
-            theme: "Tech",
-            mode: "in_person",
-            location: "Montreal",
-            startDateTime: "2026-12-20T10:00:00.000Z",
-            endDateTime: "2026-12-20T12:00:00.000Z"
-        });
-
-        expect(event.update).toHaveBeenCalledWith(
-            expect.objectContaining({
-                image: "/uploads/events/existing-image.png"
-            })
-        );
-    });
-
-    it("should update online event with null location", async () => {
-        const event = {
-            id: 1,
-            image: null,
-            update: jest.fn().mockResolvedValue()
-        };
-
-        Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => { });
-
-        await eventService.updateEventById(1, {
+        await eventService.createEvent({
             title: "Online Event",
-            description: "Updated description",
+            description: "Description",
             type: "Workshop",
             theme: "Remote",
             mode: "online",
             location: "Montreal",
             startDateTime: "2026-12-20T10:00:00.000Z",
             endDateTime: "2026-12-20T12:00:00.000Z"
-        });
+        }, 10);
 
-        expect(event.update).toHaveBeenCalledWith(
+        expect(Event.create).toHaveBeenCalledWith(
             expect.objectContaining({
                 mode: "online",
-                location: null,
-                image: null
+                location: null
             })
         );
     });
 
-    it("should update maxParticipants and registrationDeadline", async () => {
-        const event = {
-            id: 1,
-            image: null,
-            update: jest.fn().mockResolvedValue()
-        };
+    it("should create an event with maxParticipants and registrationDeadline", async () => {
+        const event = { id: 1 };
 
-        Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => { });
+        Event.create.mockResolvedValue(event);
+        EventUserRole.create.mockResolvedValue({});
 
-        await eventService.updateEventById(1, {
-            title: "Updated",
-            description: "Updated",
+        await eventService.createEvent({
+            title: "Limited Event",
+            description: "Description",
             type: "Meetup",
             theme: "Tech",
             mode: "in_person",
@@ -175,84 +122,43 @@ describe("eventService - updateEventById", () => {
             endDateTime: "2026-12-20T12:00:00.000Z",
             maxParticipants: 10,
             registrationDeadline: "2026-12-19T10:00:00.000Z"
-        });
+        }, 10);
 
-        expect(event.update).toHaveBeenCalledWith(
+        expect(Event.create).toHaveBeenCalledWith(
             expect.objectContaining({
                 maxParticipants: 10,
-                registrationDeadline: "2026-12-19T10:00:00.000Z",
-                image: null
+                registrationDeadline: "2026-12-19T10:00:00.000Z"
             })
         );
     });
 
-    it("should throw 404 when event is not found", async () => {
-        Event.findByPk.mockResolvedValue(null);
-
-        await expect(
-            eventService.updateEventById(999, {
-                title: "Updated Event"
-            })
-        ).rejects.toMatchObject({
-            message: "Event not found",
-            statusCode: 404
-        });
-    });
-
-    it("should block update when event is past", async () => {
-        const event = {
-            id: 1,
-            image: null,
-            update: jest.fn()
-        };
-
-        Event.findByPk.mockResolvedValue(event);
-
-        const error = new Error("No action is allowed on a past event");
-        error.statusCode = 403;
-
-        assertEventNotPast.mockImplementation(() => {
-            throw error;
-        });
-
-        await expect(
-            eventService.updateEventById(1, {
-                title: "Updated Event"
-            })
-        ).rejects.toMatchObject({
-            message: "No action is allowed on a past event",
-            statusCode: 403
-        });
-
-        expect(event.update).not.toHaveBeenCalled();
-    });
-
     it("should throw 400 when end date is before start date", async () => {
-        const event = {
-            id: 1,
-            image: null,
-            update: jest.fn()
-        };
-
-        Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => { });
-
         await expect(
-            eventService.updateEventById(1, {
+            eventService.createEvent({
                 startDateTime: "2026-12-20T12:00:00.000Z",
                 endDateTime: "2026-12-20T10:00:00.000Z"
-            })
+            }, 10)
         ).rejects.toMatchObject({
             message: "End date must be after start date",
             statusCode: 400
         });
 
-        expect(event.update).not.toHaveBeenCalled();
+        expect(Event.create).not.toHaveBeenCalled();
     });
 
     it("should forward database errors", async () => {
-        Event.findByPk.mockRejectedValue(new Error("DB error"));
+        Event.create.mockRejectedValue(new Error("DB error"));
 
-        await expect(eventService.updateEventById(1, { title: "Updated Event" })).rejects.toThrow("DB error");
+        await expect(
+            eventService.createEvent({
+                title: "Test Event",
+                description: "Description",
+                type: "Meetup",
+                theme: "Tech",
+                mode: "online",
+                startDateTime: "2026-12-20T10:00:00.000Z",
+                endDateTime: "2026-12-20T12:00:00.000Z"
+            }, 10)
+        ).rejects.toThrow("DB error");
     });
 });

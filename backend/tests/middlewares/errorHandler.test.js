@@ -1,17 +1,32 @@
+/* ==================================================
+   ERROR HANDLER MIDDLEWARE TESTS
+
+   Tests:
+   - Multer upload errors
+   - custom application errors
+   - default server errors
+   - custom validation error arrays
+   - Sequelize validation errors
+   - production stack hiding
+
+   Ensures:
+   - API errors are formatted consistently
+   - upload errors return clear messages
+   - production responses do not expose stack traces
+================================================== */
+
 const multer = require("multer");
 const errorHandler = require("../../src/middlewares/errorHandler");
 
-/* ==================================================
-   ERROR HANDLER MIDDLEWARE TESTS
-   Tests centralized API error formatting
-================================================== */
-
+// Create mocked Express request/response objects
 const createMocks = () => {
     const req = {};
+
     const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn()
     };
+
     const next = jest.fn();
 
     return { req, res, next };
@@ -30,6 +45,10 @@ describe("errorHandler middleware", () => {
         console.error.mockRestore();
         process.env.NODE_ENV = originalEnv;
     });
+
+    /* =============================
+       MULTER ERRORS
+    ============================= */
 
     it("should handle Multer file size errors", () => {
         const { req, res, next } = createMocks();
@@ -58,6 +77,10 @@ describe("errorHandler middleware", () => {
             message: "Unexpected field"
         });
     });
+
+    /* =============================
+       CUSTOM / DEFAULT ERRORS
+    ============================= */
 
     it("should handle generic errors with statusCode", () => {
         const { req, res, next } = createMocks();
@@ -130,6 +153,10 @@ describe("errorHandler middleware", () => {
         );
     });
 
+    /* =============================
+       SEQUELIZE ERRORS
+    ============================= */
+
     it("should handle Sequelize validation errors", () => {
         const { req, res, next } = createMocks();
 
@@ -171,6 +198,10 @@ describe("errorHandler middleware", () => {
             errors: [{ field: "email", message: "Email already exists" }]
         });
     });
+
+    /* =============================
+       PRODUCTION BEHAVIOR
+    ============================= */
 
     it("should not include stack in production", () => {
         process.env.NODE_ENV = "production";

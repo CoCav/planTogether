@@ -1,3 +1,19 @@
+/* ==================================================
+   EVENT SERVICE - GET ALL EVENTS TESTS
+
+   Tests:
+   - paginated event listing
+   - status enrichment
+   - creator filtering
+   - grouped count handling
+   - database error forwarding
+
+   Ensures:
+   - events are returned with pagination metadata
+   - event status is added before response
+   - filters are passed to query helpers correctly
+================================================== */
+
 const Event = require("../../../src/models/eventModel");
 
 const { getPaginationOptions } = require("../../../src/utils/pagination");
@@ -5,14 +21,6 @@ const { applyStatusFilter, buildCreatorInclude } = require("../../../src/utils/e
 const { getEventStatus } = require("../../../src/utils/eventTime");
 
 const eventService = require("../../../src/services/eventService");
-
-/**
- * Event Service - Get All Events
- *
- * Tests event listing with pagination and filters.
- *
- * Ensures events are returned with correct metadata and status.
-*/
 
 jest.mock("../../../src/models/eventModel", () => ({
     findAndCountAll: jest.fn()
@@ -23,16 +31,15 @@ jest.mock("../../../src/utils/eventQueryFilters");
 jest.mock("../../../src/utils/eventTime");
 
 describe("eventService - getAllEvents", () => {
-
-    buildCreatorInclude.mockReturnValue({
-        model: {},
-        as: "creator",
-        attributes: ["id", "name"]
-    });
-
     beforeEach(() => {
         jest.clearAllMocks();
         jest.spyOn(console, "error").mockImplementation(() => { });
+
+        buildCreatorInclude.mockReturnValue({
+            model: {},
+            as: "creator",
+            attributes: ["id", "name"]
+        });
     });
 
     afterEach(() => {
@@ -41,7 +48,10 @@ describe("eventService - getAllEvents", () => {
 
     it("should return paginated events with status", async () => {
         const mockEvent = {
-            toJSON: () => ({ id: 1, title: "Event" })
+            toJSON: () => ({
+                id: 1,
+                title: "Event"
+            })
         };
 
         getPaginationOptions.mockReturnValue({
@@ -61,10 +71,11 @@ describe("eventService - getAllEvents", () => {
             rows: [mockEvent]
         });
 
-        const result = await eventService.getAllEvents({ status: "upcoming" });
+        const result = await eventService.getAllEvents({
+            status: "upcoming"
+        });
 
         expect(applyStatusFilter).toHaveBeenCalled();
-
         expect(Event.findAndCountAll).toHaveBeenCalled();
 
         expect(result).toEqual({
@@ -97,7 +108,9 @@ describe("eventService - getAllEvents", () => {
             orderDirection: "DESC"
         });
 
-        await eventService.getAllEvents({ creator: "john" });
+        await eventService.getAllEvents({
+            creator: "john"
+        });
 
         expect(buildCreatorInclude).toHaveBeenCalledWith(expect.anything(), "john");
     });

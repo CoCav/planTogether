@@ -1,9 +1,23 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-// This table allows event creation by user
-const Event = sequelize.define('Event', {
+/* ==================================================
+   EVENT MODEL
 
+   Handles:
+   - event data structure
+   - creator reference
+   - event schedule
+   - participant limits
+   - event image path
+
+   Notes:
+   - creator relationship is defined in models/index.js
+   - null maxParticipants means unlimited participants
+   - null registrationDeadline means users can join until event starts
+================================================== */
+
+const Event = sequelize.define('Event', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -12,7 +26,7 @@ const Event = sequelize.define('Event', {
 
     creatorId: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: false
     },
 
     title: {
@@ -56,13 +70,11 @@ const Event = sequelize.define('Event', {
         allowNull: false
     },
 
-    // Null means unlimited participants
     maxParticipants: {
         type: DataTypes.INTEGER,
         allowNull: true
     },
 
-    // Null means users can join until the event starts
     registrationDeadline: {
         type: DataTypes.DATE,
         allowNull: true
@@ -73,10 +85,8 @@ const Event = sequelize.define('Event', {
         allowNull: true
     }
 }, {
-
     tableName: "events",
     timestamps: true
 });
-
 
 module.exports = Event;

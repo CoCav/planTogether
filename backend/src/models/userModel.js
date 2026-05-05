@@ -1,9 +1,21 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-// This table allows user creation
-const User = sequelize.define('User', {
+/* ==================================================
+   USER MODEL
 
+   Handles:
+   - user account data
+   - email normalization
+   - avatar path storage
+   - password field protection
+
+   Notes:
+   - password is excluded by default
+   - withPassword scope is used only for authentication
+================================================== */
+
+const User = sequelize.define('User', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -19,9 +31,12 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true,
+
+        // Normalize email before saving
         set(value) {
             this.setDataValue('email', value.toLowerCase().trim());
         },
+
         validate: {
             isEmail: true
         }
@@ -37,14 +52,15 @@ const User = sequelize.define('User', {
         allowNull: true
     }
 }, {
-
     tableName: "users",
     timestamps: true,
 
+    // Hide password from regular queries
     defaultScope: {
         attributes: { exclude: ['password'] }
     },
 
+    // Explicit scope for login/password checks
     scopes: {
         withPassword: {
             attributes: { include: ['password'] }

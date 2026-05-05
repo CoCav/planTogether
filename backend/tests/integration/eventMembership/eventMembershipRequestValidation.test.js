@@ -1,30 +1,24 @@
+/* ==================================================
+   EVENT MEMBERSHIP INTEGRATION - REQUEST VALIDATION
+
+   Tests:
+   - duplicate join rejection
+   - leave without membership rejection
+   - nonexistent event handling
+   - role update validation
+   - member removal validation
+
+   Ensures:
+   - invalid membership requests are rejected correctly
+   - validators run before service logic
+   - invalid params return proper HTTP errors
+================================================== */
+
 const request = require('supertest');
 const app = require('../../../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
 
-/**
- * Events Membership Integration - Request Validation
- *
- * These tests validate event membership request validation via HTTP.
- *
- * What is tested:
- * - Membership edge cases (duplicate join, leaving without membership)
- * - Nonexistent event handling
- * - Role update request validation
- * - Member removal request validation
- *
- * Integration scope:
- * → Auth middleware + Validators + Controller + Service + Database
- *
- * Goal:
- * Ensure invalid membership requests are rejected correctly.
-*/
-
 describe('Event Membership Request Validation API', () => {
-
-    /* =========================
-       Test database lifecycle
-    ========================= */
 
     beforeAll(async () => {
         await initDB();
@@ -40,10 +34,11 @@ describe('Event Membership Request Validation API', () => {
         await sequelize.close();
     });
 
-    /* =========================
-       Helpers
-    ========================= */
+    /* =============================
+       HELPERS
+    ============================= */
 
+    // Register a test user
     const registerUser = async (name, email) => {
         const res = await request(app)
             .post('/api/auth/register')
@@ -59,11 +54,13 @@ describe('Event Membership Request Validation API', () => {
         };
     };
 
+    // Retrieve user ID from database
     const getUserIdByEmail = async (email) => {
         const user = await User.findOne({ where: { email } });
         return user.id;
     };
 
+    // Generate a valid event payload
     const getValidEventPayload = (overrides = {}) => ({
         title: 'Test Event',
         description: 'This is a test event',
@@ -76,6 +73,7 @@ describe('Event Membership Request Validation API', () => {
         ...overrides
     });
 
+    // Create a test event
     const createEvent = async (token, overrides = {}) => {
         return request(app)
             .post('/api/events')
@@ -83,9 +81,9 @@ describe('Event Membership Request Validation API', () => {
             .send(getValidEventPayload(overrides));
     };
 
-    /* =========================
-       Membership validation
-    ========================= */
+    /* =============================
+       MEMBERSHIP VALIDATION
+    ============================= */
 
     it('should reject joining the same event twice', async () => {
         const creator = await registerUser(
@@ -163,9 +161,9 @@ describe('Event Membership Request Validation API', () => {
         expect(res.body).toHaveProperty('message');
     });
 
-    /* =========================
-       Role update validation
-    ========================= */
+    /* =============================
+       ROLE UPDATE VALIDATION
+    ============================= */
 
     it('should reject role update without newRole', async () => {
         const organizerEmail = `validatororg${Date.now()}@test.com`;
@@ -254,9 +252,9 @@ describe('Event Membership Request Validation API', () => {
         expect(res.body).toHaveProperty('message');
     });
 
-    /* =========================
-       Member removal validation
-    ========================= */
+    /* =============================
+       MEMBER REMOVAL VALIDATION
+    ============================= */
 
     it('should reject member removal with non-integer eventId', async () => {
         const organizer = await registerUser(

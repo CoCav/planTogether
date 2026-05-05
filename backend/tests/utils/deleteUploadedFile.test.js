@@ -1,3 +1,19 @@
+/* ==================================================
+   DELETE UPLOADED FILE UTILITY TESTS
+
+   Tests:
+   - missing file path handling
+   - existing file deletion
+   - missing physical file handling
+   - path security protection
+   - unlink failure handling
+
+   Ensures:
+   - uploaded files are deleted safely
+   - files outside upload directory are never deleted
+   - deletion errors do not crash the app
+================================================== */
+
 jest.mock("fs", () => ({
     existsSync: jest.fn(),
     promises: {
@@ -7,11 +23,6 @@ jest.mock("fs", () => ({
 
 const fs = require("fs");
 const deleteUploadedFile = require("../../src/utils/deleteUploadedFile");
-
-/* ==================================================
-   DELETE UPLOADED FILE TESTS
-   Tests safe uploaded file deletion helper
-================================================== */
 
 describe("deleteUploadedFile", () => {
     beforeEach(() => {
@@ -23,7 +34,7 @@ describe("deleteUploadedFile", () => {
         jest.restoreAllMocks();
     });
 
-    it("does nothing when file path is missing", async () => {
+    it("should do nothing when file path is missing", async () => {
         await deleteUploadedFile(null);
         await deleteUploadedFile(undefined);
         await deleteUploadedFile("");
@@ -32,7 +43,7 @@ describe("deleteUploadedFile", () => {
         expect(fs.promises.unlink).not.toHaveBeenCalled();
     });
 
-    it("deletes file when it exists", async () => {
+    it("should delete file when it exists", async () => {
         fs.existsSync.mockReturnValue(true);
         fs.promises.unlink.mockResolvedValue();
 
@@ -42,7 +53,7 @@ describe("deleteUploadedFile", () => {
         expect(fs.promises.unlink).toHaveBeenCalled();
     });
 
-    it("does not delete file when it does not exist", async () => {
+    it("should not delete file when it does not exist", async () => {
         fs.existsSync.mockReturnValue(false);
 
         await deleteUploadedFile("/uploads/avatars/missing.png");
@@ -51,7 +62,7 @@ describe("deleteUploadedFile", () => {
         expect(fs.promises.unlink).not.toHaveBeenCalled();
     });
 
-    it("does not delete file outside upload directory", async () => {
+    it("should not delete file outside upload directory", async () => {
         await deleteUploadedFile("/other-folder/file.png");
 
         expect(fs.existsSync).not.toHaveBeenCalled();
@@ -62,7 +73,7 @@ describe("deleteUploadedFile", () => {
         );
     });
 
-    it("does not throw when unlink fails", async () => {
+    it("should not throw when unlink fails", async () => {
         fs.existsSync.mockReturnValue(true);
         fs.promises.unlink.mockRejectedValue(new Error("unlink failed"));
 

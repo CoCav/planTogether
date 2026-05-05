@@ -16,7 +16,7 @@ const VALID_ROLES = ['organizer', 'co_organizer', 'participant'];
 
    Handles:
    - joining and leaving events
-   - retrieving user events (created / joined)
+   - retrieving authenticated user's events
    - managing event members and roles
    - enforcing business rules (capacity, roles, time)
 

@@ -21,11 +21,11 @@ const initDB = async () => {
         console.log('👉 Synchronizing models...');
 
         if (process.env.NODE_ENV === 'development') {
-            await sequelize.sync({ alter: true }); // Safe schema update in dev
+            await sequelize.sync({ alter: true }); // Safely update schema in dev
         } else if (process.env.NODE_ENV === 'test') {
             await sequelize.sync({ force: true }); // Reset DB for clean tests
         } else {
-            await sequelize.sync(); // Production-safe sync (no destructive changes)
+            await sequelize.sync(); // Production-safe sync
         }
 
         console.log('✅ Database synchronized successfully !');
@@ -42,25 +42,29 @@ const initDB = async () => {
    Handles:
    - event creators
    - event participants
-   - membership roles and joined dates
+   - direct membership queries
+
+   Notes:
+   - EventUserRole stores role and joinedAt
+   - EventUserRole → Event uses alias "event"
 ================================================== */
 
 /* =============================
-    Creator relationships
+   Creator relationships
 ============================= */
 
 // A user can create multiple events
 User.hasMany(Event, { foreignKey: 'creatorId' });
 
-// Each event has one creator (aliased as "creator")
+// Each event has one creator
 Event.belongsTo(User, { foreignKey: 'creatorId', as: 'creator' });
 
 
 /* =============================
-    Participation relationships
+   Participation relationships
 ============================= */
 
-// A user can participate in many events via EventUserRole
+// A user can participate in many events through EventUserRole
 User.belongsToMany(Event, {
     through: {
         model: EventUserRole,
@@ -68,10 +72,10 @@ User.belongsToMany(Event, {
     },
     foreignKey: 'userId',
     otherKey: 'eventId',
-    as: 'events' // Alias used when including events from a user
+    as: 'events'
 });
 
-// An event can have many participants (users)
+// An event can have many participants through EventUserRole
 Event.belongsToMany(User, {
     through: {
         model: EventUserRole,
@@ -79,24 +83,24 @@ Event.belongsToMany(User, {
     },
     foreignKey: 'eventId',
     otherKey: 'userId',
-    as: 'participants' // Alias used when including users from an event
+    as: 'participants'
 });
 
 
 /* =============================
-    Direct membership relationships
+   Direct membership relationships
 ============================= */
 
 // Each membership belongs to one user
 EventUserRole.belongsTo(User, { foreignKey: 'userId' });
 
-// Each membership belongs to one event (alias = "event")
+// Each membership belongs to one event
 EventUserRole.belongsTo(Event, { foreignKey: 'eventId', as: 'event' });
 
-// A user has many membership roles
+// A user can belong to multiple events (via memberships)
 User.hasMany(EventUserRole, { foreignKey: 'userId' });
 
-// An event has many membership roles
+// An event can have multiple participants (via memberships
 Event.hasMany(EventUserRole, { foreignKey: 'eventId' });
 
 module.exports = { sequelize, initDB, User, Event, EventUserRole };

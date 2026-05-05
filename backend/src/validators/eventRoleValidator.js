@@ -1,6 +1,18 @@
 const { body, param } = require('express-validator');
 
-// Validator for updating a member's role in an event
+/* ==================================================
+   EVENT ROLE VALIDATORS
+
+   Handles:
+   - member role update validation
+   - member removal param validation
+
+   Notes:
+   - validateRequest must run after these validators
+   - role authorization is handled separately by middlewares
+================================================== */
+
+// Validate member role update data
 const updateMemberRoleValidator = [
     param('eventId')
         .isInt({ min: 1 }).withMessage('Event ID must be a positive integer')
@@ -18,7 +30,7 @@ const updateMemberRoleValidator = [
         .withMessage('newRole must be one of: organizer, co_organizer, participant')
 ];
 
-// Validator for removing a member from an event
+// Validate member removal params
 const removeMemberValidator = [
     param('eventId')
         .isInt({ min: 1 }).withMessage('Event ID must be a positive integer')

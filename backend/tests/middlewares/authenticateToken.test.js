@@ -1,3 +1,19 @@
+/* ==================================================
+   AUTHENTICATE TOKEN MIDDLEWARE TESTS
+
+   Tests:
+   - missing Authorization header
+   - malformed Authorization header
+   - empty Bearer token
+   - invalid or expired token
+   - valid token authentication
+
+   Ensures:
+   - protected routes reject invalid authentication
+   - decoded JWT payload is attached to req.user
+   - next() is called only when token is valid
+================================================== */
+
 const { authenticateToken } = require("../../src/middlewares/authenticateToken");
 const jwt = require("jsonwebtoken");
 

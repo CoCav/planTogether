@@ -1,29 +1,46 @@
 const jwt = require('jsonwebtoken');
 
-// Middleware that verifies JWT access tokens
+/* ==================================================
+   AUTHENTICATION MIDDLEWARE
+
+   Handles:
+   - JWT extraction from Authorization header
+   - token verification
+   - authenticated user injection into req.user
+
+   Notes:
+   - expected header format is: Bearer <token>
+   - decoded token should contain userId
+================================================== */
+
+// Verify JWT access token
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
 
-    // Expect header format: Authorization: Bearer <token>
+    // Require Authorization: Bearer <token>
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({
-            message: 'Authorization header missing or malformed',
+            message: 'Authorization header missing or malformed'
         });
     }
 
     const token = authHeader.slice('Bearer '.length).trim();
 
     if (!token) {
-        return res.status(401).json({ message: 'No token provided' });
+        return res.status(401).json({
+            message: 'No token provided'
+        });
     }
 
-    // Verify JWT signature and expiration
+    // Verify token signature and expiration
     jwt.verify(token, process.env.JWT_SECRET, (error, decodedToken) => {
         if (error) {
-            return res.status(401).json({ message: 'Invalid or expired token' });
+            return res.status(401).json({
+                message: 'Invalid or expired token'
+            });
         }
 
-        // Attach decoded JWT payload (e.g. userId) to the request
+        // Make authenticated user data available to controllers
         req.user = decodedToken;
         next();
     });

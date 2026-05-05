@@ -1,20 +1,25 @@
-/* ==================================================
-   EVENT QUERY FILTERS
-   Helpers for building event-related database queries
-
-   Handles:
-   - dynamic where conditions
-   - date and status filters
-   - text and category filters
-   - reusable includes (creator)
-================================================== */
-
 const { Op } = require("sequelize");
 
-/* =========================
-   Adds condition to Op.and safely
-   Ensures multiple conditions are grouped properly
-========================= */
+/* ==================================================
+   EVENT QUERY FILTERS
+
+   Handles:
+   - dynamic where clause building
+   - status filtering (past / upcoming)
+   - date overlap filtering
+   - text search and category filters
+   - creator include with optional filtering
+
+   Notes:
+   - designed to be reused across services
+   - keeps controllers/services clean
+================================================== */
+
+/* =============================
+   AND CONDITION HELPER
+============================= */
+
+// Safely append a condition to Op.and
 const addAndCondition = (whereConditions, condition) => {
     if (!whereConditions[Op.and]) {
         whereConditions[Op.and] = [];
@@ -24,33 +29,33 @@ const addAndCondition = (whereConditions, condition) => {
 };
 
 
-/* =========================
-   Creator include builder
-   Adds creator relation with optional name filter
+/* =============================
+   CREATOR INCLUDE BUILDER
+============================= */
 
-   - used for filtering by creator name
-   - works with nested includes (EventUserRole → Event → User)
-========================= */
+// Build creator include with optional name filtering
 const buildCreatorInclude = (User, creator) => ({
     model: User,
     as: "creator",
     attributes: ["id", "name"],
+
+    // Apply name filter only if provided
     ...(creator && {
         where: {
             name: {
                 [Op.iLike]: `%${String(creator).trim()}%`
             }
         },
-        required: true // ensures filtering works (INNER JOIN)
+        required: true // forces INNER JOIN for filtering
     })
 });
 
 
-/* =========================
-   Applies status filter
-   - upcoming: events not finished yet
-   - past: events already finished
-========================= */
+/* =============================
+   STATUS FILTER
+============================= */
+
+// Apply event status filtering (past / upcoming)
 const applyStatusFilter = (whereConditions, status) => {
     if (!status) return;
 
@@ -68,11 +73,14 @@ const applyStatusFilter = (whereConditions, status) => {
 };
 
 
-/* =========================
-   Applies date filter
-   Uses overlap logic so multi-day events are included
-========================= */
+/* =============================
+   DATE FILTERS (OVERLAP LOGIC)
+============================= */
+
+// Apply date filtering using overlap logic
 const applyDateFilters = (whereConditions, { date, startDate, endDate }) => {
+
+    // Single day filter
     if (date) {
         const start = new Date(`${date}T00:00:00.000`);
         const end = new Date(`${date}T23:59:59.999`);
@@ -88,6 +96,7 @@ const applyDateFilters = (whereConditions, { date, startDate, endDate }) => {
         return;
     }
 
+    // Range filter
     if (startDate || endDate) {
         const start = startDate ? new Date(`${startDate}T00:00:00.000`) : null;
         const end = endDate ? new Date(`${endDate}T23:59:59.999`) : null;
@@ -113,10 +122,11 @@ const applyDateFilters = (whereConditions, { date, startDate, endDate }) => {
 };
 
 
-/* =========================
-   Applies text and category filters
-   Handles basic search and field matching
-========================= */
+/* =============================
+   BASIC FILTERS
+============================= */
+
+// Apply simple filters (search, type, etc.)
 const applyBasicEventFilters = (whereConditions, query = {}) => {
     const {
         creatorId,
@@ -133,6 +143,7 @@ const applyBasicEventFilters = (whereConditions, query = {}) => {
     if (theme) whereConditions.theme = { [Op.iLike]: `%${theme}%` };
     if (location) whereConditions.location = { [Op.iLike]: `%${location}%` };
 
+    // Full-text search on title + description
     if (search) {
         whereConditions[Op.or] = [
             { title: { [Op.iLike]: `%${search}%` } },
@@ -142,15 +153,11 @@ const applyBasicEventFilters = (whereConditions, query = {}) => {
 };
 
 
-/* =========================
-   Applies all common event filters
-   Used by:
-   - public event listing
-   - user event listing
+/* =============================
+   MAIN FILTER ENTRY POINT
+============================= */
 
-   Options:
-   - includeStatus: apply status filter (default true)
-========================= */
+// Apply all filters to a where object
 const applyEventQueryFilters = (whereConditions, query = {}, options = {}) => {
     const { includeStatus = true } = options;
 
@@ -163,6 +170,5 @@ const applyEventQueryFilters = (whereConditions, query = {}, options = {}) => {
 
     return whereConditions;
 };
-
 
 module.exports = { addAndCondition, buildCreatorInclude, applyStatusFilter, applyDateFilters, applyBasicEventFilters, applyEventQueryFilters };

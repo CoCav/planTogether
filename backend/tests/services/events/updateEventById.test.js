@@ -1,16 +1,30 @@
+/* ==================================================
+   EVENT SERVICE - UPDATE EVENT BY ID TESTS
+
+   Tests:
+   - in-person event update
+   - online event location normalization
+   - participant limit and registration deadline update
+   - missing event rejection
+   - past event update rejection
+   - invalid date order rejection
+   - event image replacement
+   - existing image preservation
+   - same image preservation
+   - database error forwarding
+
+   Ensures:
+   - only valid updates are applied
+   - past event rules are enforced
+   - old images are deleted only when replaced
+   - image and location fields are normalized correctly
+================================================== */
+
 const Event = require("../../../src/models/eventModel");
 const { assertEventNotPast } = require("../../../src/utils/eventTime");
 const deleteUploadedFile = require("../../../src/utils/deleteUploadedFile");
 
 const eventService = require("../../../src/services/eventService");
-
-/**
- * Event Service - Update Event By ID
- *
- * Tests event update logic.
- *
- * Ensures only valid updates are applied and business rules are enforced.
-*/
 
 jest.mock("../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
@@ -54,6 +68,7 @@ describe("eventService - updateEventById", () => {
         });
 
         expect(assertEventNotPast).toHaveBeenCalledWith(event);
+
         expect(event.update).toHaveBeenCalledWith({
             title: "Updated Event",
             description: "Updated description",
@@ -67,6 +82,7 @@ describe("eventService - updateEventById", () => {
             registrationDeadline: null,
             image: null
         });
+
         expect(result).toBe(event);
     });
 
@@ -266,6 +282,10 @@ describe("eventService - updateEventById", () => {
     it("should forward database errors", async () => {
         Event.findByPk.mockRejectedValue(new Error("DB error"));
 
-        await expect(eventService.updateEventById(1, { title: "Updated Event" })).rejects.toThrow("DB error");
+        await expect(
+            eventService.updateEventById(1, {
+                title: "Updated Event"
+            })
+        ).rejects.toThrow("DB error");
     });
 });

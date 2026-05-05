@@ -1,31 +1,25 @@
+/* ==================================================
+   AUTH INTEGRATION - LOGIN
+
+   Tests:
+   - successful login
+   - missing fields rejection
+   - invalid email rejection
+   - wrong password rejection
+   - unknown email rejection
+
+   Ensures:
+   - validators run correctly
+   - credentials are verified
+   - JWT token is returned
+   - password is never exposed
+================================================== */
+
 const request = require('supertest');
 const app = require('../../../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
 
-/**
- * Auth Integration - Login
- *
- * These tests validate the authentication process via HTTP.
- *
- * What is tested:
- * - Input validation (email format, required fields)
- * - Credential verification (email + password)
- * - Token generation
- * - Error handling for invalid credentials
- *
- * Integration scope:
- * → Validators + Controller + Service + Database
- *
- * Goal:
- * Ensure users can authenticate correctly and invalid logins are rejected.
-*/
-
 describe('Login API', () => {
-
-    /* =========================
-       Test database lifecycle
-    ========================= */
-
     beforeAll(async () => {
         await initDB();
     });
@@ -40,9 +34,9 @@ describe('Login API', () => {
         await sequelize.close();
     });
 
-    /* =========================
-       User login
-    ========================= */
+    /* =============================
+       LOGIN SUCCESS
+    ============================= */
 
     it('should login an existing user', async () => {
         const user = {
@@ -61,7 +55,6 @@ describe('Login API', () => {
             });
 
         expect(res.statusCode).toBe(200);
-
         expect(res.body).toHaveProperty('message', 'Login successful');
         expect(res.body).toHaveProperty('token');
         expect(res.body).toHaveProperty('user');
@@ -73,6 +66,10 @@ describe('Login API', () => {
 
         expect(res.body.user).not.toHaveProperty('password');
     });
+
+    /* =============================
+       VALIDATION ERRORS
+    ============================= */
 
     it('should reject missing fields', async () => {
         const res = await request(app)
@@ -89,6 +86,10 @@ describe('Login API', () => {
 
         expect(res.statusCode).toBe(400);
     });
+
+    /* =============================
+       CREDENTIAL ERRORS
+    ============================= */
 
     it('should reject wrong password', async () => {
         const user = {

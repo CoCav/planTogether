@@ -1,6 +1,24 @@
 const { body } = require('express-validator');
 
-// Validator for user registration
+/* ==================================================
+   AUTH VALIDATORS
+
+   Handles:
+   - registration validation
+   - login validation
+   - profile update validation
+   - password update validation
+
+   Notes:
+   - validateRequest must run after these validators
+   - email values are normalized before reaching controllers
+================================================== */
+
+/* =============================
+   REGISTER / LOGIN
+============================= */
+
+// Validate user registration data
 const registerValidator = [
     body('name')
         .trim()
@@ -12,7 +30,6 @@ const registerValidator = [
         .isEmail().withMessage('Invalid email')
         .normalizeEmail(),
 
-
     body('password')
         .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
         .matches(/\d/).withMessage('Password must contain a number')
@@ -20,7 +37,7 @@ const registerValidator = [
         .matches(/[a-z]/).withMessage('Password must contain a lowercase letter')
 ];
 
-// Validator for user login
+// Validate user login data
 const loginValidator = [
     body('email')
         .trim()
@@ -29,10 +46,15 @@ const loginValidator = [
         .normalizeEmail(),
 
     body('password')
-        .notEmpty().withMessage('Password is required'),
+        .notEmpty().withMessage('Password is required')
 ];
 
-// Validator for updating user profile
+
+/* =============================
+   PROFILE / PASSWORD
+============================= */
+
+// Validate profile update data
 const updateProfileValidator = [
     body('name')
         .optional()
@@ -46,19 +68,17 @@ const updateProfileValidator = [
         .normalizeEmail()
 ];
 
+// Validate password update data
 const changePasswordValidator = [
     body("currentPassword")
-        .notEmpty()
-        .withMessage("Current password is required"),
+        .notEmpty().withMessage("Current password is required"),
 
     body("newPassword")
-        .notEmpty()
-        .withMessage("New password is required")
-        .isLength({ min: 6 })
-        .withMessage("New password must be at least 6 characters long")
+        .notEmpty().withMessage("New password is required")
+        .isLength({ min: 6 }).withMessage("New password must be at least 6 characters long")
         .matches(/\d/).withMessage("New password must contain a number")
         .matches(/[A-Z]/).withMessage("New password must contain an uppercase letter")
-        .matches(/[a-z]/).withMessage("New password must contain a lowercase letter"),
+        .matches(/[a-z]/).withMessage("New password must contain a lowercase letter")
 ];
 
 module.exports = { registerValidator, loginValidator, updateProfileValidator, changePasswordValidator };

@@ -1,29 +1,23 @@
+/* ==================================================
+   EVENT MEMBERSHIP INTEGRATION - PERMISSIONS
+
+   Tests:
+   - organizer role permissions
+   - co-organizer permissions and restrictions
+   - participant restrictions
+   - protected creator / organizer rules
+
+   Ensures:
+   - event role hierarchy is enforced correctly
+   - unauthorized role updates are rejected
+   - unauthorized member removals are rejected
+================================================== */
+
 const request = require('supertest');
 const app = require('../../../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
 
-/**
- * Events Membership Integration - Permissions
- *
- * These tests validate role-based permissions for event membership.
- *
- * What is tested:
- * - Organizer role management (promote, demote, remove)
- * - Co-organizer permissions and restrictions
- * - Participant restrictions
- *
- * Integration scope:
- * → Auth middleware + Role middleware + Controller + Database
- *
- * Goal:
- * Ensure role hierarchy is enforced correctly.
-*/
-
 describe('Event Membership Permissions API', () => {
-
-    /* =========================
-       Test database lifecycle
-    ========================= */
 
     beforeAll(async () => {
         await initDB();
@@ -39,19 +33,22 @@ describe('Event Membership Permissions API', () => {
         await sequelize.close();
     });
 
-    /* =========================
-       Helpers
-    ========================= */
+    /* =============================
+       HELPERS
+    ============================= */
 
+    // Register a test user and return token + email
     const registerUser = async (name, email) => {
         const res = await request(app).post('/api/auth/register').send({
             name,
             email,
             password: 'Password123'
         });
+
         return { token: res.body.token, email };
     };
 
+    // Create a test event as authenticated organizer
     const createEvent = async (token) => {
         const res = await request(app)
             .post('/api/events')
@@ -70,14 +67,15 @@ describe('Event Membership Permissions API', () => {
         return res.body.event;
     };
 
+    // Retrieve user ID from database using email
     const getUserId = async (email) => {
         const user = await User.findOne({ where: { email } });
         return user.id;
     };
 
-    /* =========================
-       Organizer permissions
-    ========================= */
+    /* =============================
+       ORGANIZER PERMISSIONS
+    ============================= */
 
     it('should allow organizer to promote participant to co_organizer', async () => {
         const organizer = await registerUser('Org', `org${Date.now()}@test.com`);
@@ -88,7 +86,9 @@ describe('Event Membership Permissions API', () => {
         const participant = await registerUser('P', participantEmail);
         const participantId = await getUserId(participantEmail);
 
-        await request(app).post(`/api/events/${event.id}/members/join`).set('Authorization', `Bearer ${participant.token}`);
+        await request(app)
+            .post(`/api/events/${event.id}/members/join`)
+            .set('Authorization', `Bearer ${participant.token}`);
 
         const res = await request(app)
             .put(`/api/events/${event.id}/members/${participantId}/role`)
@@ -107,7 +107,9 @@ describe('Event Membership Permissions API', () => {
         const co = await registerUser('Co', coEmail);
         const coId = await getUserId(coEmail);
 
-        await request(app).post(`/api/events/${event.id}/members/join`).set('Authorization', `Bearer ${co.token}`);
+        await request(app)
+            .post(`/api/events/${event.id}/members/join`)
+            .set('Authorization', `Bearer ${co.token}`);
 
         await request(app)
             .put(`/api/events/${event.id}/members/${coId}/role`)
@@ -131,7 +133,9 @@ describe('Event Membership Permissions API', () => {
         const participant = await registerUser('P', pEmail);
         const pId = await getUserId(pEmail);
 
-        await request(app).post(`/api/events/${event.id}/members/join`).set('Authorization', `Bearer ${participant.token}`);
+        await request(app)
+            .post(`/api/events/${event.id}/members/join`)
+            .set('Authorization', `Bearer ${participant.token}`);
 
         const res = await request(app)
             .delete(`/api/events/${event.id}/members/${pId}`)
@@ -149,7 +153,9 @@ describe('Event Membership Permissions API', () => {
         const user = await registerUser('U', userEmail);
         const userId = await getUserId(userEmail);
 
-        await request(app).post(`/api/events/${event.id}/members/join`).set('Authorization', `Bearer ${user.token}`);
+        await request(app)
+            .post(`/api/events/${event.id}/members/join`)
+            .set('Authorization', `Bearer ${user.token}`);
 
         const res = await request(app)
             .put(`/api/events/${event.id}/members/${userId}/role`)
@@ -173,9 +179,9 @@ describe('Event Membership Permissions API', () => {
         expect(res.statusCode).toBe(403);
     });
 
-    /* =========================
-       Co-organizer permissions
-    ========================= */
+    /* =============================
+       CO-ORGANIZER PERMISSIONS
+    ============================= */
 
     it('should allow co_organizer to remove a participant', async () => {
         const organizer = await registerUser('Org', `org${Date.now()}@test.com`);
@@ -190,8 +196,13 @@ describe('Event Membership Permissions API', () => {
         const coId = await getUserId(coEmail);
         const pId = await getUserId(pEmail);
 
-        await request(app).post(`/api/events/${event.id}/members/join`).set('Authorization', `Bearer ${co.token}`);
-        await request(app).post(`/api/events/${event.id}/members/join`).set('Authorization', `Bearer ${p.token}`);
+        await request(app)
+            .post(`/api/events/${event.id}/members/join`)
+            .set('Authorization', `Bearer ${co.token}`);
+
+        await request(app)
+            .post(`/api/events/${event.id}/members/join`)
+            .set('Authorization', `Bearer ${p.token}`);
 
         await request(app)
             .put(`/api/events/${event.id}/members/${coId}/role`)
@@ -218,8 +229,13 @@ describe('Event Membership Permissions API', () => {
         const coId = await getUserId(coEmail);
         const targetId = await getUserId(targetEmail);
 
-        await request(app).post(`/api/events/${event.id}/members/join`).set('Authorization', `Bearer ${co.token}`);
-        await request(app).post(`/api/events/${event.id}/members/join`).set('Authorization', `Bearer ${target.token}`);
+        await request(app)
+            .post(`/api/events/${event.id}/members/join`)
+            .set('Authorization', `Bearer ${co.token}`);
+
+        await request(app)
+            .post(`/api/events/${event.id}/members/join`)
+            .set('Authorization', `Bearer ${target.token}`);
 
         await request(app)
             .put(`/api/events/${event.id}/members/${coId}/role`)
@@ -247,11 +263,23 @@ describe('Event Membership Permissions API', () => {
         const co1Id = await getUserId(co1Email);
         const co2Id = await getUserId(co2Email);
 
-        await request(app).post(`/api/events/${event.id}/members/join`).set('Authorization', `Bearer ${co1.token}`);
-        await request(app).post(`/api/events/${event.id}/members/join`).set('Authorization', `Bearer ${co2.token}`);
+        await request(app)
+            .post(`/api/events/${event.id}/members/join`)
+            .set('Authorization', `Bearer ${co1.token}`);
 
-        await request(app).put(`/api/events/${event.id}/members/${co1Id}/role`).set('Authorization', `Bearer ${organizer.token}`).send({ newRole: 'co_organizer' });
-        await request(app).put(`/api/events/${event.id}/members/${co2Id}/role`).set('Authorization', `Bearer ${organizer.token}`).send({ newRole: 'co_organizer' });
+        await request(app)
+            .post(`/api/events/${event.id}/members/join`)
+            .set('Authorization', `Bearer ${co2.token}`);
+
+        await request(app)
+            .put(`/api/events/${event.id}/members/${co1Id}/role`)
+            .set('Authorization', `Bearer ${organizer.token}`)
+            .send({ newRole: 'co_organizer' });
+
+        await request(app)
+            .put(`/api/events/${event.id}/members/${co2Id}/role`)
+            .set('Authorization', `Bearer ${organizer.token}`)
+            .send({ newRole: 'co_organizer' });
 
         const res = await request(app)
             .delete(`/api/events/${event.id}/members/${co2Id}`)
@@ -260,9 +288,9 @@ describe('Event Membership Permissions API', () => {
         expect(res.statusCode).toBe(403);
     });
 
-    /* =========================
-       Participant restrictions
-    ========================= */
+    /* =============================
+       PARTICIPANT RESTRICTIONS
+    ============================= */
 
     it('should reject role update by participant', async () => {
         const organizer = await registerUser('Org', `org${Date.now()}@test.com`);
@@ -276,8 +304,13 @@ describe('Event Membership Permissions API', () => {
 
         const p2Id = await getUserId(p2Email);
 
-        await request(app).post(`/api/events/${event.id}/members/join`).set('Authorization', `Bearer ${p1.token}`);
-        await request(app).post(`/api/events/${event.id}/members/join`).set('Authorization', `Bearer ${p2.token}`);
+        await request(app)
+            .post(`/api/events/${event.id}/members/join`)
+            .set('Authorization', `Bearer ${p1.token}`);
+
+        await request(app)
+            .post(`/api/events/${event.id}/members/join`)
+            .set('Authorization', `Bearer ${p2.token}`);
 
         const res = await request(app)
             .put(`/api/events/${event.id}/members/${p2Id}/role`)
@@ -299,8 +332,13 @@ describe('Event Membership Permissions API', () => {
 
         const p2Id = await getUserId(p2Email);
 
-        await request(app).post(`/api/events/${event.id}/members/join`).set('Authorization', `Bearer ${p1.token}`);
-        await request(app).post(`/api/events/${event.id}/members/join`).set('Authorization', `Bearer ${p2.token}`);
+        await request(app)
+            .post(`/api/events/${event.id}/members/join`)
+            .set('Authorization', `Bearer ${p1.token}`);
+
+        await request(app)
+            .post(`/api/events/${event.id}/members/join`)
+            .set('Authorization', `Bearer ${p2.token}`);
 
         const res = await request(app)
             .delete(`/api/events/${event.id}/members/${p2Id}`)

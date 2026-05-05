@@ -2,9 +2,24 @@ const eventMembershipService = require('../services/eventMembershipService');
 
 /* ==================================================
    EVENT MEMBERSHIP CONTROLLER
+
+   Handles:
+   - joining and leaving events
+   - retrieving current user's events
+   - retrieving event members and organizer / co_organizer(s)
+   - updating member roles
+   - removing members from events
+
+   Notes:
+   - authorization is handled by route middlewares
+   - business logic is delegated to eventMembershipService
 ================================================== */
 
-// User joins an event
+/* =============================
+   JOIN / LEAVE EVENTS
+============================= */
+
+// Join an event
 const joinEvent = async (req, res, next) => {
     try {
         const userId = req.user.userId;
@@ -16,12 +31,14 @@ const joinEvent = async (req, res, next) => {
             message: 'User successfully joined the event',
             membership
         });
+
     } catch (error) {
         return next(error);
     }
 };
 
-// User leaves an event
+
+// Leave an event
 const leaveEvent = async (req, res, next) => {
     try {
         const userId = req.user.userId;
@@ -30,14 +47,20 @@ const leaveEvent = async (req, res, next) => {
         await eventMembershipService.leaveEvent({ eventId, userId });
 
         return res.status(200).json({
-            message: 'User successfully left the event',
+            message: 'User successfully left the event'
         });
+
     } catch (error) {
         return next(error);
     }
 };
 
-// Get events of the current user
+
+/* =============================
+   CURRENT USER EVENTS
+============================= */
+
+// Get authenticated user's events
 const getMyEvents = async (req, res, next) => {
     try {
         const userId = req.user.userId;
@@ -48,12 +71,18 @@ const getMyEvents = async (req, res, next) => {
             message: 'Events retrieved successfully',
             ...result
         });
+
     } catch (error) {
         return next(error);
     }
 };
 
-// Get all members of an event (with roles)
+
+/* ==================================================
+   MEMBERS / ORGANIZER / CO-ORGANIZERS
+================================================== */
+
+// Get all members of an event
 const getMembers = async (req, res, next) => {
     try {
         const eventId = req.params.eventId;
@@ -64,12 +93,14 @@ const getMembers = async (req, res, next) => {
             message: 'Members retrieved successfully',
             members
         });
+
     } catch (error) {
         return next(error);
     }
 };
 
-// Get organizers & co_organizers of an event
+
+// Get organizer / co-organizer(s) of an event
 const getOrganizers = async (req, res, next) => {
     try {
         const eventId = req.params.eventId;
@@ -80,12 +111,18 @@ const getOrganizers = async (req, res, next) => {
             message: 'Organizers retrieved successfully',
             organizers
         });
+
     } catch (error) {
         return next(error);
     }
 };
 
-// Update a user's role in an event
+
+/* =============================
+   ROLE MANAGEMENT
+============================= */
+
+// Update member role
 const updateMemberRole = async (req, res, next) => {
     try {
         const eventId = req.params.eventId;
@@ -102,26 +139,31 @@ const updateMemberRole = async (req, res, next) => {
             message: 'User role updated successfully',
             membership
         });
+
     } catch (error) {
         return next(error);
     }
 };
 
-// Remove a member from an event
+
+// Remove member from an event
 const removeMember = async (req, res, next) => {
     try {
         const eventId = req.params.eventId;
         const userId = req.params.userId;
-        const requestingUserId = req.user.userId;
 
-        await eventMembershipService.removeMember({ eventId, userId, requestingUserId });
+        await eventMembershipService.removeMember({
+            eventId,
+            userId
+        });
 
         return res.status(200).json({
-            message: 'Member removed successfully',
+            message: 'Member removed successfully'
         });
+
     } catch (error) {
         return next(error);
     }
 };
 
-module.exports = { joinEvent, leaveEvent, getMembers, getOrganizers, updateMemberRole, removeMember, getMyEvents };
+module.exports = { joinEvent, leaveEvent, getMyEvents, getMembers, getOrganizers, updateMemberRole, removeMember };

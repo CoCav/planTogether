@@ -1,3 +1,20 @@
+/* ==================================================
+   EVENT SERVICE - GET FILTERED EVENTS TESTS
+
+   Tests:
+   - query filter helper usage
+   - Sequelize where filter forwarding
+   - event status enrichment
+   - creator filtering
+   - grouped count handling
+   - database error forwarding
+
+   Ensures:
+   - filters are applied before querying events
+   - pagination metadata is returned correctly
+   - events are formatted with computed status
+================================================== */
+
 const Event = require("../../../src/models/eventModel");
 
 const { getPaginationOptions } = require("../../../src/utils/pagination");
@@ -5,15 +22,6 @@ const { applyEventQueryFilters, buildCreatorInclude } = require("../../../src/ut
 const { getEventStatus } = require("../../../src/utils/eventTime");
 
 const eventService = require("../../../src/services/eventService");
-
-/**
- * Event Service - Get Filtered Events
- *
- * Tests event filtering logic.
- *
- * Ensures filters are applied, pagination is respected,
- * and results are correctly formatted.
-*/
 
 jest.mock("../../../src/models/eventModel", () => ({
     findAndCountAll: jest.fn()
@@ -29,7 +37,6 @@ jest.mock("../../../src/utils/eventQueryFilters", () => ({
 jest.mock("../../../src/utils/eventTime");
 
 describe("eventService - getFilteredEvents", () => {
-
     const basePagination = {
         page: 1,
         pageSize: 10,
@@ -39,20 +46,19 @@ describe("eventService - getFilteredEvents", () => {
         orderDirection: "DESC"
     };
 
-    buildCreatorInclude.mockReturnValue({
-        model: {},
-        as: "creator",
-        attributes: ["id", "name"]
-    });
-
     beforeEach(() => {
         jest.clearAllMocks();
         jest.spyOn(console, "error").mockImplementation(() => { });
 
         getPaginationOptions.mockReturnValue(basePagination);
         getEventStatus.mockReturnValue("upcoming");
-
         applyEventQueryFilters.mockImplementation((where) => where);
+
+        buildCreatorInclude.mockReturnValue({
+            model: {},
+            as: "creator",
+            attributes: ["id", "name"]
+        });
     });
 
     afterEach(() => {
@@ -60,9 +66,14 @@ describe("eventService - getFilteredEvents", () => {
     });
 
     it("should call applyEventQueryFilters", async () => {
-        Event.findAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+        Event.findAndCountAll.mockResolvedValue({
+            count: 0,
+            rows: []
+        });
 
-        await eventService.getFilteredEvents({ search: "test" });
+        await eventService.getFilteredEvents({
+            search: "test"
+        });
 
         expect(applyEventQueryFilters).toHaveBeenCalled();
     });
@@ -73,20 +84,27 @@ describe("eventService - getFilteredEvents", () => {
             return where;
         });
 
-        Event.findAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+        Event.findAndCountAll.mockResolvedValue({
+            count: 0,
+            rows: []
+        });
 
         await eventService.getFilteredEvents({ mode: "online" });
 
         expect(Event.findAndCountAll).toHaveBeenCalledWith(
             expect.objectContaining({
-                where: expect.objectContaining({ mode: "online" })
+                where: expect.objectContaining({
+                    mode: "online"
+                })
             })
         );
     });
 
     it("should return events with computed status", async () => {
         const mockEvent = {
-            toJSON: () => ({ id: 1 })
+            toJSON: () => ({
+                id: 1
+            })
         };
 
         Event.findAndCountAll.mockResolvedValue({
@@ -103,17 +121,27 @@ describe("eventService - getFilteredEvents", () => {
     });
 
     it("should include creator filter when creator query is provided", async () => {
-        Event.findAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+        Event.findAndCountAll.mockResolvedValue({
+            count: 0,
+            rows: []
+        });
 
         await eventService.getFilteredEvents({ creator: "john" });
 
-        expect(buildCreatorInclude).toHaveBeenCalledWith(expect.anything(), "john");
+        expect(buildCreatorInclude).toHaveBeenCalledWith(
+            expect.anything(),
+            "john"
+        );
     });
 
     it("should handle grouped count array", async () => {
         Event.findAndCountAll.mockResolvedValue({
             count: [{ count: 1 }, { count: 1 }],
-            rows: [{ toJSON: () => ({}) }]
+            rows: [
+                {
+                    toJSON: () => ({})
+                }
+            ]
         });
 
         const result = await eventService.getFilteredEvents({});

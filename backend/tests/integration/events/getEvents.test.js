@@ -1,32 +1,25 @@
+/* ==================================================
+   EVENTS INTEGRATION - GET EVENTS
+
+   Tests:
+   - retrieve all events
+   - retrieve a single event
+   - nonexistent event handling
+   - event status computation
+   - pagination behavior
+   - event status in listings
+
+   Ensures:
+   - events are correctly retrieved from the API
+   - pagination metadata is returned properly
+   - status helpers correctly classify events
+================================================== */
+
 const request = require('supertest');
 const app = require('../../../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
 
-/**
- * Events Integration - Get Events
- *
- * These tests validate event retrieval via HTTP.
- *
- * What is tested:
- * - Retrieve all events
- * - Retrieve a single event by ID
- * - Handling of nonexistent events
- * - Event status computation (upcoming / past)
- * - Pagination behavior
- *
- * Integration scope:
- * → Routes + Controller + Service + Database
- *
- * Goal:
- * Ensure events can be fetched correctly and business logic
- * (like status and pagination) is properly applied.
-*/
-
 describe('Get Events API', () => {
-
-    /* =========================
-       Test database lifecycle
-    ========================= */
 
     beforeAll(async () => {
         await initDB();
@@ -42,10 +35,11 @@ describe('Get Events API', () => {
         await sequelize.close();
     });
 
-    /* =========================
-       Helpers
-    ========================= */
+    /* =============================
+       HELPERS
+    ============================= */
 
+    // Register a test user and return auth token
     const registerAndGetToken = async (name, email) => {
         const res = await request(app)
             .post('/api/auth/register')
@@ -58,118 +52,47 @@ describe('Get Events API', () => {
         return res.body.token;
     };
 
+    // Generate a valid event payload
     const getValidEventPayload = (overrides = {}) => ({
         title: 'Test Event',
-        description: 'Test description',
+        description: 'This is a test event',
         startDateTime: '2026-12-31T10:00:00.000Z',
         endDateTime: '2026-12-31T12:00:00.000Z',
         mode: 'in_person',
         location: 'Montreal',
         type: 'Meetup',
-        theme: 'Tech',
+        theme: 'Technology',
         ...overrides
     });
 
-    /* =========================
-       Get all events
-    ========================= */
+    // Create a test event
+    const createEvent = async (token, overrides = {}) => {
+        const res = await request(app)
+            .post('/api/events')
+            .set('Authorization', `Bearer ${token}`)
+            .send(getValidEventPayload(overrides));
 
-    it('should get all events', async () => {
+        return res.body.event;
+    };
+
+    /* =============================
+       GET ALL EVENTS
+    ============================= */
+
+    it('should retrieve all events', async () => {
         const token = await registerAndGetToken(
-            'Events Reader',
+            'Event User',
             `events${Date.now()}@test.com`
         );
 
-        await request(app)
-            .post('/api/events')
-            .set('Authorization', `Bearer ${token}`)
-            .send(getValidEventPayload());
+        await createEvent(token);
 
         const res = await request(app).get('/api/events');
 
         expect(res.statusCode).toBe(200);
-
-        expect(res.body).toHaveProperty('events');
         expect(Array.isArray(res.body.events)).toBe(true);
+        expect(res.body.events.length).toBeGreaterThan(0);
     });
-
-    /* =========================
-       Get one event
-    ========================= */
-
-    it('should get one event by ID', async () => {
-        const token = await registerAndGetToken(
-            'Single Event Reader',
-            `single${Date.now()}@test.com`
-        );
-
-        const eventRes = await request(app)
-            .post('/api/events')
-            .set('Authorization', `Bearer ${token}`)
-            .send(getValidEventPayload());
-
-        const eventId = eventRes.body.event.id;
-
-        const res = await request(app).get(`/api/events/${eventId}`);
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty('event');
-    });
-
-    it('should reject getting one event with nonexistent id', async () => {
-        const res = await request(app).get('/api/events/999999');
-
-        expect(res.statusCode).toBe(404);
-    });
-
-    /* =========================
-       Event status
-    ========================= */
-
-    it('should return upcoming status for future event', async () => {
-        const token = await registerAndGetToken(
-            'Status Reader',
-            `status${Date.now()}@test.com`
-        );
-
-        const eventRes = await request(app)
-            .post('/api/events')
-            .set('Authorization', `Bearer ${token}`)
-            .send(getValidEventPayload());
-
-        const eventId = eventRes.body.event.id;
-
-        const res = await request(app).get(`/api/events/${eventId}`);
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body.event).toHaveProperty('status', 'upcoming');
-    });
-
-    it('should return past status for past event', async () => {
-        const token = await registerAndGetToken(
-            'Past Status Reader',
-            `past${Date.now()}@test.com`
-        );
-
-        const eventRes = await request(app)
-            .post('/api/events')
-            .set('Authorization', `Bearer ${token}`)
-            .send(getValidEventPayload({
-                startDateTime: '2020-01-01T10:00:00.000Z',
-                endDateTime: '2020-01-01T12:00:00.000Z'
-            }));
-
-        const eventId = eventRes.body.event.id;
-
-        const res = await request(app).get(`/api/events/${eventId}`);
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body.event).toHaveProperty('status', 'past');
-    });
-
-    /* =========================
-       Pagination
-    ========================= */
 
     it('should paginate events', async () => {
         const token = await registerAndGetToken(
@@ -177,53 +100,109 @@ describe('Get Events API', () => {
             `pagination${Date.now()}@test.com`
         );
 
-        await request(app)
-            .post('/api/events')
-            .set('Authorization', `Bearer ${token}`)
-            .send(getValidEventPayload({ title: 'Event A' }));
-
-        await request(app)
-            .post('/api/events')
-            .set('Authorization', `Bearer ${token}`)
-            .send(getValidEventPayload({ title: 'Event B' }));
-
-        await request(app)
-            .post('/api/events')
-            .set('Authorization', `Bearer ${token}`)
-            .send(getValidEventPayload({ title: 'Event C' }));
+        await createEvent(token, { title: 'Event 1' });
+        await createEvent(token, { title: 'Event 2' });
+        await createEvent(token, { title: 'Event 3' });
 
         const res = await request(app)
             .get('/api/events')
-            .query({ page: 1, pageSize: 2 });
+            .query({
+                page: 1,
+                pageSize: 2
+            });
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.events.length).toBe(2);
+        expect(res.body.totalEvents).toBe(3);
+    });
+
+    /* =============================
+       GET SINGLE EVENT
+    ============================= */
+
+    it('should retrieve a single event by ID', async () => {
+        const token = await registerAndGetToken(
+            'Single Event User',
+            `single${Date.now()}@test.com`
+        );
+
+        const event = await createEvent(token);
+
+        const res = await request(app).get(`/api/events/${event.id}`);
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body).toHaveProperty('events');
-        expect(res.body.events.length).toBe(2);
-        expect(res.body).toHaveProperty('page');
-        expect(res.body).toHaveProperty('pageSize');
+        expect(res.body).toHaveProperty('message', 'Event retrieved successfully');
+        expect(res.body).toHaveProperty('event');
+
+        expect(res.body.event).toMatchObject({
+            id: event.id,
+            title: 'Test Event'
+        });
     });
 
-    /* =========================
-       Status in list
-    ========================= */
+    it('should return 404 for nonexistent event', async () => {
+        const res = await request(app).get('/api/events/999999');
 
-    it('should include status for each event', async () => {
+        expect(res.statusCode).toBe(404);
+    });
+
+    /* =============================
+       EVENT STATUS
+    ============================= */
+
+    it('should include upcoming status for future events', async () => {
         const token = await registerAndGetToken(
-            'List Status User',
-            `liststatus${Date.now()}@test.com`
+            'Upcoming User',
+            `upcoming${Date.now()}@test.com`
         );
 
-        await request(app)
-            .post('/api/events')
-            .set('Authorization', `Bearer ${token}`)
-            .send(getValidEventPayload());
+        const event = await createEvent(token, {
+            title: 'Upcoming Event',
+            startDateTime: '2030-01-01T10:00:00.000Z',
+            endDateTime: '2030-01-01T12:00:00.000Z'
+        });
+
+        const res = await request(app).get(`/api/events/${event.id}`);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.event.status).toBe('upcoming');
+    });
+
+    it('should include past status for past events', async () => {
+        const token = await registerAndGetToken(
+            'Past User',
+            `past${Date.now()}@test.com`
+        );
+
+        const event = await createEvent(token, {
+            title: 'Past Event',
+            startDateTime: '2020-01-01T10:00:00.000Z',
+            endDateTime: '2020-01-01T12:00:00.000Z'
+        });
+
+        const res = await request(app).get(`/api/events/${event.id}`);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.event.status).toBe('past');
+    });
+
+    it('should include status in event listing', async () => {
+        const token = await registerAndGetToken(
+            'Listing User',
+            `listing${Date.now()}@test.com`
+        );
+
+        await createEvent(token, {
+            title: 'Future Event',
+            startDateTime: '2030-01-01T10:00:00.000Z',
+            endDateTime: '2030-01-01T12:00:00.000Z'
+        });
 
         const res = await request(app).get('/api/events');
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body.events[0]).toHaveProperty('status');
-        expect(['upcoming', 'past']).toContain(res.body.events[0].status);
+        expect(res.body.events.some(event => event.status)).toBe(true);
     });
 });

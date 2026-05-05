@@ -1,3 +1,20 @@
+/* ==================================================
+   EVENT MEMBERSHIP SERVICE - LIST MY EVENTS TESTS
+
+   Tests:
+   - paginated user events retrieval
+   - participant count enrichment
+   - event status enrichment
+   - created / joined / history views
+   - creator filtering
+   - missing user handling
+
+   Ensures:
+   - user event lists are filtered correctly
+   - pagination metadata is returned
+   - event metadata is added before response
+================================================== */
+
 const EventUserRole = require("../../../src/models/relations/eventUserRoleModel");
 const Event = require("../../../src/models/eventModel");
 const User = require("../../../src/models/userModel");
@@ -10,20 +27,13 @@ const { Op } = require("sequelize");
 
 const service = require("../../../src/services/eventMembershipService");
 
-/**
- * Event Membership - List My Events
- *
- * Tests retrieval of user-related events.
- *
- * Ensures correct filtering, pagination, and event metadata.
-*/
-
 jest.mock("../../../src/models/relations/eventUserRoleModel", () => ({
     findAndCountAll: jest.fn(),
     count: jest.fn()
 }));
 
 jest.mock("../../../src/models/eventModel");
+
 jest.mock("../../../src/models/userModel", () => ({
     findByPk: jest.fn()
 }));
@@ -37,24 +47,6 @@ jest.mock("../../../src/utils/eventQueryFilters", () => ({
 }));
 
 describe("eventMembershipService - listMyEvents", () => {
-
-    applyEventQueryFilters.mockImplementation((where) => where);
-
-    buildCreatorInclude.mockReturnValue({
-        model: User,
-        as: "creator",
-        attributes: ["id", "name"]
-    });
-
-    beforeEach(() => {
-        jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => { });
-    });
-
-    afterEach(() => {
-        console.error.mockRestore();
-    });
-
     const pagination = {
         page: 1,
         pageSize: 10,
@@ -63,6 +55,23 @@ describe("eventMembershipService - listMyEvents", () => {
         orderField: "startDateTime",
         orderDirection: "ASC"
     };
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        jest.spyOn(console, "error").mockImplementation(() => { });
+
+        applyEventQueryFilters.mockImplementation((where) => where);
+
+        buildCreatorInclude.mockReturnValue({
+            model: User,
+            as: "creator",
+            attributes: ["id", "name"]
+        });
+    });
+
+    afterEach(() => {
+        console.error.mockRestore();
+    });
 
     it("should return paginated user events with participantCount and status", async () => {
         User.findByPk.mockResolvedValue({ id: 1 });
@@ -73,7 +82,10 @@ describe("eventMembershipService - listMyEvents", () => {
         const membership = {
             toJSON: () => ({
                 id: 1,
-                event: { id: 100, title: "Event" }
+                event: {
+                    id: 100,
+                    title: "Event"
+                }
             })
         };
 
@@ -109,7 +121,6 @@ describe("eventMembershipService - listMyEvents", () => {
 
     it("should apply creator filter through creator include", async () => {
         User.findByPk.mockResolvedValue({ id: 1 });
-
         getPaginationOptions.mockReturnValue(pagination);
 
         EventUserRole.findAndCountAll.mockResolvedValue({
@@ -127,7 +138,6 @@ describe("eventMembershipService - listMyEvents", () => {
 
     it("should apply role filter for created view", async () => {
         User.findByPk.mockResolvedValue({ id: 1 });
-
         getPaginationOptions.mockReturnValue(pagination);
 
         EventUserRole.findAndCountAll.mockResolvedValue({
@@ -144,7 +154,6 @@ describe("eventMembershipService - listMyEvents", () => {
 
     it("should apply role filter for joined view", async () => {
         User.findByPk.mockResolvedValue({ id: 1 });
-
         getPaginationOptions.mockReturnValue(pagination);
 
         EventUserRole.findAndCountAll.mockResolvedValue({
@@ -161,7 +170,6 @@ describe("eventMembershipService - listMyEvents", () => {
 
     it("should apply history filter", async () => {
         User.findByPk.mockResolvedValue({ id: 1 });
-
         getPaginationOptions.mockReturnValue(pagination);
 
         EventUserRole.findAndCountAll.mockResolvedValue({
@@ -178,7 +186,6 @@ describe("eventMembershipService - listMyEvents", () => {
 
     it("should not pass creator to generic event filters", async () => {
         User.findByPk.mockResolvedValue({ id: 1 });
-
         getPaginationOptions.mockReturnValue(pagination);
 
         EventUserRole.findAndCountAll.mockResolvedValue({
@@ -201,7 +208,7 @@ describe("eventMembershipService - listMyEvents", () => {
         );
     });
 
-    it("should throw 404 if user not found", async () => {
+    it("should throw 404 if user is not found", async () => {
         User.findByPk.mockResolvedValue(null);
 
         await expect(

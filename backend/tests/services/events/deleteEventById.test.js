@@ -1,15 +1,22 @@
+/* ==================================================
+   EVENT SERVICE - DELETE EVENT BY ID TESTS
+
+   Tests:
+   - successful event deletion
+   - missing event rejection
+   - past event deletion rejection
+   - database error forwarding
+
+   Ensures:
+   - events can be deleted only when allowed
+   - past event rules are enforced
+   - missing events are handled safely
+================================================== */
+
 const Event = require("../../../src/models/eventModel");
 const { assertEventNotPast } = require("../../../src/utils/eventTime");
 
 const eventService = require("../../../src/services/eventService");
-
-/**
- * Event Service - Delete Event By ID
- *
- * Tests event deletion logic.
- *
- * Ensures events can be deleted only when allowed.
-*/
 
 jest.mock("../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
@@ -22,7 +29,7 @@ jest.mock("../../../src/utils/eventTime", () => ({
 describe("eventService - deleteEventById", () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => {});
+        jest.spyOn(console, "error").mockImplementation(() => { });
     });
 
     afterEach(() => {
@@ -36,7 +43,7 @@ describe("eventService - deleteEventById", () => {
         };
 
         Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => {});
+        assertEventNotPast.mockImplementation(() => { });
 
         await eventService.deleteEventById(1);
 
@@ -44,7 +51,7 @@ describe("eventService - deleteEventById", () => {
         expect(event.destroy).toHaveBeenCalled();
     });
 
-    it("should throw 404 when event not found", async () => {
+    it("should throw 404 when event is not found", async () => {
         Event.findByPk.mockResolvedValue(null);
 
         await expect(

@@ -2,7 +2,22 @@ const eventService = require('../services/eventService');
 
 /* ==================================================
    EVENT CONTROLLER
+
+   Handles:
+   - event creation
+   - event retrieval
+   - event filtering
+   - event update
+   - event deletion
+
+   Notes:
+   - business logic is delegated to eventService
+   - uploaded event image paths are formatted here
 ================================================== */
+
+/* =============================
+   CREATE EVENT
+============================= */
 
 // Create a new event
 const createEvent = async (req, res, next) => {
@@ -19,13 +34,18 @@ const createEvent = async (req, res, next) => {
 
         return res.status(201).json({
             message: "Event created successfully",
-            event: event
+            event
         });
 
     } catch (error) {
         return next(error);
     }
 };
+
+
+/* =============================
+   GET EVENTS
+============================= */
 
 // Get all events
 const getAllEvents = async (req, res, next) => {
@@ -38,19 +58,19 @@ const getAllEvents = async (req, res, next) => {
         });
 
     } catch (error) {
-        return next(error)
+        return next(error);
     }
 };
 
-// Get an event by its ID
+
+// Get one event by ID
 const getEvent = async (req, res, next) => {
     try {
-        // Check if event exists
         const event = await eventService.getEventById(req.params.eventId);
 
         return res.status(200).json({
             message: "Event retrieved successfully",
-            event: event
+            event
         });
 
     } catch (error) {
@@ -63,18 +83,23 @@ const getEvent = async (req, res, next) => {
 const getFilteredEvents = async (req, res, next) => {
     try {
         const result = await eventService.getFilteredEvents(req.query);
+
         return res.status(200).json(result);
 
-    } catch (err) {
-        return next(err);
+    } catch (error) {
+        return next(error);
     }
 };
 
-// ORGANIZER OR CO_ORGANIZER
+
+/* =============================
+   UPDATE / DELETE EVENT
+============================= */
 
 // Update an event
 const updateEvent = async (req, res, next) => {
     try {
+        // Undefined keeps existing image unchanged in service
         const image = req.file ? `/uploads/events/${req.file.filename}` : undefined;
 
         const updatedEvent = await eventService.updateEventById(
@@ -95,10 +120,11 @@ const updateEvent = async (req, res, next) => {
     }
 };
 
+
 // Delete an event
 const deleteEvent = async (req, res, next) => {
     try {
-        const deletedEvent = await eventService.deleteEventById(req.params.eventId);
+        await eventService.deleteEventById(req.params.eventId);
 
         return res.status(200).json({
             message: 'Event deleted successfully'

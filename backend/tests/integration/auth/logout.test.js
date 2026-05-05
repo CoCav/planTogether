@@ -1,30 +1,25 @@
+/* ==================================================
+   AUTH INTEGRATION - LOGOUT
+
+   Tests:
+   - authenticated logout
+   - missing token rejection
+   - invalid token rejection
+
+   Ensures:
+   - authentication middleware protects logout route
+   - valid tokens can access the endpoint
+   - invalid or missing tokens are rejected
+
+   Notes:
+   - logout is stateless because authentication uses JWT
+================================================== */
+
 const request = require('supertest');
 const app = require('../../../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
 
-/**
- * Auth Integration - Logout
- *
- * These tests validate the logout endpoint behavior.
- *
- * What is tested:
- * - JWT authentication middleware
- * - Access control (token required)
- * - Proper response for valid and invalid tokens
- *
- * Note:
- * Logout is stateless (JWT-based), so no DB change occurs.
- *
- * Goal:
- * Ensure protected routes correctly enforce authentication.
-*/
-
 describe('Logout API', () => {
-
-    /* =========================
-       Test database lifecycle
-    ========================= */
-
     beforeAll(async () => {
         await initDB();
     });
@@ -39,9 +34,9 @@ describe('Logout API', () => {
         await sequelize.close();
     });
 
-    /* =========================
-       User logout
-    ========================= */
+    /* =============================
+       LOGOUT
+    ============================= */
 
     it('should logout authenticated user', async () => {
         const registerRes = await request(app).post('/api/auth/register').send({
@@ -59,6 +54,10 @@ describe('Logout API', () => {
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty('message', 'Logout successful');
     });
+
+    /* =============================
+       AUTHENTICATION ERRORS
+    ============================= */
 
     it('should reject without token', async () => {
         const res = await request(app).post('/api/auth/logout');

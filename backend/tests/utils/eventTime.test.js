@@ -1,9 +1,26 @@
+/* ==================================================
+   EVENT TIME UTILITY TESTS
+
+   Tests:
+   - past event detection
+   - missing event handling
+   - event status computation
+   - past event action protection
+
+   Ensures:
+   - event status is based on endDateTime
+   - active/future events remain actionable
+   - past events throw a 403 business error
+================================================== */
+
 const { isEventPast, getEventStatus, assertEventNotPast } = require("../../src/utils/eventTime");
 
 describe("eventTime utils", () => {
     beforeEach(() => {
         jest.useFakeTimers();
-        jest.setSystemTime(new Date("2026-04-25T12:00:00.000Z").getTime());
+        jest.setSystemTime(
+            new Date("2026-04-25T12:00:00.000Z").getTime()
+        );
     });
 
     afterEach(() => {

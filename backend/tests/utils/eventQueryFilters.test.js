@@ -1,17 +1,24 @@
+/* ==================================================
+   EVENT QUERY FILTERS UTILITY TESTS
+
+   Tests:
+   - status filters
+   - date filters
+   - basic event filters
+   - combined query filters
+   - creator include builder
+
+   Ensures:
+   - Sequelize where conditions are built correctly
+   - date overlap logic is applied
+   - creator filtering is handled through includes
+================================================== */
+
 const { applyStatusFilter, applyDateFilters, applyBasicEventFilters, applyEventQueryFilters, buildCreatorInclude } = require("../../src/utils/eventQueryFilters");
 
 const { Op } = require("sequelize");
 
-/**
- * Event Query Filters
- *
- * Tests event query filter helpers.
- *
- * Ensures status, date, creator and basic filters are correctly applied.
-*/
-
 describe("applyStatusFilter", () => {
-
     it("should not modify conditions if status is missing", () => {
         const where = {};
 
@@ -45,7 +52,9 @@ describe("applyStatusFilter", () => {
     });
 
     it("should append condition if Op.and already exists", () => {
-        const where = { [Op.and]: [{ test: true }] };
+        const where = {
+            [Op.and]: [{ test: true }]
+        };
 
         applyStatusFilter(where, "upcoming");
 
@@ -54,11 +63,12 @@ describe("applyStatusFilter", () => {
 });
 
 describe("applyBasicEventFilters", () => {
-
     it("should apply creatorId filter", () => {
         const where = {};
 
-        applyBasicEventFilters(where, { creatorId: "5" });
+        applyBasicEventFilters(where, {
+            creatorId: "5"
+        });
 
         expect(where.creatorId).toBe(5);
     });
@@ -66,7 +76,9 @@ describe("applyBasicEventFilters", () => {
     it("should apply mode filter", () => {
         const where = {};
 
-        applyBasicEventFilters(where, { mode: " online " });
+        applyBasicEventFilters(where, {
+            mode: " online "
+        });
 
         expect(where.mode).toBe("online");
     });
@@ -74,18 +86,21 @@ describe("applyBasicEventFilters", () => {
     it("should apply search filter", () => {
         const where = {};
 
-        applyBasicEventFilters(where, { search: "hello" });
+        applyBasicEventFilters(where, {
+            search: "hello"
+        });
 
         expect(where[Op.or]).toHaveLength(2);
     });
 });
 
 describe("applyDateFilters", () => {
-
     it("should apply date overlap filter", () => {
         const where = {};
 
-        applyDateFilters(where, { date: "2026-04-24" });
+        applyDateFilters(where, {
+            date: "2026-04-24"
+        });
 
         expect(where[Op.and]).toHaveLength(2);
     });
@@ -93,7 +108,9 @@ describe("applyDateFilters", () => {
     it("should apply startDate only", () => {
         const where = {};
 
-        applyDateFilters(where, { startDate: "2026-04-24" });
+        applyDateFilters(where, {
+            startDate: "2026-04-24"
+        });
 
         expect(where[Op.and]).toHaveLength(1);
     });
@@ -101,14 +118,15 @@ describe("applyDateFilters", () => {
     it("should apply endDate only", () => {
         const where = {};
 
-        applyDateFilters(where, { endDate: "2026-04-24" });
+        applyDateFilters(where, {
+            endDate: "2026-04-24"
+        });
 
         expect(where[Op.and]).toHaveLength(1);
     });
 });
 
 describe("applyEventQueryFilters", () => {
-
     it("should apply all filters together", () => {
         const where = {};
 
@@ -125,36 +143,14 @@ describe("applyEventQueryFilters", () => {
         expect(where.creatorId).toBe(5);
     });
 
-    describe("buildCreatorInclude", () => {
-        const User = { name: "UserModel" };
-
-        it("should build creator include without filter", () => {
-            expect(buildCreatorInclude(User)).toEqual({
-                model: User,
-                as: "creator",
-                attributes: ["id", "name"]
-            });
-        });
-
-        it("should build creator include with name filter", () => {
-            expect(buildCreatorInclude(User, "john")).toEqual({
-                model: User,
-                as: "creator",
-                attributes: ["id", "name"],
-                where: {
-                    name: {
-                        [Op.iLike]: "%john%"
-                    }
-                },
-                required: true
-            });
-        });
-    });
-
     it("should skip status when includeStatus is false", () => {
         const where = {};
 
-        applyEventQueryFilters(where, { status: "upcoming" }, { includeStatus: false });
+        applyEventQueryFilters(
+            where,
+            { status: "upcoming" },
+            { includeStatus: false }
+        );
 
         expect(where[Op.and]).toBeUndefined();
     });
@@ -165,5 +161,33 @@ describe("applyEventQueryFilters", () => {
         const result = applyEventQueryFilters(where, {});
 
         expect(result).toBe(where);
+    });
+});
+
+describe("buildCreatorInclude", () => {
+    const User = {
+        name: "UserModel"
+    };
+
+    it("should build creator include without filter", () => {
+        expect(buildCreatorInclude(User)).toEqual({
+            model: User,
+            as: "creator",
+            attributes: ["id", "name"]
+        });
+    });
+
+    it("should build creator include with name filter", () => {
+        expect(buildCreatorInclude(User, "john")).toEqual({
+            model: User,
+            as: "creator",
+            attributes: ["id", "name"],
+            where: {
+                name: {
+                    [Op.iLike]: "%john%"
+                }
+            },
+            required: true
+        });
     });
 });

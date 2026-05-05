@@ -1,26 +1,22 @@
-const request = require("supertest");
-const app = require("../../../src/app");
-const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
-
 /* ==================================================
    USER INTEGRATION - GET PUBLIC USER EVENTS
 
-   These tests validate public user events retrieval via HTTP.
+   Tests:
+   - retrieve created events
+   - retrieve joined events
+   - separation between created and joined events
+   - no duplication of created events in joined list
+   - authentication and validation
 
-   What is tested:
-   - Retrieve created events
-   - Retrieve joined events
-   - Separation between created and joined events
-   - No duplication of created events in joined list
-   - Authentication and validation
-
-   Integration scope:
-   → Routes + Middleware + Controller + Service + Database
-
-   Goal:
-   Ensure user events are correctly retrieved and categorized.
+   Ensures:
+   - public user events are correctly categorized
+   - created and joined events remain separated
+   - authentication and validators protect the route
 ================================================== */
 
+const request = require("supertest");
+const app = require("../../../src/app");
+const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
 
 describe("Get Public User Events API", () => {
 
@@ -38,6 +34,11 @@ describe("Get Public User Events API", () => {
         await sequelize.close();
     });
 
+    /* =============================
+       HELPERS
+    ============================= */
+
+    // Register a test user and return auth token
     const registerAndGetToken = async (name, email) => {
         const res = await request(app)
             .post("/api/auth/register")
@@ -49,6 +50,10 @@ describe("Get Public User Events API", () => {
 
         return res.body.token;
     };
+
+    /* =============================
+       PUBLIC USER EVENTS
+    ============================= */
 
     it("should get created and joined events", async () => {
         const token = await registerAndGetToken(
@@ -92,12 +97,14 @@ describe("Get Public User Events API", () => {
             endDateTime: "2030-02-01T12:00:00Z"
         });
 
+        // Creator membership
         await EventUserRole.create({
             eventId: createdEvent.id,
             userId: target.id,
             role: "organizer"
         });
 
+        // Joined membership
         await EventUserRole.create({
             eventId: joinedEvent.id,
             userId: target.id,
@@ -134,11 +141,16 @@ describe("Get Public User Events API", () => {
             .set("Authorization", `Bearer ${token}`);
 
         expect(res.statusCode).toBe(200);
+
         expect(res.body).toEqual({
             createdEvents: [],
             joinedEvents: []
         });
     });
+
+    /* =============================
+       AUTHENTICATION & VALIDATION
+    ============================= */
 
     it("should reject unauthenticated request", async () => {
         const res = await request(app)

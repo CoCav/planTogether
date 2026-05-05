@@ -1,32 +1,25 @@
+/* ==================================================
+   EVENTS INTEGRATION - FILTER EVENTS
+
+   Tests:
+   - type, theme and search filters
+   - exact date and date range filters
+   - combined filters
+   - status filtering
+   - pagination
+   - sorting behavior
+
+   Ensures:
+   - filtering logic returns correct events
+   - pagination and sorting work correctly
+   - status and date helpers behave consistently
+================================================== */
+
 const request = require('supertest');
 const app = require('../../../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
 
-/**
- * Events Integration - Filter Events
- *
- * These tests validate advanced event filtering via HTTP.
- *
- * What is tested:
- * - Filtering by type, theme, search
- * - Filtering by exact date and date range
- * - Combined filters
- * - Status filtering (upcoming / past)
- * - Pagination behavior
- * - Sorting behavior
- *
- * Integration scope:
- * → Controller + Service + Query logic + Database
- *
- * Goal:
- * Ensure filtering logic returns accurate and consistent results.
-*/
-
 describe('Event Filter API', () => {
-
-    /* =========================
-       Test database lifecycle
-    ========================= */
 
     beforeAll(async () => {
         await initDB();
@@ -42,19 +35,22 @@ describe('Event Filter API', () => {
         await sequelize.close();
     });
 
-    /* =========================
-       Helpers
-    ========================= */
+    /* =============================
+       HELPERS
+    ============================= */
 
+    // Register a test user and return auth token
     const registerAndGetToken = async (name, email) => {
         const res = await request(app).post('/api/auth/register').send({
             name,
             email,
             password: 'Password123'
         });
+
         return res.body.token;
     };
 
+    // Generate a valid event payload
     const getValidEventPayload = (overrides = {}) => ({
         title: 'Test Event',
         description: 'Test description',
@@ -67,6 +63,7 @@ describe('Event Filter API', () => {
         ...overrides
     });
 
+    // Create an event with optional overrides
     const createEvent = async (token, overrides = {}) => {
         return request(app)
             .post('/api/events')
@@ -74,9 +71,9 @@ describe('Event Filter API', () => {
             .send(getValidEventPayload(overrides));
     };
 
-    /* =========================
-       Basic filters
-    ========================= */
+    /* =============================
+       BASIC FILTERS
+    ============================= */
 
     it('should filter events by type', async () => {
         const token = await registerAndGetToken('User', `type${Date.now()}@test.com`);
@@ -121,9 +118,9 @@ describe('Event Filter API', () => {
         expect(res.body.events.some(e => e.title.includes('JavaScript'))).toBe(true);
     });
 
-    /* =========================
-       Date filters
-    ========================= */
+    /* =============================
+       DATE FILTERS
+    ============================= */
 
     it('should filter events by exact date', async () => {
         const token = await registerAndGetToken('User', `date${Date.now()}@test.com`);
@@ -158,9 +155,9 @@ describe('Event Filter API', () => {
         expect(res.body.events.length).toBeGreaterThan(0);
     });
 
-    /* =========================
-       Combined filters
-    ========================= */
+    /* =============================
+       COMBINED FILTERS
+    ============================= */
 
     it('should filter events with combined params', async () => {
         const token = await registerAndGetToken('User', `combo${Date.now()}@test.com`);
@@ -203,9 +200,9 @@ describe('Event Filter API', () => {
         expect(res.body.events.length).toBe(0);
     });
 
-    /* =========================
-       Status filters
-    ========================= */
+    /* =============================
+       STATUS FILTERS
+    ============================= */
 
     it('should filter upcoming events', async () => {
         const token = await registerAndGetToken('User', `upcoming${Date.now()}@test.com`);
@@ -241,9 +238,9 @@ describe('Event Filter API', () => {
         expect(res.body.events.every(e => e.status === 'past')).toBe(true);
     });
 
-    /* =========================
-       Pagination
-    ========================= */
+    /* =============================
+       PAGINATION
+    ============================= */
 
     it('should paginate filtered events', async () => {
         const token = await registerAndGetToken('User', `pagination${Date.now()}@test.com`);
@@ -260,9 +257,9 @@ describe('Event Filter API', () => {
         expect(res.body.events.length).toBe(2);
     });
 
-    /* =========================
-       Sorting
-    ========================= */
+    /* =============================
+       SORTING
+    ============================= */
 
     it('should sort events by title ascending', async () => {
         const token = await registerAndGetToken('User', `sort${Date.now()}@test.com`);

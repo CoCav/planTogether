@@ -1,18 +1,24 @@
+/* ==================================================
+   EVENT ROLE VALIDATOR TESTS
+
+   Tests:
+   - member role update validation
+   - member removal validation
+   - eventId param validation
+   - userId param validation
+   - role value validation
+
+   Ensures:
+   - invalid event role payloads are rejected early
+   - route params are valid positive integers
+   - roles are restricted to allowed values
+================================================== */
 
 const { validationResult } = require("express-validator");
 
 const { updateMemberRoleValidator, removeMemberValidator } = require("../../src/validators/eventRoleValidator");
 
-/**
- * Event Role Validator
- *
- * Verifies validation rules for event member role actions:
- * role update and member removal.
- *
- * Ensures route params and role values are valid before reaching controllers.
-*/
-
-// Helper to simulate Express request validation
+// Run express-validator rules against mocked request params/body
 const runValidation = async (validators, { params = {}, body = {} } = {}) => {
     const req = { params, body };
 

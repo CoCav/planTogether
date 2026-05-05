@@ -1,15 +1,23 @@
+/* ==================================================
+   AUTH SERVICE - PROFILE TESTS
+
+   Tests:
+   - authenticated profile retrieval
+   - profile updates
+   - avatar updates
+   - avatar cleanup
+   - missing user handling
+
+   Ensures:
+   - profile data is retrieved correctly
+   - profile fields are updated safely
+   - avatar files are cleaned up when replaced
+================================================== */
+
 const User = require("../../../src/models/userModel");
 const deleteUploadedFile = require("../../../src/utils/deleteUploadedFile");
 
 const authService = require("../../../src/services/authService");
-
-/**
- * Auth Service - Profile
- *
- * Tests user profile retrieval and update logic.
- *
- * Ensures user data is correctly fetched and modified.
-*/
 
 jest.mock("../../../src/models/userModel", () => ({
     findByPk: jest.fn()
@@ -34,8 +42,12 @@ describe("authService - profile", () => {
         deleteUploadedFile.mockResolvedValue();
     });
 
+    /* =========================
+       getUserProfileByID
+    ========================= */
+
     describe("getUserProfileByID", () => {
-        it("should return user", async () => {
+        it("should return user profile", async () => {
             User.findByPk.mockResolvedValue(user);
 
             const result = await authService.getUserProfileByID(1);
@@ -43,15 +55,19 @@ describe("authService - profile", () => {
             expect(result).toBe(user);
         });
 
-        it("should throw if not found", async () => {
+        it("should throw if user is not found", async () => {
             User.findByPk.mockResolvedValue(null);
 
             await expect(authService.getUserProfileByID(1)).rejects.toMatchObject({ statusCode: 404 });
         });
     });
 
+    /* =========================
+       updateUserProfileByID
+    ========================= */
+
     describe("updateUserProfileByID", () => {
-        it("should update user", async () => {
+        it("should update user profile fields", async () => {
             User.findByPk.mockResolvedValue(user);
 
             const result = await authService.updateUserProfileByID(1, {
@@ -79,6 +95,7 @@ describe("authService - profile", () => {
 
         it("should clear user avatar when empty string is provided", async () => {
             user.avatar = "/uploads/avatars/old-avatar.png";
+
             User.findByPk.mockResolvedValue(user);
 
             const result = await authService.updateUserProfileByID(1, {
@@ -92,6 +109,7 @@ describe("authService - profile", () => {
 
         it("should delete old avatar when new avatar is provided", async () => {
             user.avatar = "/uploads/avatars/old-avatar.png";
+
             User.findByPk.mockResolvedValue(user);
 
             await authService.updateUserProfileByID(1, {
@@ -99,11 +117,13 @@ describe("authService - profile", () => {
             });
 
             expect(user.avatar).toBe("/uploads/avatars/new-avatar.png");
+
             expect(deleteUploadedFile).toHaveBeenCalledWith("/uploads/avatars/old-avatar.png");
         });
 
         it("should not delete avatar when avatar is unchanged", async () => {
             user.avatar = "/uploads/avatars/avatar-test.png";
+
             User.findByPk.mockResolvedValue(user);
 
             await authService.updateUserProfileByID(1, {
@@ -115,6 +135,7 @@ describe("authService - profile", () => {
 
         it("should not delete avatar when avatar is cleared", async () => {
             user.avatar = "/uploads/avatars/old-avatar.png";
+
             User.findByPk.mockResolvedValue(user);
 
             await authService.updateUserProfileByID(1, {
@@ -122,10 +143,11 @@ describe("authService - profile", () => {
             });
 
             expect(user.avatar).toBeNull();
+
             expect(deleteUploadedFile).not.toHaveBeenCalled();
         });
 
-        it("should throw if user not found", async () => {
+        it("should throw if user is not found", async () => {
             User.findByPk.mockResolvedValue(null);
 
             await expect(authService.updateUserProfileByID(1, {})).rejects.toMatchObject({ statusCode: 404 });

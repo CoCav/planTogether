@@ -1,3 +1,20 @@
+/* ==================================================
+   PAGINATION UTILITY TESTS
+
+   Tests:
+   - default pagination values
+   - page and pageSize parsing
+   - maximum page size limit
+   - invalid number fallback
+   - sort field allowlist
+   - order direction normalization
+
+   Ensures:
+   - pagination values are safe and predictable
+   - invalid query values fallback correctly
+   - sorting only accepts allowed fields
+================================================== */
+
 const { getPaginationOptions } = require("../../src/utils/pagination");
 
 describe("getPaginationOptions", () => {

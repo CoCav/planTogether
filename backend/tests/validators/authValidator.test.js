@@ -1,21 +1,23 @@
+/* ==================================================
+   AUTH VALIDATOR TESTS
+
+   Tests:
+   - registration validation
+   - login validation
+   - profile update validation
+   - password change validation
+
+   Ensures:
+   - invalid auth payloads are rejected early
+   - password security rules are enforced
+   - optional profile fields are validated correctly
+================================================== */
+
 const { validationResult } = require("express-validator");
 
 const { registerValidator, loginValidator, updateProfileValidator, changePasswordValidator } = require("../../src/validators/authValidator");
 
-/**
- * Auth Validator
- *
- * These tests verify express-validator rules for:
- * - user registration
- * - login
- * - profile update
- * - password change
- *
- * The goal is to ensure validation rules behave correctly
- * before reaching controllers and services.
-*/
-
-// Helper to simulate Express request validation
+// Run express-validator rules against a mocked request body
 const runValidation = async (validators, body) => {
     const req = { body };
 
@@ -27,7 +29,6 @@ const runValidation = async (validators, body) => {
 };
 
 describe("authValidator", () => {
-
     describe("registerValidator", () => {
         it("should pass with valid data", async () => {
             const result = await runValidation(registerValidator, {
@@ -79,7 +80,7 @@ describe("authValidator", () => {
             expect(result.isEmpty()).toBe(true);
         });
 
-        it("should fail if password missing", async () => {
+        it("should fail if password is missing", async () => {
             const result = await runValidation(loginValidator, {
                 email: "john@test.com"
             });
@@ -98,7 +99,7 @@ describe("authValidator", () => {
             expect(result.isEmpty()).toBe(true);
         });
 
-        it("should fail if name too short", async () => {
+        it("should fail if name is too short", async () => {
             const result = await runValidation(updateProfileValidator, {
                 name: "A"
             });
@@ -117,7 +118,7 @@ describe("authValidator", () => {
             expect(result.isEmpty()).toBe(true);
         });
 
-        it("should fail if currentPassword missing", async () => {
+        it("should fail if currentPassword is missing", async () => {
             const result = await runValidation(changePasswordValidator, {
                 newPassword: "NewPass1"
             });

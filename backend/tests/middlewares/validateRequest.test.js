@@ -1,8 +1,25 @@
+/* ==================================================
+   VALIDATE REQUEST MIDDLEWARE TESTS
+
+   Tests:
+   - successful validation flow
+   - formatted validation errors
+   - non-production validation logging
+   - production logging behavior
+   - fallback field formatting
+
+   Ensures:
+   - next() is called when validation succeeds
+   - validation errors are forwarded consistently
+   - production does not log validation details
+================================================== */
+
 const validateRequest = require("../../src/middlewares/validateRequest");
 const { validationResult } = require("express-validator");
 
 jest.mock("express-validator");
 
+// Create mocked Express request/response objects
 const createMocks = () => {
     const req = {};
 
@@ -66,11 +83,13 @@ describe("validateRequest middleware", () => {
     it("should log validation errors when not in production", () => {
         const { req, res, next } = createMocks();
 
-        jest.spyOn(console, "log").mockImplementation(() => {});
+        jest.spyOn(console, "log").mockImplementation(() => { });
 
         validationResult.mockReturnValue({
             isEmpty: () => false,
-            array: () => [{ path: "email", msg: "Invalid email" }]
+            array: () => [
+                { path: "email", msg: "Invalid email" }
+            ]
         });
 
         validateRequest(req, res, next);
@@ -83,16 +102,18 @@ describe("validateRequest middleware", () => {
         console.log.mockRestore();
     });
 
-    it("should NOT log validation errors in production", () => {
+    it("should not log validation errors in production", () => {
         process.env.NODE_ENV = "production";
 
         const { req, res, next } = createMocks();
 
-        jest.spyOn(console, "log").mockImplementation(() => {});
+        jest.spyOn(console, "log").mockImplementation(() => { });
 
         validationResult.mockReturnValue({
             isEmpty: () => false,
-            array: () => [{ path: "email", msg: "Invalid email" }]
+            array: () => [
+                { path: "email", msg: "Invalid email" }
+            ]
         });
 
         validateRequest(req, res, next);
@@ -116,7 +137,9 @@ describe("validateRequest middleware", () => {
 
         expect(next).toHaveBeenCalledWith(
             expect.objectContaining({
-                errors: [{ field: "username", message: "Required" }]
+                errors: [
+                    { field: "username", message: "Required" }
+                ]
             })
         );
     });

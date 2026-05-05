@@ -1,16 +1,25 @@
+/* ==================================================
+   EVENT MEMBERSHIP SERVICE - LEAVE EVENT TESTS
+
+   Tests:
+   - successful event leave
+   - missing event rejection
+   - past event rejection
+   - missing participation rejection
+   - organizer self-leave protection
+   - database error forwarding
+
+   Ensures:
+   - users can leave joined events
+   - organizers cannot leave their own event
+   - past event rules are respected
+================================================== */
+
 const Event = require("../../../src/models/eventModel");
 const EventUserRole = require("../../../src/models/relations/eventUserRoleModel");
 const { assertEventNotPast } = require("../../../src/utils/eventTime");
 
 const service = require("../../../src/services/eventMembershipService");
-
-/**
- * Event Membership - Leave Event
- *
- * Tests leaving an event.
- *
- * Ensures users can leave events while respecting role rules.
-*/
 
 jest.mock("../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
@@ -27,7 +36,7 @@ jest.mock("../../../src/utils/eventTime", () => ({
 describe("eventMembershipService - leaveEvent", () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => {});
+        jest.spyOn(console, "error").mockImplementation(() => { });
     });
 
     afterEach(() => {
@@ -41,7 +50,7 @@ describe("eventMembershipService - leaveEvent", () => {
         };
 
         Event.findByPk.mockResolvedValue({ id: 1 });
-        assertEventNotPast.mockImplementation(() => {});
+        assertEventNotPast.mockImplementation(() => { });
         EventUserRole.findOne.mockResolvedValue(membership);
 
         await service.leaveEvent({
@@ -50,13 +59,15 @@ describe("eventMembershipService - leaveEvent", () => {
         });
 
         expect(assertEventNotPast).toHaveBeenCalledWith({ id: 1 });
+
         expect(EventUserRole.findOne).toHaveBeenCalledWith({
             where: { eventId: 1, userId: 10 }
         });
+
         expect(membership.destroy).toHaveBeenCalled();
     });
 
-    it("should throw 404 if event not found", async () => {
+    it("should throw 404 if event is not found", async () => {
         Event.findByPk.mockResolvedValue(null);
 
         await expect(
@@ -67,7 +78,7 @@ describe("eventMembershipService - leaveEvent", () => {
         });
     });
 
-    it("should block past event", async () => {
+    it("should block leaving a past event", async () => {
         Event.findByPk.mockResolvedValue({ id: 1 });
 
         const error = new Error("No action is allowed on a past event");
@@ -86,7 +97,7 @@ describe("eventMembershipService - leaveEvent", () => {
 
     it("should throw 404 if participation is not found", async () => {
         Event.findByPk.mockResolvedValue({ id: 1 });
-        assertEventNotPast.mockImplementation(() => {});
+        assertEventNotPast.mockImplementation(() => { });
         EventUserRole.findOne.mockResolvedValue(null);
 
         await expect(
@@ -104,7 +115,7 @@ describe("eventMembershipService - leaveEvent", () => {
         };
 
         Event.findByPk.mockResolvedValue({ id: 1 });
-        assertEventNotPast.mockImplementation(() => {});
+        assertEventNotPast.mockImplementation(() => { });
         EventUserRole.findOne.mockResolvedValue(membership);
 
         await expect(

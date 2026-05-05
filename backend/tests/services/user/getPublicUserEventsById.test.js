@@ -1,17 +1,23 @@
+/* ==================================================
+   USER SERVICE - GET PUBLIC USER EVENTS TESTS
+
+   Tests:
+   - created and joined events retrieval
+   - created events exclusion from joined events
+   - empty event lists
+   - missing user rejection
+
+   Ensures:
+   - public user events are correctly separated
+   - created events are not duplicated in joined events
+   - event lookup stops when user does not exist
+================================================== */
+
 const User = require("../../../src/models/userModel");
 const Event = require("../../../src/models/eventModel");
 const EventUserRole = require("../../../src/models/relations/eventUserRoleModel");
 
 const userService = require("../../../src/services/userService");
-
-/**
- * User Service - Public Events
- *
- * Tests public user events retrieval logic.
- *
- * Ensures created and joined events are correctly separated
- * and duplicated creator events are excluded from joined events.
- */
 
 jest.mock("../../../src/models/userModel", () => ({
     findByPk: jest.fn()
@@ -31,10 +37,17 @@ describe("userService - getPublicUserEventsById", () => {
     });
 
     it("should return created and joined events", async () => {
-        const user = { name: "John", avatar: null };
+        const user = {
+            name: "John",
+            avatar: null
+        };
 
         const createdEvents = [
-            { id: 1, title: "Created event", creatorId: 1 }
+            {
+                id: 1,
+                title: "Created event",
+                creatorId: 1
+            }
         ];
 
         const joinedEvent = {
@@ -75,7 +88,10 @@ describe("userService - getPublicUserEventsById", () => {
     });
 
     it("should exclude created events from joined events", async () => {
-        const user = { name: "John", avatar: null };
+        const user = {
+            name: "John",
+            avatar: null
+        };
 
         const createdEvent = {
             id: 1,
@@ -105,7 +121,10 @@ describe("userService - getPublicUserEventsById", () => {
     });
 
     it("should return empty arrays when user has no events", async () => {
-        const user = { name: "John", avatar: null };
+        const user = {
+            name: "John",
+            avatar: null
+        };
 
         User.findByPk.mockResolvedValue(user);
         Event.findAll.mockResolvedValue([]);
@@ -122,12 +141,12 @@ describe("userService - getPublicUserEventsById", () => {
     it("should throw if user is not found", async () => {
         User.findByPk.mockResolvedValue(null);
 
-        await expect(userService.getPublicUserEventsById(1))
-            .rejects
-            .toMatchObject({
-                statusCode: 404,
-                message: "User not found"
-            });
+        await expect(
+            userService.getPublicUserEventsById(1)
+        ).rejects.toMatchObject({
+            statusCode: 404,
+            message: "User not found"
+        });
 
         expect(Event.findAll).not.toHaveBeenCalled();
         expect(EventUserRole.findAll).not.toHaveBeenCalled();

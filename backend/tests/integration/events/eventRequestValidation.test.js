@@ -1,29 +1,23 @@
+/* ==================================================
+   EVENTS INTEGRATION - REQUEST VALIDATION
+
+   Tests:
+   - event creation validation
+   - event update validation
+   - invalid params and invalid body values
+   - business validation rules
+
+   Ensures:
+   - invalid event payloads are rejected
+   - validators properly protect event routes
+   - invalid dates, modes and locations are blocked
+================================================== */
+
 const request = require('supertest');
 const app = require('../../../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
 
-/**
- * Events Integration - Event Request Validation
- *
- * These tests validate event input validation via HTTP.
- *
- * What is tested:
- * - Event creation validation (missing fields, invalid values)
- * - Event update validation (params + body validation)
- * - Business rules enforced by validators
- *
- * Integration scope:
- * → Validators + Controller + Middleware + Database
- *
- * Goal:
- * Ensure invalid data is properly rejected by the API.
-*/
-
 describe('Event Request Validation API', () => {
-
-    /* =========================
-       Test database lifecycle
-    ========================= */
 
     beforeAll(async () => {
         await initDB();
@@ -39,19 +33,22 @@ describe('Event Request Validation API', () => {
         await sequelize.close();
     });
 
-    /* =========================
-       Helpers
-    ========================= */
+    /* =============================
+       HELPERS
+    ============================= */
 
+    // Register a test user and return auth token
     const registerAndGetToken = async (name, email) => {
         const res = await request(app).post('/api/auth/register').send({
             name,
             email,
             password: 'Password123'
         });
+
         return res.body.token;
     };
 
+    // Generate a valid event payload
     const getValidEventPayload = (overrides = {}) => ({
         title: 'Test Event',
         description: 'Test description',
@@ -64,9 +61,9 @@ describe('Event Request Validation API', () => {
         ...overrides
     });
 
-    /* =========================
-       CREATE validation
-    ========================= */
+    /* =============================
+       CREATE VALIDATION
+    ============================= */
 
     describe('Create validation', () => {
 
@@ -119,12 +116,11 @@ describe('Event Request Validation API', () => {
 
             expect(res.statusCode).toBe(400);
         });
-
     });
 
-    /* =========================
-       UPDATE validation
-    ========================= */
+    /* =============================
+       UPDATE VALIDATION
+    ============================= */
 
     describe('Update validation', () => {
 
@@ -253,6 +249,5 @@ describe('Event Request Validation API', () => {
 
             expect(res.statusCode).toBe(400);
         });
-
     });
 });

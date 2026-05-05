@@ -1,3 +1,21 @@
+/* ==================================================
+   AUTHORIZE EVENT MIDDLEWARE TESTS
+
+   Tests:
+   - role change authorization
+   - member removal authorization
+   - protected creator rules
+   - protected organizer rules
+   - co-organizer restrictions
+   - unexpected database errors
+
+   Ensures:
+   - event role hierarchy is enforced
+   - unauthorized role changes are rejected
+   - unauthorized removals are rejected
+   - valid actions continue with next()
+================================================== */
+
 const { authorizeRoleChange, authorizeMemberRemoval } = require("../../src/middlewares/authorizeEvent");
 
 const EventUserRole = require("../../src/models/relations/eventUserRoleModel");
@@ -6,7 +24,9 @@ const Event = require("../../src/models/eventModel");
 jest.mock("../../src/models/relations/eventUserRoleModel");
 jest.mock("../../src/models/eventModel");
 
+// Create mocked Express request/response objects
 const createMocks = ({ eventId = "1", userId = "2", requestingUserId = 1, newRole = "co_organizer" } = {}) => {
+
     const req = {
         params: { eventId, userId },
         body: { newRole },
@@ -24,9 +44,14 @@ const createMocks = ({ eventId = "1", userId = "2", requestingUserId = 1, newRol
 };
 
 describe("authorizeRoleChange", () => {
+
     beforeEach(() => {
         jest.clearAllMocks();
     });
+
+    /* =============================
+       PARAM VALIDATION
+    ============================= */
 
     it("should return 400 when userId is invalid", async () => {
         const { req, res, next } = createMocks({ userId: "invalid" });
@@ -36,6 +61,10 @@ describe("authorizeRoleChange", () => {
         expect(res.status).toHaveBeenCalledWith(400);
         expect(next).not.toHaveBeenCalled();
     });
+
+    /* =============================
+       RESOURCE VALIDATION
+    ============================= */
 
     it("should return 404 when event is not found", async () => {
         const { req, res, next } = createMocks();
@@ -46,7 +75,11 @@ describe("authorizeRoleChange", () => {
         await authorizeRoleChange(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(404);
-        expect(res.json).toHaveBeenCalledWith({ message: "Event not found" });
+
+        expect(res.json).toHaveBeenCalledWith({
+            message: "Event not found"
+        });
+
         expect(next).not.toHaveBeenCalled();
     });
 
@@ -54,70 +87,124 @@ describe("authorizeRoleChange", () => {
         const { req, res, next } = createMocks();
 
         EventUserRole.findOne.mockResolvedValue(null);
-        Event.findByPk.mockResolvedValue({ id: 1, creatorId: 1 });
+
+        Event.findByPk.mockResolvedValue({
+            id: 1,
+            creatorId: 1
+        });
 
         await authorizeRoleChange(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(404);
-        expect(res.json).toHaveBeenCalledWith({ message: "User link not found in event" });
+
+        expect(res.json).toHaveBeenCalledWith({
+            message: "User link not found in event"
+        });
+
         expect(next).not.toHaveBeenCalled();
     });
 
-    it("should prevent changing the event creator role", async () => {
-        const { req, res, next } = createMocks({ userId: "1" });
+    /* =============================
+       BUSINESS RULES
+    ============================= */
 
-        EventUserRole.findOne.mockResolvedValue({ role: "participant" });
-        Event.findByPk.mockResolvedValue({ id: 1, creatorId: 1 });
+    it("should prevent changing the event creator role", async () => {
+        const { req, res, next } = createMocks({
+            userId: "1"
+        });
+
+        EventUserRole.findOne.mockResolvedValue({
+            role: "participant"
+        });
+
+        Event.findByPk.mockResolvedValue({
+            id: 1,
+            creatorId: 1
+        });
 
         await authorizeRoleChange(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(403);
+
         expect(res.json).toHaveBeenCalledWith({
             message: "You cannot change the role of the event creator"
         });
+
         expect(next).not.toHaveBeenCalled();
     });
 
     it("should prevent changing organizer role", async () => {
         const { req, res, next } = createMocks();
 
-        EventUserRole.findOne.mockResolvedValue({ role: "organizer" });
-        Event.findByPk.mockResolvedValue({ id: 1, creatorId: 1 });
+        EventUserRole.findOne.mockResolvedValue({
+            role: "organizer"
+        });
+
+        Event.findByPk.mockResolvedValue({
+            id: 1,
+            creatorId: 1
+        });
 
         await authorizeRoleChange(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(403);
+
         expect(res.json).toHaveBeenCalledWith({
             message: "Organizer role cannot be changed"
         });
+
         expect(next).not.toHaveBeenCalled();
     });
 
     it("should prevent promoting user to organizer", async () => {
-        const { req, res, next } = createMocks({ newRole: "organizer" });
+        const { req, res, next } = createMocks({
+            newRole: "organizer"
+        });
 
-        EventUserRole.findOne.mockResolvedValue({ role: "participant" });
-        Event.findByPk.mockResolvedValue({ id: 1, creatorId: 1 });
+        EventUserRole.findOne.mockResolvedValue({
+            role: "participant"
+        });
+
+        Event.findByPk.mockResolvedValue({
+            id: 1,
+            creatorId: 1
+        });
 
         await authorizeRoleChange(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(403);
+
         expect(res.json).toHaveBeenCalledWith({
             message: "Only one organizer is allowed per event"
         });
+
         expect(next).not.toHaveBeenCalled();
     });
+
+    /* =============================
+       SUCCESS CASE
+    ============================= */
 
     it("should call next when role change is allowed", async () => {
         const { req, res, next } = createMocks();
 
-        EventUserRole.findOne.mockResolvedValue({ role: "participant" });
-        Event.findByPk.mockResolvedValue({ id: 1, creatorId: 1 });
+        EventUserRole.findOne.mockResolvedValue({
+            role: "participant"
+        });
+
+        Event.findByPk.mockResolvedValue({
+            id: 1,
+            creatorId: 1
+        });
 
         await authorizeRoleChange(req, res, next);
 
         expect(next).toHaveBeenCalled();
     });
+
+    /* =============================
+       UNEXPECTED ERRORS
+    ============================= */
 
     it("should return 500 on unexpected error", async () => {
         const { req, res, next } = createMocks();
@@ -127,24 +214,39 @@ describe("authorizeRoleChange", () => {
         await authorizeRoleChange(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(500);
-        expect(res.json).toHaveBeenCalledWith({ message: "Internal server error" });
+
+        expect(res.json).toHaveBeenCalledWith({
+            message: "Internal server error"
+        });
+
         expect(next).not.toHaveBeenCalled();
     });
 });
 
 describe("authorizeMemberRemoval", () => {
+
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
+    /* =============================
+       PARAM VALIDATION
+    ============================= */
+
     it("should return 400 when userId is invalid", async () => {
-        const { req, res, next } = createMocks({ userId: "invalid" });
+        const { req, res, next } = createMocks({
+            userId: "invalid"
+        });
 
         await authorizeMemberRemoval(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(400);
         expect(next).not.toHaveBeenCalled();
     });
+
+    /* =============================
+       RESOURCE VALIDATION
+    ============================= */
 
     it("should return 404 when event is not found", async () => {
         const { req, res, next } = createMocks();
@@ -158,7 +260,11 @@ describe("authorizeMemberRemoval", () => {
         await authorizeMemberRemoval(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(404);
-        expect(res.json).toHaveBeenCalledWith({ message: "Event not found" });
+
+        expect(res.json).toHaveBeenCalledWith({
+            message: "Event not found"
+        });
+
         expect(next).not.toHaveBeenCalled();
     });
 
@@ -169,48 +275,73 @@ describe("authorizeMemberRemoval", () => {
             .mockResolvedValueOnce({ role: "organizer" })
             .mockResolvedValueOnce(null);
 
-        Event.findByPk.mockResolvedValue({ id: 1, creatorId: 1 });
+        Event.findByPk.mockResolvedValue({
+            id: 1,
+            creatorId: 1
+        });
 
         await authorizeMemberRemoval(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(404);
-        expect(res.json).toHaveBeenCalledWith({ message: "User link not found in event" });
+
+        expect(res.json).toHaveBeenCalledWith({
+            message: "User link not found in event"
+        });
+
         expect(next).not.toHaveBeenCalled();
     });
 
+    /* =============================
+       BUSINESS RULES
+    ============================= */
+
     it("should prevent removing the event creator", async () => {
-        const { req, res, next } = createMocks({ userId: "1" });
+        const { req, res, next } = createMocks({
+            userId: "1"
+        });
 
         EventUserRole.findOne
             .mockResolvedValueOnce({ role: "organizer" })
             .mockResolvedValueOnce({ role: "participant" });
 
-        Event.findByPk.mockResolvedValue({ id: 1, creatorId: 1 });
+        Event.findByPk.mockResolvedValue({
+            id: 1,
+            creatorId: 1
+        });
 
         await authorizeMemberRemoval(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(403);
+
         expect(res.json).toHaveBeenCalledWith({
             message: "You cannot remove the event creator"
         });
+
         expect(next).not.toHaveBeenCalled();
     });
 
     it("should prevent removing organizer", async () => {
-        const { req, res, next } = createMocks({ userId: "2" });
+        const { req, res, next } = createMocks({
+            userId: "2"
+        });
 
         EventUserRole.findOne
             .mockResolvedValueOnce({ role: "organizer" })
             .mockResolvedValueOnce({ role: "organizer" });
 
-        Event.findByPk.mockResolvedValue({ id: 1, creatorId: 1 });
+        Event.findByPk.mockResolvedValue({
+            id: 1,
+            creatorId: 1
+        });
 
         await authorizeMemberRemoval(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(403);
+
         expect(res.json).toHaveBeenCalledWith({
             message: "Organizer cannot be removed from the event"
         });
+
         expect(next).not.toHaveBeenCalled();
     });
 
@@ -224,14 +355,19 @@ describe("authorizeMemberRemoval", () => {
             .mockResolvedValueOnce({ role: "co_organizer" })
             .mockResolvedValueOnce({ role: "participant" });
 
-        Event.findByPk.mockResolvedValue({ id: 1, creatorId: 99 });
+        Event.findByPk.mockResolvedValue({
+            id: 1,
+            creatorId: 99
+        });
 
         await authorizeMemberRemoval(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(403);
+
         expect(res.json).toHaveBeenCalledWith({
             message: "You cannot remove yourself from the event"
         });
+
         expect(next).not.toHaveBeenCalled();
     });
 
@@ -242,16 +378,25 @@ describe("authorizeMemberRemoval", () => {
             .mockResolvedValueOnce({ role: "co_organizer" })
             .mockResolvedValueOnce({ role: "co_organizer" });
 
-        Event.findByPk.mockResolvedValue({ id: 1, creatorId: 1 });
+        Event.findByPk.mockResolvedValue({
+            id: 1,
+            creatorId: 1
+        });
 
         await authorizeMemberRemoval(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(403);
+
         expect(res.json).toHaveBeenCalledWith({
             message: "Co-organizers can only remove participants"
         });
+
         expect(next).not.toHaveBeenCalled();
     });
+
+    /* =============================
+       SUCCESS CASES
+    ============================= */
 
     it("should call next when removal is allowed for organizer", async () => {
         const { req, res, next } = createMocks();
@@ -260,7 +405,10 @@ describe("authorizeMemberRemoval", () => {
             .mockResolvedValueOnce({ role: "organizer" })
             .mockResolvedValueOnce({ role: "participant" });
 
-        Event.findByPk.mockResolvedValue({ id: 1, creatorId: 1 });
+        Event.findByPk.mockResolvedValue({
+            id: 1,
+            creatorId: 1
+        });
 
         await authorizeMemberRemoval(req, res, next);
 
@@ -274,12 +422,19 @@ describe("authorizeMemberRemoval", () => {
             .mockResolvedValueOnce({ role: "co_organizer" })
             .mockResolvedValueOnce({ role: "participant" });
 
-        Event.findByPk.mockResolvedValue({ id: 1, creatorId: 1 });
+        Event.findByPk.mockResolvedValue({
+            id: 1,
+            creatorId: 1
+        });
 
         await authorizeMemberRemoval(req, res, next);
 
         expect(next).toHaveBeenCalled();
     });
+
+    /* =============================
+       UNEXPECTED ERRORS
+    ============================= */
 
     it("should return 500 on unexpected error", async () => {
         const { req, res, next } = createMocks();
@@ -289,7 +444,11 @@ describe("authorizeMemberRemoval", () => {
         await authorizeMemberRemoval(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(500);
-        expect(res.json).toHaveBeenCalledWith({ message: "Internal server error" });
+
+        expect(res.json).toHaveBeenCalledWith({
+            message: "Internal server error"
+        });
+
         expect(next).not.toHaveBeenCalled();
     });
 });

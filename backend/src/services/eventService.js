@@ -1,16 +1,37 @@
-const { Op, fn, col } = require('sequelize');
+const { fn, col } = require('sequelize');
+
 const Event = require('../models/eventModel');
 const User = require('../models/userModel');
 const EventUserRole = require('../models/relations/eventUserRoleModel');
+
 const { getPaginationOptions } = require('../utils/pagination');
 const { assertEventNotPast, getEventStatus } = require('../utils/eventTime');
 const { applyStatusFilter, applyEventQueryFilters, buildCreatorInclude } = require('../utils/eventQueryFilters');
 const deleteUploadedFile = require("../utils/deleteUploadedFile");
 
-// Create a new event and assign the creator as the organizer
+/* ==================================================
+   EVENT SERVICE
+
+   Handles:
+   - event creation
+   - event retrieval
+   - event filtering and pagination
+   - event update and deletion
+   - participant count and status enrichment
+
+   Notes:
+   - creator is automatically added as organizer
+   - past events cannot be updated or deleted
+   - event images are cleaned after successful update
+================================================== */
+
+/* =============================
+   CREATE EVENT
+============================= */
+
+// Create a new event
 const createEvent = async (data, userId) => {
     try {
-        // Get all datas from an user while creating an event
         const {
             title,
             description,
@@ -25,7 +46,7 @@ const createEvent = async (data, userId) => {
             image
         } = data;
 
-        // Minimal safety validation
+        // Ensure event dates are coherent
         if (new Date(endDateTime) < new Date(startDateTime)) {
             const error = new Error("End date must be after start date");
             error.statusCode = 400;
@@ -47,7 +68,7 @@ const createEvent = async (data, userId) => {
             creatorId: userId
         });
 
-        // Automatically assign the creator as the organizer
+        // Creator automatically becomes organizer
         await EventUserRole.create({
             eventId: event.id,
             userId,
@@ -62,14 +83,18 @@ const createEvent = async (data, userId) => {
     }
 };
 
-// Get all events with pagination
+
+/* =============================
+   GET EVENTS
+============================= */
+
+// Get all events with status filter and pagination
 const getAllEvents = async (query) => {
     try {
-
         const { status } = query;
         const whereConditions = {};
 
-        // Apply backend status filter before pagination
+        // Apply status filter before pagination
         applyStatusFilter(whereConditions, status);
 
         const {
@@ -90,7 +115,6 @@ const getAllEvents = async (query) => {
                 include: [[fn("COUNT", col("participants.id")), "participantCount"]]
             },
             include: [
-                // Creator filtering handled here (not in whereConditions)
                 buildCreatorInclude(User, query.creator),
 
                 {
@@ -108,6 +132,7 @@ const getAllEvents = async (query) => {
             subQuery: false
         });
 
+        // Sequelize returns grouped count as an array
         const totalEvents = Array.isArray(count) ? count.length : count;
 
         return {
@@ -120,13 +145,15 @@ const getAllEvents = async (query) => {
                 status: getEventStatus(event)
             }))
         };
+
     } catch (error) {
         console.error("Error in getting all events:", error);
         throw error;
     }
 };
 
-// Get an event by its ID
+
+// Get one event by ID
 const getEventById = async (id) => {
     try {
         const event = await Event.findOne({
@@ -134,20 +161,23 @@ const getEventById = async (id) => {
             attributes: {
                 include: [[fn("COUNT", col("participants.id")), "participantCount"]]
             },
-            include: [{
-                model: User,
-                as: "creator",
-                attributes: ["id", "name"]
-            }, {
-                model: User,
-                as: "participants",
-                attributes: [],
-                through: {
-                    attributes: [],
-                    where: { role: "participant" }
+            include: [
+                {
+                    model: User,
+                    as: "creator",
+                    attributes: ["id", "name"]
                 },
-                required: false
-            }],
+                {
+                    model: User,
+                    as: "participants",
+                    attributes: [],
+                    through: {
+                        attributes: [],
+                        where: { role: "participant" }
+                    },
+                    required: false
+                }
+            ],
             group: ["Event.id", "creator.id"]
         });
 
@@ -161,32 +191,22 @@ const getEventById = async (id) => {
             ...event.toJSON(),
             status: getEventStatus(event)
         };
+
     } catch (error) {
         console.error("Error in getting the event:", error);
         throw error;
     }
 };
 
-/* =========================
-   Filters events
-   Applies:
-   - query filters (search, type, theme, etc.)
-   - creator filtering (via include)
-   - pagination and sorting
-========================= */
+
+// Get filtered events with pagination
 const getFilteredEvents = async (query) => {
     try {
-
-        /* =========================
-           Where conditions
-           Applies generic filters
-        ========================= */
         const whereConditions = {};
+
+        // Apply generic query filters (search, type, theme, mode, dates)
         applyEventQueryFilters(whereConditions, query);
 
-        /* =========================
-           Pagination + sorting
-        ========================= */
         const {
             page,
             pageSize,
@@ -194,19 +214,8 @@ const getFilteredEvents = async (query) => {
             offset,
             orderField,
             orderDirection
-        } = getPaginationOptions(
-            query,
-            ["startDateTime", "title", "creatorId", "createdAt"],
-            "createdAt",
-            "DESC"
-        );
+        } = getPaginationOptions(query, ["startDateTime", "title", "creatorId", "createdAt"], "createdAt", "DESC");
 
-        /* =========================
-           Query database
-           Includes:
-           - creator (with optional filtering)
-           - participants (for count)
-        ========================= */
         const { count, rows } = await Event.findAndCountAll({
             where: whereConditions,
             limit,
@@ -216,7 +225,6 @@ const getFilteredEvents = async (query) => {
                 include: [[fn("COUNT", col("participants.id")), "participantCount"]]
             },
             include: [
-                // Creator filtering handled here
                 buildCreatorInclude(User, query.creator),
 
                 {
@@ -253,12 +261,14 @@ const getFilteredEvents = async (query) => {
     }
 };
 
-// ORGANIZER AND CO_ORGANIZER
+
+/* =============================
+   UPDATE / DELETE EVENT
+============================= */
 
 // Update an event
 const updateEventById = async (id, data) => {
     try {
-        // Check if event exists
         const event = await Event.findByPk(id);
 
         if (!event) {
@@ -267,7 +277,7 @@ const updateEventById = async (id, data) => {
             throw error;
         }
 
-        // Check if event is in the past
+        // Past events are locked
         assertEventNotPast(event);
 
         const oldImage = event.image;
@@ -286,7 +296,7 @@ const updateEventById = async (id, data) => {
             image
         } = data;
 
-        // Minimal safety validation
+        // Validate date order only when both dates are provided
         if (startDateTime && endDateTime) {
             if (new Date(endDateTime) < new Date(startDateTime)) {
                 const error = new Error("End date must be after start date");
@@ -311,9 +321,11 @@ const updateEventById = async (id, data) => {
 
         await event.update(updatedData);
 
+        // Delete old image only after successful DB update
         if (image !== undefined && image && oldImage && oldImage !== image) {
             await deleteUploadedFile(oldImage);
         }
+
         return event;
 
     } catch (error) {
@@ -322,10 +334,10 @@ const updateEventById = async (id, data) => {
     }
 };
 
+
 // Delete an event
 const deleteEventById = async (id) => {
     try {
-        // Check if event exists
         const event = await Event.findByPk(id);
 
         if (!event) {
@@ -334,11 +346,10 @@ const deleteEventById = async (id) => {
             throw error;
         }
 
-        // Check if event is in the past
+        // Past events cannot be deleted
         assertEventNotPast(event);
 
         await event.destroy();
-        return;
 
     } catch (error) {
         console.error('Error in deleting the event:', error);

@@ -1,32 +1,25 @@
+/* ==================================================
+   EVENT MEMBERSHIP INTEGRATION - MY EVENTS
+
+   Tests:
+   - authenticated user's events retrieval
+   - authentication requirement
+   - event status enrichment
+   - participant count enrichment
+   - pagination by view
+   - history view filtering
+
+   Ensures:
+   - authenticated users can retrieve their related events
+   - response includes event metadata
+   - view filters and pagination work correctly
+================================================== */
+
 const request = require('supertest');
 const app = require('../../../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
 
-/**
- * Events Membership Integration - My Events
- *
- * These tests validate the current user's event memberships via HTTP.
- *
- * What is tested:
- * - Retrieving authenticated user's events
- * - Authentication requirements
- * - Event status in membership results
- * - Participant count metadata
- * - Pagination by view
- * - History view filtering
- *
- * Integration scope:
- * → Auth middleware + Controller + Service + Database
- *
- * Goal:
- * Ensure users can retrieve their related events with correct metadata.
-*/
-
 describe('My Events API', () => {
-
-    /* =========================
-       Test database lifecycle
-    ========================= */
 
     beforeAll(async () => {
         await initDB();
@@ -42,10 +35,11 @@ describe('My Events API', () => {
         await sequelize.close();
     });
 
-    /* =========================
-       Helpers
-    ========================= */
+    /* =============================
+       HELPERS
+    ============================= */
 
+    // Register a test user and return auth token
     const registerUser = async (name, email) => {
         const res = await request(app).post('/api/auth/register').send({
             name,
@@ -56,6 +50,7 @@ describe('My Events API', () => {
         return res.body.token;
     };
 
+    // Create a test event
     const createEvent = async (token, overrides = {}) => {
         return request(app)
             .post('/api/events')
@@ -73,9 +68,9 @@ describe('My Events API', () => {
             });
     };
 
-    /* =========================
-       Current user's events
-    ========================= */
+    /* =============================
+       CURRENT USER EVENTS
+    ============================= */
 
     it('should get events for the authenticated user', async () => {
         const creatorToken = await registerUser('Creator', `creator${Date.now()}@test.com`);
@@ -110,9 +105,9 @@ describe('My Events API', () => {
         expect(res.statusCode).toBe(401);
     });
 
-    /* =========================
-       Event metadata
-    ========================= */
+    /* =============================
+       EVENT METADATA
+    ============================= */
 
     it('should include event status in current user events', async () => {
         const creatorToken = await registerUser(
@@ -176,9 +171,9 @@ describe('My Events API', () => {
         expect(eventMembership.event).toHaveProperty('status');
     });
 
-    /* =========================
-       Pagination and views
-    ========================= */
+    /* =============================
+       PAGINATION / VIEWS
+    ============================= */
 
     it('should paginate current user events by view', async () => {
         const creatorToken = await registerUser(

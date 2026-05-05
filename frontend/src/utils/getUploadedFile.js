@@ -1,6 +1,6 @@
 // utils/getUploadedFile.js
 import defaultAvatar from "../assets/avatar_user_per_default.png";
-import defaultEventImage from "../assets/pexels-jrdb99-19683874.jpg";
+import defaultEventImage from "../assets/event_image_per_default.jpg";
 
 const API_ORIGIN = import.meta.env.VITE_API_URL.replace("/api", "");
 

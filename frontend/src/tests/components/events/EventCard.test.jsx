@@ -15,7 +15,8 @@ vi.mock("../../../utils/format", () => ({
 }));
 
 vi.mock("../../../utils/getUploadedFile.js", () => ({
-    getEventImage: (image) => image || "default-event-image.jpg"
+    getEventImage: vi.fn((image) => image || "event_image_per_default.jpg"),
+    defaultEventImage: "event_image_per_default.jpg"
 }));
 
 const baseEvent = {
@@ -77,7 +78,7 @@ describe("EventCard", () => {
         const image = screen.getByAltText("Test Event");
 
         expect(image).toBeInTheDocument();
-        expect(image).toHaveAttribute("src", "default-event-image.jpg");
+        expect(image).toHaveAttribute("src", "event_image_per_default.jpg");
     });
 
     it("shows ended label when event is past", () => {
@@ -102,7 +103,7 @@ describe("EventCard", () => {
 
         fireEvent.error(image);
 
-        expect(image.src).toContain("pexels-jrdb99-19683874.jpg");
+        expect(image.src).toContain("event_image_per_default.jpg");
     });
 
     it("shows join button for authenticated non-member", () => {

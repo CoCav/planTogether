@@ -51,6 +51,17 @@ describe("deleteUploadedFile", () => {
         expect(fs.promises.unlink).not.toHaveBeenCalled();
     });
 
+    it("does not delete file outside upload directory", async () => {
+        await deleteUploadedFile("/other-folder/file.png");
+
+        expect(fs.existsSync).not.toHaveBeenCalled();
+        expect(fs.promises.unlink).not.toHaveBeenCalled();
+
+        expect(console.warn).toHaveBeenCalledWith(
+            "Invalid file path, outside upload directory"
+        );
+    });
+
     it("does not throw when unlink fails", async () => {
         fs.existsSync.mockReturnValue(true);
         fs.promises.unlink.mockRejectedValue(new Error("unlink failed"));

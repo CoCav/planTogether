@@ -6,11 +6,19 @@ const path = require("path");
    Safely removes an uploaded local file from storage
 ================================================== */
 
+const baseUploadDir = process.env.UPLOAD_DIR || "uploads";
+
 const deleteUploadedFile = async (filePath) => {
     if (!filePath) return;
 
     try {
         const normalizedPath = filePath.startsWith("/") ? filePath.slice(1) : filePath;
+
+        // security: prevent deletion of files outside the uploads directory
+        if (!normalizedPath.startsWith(baseUploadDir)) {
+            console.warn("Invalid file path, outside upload directory");
+            return;
+        }
 
         const absolutePath = path.join(__dirname, "..", "..", normalizedPath);
 

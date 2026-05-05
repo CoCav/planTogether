@@ -11,11 +11,11 @@
 
 ![Auth](https://img.shields.io/badge/Auth-JWT-yellow)
 
-![Backend Tests](https://img.shields.io/badge/backend-333%20passing-brightgreen)
-![Backend Coverage](https://img.shields.io/badge/backend%20coverage-99.2%25%20statements%20%7C%2093.23%25%20branches-brightgreen)
+![Backend Tests](https://img.shields.io/badge/backend-372%20passing-brightgreen)
+![Backend Coverage](https://img.shields.io/badge/backend%20coverage-98.18%25%20statements%20%7C%2094.13%25%20branches-brightgreen)
 
-![Frontend Tests](https://img.shields.io/badge/frontend-363%20passing-brightgreen)
-![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-93.86%25%20statements%20%7C%2089.98%25%20branches-brightgreen)
+![Frontend Tests](https://img.shields.io/badge/frontend-425%20passing-brightgreen)
+![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-91.39%25%20statements%20%7C%2087.96%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -25,8 +25,8 @@ PlanTogether is a **fullstack event management platform** that enables users to 
 
 The project is composed of:
 
-- a **Node.js / Express backend API** handling business logic, authentication, and data management
-- a **React frontend application** providing a responsive and interactive user interface
+- a **Node.js / Express backend API** handling business logic, authentication, data management, and file uploads
+- a **React frontend application** providing a responsive and interactive user interface with advanced filtering and user experience features
 
 Together, they provide a complete end-to-end experience, from secure API operations to dynamic user interactions.
 
@@ -36,11 +36,13 @@ The application focuses on **clean architecture, scalability, and comprehensive 
 
 ## 🎯 Key Highlights
 
-- 🧪 **690+ automated tests across backend and frontend** (Jest + Supertest + Vitest + React Testing Library)
-- 📊 **High test coverage** (~99% backend / ~94% frontend)
+- 🧪 **790+ automated tests across backend and frontend** (Jest + Supertest + Vitest + React Testing Library)
+- 📊 **High test coverage** (~98% backend / ~91% frontend)
 - 🔐 **Secure authentication and role-based access control (RBAC)**
 - 🧱 **Clean fullstack architecture** (MVC backend + modular React frontend)
-- 🔍 **Advanced event filtering** (search, date range, sorting, pagination)
+- 🔍 **Advanced event filtering** (search, creator, date range, sorting, pagination)
+- 🔗 **URL-synchronized filters, pagination, and views**
+- 🖼️ **Image upload system** (avatars and event images with preview and drag-and-drop)
 - ⚛️ **Modern React frontend** with protected routes and dynamic UI
 - 🛡️ **Robust validation and error handling** across API and UI
 
@@ -54,11 +56,14 @@ Users can:
 
 - Create, update, and manage events
 - Join and leave events
-- Browse and filter events using advanced search options
+- Browse, search, and filter events using advanced search options
+- Upload and manage avatars and event images
 - Interact with events through a role-based system (`organizer`, `co_organizer`, `participant`)
 - Manage their profile and authentication securely
 
 The platform ensures a smooth and intuitive user experience, with dynamic UI behavior driven by user roles and permissions, and reliable data handling powered by the backend API.
+
+It also includes advanced frontend capabilities such as URL-synchronized filters, pagination, and contextual empty states for a consistent and seamless user experience.
 
 ---
 
@@ -91,6 +96,11 @@ DB_USER=postgres
 DB_PASSWORD=your_password
 DB_HOST=localhost
 DB_PORT=5432
+
+UPLOAD_DIR=uploads
+
+DB_LOGGING=false
+DB_SSL=false
 
 NODE_ENV=development
 CORS_ORIGIN=http://localhost:5173
@@ -129,7 +139,7 @@ npm run dev
 
 ---
 
-## 📚 API Documentation
+## 📖 Project Documentation
 
 The backend API is fully documented in the backend README:
 
@@ -142,14 +152,16 @@ It includes:
 - Authentication and authorization
 - Error handling
 
----
+The frontend is fully documented in the frontend README:
 
-## 📖 Documentation
+👉 [`/frontend/README.md`](./frontend/README.md)
 
-Additional project documentation:
+It includes:
 
-- Backend → [`/backend/README.md`](./backend/README.md)
-- Frontend → [`/frontend/README.md`](./frontend/README.md)
+- Application architecture
+- Core features and UI behavior
+- State management and routing
+- API integration details
 
 ---
 
@@ -166,6 +178,7 @@ The project uses a modern fullstack architecture combining a robust backend, a d
 - JWT (authentication)
 - bcrypt (password hashing)
 - express-validator (input validation)
+- Multer (file uploads)
 
 ### ⚛️ Frontend
 
@@ -174,6 +187,7 @@ The project uses a modern fullstack architecture combining a robust backend, a d
 - Axios (API communication)
 - Context API
 - Custom hooks
+- FormData handling (file uploads)
 
 ### 🧪 Testing
 
@@ -222,6 +236,7 @@ planTogether/
 ├── frontend/
 │   ├── src/
 │   │   ├── api/
+│   │   ├── assets/
 │   │   ├── components/
 │   │   │   ├── auth/
 │   │   │   ├── events/
@@ -267,6 +282,7 @@ Testing strategies are also separated: backend tests are organized at the projec
 - User registration and login (JWT-based authentication)
 - Secure password hashing with bcrypt
 - Profile management (name, email)
+- Avatar upload and update with preview support
 - Password update with current password verification
 - Session handling with optional "Remember me" functionality
 - Redirect to the originally requested page after login
@@ -274,6 +290,7 @@ Testing strategies are also separated: backend tests are organized at the projec
 ### 📅 Event Management
 
 - Create, update, delete, and view events
+- Upload and manage event images (with preview and fallback support)
 - Automatic organizer assignment upon event creation
 - Strong validation across frontend and backend
 - Date consistency rules (end date must be after start date)
@@ -283,13 +300,24 @@ Testing strategies are also separated: backend tests are organized at the projec
 - Join and leave events (except for the organizer)
 - Prevent duplicate participation
 - Retrieve event members and organizers
+- Manage personal event dashboard (created and joined events)
 
 ### 🔍 Event Search & Filtering
 
 - Keyword search (title and description)
+- Creator-based search
 - Filtering by type, theme, mode, and location
 - Exact date and date range filtering
 - Combined filters with sorting and pagination
+- URL-synchronized filters, pagination, and active views
+
+### 🖼️ Media & Upload Experience
+
+- Avatar and event image upload system
+- Drag and drop upload panels
+- Image preview with filename and size
+- Remove uploaded files before submission
+- Default image fallback for missing or broken images
 
 ### 🎭 Roles & Permissions
 
@@ -311,6 +339,13 @@ Access control is enforced through:
 - Role-based access control (RBAC) across backend and frontend
 - Strict role validation and permission checks
 
+### 📄 User Experience
+
+- Contextual empty states based on filters and views
+- Loading states for asynchronous operations
+- Config-driven event tabs (All, Upcoming, Archives, etc.)
+- Responsive UI and reusable component design
+
 ---
 
 ## 🧱 Architecture
@@ -326,30 +361,37 @@ The backend is built using a **layered architecture**:
 - Services → business logic (events, memberships, roles)
 - Models → database structure and relations (Sequelize)
 - Validators → input validation
-- Middlewares → authentication, authorization, and error handling
+- Middlewares → authentication, authorization, file upload handling, and error handling
+- Utils → shared logic (filtering, pagination, file management)
 
 This design supports:
 
 - Scalable business logic
 - Secure access control (RBAC)
-- Advanced filtering and validation
+- Centralized event filtering and validation
+- File upload management (avatars and event images)
 - High testability
+
+---
 
 ### ⚛️ Frontend
 
-The frontend uses a **component-based architecture**:
+The frontend uses a **component-based and feature-driven architecture**:
 
 - Pages → main application views
 - Components → reusable UI elements
-- API layer → centralized Axios calls
+- Services → centralized Axios API layer
 - Context → global authentication state
-- Hooks → reusable logic
-- Features → domain-specific logic and validation
+- Hooks → reusable logic (filtering, pagination, event actions)
+- Features → domain-specific logic (filters, query params, empty states)
+- Utils → shared helpers (image handling, data formatting)
 
 This structure enables:
 
 - Dynamic and responsive UI
 - Role-based rendering
+- URL-synchronized state (filters, pagination, views)
+- Advanced user experience (uploads, previews, empty states)
 - Scalable and maintainable code organization
 
 Together, this architecture ensures a clear separation of concerns and allows both backend and frontend to evolve independently while maintaining a consistent and reliable data flow.
@@ -380,10 +422,10 @@ npm run test:run
 
 ### 📊 Results
 
-- Backend: 333 tests (49 test suites)
-- Frontend: 363 tests (51 test suites)
-- ✅ 690+ tests in total — all passing
-- 📊 High test coverage (~99% backend / ~94% frontend)
+- Backend: 372 tests (51 test suites)
+- Frontend: 425 tests (53 test suites)
+- ✅ 790+ tests in total — all passing
+- 📊 High test coverage (~98% backend / ~91% frontend)
 
 ---
 
@@ -394,9 +436,11 @@ npm run test:run
 - Authentication and profile management
 - Event CRUD operations
 - Filtering, sorting, and pagination
+- Creator-based filtering
 - Event memberships (join, leave, roles)
 - Permissions and role hierarchy (RBAC)
 - Validation and edge cases
+- File upload handling (avatars and event images)
 - API error handling and consistency
 - Internal utilities (event filtering, date logic, pagination)
 
@@ -408,8 +452,10 @@ npm run test:run
 - Role-based UI behavior
 - Form validation and user input handling
 - API interactions (mocked)
+- Image upload flows (preview, remove, drag & drop)
+- URL-synchronized filters, pagination, and views
 - Loading, empty, and error states
-- Custom hooks and utilities (event actions, pagination, data fetching)
+- Custom hooks and utilities (event filtering, pagination, data fetching)
 
 ### 🔁 Test Strategy
 
@@ -417,6 +463,7 @@ npm run test:run
 - Frontend tests simulate user interactions using **React Testing Library** and **Vitest**
 - API calls are mocked on the frontend to isolate UI behavior
 - Tests cover success cases, edge cases, and error handling
+- Critical logic (filtering, uploads, pagination) is tested in isolation
 - Each test is independent and ensures consistent application behavior
 
 These tests provide strong confidence in both backend and frontend reliability.
@@ -441,15 +488,19 @@ The application implements multiple security mechanisms to protect data and enfo
 
 - Request validation on both backend and frontend
 - Protection against malformed or invalid data
+- File validation for uploads (type and size constraints)
 
 ### 🔒 Data Protection
 
 - Password hashing using bcrypt
 - Sensitive data protection via Sequelize scopes
+- Secure handling of uploaded files (avatars and event images)
 
 ### ⚙️ Additional Security Measures
 
+- SQL injection protection via Sequelize ORM
 - Centralized error handling with consistent API responses
+- Controlled file upload flow with validation and cleanup
 
 These mechanisms ensure secure data handling and prevent unauthorized access across both backend and frontend layers.
 
@@ -459,23 +510,28 @@ These mechanisms ensure secure data handling and prevent unauthorized access acr
 
 ### ⚛️ Frontend
 
-- Added My Events dashboard (created vs joined events)
-- Refactored Profile page for improved separation of concerns
-- Improved protected routing and redirect behavior
-- Enhanced UI consistency (layout, footer, and reusable components)
+- Introduced URL-synchronized filters, pagination, and active views
+- Added creator-based search and advanced event filtering
+- Implemented image upload UI (avatars and event images) with preview and drag-and-drop
+- Improved contextual empty states and loading experience
+- Introduced config-driven event tabs for better scalability
 
 ### 🔧 Backend
 
-- Standardized API error responses for better frontend integration
-- Included event creator information in API responses
-- Improved event filtering system (search, exact date, date range)
+- Centralized event filtering logic using reusable utilities
+- Added creator-based filtering across public and user event listings
+- Implemented avatar and event image upload system
+- Introduced reusable Multer upload middleware
+- Added automatic cleanup of old uploaded files on replacement
+- Strengthened upload validation and error handling
+- Improved API consistency and filtering capabilities
 
 ### 🧪 Testing
 
-- Refactored backend test structure (authentication, events, memberships)
-- Expanded backend test coverage (318 tests)
-- Added comprehensive frontend test suite (pages, routing, components)
-- Improved test database setup and reliability
+- Expanded backend test coverage to 371 tests (51 test suites)
+- Added comprehensive frontend test suite (425 tests across 53 test files)
+- Improved coverage across filtering, uploads, and role-based logic
+- Strengthened test reliability and structure across the full stack
 
 ---
 
@@ -486,7 +542,7 @@ These mechanisms ensure secure data handling and prevent unauthorized access acr
 | Backend   | ✅ Complete |
 | Frontend  | ✅ Complete |
 | Security  | ✅ Robust |
-| Testing   | ✅ 690+ tests (100 test suites) |
+| Testing   | ✅ 790+ tests |
 | UX        | 🚧 Ongoing improvements |
 
 ---
@@ -495,10 +551,9 @@ These mechanisms ensure secure data handling and prevent unauthorized access acr
 
 ### 🚀 Features
 
-- Add event registration deadlines
-- Implement an event invitation system
-- Add notifications (event updates, invitations)
-- Support user avatars and enhanced profile customization
+- Implement an event invitation system (invite users via email or shareable link)
+- Add notifications (event updates, invitations, reminders)
+- Support public and private events with fine-grained access control
 
 ### 📅 Event Management
 
@@ -506,11 +561,13 @@ These mechanisms ensure secure data handling and prevent unauthorized access acr
 
 ### ⚛️ Frontend / UX
 
-- Improve mobile responsiveness and overall UI optimization
+- Improve mobile responsiveness and accessibility
+- Enhance UI/UX consistency and animations
 
 ### ⚙️ Infrastructure
 
 - Deploy the application (Vercel, Railway, or Render)
+- Improve environment-based configuration for production
 
 ---
 
@@ -525,24 +582,38 @@ Through this project, I strengthened my fullstack development skills and gained 
 - Building role-based access control (RBAC)
 - Managing relational data with Sequelize and PostgreSQL
 - Handling complex business logic (roles, permissions, event workflows)
+- Designing reusable utilities for filtering, pagination, and data processing
+- Implementing file upload systems with validation and lifecycle management
+
+---
 
 ### ⚛️ Frontend
 
-- Structuring a modular React application
+- Structuring a modular and feature-driven React application
 - Managing global state with the Context API
 - Creating reusable logic with custom hooks
 - Building dynamic, role-based UI behavior
+- Synchronizing application state with URL parameters (filters, pagination, views)
+- Designing interactive UX patterns (drag-and-drop uploads, previews, empty states)
+
+---
 
 ### 🧪 Testing & Quality
 
 - Writing backend tests using Jest and Supertest
 - Building frontend tests with Vitest and React Testing Library
+- Testing full user flows and complex UI interactions
 - Ensuring reliability through automated testing and edge case handling
+- Validating critical logic such as filtering, uploads, and permissions
+
+---
 
 ### 🧱 Architecture & Practices
 
 - Applying separation of concerns across backend and frontend
 - Designing maintainable and scalable codebases
 - Aligning frontend and backend validation logic
+- Structuring applications around reusable and domain-driven features
+- Writing clean, testable, and production-ready code
 
 ---

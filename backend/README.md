@@ -15,8 +15,8 @@ PlanTogether helps users organize and collaborate on events efficiently through 
 
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
 ![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
-![Tests](https://img.shields.io/badge/tests-333%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-99.2%25%20statements%20%7C%2093.23%25%20branches-brightgreen)
+![Tests](https://img.shields.io/badge/tests-372%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-98.18%25%20statements%20%7C%2094.13%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -36,6 +36,13 @@ Users can create, join, leave, update, and manage events depending on their role
 
 The API is built with a modular architecture to ensure scalability, maintainability, and testability.
 
+It also includes advanced features such as:
+
+- file upload support for user avatars and event images
+- centralized and reusable event filtering system (search, creator, categories, dates, status)
+- consistent filtering across public and user-specific event listings
+- robust validation and error handling for uploads and API requests
+
 ---
 
 ## 🎯 API Overview
@@ -44,30 +51,52 @@ PlanTogether provides a **RESTful API** designed to support collaborative event 
 
 The API allows clients to:
 
-- authenticate users securely using JWT
-- create, update, and manage events
-- join and leave events
-- manage membership roles within events
-- retrieve user-related data (e.g., `/my-events`)
-- filter and paginate events efficiently
+- Authenticate users securely using JWT
+- Create, update, and manage events
+- Join and leave events
+- Manage membership roles within events
+- Retrieve user-related data (e.g., `/my-events`)
+- Upload and manage user avatars and event images
+- Filter, sort, and paginate events efficiently (including creator-based filtering)
 
 The API enforces strict validation rules and authorization logic to ensure **data integrity**, **consistent behavior**, and **secure access control** across all endpoints.
+
+It also relies on a centralized filtering system to provide consistent results across public and user-specific event listings.
 
 ---
 
 ## 🔧 Tech Stack
 
-The backend is built using robust and scalable technologies to ensure performance, security, and maintainability:
+The backend is built using robust and scalable technologies to ensure performance, security, and maintainability.
+
+### Core Technologies
 
 - **Node.js** – JavaScript runtime environment
 - **Express** – web framework for building REST APIs
 - **PostgreSQL** – relational database system
 - **Sequelize** – ORM for database modeling and queries
+
+### Authentication & Security
+
 - **JSON Web Tokens (JWT)** – secure stateless authentication
+- **bcrypt** – password hashing
 - **Express Validator** – request validation and input sanitization
-- **Jest & Supertest** – unit and integration testing
-- **Middleware architecture** – authentication, validation, and authorization layers
+
+### File Handling
+
+- **Multer** – file upload handling for avatars and event images
+- **Custom file utilities** – upload management and cleanup logic
+
+### Architecture & Patterns
+
+- **Middleware architecture** – authentication, validation, authorization, and file upload layers
 - **MVC pattern** – modular and maintainable application structure
+- **Service layer** – business logic abstraction
+
+### Testing
+
+- **Jest** – unit testing framework
+- **Supertest** – integration testing for API endpoints
 
 ---
 
@@ -92,6 +121,7 @@ project-root
 │   │   ├── requireEventRole.js
 │   │   ├── authorizeEvent.js
 │   │   ├── validateRequest.js
+│   │   ├── uploadFile.js
 │   │   └── errorHandler.js
 │   │
 │   ├── models
@@ -112,6 +142,7 @@ project-root
 │   │   └── eventMembershipService.js
 │   │
 │   ├── utils
+│   │   ├── deleteUploadedFile.js
 │   │   ├── eventQueryFilters.js
 │   │   ├── eventTime.js
 │   │   └── pagination.js
@@ -162,6 +193,7 @@ project-root
 │   │   ├── authorizeEvent.test.js
 │   │   ├── errorHandler.test.js
 │   │   ├── requireEventRole.test.js
+│   │   ├── uploadFile.test.js
 │   │   └── validateRequest.test.js
 │   │
 │   ├── services
@@ -189,6 +221,7 @@ project-root
 │   │       └── updateMemberRole.test.js
 │   │
 │   ├── utils
+│   │   ├── deleteUploadedFile.test.js
 │   │   ├── eventQueryFilters.test.js
 │   │   ├── eventTime.test.js
 │   │   └── pagination.test.js
@@ -207,6 +240,10 @@ project-root
 
 The `relations` folder contains linking models used to represent many-to-many relationships (e.g., users participating in events with specific roles).
 
+The `utils` layer centralizes reusable logic such as event filtering, pagination, date handling, and file management, ensuring consistency across services.
+
+The `middlewares` layer includes reusable components for authentication, authorization, validation, file uploads, and centralized error handling.
+
 The test suite mirrors the application structure to ensure full coverage and maintainability.
 
 This structure ensures a clear separation of concerns, improves scalability, and makes the codebase easier to maintain, test, and extend over time.
@@ -223,6 +260,8 @@ The API provides a complete set of endpoints to manage users, events, and member
 - Login with JWT authentication (stateless, token-based)
 - Profile retrieval
 - Profile update
+- Avatar upload and replacement (multipart/form-data)
+- Automatic old avatar cleanup when replaced
 - Change password (secure flow with current password verification)
 - Logout endpoint
 - Email normalization and password hashing using **bcrypt**
@@ -237,11 +276,15 @@ The API provides a complete set of endpoints to manage users, events, and member
 - Retrieve a single event
 - Update events *(organizer or co_organizer)*
 - Delete events *(organizer only)*
+- Event image upload and replacement (multipart/form-data)
+- Automatic old event image cleanup when replaced
 
 Additional capabilities:
 
 - Event creator information included in API responses
+- Event image paths included in API responses
 - Strong validation (required fields and date consistency)
+- Upload validation for supported image types and file sizes
 
 Each event automatically assigns the creator as **organizer**.
 
@@ -329,6 +372,8 @@ This ensures a clear separation between:
 - access control
 - business logic
 
+This system ensures consistent and reusable access control across all event-related operations.
+
 ---
 
 ### 👥 Members & Roles Management
@@ -344,20 +389,25 @@ Organizers and co_organizers can:
 
 ### 🔍 Event Search & Filtering
 
-The API supports advanced filtering using query parameters:
+The API supports advanced filtering using query parameters.
+
+Filtering is powered by a centralized and reusable system, ensuring consistent results across public and user-specific event listings:
 
 - `search` → keyword search in title and description
+- `creator` → filter by creator name
 - `type` → filter by event type
 - `theme` → filter by event theme
 - `location` → filter by event location
 - `startDate` → filter events starting from a specific date
 - `endDate` → filter events up to a specific date
 - `date` → filter events for an exact day (overrides range)
+- `status` → filter upcoming or past events
 
 Additional features:
 
 - Sorting (`date`, `title`, `creatorId`)
 - Pagination (`page`, `pageSize`)
+- Creator filtering across public and user-specific event listings
 
 #### Examples
 
@@ -371,6 +421,18 @@ Filter events for an exact date:
 
 ```
 GET /api/events/filtered?date=2026-04-16
+```
+
+Filter events by creator:
+
+```
+GET /api/events/filtered?creator=Luffy
+```
+
+Filter user-specific events by view and creator:
+
+```
+GET /api/events/my-events?view=joined&creator=Luffy&page=2
 ```
 
 ---
@@ -395,13 +457,16 @@ npm run test:coverage
 
 ### 📊 Results
 
-- 49 test suites
-- 333 tests
+- 51 test suites
+- 372 tests
 - ✅ All passing
-- 99.2% statements coverage
-- 93.23% branch coverage
+
+**Coverage:**
+- 98.18% statements coverage
+- 94.13% branch coverage
 - 100% functions coverage
-- 99.33% lines coverage
+- 98.28% lines coverage
+- ✅ High coverage across core features such as business logic, filtering, and upload flows
 
 ---
 
@@ -424,10 +489,13 @@ They simulate real HTTP requests using **Supertest** and cover all major API fea
 - **Authentication**
   - Register, login, logout
   - Profile and password management
+  - Avatar upload and replacement
 
 - **Events**
   - CRUD operations
+  - Event image upload and replacement
   - Filtering and pagination
+  - Creator-based filtering
   - Role-based permissions
   - Request validation
 
@@ -463,6 +531,7 @@ These tests validate the internal logic of the application independently from HT
   - Authentication (`authenticateToken`)
   - Authorization (`requireEventRole`, `authorizeEvent`)
   - Request validation (`validateRequest`)
+  - File upload handling (`uploadFile`)
   - Error handling (`errorHandler`)
 
 - **Validators**
@@ -471,7 +540,8 @@ These tests validate the internal logic of the application independently from HT
 
 - **Utils**
   - Shared helper functions
-  - Event query filtering logic (status, date, search, pagination)
+  - Uploaded file cleanup
+  - Event query filtering logic (status, date, search, creator, pagination, centralized filtering system)
 
 ---
 
@@ -482,12 +552,13 @@ These tests validate the internal logic of the application independently from HT
 - A dedicated test database ensures isolation
 - Each test is independent and cleans up its data
 - Internal modules are tested in isolation for robustness and maintainability
+- High coverage ensures strong reliability across critical features such as filtering, uploads, and permission handling
 
 ---
 
 ## 🔐 Security
 
-The API implements multiple security layers to protect sensitive data and enforce strict access control across all endpoints
+The API implements multiple security layers to protect sensitive data and enforce strict access control across all endpoints.
 
 ### 🔑 Authentication
 
@@ -505,6 +576,7 @@ The API implements multiple security layers to protect sensitive data and enforc
 
 - Request validation using **express-validator**
 - Sanitization of incoming data to prevent malformed or malicious input
+- File validation for uploads (type, size, and format constraints)
 
 ### 🔒 Data Protection
 
@@ -515,6 +587,7 @@ The API implements multiple security layers to protect sensitive data and enforc
 
 - SQL injection protection via Sequelize ORM parameterized queries
 - Centralized error handling with consistent and safe API responses
+- Secure file upload handling with controlled storage and validation
 
 These mechanisms ensure secure data handling and prevent unauthorized access throughout the API.
 
@@ -556,7 +629,7 @@ Clone the repository and install dependencies:
 
 ```bash
 git clone https://github.com/CoCav/planTogether.git
-cd plantogether
+cd planTogether
 npm install
 ```
 
@@ -579,6 +652,11 @@ DB_PASSWORD=your_password
 DB_HOST=localhost
 DB_PORT=5432
 
+UPLOAD_DIR=uploads
+
+DB_LOGGING=false
+DB_SSL=false
+
 NODE_ENV=development
 CORS_ORIGIN=http://localhost:5173
 ```
@@ -586,7 +664,10 @@ CORS_ORIGIN=http://localhost:5173
 ### 🔍 Notes
 - `JWT_SECRET` → used to sign and verify authentication tokens
 - `NODE_ENV` → defines the environment (development, production, test)
+- `DB_LOGGING` → enable Sequelize query logging (`true` or `false`)
+- `DB_SSL` → enable SSL for production environments (e.g. cloud databases)
 - `CORS_ORIGIN` → allowed frontend origin
+- `UPLOAD_DIR` → base directory where uploaded files (avatars and event images) are stored
 
 👉 A `.env.example` file is provided as a reference configuration.
 
@@ -620,7 +701,11 @@ Health check endpoint:
 
 The API exposes the following main endpoints grouped by feature.
 
+All endpoints return standardized JSON responses as described in the API Response Format section.
+
 Path parameters use the `:paramName` syntax (e.g., `:eventId`).
+
+> ⚠️ Some endpoints (such as avatar and event image upload) require `multipart/form-data` requests.
 
 ### 🔐 Authentication
 
@@ -630,7 +715,7 @@ Endpoints related to user authentication and account management.
 POST   /api/auth/register
 POST   /api/auth/login
 GET    /api/auth/profile
-PUT    /api/auth/profile
+PUT    /api/auth/profile   (supports avatar upload via multipart/form-data)
 PUT    /api/auth/password
 POST   /api/auth/logout
 ```
@@ -645,8 +730,8 @@ Endpoints for managing events.
 GET    /api/events
 GET    /api/events/:eventId
 GET    /api/events/filtered
-POST   /api/events
-PUT    /api/events/:eventId
+POST   /api/events         (supports image upload via multipart/form-data)
+PUT    /api/events/:eventId   (supports image upload via multipart/form-data)
 DELETE /api/events/:eventId
 ```
 
@@ -672,16 +757,19 @@ DELETE /api/events/:eventId/members/:userId
 
 ### 🔧 API & Features
 
-- Standardized API error handling with a centralized error middleware
-- Strengthened event validation (required fields, date consistency)
-- Enhanced event filtering (search, date range, sorting, pagination)
-- Included event creator details in API responses
+- Centralized event filtering logic across public and user-specific event listings
+- Added creator filtering through reusable Sequelize include helpers
+- Added user avatar and event image upload support
+- Introduced a reusable Multer-based upload middleware
+- Implemented automatic cleanup of old uploaded files on replacement
+- Strengthened upload validation and error handling (file size, type, and format)
 
 ### 🧪 Testing
 
 - Refactored test architecture for improved clarity and maintainability
 - Expanded test coverage across authentication, events, and memberships
 - Added integration tests to validate full API workflows
+- Achieved high coverage across core features including filtering, uploads, and permissions
 - Improved overall API reliability through automated testing
 
 ---
@@ -690,11 +778,12 @@ DELETE /api/events/:eventId/members/:userId
 
 | Area             | Status |
 |------------------|--------|
-| Backend API      | ✅ Fully Functional |
+| Backend API      | ✅ Fully functional |
 | Architecture     | ✅ Modular & scalable |
 | Authentication   | ✅ Complete (login, logout, profile, password update) |
 | Authorization    | ✅ Advanced role-based system |
-| Testing          | ✅ 333 tests (49 test suites) |
+| File Uploads     | ✅ Avatars & event images supported |
+| Testing          | ✅ 372 tests (51 test suites) |
 | Frontend         | 🔗 Connected & functional |
 
 ---
@@ -709,7 +798,8 @@ DELETE /api/events/:eventId/members/:userId
 
 ### ⚙️ Infrastructure & Deployment
 
-- Deploy the API using Docker and a cloud provider
+- Containerize the API using Docker
+- Deploy to a cloud provider (e.g., AWS, Render, or Fly.io)
 - Improve environment-based configuration for production
 
 ---

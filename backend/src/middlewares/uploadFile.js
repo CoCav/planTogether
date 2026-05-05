@@ -22,8 +22,10 @@ const fs = require("fs");
    - works with global errorHandler for upload errors
 ================================================== */
 
+const baseUploadDir = process.env.UPLOAD_DIR || "uploads";
+
 const createImageUpload = ({ folder, prefix, maxSize }) => {
-    const uploadDir = path.join(__dirname, "../../uploads", folder);
+    const uploadDir = path.join(__dirname, "../../", baseUploadDir, folder);
 
     if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });

@@ -17,7 +17,7 @@
 const User = require("../../../src/models/userModel");
 const deleteUploadedFile = require("../../../src/utils/deleteUploadedFile");
 
-const authService = require("../../../src/services/authService");
+const userService = require("../../../src/services/userService");
 
 jest.mock("../../../src/models/userModel", () => ({
     findByPk: jest.fn()
@@ -25,7 +25,7 @@ jest.mock("../../../src/models/userModel", () => ({
 
 jest.mock("../../../src/utils/deleteUploadedFile", () => jest.fn());
 
-describe("authService - profile", () => {
+describe("userService - getCurrentUserProfileById", () => {
     let user;
 
     beforeEach(() => {
@@ -42,15 +42,15 @@ describe("authService - profile", () => {
         deleteUploadedFile.mockResolvedValue();
     });
 
-    /* =========================
-       getUserProfileByID
-    ========================= */
+    /* ==========================
+       getCurrentUserProfileById
+    ============================= */
 
-    describe("getUserProfileByID", () => {
+    describe("getCurrentUserProfileById", () => {
         it("should return user profile", async () => {
             User.findByPk.mockResolvedValue(user);
 
-            const result = await authService.getUserProfileByID(1);
+            const result = await userService.getCurrentUserProfileById(1);
 
             expect(result).toBe(user);
         });
@@ -58,19 +58,19 @@ describe("authService - profile", () => {
         it("should throw if user is not found", async () => {
             User.findByPk.mockResolvedValue(null);
 
-            await expect(authService.getUserProfileByID(1)).rejects.toMatchObject({ statusCode: 404 });
+            await expect(userService.getCurrentUserProfileById(1)).rejects.toMatchObject({ statusCode: 404 });
         });
     });
 
-    /* =========================
-       updateUserProfileByID
-    ========================= */
+    /* ============================
+       updateCurrentUserProfileById
+    =============================== */
 
-    describe("updateUserProfileByID", () => {
+    describe("getCurrentUserProfileByID", () => {
         it("should update user profile fields", async () => {
             User.findByPk.mockResolvedValue(user);
 
-            const result = await authService.updateUserProfileByID(1, {
+            const result = await userService.updateCurrentUserProfileById(1, {
                 name: "Updated",
                 email: " UPDATED@TEST.COM "
             });
@@ -84,7 +84,7 @@ describe("authService - profile", () => {
         it("should update user avatar when provided", async () => {
             User.findByPk.mockResolvedValue(user);
 
-            const result = await authService.updateUserProfileByID(1, {
+            const result = await userService.updateCurrentUserProfileById(1, {
                 avatar: "/uploads/avatars/avatar-test.png"
             });
 
@@ -98,7 +98,7 @@ describe("authService - profile", () => {
 
             User.findByPk.mockResolvedValue(user);
 
-            const result = await authService.updateUserProfileByID(1, {
+            const result = await userService.updateCurrentUserProfileById(1, {
                 avatar: ""
             });
 
@@ -112,7 +112,7 @@ describe("authService - profile", () => {
 
             User.findByPk.mockResolvedValue(user);
 
-            await authService.updateUserProfileByID(1, {
+            await userService.updateCurrentUserProfileById(1, {
                 avatar: "/uploads/avatars/new-avatar.png"
             });
 
@@ -126,7 +126,7 @@ describe("authService - profile", () => {
 
             User.findByPk.mockResolvedValue(user);
 
-            await authService.updateUserProfileByID(1, {
+            await userService.updateCurrentUserProfileById(1, {
                 avatar: "/uploads/avatars/avatar-test.png"
             });
 
@@ -138,7 +138,7 @@ describe("authService - profile", () => {
 
             User.findByPk.mockResolvedValue(user);
 
-            await authService.updateUserProfileByID(1, {
+            await userService.updateCurrentUserProfileById(1, {
                 avatar: ""
             });
 
@@ -150,7 +150,7 @@ describe("authService - profile", () => {
         it("should throw if user is not found", async () => {
             User.findByPk.mockResolvedValue(null);
 
-            await expect(authService.updateUserProfileByID(1, {})).rejects.toMatchObject({ statusCode: 404 });
+            await expect(userService.updateCurrentUserProfileById(1, {})).rejects.toMatchObject({ statusCode: 404 });
         });
     });
 });

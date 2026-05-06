@@ -1,5 +1,5 @@
 /* ==================================================
-   USER INTEGRATION - GET PUBLIC USER PROFILE
+   USER INTEGRATION - PUBLIC USER PROFILE
 
    Tests:
    - authenticated public profile retrieval
@@ -18,7 +18,7 @@ const request = require("supertest");
 const app = require("../../../src/app");
 const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
 
-describe("Get Public User Profile API", () => {
+describe("Public User Profile API", () => {
 
     beforeAll(async () => {
         await initDB();

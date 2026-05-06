@@ -4,15 +4,12 @@
    Tests:
    - user registration
    - user login
-   - authenticated profile retrieval
-   - profile updates
-   - password updates
    - logout responses
 
    Ensures:
-   - controllers call services correctly
+   - auth controller calls authService correctly
    - HTTP responses are properly formatted
-   - uploaded avatars are handled correctly
+   - uploaded avatars are handled during registration
    - errors are forwarded to next()
 ================================================== */
 
@@ -204,181 +201,8 @@ describe("authController", () => {
     });
 
     /* =============================
-       PROFILE
+       LOGOUT
     ============================= */
-
-    describe("getUserByID", () => {
-        it("should return authenticated user profile", async () => {
-            const { req, res, next } = createMocks({
-                user: { userId: 1 }
-            });
-
-            authService.getUserProfileByID.mockResolvedValue(mockUser);
-
-            await authController.getUserByID(req, res, next);
-
-            expect(authService.getUserProfileByID).toHaveBeenCalledWith(1);
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({
-                message: "User profile retrieved successfully",
-                user: {
-                    userId: 1,
-                    name: "John Doe",
-                    email: "john@test.com",
-                    avatar: null
-                }
-            });
-        });
-
-        it("should forward get profile errors to next", async () => {
-            const { req, res, next } = createMocks();
-
-            const error = new Error("Profile failed");
-            authService.getUserProfileByID.mockRejectedValue(error);
-
-            await authController.getUserByID(req, res, next);
-
-            expect(next).toHaveBeenCalledWith(error);
-        });
-    });
-
-    describe("updateUserByID", () => {
-        it("should update authenticated user profile", async () => {
-            const { req, res, next } = createMocks({
-                user: { userId: 1 },
-                body: {
-                    name: "Updated",
-                    email: "updated@test.com"
-                }
-            });
-
-            const updatedUser = {
-                id: 1,
-                name: "Updated",
-                email: "updated@test.com",
-                avatar: null
-            };
-
-            authService.updateUserProfileByID.mockResolvedValue(updatedUser);
-
-            await authController.updateUserByID(req, res, next);
-
-            expect(authService.updateUserProfileByID).toHaveBeenCalledWith(1, {
-                name: "Updated",
-                email: "updated@test.com"
-            });
-
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({
-                message: "User profile updated successfully",
-                user: {
-                    userId: 1,
-                    name: "Updated",
-                    email: "updated@test.com",
-                    avatar: null
-                }
-            });
-        });
-
-        it("should update authenticated user profile with uploaded avatar", async () => {
-            const { req, res, next } = createMocks({
-                user: { userId: 1 },
-                body: {
-                    name: "Updated",
-                    email: "updated@test.com"
-                },
-                file: {
-                    filename: "avatar-updated.png"
-                }
-            });
-
-            const updatedUser = {
-                id: 1,
-                name: "Updated",
-                email: "updated@test.com",
-                avatar: "/uploads/avatars/avatar-updated.png"
-            };
-
-            authService.updateUserProfileByID.mockResolvedValue(updatedUser);
-
-            await authController.updateUserByID(req, res, next);
-
-            expect(authService.updateUserProfileByID).toHaveBeenCalledWith(1, {
-                name: "Updated",
-                email: "updated@test.com",
-                avatar: "/uploads/avatars/avatar-updated.png"
-            });
-
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({
-                message: "User profile updated successfully",
-                user: {
-                    userId: 1,
-                    name: "Updated",
-                    email: "updated@test.com",
-                    avatar: "/uploads/avatars/avatar-updated.png"
-                }
-            });
-        });
-
-        it("should forward update profile errors to next", async () => {
-            const { req, res, next } = createMocks();
-
-            const error = new Error("Update failed");
-            authService.updateUserProfileByID.mockRejectedValue(error);
-
-            await authController.updateUserByID(req, res, next);
-
-            expect(next).toHaveBeenCalledWith(error);
-        });
-    });
-
-    /* =============================
-       PASSWORD / LOGOUT
-    ============================= */
-
-    describe("changePassword", () => {
-        it("should change authenticated user password", async () => {
-            const { req, res, next } = createMocks({
-                user: { userId: 1 },
-                body: {
-                    currentPassword: "OldPassword1",
-                    newPassword: "NewPassword1"
-                }
-            });
-
-            authService.changeUserPasswordByID.mockResolvedValue();
-
-            await authController.changePassword(req, res, next);
-
-            expect(authService.changeUserPasswordByID).toHaveBeenCalledWith(
-                1,
-                "OldPassword1",
-                "NewPassword1"
-            );
-
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({
-                message: "Password updated successfully"
-            });
-        });
-
-        it("should forward change password errors to next", async () => {
-            const { req, res, next } = createMocks({
-                body: {
-                    currentPassword: "OldPassword1",
-                    newPassword: "NewPassword1"
-                }
-            });
-
-            const error = new Error("Password failed");
-            authService.changeUserPasswordByID.mockRejectedValue(error);
-
-            await authController.changePassword(req, res, next);
-
-            expect(next).toHaveBeenCalledWith(error);
-        });
-    });
 
     describe("logout", () => {
         it("should return logout success message", async () => {
@@ -387,9 +211,7 @@ describe("authController", () => {
             await authController.logout(req, res);
 
             expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({
-                message: "Logout successful"
-            });
+            expect(res.json).toHaveBeenCalledWith({ message: "Logout successful" });
         });
     });
 });

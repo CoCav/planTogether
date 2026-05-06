@@ -1,5 +1,5 @@
 /* ==================================================
-   AUTH INTEGRATION - PASSWORD
+   AUTH INTEGRATION - CURRENT USER PASSWORD
 
    Tests:
    - successful password update
@@ -21,7 +21,7 @@ const request = require('supertest');
 const app = require('../../../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
 
-describe('Password API', () => {
+describe('Current User Password API', () => {
     beforeAll(async () => {
         await initDB();
     });
@@ -52,7 +52,7 @@ describe('Password API', () => {
         const token = registerRes.body.token;
 
         const res = await request(app)
-            .put('/api/auth/password')
+            .put('/api/users/me/password')
             .set('Authorization', `Bearer ${token}`)
             .send({
                 currentPassword: 'Password123',
@@ -69,7 +69,7 @@ describe('Password API', () => {
 
     it('should reject without token', async () => {
         const res = await request(app)
-            .put('/api/auth/password')
+            .put('/api/users/me/password')
             .send({
                 currentPassword: 'Password123',
                 newPassword: 'NewPassword123'
@@ -80,7 +80,7 @@ describe('Password API', () => {
 
     it('should reject invalid token', async () => {
         const res = await request(app)
-            .put('/api/auth/password')
+            .put('/api/users/me/password')
             .set('Authorization', 'Bearer invalid-token')
             .send({
                 currentPassword: 'Password123',
@@ -104,7 +104,7 @@ describe('Password API', () => {
         const token = registerRes.body.token;
 
         const res = await request(app)
-            .put('/api/auth/password')
+            .put('/api/users/me/password')
             .set('Authorization', `Bearer ${token}`)
             .send({
                 currentPassword: 'WrongPassword',
@@ -124,7 +124,7 @@ describe('Password API', () => {
         const token = registerRes.body.token;
 
         const res = await request(app)
-            .put('/api/auth/password')
+            .put('/api/users/me/password')
             .set('Authorization', `Bearer ${token}`)
             .send({
                 currentPassword: 'Password123',
@@ -148,7 +148,7 @@ describe('Password API', () => {
         const token = registerRes.body.token;
 
         const res = await request(app)
-            .put('/api/auth/password')
+            .put('/api/users/me/password')
             .set('Authorization', `Bearer ${token}`)
             .send({
                 currentPassword: 'Password123',
@@ -179,7 +179,7 @@ describe('Password API', () => {
         const token = loginRes.body.token;
 
         await request(app)
-            .put('/api/auth/password')
+            .put('/api/users/me/password')
             .set('Authorization', `Bearer ${token}`)
             .send({
                 currentPassword: 'Password123',

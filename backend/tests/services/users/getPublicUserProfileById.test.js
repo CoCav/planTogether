@@ -1,5 +1,5 @@
 /* ==================================================
-   USER SERVICE - GET PUBLIC USER PROFILE TESTS
+   USER SERVICE - GET PUBLIC USER PROFILE BY ID TESTS
 
    Tests:
    - public profile retrieval

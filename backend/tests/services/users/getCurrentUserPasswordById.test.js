@@ -1,5 +1,5 @@
 /* ==================================================
-   AUTH SERVICE - CHANGE PASSWORD TESTS
+   AUTH SERVICE - GET CURRENT USER PASSWORD BY ID TESTS
 
    Tests:
    - successful password update
@@ -17,7 +17,7 @@
 const bcrypt = require("bcrypt");
 const User = require("../../../src/models/userModel");
 
-const authService = require("../../../src/services/authService");
+const userService = require("../../../src/services/userService");
 
 jest.mock("bcrypt");
 
@@ -25,7 +25,7 @@ jest.mock("../../../src/models/userModel", () => ({
     scope: jest.fn()
 }));
 
-describe("authService - changeUserPasswordByID", () => {
+describe("userService - getCurrentUserPasswordByID", () => {
     const user = {
         id: 1,
         password: "hashed",
@@ -47,7 +47,7 @@ describe("authService - changeUserPasswordByID", () => {
 
         bcrypt.hash.mockResolvedValue("new-hash");
 
-        await authService.changeUserPasswordByID(1, "old", "new");
+        await userService.changeCurrentUserPasswordById(1, "old", "new");
 
         expect(user.password).toBe("new-hash");
         expect(user.save).toHaveBeenCalled();
@@ -64,7 +64,7 @@ describe("authService - changeUserPasswordByID", () => {
 
         bcrypt.hash.mockResolvedValue("new-hash");
 
-        await authService.changeUserPasswordByID(1, "old", "new");
+        await userService.changeCurrentUserPasswordById(1, "old", "new");
 
         expect(bcrypt.hash).toHaveBeenCalledWith("new", 10);
     });
@@ -74,7 +74,7 @@ describe("authService - changeUserPasswordByID", () => {
             findByPk: jest.fn().mockResolvedValue(null)
         });
 
-        await expect(authService.changeUserPasswordByID(1, "a", "b")).rejects.toMatchObject({ statusCode: 404 });
+        await expect(userService.changeCurrentUserPasswordById(1, "a", "b")).rejects.toMatchObject({ statusCode: 404 });
     });
 
     it("should throw if current password is invalid", async () => {
@@ -84,7 +84,7 @@ describe("authService - changeUserPasswordByID", () => {
 
         bcrypt.compare.mockResolvedValueOnce(false);
 
-        await expect(authService.changeUserPasswordByID(1, "a", "b")).rejects.toMatchObject({ statusCode: 401 });
+        await expect(userService.changeCurrentUserPasswordById(1, "a", "b")).rejects.toMatchObject({ statusCode: 401 });
     });
 
     it("should throw if new password is identical to current password", async () => {
@@ -96,6 +96,6 @@ describe("authService - changeUserPasswordByID", () => {
             .mockResolvedValueOnce(true)
             .mockResolvedValueOnce(true);
 
-        await expect(authService.changeUserPasswordByID(1, "a", "a")).rejects.toMatchObject({ statusCode: 400 });
+        await expect(userService.changeCurrentUserPasswordById(1, "a", "a")).rejects.toMatchObject({ statusCode: 400 });
     });
 });

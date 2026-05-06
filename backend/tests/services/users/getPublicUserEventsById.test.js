@@ -1,5 +1,5 @@
 /* ==================================================
-   USER SERVICE - GET PUBLIC USER EVENTS TESTS
+   USER SERVICE - GET PUBLIC USER EVENTS BY ID TESTS
 
    Tests:
    - created and joined events retrieval

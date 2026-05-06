@@ -1,5 +1,5 @@
 /* ==================================================
-   AUTH INTEGRATION - PROFILE
+   AUTH INTEGRATION - CURRENT USER PROFILE
 
    Tests:
    - authenticated profile retrieval
@@ -27,7 +27,7 @@ const fs = require("fs");
 const path = require("path")
 
 
-describe("Profile API", () => {
+describe("Current User Profile API", () => {
     beforeAll(async () => {
         await initDB();
     });
@@ -42,7 +42,7 @@ describe("Profile API", () => {
         await sequelize.close();
     });
 
-    describe("GET /api/auth/profile", () => {
+    describe("GET /api/users/me", () => {
         it("should get the profile of an authenticated user", async () => {
             const email = `profile${Date.now()}@test.com`;
 
@@ -57,7 +57,7 @@ describe("Profile API", () => {
             const token = registerRes.body.token;
 
             const res = await request(app)
-                .get("/api/auth/profile")
+                .get("/api/users/me")
                 .set("Authorization", `Bearer ${token}`);
 
             expect(res.statusCode).toBe(200);
@@ -75,21 +75,21 @@ describe("Profile API", () => {
         });
 
         it("should reject access without token", async () => {
-            const res = await request(app).get("/api/auth/profile");
+            const res = await request(app).get("/api/users/me");
 
             expect(res.statusCode).toBe(401);
         });
 
         it("should reject access with invalid token", async () => {
             const res = await request(app)
-                .get("/api/auth/profile")
+                .get("/api/users/me")
                 .set("Authorization", "Bearer invalid-token");
 
             expect(res.statusCode).toBe(401);
         });
     });
 
-    describe("PUT /api/auth/profile", () => {
+    describe("PUT /api/users/me", () => {
         it("should update the profile of an authenticated user", async () => {
             const originalEmail = `profileupdate${Date.now()}@test.com`;
             const updatedEmail = `updatedprofile${Date.now()}@test.com`;
@@ -105,7 +105,7 @@ describe("Profile API", () => {
             const token = registerRes.body.token;
 
             const res = await request(app)
-                .put("/api/auth/profile")
+                .put("/api/users/me")
                 .set("Authorization", `Bearer ${token}`)
                 .send({
                     name: "Updated Name",
@@ -126,7 +126,7 @@ describe("Profile API", () => {
             expect(res.body.user).not.toHaveProperty("password");
 
             const profileRes = await request(app)
-                .get("/api/auth/profile")
+                .get("/api/users/me")
                 .set("Authorization", `Bearer ${token}`);
 
             expect(profileRes.body.user.name).toBe("Updated Name");
@@ -148,7 +148,7 @@ describe("Profile API", () => {
             const token = registerRes.body.token;
 
             const res = await request(app)
-                .put("/api/auth/profile")
+                .put("/api/users/me")
                 .set("Authorization", `Bearer ${token}`)
                 .field("name", "Avatar Updated")
                 .field("email", email)
@@ -167,7 +167,7 @@ describe("Profile API", () => {
             expect(res.body.user.avatar).toMatch(/^\/uploads\/avatars\/avatar-/);
 
             const profileRes = await request(app)
-                .get("/api/auth/profile")
+                .get("/api/users/me")
                 .set("Authorization", `Bearer ${token}`);
 
             expect(profileRes.body.user.avatar).toBe(res.body.user.avatar);
@@ -194,7 +194,7 @@ describe("Profile API", () => {
             expect(fs.existsSync(oldAvatarPath)).toBe(true);
 
             const res = await request(app)
-                .put("/api/auth/profile")
+                .put("/api/users/me")
                 .set("Authorization", `Bearer ${token}`)
                 .field("name", "Avatar Replace User")
                 .field("email", email)
@@ -212,7 +212,7 @@ describe("Profile API", () => {
 
         it("should reject update without token", async () => {
             const res = await request(app)
-                .put("/api/auth/profile")
+                .put("/api/users/me")
                 .send({
                     name: "Updated Name",
                     email: `updated${Date.now()}@test.com`
@@ -223,7 +223,7 @@ describe("Profile API", () => {
 
         it("should reject update with invalid token", async () => {
             const res = await request(app)
-                .put("/api/auth/profile")
+                .put("/api/users/me")
                 .set("Authorization", "Bearer invalid-token")
                 .send({
                     name: "Updated Name",
@@ -245,7 +245,7 @@ describe("Profile API", () => {
             const token = registerRes.body.token;
 
             const res = await request(app)
-                .put("/api/auth/profile")
+                .put("/api/users/me")
                 .set("Authorization", `Bearer ${token}`)
                 .send({
                     name: "Updated Name",
@@ -267,7 +267,7 @@ describe("Profile API", () => {
             const token = registerRes.body.token;
 
             const res = await request(app)
-                .put("/api/auth/profile")
+                .put("/api/users/me")
                 .set("Authorization", `Bearer ${token}`)
                 .send({
                     name: "",
@@ -298,7 +298,7 @@ describe("Profile API", () => {
             const token = secondRegisterRes.body.token;
 
             const res = await request(app)
-                .put("/api/auth/profile")
+                .put("/api/users/me")
                 .set("Authorization", `Bearer ${token}`)
                 .send({
                     name: "Updated Name",

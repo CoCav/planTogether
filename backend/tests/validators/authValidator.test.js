@@ -4,18 +4,16 @@
    Tests:
    - registration validation
    - login validation
-   - profile update validation
-   - password change validation
 
    Ensures:
    - invalid auth payloads are rejected early
-   - password security rules are enforced
-   - optional profile fields are validated correctly
+   - registration password security rules are enforced
+   - login credentials are validated before controller logic
 ================================================== */
 
 const { validationResult } = require("express-validator");
 
-const { registerValidator, loginValidator, updateProfileValidator, changePasswordValidator } = require("../../src/validators/authValidator");
+const { registerValidator, loginValidator } = require("../../src/validators/authValidator");
 
 // Run express-validator rules against a mocked request body
 const runValidation = async (validators, body) => {
@@ -86,53 +84,6 @@ describe("authValidator", () => {
             });
 
             expect(result.array()[0].msg).toMatch(/password is required/i);
-        });
-    });
-
-    describe("updateProfileValidator", () => {
-        it("should pass with valid optional fields", async () => {
-            const result = await runValidation(updateProfileValidator, {
-                name: "John",
-                email: "john@test.com"
-            });
-
-            expect(result.isEmpty()).toBe(true);
-        });
-
-        it("should fail if name is too short", async () => {
-            const result = await runValidation(updateProfileValidator, {
-                name: "A"
-            });
-
-            expect(result.array()[0].msg).toMatch(/at least 2 characters/i);
-        });
-    });
-
-    describe("changePasswordValidator", () => {
-        it("should pass with valid data", async () => {
-            const result = await runValidation(changePasswordValidator, {
-                currentPassword: "oldPass1",
-                newPassword: "NewPass1"
-            });
-
-            expect(result.isEmpty()).toBe(true);
-        });
-
-        it("should fail if currentPassword is missing", async () => {
-            const result = await runValidation(changePasswordValidator, {
-                newPassword: "NewPass1"
-            });
-
-            expect(result.array()[0].msg).toMatch(/current password is required/i);
-        });
-
-        it("should fail if newPassword is weak", async () => {
-            const result = await runValidation(changePasswordValidator, {
-                currentPassword: "oldPass1",
-                newPassword: "abc"
-            });
-
-            expect(result.isEmpty()).toBe(false);
         });
     });
 });

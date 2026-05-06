@@ -1,5 +1,5 @@
 /* ==================================================
-   USER INTEGRATION - GET PUBLIC USER EVENTS
+   USER INTEGRATION - PUBLIC USER EVENTS
 
    Tests:
    - retrieve created events
@@ -18,7 +18,7 @@ const request = require("supertest");
 const app = require("../../../src/app");
 const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
 
-describe("Get Public User Events API", () => {
+describe("Public User Events API", () => {
 
     beforeAll(async () => {
         await initDB();

@@ -4,23 +4,25 @@ const Event = require('../models/eventModel');
 const User = require('../models/userModel');
 const EventUserRole = require('../models/relations/eventUserRoleModel');
 
+const { deleteUploadedFile } = require("../utils/uploadedFileStorage");
+const { assertEventNotPast, getEventStatus } = require('../utils/eventStatus');
+const { buildEventWhereConditions, buildEventCreatorInclude } = require('../utils/eventQueryBuilder');
 const { getPaginationOptions } = require('../utils/pagination');
-const { assertEventNotPast, getEventStatus } = require('../utils/eventTime');
-const { applyStatusFilter, applyEventQueryFilters, buildCreatorInclude } = require('../utils/eventQueryFilters');
-const deleteUploadedFile = require("../utils/deleteUploadedFile");
+
 
 /* ==================================================
    EVENT SERVICE
 
    Handles:
    - event creation
-   - event retrieval
-   - event filtering and pagination
+   - event listing with optional filters and pagination
+   - single event retrieval
    - event update and deletion
    - participant count and status enrichment
 
    Notes:
    - creator is automatically added as organizer
+   - getAllEvents supports filters through query params
    - past events cannot be updated or deleted
    - event images are cleaned after successful update
 ================================================== */
@@ -88,14 +90,13 @@ const createEvent = async (data, userId) => {
    GET EVENTS
 ============================= */
 
-// Get all events with status filter and pagination
-const getAllEvents = async (query) => {
+// Get all events with optional filters and pagination
+const getAllEvents = async (query = {}) => {
     try {
-        const { status } = query;
         const whereConditions = {};
 
-        // Apply status filter before pagination
-        applyStatusFilter(whereConditions, status);
+        // Applies status, date, search, type, theme, mode, location and creatorId filters
+        buildEventWhereConditions(whereConditions, query);
 
         const {
             page,
@@ -104,7 +105,12 @@ const getAllEvents = async (query) => {
             offset,
             orderField,
             orderDirection
-        } = getPaginationOptions(query, ["startDateTime", "title", "creatorId", "createdAt"], "createdAt", "DESC");
+        } = getPaginationOptions(
+            query,
+            ["startDateTime", "title", "creatorId", "createdAt"],
+            "createdAt",
+            "DESC"
+        );
 
         const { count, rows } = await Event.findAndCountAll({
             where: whereConditions,
@@ -115,8 +121,7 @@ const getAllEvents = async (query) => {
                 include: [[fn("COUNT", col("participants.id")), "participantCount"]]
             },
             include: [
-                buildCreatorInclude(User, query.creator),
-
+                buildEventCreatorInclude(User, query.creator),
                 {
                     model: User,
                     as: "participants",
@@ -132,7 +137,6 @@ const getAllEvents = async (query) => {
             subQuery: false
         });
 
-        // Sequelize returns grouped count as an array
         const totalEvents = Array.isArray(count) ? count.length : count;
 
         return {
@@ -147,14 +151,14 @@ const getAllEvents = async (query) => {
         };
 
     } catch (error) {
-        console.error("Error in getting all events:", error);
+        console.error("Error in getEvents service:", error);
         throw error;
     }
 };
 
 
 // Get one event by ID
-const getEventById = async (id) => {
+const getEventByID = async (id) => {
     try {
         const event = await Event.findOne({
             where: { id },
@@ -198,76 +202,12 @@ const getEventById = async (id) => {
     }
 };
 
-
-// Get filtered events with pagination
-const getFilteredEvents = async (query) => {
-    try {
-        const whereConditions = {};
-
-        // Apply generic query filters (search, type, theme, mode, dates)
-        applyEventQueryFilters(whereConditions, query);
-
-        const {
-            page,
-            pageSize,
-            limit,
-            offset,
-            orderField,
-            orderDirection
-        } = getPaginationOptions(query, ["startDateTime", "title", "creatorId", "createdAt"], "createdAt", "DESC");
-
-        const { count, rows } = await Event.findAndCountAll({
-            where: whereConditions,
-            limit,
-            offset,
-            order: [[orderField, orderDirection]],
-            attributes: {
-                include: [[fn("COUNT", col("participants.id")), "participantCount"]]
-            },
-            include: [
-                buildCreatorInclude(User, query.creator),
-
-                {
-                    model: User,
-                    as: "participants",
-                    attributes: [],
-                    through: {
-                        attributes: [],
-                        where: { role: "participant" }
-                    },
-                    required: false
-                }
-            ],
-            group: ["Event.id", "creator.id"],
-            subQuery: false
-        });
-
-        const totalEvents = Array.isArray(count) ? count.length : count;
-
-        return {
-            page,
-            pageSize,
-            totalEvents,
-            totalPages: Math.ceil(totalEvents / pageSize),
-            events: rows.map((event) => ({
-                ...event.toJSON(),
-                status: getEventStatus(event)
-            }))
-        };
-
-    } catch (error) {
-        console.error("Error in filtering events:", error);
-        throw error;
-    }
-};
-
-
 /* =============================
    UPDATE / DELETE EVENT
 ============================= */
 
 // Update an event
-const updateEventById = async (id, data) => {
+const updateEventByID = async (id, data) => {
     try {
         const event = await Event.findByPk(id);
 
@@ -336,7 +276,7 @@ const updateEventById = async (id, data) => {
 
 
 // Delete an event
-const deleteEventById = async (id) => {
+const deleteEventByID = async (id) => {
     try {
         const event = await Event.findByPk(id);
 
@@ -357,4 +297,4 @@ const deleteEventById = async (id) => {
     }
 };
 
-module.exports = { createEvent, getAllEvents, getEventById, getFilteredEvents, updateEventById, deleteEventById };
+module.exports = { createEvent, getAllEvents, getEventByID, updateEventByID, deleteEventByID };

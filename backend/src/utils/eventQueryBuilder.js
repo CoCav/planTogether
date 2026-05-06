@@ -1,0 +1,172 @@
+const { Op } = require("sequelize");
+
+/* ==================================================
+   EVENT QUERY BUILDER
+
+   Handles:
+   - dynamic Sequelize where clause building
+   - event status filtering (past / upcoming)
+   - event date overlap filtering
+   - text search and category filters
+   - event creator include with optional filtering
+
+   Notes:
+   - designed to be reused across services
+   - keeps controllers/services clean
+   - mutates the provided whereConditions object
+================================================== */
+
+/* =============================
+   AND CONDITION HELPER
+============================= */
+
+// Safely append a condition to Op.and
+const addAndCondition = (whereConditions, condition) => {
+    if (!whereConditions[Op.and]) {
+        whereConditions[Op.and] = [];
+    }
+
+    whereConditions[Op.and].push(condition);
+};
+
+
+/* =============================
+   CREATOR INCLUDE BUILDER
+============================= */
+
+// Build event creator include with optional name filtering
+const buildEventCreatorInclude = (User, creator) => ({
+    model: User,
+    as: "creator",
+    attributes: ["id", "name"],
+
+    // Apply name filter only if provided
+    ...(creator && {
+        where: {
+            name: {
+                [Op.iLike]: `%${String(creator).trim()}%`
+            }
+        },
+        required: true // forces INNER JOIN for filtering
+    })
+});
+
+
+/* =============================
+   STATUS FILTER
+============================= */
+
+// Apply event status filtering (past / upcoming)
+const applyEventStatusFilter = (whereConditions, status) => {
+    if (!status) return;
+
+    if (status === "upcoming") {
+        addAndCondition(whereConditions, {
+            endDateTime: { [Op.gte]: new Date() }
+        });
+    }
+
+    if (status === "past") {
+        addAndCondition(whereConditions, {
+            endDateTime: { [Op.lt]: new Date() }
+        });
+    }
+};
+
+
+/* =============================
+   DATE FILTERS (OVERLAP LOGIC)
+============================= */
+
+// Apply event date filtering using overlap logic
+const applyEventDateFilters = (whereConditions, { date, startDate, endDate }) => {
+    if (date) {
+        const start = new Date(`${date}T00:00:00.000`);
+        const end = new Date(`${date}T23:59:59.999`);
+
+        addAndCondition(whereConditions, {
+            startDateTime: { [Op.lte]: end }
+        });
+
+        addAndCondition(whereConditions, {
+            endDateTime: { [Op.gte]: start }
+        });
+
+        return;
+    }
+
+    if (startDate || endDate) {
+        const start = startDate ? new Date(`${startDate}T00:00:00.000`) : null;
+        const end = endDate ? new Date(`${endDate}T23:59:59.999`) : null;
+
+        if (start && end) {
+            addAndCondition(whereConditions, {
+                startDateTime: { [Op.lte]: end }
+            });
+
+            addAndCondition(whereConditions, {
+                endDateTime: { [Op.gte]: start }
+            });
+        } else if (start) {
+            addAndCondition(whereConditions, {
+                startDateTime: { [Op.gte]: start }
+            });
+        } else if (end) {
+            addAndCondition(whereConditions, {
+                startDateTime: { [Op.lte]: end }
+            });
+        }
+    }
+};
+
+
+/* =============================
+   BASIC EVENT FILTERS
+============================= */
+
+// Apply basic event filters (search, type, theme, etc.)
+const applyEventBasicFilters = (whereConditions, query = {}) => {
+    const {
+        creatorId,
+        type,
+        theme,
+        location,
+        mode,
+        search
+    } = query;
+
+    if (creatorId) whereConditions.creatorId = parseInt(creatorId, 10);
+    if (mode) whereConditions.mode = String(mode).trim();
+    if (type) whereConditions.type = { [Op.iLike]: `%${type}%` };
+    if (theme) whereConditions.theme = { [Op.iLike]: `%${theme}%` };
+    if (location) whereConditions.location = { [Op.iLike]: `%${location}%` };
+
+    // Search on title + description
+    if (search) {
+        whereConditions[Op.or] = [
+            { title: { [Op.iLike]: `%${search}%` } },
+            { description: { [Op.iLike]: `%${search}%` } }
+        ];
+    }
+};
+
+
+/* =============================
+   MAIN QUERY BUILDER
+============================= */
+
+// Build all event where conditions from query params
+const buildEventWhereConditions = (whereConditions, query = {}, options = {}) => {
+    const { includeStatus = true } = options;
+
+    if (includeStatus) {
+        applyEventStatusFilter(whereConditions, query.status);
+    }
+
+    applyEventDateFilters(whereConditions, query);
+    applyEventBasicFilters(whereConditions, query);
+
+    return whereConditions;
+};
+
+module.exports = { addAndCondition, buildEventCreatorInclude, applyEventStatusFilter, applyEventDateFilters, applyEventBasicFilters, buildEventWhereConditions };

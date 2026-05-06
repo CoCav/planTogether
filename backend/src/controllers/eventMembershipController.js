@@ -5,12 +5,13 @@ const eventMembershipService = require('../services/eventMembershipService');
 
    Handles:
    - joining and leaving events
-   - retrieving current user's events
-   - retrieving event members and organizer / co_organizer(s)
+   - retrieving event members
+   - retrieving event staff (organizer and co-organizers)
    - updating member roles
    - removing members from events
 
    Notes:
+   - current user event listing belongs to userController
    - authorization is handled by route middlewares
    - business logic is delegated to eventMembershipService
 ================================================== */
@@ -55,42 +56,19 @@ const leaveEvent = async (req, res, next) => {
     }
 };
 
-
-/* =============================
-   CURRENT USER EVENTS
-============================= */
-
-// Get authenticated user's events
-const getMyEvents = async (req, res, next) => {
-    try {
-        const userId = req.user.userId;
-
-        const result = await eventMembershipService.listMyEvents(userId, req.query);
-
-        return res.status(200).json({
-            message: 'Events retrieved successfully',
-            ...result
-        });
-
-    } catch (error) {
-        return next(error);
-    }
-};
-
-
 /* ==================================================
    MEMBERS / ORGANIZER / CO-ORGANIZERS
 ================================================== */
 
 // Get all members of an event
-const getMembers = async (req, res, next) => {
+const getEventMembers = async (req, res, next) => {
     try {
         const eventId = req.params.eventId;
 
-        const members = await eventMembershipService.listMembers(eventId);
+        const members = await eventMembershipService.getEventMembers(eventId);
 
         return res.status(200).json({
-            message: 'Members retrieved successfully',
+            message: 'All event Members retrieved successfully',
             members
         });
 
@@ -101,15 +79,15 @@ const getMembers = async (req, res, next) => {
 
 
 // Get organizer / co-organizer(s) of an event
-const getOrganizers = async (req, res, next) => {
+const getEventStaff = async (req, res, next) => {
     try {
         const eventId = req.params.eventId;
 
-        const organizers = await eventMembershipService.listOrganizers(eventId);
+        const eventStaff = await eventMembershipService.getEventStaff(eventId);
 
         return res.status(200).json({
-            message: 'Organizers retrieved successfully',
-            organizers
+            message: 'Event Staff retrieved successfully',
+            eventStaff
         });
 
     } catch (error) {
@@ -122,21 +100,21 @@ const getOrganizers = async (req, res, next) => {
    ROLE MANAGEMENT
 ============================= */
 
-// Update member role
-const updateMemberRole = async (req, res, next) => {
+// Update a member's in an event
+const updateEventMemberRole = async (req, res, next) => {
     try {
         const eventId = req.params.eventId;
         const userId = req.params.userId;
         const { newRole } = req.body;
 
-        const membership = await eventMembershipService.updateMemberRole({
+        const membership = await eventMembershipService.updateEventMemberRole({
             eventId,
             userId,
             newRole
         });
 
         return res.status(200).json({
-            message: 'User role updated successfully',
+            message: 'Event User role updated successfully',
             membership
         });
 
@@ -146,19 +124,19 @@ const updateMemberRole = async (req, res, next) => {
 };
 
 
-// Remove member from an event
-const removeMember = async (req, res, next) => {
+// Remove a member from an event
+const removeEventMember = async (req, res, next) => {
     try {
         const eventId = req.params.eventId;
         const userId = req.params.userId;
 
-        await eventMembershipService.removeMember({
+        await eventMembershipService.removeEventMember({
             eventId,
             userId
         });
 
         return res.status(200).json({
-            message: 'Member removed successfully'
+            message: 'Event member removed successfully'
         });
 
     } catch (error) {
@@ -166,4 +144,4 @@ const removeMember = async (req, res, next) => {
     }
 };
 
-module.exports = { joinEvent, leaveEvent, getMyEvents, getMembers, getOrganizers, updateMemberRole, removeMember };
+module.exports = { joinEvent, leaveEvent, getEventMembers, getEventStaff, updateEventMemberRole, removeEventMember };

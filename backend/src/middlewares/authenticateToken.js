@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 /* ==================================================
-   AUTHENTICATION MIDDLEWARE
+   AUTHENTICATE TOKEN MIDDLEWARE
 
    Handles:
    - JWT extraction from Authorization header

@@ -8,7 +8,7 @@ const { body } = require('express-validator');
    - login validation
 
    Notes:
-   - validateRequest must run after these validators
+   - handleValidationErrors must run after these validators
    - email values are normalized before reaching controllers
    - user profile/password validators belong to userValidator
 ================================================== */

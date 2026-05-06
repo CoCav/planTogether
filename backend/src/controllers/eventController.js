@@ -5,10 +5,11 @@ const eventService = require('../services/eventService');
 
    Handles:
    - event creation
-   - event retrieval
-   - event filtering
+   - event listing with optional filters and pagination
+   - single event retrieval
    - event update
    - event deletion
+   - API response formatting
 
    Notes:
    - business logic is delegated to eventService
@@ -47,13 +48,13 @@ const createEvent = async (req, res, next) => {
    GET EVENTS
 ============================= */
 
-// Get all events
+// Get all events with optional filters and pagination
 const getAllEvents = async (req, res, next) => {
     try {
         const events = await eventService.getAllEvents(req.query);
 
         return res.status(200).json({
-            message: "All events retrieved successfully",
+            message: "Events retrieved successfully",
             ...events
         });
 
@@ -62,11 +63,10 @@ const getAllEvents = async (req, res, next) => {
     }
 };
 
-
 // Get one event by ID
 const getEvent = async (req, res, next) => {
     try {
-        const event = await eventService.getEventById(req.params.eventId);
+        const event = await eventService.getEventByID(req.params.eventId);
 
         return res.status(200).json({
             message: "Event retrieved successfully",
@@ -78,20 +78,6 @@ const getEvent = async (req, res, next) => {
     }
 };
 
-
-// Get filtered events
-const getFilteredEvents = async (req, res, next) => {
-    try {
-        const result = await eventService.getFilteredEvents(req.query);
-
-        return res.status(200).json(result);
-
-    } catch (error) {
-        return next(error);
-    }
-};
-
-
 /* =============================
    UPDATE / DELETE EVENT
 ============================= */
@@ -102,7 +88,7 @@ const updateEvent = async (req, res, next) => {
         // Undefined keeps existing image unchanged in service
         const image = req.file ? `/uploads/events/${req.file.filename}` : undefined;
 
-        const updatedEvent = await eventService.updateEventById(
+        const updatedEvent = await eventService.updateEventByID(
             req.params.eventId,
             {
                 ...req.body,
@@ -124,7 +110,7 @@ const updateEvent = async (req, res, next) => {
 // Delete an event
 const deleteEvent = async (req, res, next) => {
     try {
-        await eventService.deleteEventById(req.params.eventId);
+        await eventService.deleteEventByID(req.params.eventId);
 
         return res.status(200).json({
             message: 'Event deleted successfully'
@@ -135,4 +121,4 @@ const deleteEvent = async (req, res, next) => {
     }
 };
 
-module.exports = { createEvent, getAllEvents, getEvent, getFilteredEvents, updateEvent, deleteEvent };
+module.exports = { createEvent, getAllEvents, getEvent, updateEvent, deleteEvent };

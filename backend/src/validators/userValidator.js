@@ -1,25 +1,107 @@
-const { body, param } = require("express-validator");
+const { body, param, query } = require("express-validator");
 
 /* ==================================================
    USER VALIDATORS
 
    Handles:
-   - authenticated profile update data
-   - authenticated password update data
-   - public user profile params
-   - public user events params
+   - authenticated current user profile update validation
+   - authenticated current user password update validation
+   - authenticated current user events query validation
+   - public user ID param validation
 
    Notes:
-   - validateRequest must run after these validators
-   - /me routes use JWT userId and do not need id param validation
-   - /:id routes validate public user ID params
+   - handleValidationErrors must run after these validators
+   - /me routes use JWT userId and do not need param validation
+   - /:id routes validate public user IDs
 ================================================== */
-
 /* =============================
    AUTHENTICATED USER
 ============================= */
 
-// Validate authenticated profile update data
+// Validate authenticated current user's events query params
+const getCurrentUserEventsValidator = [
+    query("view")
+        .optional()
+        .isIn(["created", "joined", "createdHistory", "joinedHistory"])
+        .withMessage("View must be one of: created, joined, createdHistory, joinedHistory"),
+
+    query("status")
+        .optional()
+        .isIn(["upcoming", "past"])
+        .withMessage("Status must be upcoming or past"),
+
+    query("creatorId")
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage("Creator ID must be a positive integer")
+        .toInt(),
+
+    query("creator")
+        .optional()
+        .trim(),
+
+    query("mode")
+        .optional()
+        .isIn(["online", "in_person"])
+        .withMessage("Mode must be online or in_person"),
+
+    query("type")
+        .optional()
+        .trim(),
+
+    query("theme")
+        .optional()
+        .trim(),
+
+    query("location")
+        .optional()
+        .trim(),
+
+    query("search")
+        .optional()
+        .trim(),
+
+    query("date")
+        .optional()
+        .isISO8601()
+        .withMessage("Date must be a valid ISO8601 date"),
+
+    query("startDate")
+        .optional()
+        .isISO8601()
+        .withMessage("Start date must be a valid ISO8601 date"),
+
+    query("endDate")
+        .optional()
+        .isISO8601()
+        .withMessage("End date must be a valid ISO8601 date"),
+
+    query("page")
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage("Page must be a positive integer")
+        .toInt(),
+
+    query("pageSize")
+        .optional()
+        .isInt({ min: 1, max: 100 })
+        .withMessage("Page size must be between 1 and 100")
+        .toInt(),
+
+    query("sortBy")
+        .optional()
+        .isIn(["startDateTime", "title", "createdAt"])
+        .withMessage("Sort field must be one of: startDateTime, title, createdAt"),
+
+    query("order")
+        .optional()
+        .toLowerCase()
+        .isIn(["asc", "desc"])
+        .withMessage("Order must be asc or desc")
+];
+
+
+// Validate authenticated current user profile update data
 const updateCurrentUserProfileValidator = [
     body("name")
         .optional()
@@ -33,7 +115,8 @@ const updateCurrentUserProfileValidator = [
         .normalizeEmail()
 ];
 
-// Validate authenticated password update data
+
+// Validate authenticated current user password update data
 const changeCurrentUserPasswordValidator = [
     body("currentPassword")
         .notEmpty().withMessage("Current password is required"),
@@ -58,4 +141,4 @@ const userIdParamValidator = [
         .toInt()
 ];
 
-module.exports = { updateCurrentUserProfileValidator, changeCurrentUserPasswordValidator, userIdParamValidator };
+module.exports = { getCurrentUserEventsValidator, updateCurrentUserProfileValidator, changeCurrentUserPasswordValidator, userIdParamValidator };

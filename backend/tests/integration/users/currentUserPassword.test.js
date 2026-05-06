@@ -1,5 +1,5 @@
 /* ==================================================
-   AUTH INTEGRATION - CURRENT USER PASSWORD
+   USER INTEGRATION - CURRENT USER PASSWORD
 
    Tests:
    - successful password update

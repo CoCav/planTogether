@@ -4,40 +4,36 @@ const router = express.Router();
 const eventController = require('../controllers/eventController');
 
 const { authenticateToken } = require('../middlewares/authenticateToken');
-const { uploadEventImage } = require('../middlewares/uploadFile');
-const validateRequest = require('../middlewares/validateRequest');
-const { requireEventRole } = require('../middlewares/requireEventRole');
+const { uploadEventImage } = require('../middlewares/uploadFiles');
+const handleValidationErrors = require("../middlewares/handleValidationErrors");
+const authorizeEventRole = require('../middlewares/authorizeEventRole');
 
-const { createEventValidator, updateEventValidator, eventIdParamValidator } = require('../validators/eventValidator');
+const { eventIdParamValidator, createEventValidator, updateEventValidator, getAllEventsValidator } = require('../validators/eventValidator');
 
 /* ==================================================
    EVENT ROUTES
 
    Handles:
    - event creation
-   - event listing
-   - filtered event listing
+   - event listing with optional query filters
    - single event retrieval
    - event update
    - event deletion
 
    Notes:
-   - static routes must be declared before /:eventId
+   - /api/events is the main listing endpoint
    - update/delete routes require event role authorization
+   - static routes must be declared before /:eventId if added later
 ================================================== */
 
 /* =============================
    READ EVENTS
 ============================= */
 
-// Get filtered events
-router.get('/filtered', eventController.getFilteredEvents);
-
-// Get all events
-router.get('/', eventController.getAllEvents);
-
+// Get all events with optional filters and pagination
+router.get("/", getAllEventsValidator, handleValidationErrors, eventController.getAllEvents);
 // Get one event by ID
-router.get('/:eventId', eventIdParamValidator, validateRequest, eventController.getEvent);
+router.get('/:eventId', eventIdParamValidator, handleValidationErrors, eventController.getEvent);
 
 
 /* =============================
@@ -45,12 +41,12 @@ router.get('/:eventId', eventIdParamValidator, validateRequest, eventController.
 ============================= */
 
 // Create a new event
-router.post('/', authenticateToken, uploadEventImage.single("image"), createEventValidator, validateRequest, eventController.createEvent);
+router.post('/', authenticateToken, uploadEventImage.single("image"), createEventValidator, handleValidationErrors, eventController.createEvent);
 
 // Update an event
-router.put('/:eventId', authenticateToken, uploadEventImage.single("image"), eventIdParamValidator, updateEventValidator, validateRequest, requireEventRole(['organizer', 'co_organizer']), eventController.updateEvent);
+router.put("/:eventId", uploadEventImage.single("image"), authenticateToken, eventIdParamValidator, updateEventValidator, handleValidationErrors, authorizeEventRole(["organizer", "co_organizer"]), eventController.updateEvent);
 
 // Delete an event
-router.delete('/:eventId', authenticateToken, eventIdParamValidator, validateRequest, requireEventRole(['organizer']), eventController.deleteEvent);
+router.delete('/:eventId', authenticateToken, eventIdParamValidator, handleValidationErrors, authorizeEventRole(['organizer']), eventController.deleteEvent);
 
 module.exports = router;

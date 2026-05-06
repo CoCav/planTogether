@@ -1,19 +1,25 @@
+const { Op } = require("sequelize");
 const bcrypt = require("bcrypt");
 
 const User = require("../models/userModel");
 const Event = require("../models/eventModel");
 const EventUserRole = require("../models/relations/eventUserRoleModel");
-const deleteUploadedFile = require("../utils/deleteUploadedFile");
+
+const { deleteUploadedFile } = require("../utils/uploadedFileStorage");
+const { buildEventWhereConditions, buildEventCreatorInclude } = require("../utils/eventQueryBuilder");
+const { getEventStatus } = require("../utils/eventStatus");
+const { getPaginationOptions } = require("../utils/pagination");
 
 /* ==================================================
    USER SERVICE
 
    Handles:
-   - authenticated user profile retrieval
-   - authenticated profile update
-   - authenticated password update
+   - authenticated current user events retrieval
+   - authenticated current user profile retrieval
+   - authenticated current user profile update
+   - authenticated current user password update
    - public user profile retrieval
-   - public user event retrieval
+   - public user events retrieval
    - public profile statistics
 
    Notes:
@@ -22,12 +28,157 @@ const deleteUploadedFile = require("../utils/deleteUploadedFile");
    - EventUserRole includes events with alias "event"
 ================================================== */
 
-/* =============================
-   AUTHENTICATED PROFILE
-============================= */
+/* ==================================================
+   AUTHENTICATED USER
+================================================== */
 
-// Get authenticated user profile
-const getCurrentUserProfileById = async (userId) => {
+// Get all paginated events of the current user by ID
+const getCurrentUserEventsByID = async (userId, query = {}) => {
+    try {
+        const { view } = query;
+        const now = new Date();
+
+        const user = await User.findByPk(userId);
+
+        if (!user) {
+            const error = new Error("User not found");
+            error.statusCode = 404;
+            throw error;
+        }
+
+        /* =========================
+           View-based filters
+        ========================= */
+
+        const isHistoryView = view === "createdHistory" || view === "joinedHistory";
+
+        const roleFilter = !view
+            ? undefined
+            : view === "created" || view === "createdHistory"
+                ? "organizer"
+                : { [Op.in]: ["participant", "co_organizer"] };
+
+        const eventDateFilter = !view
+            ? {}
+            : isHistoryView
+                ? { endDateTime: { [Op.lt]: now } }
+                : { endDateTime: { [Op.gte]: now } };
+
+
+        /* =========================
+           Event filters
+        ========================= */
+
+        const { creator, ...eventQuery } = query;
+
+        const eventFilter = { ...eventDateFilter };
+        buildEventWhereConditions(eventFilter, eventQuery, { includeStatus: false });
+
+
+        /* =========================
+           Pagination
+        ========================= */
+
+        const paginationQuery = {
+            ...query,
+            sortBy: query.sortBy || "startDateTime",
+            order: query.order || (isHistoryView ? "desc" : "asc")
+        };
+
+        const {
+            page,
+            pageSize,
+            limit,
+            offset,
+            orderField,
+            orderDirection
+        } = getPaginationOptions(
+            paginationQuery,
+            ["startDateTime", "title", "createdAt"],
+            "startDateTime",
+            isHistoryView ? "DESC" : "ASC"
+        );
+
+
+        /* =========================
+           Query database
+        ========================= */
+
+        const { count, rows } = await EventUserRole.findAndCountAll({
+            where: {
+                userId,
+                ...(roleFilter && { role: roleFilter })
+            },
+            include: [{
+                model: Event,
+                as: "event",
+                where: eventFilter,
+                attributes: [
+                    "id",
+                    "title",
+                    "description",
+                    "type",
+                    "theme",
+                    "mode",
+                    "location",
+                    "startDateTime",
+                    "endDateTime",
+                    "maxParticipants",
+                    "registrationDeadline",
+                    "creatorId"
+                ],
+                include: [
+                    buildEventCreatorInclude(User, creator)
+                ]
+            }],
+            limit,
+            offset,
+            order: [[{ model: Event, as: "event" }, orderField, orderDirection]]
+        });
+
+
+        /* =========================
+           Data enrichment
+        ========================= */
+
+        const events = await Promise.all(
+            rows.map(async (membership) => {
+                const data = membership.toJSON();
+
+                const participantCount = await EventUserRole.count({
+                    where: {
+                        eventId: data.event.id,
+                        role: "participant"
+                    }
+                });
+
+                return {
+                    ...data,
+                    event: {
+                        ...data.event,
+                        participantCount,
+                        status: getEventStatus(data.event)
+                    }
+                };
+            })
+        );
+
+        return {
+            page,
+            pageSize,
+            totalEvents: count,
+            totalPages: Math.ceil(count / pageSize),
+            events
+        };
+
+    } catch (error) {
+        console.error("Error in getCurrentUserEvents service:", error);
+        throw error;
+    }
+};
+
+// Get current user profile by ID
+const getCurrentUserProfileByID = async (userId) => {
     try {
         const user = await User.findByPk(userId);
 
@@ -46,8 +197,8 @@ const getCurrentUserProfileById = async (userId) => {
 };
 
 
-// Update authenticated user profile
-const updateCurrentUserProfileById = async (userId, updatedData) => {
+// Update current user profile by ID
+const updateCurrentUserProfileByID = async (userId, updatedData) => {
     try {
         const user = await User.findByPk(userId);
 
@@ -96,13 +247,8 @@ const updateCurrentUserProfileById = async (userId, updatedData) => {
     }
 };
 
-
-/* =============================
-   PASSWORD
-============================= */
-
-// Change authenticated user password
-const changeCurrentUserPasswordById = async (userId, currentPassword, newPassword) => {
+// Change current user password by ID
+const changeCurrentUserPasswordByID = async (userId, currentPassword, newPassword) => {
     try {
         const user = await User.scope("withPassword").findByPk(userId);
 
@@ -142,11 +288,11 @@ const changeCurrentUserPasswordById = async (userId, currentPassword, newPasswor
 
 
 /* =============================
-   PUBLIC PROFILE
+   PUBLIC USER
 ============================= */
 
 // Get public user profile by ID
-const getPublicUserProfileById = async (userId) => {
+const getPublicUserProfileByID = async (userId) => {
     const user = await User.findByPk(userId, {
         attributes: ["name", "avatar"]
     });
@@ -174,13 +320,8 @@ const getPublicUserProfileById = async (userId) => {
     };
 };
 
-
-/* =============================
-   PUBLIC USER EVENTS
-============================= */
-
 // Get public events created and joined by a user
-const getPublicUserEventsById = async (userId) => {
+const getPublicUserEventsByID = async (userId) => {
     const user = await User.findByPk(userId);
 
     if (!user) {
@@ -215,4 +356,4 @@ const getPublicUserEventsById = async (userId) => {
     };
 };
 
-module.exports = { getCurrentUserProfileById, updateCurrentUserProfileById, changeCurrentUserPasswordById, getPublicUserProfileById, getPublicUserEventsById };
+module.exports = { getCurrentUserEventsByID, getCurrentUserProfileByID, updateCurrentUserProfileByID, changeCurrentUserPasswordByID, getPublicUserProfileByID, getPublicUserEventsByID };

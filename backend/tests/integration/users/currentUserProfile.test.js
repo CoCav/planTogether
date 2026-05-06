@@ -1,5 +1,5 @@
 /* ==================================================
-   AUTH INTEGRATION - CURRENT USER PROFILE
+   USER INTEGRATION - CURRENT USER PROFILE
 
    Tests:
    - authenticated profile retrieval

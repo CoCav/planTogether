@@ -4,6 +4,7 @@ const userService = require("../services/userService");
    USER CONTROLLER
 
    Handles:
+   - authenticated user events retrieval
    - authenticated user profile retrieval
    - authenticated profile update
    - authenticated password update
@@ -12,21 +13,38 @@ const userService = require("../services/userService");
    - API response formatting
 
    Notes:
-   - private profile routes use req.user.userId
+   - current user routes use req.user.userId
    - public routes use req.params.id
    - sensitive public user fields are filtered in userService
 ================================================== */
 
 /* =============================
-   AUTHENTICATED PROFILE
+   AUTHENTICATED USER
 ============================= */
+
+// Get authenticated user's events
+const getCurrentUserEvents = async (req, res, next) => {
+    try {
+        const userId = req.user.userId;
+
+        const result = await userService.getCurrentUserEventsByID(userId, req.query);
+
+        return res.status(200).json({
+            message: "Events retrieved successfully",
+            ...result
+        });
+
+    } catch (error) {
+        return next(error);
+    }
+};
 
 // Get authenticated user profile
 const getCurrentUserProfile = async (req, res, next) => {
     try {
         const userId = req.user.userId;
 
-        const user = await userService.getCurrentUserProfileById(userId);
+        const user = await userService.getCurrentUserProfileByID(userId);
 
         return res.status(200).json({
             message: "User profile retrieved successfully",
@@ -58,7 +76,7 @@ const updateCurrentUserProfile = async (req, res, next) => {
             updatedData.avatar = `/uploads/avatars/${req.file.filename}`;
         }
 
-        const user = await userService.updateCurrentUserProfileById(userId, updatedData);
+        const user = await userService.updateCurrentUserProfileByID(userId, updatedData);
 
         return res.status(200).json({
             message: "User profile updated successfully",
@@ -75,18 +93,13 @@ const updateCurrentUserProfile = async (req, res, next) => {
     }
 };
 
-
-/* =============================
-   PASSWORD
-============================= */
-
 // Change authenticated user password
 const changeCurrentUserPassword = async (req, res, next) => {
     try {
         const userId = req.user.userId;
         const { currentPassword, newPassword } = req.body;
 
-        await userService.changeCurrentUserPasswordById(
+        await userService.changeCurrentUserPasswordByID(
             userId,
             currentPassword,
             newPassword
@@ -103,13 +116,13 @@ const changeCurrentUserPassword = async (req, res, next) => {
 
 
 /* =============================
-   PUBLIC PROFILE
+   PUBLIC USER
 ============================= */
 
 // Get public user profile
 const getPublicUserProfile = async (req, res, next) => {
     try {
-        const profile = await userService.getPublicUserProfileById(req.params.id);
+        const profile = await userService.getPublicUserProfileByID(req.params.id);
 
         return res.status(200).json(profile);
 
@@ -118,15 +131,10 @@ const getPublicUserProfile = async (req, res, next) => {
     }
 };
 
-
-/* =============================
-   PUBLIC USER EVENTS
-============================= */
-
 // Get public events created and joined by a user
 const getPublicUserEvents = async (req, res, next) => {
     try {
-        const events = await userService.getPublicUserEventsById(req.params.id);
+        const events = await userService.getPublicUserEventsByID(req.params.id);
 
         return res.status(200).json(events);
 
@@ -135,4 +143,4 @@ const getPublicUserEvents = async (req, res, next) => {
     }
 };
 
-module.exports = { getCurrentUserProfile, updateCurrentUserProfile, changeCurrentUserPassword, getPublicUserProfile, getPublicUserEvents };
+module.exports = { getCurrentUserEvents, getCurrentUserProfile, updateCurrentUserProfile, changeCurrentUserPassword, getPublicUserProfile, getPublicUserEvents };

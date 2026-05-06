@@ -4,39 +4,43 @@ const router = express.Router();
 const userController = require("../controllers/userController");
 
 const { authenticateToken } = require("../middlewares/authenticateToken");
-const { uploadAvatar } = require("../middlewares/uploadFile");
-const validateRequest = require("../middlewares/validateRequest");
+const { uploadAvatar } = require("../middlewares/uploadFiles");
+const handleValidationErrors = require("../middlewares/handleValidationErrors");
 
-const { updateCurrentUserProfileValidator, changeCurrentUserPasswordValidator, userIdParamValidator } = require("../validators/userValidator");
+const { userIdParamValidator, updateCurrentUserProfileValidator, changeCurrentUserPasswordValidator } = require("../validators/userValidator");
 
 /* ==================================================
    USER ROUTES
 
    Handles:
-   - authenticated user profile retrieval
-   - authenticated profile update
-   - authenticated password update
+   - authenticated current user events retrieval
+   - authenticated current user profile retrieval
+   - authenticated current user profile update
+   - authenticated current user password update
    - public user profile retrieval
    - public user events retrieval
 
    Notes:
    - /me routes use authenticated userId from JWT
-   - /:id routes use public user id route param
-   - public profile response hides sensitive user fields
+   - /:id routes use public user ID route params
+   - public profile responses hide sensitive user fields
 ================================================== */
 
 /* =============================
    AUTHENTICATED USER
 ============================= */
 
-// Get authenticated user profile
+// Get all paginated events of the current user
+router.get('/me/events', authenticateToken, userController.getCurrentUserEvents);
+
+// Get current user profile
 router.get("/me", authenticateToken, userController.getCurrentUserProfile);
 
-// Update authenticated user profile
-router.put("/me", uploadAvatar.single("avatar"), authenticateToken, updateCurrentUserProfileValidator, validateRequest, userController.updateCurrentUserProfile);
+// Update current user profile
+router.put("/me", uploadAvatar.single("avatar"), authenticateToken, updateCurrentUserProfileValidator, handleValidationErrors, userController.updateCurrentUserProfile);
 
-// Change authenticated user's password
-router.put("/me/password", authenticateToken, changeCurrentUserPasswordValidator, validateRequest, userController.changeCurrentUserPassword);
+// Change current user's password
+router.put("/me/password", authenticateToken, changeCurrentUserPasswordValidator, handleValidationErrors, userController.changeCurrentUserPassword);
 
 
 /* =============================
@@ -44,9 +48,9 @@ router.put("/me/password", authenticateToken, changeCurrentUserPasswordValidator
 ============================= */
 
 // Get public user profile
-router.get("/:id", authenticateToken, userIdParamValidator, validateRequest, userController.getPublicUserProfile);
+router.get("/:id", authenticateToken, userIdParamValidator, handleValidationErrors, userController.getPublicUserProfile);
 
 // Get public user events
-router.get("/:id/events", authenticateToken, userIdParamValidator, validateRequest, userController.getPublicUserEvents);
+router.get("/:id/events", authenticateToken, userIdParamValidator, handleValidationErrors, userController.getPublicUserEvents);
 
 module.exports = router;

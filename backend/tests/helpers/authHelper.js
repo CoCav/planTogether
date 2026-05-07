@@ -8,15 +8,15 @@
 
    Notes:
    - shared across integration tests
-   - returns auth token + created user data
+   - returns auth token, auth headers, email, password and raw response
+   - auth headers can be passed directly to Supertest .set()
 ================================================== */
 
 const request = require("supertest");
 const app = require("../../src/app");
 
-// Register test user and return auth data
+// Register a test user and return reusable auth data
 const registerAndGetToken = async ({ name = "Test User", email = `user${Date.now()}@test.com`, password = "Password123" } = {}) => {
-
     const res = await request(app)
         .post("/api/auth/register")
         .send({

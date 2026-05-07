@@ -7,13 +7,14 @@
 
    Notes:
    - shared across integration tests
-   - expects auth headers from authHelper
+   - createEvent expects auth headers from authHelper
+   - createEvent returns the full Supertest response
 ================================================== */
 
 const request = require("supertest");
 const app = require("../../src/app");
 
-// Generate valid event payload
+// Generate a valid event payload with optional overrides
 const getValidEventPayload = (overrides = {}) => ({
     title: "Test Event",
     description: "This is a test event",
@@ -26,7 +27,7 @@ const getValidEventPayload = (overrides = {}) => ({
     ...overrides
 });
 
-// Create authenticated event
+// Create an authenticated event and return the full response
 const createEvent = async (headers, overrides = {}) => {
     return request(app)
         .post("/api/events")

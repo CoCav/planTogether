@@ -10,16 +10,21 @@
    - authentication middleware protects logout route
    - valid tokens can access the endpoint
    - invalid or missing tokens are rejected
+   - logout remains stateless with JWT authentication
 
    Notes:
    - logout is stateless because authentication uses JWT
 ================================================== */
 
-const request = require('supertest');
-const app = require('../../../src/app');
-const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
+const request = require("supertest");
+const app = require("../../../src/app");
 
-describe('Logout API', () => {
+const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
+
+const { registerAndGetToken } = require("../../helpers/authHelper");
+
+describe("Logout API", () => {
+
     beforeAll(async () => {
         await initDB();
     });
@@ -35,40 +40,42 @@ describe('Logout API', () => {
     });
 
     /* =============================
-       LOGOUT
+       LOGOUT SUCCESS
     ============================= */
 
-    it('should logout authenticated user', async () => {
-        const registerRes = await request(app).post('/api/auth/register').send({
-            name: 'Logout User',
-            email: `logout${Date.now()}@test.com`,
-            password: 'Password123'
+    it("should logout authenticated user", async () => {
+        const userAuth = await registerAndGetToken({
+            name: "Logout User",
+            email: `logout${Date.now()}@test.com`
         });
 
-        const token = registerRes.body.token;
-
         const res = await request(app)
-            .post('/api/auth/logout')
-            .set('Authorization', `Bearer ${token}`);
+            .post("/api/auth/logout")
+            .set(userAuth.headers);
 
         expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty('message', 'Logout successful');
+
+        expect(res.body).toHaveProperty(
+            "message",
+            "Logout successful"
+        );
     });
 
     /* =============================
        AUTHENTICATION ERRORS
     ============================= */
 
-    it('should reject without token', async () => {
-        const res = await request(app).post('/api/auth/logout');
+    it("should reject without token", async () => {
+        const res = await request(app)
+            .post("/api/auth/logout");
 
         expect(res.statusCode).toBe(401);
     });
 
-    it('should reject invalid token', async () => {
+    it("should reject invalid token", async () => {
         const res = await request(app)
-            .post('/api/auth/logout')
-            .set('Authorization', 'Bearer invalid-token');
+            .post("/api/auth/logout")
+            .set("Authorization", "Bearer invalid-token");
 
         expect(res.statusCode).toBe(401);
     });

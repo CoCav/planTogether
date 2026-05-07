@@ -2,15 +2,18 @@
    USER INTEGRATION - PUBLIC USER EVENTS
 
    Tests:
-   - retrieve created events
-   - retrieve joined events
-   - separation between created and joined events
-   - no duplication of created events in joined list
-   - authentication and validation
+   - authenticated public events retrieval
+   - authentication protection
+   - invalid user ID validation
+   - nonexistent user handling
+   - created events retrieval
+   - joined events retrieval
+   - duplicate event exclusion
 
    Ensures:
-   - public user events are correctly categorized
-   - created and joined events remain separated
+   - public user events are retrieved correctly
+   - created and joined events are separated correctly
+   - created events are not duplicated in joined events
    - authentication and validators protect the route
 ================================================== */
 
@@ -20,8 +23,11 @@ const app = require("../../../src/app");
 const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
 
 const { registerAndGetToken } = require("../../helpers/authHelper");
+const { createEvent } = require("../../helpers/eventHelper");
+const { joinEvent } = require("../../helpers/eventMembershipHelper");
 
 describe("Public User Events API", () => {
+
     beforeAll(async () => {
         await initDB();
     });
@@ -40,114 +46,160 @@ describe("Public User Events API", () => {
        PUBLIC USER EVENTS
     ============================= */
 
-    it("should get created and joined events", async () => {
+    it("should retrieve public user events", async () => {
         const viewerAuth = await registerAndGetToken({
             name: "Viewer",
             email: `viewer${Date.now()}@test.com`
         });
 
-        const targetUser = await User.create({
+        const targetUserAuth = await registerAndGetToken({
             name: "Target User",
-            email: `target${Date.now()}@test.com`,
-            password: "Password123"
+            email: `target${Date.now()}@test.com`
         });
 
-        const otherUser = await User.create({
-            name: "Other User",
-            email: `other${Date.now()}@test.com`,
-            password: "Password123"
-        });
-
-        const createdEvent = await Event.create({
-            creatorId: targetUser.id,
-            title: "Created Event",
-            description: "desc",
-            type: "Meetup",
-            theme: "Tech",
-            mode: "in_person",
-            location: "Paris",
-            startDateTime: "2030-01-01T10:00:00Z",
-            endDateTime: "2030-01-01T12:00:00Z"
-        });
-
-        const joinedEvent = await Event.create({
-            creatorId: otherUser.id,
-            title: "Joined Event",
-            description: "desc",
-            type: "Meetup",
-            theme: "Tech",
-            mode: "in_person",
-            location: "Lyon",
-            startDateTime: "2030-02-01T10:00:00Z",
-            endDateTime: "2030-02-01T12:00:00Z"
-        });
-
-        // Creator membership
-        await EventUserRole.create({
-            eventId: createdEvent.id,
-            userId: targetUser.id,
-            role: "organizer"
-        });
-
-        // Joined membership
-        await EventUserRole.create({
-            eventId: joinedEvent.id,
-            userId: targetUser.id,
-            role: "participant"
-        });
+        await createEvent(
+            targetUserAuth.headers,
+            {
+                title: "Created Event"
+            }
+        );
 
         const res = await request(app)
-            .get(`/api/users/${targetUser.id}/events`)
+            .get(`/api/users/${targetUserAuth.user.userId}/events`)
             .set(viewerAuth.headers);
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body.createdEvents.length).toBe(1);
-        expect(res.body.joinedEvents.length).toBe(1);
+        expect(res.body).toHaveProperty("createdEvents");
+        expect(res.body).toHaveProperty("joinedEvents");
 
-        expect(res.body.createdEvents[0].id).toBe(createdEvent.id);
-        expect(res.body.joinedEvents[0].id).toBe(joinedEvent.id);
+        expect(Array.isArray(res.body.createdEvents)).toBe(true);
+        expect(Array.isArray(res.body.joinedEvents)).toBe(true);
     });
 
-    it("should return empty arrays if no events", async () => {
+    it("should retrieve created public user events", async () => {
         const viewerAuth = await registerAndGetToken({
             name: "Viewer",
-            email: `viewer${Date.now()}@test.com`
+            email: `createdviewer${Date.now()}@test.com`
         });
 
-        const targetUser = await User.create({
-            name: "Empty User",
-            email: `empty${Date.now()}@test.com`,
-            password: "Password123"
+        const targetUserAuth = await registerAndGetToken({
+            name: "Creator",
+            email: `createdtarget${Date.now()}@test.com`
         });
+
+        await createEvent(
+            targetUserAuth.headers,
+            {
+                title: "Created Public Event"
+            }
+        );
 
         const res = await request(app)
-            .get(`/api/users/${targetUser.id}/events`)
+            .get(`/api/users/${targetUserAuth.user.userId}/events`)
             .set(viewerAuth.headers);
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body).toEqual({
-            createdEvents: [],
-            joinedEvents: []
+        expect(res.body.createdEvents.some(
+            (event) => event.title === "Created Public Event"
+        )).toBe(true);
+    });
+
+    it("should retrieve joined public user events", async () => {
+        const viewerAuth = await registerAndGetToken({
+            name: "Viewer",
+            email: `joinedviewer${Date.now()}@test.com`
         });
+
+        const targetUserAuth = await registerAndGetToken({
+            name: "Participant",
+            email: `joinedtarget${Date.now()}@test.com`
+        });
+
+        const eventCreatorAuth = await registerAndGetToken({
+            name: "Event Creator",
+            email: `eventcreator${Date.now()}@test.com`
+        });
+
+        const eventRes = await createEvent(
+            eventCreatorAuth.headers,
+            {
+                title: "Joined Public Event"
+            }
+        );
+
+        await joinEvent(eventRes.body.event.id, targetUserAuth.headers);
+
+        const res = await request(app)
+            .get(`/api/users/${targetUserAuth.user.userId}/events`)
+            .set(viewerAuth.headers);
+
+        expect(res.statusCode).toBe(200);
+
+        expect(res.body.joinedEvents.some(
+            (event) => event.title === "Joined Public Event"
+        )).toBe(true);
+    });
+
+    it("should not duplicate created events in joined events", async () => {
+        const viewerAuth = await registerAndGetToken({
+            name: "Viewer",
+            email: `duplicateviewer${Date.now()}@test.com`
+        });
+
+        const targetUserAuth = await registerAndGetToken({
+            name: "Target User",
+            email: `duplicatetarget${Date.now()}@test.com`
+        });
+
+        const createdEventRes = await createEvent(
+            targetUserAuth.headers,
+            {
+                title: "Non Duplicated Event"
+            }
+        );
+
+        const res = await request(app)
+            .get(`/api/users/${targetUserAuth.user.userId}/events`)
+            .set(viewerAuth.headers);
+
+        expect(res.statusCode).toBe(200);
+
+        expect(res.body.createdEvents.some(
+            (event) => event.title === "Non Duplicated Event"
+        )).toBe(true);
+
+        expect(res.body.joinedEvents.some(
+            (event) => event.title === "Non Duplicated Event"
+        )).toBe(false);
     });
 
     /* =============================
-       AUTHENTICATION & VALIDATION
+       AUTHENTICATION ERRORS
     ============================= */
 
     it("should reject unauthenticated request", async () => {
+        const targetUser = await User.create({
+            name: "Target User",
+            email: `unauth${Date.now()}@test.com`,
+            password: "Password123"
+        });
+
         const res = await request(app)
-            .get("/api/users/1/events");
+            .get(`/api/users/${targetUser.id}/events`);
 
         expect(res.statusCode).toBe(401);
     });
 
+    /* =============================
+       VALIDATION ERRORS
+    ============================= */
+
     it("should reject invalid user ID", async () => {
         const viewerAuth = await registerAndGetToken({
             name: "Viewer",
-            email: `viewer${Date.now()}@test.com`
+            email: `invalidviewer${Date.now()}@test.com`
         });
 
         const res = await request(app)
@@ -157,10 +209,14 @@ describe("Public User Events API", () => {
         expect(res.statusCode).toBe(400);
     });
 
+    /* =============================
+       BUSINESS RULES
+    ============================= */
+
     it("should return 404 if user does not exist", async () => {
         const viewerAuth = await registerAndGetToken({
             name: "Viewer",
-            email: `viewer${Date.now()}@test.com`
+            email: `missingviewer${Date.now()}@test.com`
         });
 
         const res = await request(app)

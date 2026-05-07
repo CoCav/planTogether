@@ -7,19 +7,21 @@
 
    Notes:
    - shared across event membership integration tests
+   - expects auth headers from authHelper
+   - returns full Supertest responses
 ================================================== */
 
 const request = require("supertest");
 const app = require("../../src/app");
 
-// Join event as authenticated user
+// Join an event as an authenticated user
 const joinEvent = async (eventId, headers) => {
     return request(app)
         .post(`/api/events/${eventId}/members/join`)
         .set(headers);
 };
 
-// Update event member role
+// Update an event member role as an authenticated user
 const updateMemberRole = async (eventId, userId, headers, newRole) => {
     return request(app)
         .put(`/api/events/${eventId}/members/${userId}/role`)

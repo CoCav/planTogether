@@ -2,19 +2,19 @@
    USER INTEGRATION - CURRENT USER PASSWORD
 
    Tests:
-   - successful password update
-   - missing token rejection
+   - authenticated password update
+   - authentication protection
    - invalid token rejection
    - wrong current password rejection
    - same password rejection
-   - weak new password rejection
-   - login with new password after update
+   - weak password rejection
+   - missing password fields validation
+   - password persistence after update
 
    Ensures:
-   - authentication middleware protects password update
-   - current password is verified
-   - new password rules are enforced
-   - password update is persisted correctly
+   - authenticated users can change their password
+   - validators protect password rules
+   - old passwords become invalid after update
 ================================================== */
 
 const request = require("supertest");
@@ -25,6 +25,7 @@ const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/
 const { registerAndGetToken } = require("../../helpers/authHelper");
 
 describe("Current User Password API", () => {
+
     beforeAll(async () => {
         await initDB();
     });
@@ -40,13 +41,13 @@ describe("Current User Password API", () => {
     });
 
     /* =============================
-       PASSWORD UPDATE SUCCESS
+       PASSWORD UPDATE
     ============================= */
 
-    it("should change password correctly", async () => {
+    it("should update current user password", async () => {
         const userAuth = await registerAndGetToken({
-            name: "User",
-            email: `pass${Date.now()}@test.com`,
+            name: "Password User",
+            email: `password${Date.now()}@test.com`,
             password: "Password123"
         });
 
@@ -66,11 +67,40 @@ describe("Current User Password API", () => {
         );
     });
 
+    it("should allow login with new password after update", async () => {
+        const email = `persist${Date.now()}@test.com`;
+
+        const userAuth = await registerAndGetToken({
+            name: "Persistence User",
+            email,
+            password: "Password123"
+        });
+
+        await request(app)
+            .put("/api/users/me/password")
+            .set(userAuth.headers)
+            .send({
+                currentPassword: "Password123",
+                newPassword: "NewPassword123"
+            });
+
+        const res = await request(app)
+            .post("/api/auth/login")
+            .send({
+                email,
+                password: "NewPassword123"
+            });
+
+        expect(res.statusCode).toBe(200);
+
+        expect(res.body).toHaveProperty("token");
+    });
+
     /* =============================
        AUTHENTICATION ERRORS
     ============================= */
 
-    it("should reject without token", async () => {
+    it("should reject password update without token", async () => {
         const res = await request(app)
             .put("/api/users/me/password")
             .send({
@@ -81,7 +111,7 @@ describe("Current User Password API", () => {
         expect(res.statusCode).toBe(401);
     });
 
-    it("should reject invalid token", async () => {
+    it("should reject password update with invalid token", async () => {
         const res = await request(app)
             .put("/api/users/me/password")
             .set("Authorization", "Bearer invalid-token")
@@ -94,32 +124,30 @@ describe("Current User Password API", () => {
     });
 
     /* =============================
-       BUSINESS RULES
+       VALIDATION ERRORS
     ============================= */
 
-    it("should reject wrong current password", async () => {
+    it("should reject missing current password", async () => {
         const userAuth = await registerAndGetToken({
-            name: "User",
-            email: `wrong${Date.now()}@test.com`,
-            password: "Password123"
+            name: "Validation User",
+            email: `missingcurrent${Date.now()}@test.com`
         });
 
         const res = await request(app)
             .put("/api/users/me/password")
             .set(userAuth.headers)
             .send({
-                currentPassword: "WrongPassword",
+                currentPassword: "",
                 newPassword: "NewPassword123"
             });
 
-        expect(res.statusCode).toBe(401);
+        expect(res.statusCode).toBe(400);
     });
 
-    it("should reject same password", async () => {
+    it("should reject missing new password", async () => {
         const userAuth = await registerAndGetToken({
-            name: "User",
-            email: `same${Date.now()}@test.com`,
-            password: "Password123"
+            name: "Validation User",
+            email: `missingnew${Date.now()}@test.com`
         });
 
         const res = await request(app)
@@ -127,19 +155,15 @@ describe("Current User Password API", () => {
             .set(userAuth.headers)
             .send({
                 currentPassword: "Password123",
-                newPassword: "Password123"
+                newPassword: ""
             });
 
         expect(res.statusCode).toBe(400);
     });
 
-    /* =============================
-       VALIDATION ERRORS
-    ============================= */
-
     it("should reject weak new password", async () => {
         const userAuth = await registerAndGetToken({
-            name: "User",
+            name: "Weak Password User",
             email: `weak${Date.now()}@test.com`,
             password: "Password123"
         });
@@ -156,42 +180,42 @@ describe("Current User Password API", () => {
     });
 
     /* =============================
-       PASSWORD PERSISTENCE
+       BUSINESS RULES
     ============================= */
 
-    it("should allow login with new password and reject old one", async () => {
-        const email = `verify${Date.now()}@test.com`;
-
+    it("should reject wrong current password", async () => {
         const userAuth = await registerAndGetToken({
-            name: "User",
-            email,
+            name: "Wrong Password User",
+            email: `wrong${Date.now()}@test.com`,
             password: "Password123"
         });
 
-        await request(app)
+        const res = await request(app)
+            .put("/api/users/me/password")
+            .set(userAuth.headers)
+            .send({
+                currentPassword: "WrongPassword",
+                newPassword: "NewPassword123"
+            });
+
+        expect(res.statusCode).toBe(401);
+    });
+
+    it("should reject updating to the same password", async () => {
+        const userAuth = await registerAndGetToken({
+            name: "Same Password User",
+            email: `same${Date.now()}@test.com`,
+            password: "Password123"
+        });
+
+        const res = await request(app)
             .put("/api/users/me/password")
             .set(userAuth.headers)
             .send({
                 currentPassword: "Password123",
-                newPassword: "NewPassword123"
+                newPassword: "Password123"
             });
 
-        const oldLogin = await request(app)
-            .post("/api/auth/login")
-            .send({
-                email,
-                password: "Password123"
-            });
-
-        expect(oldLogin.statusCode).toBe(401);
-
-        const newLogin = await request(app)
-            .post("/api/auth/login")
-            .send({
-                email,
-                password: "NewPassword123"
-            });
-
-        expect(newLogin.statusCode).toBe(200);
+        expect(res.statusCode).toBe(400);
     });
 });

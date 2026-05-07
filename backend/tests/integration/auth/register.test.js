@@ -4,23 +4,28 @@
    Tests:
    - successful user registration
    - avatar upload during registration
+   - email normalization
    - missing fields rejection
    - invalid email rejection
    - weak password rejection
+   - invalid avatar upload rejection
    - duplicate email rejection
 
    Ensures:
    - full registration pipeline works end-to-end
    - uploaded avatar paths are returned correctly
+   - emails are normalized before persistence
    - password is never exposed
    - database persistence works correctly
 ================================================== */
 
 const request = require("supertest");
 const app = require("../../../src/app");
+
 const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
 
 describe("Register API", () => {
+
     beforeAll(async () => {
         await initDB();
     });
@@ -51,7 +56,12 @@ describe("Register API", () => {
             });
 
         expect(res.statusCode).toBe(201);
-        expect(res.body).toHaveProperty("message", "User registered successfully");
+
+        expect(res.body).toHaveProperty(
+            "message",
+            "User registered successfully"
+        );
+
         expect(res.body).toHaveProperty("token");
         expect(res.body).toHaveProperty("user");
 
@@ -78,6 +88,7 @@ describe("Register API", () => {
             });
 
         expect(res.statusCode).toBe(201);
+
         expect(res.body).toHaveProperty("token");
 
         expect(res.body.user).toMatchObject({
@@ -86,7 +97,26 @@ describe("Register API", () => {
         });
 
         expect(res.body.user.avatar).toMatch(/^\/uploads\/avatars\/avatar-/);
+
         expect(res.body.user).not.toHaveProperty("password");
+    });
+
+    /* =============================
+       DATA NORMALIZATION
+    ============================= */
+
+    it("should normalize email before saving", async () => {
+        const res = await request(app)
+            .post("/api/auth/register")
+            .send({
+                name: "Normalized User",
+                email: "  TEST@Example.COM  ",
+                password: "Password123"
+            });
+
+        expect(res.statusCode).toBe(201);
+
+        expect(res.body.user.email).toBe("test@example.com");
     });
 
     /* =============================
@@ -96,7 +126,11 @@ describe("Register API", () => {
     it("should reject registration with missing fields", async () => {
         const res = await request(app)
             .post("/api/auth/register")
-            .send({ name: "", email: "", password: "" });
+            .send({
+                name: "",
+                email: "",
+                password: ""
+            });
 
         expect(res.statusCode).toBe(400);
     });
@@ -126,23 +160,83 @@ describe("Register API", () => {
     });
 
     /* =============================
+       FILE UPLOADS
+    ============================= */
+
+    it("should reject invalid avatar file type", async () => {
+        const res = await request(app)
+            .post("/api/auth/register")
+            .field("name", "Invalid Avatar User")
+            .field("email", `invalidavatar${Date.now()}@test.com`)
+            .field("password", "Password123")
+            .attach("avatar", Buffer.from("fake file"), {
+                filename: "avatar.txt",
+                contentType: "text/plain"
+            });
+
+        expect(res.statusCode).toBe(400);
+    });
+
+    it("should reject avatar file that exceeds size limit", async () => {
+        const largeBuffer = Buffer.alloc(3 * 1024 * 1024);
+
+        const res = await request(app)
+            .post("/api/auth/register")
+            .field("name", "Large Avatar User")
+            .field("email", `largeavatar${Date.now()}@test.com`)
+            .field("password", "Password123")
+            .attach("avatar", largeBuffer, {
+                filename: "large-avatar.png",
+                contentType: "image/png"
+            });
+
+        expect(res.statusCode).toBe(400);
+    });
+
+    /* =============================
        BUSINESS RULES
     ============================= */
 
     it("should reject duplicate email", async () => {
         const email = `duplicate${Date.now()}@test.com`;
 
-        await request(app).post("/api/auth/register").send({
-            name: "First User",
-            email,
-            password: "Password123"
-        });
+        await request(app)
+            .post("/api/auth/register")
+            .send({
+                name: "First User",
+                email,
+                password: "Password123"
+            });
 
-        const res = await request(app).post("/api/auth/register").send({
-            name: "Second User",
-            email,
-            password: "Password123"
-        });
+        const res = await request(app)
+            .post("/api/auth/register")
+            .send({
+                name: "Second User",
+                email,
+                password: "Password123"
+            });
+
+        expect(res.statusCode).toBe(409);
+    });
+
+    it("should reject duplicate email with different casing", async () => {
+        const email = `duplicatecase${Date.now()}@test.com`;
+
+        await request(app)
+            .post("/api/auth/register")
+            .send({
+                name: "First User",
+                email,
+                password: "Password123"
+            });
+
+        const res = await request(app)
+            .post("/api/auth/register")
+            .send({
+                name: "Second User",
+                email: email.toUpperCase(),
+                password: "Password123"
+            });
 
         expect(res.statusCode).toBe(409);
     });

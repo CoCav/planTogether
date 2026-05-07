@@ -3,14 +3,16 @@
 
    Tests:
    - authenticated public profile retrieval
-   - invalid user ID validation
    - authentication protection
+   - invalid user ID validation
    - nonexistent user handling
    - sensitive data protection
+   - public stats retrieval
 
    Ensures:
    - public user profiles are correctly retrieved
    - private user fields are never exposed
+   - public stats are included in the response
    - authentication and validators protect the route
 ================================================== */
 
@@ -20,8 +22,11 @@ const app = require("../../../src/app");
 const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
 
 const { registerAndGetToken } = require("../../helpers/authHelper");
+const { createEvent } = require("../../helpers/eventHelper");
+const { joinEvent } = require("../../helpers/eventMembershipHelper");
 
 describe("Public User Profile API", () => {
+
     beforeAll(async () => {
         await initDB();
     });
@@ -66,8 +71,73 @@ describe("Public User Profile API", () => {
             name: "Target User",
             avatar: "/uploads/avatars/test.png"
         });
+    });
 
-        // Ensure sensitive data is never exposed publicly
+    it("should include public user stats", async () => {
+        const viewerAuth = await registerAndGetToken({
+            name: "Viewer",
+            email: `viewerstats${Date.now()}@test.com`
+        });
+
+        const targetUserAuth = await registerAndGetToken({
+            name: "Target User",
+            email: `targetstats${Date.now()}@test.com`
+        });
+
+        const createdEventRes = await createEvent(
+            targetUserAuth.headers,
+            {
+                title: "Created Event"
+            }
+        );
+
+        const joinedEventCreatorAuth = await registerAndGetToken({
+            name: "Joined Event Creator",
+            email: `joinedcreator${Date.now()}@test.com`
+        });
+
+        const joinedEventRes = await createEvent(
+            joinedEventCreatorAuth.headers,
+            {
+                title: "Joined Event"
+            }
+        );
+
+        await joinEvent(joinedEventRes.body.event.id, targetUserAuth.headers);
+
+        const res = await request(app)
+            .get(`/api/users/${targetUserAuth.user.userId}`)
+            .set(viewerAuth.headers);
+
+        expect(res.statusCode).toBe(200);
+
+        expect(res.body.stats).toHaveProperty("createdEventsCount", 1);
+        expect(res.body.stats).toHaveProperty("joinedEventsCount", 2);
+    });
+
+    /* =============================
+       SENSITIVE DATA PROTECTION
+    ============================= */
+
+    it("should never expose sensitive user fields publicly", async () => {
+        const viewerAuth = await registerAndGetToken({
+            name: "Viewer",
+            email: `sensitiveviewer${Date.now()}@test.com`
+        });
+
+        const targetUser = await User.create({
+            name: "Sensitive User",
+            email: `sensitive${Date.now()}@test.com`,
+            password: "Password123",
+            avatar: "/uploads/avatars/test.png"
+        });
+
+        const res = await request(app)
+            .get(`/api/users/${targetUser.id}`)
+            .set(viewerAuth.headers);
+
+        expect(res.statusCode).toBe(200);
+
         expect(res.body.user).not.toHaveProperty("id");
         expect(res.body.user).not.toHaveProperty("email");
         expect(res.body.user).not.toHaveProperty("password");
@@ -76,7 +146,7 @@ describe("Public User Profile API", () => {
     });
 
     /* =============================
-       AUTHENTICATION & VALIDATION
+       AUTHENTICATION ERRORS
     ============================= */
 
     it("should reject unauthenticated request", async () => {
@@ -86,15 +156,20 @@ describe("Public User Profile API", () => {
             password: "Password123"
         });
 
-        const res = await request(app).get(`/api/users/${targetUser.id}`);
+        const res = await request(app)
+            .get(`/api/users/${targetUser.id}`);
 
         expect(res.statusCode).toBe(401);
     });
 
+    /* =============================
+       VALIDATION ERRORS
+    ============================= */
+
     it("should reject invalid user ID", async () => {
         const viewerAuth = await registerAndGetToken({
             name: "Viewer",
-            email: `viewer${Date.now()}@test.com`
+            email: `invalidviewer${Date.now()}@test.com`
         });
 
         const res = await request(app)
@@ -104,10 +179,14 @@ describe("Public User Profile API", () => {
         expect(res.statusCode).toBe(400);
     });
 
+    /* =============================
+       BUSINESS RULES
+    ============================= */
+
     it("should return 404 if user does not exist", async () => {
         const viewerAuth = await registerAndGetToken({
             name: "Viewer",
-            email: `viewer${Date.now()}@test.com`
+            email: `missingviewer${Date.now()}@test.com`
         });
 
         const res = await request(app)

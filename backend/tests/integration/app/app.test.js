@@ -12,8 +12,8 @@
    - Express app can be tested without starting server
 ================================================== */
 
-const request = require('supertest');
-const app = require('../../../src/app');
+const request = require("supertest");
+const app = require("../../../src/app");
 
 describe('App API', () => {
 
@@ -52,8 +52,6 @@ describe('App API', () => {
         const res = await request(app).get('/api/unknown');
 
         expect(res.statusCode).toBe(404);
-        expect(res.body).toEqual({
-            message: 'Route not found'
-        });
+        expect(res.body).toEqual({ message: 'Route not found' });
     });
 });

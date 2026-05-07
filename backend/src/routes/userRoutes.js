@@ -7,7 +7,7 @@ const { authenticateToken } = require("../middlewares/authenticateToken");
 const { uploadAvatar } = require("../middlewares/uploadFiles");
 const handleValidationErrors = require("../middlewares/handleValidationErrors");
 
-const { userIdParamValidator, updateCurrentUserProfileValidator, changeCurrentUserPasswordValidator } = require("../validators/userValidator");
+const { userIdParamValidator, getCurrentUserEventsValidator, updateCurrentUserProfileValidator, changeCurrentUserPasswordValidator } = require("../validators/userValidator");
 
 /* ==================================================
    USER ROUTES
@@ -31,7 +31,7 @@ const { userIdParamValidator, updateCurrentUserProfileValidator, changeCurrentUs
 ============================= */
 
 // Get all paginated events of the current user
-router.get('/me/events', authenticateToken, userController.getCurrentUserEvents);
+router.get('/me/events', authenticateToken, getCurrentUserEventsValidator, handleValidationErrors, userController.getCurrentUserEvents);
 
 // Get current user profile
 router.get("/me", authenticateToken, userController.getCurrentUserProfile);

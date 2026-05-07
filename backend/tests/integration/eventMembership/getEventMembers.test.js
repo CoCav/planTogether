@@ -4,10 +4,13 @@
    Tests:
    - event members retrieval
    - public access to event members endpoint
+   - nonexistent event handling
+   - invalid event ID validation
 
    Ensures:
    - event members are returned correctly
    - public users can access event members endpoint
+   - invalid requests are rejected correctly
 ================================================== */
 
 const request = require("supertest");
@@ -17,8 +20,10 @@ const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/
 
 const { registerAndGetToken } = require("../../helpers/authHelper");
 const { createEvent } = require("../../helpers/eventHelper");
+const { joinEvent } = require("../../helpers/eventMembershipHelper");
 
 describe("Get Event Members API", () => {
+
     beforeAll(async () => {
         await initDB();
     });
@@ -44,21 +49,19 @@ describe("Get Event Members API", () => {
         });
 
         const eventRes = await createEvent(eventCreatorAuth.headers);
-        const eventId = eventRes.body.event.id;
+        const event = eventRes.body.event;
 
         const participantAuth = await registerAndGetToken({
             name: "Participant",
             email: `participant${Date.now()}@test.com`
         });
 
-        await request(app)
-            .post(`/api/events/${eventId}/members/join`)
-            .set(participantAuth.headers);
+        await joinEvent(event.id, participantAuth.headers);
 
-        const res = await request(app)
-            .get(`/api/events/${eventId}/members`);
+        const res = await request(app).get(`/api/events/${event.id}/members`);
 
         expect(res.statusCode).toBe(200);
+
         expect(res.body).toHaveProperty("members");
         expect(Array.isArray(res.body.members)).toBe(true);
         expect(res.body.members.length).toBeGreaterThan(0);
@@ -71,12 +74,31 @@ describe("Get Event Members API", () => {
         });
 
         const eventRes = await createEvent(eventCreatorAuth.headers);
-        const eventId = eventRes.body.event.id;
+        const event = eventRes.body.event;
 
-        const res = await request(app)
-            .get(`/api/events/${eventId}/members`);
+        const res = await request(app).get(`/api/events/${event.id}/members`);
 
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty("members");
+    });
+
+    /* =============================
+       EDGE CASES
+    ============================= */
+
+    it("should return 404 for nonexistent event", async () => {
+        const res = await request(app).get("/api/events/999999/members");
+
+        expect(res.statusCode).toBe(404);
+    });
+
+    /* =============================
+       VALIDATION ERRORS
+    ============================= */
+
+    it("should reject invalid eventId", async () => {
+        const res = await request(app).get("/api/events/abc/members");
+
+        expect(res.statusCode).toBe(400);
     });
 });

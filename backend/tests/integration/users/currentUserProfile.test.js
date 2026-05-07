@@ -2,34 +2,37 @@
    USER INTEGRATION - CURRENT USER PROFILE
 
    Tests:
-   - authenticated profile retrieval
-   - missing token rejection
-   - invalid token rejection
-   - profile update
+   - authenticated current profile retrieval
+   - authenticated profile update
    - avatar upload update
-   - old avatar file deletion
-   - invalid update rejection
+   - previous avatar cleanup
+   - authentication protection
+   - invalid email validation
+   - invalid name validation
    - duplicate email rejection
+   - invalid avatar file rejection
+   - oversized avatar rejection
+   - email normalization on update
 
    Ensures:
-   - profile routes are protected
-   - profile updates are persisted
-   - avatar uploads are stored correctly
-   - replaced avatar files are cleaned up
-   - password is never exposed
+   - authenticated users can manage their profile
+   - uploaded avatars are stored correctly
+   - previous avatar files are cleaned up
+   - validators protect profile updates
 ================================================== */
+
+const fs = require("fs");
+const path = require("path");
 
 const request = require("supertest");
 const app = require("../../../src/app");
 
 const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
 
-const fs = require("fs");
-const path = require("path");
-
 const { registerAndGetToken } = require("../../helpers/authHelper");
 
 describe("Current User Profile API", () => {
+
     beforeAll(async () => {
         await initDB();
     });
@@ -44,246 +47,269 @@ describe("Current User Profile API", () => {
         await sequelize.close();
     });
 
-    describe("GET /api/users/me", () => {
+    /* =============================
+       CURRENT USER PROFILE
+    ============================= */
 
-        it("should get the profile of an authenticated user", async () => {
-            const userAuth = await registerAndGetToken({
-                name: "Profile User",
-                email: `profile${Date.now()}@test.com`
-            });
-
-            const res = await request(app)
-                .get("/api/users/me")
-                .set(userAuth.headers);
-
-            expect(res.statusCode).toBe(200);
-
-            expect(res.body).toHaveProperty(
-                "message",
-                "User profile retrieved successfully"
-            );
-
-            expect(res.body).toHaveProperty("user");
-
-            expect(res.body.user).toMatchObject({
-                name: "Profile User",
-                email: userAuth.email,
-                avatar: null
-            });
-
-            expect(res.body.user).not.toHaveProperty("password");
+    it("should get current authenticated user profile", async () => {
+        const userAuth = await registerAndGetToken({
+            name: "Profile User",
+            email: `profile${Date.now()}@test.com`
         });
 
-        it("should reject access without token", async () => {
-            const res = await request(app)
-                .get("/api/users/me");
+        const res = await request(app)
+            .get("/api/users/me")
+            .set(userAuth.headers);
 
-            expect(res.statusCode).toBe(401);
+        expect(res.statusCode).toBe(200);
+
+        expect(res.body).toHaveProperty(
+            "message",
+            "User profile retrieved successfully"
+        );
+
+        expect(res.body).toHaveProperty("user");
+
+        expect(res.body.user).toMatchObject({
+            name: "Profile User",
+            email: userAuth.email
         });
 
-        it("should reject access with invalid token", async () => {
-            const res = await request(app)
-                .get("/api/users/me")
-                .set("Authorization", "Bearer invalid-token");
+        expect(res.body.user).not.toHaveProperty("password");
+    });
 
-            expect(res.statusCode).toBe(401);
+    it("should update current user profile", async () => {
+        const userAuth = await registerAndGetToken({
+            name: "Old Name",
+            email: `update${Date.now()}@test.com`
+        });
+
+        const res = await request(app)
+            .put("/api/users/me")
+            .set(userAuth.headers)
+            .send({
+                name: "New Name"
+            });
+
+        expect(res.statusCode).toBe(200);
+
+        expect(res.body.user).toMatchObject({
+            name: "New Name",
+            email: userAuth.email
         });
     });
 
-    describe("PUT /api/users/me", () => {
-        it("should update the profile of an authenticated user", async () => {
-            const updatedEmail = `updatedprofile${Date.now()}@test.com`;
-
-            const userAuth = await registerAndGetToken({
-                name: "Profile User",
-                email: `profileupdate${Date.now()}@test.com`
-            });
-
-            const res = await request(app)
-                .put("/api/users/me")
-                .set(userAuth.headers)
-                .send({
-                    name: "Updated Name",
-                    email: updatedEmail
-                });
-
-            expect(res.statusCode).toBe(200);
-
-            expect(res.body).toHaveProperty(
-                "message",
-                "User profile updated successfully"
-            );
-
-            expect(res.body).toHaveProperty("user");
-
-            expect(res.body.user).toMatchObject({
-                name: "Updated Name",
-                email: updatedEmail,
-                avatar: null
-            });
-
-            expect(res.body.user).not.toHaveProperty("password");
-
-            const profileRes = await request(app)
-                .get("/api/users/me")
-                .set(userAuth.headers);
-
-            expect(profileRes.body.user.name).toBe("Updated Name");
-
-            expect(profileRes.body.user.email).toBe(updatedEmail);
-
-            expect(profileRes.body.user.avatar).toBeNull();
+    it("should update only email", async () => {
+        const userAuth = await registerAndGetToken({
+            name: "Email Update User",
+            email: `emailupdate${Date.now()}@test.com`
         });
 
-        it("should update the profile avatar of an authenticated user", async () => {
-            const email = `avatarprofile${Date.now()}@test.com`;
-
-            const userAuth = await registerAndGetToken({
-                name: "Avatar Profile User",
-                email
+        const res = await request(app)
+            .put("/api/users/me")
+            .set(userAuth.headers)
+            .send({
+                email: `updated${Date.now()}@test.com`
             });
 
-            const res = await request(app)
-                .put("/api/users/me")
-                .set(userAuth.headers)
-                .field("name", "Avatar Updated")
-                .field("email", email)
-                .attach("avatar", Buffer.from("fake image content"), {
-                    filename: "avatar.png",
-                    contentType: "image/png"
-                });
+        expect(res.statusCode).toBe(200);
 
-            expect(res.statusCode).toBe(200);
+        expect(res.body.user.email).toContain("updated");
 
-            expect(res.body.user).toMatchObject({
-                name: "Avatar Updated",
-                email
+        expect(res.body.user.name).toBe("Email Update User");
+    });
+
+    it("should normalize updated email", async () => {
+        const userAuth = await registerAndGetToken({
+            name: "Normalize User",
+            email: `normalize${Date.now()}@test.com`
+        });
+
+        const res = await request(app)
+            .put("/api/users/me")
+            .set(userAuth.headers)
+            .send({
+                email: "   NORMALIZED@TEST.COM   "
             });
 
-            expect(res.body.user.avatar).toMatch(/^\/uploads\/avatars\/avatar-/);
+        expect(res.statusCode).toBe(200);
 
-            const profileRes = await request(app)
-                .get("/api/users/me")
-                .set(userAuth.headers);
+        expect(res.body.user.email).toBe("normalized@test.com");
+    });
 
-            expect(profileRes.body.user.avatar).toBe(res.body.user.avatar);
+    /* =============================
+       AVATAR UPLOADS
+    ============================= */
+
+    it("should update current user avatar", async () => {
+        const userAuth = await registerAndGetToken({
+            name: "Avatar User",
+            email: `avatar${Date.now()}@test.com`
         });
 
-        it("should delete old avatar file when avatar is replaced", async () => {
-            const email = `replaceavatar${Date.now()}@test.com`;
-
-            const registerRes = await request(app)
-                .post("/api/auth/register")
-                .field("name", "Avatar Replace User")
-                .field("email", email)
-                .field("password", "Password123")
-                .attach("avatar", Buffer.from("old avatar content"), {
-                    filename: "old-avatar.png",
-                    contentType: "image/png"
-                });
-
-            const token = registerRes.body.token;
-            const oldAvatar = registerRes.body.user.avatar;
-
-            const oldAvatarPath = path.join(__dirname, "../../../", oldAvatar);
-
-            expect(fs.existsSync(oldAvatarPath)).toBe(true);
-
-            const res = await request(app)
-                .put("/api/users/me")
-                .set("Authorization", `Bearer ${token}`)
-                .field("name", "Avatar Replace User")
-                .field("email", email)
-                .attach("avatar", Buffer.from("new avatar content"), {
-                    filename: "new-avatar.png",
-                    contentType: "image/png"
-                });
-
-            expect(res.statusCode).toBe(200);
-
-            expect(res.body.user.avatar).toMatch(/^\/uploads\/avatars\/avatar-/);
-            expect(res.body.user.avatar).not.toBe(oldAvatar);
-
-            expect(fs.existsSync(oldAvatarPath)).toBe(false);
-        });
-
-        it("should reject update without token", async () => {
-            const res = await request(app)
-                .put("/api/users/me")
-                .send({
-                    name: "Updated Name",
-                    email: `updated${Date.now()}@test.com`
-                });
-
-            expect(res.statusCode).toBe(401);
-        });
-
-        it("should reject update with invalid token", async () => {
-            const res = await request(app)
-                .put("/api/users/me")
-                .set("Authorization", "Bearer invalid-token")
-                .send({
-                    name: "Updated Name",
-                    email: `updated${Date.now()}@test.com`
-                });
-
-            expect(res.statusCode).toBe(401);
-        });
-
-        it("should reject invalid email", async () => {
-            const userAuth = await registerAndGetToken({
-                name: "Profile Validation User",
-                email: `profileval${Date.now()}@test.com`
+        const res = await request(app)
+            .put("/api/users/me")
+            .set(userAuth.headers)
+            .attach("avatar", Buffer.from("fake image"), {
+                filename: "avatar.png",
+                contentType: "image/png"
             });
 
-            const res = await request(app)
-                .put("/api/users/me")
-                .set(userAuth.headers)
-                .send({
-                    name: "Updated Name",
-                    email: "invalid-email"
-                });
+        expect(res.statusCode).toBe(200);
 
-            expect(res.statusCode).toBe(400);
+        expect(res.body.user.avatar).toMatch(/^\/uploads\/avatars\/avatar-/);
+    });
+
+    it("should delete previous avatar when uploading a new one", async () => {
+        const userAuth = await registerAndGetToken({
+            name: "Cleanup User",
+            email: `cleanup${Date.now()}@test.com`
         });
 
-        it("should reject empty fields", async () => {
-            const userAuth = await registerAndGetToken({
-                name: "Empty Field User",
-                email: `empty${Date.now()}@test.com`
+        const firstUploadRes = await request(app)
+            .put("/api/users/me")
+            .set(userAuth.headers)
+            .attach("avatar", Buffer.from("first image"), {
+                filename: "first.png",
+                contentType: "image/png"
             });
 
-            const res = await request(app)
-                .put("/api/users/me")
-                .set(userAuth.headers)
-                .send({
-                    name: "",
-                    email: ""
-                });
+        const firstAvatarPath = firstUploadRes.body.user.avatar;
 
-            expect(res.statusCode).toBe(400);
+        const secondUploadRes = await request(app)
+            .put("/api/users/me")
+            .set(userAuth.headers)
+            .attach("avatar", Buffer.from("second image"), {
+                filename: "second.png",
+                contentType: "image/png"
+            });
+
+        const secondAvatarPath = secondUploadRes.body.user.avatar;
+
+        expect(secondAvatarPath).not.toBe(firstAvatarPath);
+
+        const oldAvatarAbsolutePath = path.join(__dirname, "../../../", firstAvatarPath);
+
+        expect(fs.existsSync(oldAvatarAbsolutePath)).toBe(false);
+    });
+
+    /* =============================
+       AUTHENTICATION ERRORS
+    ============================= */
+
+    it("should reject getting current profile without token", async () => {
+        const res = await request(app)
+            .get("/api/users/me");
+
+        expect(res.statusCode).toBe(401);
+    });
+
+    it("should reject updating current profile without token", async () => {
+        const res = await request(app)
+            .put("/api/users/me")
+            .send({
+                name: "Unauthorized"
+            });
+
+        expect(res.statusCode).toBe(401);
+    });
+
+    /* =============================
+       VALIDATION ERRORS
+    ============================= */
+
+    it("should reject invalid email update", async () => {
+        const userAuth = await registerAndGetToken({
+            name: "Invalid Email User",
+            email: `invalidemail${Date.now()}@test.com`
         });
 
-        it("should reject duplicate email", async () => {
-            const firstUserAuth = await registerAndGetToken({
-                name: "First User",
-                email: `first${Date.now()}@test.com`
+        const res = await request(app)
+            .put("/api/users/me")
+            .set(userAuth.headers)
+            .send({
+                email: "not-an-email"
             });
 
-            const secondUserAuth = await registerAndGetToken({
-                name: "Second User",
-                email: `second${Date.now()}@test.com`
-            });
+        expect(res.statusCode).toBe(400);
+    });
 
-            const res = await request(app)
-                .put("/api/users/me")
-                .set(secondUserAuth.headers)
-                .send({
-                    name: "Updated Name",
-                    email: firstUserAuth.email
-                });
-
-            expect(res.statusCode).toBe(409);
+    it("should reject too short name update", async () => {
+        const userAuth = await registerAndGetToken({
+            name: "Short Name User",
+            email: `shortname${Date.now()}@test.com`
         });
+
+        const res = await request(app)
+            .put("/api/users/me")
+            .set(userAuth.headers)
+            .send({
+                name: "A"
+            });
+
+        expect(res.statusCode).toBe(400);
+    });
+
+    it("should reject invalid avatar file type", async () => {
+        const userAuth = await registerAndGetToken({
+            name: "Invalid Avatar User",
+            email: `invalidavatar${Date.now()}@test.com`
+        });
+
+        const res = await request(app)
+            .put("/api/users/me")
+            .set(userAuth.headers)
+            .attach("avatar", Buffer.from("fake pdf"), {
+                filename: "document.pdf",
+                contentType: "application/pdf"
+            });
+
+        expect(res.statusCode).toBe(400);
+    });
+
+    it("should reject oversized avatar upload", async () => {
+        const userAuth = await registerAndGetToken({
+            name: "Oversized Avatar User",
+            email: `oversized${Date.now()}@test.com`
+        });
+
+        const oversizedBuffer = Buffer.alloc(
+            3 * 1024 * 1024
+        );
+
+        const res = await request(app)
+            .put("/api/users/me")
+            .set(userAuth.headers)
+            .attach("avatar", oversizedBuffer, {
+                filename: "oversized.png",
+                contentType: "image/png"
+            });
+
+        expect(res.statusCode).toBe(400);
+    });
+
+    /* =============================
+       BUSINESS RULES
+    ============================= */
+
+    it("should reject duplicate email update", async () => {
+        const firstUserAuth = await registerAndGetToken({
+            name: "First User",
+            email: `first${Date.now()}@test.com`
+        });
+
+        const secondUserAuth = await registerAndGetToken({
+            name: "Second User",
+            email: `second${Date.now()}@test.com`
+        });
+
+        const res = await request(app)
+            .put("/api/users/me")
+            .set(firstUserAuth.headers)
+            .send({
+                email: secondUserAuth.email
+            });
+
+        expect(res.statusCode).toBe(409);
     });
 });

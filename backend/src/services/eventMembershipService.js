@@ -1,11 +1,11 @@
-const { Op } = require('sequelize');
+const { Op } = require("sequelize");
 
-const Event = require('../models/eventModel');
-const User = require('../models/userModel');
-const EventUserRole = require('../models/relations/eventUserRoleModel');
+const Event = require("../models/eventModel");
+const User = require("../models/userModel");
+const EventUserRole = require("../models/relations/eventUserRoleModel");
 
-const { assertEventNotPast, getEventStatus } = require('../utils/eventStatus');
-const { getPaginationOptions } = require('../utils/pagination');
+const { assertEventNotPast, getEventStatus } = require("../utils/eventStatus");
+const { getPaginationOptions } = require("../utils/pagination");
 
 // Valid roles for event members
 const VALID_ROLES = ['organizer', 'co_organizer', 'participant'];

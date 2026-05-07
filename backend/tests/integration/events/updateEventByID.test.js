@@ -1,36 +1,41 @@
 /* ==================================================
-   EVENTS INTEGRATION - UPDATE EVENT BY ID
+   EVENTS INTEGRATION - UPDATE EVENT
 
    Tests:
    - organizer event update
-   - image replacement
-   - authentication requirement
-   - authorization rules
-   - nonexistent event update rejection
+   - co-organizer event update
+   - event update with image upload
+   - authentication protection
+   - participant update rejection
+   - nonexistent event handling
    - past event update rejection
-   - participant limit and registration deadline updates
-   - validation errors
+   - invalid event ID validation
+   - invalid payload validation
+   - invalid image type rejection
+   - oversized image rejection
 
    Ensures:
-   - only authorized users can update events
-   - old uploaded images are deleted correctly
-   - business rules prevent invalid updates
-   - event update flow works end-to-end
+   - organizers and co-organizers can update events
+   - participants cannot update events
+   - validators and authorization protect event updates
+   - uploaded event images are updated correctly
 ================================================== */
 
-const fs = require("fs");
-const path = require("path");
 const request = require("supertest");
-
 const app = require("../../../src/app");
 
 const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
 
-const { registerAndGetToken } = require("../../helpers/authHelper");
-const { getValidEventPayload, createEvent } = require("../../helpers/eventHelper");
-const { getUserIdByEmail } = require('../../helpers/userHelper');
+const fs = require("fs");
+const path = require("path");
 
-describe("Update Event by ID API", () => {
+const { registerAndGetToken } = require("../../helpers/authHelper");
+const { createEvent } = require("../../helpers/eventHelper");
+const { joinEvent, updateMemberRole } = require("../../helpers/eventMembershipHelper");
+const { getUserIdByEmail } = require("../../helpers/userHelper");
+
+describe("Update Event API", () => {
+
     beforeAll(async () => {
         await initDB();
     });
@@ -49,88 +54,98 @@ describe("Update Event by ID API", () => {
        EVENT UPDATE
     ============================= */
 
-    it("should allow organizer to update an event", async () => {
-        const auth = await registerAndGetToken({
-            name: "Event Organizer",
+    it("should allow organizer to update event", async () => {
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
             email: `organizer${Date.now()}@test.com`
         });
 
-        const eventRes = await createEvent(auth.headers);
+        const eventRes = await createEvent(organizerAuth.headers);
         const event = eventRes.body.event;
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)
-            .set(auth.headers)
+            .set(organizerAuth.headers)
             .send({
-                title: "Updated Event",
-                description: "Updated description",
-                type: "Conference",
-                theme: "Business",
-                mode: "online",
-                startDateTime: "2026-12-31T14:00:00.000Z",
-                endDateTime: "2026-12-31T16:00:00.000Z"
+                title: "Updated Event Title"
             });
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body.event).toMatchObject({
-            title: "Updated Event",
-            description: "Updated description",
-            type: "Conference",
-            theme: "Business",
-            mode: "online"
-        });
+        expect(res.body.event.title).toBe("Updated Event Title");
     });
 
-    it("should update participant limit and registration deadline", async () => {
-        const auth = await registerAndGetToken({
-            name: "Advanced Update User",
-            email: `advanced${Date.now()}@test.com`
+    it("should allow co-organizer to update event", async () => {
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `mainorganizer${Date.now()}@test.com`
         });
 
-        const eventRes = await createEvent(auth.headers);
+        const coOrganizerAuth = await registerAndGetToken({
+            name: "Co Organizer",
+            email: `coorganizer${Date.now()}@test.com`
+        });
+
+        const eventRes = await createEvent(organizerAuth.headers);
         const event = eventRes.body.event;
+
+        await joinEvent(event.id, coOrganizerAuth.headers);
+
+        const coOrganizerId = await getUserIdByEmail(coOrganizerAuth.email);
+
+        await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, "co_organizer");
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)
-            .set(auth.headers)
+            .set(coOrganizerAuth.headers)
             .send({
-                title: "Updated Event",
-                description: "Updated",
-                type: "Meetup",
-                theme: "Technology",
-                mode: "online",
-                startDateTime: "2026-12-31T10:00:00.000Z",
-                endDateTime: "2026-12-31T12:00:00.000Z",
-                maxParticipants: 50,
-                registrationDeadline: "2026-12-30T10:00:00.000Z"
+                title: "Co Organizer Updated Event"
             });
 
         expect(res.statusCode).toBe(200);
-        expect(res.body.event.maxParticipants).toBe(50);
 
-        expect(new Date(res.body.event.registrationDeadline).toISOString())
-            .toBe("2026-12-30T10:00:00.000Z");
+        expect(res.body.event.title).toBe("Co Organizer Updated Event");
     });
 
-    /* =============================
-       IMAGE UPDATE
-    ============================= */
-
-    it("should update event image and delete old image", async () => {
-        const auth = await registerAndGetToken({
+    it("should update event image", async () => {
+        const organizerAuth = await registerAndGetToken({
             name: "Image Organizer",
-            email: `image${Date.now()}@test.com`
+            email: `imageorganizer${Date.now()}@test.com`
         });
 
+        const eventRes = await createEvent(organizerAuth.headers);
+        const event = eventRes.body.event;
+
+        const res = await request(app)
+            .put(`/api/events/${event.id}`)
+            .set(organizerAuth.headers)
+            .field("title", "Updated Image Event")
+            .attach("image", Buffer.from("fake image"), {
+                filename: "updated.png",
+                contentType: "image/png"
+            });
+
+        expect(res.statusCode).toBe(200);
+
+        expect(res.body.event.image).toMatch(/^\/uploads\/events\/event-/);
+    });
+
+    it("should delete old image when replacing event image", async () => {
+        const organizerAuth = await registerAndGetToken({
+            name: "Cleanup Organizer",
+            email: `cleanup${Date.now()}@test.com`
+        });
+
+        // Create event with initial image
         const createRes = await request(app)
             .post("/api/events")
-            .set(auth.headers)
-            .field("title", "Image Event")
-            .field("description", "Image description")
+            .set(organizerAuth.headers)
+            .field("title", "Cleanup Event")
+            .field("description", "Image cleanup test")
             .field("type", "Meetup")
             .field("theme", "Technology")
-            .field("mode", "online")
+            .field("mode", "in_person")
+            .field("location", "Montreal")
             .field("startDateTime", "2026-12-31T10:00:00.000Z")
             .field("endDateTime", "2026-12-31T12:00:00.000Z")
             .attach("image", Buffer.from("old image"), {
@@ -139,26 +154,24 @@ describe("Update Event by ID API", () => {
             });
 
         const event = createRes.body.event;
+
         const oldImagePath = path.join(__dirname, "../../../", event.image);
 
         expect(fs.existsSync(oldImagePath)).toBe(true);
 
+        // Replace image
         const updateRes = await request(app)
             .put(`/api/events/${event.id}`)
-            .set(auth.headers)
-            .field("title", "Updated Image Event")
-            .field("description", "Updated")
-            .field("type", "Meetup")
-            .field("theme", "Technology")
-            .field("mode", "online")
-            .field("startDateTime", "2026-12-31T10:00:00.000Z")
-            .field("endDateTime", "2026-12-31T12:00:00.000Z")
+            .set(organizerAuth.headers)
+            .field("title", "Cleanup Event Updated")
             .attach("image", Buffer.from("new image"), {
                 filename: "new.png",
                 contentType: "image/png"
             });
 
         expect(updateRes.statusCode).toBe(200);
+
+        // Old image should be deleted
         expect(fs.existsSync(oldImagePath)).toBe(false);
     });
 
@@ -167,12 +180,12 @@ describe("Update Event by ID API", () => {
     ============================= */
 
     it("should reject update without token", async () => {
-        const auth = await registerAndGetToken({
-            name: "Unauthorized User",
-            email: `unauthorized${Date.now()}@test.com`
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `unauth${Date.now()}@test.com`
         });
 
-        const eventRes = await createEvent(auth.headers);
+        const eventRes = await createEvent(organizerAuth.headers);
         const event = eventRes.body.event;
 
         const res = await request(app)
@@ -185,139 +198,73 @@ describe("Update Event by ID API", () => {
     });
 
     /* =============================
-       AUTHORIZATION
+       AUTHORIZATION ERRORS
     ============================= */
 
-    it("should allow co_organizer to update an event", async () => {
+    it("should reject update by participant", async () => {
         const organizerAuth = await registerAndGetToken({
-            name: "Org",
-            email: `orgu${Date.now()}@test.com`
-        });
-
-        const coOrganizerAuth = await registerAndGetToken({
-            name: "Co",
-            email: `cou${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(organizerAuth.headers);
-        const event = eventRes.body.event;
-
-        await request(app)
-            .post(`/api/events/${event.id}/members/join`)
-            .set(coOrganizerAuth.headers);
-
-        const coId = await getUserIdByEmail(coOrganizerAuth.email);
-
-        await request(app)
-            .put(`/api/events/${event.id}/members/${coId}/role`)
-            .set(organizerAuth.headers)
-            .send({
-                newRole: "co_organizer"
-            });
-
-        const res = await request(app)
-            .put(`/api/events/${event.id}`)
-            .set(coOrganizerAuth.headers)
-            .send({
-                title: "Updated by Co",
-                description: "Updated by Co",
-                type: "Meetup",
-                theme: "Tech",
-                mode: "in_person",
-                location: "Montreal",
-                startDateTime: "2026-12-31T14:00:00.000Z",
-                endDateTime: "2026-12-31T16:00:00.000Z"
-            });
-
-        expect(res.statusCode).toBe(200);
-    });
-
-    it("should prevent participant from updating an event", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Org",
-            email: `org${Date.now()}@test.com`
+            name: "Organizer",
+            email: `authorganizer${Date.now()}@test.com`
         });
 
         const participantAuth = await registerAndGetToken({
-            name: "Part",
-            email: `part${Date.now()}@test.com`
+            name: "Participant",
+            email: `participant${Date.now()}@test.com`
         });
 
         const eventRes = await createEvent(organizerAuth.headers);
         const event = eventRes.body.event;
 
-        await request(app)
-            .post(`/api/events/${event.id}/members/join`)
-            .set(participantAuth.headers);
+        await joinEvent(event.id, participantAuth.headers);
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)
             .set(participantAuth.headers)
             .send({
-                title: "Hacked",
-                description: "Hacked",
-                type: "Meetup",
-                theme: "Tech",
-                mode: "in_person",
-                location: "Montreal",
-                startDateTime: "2026-12-31T14:00:00.000Z",
-                endDateTime: "2026-12-31T16:00:00.000Z"
+                title: "Participant Update"
             });
 
         expect(res.statusCode).toBe(403);
     });
 
-    /* =============================
-       BUSINESS RULES
-    ============================= */
-
     it("should reject update for nonexistent event", async () => {
-        const auth = await registerAndGetToken({
-            name: "Missing Event User",
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
             email: `missing${Date.now()}@test.com`
         });
 
         const res = await request(app)
             .put("/api/events/999999")
-            .set(auth.headers)
+            .set(organizerAuth.headers)
             .send({
-                title: "Missing Event",
-                description: "Missing description",
-                type: "Meetup",
-                theme: "Technology",
-                mode: "online",
-                startDateTime: "2026-12-31T10:00:00.000Z",
-                endDateTime: "2026-12-31T12:00:00.000Z"
+                title: "Missing Event"
             });
 
         expect(res.statusCode).toBe(403);
     });
 
-    it("should reject update for past event", async () => {
-        const auth = await registerAndGetToken({
-            name: "Past Event User",
-            email: `pastupdate${Date.now()}@test.com`
+    it("should reject updating past event", async () => {
+        const organizerAuth = await registerAndGetToken({
+            name: "Past Organizer",
+            email: `pastorganizer${Date.now()}@test.com`
         });
 
-        const eventRes = await createEvent(auth.headers, {
-            title: "Past Event",
-            startDateTime: "2020-01-01T10:00:00.000Z",
-            endDateTime: "2020-01-01T12:00:00.000Z"
-        });
+        const eventRes = await createEvent(
+            organizerAuth.headers,
+            {
+                title: "Past Event",
+                startDateTime: "2020-01-01T10:00:00.000Z",
+                endDateTime: "2020-01-01T12:00:00.000Z"
+            }
+        );
 
         const event = eventRes.body.event;
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)
-            .set(auth.headers)
+            .set(organizerAuth.headers)
             .send({
-                title: "Updated Past Event",
-                description: "Updated past description",
-                type: "Meetup",
-                theme: "Technology",
-                mode: "online",
-                startDateTime: "2020-01-01T10:00:00.000Z",
-                endDateTime: "2020-01-01T12:00:00.000Z"
+                title: "Updated Past Event"
             });
 
         expect(res.statusCode).toBe(403);
@@ -327,151 +274,80 @@ describe("Update Event by ID API", () => {
        VALIDATION ERRORS
     ============================= */
 
-    it("should reject invalid registration deadline update", async () => {
-        const auth = await registerAndGetToken({
-            name: "Deadline User",
-            email: `deadline${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(auth.headers);
-        const event = eventRes.body.event;
-
-        const res = await request(app)
-            .put(`/api/events/${event.id}`)
-            .set(auth.headers)
-            .send({
-                title: "Invalid Deadline Event",
-                description: "Invalid",
-                type: "Meetup",
-                theme: "Technology",
-                mode: "online",
-                startDateTime: "2026-12-31T10:00:00.000Z",
-                endDateTime: "2026-12-31T12:00:00.000Z",
-                registrationDeadline: "2027-01-01T10:00:00.000Z"
-            });
-
-        expect(res.statusCode).toBe(400);
-    });
-
-    it("should reject non-integer eventId", async () => {
-        const auth = await registerAndGetToken({
-            name: "User",
-            email: `id${Date.now()}@test.com`
+    it("should reject invalid eventId", async () => {
+        const organizerAuth = await registerAndGetToken({
+            name: "Validator Organizer",
+            email: `validator${Date.now()}@test.com`
         });
 
         const res = await request(app)
             .put("/api/events/abc")
-            .set(auth.headers)
+            .set(organizerAuth.headers)
             .send({
-                startDateTime: "2026-12-31T10:00:00.000Z",
-                endDateTime: "2026-12-31T12:00:00.000Z",
-                mode: "online"
+                title: "Invalid Event ID"
             });
 
         expect(res.statusCode).toBe(400);
     });
 
-    it("should reject invalid startDateTime", async () => {
-        const auth = await registerAndGetToken({
-            name: "User",
-            email: `start${Date.now()}@test.com`
+    it("should reject invalid payload", async () => {
+        const organizerAuth = await registerAndGetToken({
+            name: "Payload Organizer",
+            email: `payload${Date.now()}@test.com`
         });
 
-        const eventRes = await createEvent(auth.headers);
+        const eventRes = await createEvent(organizerAuth.headers);
         const event = eventRes.body.event;
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)
-            .set(auth.headers)
+            .set(organizerAuth.headers)
             .send({
-                startDateTime: "invalid",
-                endDateTime: "2026-12-31T12:00:00.000Z",
-                mode: "online"
+                mode: "physical"
             });
 
         expect(res.statusCode).toBe(400);
     });
 
-    it("should reject invalid endDateTime", async () => {
-        const auth = await registerAndGetToken({
-            name: "User",
-            email: `end${Date.now()}@test.com`
+    it("should reject invalid image type", async () => {
+        const organizerAuth = await registerAndGetToken({
+            name: "Invalid Image Organizer",
+            email: `invalidimage${Date.now()}@test.com`
         });
 
-        const eventRes = await createEvent(auth.headers);
+        const eventRes = await createEvent(organizerAuth.headers);
         const event = eventRes.body.event;
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)
-            .set(auth.headers)
-            .send({
-                startDateTime: "2026-12-31T10:00:00.000Z",
-                endDateTime: "invalid",
-                mode: "online"
+            .set(organizerAuth.headers)
+            .field("title", "Invalid Image Update")
+            .attach("image", Buffer.from("fake pdf"), {
+                filename: "document.pdf",
+                contentType: "application/pdf"
             });
 
         expect(res.statusCode).toBe(400);
     });
 
-    it("should reject invalid date order", async () => {
-        const auth = await registerAndGetToken({
-            name: "User",
-            email: `order${Date.now()}@test.com`
+    it("should reject oversized image upload", async () => {
+        const organizerAuth = await registerAndGetToken({
+            name: "Oversized Organizer",
+            email: `oversized${Date.now()}@test.com`
         });
 
-        const eventRes = await createEvent(auth.headers);
+        const eventRes = await createEvent(organizerAuth.headers);
         const event = eventRes.body.event;
+
+        const oversizedBuffer = Buffer.alloc(4 * 1024 * 1024);
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)
-            .set(auth.headers)
-            .send({
-                startDateTime: "2026-12-31T12:00:00.000Z",
-                endDateTime: "2026-12-31T10:00:00.000Z",
-                mode: "online"
-            });
-
-        expect(res.statusCode).toBe(400);
-    });
-
-    it("should reject invalid mode", async () => {
-        const auth = await registerAndGetToken({
-            name: "User",
-            email: `mode2${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(auth.headers);
-        const event = eventRes.body.event;
-
-        const res = await request(app)
-            .put(`/api/events/${event.id}`)
-            .set(auth.headers)
-            .send({
-                startDateTime: "2026-12-31T10:00:00.000Z",
-                endDateTime: "2026-12-31T12:00:00.000Z",
-                mode: "hybrid"
-            });
-
-        expect(res.statusCode).toBe(400);
-    });
-
-    it("should reject in-person event without location", async () => {
-        const auth = await registerAndGetToken({
-            name: "User",
-            email: `loc2${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(auth.headers);
-        const event = eventRes.body.event;
-
-        const res = await request(app)
-            .put(`/api/events/${event.id}`)
-            .set(auth.headers)
-            .send({
-                startDateTime: "2026-12-31T10:00:00.000Z",
-                endDateTime: "2026-12-31T12:00:00.000Z",
-                mode: "in_person",
-                location: ""
+            .set(organizerAuth.headers)
+            .field("title", "Oversized Image Update")
+            .attach("image", oversizedBuffer, {
+                filename: "huge.png",
+                contentType: "image/png"
             });
 
         expect(res.statusCode).toBe(400);

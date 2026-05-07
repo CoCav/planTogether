@@ -1,13 +1,13 @@
-const { fn, col } = require('sequelize');
+const { fn, col } = require("sequelize");
 
-const Event = require('../models/eventModel');
-const User = require('../models/userModel');
-const EventUserRole = require('../models/relations/eventUserRoleModel');
+const Event = require("../models/eventModel");
+const User = require("../models/userModel");
+const EventUserRole = require("../models/relations/eventUserRoleModel");
 
 const { deleteUploadedFile } = require("../utils/uploadedFileStorage");
-const { assertEventNotPast, getEventStatus } = require('../utils/eventStatus');
-const { buildEventWhereConditions, buildEventCreatorInclude } = require('../utils/eventQueryBuilder');
-const { getPaginationOptions } = require('../utils/pagination');
+const { assertEventNotPast, getEventStatus } = require("../utils/eventStatus");
+const { buildEventWhereConditions, buildEventCreatorInclude } = require("../utils/eventQueryBuilder");
+const { getPaginationOptions } = require("../utils/pagination");
 
 
 /* ==================================================

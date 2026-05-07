@@ -1,29 +1,33 @@
 /* ==================================================
-   EVENTS INTEGRATION - DELETE EVENT BY ID
+   EVENTS INTEGRATION - DELETE EVENT
 
    Tests:
    - organizer event deletion
-   - authentication requirement
-   - nonexistent event deletion rejection
+   - authentication protection
+   - participant delete rejection
+   - co-organizer delete rejection
+   - nonexistent event handling
    - past event deletion rejection
+   - invalid event ID validation
 
    Ensures:
-   - only authorized users can delete events
+   - only organizers can delete events
+   - deleted events are no longer retrievable
    - role middleware protects delete route
    - business rules prevent deleting past events
-   - deleted events are no longer retrievable
 ================================================== */
 
-const request = require('supertest');
-const app = require('../../../src/app');
+const request = require("supertest");
+const app = require("../../../src/app");
 
-const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
+const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
 
-const { registerAndGetToken } = require('../../helpers/authHelper');
-const { createEvent } = require('../../helpers/eventHelper');
-const { getUserIdByEmail } = require('../../helpers/userHelper');
+const { registerAndGetToken } = require("../../helpers/authHelper");
+const { createEvent } = require("../../helpers/eventHelper");
+const { joinEvent, updateMemberRole } = require("../../helpers/eventMembershipHelper");
+const { getUserIdByEmail } = require("../../helpers/userHelper");
 
-describe('Delete Event By ID API', () => {
+describe("Delete Event API", () => {
 
     beforeAll(async () => {
         await initDB();
@@ -43,28 +47,27 @@ describe('Delete Event By ID API', () => {
        EVENT DELETION
     ============================= */
 
-    it('should allow an organizer to delete an event', async () => {
-        const auth = await registerAndGetToken({
-            name: 'Event Deleter',
-            email: `eventdeleter${Date.now()}@test.com`
+    it("should allow organizer to delete event", async () => {
+        const organizerAuth = await registerAndGetToken({
+            name: "Event Deleter",
+            email: `deleter${Date.now()}@test.com`
         });
 
-        const eventRes = await createEvent(auth.headers);
+        const eventRes = await createEvent(organizerAuth.headers);
         const event = eventRes.body.event;
 
         const res = await request(app)
             .delete(`/api/events/${event.id}`)
-            .set(auth.headers);
+            .set(organizerAuth.headers);
 
         expect(res.statusCode).toBe(200);
 
         expect(res.body).toHaveProperty(
-            'message',
-            'Event deleted successfully'
+            "message",
+            "Event deleted successfully"
         );
 
-        const getRes = await request(app)
-            .get(`/api/events/${event.id}`);
+        const getRes = await request(app).get(`/api/events/${event.id}`);
 
         expect(getRes.statusCode).toBe(404);
     });
@@ -73,42 +76,39 @@ describe('Delete Event By ID API', () => {
        AUTHENTICATION ERRORS
     ============================= */
 
-    it('should reject event deletion without token', async () => {
-        const auth = await registerAndGetToken({
-            name: 'Unauthorized Deleter',
+    it("should reject delete without token", async () => {
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
             email: `unauthdelete${Date.now()}@test.com`
         });
 
-        const eventRes = await createEvent(auth.headers);
+        const eventRes = await createEvent(organizerAuth.headers);
         const event = eventRes.body.event;
 
-        const res = await request(app)
-            .delete(`/api/events/${event.id}`);
+        const res = await request(app).delete(`/api/events/${event.id}`);
 
         expect(res.statusCode).toBe(401);
     });
 
     /* =============================
-       AUTHORIZATION
+       AUTHORIZATION ERRORS
     ============================= */
 
-    it('should prevent participant from deleting an event', async () => {
+    it("should reject delete by participant", async () => {
         const organizerAuth = await registerAndGetToken({
-            name: 'Org',
-            email: `orgd${Date.now()}@test.com`
+            name: "Organizer",
+            email: `organizer${Date.now()}@test.com`
         });
 
         const participantAuth = await registerAndGetToken({
-            name: 'Part',
-            email: `partd${Date.now()}@test.com`
+            name: "Participant",
+            email: `participant${Date.now()}@test.com`
         });
 
         const eventRes = await createEvent(organizerAuth.headers);
         const event = eventRes.body.event;
 
-        await request(app)
-            .post(`/api/events/${event.id}/members/join`)
-            .set(participantAuth.headers);
+        await joinEvent(event.id, participantAuth.headers);
 
         const res = await request(app)
             .delete(`/api/events/${event.id}`)
@@ -117,76 +117,87 @@ describe('Delete Event By ID API', () => {
         expect(res.statusCode).toBe(403);
     });
 
-    it('should prevent co_organizer from deleting an event', async () => {
+    it("should reject delete by co_organizer", async () => {
         const organizerAuth = await registerAndGetToken({
-            name: 'Org',
-            email: `orgd${Date.now()}@test.com`
+            name: "Organizer",
+            email: `organizer${Date.now()}@test.com`
         });
 
         const coOrganizerAuth = await registerAndGetToken({
-            name: 'Co',
-            email: `cod${Date.now()}@test.com`
+            name: "Co Organizer",
+            email: `coorganizer${Date.now()}@test.com`
         });
 
         const eventRes = await createEvent(organizerAuth.headers);
         const event = eventRes.body.event;
 
-        await request(app)
-            .post(`/api/events/${event.id}/members/join`)
-            .set(coOrganizerAuth.headers);
+        await joinEvent(event.id, coOrganizerAuth.headers);
 
-        const coId = await getUserIdByEmail(
-            coOrganizerAuth.email
-        );
+        const coOrganizerId = await getUserIdByEmail(coOrganizerAuth.email);
 
-        await request(app)
-            .put(`/api/events/${event.id}/members/${coId}/role`)
-            .set(organizerAuth.headers)
-            .send({
-                newRole: 'co_organizer'
-            });
+        await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, "co_organizer");
 
         const res = await request(app)
             .delete(`/api/events/${event.id}`)
             .set(coOrganizerAuth.headers);
 
         expect(res.statusCode).toBe(403);
+    });
+
+    it("should reject deleting nonexistent event", async () => {
+        const organizerAuth = await registerAndGetToken({
+            name: "Missing Event Deleter",
+            email: `missingdelete${Date.now()}@test.com`
+        });
+
+        const res = await request(app)
+            .delete("/api/events/999999")
+            .set(organizerAuth.headers);
+
+        expect(res.statusCode).toBe(403);
+    });
+
+    /* =============================
+       VALIDATION ERRORS
+    ============================= */
+
+    it("should reject invalid eventId", async () => {
+        const organizerAuth = await registerAndGetToken({
+            name: "Invalid ID User",
+            email: `invalidid${Date.now()}@test.com`
+        });
+
+        const res = await request(app)
+            .delete("/api/events/abc")
+            .set(organizerAuth.headers);
+
+        expect(res.statusCode).toBe(400);
     });
 
     /* =============================
        BUSINESS RULES
     ============================= */
 
-    it('should reject deleting a nonexistent event', async () => {
-        const auth = await registerAndGetToken({
-            name: 'Missing Event Deleter',
-            email: `missingdelete${Date.now()}@test.com`
-        });
-
-        const res = await request(app)
-            .delete('/api/events/999999')
-            .set(auth.headers);
-
-        expect(res.statusCode).toBe(403);
-    });
-
-    it('should not allow deleting a past event', async () => {
-        const auth = await registerAndGetToken({
-            name: 'Past Event Deleter',
+    it("should reject deleting past event", async () => {
+        const organizerAuth = await registerAndGetToken({
+            name: "Past Event Deleter",
             email: `pastdelete${Date.now()}@test.com`
         });
 
-        const eventRes = await createEvent(auth.headers, {
-            title: 'Past Event',
-            startDateTime: '2020-01-01T10:00:00.000Z',
-            endDateTime: '2020-01-01T12:00:00.000Z'
-        });
+        const eventRes = await createEvent(
+            organizerAuth.headers,
+            {
+                title: "Past Event",
+                startDateTime: "2020-01-01T10:00:00.000Z",
+                endDateTime: "2020-01-01T12:00:00.000Z"
+            }
+        );
 
         const event = eventRes.body.event;
 
         const res = await request(app)
             .delete(`/api/events/${event.id}`)
-            .set(auth.headers);
+            .set(organizerAuth.headers);
 
         expect(res.statusCode).toBe(403);
     });

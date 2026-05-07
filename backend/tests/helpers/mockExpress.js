@@ -8,22 +8,18 @@
 
    Notes:
    - shared across unit controller and middleware tests
-   - reduces duplicated mock setup in tests
+   - keep this helper generic and add local wrappers when tests need defaults
 ================================================== */
 
 // Create mocked Express req / res / next objects
 const createMockReqResNext = ({ params = {}, query = {}, body = {}, user = undefined, file = undefined } = {}) => {
-
-    // Mock Express request object
     const req = { params, query, body, user, file };
 
-    // Mock Express response object
     const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn()
     };
 
-    // Mock Express next function
     const next = jest.fn();
 
     return { req, res, next };

@@ -18,6 +18,10 @@ const getUserIdByEmail = async (email) => {
         where: { email }
     });
 
+    if (!user) {
+        throw new Error(`Test user not found for email: ${email}`);
+    }
+
     return user.id;
 };
 

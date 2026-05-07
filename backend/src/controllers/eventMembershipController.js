@@ -1,4 +1,4 @@
-const eventMembershipService = require('../services/eventMembershipService');
+const eventMembershipService = require("../services/eventMembershipService");
 
 /* ==================================================
    EVENT MEMBERSHIP CONTROLLER

@@ -1,14 +1,14 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
-const eventMembershipController = require('../controllers/eventMembershipController');
+const eventMembershipController = require("../controllers/eventMembershipController");
 
-const { authenticateToken } = require('../middlewares/authenticateToken');
+const { authenticateToken } = require("../middlewares/authenticateToken");
 const handleValidationErrors = require("../middlewares/handleValidationErrors");
-const authorizeEventRole = require('../middlewares/authorizeEventRole');
-const { authorizeEventMemberRoleUpdate, authorizeEventMemberRemoval } = require('../middlewares/eventMemberAuthorization');
+const authorizeEventRole = require("../middlewares/authorizeEventRole");
+const { authorizeEventMemberRoleUpdate, authorizeEventMemberRemoval } = require("../middlewares/eventMemberAuthorization");
 
-const { eventIdParamValidator, updateEventMemberRoleValidator, removeEventMemberValidator } = require('../validators/eventMembershipValidator');
+const { eventIdParamValidator, updateEventMemberRoleValidator, removeEventMemberValidator } = require("../validators/eventMembershipValidator");
 
 /* ==================================================
    EVENT MEMBERSHIP ROUTES

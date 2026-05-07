@@ -143,10 +143,12 @@ const updateEventValidator = [
         }),
 
     body("startDateTime")
+        .optional()
         .notEmpty().withMessage("Start date and time is required")
         .isISO8601().withMessage("Start date and time must be a valid ISO8601 date"),
 
     body("endDateTime")
+        .optional()
         .notEmpty().withMessage("End date and time is required")
         .isISO8601().withMessage("End date and time must be a valid ISO8601 date")
         .custom((value, { req }) => {
@@ -180,7 +182,6 @@ const updateEventValidator = [
             return true;
         })
 ];
-
 
 /* =============================
    EVENT QUERY FILTERS

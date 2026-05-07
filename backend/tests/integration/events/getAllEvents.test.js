@@ -21,6 +21,9 @@ const request = require("supertest");
 const app = require("../../../src/app");
 const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
 
+const { registerAndGetToken } = require('../../helpers/authHelper');
+const { getValidEventPayload, createEvent } = require('../../helpers/eventHelper');
+
 describe("Get All Events API", () => {
     beforeAll(async () => {
         await initDB();
@@ -37,53 +40,16 @@ describe("Get All Events API", () => {
     });
 
     /* =============================
-       HELPERS
-    ============================= */
-
-    const registerAndGetToken = async (name, email) => {
-        const res = await request(app)
-            .post("/api/auth/register")
-            .send({
-                name,
-                email,
-                password: "Password123"
-            });
-
-        return res.body.token;
-    };
-
-    const getValidEventPayload = (overrides = {}) => ({
-        title: "Test Event",
-        description: "Test description",
-        startDateTime: "2026-12-31T10:00:00.000Z",
-        endDateTime: "2026-12-31T12:00:00.000Z",
-        mode: "in_person",
-        location: "Montreal",
-        type: "Meetup",
-        theme: "Technology",
-        ...overrides
-    });
-
-    const createEvent = async (token, overrides = {}) => {
-        const res = await request(app)
-            .post("/api/events")
-            .set("Authorization", `Bearer ${token}`)
-            .send(getValidEventPayload(overrides));
-
-        return res.body.event;
-    };
-
-    /* =============================
        EVENT LISTING
     ============================= */
 
     it("should retrieve all events", async () => {
-        const token = await registerAndGetToken(
-            "Event User",
-            `events${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: "Event User",
+            email: `events${Date.now()}@test.com`
+        });
 
-        await createEvent(token);
+        await createEvent(auth.headers);
 
         const res = await request(app).get("/api/events");
 
@@ -93,12 +59,12 @@ describe("Get All Events API", () => {
     });
 
     it("should include status in event listing", async () => {
-        const token = await registerAndGetToken(
-            "Listing User",
-            `listing${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: "Listing User",
+            email: `listing${Date.now()}@test.com`
+        });
 
-        await createEvent(token, {
+        await createEvent(auth.headers, {
             title: "Future Event",
             startDateTime: "2030-01-01T10:00:00.000Z",
             endDateTime: "2030-01-01T12:00:00.000Z"
@@ -115,13 +81,13 @@ describe("Get All Events API", () => {
     ============================= */
 
     it("should filter events by type", async () => {
-        const token = await registerAndGetToken(
-            "User",
-            `type${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: "User",
+            email: `type${Date.now()}@test.com`
+        });
 
-        await createEvent(token, { type: "Meetup" });
-        await createEvent(token, { type: "Conference" });
+        await createEvent(auth.headers, { type: "Meetup" });
+        await createEvent(auth.headers, { type: "Conference" });
 
         const res = await request(app)
             .get("/api/events")
@@ -132,13 +98,13 @@ describe("Get All Events API", () => {
     });
 
     it("should filter events by theme", async () => {
-        const token = await registerAndGetToken(
-            "User",
-            `theme${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: "User",
+            email: `theme${Date.now()}@test.com`
+        });
 
-        await createEvent(token, { theme: "Technology" });
-        await createEvent(token, { theme: "Business" });
+        await createEvent(auth.headers, { theme: "Technology" });
+        await createEvent(auth.headers, { theme: "Business" });
 
         const res = await request(app)
             .get("/api/events")
@@ -149,13 +115,13 @@ describe("Get All Events API", () => {
     });
 
     it("should filter events by search term", async () => {
-        const token = await registerAndGetToken(
-            "User",
-            `search${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: "User",
+            email: `search${Date.now()}@test.com`
+        });
 
-        await createEvent(token, { title: "JavaScript Meetup" });
-        await createEvent(token, { title: "Cooking Workshop" });
+        await createEvent(auth.headers, { title: "JavaScript Meetup" });
+        await createEvent(auth.headers, { title: "Cooking Workshop" });
 
         const res = await request(app)
             .get("/api/events")
@@ -170,12 +136,12 @@ describe("Get All Events API", () => {
     ============================= */
 
     it("should filter events by exact date", async () => {
-        const token = await registerAndGetToken(
-            "User",
-            `date${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: "User",
+            email: `date${Date.now()}@test.com`
+        });
 
-        await createEvent(token, {
+        await createEvent(auth.headers, {
             startDateTime: "2026-12-31T10:00:00.000Z",
             endDateTime: "2026-12-31T12:00:00.000Z"
         });
@@ -189,12 +155,12 @@ describe("Get All Events API", () => {
     });
 
     it("should filter events by date range", async () => {
-        const token = await registerAndGetToken(
-            "User",
-            `range${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: "User",
+            email: `range${Date.now()}@test.com`
+        });
 
-        await createEvent(token, {
+        await createEvent(auth.headers, {
             startDateTime: "2026-12-20T10:00:00.000Z",
             endDateTime: "2026-12-20T12:00:00.000Z"
         });
@@ -215,18 +181,18 @@ describe("Get All Events API", () => {
     ============================= */
 
     it("should filter events with combined params", async () => {
-        const token = await registerAndGetToken(
-            "User",
-            `combo${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: "User",
+            email: `combo${Date.now()}@test.com`
+        });
 
-        await createEvent(token, {
+        await createEvent(auth.headers, {
             type: "Meetup",
             theme: "Technology",
             location: "Montreal"
         });
 
-        await createEvent(token, {
+        await createEvent(auth.headers, {
             type: "Meetup",
             theme: "Business",
             location: "Quebec"
@@ -263,18 +229,18 @@ describe("Get All Events API", () => {
     ============================= */
 
     it("should filter upcoming events", async () => {
-        const token = await registerAndGetToken(
-            "User",
-            `upcoming${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: "User",
+            email: `upcoming${Date.now()}@test.com`
+        });
 
-        await createEvent(token, {
+        await createEvent(auth.headers, {
             title: "Upcoming Event",
             startDateTime: "2030-01-01T10:00:00.000Z",
             endDateTime: "2030-01-01T12:00:00.000Z"
         });
 
-        await createEvent(token, {
+        await createEvent(auth.headers, {
             title: "Past Event",
             startDateTime: "2020-01-01T10:00:00.000Z",
             endDateTime: "2020-01-01T12:00:00.000Z"
@@ -289,12 +255,12 @@ describe("Get All Events API", () => {
     });
 
     it("should filter past events", async () => {
-        const token = await registerAndGetToken(
-            "User",
-            `past${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: "User",
+            email: `past${Date.now()}@test.com`
+        });
 
-        await createEvent(token, {
+        await createEvent(auth.headers, {
             title: "Past Event",
             startDateTime: "2020-01-01T10:00:00.000Z",
             endDateTime: "2020-01-01T12:00:00.000Z"
@@ -313,14 +279,14 @@ describe("Get All Events API", () => {
     ============================= */
 
     it("should paginate events", async () => {
-        const token = await registerAndGetToken(
-            "Pagination User",
-            `pagination${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: "Pagination User",
+            email: `pagination${Date.now()}@test.com`
+        });
 
-        await createEvent(token, { title: "Event 1" });
-        await createEvent(token, { title: "Event 2" });
-        await createEvent(token, { title: "Event 3" });
+        await createEvent(auth.headers, { title: "Event 1" });
+        await createEvent(auth.headers, { title: "Event 2" });
+        await createEvent(auth.headers, { title: "Event 3" });
 
         const res = await request(app)
             .get("/api/events")
@@ -339,13 +305,13 @@ describe("Get All Events API", () => {
     ============================= */
 
     it("should sort events by title ascending", async () => {
-        const token = await registerAndGetToken(
-            "User",
-            `sort${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: "User",
+            email: `sort${Date.now()}@test.com`
+        });
 
-        await createEvent(token, { title: "Zulu" });
-        await createEvent(token, { title: "Alpha" });
+        await createEvent(auth.headers, { title: "Zulu" });
+        await createEvent(auth.headers, { title: "Alpha" });
 
         const res = await request(app)
             .get("/api/events")

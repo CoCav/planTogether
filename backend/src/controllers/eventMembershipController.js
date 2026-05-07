@@ -68,7 +68,7 @@ const getEventMembers = async (req, res, next) => {
         const members = await eventMembershipService.getEventMembers(eventId);
 
         return res.status(200).json({
-            message: 'All event Members retrieved successfully',
+            message: 'Event members retrieved successfully',
             members
         });
 

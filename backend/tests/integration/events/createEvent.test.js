@@ -17,6 +17,10 @@ const request = require('supertest');
 const app = require('../../../src/app');
 const { initDB, sequelize, User, Event, EventUserRole } = require('../../../src/models');
 
+const { registerAndGetToken } = require('../../helpers/authHelper');
+const { getValidEventPayload } = require('../../helpers/eventHelper');
+
+
 describe('Create Event API', () => {
 
     beforeAll(async () => {
@@ -34,48 +38,18 @@ describe('Create Event API', () => {
     });
 
     /* =============================
-       HELPERS
-    ============================= */
-
-    // Register a test user and return auth token
-    const registerAndGetToken = async (name, email) => {
-        const registerRes = await request(app)
-            .post('/api/auth/register')
-            .send({
-                name,
-                email,
-                password: 'Password123'
-            });
-
-        return registerRes.body.token;
-    };
-
-    // Generate a valid event payload
-    const getValidEventPayload = (overrides = {}) => ({
-        title: 'Test Event',
-        description: 'This is a test event',
-        startDateTime: '2026-12-31T10:00:00.000Z',
-        endDateTime: '2026-12-31T12:00:00.000Z',
-        mode: 'in_person',
-        location: 'Montreal',
-        type: 'Meetup',
-        theme: 'Technology',
-        ...overrides
-    });
-
-    /* =============================
        EVENT CREATION
     ============================= */
 
     it('should create an event for an authenticated user', async () => {
-        const token = await registerAndGetToken(
-            'Event Creator',
-            `event${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: 'Event Creator',
+            email: `event${Date.now()}@test.com`
+        });
 
         const res = await request(app)
             .post('/api/events')
-            .set('Authorization', `Bearer ${token}`)
+            .set(auth.headers)
             .send(getValidEventPayload());
 
         expect(res.statusCode).toBe(201);
@@ -94,14 +68,14 @@ describe('Create Event API', () => {
     });
 
     it('should create an online event without location', async () => {
-        const token = await registerAndGetToken(
-            'Online Event Creator',
-            `onlineevent${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: 'Online Event Creator',
+            email: `onlineevent${Date.now()}@test.com`
+        });
 
         const res = await request(app)
             .post('/api/events')
-            .set('Authorization', `Bearer ${token}`)
+            .set(auth.headers)
             .send(
                 getValidEventPayload({
                     mode: 'online',
@@ -119,14 +93,14 @@ describe('Create Event API', () => {
     });
 
     it('should create an event with a participant limit and registration deadline', async () => {
-        const token = await registerAndGetToken(
-            'Limited Event Creator',
-            `limitedevent${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: 'Limited Event Creator',
+            email: `limitedevent${Date.now()}@test.com`
+        });
 
         const res = await request(app)
             .post('/api/events')
-            .set('Authorization', `Bearer ${token}`)
+            .set(auth.headers)
             .send(
                 getValidEventPayload({
                     maxParticipants: 25,
@@ -149,22 +123,28 @@ describe('Create Event API', () => {
     ============================= */
 
     it('should reject missing title', async () => {
-        const token = await registerAndGetToken('User', `title${Date.now()}@test.com`);
+        const auth = await registerAndGetToken({
+            name: 'User',
+            email: `title${Date.now()}@test.com`
+        });
 
         const res = await request(app)
             .post('/api/events')
-            .set('Authorization', `Bearer ${token}`)
+            .set(auth.headers)
             .send(getValidEventPayload({ title: '' }));
 
         expect(res.statusCode).toBe(400);
     });
 
     it('should reject invalid date order', async () => {
-        const token = await registerAndGetToken('User', `date${Date.now()}@test.com`);
+        const auth = await registerAndGetToken({
+            name: 'User',
+            email: `date${Date.now()}@test.com`
+        });
 
         const res = await request(app)
             .post('/api/events')
-            .set('Authorization', `Bearer ${token}`)
+            .set(auth.headers)
             .send(getValidEventPayload({
                 startDateTime: '2026-12-31T12:00:00.000Z',
                 endDateTime: '2026-12-31T10:00:00.000Z'
@@ -174,22 +154,28 @@ describe('Create Event API', () => {
     });
 
     it('should reject invalid mode', async () => {
-        const token = await registerAndGetToken('User', `mode${Date.now()}@test.com`);
+        const auth = await registerAndGetToken({
+            name: 'User',
+            email: `mode${Date.now()}@test.com`
+        });
 
         const res = await request(app)
             .post('/api/events')
-            .set('Authorization', `Bearer ${token}`)
+            .set(auth.headers)
             .send(getValidEventPayload({ mode: 'hybrid' }));
 
         expect(res.statusCode).toBe(400);
     });
 
     it('should reject in-person event without location', async () => {
-        const token = await registerAndGetToken('User', `loc${Date.now()}@test.com`);
+        const auth = await registerAndGetToken({
+            name: 'User',
+            email: `loc${Date.now()}@test.com`
+        });
 
         const res = await request(app)
             .post('/api/events')
-            .set('Authorization', `Bearer ${token}`)
+            .set(auth.headers)
             .send(getValidEventPayload({
                 mode: 'in_person',
                 location: ''
@@ -199,14 +185,14 @@ describe('Create Event API', () => {
     });
 
     it('should reject event creation when registration deadline is after event start', async () => {
-        const token = await registerAndGetToken(
-            'Invalid Deadline Creator',
-            `invaliddeadline${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: 'Invalid Deadline Creator',
+            email: `invaliddeadline${Date.now()}@test.com`
+        });
 
         const res = await request(app)
             .post('/api/events')
-            .set('Authorization', `Bearer ${token}`)
+            .set(auth.headers)
             .send(
                 getValidEventPayload({
                     registrationDeadline: '2026-12-31T11:00:00.000Z'

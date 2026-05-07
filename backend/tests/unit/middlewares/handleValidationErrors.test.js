@@ -17,21 +17,9 @@
 const handleValidationErrors = require("../../../src/middlewares/handleValidationErrors");
 const { validationResult } = require("express-validator");
 
+const { createMockReqResNext } = require("../../helpers/mockExpress");
+
 jest.mock("express-validator");
-
-// Create mocked Express request/response objects
-const createMocks = () => {
-    const req = {};
-
-    const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-    };
-
-    const next = jest.fn();
-
-    return { req, res, next };
-};
 
 describe("handleValidationErrors middleware", () => {
     const originalEnv = process.env.NODE_ENV;
@@ -46,7 +34,7 @@ describe("handleValidationErrors middleware", () => {
     });
 
     it("should call next when there are no validation errors", () => {
-        const { req, res, next } = createMocks();
+        const { req, res, next } = createMockReqResNext();
 
         validationResult.mockReturnValue({
             isEmpty: () => true
@@ -58,7 +46,7 @@ describe("handleValidationErrors middleware", () => {
     });
 
     it("should forward formatted errors to next when validation fails", () => {
-        const { req, res, next } = createMocks();
+        const { req, res, next } = createMockReqResNext();
 
         validationResult.mockReturnValue({
             isEmpty: () => false,
@@ -81,7 +69,7 @@ describe("handleValidationErrors middleware", () => {
     });
 
     it("should log validation errors when not in production", () => {
-        const { req, res, next } = createMocks();
+        const { req, res, next } = createMockReqResNext();
 
         jest.spyOn(console, "log").mockImplementation(() => { });
 
@@ -105,7 +93,7 @@ describe("handleValidationErrors middleware", () => {
     it("should not log validation errors in production", () => {
         process.env.NODE_ENV = "production";
 
-        const { req, res, next } = createMocks();
+        const { req, res, next } = createMockReqResNext();
 
         jest.spyOn(console, "log").mockImplementation(() => { });
 
@@ -124,7 +112,7 @@ describe("handleValidationErrors middleware", () => {
     });
 
     it("should fallback to param when path is missing", () => {
-        const { req, res, next } = createMocks();
+        const { req, res, next } = createMockReqResNext();
 
         validationResult.mockReturnValue({
             isEmpty: () => false,

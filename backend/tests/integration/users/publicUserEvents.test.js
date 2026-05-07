@@ -16,10 +16,12 @@
 
 const request = require("supertest");
 const app = require("../../../src/app");
+
 const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
 
-describe("Public User Events API", () => {
+const { registerAndGetToken } = require("../../helpers/authHelper");
 
+describe("Public User Events API", () => {
     beforeAll(async () => {
         await initDB();
     });
@@ -35,33 +37,16 @@ describe("Public User Events API", () => {
     });
 
     /* =============================
-       HELPERS
-    ============================= */
-
-    // Register a test user and return auth token
-    const registerAndGetToken = async (name, email) => {
-        const res = await request(app)
-            .post("/api/auth/register")
-            .send({
-                name,
-                email,
-                password: "Password123"
-            });
-
-        return res.body.token;
-    };
-
-    /* =============================
        PUBLIC USER EVENTS
     ============================= */
 
     it("should get created and joined events", async () => {
-        const token = await registerAndGetToken(
-            "Viewer",
-            `viewer${Date.now()}@test.com`
-        );
+        const viewerAuth = await registerAndGetToken({
+            name: "Viewer",
+            email: `viewer${Date.now()}@test.com`
+        });
 
-        const target = await User.create({
+        const targetUser = await User.create({
             name: "Target User",
             email: `target${Date.now()}@test.com`,
             password: "Password123"
@@ -74,7 +59,7 @@ describe("Public User Events API", () => {
         });
 
         const createdEvent = await Event.create({
-            creatorId: target.id,
+            creatorId: targetUser.id,
             title: "Created Event",
             description: "desc",
             type: "Meetup",
@@ -100,20 +85,20 @@ describe("Public User Events API", () => {
         // Creator membership
         await EventUserRole.create({
             eventId: createdEvent.id,
-            userId: target.id,
+            userId: targetUser.id,
             role: "organizer"
         });
 
         // Joined membership
         await EventUserRole.create({
             eventId: joinedEvent.id,
-            userId: target.id,
+            userId: targetUser.id,
             role: "participant"
         });
 
         const res = await request(app)
-            .get(`/api/users/${target.id}/events`)
-            .set("Authorization", `Bearer ${token}`);
+            .get(`/api/users/${targetUser.id}/events`)
+            .set(viewerAuth.headers);
 
         expect(res.statusCode).toBe(200);
 
@@ -125,20 +110,20 @@ describe("Public User Events API", () => {
     });
 
     it("should return empty arrays if no events", async () => {
-        const token = await registerAndGetToken(
-            "Viewer",
-            `viewer${Date.now()}@test.com`
-        );
+        const viewerAuth = await registerAndGetToken({
+            name: "Viewer",
+            email: `viewer${Date.now()}@test.com`
+        });
 
-        const user = await User.create({
+        const targetUser = await User.create({
             name: "Empty User",
             email: `empty${Date.now()}@test.com`,
             password: "Password123"
         });
 
         const res = await request(app)
-            .get(`/api/users/${user.id}/events`)
-            .set("Authorization", `Bearer ${token}`);
+            .get(`/api/users/${targetUser.id}/events`)
+            .set(viewerAuth.headers);
 
         expect(res.statusCode).toBe(200);
 
@@ -160,27 +145,27 @@ describe("Public User Events API", () => {
     });
 
     it("should reject invalid user ID", async () => {
-        const token = await registerAndGetToken(
-            "Viewer",
-            `viewer${Date.now()}@test.com`
-        );
+        const viewerAuth = await registerAndGetToken({
+            name: "Viewer",
+            email: `viewer${Date.now()}@test.com`
+        });
 
         const res = await request(app)
             .get("/api/users/abc/events")
-            .set("Authorization", `Bearer ${token}`);
+            .set(viewerAuth.headers);
 
         expect(res.statusCode).toBe(400);
     });
 
     it("should return 404 if user does not exist", async () => {
-        const token = await registerAndGetToken(
-            "Viewer",
-            `viewer${Date.now()}@test.com`
-        );
+        const viewerAuth = await registerAndGetToken({
+            name: "Viewer",
+            email: `viewer${Date.now()}@test.com`
+        });
 
         const res = await request(app)
             .get("/api/users/999999/events")
-            .set("Authorization", `Bearer ${token}`);
+            .set(viewerAuth.headers);
 
         expect(res.statusCode).toBe(404);
     });

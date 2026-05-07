@@ -14,7 +14,12 @@
 
 const request = require("supertest");
 const app = require("../../../src/app");
+
 const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
+
+const { registerAndGetToken } = require("../../helpers/authHelper");
+const { createEvent } = require("../../helpers/eventHelper");
+const { getUserIdByEmail } = require("../../helpers/userHelper");
 
 describe("Get Event Staff API", () => {
     beforeAll(async () => {
@@ -31,91 +36,92 @@ describe("Get Event Staff API", () => {
         await sequelize.close();
     });
 
-    const registerUser = async (name, email) => {
-        const res = await request(app)
-            .post("/api/auth/register")
-            .send({
-                name,
-                email,
-                password: "Password123"
-            });
-
-        return {
-            token: res.body.token,
-            email
-        };
-    };
-
-    const createEvent = async (token, overrides = {}) => {
-        return request(app)
-            .post("/api/events")
-            .set("Authorization", `Bearer ${token}`)
-            .send({
-                title: "Test Event",
-                description: "Test",
-                startDateTime: "2026-12-31T10:00:00.000Z",
-                endDateTime: "2026-12-31T12:00:00.000Z",
-                mode: "in_person",
-                location: "Montreal",
-                type: "Meetup",
-                theme: "Tech",
-                ...overrides
-            });
-    };
+    /* =============================
+       EVENT STAFF RETRIEVAL
+    ============================= */
 
     it("should retrieve event staff", async () => {
-        const creator = await registerUser(
-            "Organizer User",
-            `organizer${Date.now()}@test.com`
-        );
+        const eventCreatorAuth = await registerAndGetToken({
+            name: "Event Creator",
+            email: `creator${Date.now()}@test.com`
+        });
 
-        const eventRes = await createEvent(creator.token);
+        const coOrganizerAuth = await registerAndGetToken({
+            name: "Co Organizer",
+            email: `coorg${Date.now()}@test.com`
+        });
+
+        const eventRes = await createEvent(eventCreatorAuth.headers);
         const eventId = eventRes.body.event.id;
 
-        const res = await request(app).get(`/api/events/${eventId}/staff`)
+        await request(app)
+            .post(`/api/events/${eventId}/members/join`)
+            .set(coOrganizerAuth.headers);
+
+        const coOrganizerId = await getUserIdByEmail(
+            coOrganizerAuth.email
+        );
+
+        await request(app)
+            .put(`/api/events/${eventId}/members/${coOrganizerId}/role`)
+            .set(eventCreatorAuth.headers)
+            .send({
+                newRole: "co_organizer"
+            });
+
+        const res = await request(app).get(`/api/events/${eventId}/staff`);
 
         expect(res.statusCode).toBe(200);
 
         expect(res.body).toHaveProperty("eventStaff");
         expect(Array.isArray(res.body.eventStaff)).toBe(true);
-        expect(res.body.eventStaff.length).toBeGreaterThan(0);
+
+        const staffEmails = res.body.eventStaff.map(
+            (staffMember) => staffMember.email || staffMember.User?.email
+        );
+
+        expect(staffEmails).toContain(eventCreatorAuth.email);
+        expect(staffEmails).toContain(coOrganizerAuth.email);
     });
 
     it("should allow public access to event staff endpoint", async () => {
-        const creator = await registerUser(
-            "Public Organizer Creator",
-            `publicorganizer${Date.now()}@test.com`
-        );
+        const eventCreatorAuth = await registerAndGetToken({
+            name: "Event Creator",
+            email: `creator${Date.now()}@test.com`
+        });
 
-        const eventRes = await createEvent(creator.token);
+        const eventRes = await createEvent(eventCreatorAuth.headers);
 
-        const res = await request(app).get(`/api/events/${eventRes.body.event.id}/staff`);
+        const eventId = eventRes.body.event.id;
+
+        const res = await request(app).get(`/api/events/${eventId}/staff`);
 
         expect(res.statusCode).toBe(200);
+
         expect(res.body).toHaveProperty("eventStaff");
     });
 
     it("should assign organizer role to the event creator", async () => {
-        const creatorEmail = `mainorganizer${Date.now()}@test.com`;
+        const eventCreatorAuth = await registerAndGetToken({
+            name: "Main Organizer",
+            email: `mainorganizer${Date.now()}@test.com`
+        });
 
-        const creator = await registerUser(
-            "Main Organizer",
-            creatorEmail
-        );
+        const eventRes = await createEvent(eventCreatorAuth.headers);
 
-        const eventRes = await createEvent(creator.token);
         const eventId = eventRes.body.event.id;
 
-        const res = await request(app).get(`/api/events/${eventId}/staff`)
+        const res = await request(app).get(`/api/events/${eventId}/staff`);
 
         expect(res.statusCode).toBe(200);
 
         expect(Array.isArray(res.body.eventStaff)).toBe(true);
 
-        const organizerEmails = res.body.eventStaff.map(
-            (staffMember) => staffMember.email || staffMember.User?.email
+        const creatorStaffMember = res.body.eventStaff.find(
+            (staffMember) => (staffMember.email || staffMember.User?.email) === eventCreatorAuth.email
         );
 
-        expect(organizerEmails).toContain(creatorEmail);
+        expect(creatorStaffMember).toBeDefined();
+        expect(creatorStaffMember.role).toBe("organizer");
     });
 });

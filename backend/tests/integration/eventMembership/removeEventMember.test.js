@@ -18,6 +18,11 @@ const request = require("supertest");
 const app = require("../../../src/app");
 const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
 
+const { registerAndGetToken } = require("../../helpers/authHelper");
+const { createEvent } = require("../../helpers/eventHelper");
+const { getUserIdByEmail } = require("../../helpers/userHelper");
+const { joinEvent, updateMemberRole } = require("../../helpers/eventMembershipHelper");
+
 describe("Remove Event Member API", () => {
     beforeAll(async () => {
         await initDB();
@@ -34,108 +39,48 @@ describe("Remove Event Member API", () => {
     });
 
     /* =============================
-       HELPERS
-    ============================= */
-
-    const registerUser = async (name, email) => {
-        const res = await request(app)
-            .post("/api/auth/register")
-            .send({
-                name,
-                email,
-                password: "Password123"
-            });
-
-        return {
-            token: res.body.token,
-            email
-        };
-    };
-
-    const createEvent = async (token) => {
-        const res = await request(app)
-            .post("/api/events")
-            .set("Authorization", `Bearer ${token}`)
-            .send({
-                title: "Test Event",
-                description: "Test",
-                startDateTime: "2026-12-31T10:00:00.000Z",
-                endDateTime: "2026-12-31T12:00:00.000Z",
-                mode: "in_person",
-                location: "Montreal",
-                type: "Meetup",
-                theme: "Tech"
-            });
-
-        return res.body.event;
-    };
-
-    const getUserId = async (email) => {
-        const user = await User.findOne({
-            where: { email }
-        });
-
-        return user.id;
-    };
-
-    const joinEvent = async (eventId, token) => {
-        await request(app)
-            .post(`/api/events/${eventId}/members/join`)
-            .set("Authorization", `Bearer ${token}`);
-    };
-
-    const updateMemberRole = async (eventId, userId, token, newRole) => {
-        await request(app)
-            .put(`/api/events/${eventId}/members/${userId}/role`)
-            .set("Authorization", `Bearer ${token}`)
-            .send({ newRole });
-    };
-
-    /* =============================
        ORGANIZER PERMISSIONS
     ============================= */
 
     it("should allow organizer to remove a participant", async () => {
-        const organizer = await registerUser(
-            "Organizer",
-            `org${Date.now()}@test.com`
-        );
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `org${Date.now()}@test.com`
+        });
 
-        const participantEmail = `participant${Date.now()}@test.com`;
+        const participantAuth = await registerAndGetToken({
+            name: "Participant",
+            email: `participant${Date.now()}@test.com`
+        });
 
-        const participant = await registerUser(
-            "Participant",
-            participantEmail
-        );
+        const participantAuthID = await getUserIdByEmail(participantAuth.email);
 
-        const participantId = await getUserId(participantEmail);
+        const eventRes = await createEvent(organizerAuth.headers);
+        const event = eventRes.body.event;
 
-        const event = await createEvent(organizer.token);
-
-        await joinEvent(event.id, participant.token);
+        await joinEvent(event.id, participantAuth.headers);
 
         const res = await request(app)
-            .delete(`/api/events/${event.id}/members/${participantId}`)
-            .set("Authorization", `Bearer ${organizer.token}`);
+            .delete(`/api/events/${event.id}/members/${participantAuthID}`)
+            .set(organizerAuth.headers);
 
         expect(res.statusCode).toBe(200);
     });
 
     it("should reject organizer removing themselves", async () => {
-        const organizerEmail = `org${Date.now()}@test.com`;
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `org${Date.now()}@test.com`
+        });
 
-        const organizer = await registerUser(
-            "Organizer",
-            organizerEmail
-        );
+        const organizerID = await getUserIdByEmail(organizerAuth.email);
 
-        const organizerId = await getUserId(organizerEmail);
-
-        const event = await createEvent(organizer.token);
+        const eventRes = await createEvent(organizerAuth.headers);
+        const event = eventRes.body.event;
 
         const res = await request(app)
-            .delete(`/api/events/${event.id}/members/${organizerId}`)
-            .set("Authorization", `Bearer ${organizer.token}`);
+            .delete(`/api/events/${event.id}/members/${organizerID}`)
+            .set(organizerAuth.headers);
 
         expect(res.statusCode).toBe(403);
     });
@@ -145,90 +90,86 @@ describe("Remove Event Member API", () => {
     ============================= */
 
     it("should allow co_organizer to remove a participant", async () => {
-        const organizer = await registerUser(
-            "Organizer",
-            `org${Date.now()}@test.com`
-        );
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `org${Date.now()}@test.com`
+        });
 
-        const coOrganizerEmail = `co${Date.now()}@test.com`;
-        const participantEmail = `participant${Date.now()}@test.com`;
+        const coOrganizerAuth = await registerAndGetToken({
+            name: "Co Organizer",
+            email: `co${Date.now()}@test.com`
+        });
 
-        const coOrganizer = await registerUser(
-            "Co Organizer",
-            coOrganizerEmail
-        );
+        const participantAuth = await registerAndGetToken({
+            name: "Participant",
+            email: `participant${Date.now()}@test.com`
+        });
 
-        const participant = await registerUser(
-            "Participant",
-            participantEmail
-        );
+        const coOrganizerID = await getUserIdByEmail(coOrganizerAuth.email);
+        const participantID = await getUserIdByEmail(participantAuth.email);
 
-        const coOrganizerId = await getUserId(coOrganizerEmail);
-        const participantId = await getUserId(participantEmail);
+        const eventRes = await createEvent(organizerAuth.headers);
+        const event = eventRes.body.event;
 
-        const event = await createEvent(organizer.token);
-
-        await joinEvent(event.id, coOrganizer.token);
-        await joinEvent(event.id, participant.token);
+        await joinEvent(event.id, coOrganizerAuth.headers);
+        await joinEvent(event.id, participantAuth.headers);
 
         await updateMemberRole(
             event.id,
-            coOrganizerId,
-            organizer.token,
+            coOrganizerID,
+            organizerAuth.headers,
             "co_organizer"
         );
 
         const res = await request(app)
-            .delete(`/api/events/${event.id}/members/${participantId}`)
-            .set("Authorization", `Bearer ${coOrganizer.token}`);
+            .delete(`/api/events/${event.id}/members/${participantID}`)
+            .set(coOrganizerAuth.headers);
 
         expect(res.statusCode).toBe(200);
     });
 
     it("should reject removing another co_organizer", async () => {
-        const organizer = await registerUser(
-            "Organizer",
-            `org${Date.now()}@test.com`
-        );
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `org${Date.now()}@test.com`
+        });
 
-        const coOneEmail = `co1${Date.now()}@test.com`;
-        const coTwoEmail = `co2${Date.now()}@test.com`;
+        const coOneAuth = await registerAndGetToken({
+            name: "Co Organizer One",
+            email: `co1${Date.now()}@test.com`
+        });
 
-        const coOne = await registerUser(
-            "Co Organizer One",
-            coOneEmail
-        );
+        const coTwoAuth = await registerAndGetToken({
+            name: "Co Organizer Two",
+            email: `co2${Date.now()}@test.com`
+        });
 
-        const coTwo = await registerUser(
-            "Co Organizer Two",
-            coTwoEmail
-        );
+        const coOneID = await getUserIdByEmail(coOneAuth.email);
+        const coTwoID = await getUserIdByEmail(coTwoAuth.email);
 
-        const coOneId = await getUserId(coOneEmail);
-        const coTwoId = await getUserId(coTwoEmail);
+        const eventRes = await createEvent(organizerAuth.headers);
+        const event = eventRes.body.event;
 
-        const event = await createEvent(organizer.token);
-
-        await joinEvent(event.id, coOne.token);
-        await joinEvent(event.id, coTwo.token);
+        await joinEvent(event.id, coOneAuth.headers);
+        await joinEvent(event.id, coTwoAuth.headers);
 
         await updateMemberRole(
             event.id,
-            coOneId,
-            organizer.token,
+            coOneID,
+            organizerAuth.headers,
             "co_organizer"
         );
 
         await updateMemberRole(
             event.id,
-            coTwoId,
-            organizer.token,
+            coTwoID,
+            organizerAuth.headers,
             "co_organizer"
         );
 
         const res = await request(app)
-            .delete(`/api/events/${event.id}/members/${coTwoId}`)
-            .set("Authorization", `Bearer ${coOne.token}`);
+            .delete(`/api/events/${event.id}/members/${coTwoID}`)
+            .set(coOneAuth.headers);
 
         expect(res.statusCode).toBe(403);
     });
@@ -238,34 +179,33 @@ describe("Remove Event Member API", () => {
     ============================= */
 
     it("should reject member removal by participant", async () => {
-        const organizer = await registerUser(
-            "Organizer",
-            `org${Date.now()}@test.com`
-        );
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `org${Date.now()}@test.com`
+        });
 
-        const participantOneEmail = `p1${Date.now()}@test.com`;
-        const participantTwoEmail = `p2${Date.now()}@test.com`;
+        const participantOneAuth = await registerAndGetToken({
+            name: "Participant One",
+            email: `p1${Date.now()}@test.com`
+        });
 
-        const participantOne = await registerUser(
-            "Participant One",
-            participantOneEmail
-        );
+        const participantTwoAuth = await registerAndGetToken({
+            name: "Participant Two",
+            email: `p2${Date.now()}@test.com`
+        });
 
-        const participantTwo = await registerUser(
-            "Participant Two",
-            participantTwoEmail
-        );
+        const participantOneID = await getUserIdByEmail(participantOneAuth.email);
+        const participantTwoID = await getUserIdByEmail(participantTwoAuth.email);
 
-        const participantTwoId = await getUserId(participantTwoEmail);
+        const eventRes = await createEvent(organizerAuth.headers);
+        const event = eventRes.body.event;
 
-        const event = await createEvent(organizer.token);
-
-        await joinEvent(event.id, participantOne.token);
-        await joinEvent(event.id, participantTwo.token);
+        await joinEvent(event.id, participantOneAuth.headers);
+        await joinEvent(event.id, participantTwoAuth.headers);
 
         const res = await request(app)
-            .delete(`/api/events/${event.id}/members/${participantTwoId}`)
-            .set("Authorization", `Bearer ${participantOne.token}`);
+            .delete(`/api/events/${event.id}/members/${participantTwoID}`)
+            .set(participantOneAuth.headers);
 
         expect(res.statusCode).toBe(403);
     });
@@ -275,29 +215,30 @@ describe("Remove Event Member API", () => {
     ============================= */
 
     it("should reject member removal with non-integer eventId", async () => {
-        const organizer = await registerUser(
-            "Organizer",
-            `removeinvalideventid${Date.now()}@test.com`
-        );
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `removeinvalideventid${Date.now()}@test.com`
+        });
 
         const res = await request(app)
             .delete("/api/events/abc/members/1")
-            .set("Authorization", `Bearer ${organizer.token}`);
+            .set(organizerAuth.headers);
 
         expect(res.statusCode).toBe(400);
     });
 
     it("should reject member removal with non-integer userId", async () => {
-        const organizer = await registerUser(
-            "Organizer",
-            `removeinvaliduserid${Date.now()}@test.com`
-        );
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `removeinvaliduserid${Date.now()}@test.com`
+        });
 
-        const event = await createEvent(organizer.token);
+        const eventRes = await createEvent(organizerAuth.headers);
+        const event = eventRes.body.event;
 
         const res = await request(app)
             .delete(`/api/events/${event.id}/members/abc`)
-            .set("Authorization", `Bearer ${organizer.token}`);
+            .set(organizerAuth.headers);
 
         expect(res.statusCode).toBe(400);
     });

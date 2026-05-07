@@ -18,19 +18,7 @@
 const multer = require("multer");
 const errorHandler = require("../../../src/middlewares/errorHandler");
 
-// Create mocked Express request/response objects
-const createMocks = () => {
-    const req = {};
-
-    const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-    };
-
-    const next = jest.fn();
-
-    return { req, res, next };
-};
+const { createMockReqResNext } = require("../../helpers/mockExpress");
 
 describe("errorHandler middleware", () => {
     const originalEnv = process.env.NODE_ENV;
@@ -51,7 +39,7 @@ describe("errorHandler middleware", () => {
     ============================= */
 
     it("should handle Multer file size errors", () => {
-        const { req, res, next } = createMocks();
+        const { req, res, next } = createMockReqResNext();
 
         const error = new multer.MulterError("LIMIT_FILE_SIZE");
 
@@ -65,7 +53,7 @@ describe("errorHandler middleware", () => {
     });
 
     it("should handle generic Multer errors", () => {
-        const { req, res, next } = createMocks();
+        const { req, res, next } = createMockReqResNext();
 
         const error = new multer.MulterError("LIMIT_UNEXPECTED_FILE");
 
@@ -83,7 +71,7 @@ describe("errorHandler middleware", () => {
     ============================= */
 
     it("should handle generic errors with statusCode", () => {
-        const { req, res, next } = createMocks();
+        const { req, res, next } = createMockReqResNext();
 
         const error = new Error("Not found");
         error.statusCode = 404;
@@ -101,7 +89,7 @@ describe("errorHandler middleware", () => {
     });
 
     it("should default to 500 when statusCode is missing", () => {
-        const { req, res, next } = createMocks();
+        const { req, res, next } = createMockReqResNext();
 
         const error = new Error("Something went wrong");
 
@@ -117,7 +105,7 @@ describe("errorHandler middleware", () => {
     });
 
     it("should use default message when error message is missing", () => {
-        const { req, res, next } = createMocks();
+        const { req, res, next } = createMockReqResNext();
 
         const error = {
             statusCode: 500
@@ -135,7 +123,7 @@ describe("errorHandler middleware", () => {
     });
 
     it("should include custom errors array when provided", () => {
-        const { req, res, next } = createMocks();
+        const { req, res, next } = createMockReqResNext();
 
         const error = new Error("Bad request");
         error.statusCode = 400;
@@ -158,7 +146,7 @@ describe("errorHandler middleware", () => {
     ============================= */
 
     it("should handle Sequelize validation errors", () => {
-        const { req, res, next } = createMocks();
+        const { req, res, next } = createMockReqResNext();
 
         const error = {
             name: "SequelizeValidationError",
@@ -182,7 +170,7 @@ describe("errorHandler middleware", () => {
     });
 
     it("should handle Sequelize unique constraint errors", () => {
-        const { req, res, next } = createMocks();
+        const { req, res, next } = createMockReqResNext();
 
         const error = {
             name: "SequelizeUniqueConstraintError",
@@ -206,7 +194,7 @@ describe("errorHandler middleware", () => {
     it("should not include stack in production", () => {
         process.env.NODE_ENV = "production";
 
-        const { req, res, next } = createMocks();
+        const { req, res, next } = createMockReqResNext();
 
         const error = new Error("Production error");
 

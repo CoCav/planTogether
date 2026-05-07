@@ -21,6 +21,8 @@ const EventUserRole = require("../../../src/models/relations/eventUserRoleModel"
 
 const { authorizeEventMemberRoleUpdate, authorizeEventMemberRemoval } = require("../../../src/middlewares/eventMemberAuthorization");
 
+const { createMockReqResNext } = require("../../helpers/mockExpress");
+
 jest.mock("../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
 }));
@@ -29,8 +31,8 @@ jest.mock("../../../src/models/relations/eventUserRoleModel", () => ({
     findOne: jest.fn()
 }));
 
-const createMocks = ({ eventId = "1", targetUserId = "2", requesterUserId = 10, newRole = "co_organizer" } = {}) => {
-    const req = {
+const createEventMemberAuthorizationMocks = ({ eventId = "1", targetUserId = "2", requesterUserId = 10, newRole = "co_organizer" } = {}) => {
+    return createMockReqResNext({
         params: {
             eventId,
             userId: targetUserId
@@ -41,16 +43,7 @@ const createMocks = ({ eventId = "1", targetUserId = "2", requesterUserId = 10, 
         body: {
             newRole
         }
-    };
-
-    const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-    };
-
-    const next = jest.fn();
-
-    return { req, res, next };
+    });
 };
 
 const createEvent = (overrides = {}) => ({
@@ -82,7 +75,7 @@ describe("eventMemberAuthorization middleware", () => {
 
     describe("authorizeEventMemberRoleUpdate", () => {
         it("should return 403 when requester is not organizer", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventMemberAuthorizationMocks();
 
             EventUserRole.findOne.mockResolvedValueOnce(
                 createMembership({
@@ -99,7 +92,7 @@ describe("eventMemberAuthorization middleware", () => {
         });
 
         it("should return 404 when event is not found", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventMemberAuthorizationMocks();
 
             EventUserRole.findOne
                 .mockResolvedValueOnce(
@@ -125,7 +118,7 @@ describe("eventMemberAuthorization middleware", () => {
         });
 
         it("should return 404 when target membership is not found", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventMemberAuthorizationMocks();
 
             EventUserRole.findOne
                 .mockResolvedValueOnce(
@@ -146,7 +139,7 @@ describe("eventMemberAuthorization middleware", () => {
         });
 
         it("should prevent changing the event creator role", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createEventMemberAuthorizationMocks({
                 targetUserId: "2"
             });
 
@@ -178,7 +171,7 @@ describe("eventMemberAuthorization middleware", () => {
         });
 
         it("should prevent promoting a member to organizer", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createEventMemberAuthorizationMocks({
                 targetUserId: "2",
                 newRole: "organizer"
             });
@@ -207,7 +200,7 @@ describe("eventMemberAuthorization middleware", () => {
         });
 
         it("should call next when organizer updates participant role", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createEventMemberAuthorizationMocks({
                 targetUserId: "2",
                 newRole: "co_organizer"
             });
@@ -235,7 +228,7 @@ describe("eventMemberAuthorization middleware", () => {
         });
 
         it("should return 500 on unexpected error", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventMemberAuthorizationMocks();
 
             EventUserRole.findOne.mockRejectedValue(new Error("DB error"));
 
@@ -253,7 +246,7 @@ describe("eventMemberAuthorization middleware", () => {
 
     describe("authorizeEventMemberRemoval", () => {
         it("should return 403 when requester is not organizer or co_organizer", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventMemberAuthorizationMocks();
 
             EventUserRole.findOne.mockResolvedValueOnce(
                 createMembership({
@@ -269,7 +262,7 @@ describe("eventMemberAuthorization middleware", () => {
         });
 
         it("should return 404 when event is not found", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventMemberAuthorizationMocks();
 
             EventUserRole.findOne
                 .mockResolvedValueOnce(
@@ -295,7 +288,7 @@ describe("eventMemberAuthorization middleware", () => {
         });
 
         it("should return 404 when target membership is not found", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventMemberAuthorizationMocks();
 
             EventUserRole.findOne
                 .mockResolvedValueOnce(
@@ -319,7 +312,7 @@ describe("eventMemberAuthorization middleware", () => {
         });
 
         it("should prevent removing the event creator", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createEventMemberAuthorizationMocks({
                 targetUserId: "2"
             });
 
@@ -351,7 +344,7 @@ describe("eventMemberAuthorization middleware", () => {
         });
 
         it("should prevent removing organizer", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createEventMemberAuthorizationMocks({
                 targetUserId: "2"
             });
 
@@ -379,7 +372,7 @@ describe("eventMemberAuthorization middleware", () => {
         });
 
         it("should prevent self-removal through admin route", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createEventMemberAuthorizationMocks({
                 requesterUserId: 10,
                 targetUserId: "10"
             });
@@ -408,7 +401,7 @@ describe("eventMemberAuthorization middleware", () => {
         });
 
         it("should allow organizer to remove participant", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createEventMemberAuthorizationMocks({
                 targetUserId: "2"
             });
 
@@ -435,7 +428,7 @@ describe("eventMemberAuthorization middleware", () => {
         });
 
         it("should allow co_organizer to remove participant", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createEventMemberAuthorizationMocks({
                 targetUserId: "2"
             });
 
@@ -462,7 +455,7 @@ describe("eventMemberAuthorization middleware", () => {
         });
 
         it("should prevent co_organizer from removing another co_organizer", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createEventMemberAuthorizationMocks({
                 targetUserId: "2"
             });
 
@@ -490,7 +483,7 @@ describe("eventMemberAuthorization middleware", () => {
         });
 
         it("should return 500 on unexpected error", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventMemberAuthorizationMocks();
 
             EventUserRole.findOne.mockRejectedValue(new Error("DB error"));
 

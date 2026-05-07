@@ -14,20 +14,9 @@
    - roles are restricted to allowed values
 ================================================== */
 
-const { validationResult } = require("express-validator");
-
 const { updateEventMemberRoleValidator, removeEventMemberValidator } = require("../../../src/validators/eventMembershipValidator");
 
-// Run express-validator rules against mocked request params/body
-const runValidation = async (validators, { params = {}, body = {} } = {}) => {
-    const req = { params, body };
-
-    for (const validator of validators) {
-        await validator.run(req);
-    }
-
-    return validationResult(req);
-};
+const { runValidation } = require("../../helpers/validationHelper");
 
 describe("eventMembershipValidator", () => {
 

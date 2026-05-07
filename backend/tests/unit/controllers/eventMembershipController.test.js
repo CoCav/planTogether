@@ -5,7 +5,7 @@
    - joining events
    - leaving events
    - retrieving authenticated user's events
-   - retrieving members and organizers
+   - retrieving event members and staff
    - updating member roles
    - removing members
 
@@ -19,20 +19,18 @@
 const eventMermbershipController = require("../../../src/controllers/eventMembershipController");
 const eventMembershipService = require("../../../src/services/eventMembershipService");
 
+const { createMockReqResNext } = require("../../helpers/mockExpress");
+
 jest.mock("../../../src/services/eventMembershipService");
 
-// Create mocked Express request/response objects
-const createMocks = ({ params = { eventId: "1", userId: "2" }, query = {}, body = {}, user = { userId: 10 } } = {}) => {
-    const req = { params, query, body, user };
-
-    const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-    };
-
-    const next = jest.fn();
-
-    return { req, res, next };
+const createEventMembershipControllerMocks = ({ body = {}, params = { eventId: "1" }, query = {}, user = { userId: 10 }, file = undefined } = {}) => {
+    return createMockReqResNext({
+        body,
+        params,
+        query,
+        user,
+        file
+    });
 };
 
 describe("eventMembershipController", () => {
@@ -46,7 +44,7 @@ describe("eventMembershipController", () => {
 
     describe("joinEvent", () => {
         it("should join an event", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventMembershipControllerMocks();
             const membership = { eventId: "1", userId: 10, role: "participant" };
 
             eventMembershipService.joinEvent.mockResolvedValue(membership);
@@ -66,7 +64,7 @@ describe("eventMembershipController", () => {
         });
 
         it("should forward join errors to next", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventMembershipControllerMocks();
             const error = new Error("Join failed");
 
             eventMembershipService.joinEvent.mockRejectedValue(error);
@@ -79,7 +77,7 @@ describe("eventMembershipController", () => {
 
     describe("leaveEvent", () => {
         it("should leave an event", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventMembershipControllerMocks();
 
             eventMembershipService.leaveEvent.mockResolvedValue();
 
@@ -97,7 +95,7 @@ describe("eventMembershipController", () => {
         });
 
         it("should forward leave errors to next", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventMembershipControllerMocks();
             const error = new Error("Leave failed");
 
             eventMembershipService.leaveEvent.mockRejectedValue(error);
@@ -114,7 +112,7 @@ describe("eventMembershipController", () => {
 
     describe("getEventMembers", () => {
         it("should get event members", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventMembershipControllerMocks();
             const members = [{ id: 1, role: "participant" }];
 
             eventMembershipService.getEventMembers.mockResolvedValue(members);
@@ -124,13 +122,13 @@ describe("eventMembershipController", () => {
             expect(eventMembershipService.getEventMembers).toHaveBeenCalledWith("1");
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
-                message: "All event Members retrieved successfully",
+                message: "Event members retrieved successfully",
                 members
             });
         });
 
         it("should forward get members errors to next", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventMembershipControllerMocks();
             const error = new Error("Members failed");
 
             eventMembershipService.getEventMembers.mockRejectedValue(error);
@@ -143,7 +141,7 @@ describe("eventMembershipController", () => {
 
     describe("getEventStaff", () => {
         it("should get event staff with organizer and co_organizer roles", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventMembershipControllerMocks();
 
             const eventStaff = [
                 { id: 1, role: "organizer" },
@@ -163,7 +161,7 @@ describe("eventMembershipController", () => {
         });
 
         it("should forward get event staff errors to next", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventMembershipControllerMocks();
             const error = new Error("Event staff failed");
 
             eventMembershipService.getEventStaff.mockRejectedValue(error);
@@ -180,7 +178,7 @@ describe("eventMembershipController", () => {
 
     describe("updateEventMemberRole", () => {
         it("should update event member role", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createEventMembershipControllerMocks({
                 params: { eventId: "1", userId: "2" },
                 body: { newRole: "co_organizer" }
             });
@@ -205,7 +203,7 @@ describe("eventMembershipController", () => {
         });
 
         it("should forward update role errors to next", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventMembershipControllerMocks();
             const error = new Error("Update role failed");
 
             eventMembershipService.updateEventMemberRole.mockRejectedValue(error);
@@ -218,7 +216,7 @@ describe("eventMembershipController", () => {
 
     describe("removeEventMember", () => {
         it("should remove event member", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createEventMembershipControllerMocks({
                 params: { eventId: "1", userId: "2" }
             });
 
@@ -238,7 +236,7 @@ describe("eventMembershipController", () => {
         });
 
         it("should forward remove member errors to next", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventMembershipControllerMocks();
             const error = new Error("Remove failed");
 
             eventMembershipService.removeEventMember.mockRejectedValue(error);

@@ -18,20 +18,18 @@
 const userController = require("../../../src/controllers/userController");
 const userService = require("../../../src/services/userService");
 
+const { createMockReqResNext } = require("../../helpers/mockExpress");
+
 jest.mock("../../../src/services/userService");
 
-// Create mocked Express request/response objects
-const createMocks = ({ params = { id: 1 }, query = {}, body = {}, user = { userId: 1 }, file } = {}) => {
-    const req = { params, query, body, user, file };
-
-    const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-    };
-
-    const next = jest.fn();
-
-    return { req, res, next };
+const createUserControllerMocks = ({ params = { id: 1 }, query = {}, body = {}, user = { userId: 10 }, file = undefined } = {}) => {
+    return createMockReqResNext({
+        params,
+        query,
+        body,
+        user,
+        file
+    });
 };
 
 const mockUser = {
@@ -53,7 +51,7 @@ describe("userController", () => {
 
     describe("getCurrentUserEvents", () => {
         it("should get current user events", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createUserControllerMocks({
                 query: { view: "joined", page: "1" },
                 user: { userId: 10 }
             });
@@ -83,7 +81,7 @@ describe("userController", () => {
         });
 
         it("should forward get my events errors to next", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createUserControllerMocks();
             const error = new Error("My events failed");
 
             userService.getCurrentUserEventsByID.mockRejectedValue(error);
@@ -101,7 +99,7 @@ describe("userController", () => {
 
     describe("getCurrentUserProfile", () => {
         it("should return authenticated user profile", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createUserControllerMocks({
                 user: { userId: 1 }
             });
 
@@ -123,7 +121,7 @@ describe("userController", () => {
         });
 
         it("should forward current profile errors to next", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createUserControllerMocks();
 
             const error = new Error("Profile failed");
             userService.getCurrentUserProfileByID.mockRejectedValue(error);
@@ -136,7 +134,7 @@ describe("userController", () => {
 
     describe("updateCurrentUserProfile", () => {
         it("should update authenticated user profile", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createUserControllerMocks({
                 user: { userId: 1 },
                 body: {
                     name: "Updated",
@@ -173,7 +171,7 @@ describe("userController", () => {
         });
 
         it("should update authenticated user profile with uploaded avatar", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createUserControllerMocks({
                 user: { userId: 1 },
                 body: {
                     name: "Updated",
@@ -214,7 +212,7 @@ describe("userController", () => {
         });
 
         it("should forward update profile errors to next", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createUserControllerMocks();
 
             const error = new Error("Update failed");
             userService.updateCurrentUserProfileByID.mockRejectedValue(error);
@@ -231,7 +229,7 @@ describe("userController", () => {
 
     describe("changeCurrentUserPassword", () => {
         it("should change authenticated user password", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createUserControllerMocks({
                 user: { userId: 1 },
                 body: {
                     currentPassword: "OldPassword1",
@@ -254,7 +252,7 @@ describe("userController", () => {
         });
 
         it("should forward change password errors to next", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createUserControllerMocks({
                 body: {
                     currentPassword: "OldPassword1",
                     newPassword: "NewPassword1"
@@ -276,7 +274,7 @@ describe("userController", () => {
 
     describe("getPublicUserProfile", () => {
         it("should return public user profile", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createUserControllerMocks();
 
             const mockProfile = {
                 user: {
@@ -299,7 +297,7 @@ describe("userController", () => {
         });
 
         it("should forward public profile errors to next", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createUserControllerMocks();
 
             const error = new Error("Public profile failed");
             userService.getPublicUserProfileByID.mockRejectedValue(error);
@@ -316,7 +314,7 @@ describe("userController", () => {
 
     describe("getPublicUserEvents", () => {
         it("should return public user events", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createUserControllerMocks();
 
             const mockEvents = {
                 createdEvents: [],
@@ -333,7 +331,7 @@ describe("userController", () => {
         });
 
         it("should forward public events errors to next", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createUserControllerMocks();
 
             const error = new Error("Public events failed");
             userService.getPublicUserEventsByID.mockRejectedValue(error);

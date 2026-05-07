@@ -13,20 +13,9 @@
    - invalid route params are rejected before service lookup
 ================================================== */
 
-const { validationResult } = require("express-validator");
-
 const { getCurrentUserEventsValidator, updateCurrentUserProfileValidator, changeCurrentUserPasswordValidator, userIdParamValidator } = require("../../../src/validators/userValidator");
 
-// Run express-validator rules against mocked request params/body
-const runValidation = async (validators, { params = {}, body = {}, query = {} } = {}) => {
-    const req = { params, body, query };
-
-    for (const validator of validators) {
-        await validator.run(req);
-    }
-
-    return validationResult(req);
-};
+const { runValidation } = require("../../helpers/validationHelper");
 
 describe("userValidator", () => {
 

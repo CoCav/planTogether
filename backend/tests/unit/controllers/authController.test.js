@@ -16,21 +16,9 @@
 const authController = require("../../../src/controllers/authController");
 const authService = require("../../../src/services/authService");
 
+const { createMockReqResNext } = require("../../helpers/mockExpress");
+
 jest.mock("../../../src/services/authService");
-
-// Create mocked Express request/response objects
-const createMocks = ({ body = {}, user = { userId: 1 }, file } = {}) => {
-    const req = { body, user, file };
-
-    const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-    };
-
-    const next = jest.fn();
-
-    return { req, res, next };
-};
 
 const mockUser = {
     id: 1,
@@ -50,7 +38,7 @@ describe("authController", () => {
 
     describe("register", () => {
         it("should register user and return token", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createMockReqResNext({
                 body: {
                     name: "John Doe",
                     email: "john@test.com",
@@ -86,7 +74,7 @@ describe("authController", () => {
         });
 
         it("should register user with uploaded avatar", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createMockReqResNext({
                 body: {
                     name: "John Doe",
                     email: "john@test.com",
@@ -128,7 +116,7 @@ describe("authController", () => {
         });
 
         it("should forward register errors to next", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createMockReqResNext({
                 body: {
                     name: "John Doe",
                     email: "john@test.com",
@@ -151,7 +139,7 @@ describe("authController", () => {
 
     describe("login", () => {
         it("should login user and return token", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createMockReqResNext({
                 body: {
                     email: "john@test.com",
                     password: "Password1"
@@ -184,7 +172,7 @@ describe("authController", () => {
         });
 
         it("should forward login errors to next", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createMockReqResNext({
                 body: {
                     email: "john@test.com",
                     password: "Password1"
@@ -206,7 +194,7 @@ describe("authController", () => {
 
     describe("logout", () => {
         it("should return logout success message", async () => {
-            const { req, res } = createMocks();
+            const { req, res } = createMockReqResNext();
 
             await authController.logout(req, res);
 

@@ -21,11 +21,13 @@
 
 const request = require("supertest");
 const app = require("../../../src/app");
+
 const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
 
 const fs = require("fs");
-const path = require("path")
+const path = require("path");
 
+const { registerAndGetToken } = require("../../helpers/authHelper");
 
 describe("Current User Profile API", () => {
     beforeAll(async () => {
@@ -43,31 +45,29 @@ describe("Current User Profile API", () => {
     });
 
     describe("GET /api/users/me", () => {
+
         it("should get the profile of an authenticated user", async () => {
-            const email = `profile${Date.now()}@test.com`;
-
-            const registerRes = await request(app)
-                .post("/api/auth/register")
-                .send({
-                    name: "Profile User",
-                    email,
-                    password: "Password123"
-                });
-
-            const token = registerRes.body.token;
+            const userAuth = await registerAndGetToken({
+                name: "Profile User",
+                email: `profile${Date.now()}@test.com`
+            });
 
             const res = await request(app)
                 .get("/api/users/me")
-                .set("Authorization", `Bearer ${token}`);
+                .set(userAuth.headers);
 
             expect(res.statusCode).toBe(200);
 
-            expect(res.body).toHaveProperty("message", "User profile retrieved successfully");
+            expect(res.body).toHaveProperty(
+                "message",
+                "User profile retrieved successfully"
+            );
+
             expect(res.body).toHaveProperty("user");
 
             expect(res.body.user).toMatchObject({
                 name: "Profile User",
-                email,
+                email: userAuth.email,
                 avatar: null
             });
 
@@ -75,7 +75,8 @@ describe("Current User Profile API", () => {
         });
 
         it("should reject access without token", async () => {
-            const res = await request(app).get("/api/users/me");
+            const res = await request(app)
+                .get("/api/users/me");
 
             expect(res.statusCode).toBe(401);
         });
@@ -91,22 +92,16 @@ describe("Current User Profile API", () => {
 
     describe("PUT /api/users/me", () => {
         it("should update the profile of an authenticated user", async () => {
-            const originalEmail = `profileupdate${Date.now()}@test.com`;
             const updatedEmail = `updatedprofile${Date.now()}@test.com`;
 
-            const registerRes = await request(app)
-                .post("/api/auth/register")
-                .send({
-                    name: "Profile User",
-                    email: originalEmail,
-                    password: "Password123"
-                });
-
-            const token = registerRes.body.token;
+            const userAuth = await registerAndGetToken({
+                name: "Profile User",
+                email: `profileupdate${Date.now()}@test.com`
+            });
 
             const res = await request(app)
                 .put("/api/users/me")
-                .set("Authorization", `Bearer ${token}`)
+                .set(userAuth.headers)
                 .send({
                     name: "Updated Name",
                     email: updatedEmail
@@ -114,7 +109,11 @@ describe("Current User Profile API", () => {
 
             expect(res.statusCode).toBe(200);
 
-            expect(res.body).toHaveProperty("message", "User profile updated successfully");
+            expect(res.body).toHaveProperty(
+                "message",
+                "User profile updated successfully"
+            );
+
             expect(res.body).toHaveProperty("user");
 
             expect(res.body.user).toMatchObject({
@@ -127,29 +126,26 @@ describe("Current User Profile API", () => {
 
             const profileRes = await request(app)
                 .get("/api/users/me")
-                .set("Authorization", `Bearer ${token}`);
+                .set(userAuth.headers);
 
             expect(profileRes.body.user.name).toBe("Updated Name");
+
             expect(profileRes.body.user.email).toBe(updatedEmail);
+
             expect(profileRes.body.user.avatar).toBeNull();
         });
 
         it("should update the profile avatar of an authenticated user", async () => {
             const email = `avatarprofile${Date.now()}@test.com`;
 
-            const registerRes = await request(app)
-                .post("/api/auth/register")
-                .send({
-                    name: "Avatar Profile User",
-                    email,
-                    password: "Password123"
-                });
-
-            const token = registerRes.body.token;
+            const userAuth = await registerAndGetToken({
+                name: "Avatar Profile User",
+                email
+            });
 
             const res = await request(app)
                 .put("/api/users/me")
-                .set("Authorization", `Bearer ${token}`)
+                .set(userAuth.headers)
                 .field("name", "Avatar Updated")
                 .field("email", email)
                 .attach("avatar", Buffer.from("fake image content"), {
@@ -168,7 +164,7 @@ describe("Current User Profile API", () => {
 
             const profileRes = await request(app)
                 .get("/api/users/me")
-                .set("Authorization", `Bearer ${token}`);
+                .set(userAuth.headers);
 
             expect(profileRes.body.user.avatar).toBe(res.body.user.avatar);
         });
@@ -204,6 +200,7 @@ describe("Current User Profile API", () => {
                 });
 
             expect(res.statusCode).toBe(200);
+
             expect(res.body.user.avatar).toMatch(/^\/uploads\/avatars\/avatar-/);
             expect(res.body.user.avatar).not.toBe(oldAvatar);
 
@@ -234,19 +231,14 @@ describe("Current User Profile API", () => {
         });
 
         it("should reject invalid email", async () => {
-            const registerRes = await request(app)
-                .post("/api/auth/register")
-                .send({
-                    name: "Profile Validation User",
-                    email: `profileval${Date.now()}@test.com`,
-                    password: "Password123"
-                });
-
-            const token = registerRes.body.token;
+            const userAuth = await registerAndGetToken({
+                name: "Profile Validation User",
+                email: `profileval${Date.now()}@test.com`
+            });
 
             const res = await request(app)
                 .put("/api/users/me")
-                .set("Authorization", `Bearer ${token}`)
+                .set(userAuth.headers)
                 .send({
                     name: "Updated Name",
                     email: "invalid-email"
@@ -256,19 +248,14 @@ describe("Current User Profile API", () => {
         });
 
         it("should reject empty fields", async () => {
-            const registerRes = await request(app)
-                .post("/api/auth/register")
-                .send({
-                    name: "Empty Field User",
-                    email: `empty${Date.now()}@test.com`,
-                    password: "Password123"
-                });
-
-            const token = registerRes.body.token;
+            const userAuth = await registerAndGetToken({
+                name: "Empty Field User",
+                email: `empty${Date.now()}@test.com`
+            });
 
             const res = await request(app)
                 .put("/api/users/me")
-                .set("Authorization", `Bearer ${token}`)
+                .set(userAuth.headers)
                 .send({
                     name: "",
                     email: ""
@@ -278,31 +265,22 @@ describe("Current User Profile API", () => {
         });
 
         it("should reject duplicate email", async () => {
-            const firstEmail = `first${Date.now()}@test.com`;
-            const secondEmail = `second${Date.now()}@test.com`;
-
-            await request(app).post("/api/auth/register").send({
+            const firstUserAuth = await registerAndGetToken({
                 name: "First User",
-                email: firstEmail,
-                password: "Password123"
+                email: `first${Date.now()}@test.com`
             });
 
-            const secondRegisterRes = await request(app)
-                .post("/api/auth/register")
-                .send({
-                    name: "Second User",
-                    email: secondEmail,
-                    password: "Password123"
-                });
-
-            const token = secondRegisterRes.body.token;
+            const secondUserAuth = await registerAndGetToken({
+                name: "Second User",
+                email: `second${Date.now()}@test.com`
+            });
 
             const res = await request(app)
                 .put("/api/users/me")
-                .set("Authorization", `Bearer ${token}`)
+                .set(secondUserAuth.headers)
                 .send({
                     name: "Updated Name",
-                    email: firstEmail
+                    email: firstUserAuth.email
                 });
 
             expect(res.statusCode).toBe(409);

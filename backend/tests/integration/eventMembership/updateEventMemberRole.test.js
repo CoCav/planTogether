@@ -18,6 +18,11 @@ const request = require("supertest");
 const app = require("../../../src/app");
 const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
 
+const { registerAndGetToken } = require("../../helpers/authHelper");
+const { createEvent } = require("../../helpers/eventHelper");
+const { joinEvent, updateMemberRole } = require("../../helpers/eventMembershipHelper");
+const { getUserIdByEmail } = require("../../helpers/userHelper");
+
 describe("Update Event Member Role API", () => {
 
     beforeAll(async () => {
@@ -35,150 +40,96 @@ describe("Update Event Member Role API", () => {
     });
 
     /* =============================
-       HELPERS
-    ============================= */
-
-    const registerUser = async (name, email) => {
-        const res = await request(app)
-            .post("/api/auth/register")
-            .send({
-                name,
-                email,
-                password: "Password123"
-            });
-
-        return {
-            token: res.body.token,
-            email
-        };
-    };
-
-    const createEvent = async (token) => {
-        const res = await request(app)
-            .post("/api/events")
-            .set("Authorization", `Bearer ${token}`)
-            .send({
-                title: "Test Event",
-                description: "Test",
-                startDateTime: "2026-12-31T10:00:00.000Z",
-                endDateTime: "2026-12-31T12:00:00.000Z",
-                mode: "in_person",
-                location: "Montreal",
-                type: "Meetup",
-                theme: "Tech"
-            });
-
-        return res.body.event;
-    };
-
-    const getUserId = async (email) => {
-        const user = await User.findOne({
-            where: { email }
-        });
-
-        return user.id;
-    };
-
-    /* =============================
        ORGANIZER PERMISSIONS
     ============================= */
 
     it("should allow organizer to promote participant to co_organizer", async () => {
-        const organizer = await registerUser(
-            "Organizer",
-            `org${Date.now()}@test.com`
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `org${Date.now()}@test.com`
+        });
+
+        const participantAuth = await registerAndGetToken({
+            name: "Participant",
+            email: `participant${Date.now()}@test.com`
+        });
+
+        const participantID = await getUserIdByEmail(participantAuth.email);
+
+        const eventRes = await createEvent(organizerAuth.headers);
+        const event = eventRes.body.event;
+
+        await joinEvent(event.id, participantAuth.headers);
+
+        const res = await updateMemberRole(
+            event.id,
+            participantID,
+            organizerAuth.headers,
+            "co_organizer"
         );
-
-        const participantEmail = `participant${Date.now()}@test.com`;
-
-        const participant = await registerUser(
-            "Participant",
-            participantEmail
-        );
-
-        const participantId = await getUserId(participantEmail);
-
-        const event = await createEvent(organizer.token);
-
-        await request(app)
-            .post(`/api/events/${event.id}/members/join`)
-            .set("Authorization", `Bearer ${participant.token}`);
-
-        const res = await request(app)
-            .put(`/api/events/${event.id}/members/${participantId}/role`)
-            .set("Authorization", `Bearer ${organizer.token}`)
-            .send({
-                newRole: "co_organizer"
-            });
 
         expect(res.statusCode).toBe(200);
     });
 
     it("should allow organizer to demote co_organizer to participant", async () => {
-        const organizer = await registerUser(
-            "Organizer",
-            `org${Date.now()}@test.com`
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `org${Date.now()}@test.com`
+        });
+
+        const coOrganizerAuth = await registerAndGetToken({
+            name: "Co Organizer",
+            email: `co${Date.now()}@test.com`
+        });
+
+        const coOrganizerID = await getUserIdByEmail(coOrganizerAuth.email);
+
+        const eventRes = await createEvent(organizerAuth.headers);
+        const event = eventRes.body.event;
+
+        await joinEvent(event.id, coOrganizerAuth.headers);
+
+        await updateMemberRole(
+            event.id,
+            coOrganizerID,
+            organizerAuth.headers,
+            "co_organizer"
         );
 
-        const coOrganizerEmail = `co${Date.now()}@test.com`;
-
-        const coOrganizer = await registerUser(
-            "Co Organizer",
-            coOrganizerEmail
+        const res = await updateMemberRole(
+            event.id,
+            coOrganizerID,
+            organizerAuth.headers,
+            "participant"
         );
-
-        const coOrganizerId = await getUserId(coOrganizerEmail);
-
-        const event = await createEvent(organizer.token);
-
-        await request(app)
-            .post(`/api/events/${event.id}/members/join`)
-            .set("Authorization", `Bearer ${coOrganizer.token}`);
-
-        await request(app)
-            .put(`/api/events/${event.id}/members/${coOrganizerId}/role`)
-            .set("Authorization", `Bearer ${organizer.token}`)
-            .send({
-                newRole: "co_organizer"
-            });
-
-        const res = await request(app)
-            .put(`/api/events/${event.id}/members/${coOrganizerId}/role`)
-            .set("Authorization", `Bearer ${organizer.token}`)
-            .send({
-                newRole: "participant"
-            });
 
         expect(res.statusCode).toBe(200);
     });
 
     it("should reject promoting to organizer role", async () => {
-        const organizer = await registerUser(
-            "Organizer",
-            `org${Date.now()}@test.com`
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `org${Date.now()}@test.com`
+        });
+
+        const userAuth = await registerAndGetToken({
+            name: "User",
+            email: `user${Date.now()}@test.com`
+        });
+
+        const userID = await getUserIdByEmail(userAuth.email);
+
+        const eventRes = await createEvent(organizerAuth.headers);
+        const event = eventRes.body.event;
+
+        await joinEvent(event.id, userAuth.headers);
+
+        const res = await updateMemberRole(
+            event.id,
+            userID,
+            organizerAuth.headers,
+            "organizer"
         );
-
-        const userEmail = `user${Date.now()}@test.com`;
-
-        const user = await registerUser(
-            "User",
-            userEmail
-        );
-
-        const userId = await getUserId(userEmail);
-
-        const event = await createEvent(organizer.token);
-
-        await request(app)
-            .post(`/api/events/${event.id}/members/join`)
-            .set("Authorization", `Bearer ${user.token}`);
-
-        const res = await request(app)
-            .put(`/api/events/${event.id}/members/${userId}/role`)
-            .set("Authorization", `Bearer ${organizer.token}`)
-            .send({
-                newRole: "organizer"
-            });
 
         expect(res.statusCode).toBe(403);
     });
@@ -188,47 +139,45 @@ describe("Update Event Member Role API", () => {
     ============================= */
 
     it("should reject role update by co_organizer", async () => {
-        const organizer = await registerUser(
-            "Organizer",
-            `org${Date.now()}@test.com`
-        );
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `org${Date.now()}@test.com`
+        });
 
-        const coEmail = `co${Date.now()}@test.com`;
-        const targetEmail = `target${Date.now()}@test.com`;
+        const coOrganizerAuth = await registerAndGetToken({
+            name: "Co Organizer",
+            email: `co${Date.now()}@test.com`
+        });
 
-        const coOrganizer = await registerUser(
-            "Co Organizer",
-            coEmail
-        );
+        const targetUserAuth = await registerAndGetToken({
+            name: "Target User",
+            email: `target${Date.now()}@test.com`
+        });
 
-        const target = await registerUser(
-            "Target",
-            targetEmail
-        );
+        const coOrganizerID = await getUserIdByEmail(coOrganizerAuth.email);
+        const targetUserID = await getUserIdByEmail(targetUserAuth.email);
 
-        const coOrganizerId = await getUserId(coEmail);
-        const targetId = await getUserId(targetEmail);
-
-        const event = await createEvent(organizer.token);
+        const eventRes = await createEvent(organizerAuth.headers);
+        const event = eventRes.body.event;
 
         await request(app)
             .post(`/api/events/${event.id}/members/join`)
-            .set("Authorization", `Bearer ${coOrganizer.token}`);
+            .set(coOrganizerAuth.headers);
 
         await request(app)
             .post(`/api/events/${event.id}/members/join`)
-            .set("Authorization", `Bearer ${target.token}`);
+            .set(targetUserAuth.headers);
 
         await request(app)
-            .put(`/api/events/${event.id}/members/${coOrganizerId}/role`)
-            .set("Authorization", `Bearer ${organizer.token}`)
+            .put(`/api/events/${event.id}/members/${coOrganizerID}/role`)
+            .set(organizerAuth.headers)
             .send({
                 newRole: "co_organizer"
             });
 
         const res = await request(app)
-            .put(`/api/events/${event.id}/members/${targetId}/role`)
-            .set("Authorization", `Bearer ${coOrganizer.token}`)
+            .put(`/api/events/${event.id}/members/${targetUserID}/role`)
+            .set(coOrganizerAuth.headers)
             .send({
                 newRole: "co_organizer"
             });
@@ -241,39 +190,37 @@ describe("Update Event Member Role API", () => {
     ============================= */
 
     it("should reject role update by participant", async () => {
-        const organizer = await registerUser(
-            "Organizer",
-            `org${Date.now()}@test.com`
-        );
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `org${Date.now()}@test.com`
+        });
 
-        const participantOneEmail = `p1${Date.now()}@test.com`;
-        const participantTwoEmail = `p2${Date.now()}@test.com`;
+        const participantOneAuth = await registerAndGetToken({
+            name: "Participant One",
+            email: `p1${Date.now()}@test.com`
+        });
 
-        const participantOne = await registerUser(
-            "Participant One",
-            participantOneEmail
-        );
+        const participantTwoAuth = await registerAndGetToken({
+            name: "Participant Two",
+            email: `p2${Date.now()}@test.com`
+        });
 
-        const participantTwo = await registerUser(
-            "Participant Two",
-            participantTwoEmail
-        );
+        const participantTwoID = await getUserIdByEmail(participantTwoAuth.email);
 
-        const participantTwoId = await getUserId(participantTwoEmail);
-
-        const event = await createEvent(organizer.token);
+        const eventRes = await createEvent(organizerAuth.headers);
+        const event = eventRes.body.event;
 
         await request(app)
             .post(`/api/events/${event.id}/members/join`)
-            .set("Authorization", `Bearer ${participantOne.token}`);
+            .set(participantOneAuth.headers);
 
         await request(app)
             .post(`/api/events/${event.id}/members/join`)
-            .set("Authorization", `Bearer ${participantTwo.token}`);
+            .set(participantTwoAuth.headers);
 
         const res = await request(app)
-            .put(`/api/events/${event.id}/members/${participantTwoId}/role`)
-            .set("Authorization", `Bearer ${participantOne.token}`)
+            .put(`/api/events/${event.id}/members/${participantTwoID}/role`)
+            .set(participantOneAuth.headers)
             .send({
                 newRole: "co_organizer"
             });
@@ -286,60 +233,56 @@ describe("Update Event Member Role API", () => {
     ============================= */
 
     it("should reject role update without newRole", async () => {
-        const organizerEmail = `validatororg${Date.now()}@test.com`;
-        const participantEmail = `validatorparticipant${Date.now()}@test.com`;
+        const organizerAuth = await registerAndGetToken({
+            name: "Validator Organizer",
+            email: `validatororg${Date.now()}@test.com`
+        });
 
-        const organizer = await registerUser(
-            "Validator Organizer",
-            organizerEmail
-        );
+        const participantAuth = await registerAndGetToken({
+            name: "Validator Participant",
+            email: `validatorparticipant${Date.now()}@test.com`
+        });
 
-        const participant = await registerUser(
-            "Validator Participant",
-            participantEmail
-        );
+        const participantID = await getUserIdByEmail(participantAuth.email);
 
-        const participantId = await getUserId(participantEmail);
-
-        const event = await createEvent(organizer.token);
+        const eventRes = await createEvent(organizerAuth.headers);
+        const event = eventRes.body.event;
 
         await request(app)
             .post(`/api/events/${event.id}/members/join`)
-            .set("Authorization", `Bearer ${participant.token}`);
+            .set(participantAuth.headers);
 
         const res = await request(app)
-            .put(`/api/events/${event.id}/members/${participantId}/role`)
-            .set("Authorization", `Bearer ${organizer.token}`)
+            .put(`/api/events/${event.id}/members/${participantID}/role`)
+            .set(organizerAuth.headers)
             .send({});
 
         expect(res.statusCode).toBe(400);
     });
 
     it("should reject role update with invalid newRole", async () => {
-        const organizerEmail = `invalidroleorg${Date.now()}@test.com`;
-        const participantEmail = `invalidroleparticipant${Date.now()}@test.com`;
+        const organizerAuth = await registerAndGetToken({
+            name: "Invalid Role Organizer",
+            email: `invalidroleorg${Date.now()}@test.com`
+        });
 
-        const organizer = await registerUser(
-            "Invalid Role Organizer",
-            organizerEmail
-        );
+        const participantAuth = await registerAndGetToken({
+            name: "Invalid Role Participant",
+            email: `invalidroleparticipant${Date.now()}@test.com`
+        });
 
-        const participant = await registerUser(
-            "Invalid Role Participant",
-            participantEmail
-        );
+        const participantID = await getUserIdByEmail(participantAuth.email);
 
-        const participantId = await getUserId(participantEmail);
-
-        const event = await createEvent(organizer.token);
+        const eventRes = await createEvent(organizerAuth.headers);
+        const event = eventRes.body.event;
 
         await request(app)
             .post(`/api/events/${event.id}/members/join`)
-            .set("Authorization", `Bearer ${participant.token}`);
+            .set(participantAuth.headers);
 
         const res = await request(app)
-            .put(`/api/events/${event.id}/members/${participantId}/role`)
-            .set("Authorization", `Bearer ${organizer.token}`)
+            .put(`/api/events/${event.id}/members/${participantID}/role`)
+            .set(organizerAuth.headers)
             .send({
                 newRole: "admin"
             });
@@ -348,14 +291,14 @@ describe("Update Event Member Role API", () => {
     });
 
     it("should reject role update with non-integer eventId", async () => {
-        const organizer = await registerUser(
-            "Organizer",
-            `organizer${Date.now()}@test.com`
-        );
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `org${Date.now()}@test.com`
+        });
 
         const res = await request(app)
             .put("/api/events/abc/members/1/role")
-            .set("Authorization", `Bearer ${organizer.token}`)
+            .set(organizerAuth.headers)
             .send({
                 newRole: "participant"
             });
@@ -364,16 +307,17 @@ describe("Update Event Member Role API", () => {
     });
 
     it("should reject role update with non-integer userId", async () => {
-        const organizer = await registerUser(
-            "Organizer",
-            `organizer${Date.now()}@test.com`
-        );
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `org${Date.now()}@test.com`
+        });
 
-        const event = await createEvent(organizer.token);
+        const eventRes = await createEvent(organizerAuth.headers);
+        const event = eventRes.body.event;
 
         const res = await request(app)
             .put(`/api/events/${event.id}/members/abc/role`)
-            .set("Authorization", `Bearer ${organizer.token}`)
+            .set(organizerAuth.headers)
             .send({
                 newRole: "participant"
             });

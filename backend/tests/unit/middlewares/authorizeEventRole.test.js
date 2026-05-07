@@ -18,23 +18,17 @@
 const authorizeEventRole = require("../../../src/middlewares/authorizeEventRole");
 const EventUserRole = require("../../../src/models/relations/eventUserRoleModel");
 
-jest.mock("../../../src/models/relations/eventUserRoleModel");
+const { createMockReqResNext } = require("../../helpers/mockExpress");
 
-// Create mocked Express request/response objects
-const createMocks = ({ eventId = "1", userId = 1 } = {}) => {
-    const req = {
+jest.mock("../../../src/models/relations/eventUserRoleModel", () => ({
+    findOne: jest.fn()
+}));
+
+const createEventRoleMocks = ({ eventId = "1", userId = 1 } = {}) => {
+    return createMockReqResNext({
         params: { eventId },
         user: { userId }
-    };
-
-    const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-    };
-
-    const next = jest.fn();
-
-    return { req, res, next };
+    });
 };
 
 describe("authorizeEventRole middleware", () => {
@@ -43,7 +37,7 @@ describe("authorizeEventRole middleware", () => {
     });
 
     it("should return 400 when eventId is missing", async () => {
-        const { req, res, next } = createMocks({ eventId: null });
+        const { req, res, next } = createEventRoleMocks({ eventId: null });
 
         const middleware = authorizeEventRole(["organizer"]);
 
@@ -55,7 +49,7 @@ describe("authorizeEventRole middleware", () => {
     });
 
     it("should return 403 when membership is not found", async () => {
-        const { req, res, next } = createMocks();
+        const { req, res, next } = createEventRoleMocks();
 
         EventUserRole.findOne.mockResolvedValue(null);
 
@@ -69,7 +63,7 @@ describe("authorizeEventRole middleware", () => {
     });
 
     it("should return 403 when role is not allowed", async () => {
-        const { req, res, next } = createMocks();
+        const { req, res, next } = createEventRoleMocks();
 
         EventUserRole.findOne.mockResolvedValue({ role: "participant" });
 
@@ -85,7 +79,7 @@ describe("authorizeEventRole middleware", () => {
     });
 
     it("should attach membership and call next when role is allowed", async () => {
-        const { req, res, next } = createMocks();
+        const { req, res, next } = createEventRoleMocks();
 
         const membership = {
             eventId: 1,
@@ -104,7 +98,7 @@ describe("authorizeEventRole middleware", () => {
     });
 
     it("should query membership with eventId and userId", async () => {
-        const { req, res, next } = createMocks({
+        const { req, res, next } = createEventRoleMocks({
             eventId: "42",
             userId: 7
         });
@@ -124,7 +118,7 @@ describe("authorizeEventRole middleware", () => {
     });
 
     it("should return 500 on unexpected error", async () => {
-        const { req, res, next } = createMocks();
+        const { req, res, next } = createEventRoleMocks();
 
         jest.spyOn(console, "error").mockImplementation(() => { });
         EventUserRole.findOne.mockRejectedValue(new Error("DB error"));

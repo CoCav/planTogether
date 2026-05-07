@@ -14,7 +14,11 @@
 
 const request = require("supertest");
 const app = require("../../../src/app");
+
 const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
+
+const { registerAndGetToken } = require("../../helpers/authHelper");
+const { createEvent } = require("../../helpers/eventHelper");
 
 describe("Get Event By ID API", () => {
     beforeAll(async () => {
@@ -32,58 +36,21 @@ describe("Get Event By ID API", () => {
     });
 
     /* =============================
-       HELPERS
-    ============================= */
-
-    const registerAndGetToken = async (name, email) => {
-        const res = await request(app)
-            .post("/api/auth/register")
-            .send({
-                name,
-                email,
-                password: "Password123"
-            });
-
-        return res.body.token;
-    };
-
-    const getValidEventPayload = (overrides = {}) => ({
-        title: "Test Event",
-        description: "This is a test event",
-        startDateTime: "2026-12-31T10:00:00.000Z",
-        endDateTime: "2026-12-31T12:00:00.000Z",
-        mode: "in_person",
-        location: "Montreal",
-        type: "Meetup",
-        theme: "Technology",
-        ...overrides
-    });
-
-    const createEvent = async (token, overrides = {}) => {
-        const res = await request(app)
-            .post("/api/events")
-            .set("Authorization", `Bearer ${token}`)
-            .send(getValidEventPayload(overrides));
-
-        return res.body.event;
-    };
-
-    /* =============================
        GET EVENT BY ID
     ============================= */
 
     it("should retrieve a single event by ID", async () => {
-        const token = await registerAndGetToken(
-            "Single Event User",
-            `single${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: "Single Event User",
+            email: `single${Date.now()}@test.com`
+        });
 
-        const event = await createEvent(token);
+        const eventRes = await createEvent(auth.headers);
+        const event = eventRes.body.event;
 
         const res = await request(app).get(`/api/events/${event.id}`);
 
         expect(res.statusCode).toBe(200);
-
         expect(res.body).toHaveProperty("message", "Event retrieved successfully");
         expect(res.body).toHaveProperty("event");
 
@@ -104,16 +71,18 @@ describe("Get Event By ID API", () => {
     ============================= */
 
     it("should include upcoming status for future event", async () => {
-        const token = await registerAndGetToken(
-            "Upcoming User",
-            `upcoming${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: "Upcoming User",
+            email: `upcoming${Date.now()}@test.com`
+        });
 
-        const event = await createEvent(token, {
+        const eventRes = await createEvent(auth.headers, {
             title: "Upcoming Event",
             startDateTime: "2030-01-01T10:00:00.000Z",
             endDateTime: "2030-01-01T12:00:00.000Z"
         });
+
+        const event = eventRes.body.event;
 
         const res = await request(app).get(`/api/events/${event.id}`);
 
@@ -122,16 +91,18 @@ describe("Get Event By ID API", () => {
     });
 
     it("should include past status for past event", async () => {
-        const token = await registerAndGetToken(
-            "Past User",
-            `past${Date.now()}@test.com`
-        );
+        const auth = await registerAndGetToken({
+            name: "Past User",
+            email: `past${Date.now()}@test.com`
+        });
 
-        const event = await createEvent(token, {
+        const eventRes = await createEvent(auth.headers, {
             title: "Past Event",
             startDateTime: "2020-01-01T10:00:00.000Z",
             endDateTime: "2020-01-01T12:00:00.000Z"
         });
+
+        const event = eventRes.body.event;
 
         const res = await request(app).get(`/api/events/${event.id}`);
 

@@ -14,20 +14,9 @@
    - event dates and route params are validated
 ================================================== */
 
-const { validationResult } = require("express-validator");
-
 const { createEventValidator, updateEventValidator, eventIdParamValidator, getAllEventsValidator } = require("../../../src/validators/eventValidator");
 
-// Run express-validator rules against mocked request params/body
-const runValidation = async (validators, { params = {}, body = {}, query = {} } = {}) => {
-    const req = { params, body, query };
-
-    for (const validator of validators) {
-        await validator.run(req);
-    }
-
-    return validationResult(req);
-};
+const { runValidation } = require("../../helpers/validationHelper");
 
 const validEventBody = {
     title: "Test Event",
@@ -41,6 +30,7 @@ const validEventBody = {
 };
 
 describe("eventValidator", () => {
+
     describe("createEventValidator", () => {
         it("should pass with valid event data", async () => {
             const result = await runValidation(createEventValidator, {

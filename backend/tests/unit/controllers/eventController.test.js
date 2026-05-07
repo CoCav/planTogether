@@ -4,7 +4,7 @@
    Tests:
    - event creation
    - event retrieval
-   - event filtering
+   - event listing
    - event update
    - event deletion
 
@@ -18,20 +18,18 @@
 const eventController = require("../../../src/controllers/eventController");
 const eventService = require("../../../src/services/eventService");
 
+const { createMockReqResNext } = require("../../helpers/mockExpress");
+
 jest.mock("../../../src/services/eventService");
 
-// Create mocked Express request/response objects
-const createMocks = ({ body = {}, params = { eventId: "1" }, query = {}, user = { userId: 10 }, file = undefined } = {}) => {
-    const req = { body, params, query, user, file };
-
-    const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-    };
-
-    const next = jest.fn();
-
-    return { req, res, next };
+const createEventControllerMocks = ({ body = {}, params = { eventId: "1" }, query = {}, user = { userId: 10 }, file = undefined } = {}) => {
+    return createMockReqResNext({
+        body,
+        params,
+        query,
+        user,
+        file
+    });
 };
 
 describe("eventController", () => {
@@ -45,7 +43,7 @@ describe("eventController", () => {
 
     describe("createEvent", () => {
         it("should create an event without image", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createEventControllerMocks({
                 body: { title: "Test Event" },
                 user: { userId: 10 }
             });
@@ -71,7 +69,7 @@ describe("eventController", () => {
         });
 
         it("should create an event with image", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createEventControllerMocks({
                 body: { title: "Test Event" },
                 user: { userId: 10 },
                 file: { filename: "event-123.png" }
@@ -102,7 +100,8 @@ describe("eventController", () => {
         });
 
         it("should forward create event errors to next", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventControllerMocks();
+
             const error = new Error("Create failed");
 
             eventService.createEvent.mockRejectedValue(error);
@@ -119,7 +118,7 @@ describe("eventController", () => {
 
     describe("getAllEvents", () => {
         it("should get all events", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createEventControllerMocks({
                 query: { page: "1" }
             });
 
@@ -144,7 +143,8 @@ describe("eventController", () => {
         });
 
         it("should forward get all events errors to next", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventControllerMocks();
+
             const error = new Error("Fetch failed");
 
             eventService.getAllEvents.mockRejectedValue(error);
@@ -156,12 +156,15 @@ describe("eventController", () => {
     });
 
     describe("getEvent", () => {
-        it("should get an event by id", async () => {
-            const { req, res, next } = createMocks({
+        it("should get an event by ID", async () => {
+            const { req, res, next } = createEventControllerMocks({
                 params: { eventId: "42" }
             });
 
-            eventService.getEventByID.mockResolvedValue({ id: 42, title: "Event" });
+            eventService.getEventByID.mockResolvedValue({
+                id: 42,
+                title: "Event"
+            });
 
             await eventController.getEvent(req, res, next);
 
@@ -174,7 +177,8 @@ describe("eventController", () => {
         });
 
         it("should forward get event errors to next", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventControllerMocks();
+
             const error = new Error("Not found");
 
             eventService.getEventByID.mockRejectedValue(error);
@@ -191,7 +195,7 @@ describe("eventController", () => {
 
     describe("updateEvent", () => {
         it("should update an event without new image", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createEventControllerMocks({
                 params: { eventId: "42" },
                 body: { title: "Updated Event" }
             });
@@ -216,7 +220,7 @@ describe("eventController", () => {
         });
 
         it("should update an event with new image", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createEventControllerMocks({
                 params: { eventId: "42" },
                 body: { title: "Updated Event" },
                 file: { filename: "event-updated.png" }
@@ -247,7 +251,8 @@ describe("eventController", () => {
         });
 
         it("should forward update event errors to next", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventControllerMocks();
+
             const error = new Error("Update failed");
 
             eventService.updateEventByID.mockRejectedValue(error);
@@ -260,7 +265,7 @@ describe("eventController", () => {
 
     describe("deleteEvent", () => {
         it("should delete an event", async () => {
-            const { req, res, next } = createMocks({
+            const { req, res, next } = createEventControllerMocks({
                 params: { eventId: "42" }
             });
 
@@ -276,7 +281,8 @@ describe("eventController", () => {
         });
 
         it("should forward delete event errors to next", async () => {
-            const { req, res, next } = createMocks();
+            const { req, res, next } = createEventControllerMocks();
+
             const error = new Error("Delete failed");
 
             eventService.deleteEventByID.mockRejectedValue(error);

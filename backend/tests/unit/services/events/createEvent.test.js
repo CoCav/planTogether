@@ -4,21 +4,22 @@
    Tests:
    - successful event creation
    - automatic organizer membership creation
-   - online event location normalization
-   - missing required dates rejection
    - invalid date order rejection
    - database error forwarding
 
    Ensures:
-   - events are created with valid data
+   - events are created with normalized data
    - creators are automatically linked as organizers
    - business rules are enforced before persistence
+   - database errors are forwarded correctly
 ================================================== */
 
 const Event = require("../../../../src/models/eventModel");
 const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
 
 const eventService = require("../../../../src/services/eventService");
+
+const { buildEventCreateData } = require("../../../../src/utils/eventDataBuilder");
 
 jest.mock("../../../../src/models/eventModel", () => ({
     create: jest.fn()
@@ -28,7 +29,12 @@ jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
     create: jest.fn()
 }));
 
+jest.mock("../../../../src/utils/eventDataBuilder", () => ({
+    buildEventCreateData: jest.fn()
+}));
+
 describe("eventService - createEvent", () => {
+
     beforeEach(() => {
         jest.clearAllMocks();
         jest.spyOn(console, "error").mockImplementation(() => { });
@@ -38,9 +44,32 @@ describe("eventService - createEvent", () => {
         console.error.mockRestore();
     });
 
-    it("should create an in-person event and organizer membership", async () => {
-        const event = { id: 1, title: "Test Event" };
+    /* =============================
+       CREATE EVENT SUCCESS
+    ============================= */
 
+    it("should create an event and organizer membership", async () => {
+        const eventData = {
+            creatorId: 10,
+            title: "Test Event",
+            description: "Description",
+            type: "Meetup",
+            theme: "Tech",
+            mode: "in_person",
+            location: "Montreal",
+            startDateTime: "2026-12-20T10:00:00.000Z",
+            endDateTime: "2026-12-20T12:00:00.000Z",
+            maxParticipants: null,
+            registrationDeadline: null,
+            image: null
+        };
+
+        const event = {
+            id: 1,
+            title: "Test Event"
+        };
+
+        buildEventCreateData.mockReturnValue(eventData);
         Event.create.mockResolvedValue(event);
         EventUserRole.create.mockResolvedValue({});
 
@@ -56,8 +85,7 @@ describe("eventService - createEvent", () => {
             image: null
         }, 10);
 
-        expect(Event.create).toHaveBeenCalledWith({
-            creatorId: 10,
+        expect(buildEventCreateData).toHaveBeenCalledWith({
             title: "Test Event",
             description: "Description",
             type: "Meetup",
@@ -66,10 +94,10 @@ describe("eventService - createEvent", () => {
             location: "Montreal",
             startDateTime: "2026-12-20T10:00:00.000Z",
             endDateTime: "2026-12-20T12:00:00.000Z",
-            maxParticipants: null,
-            registrationDeadline: null,
             image: null
-        });
+        }, 10);
+
+        expect(Event.create).toHaveBeenCalledWith(eventData);
 
         expect(EventUserRole.create).toHaveBeenCalledWith({
             eventId: 1,
@@ -80,57 +108,9 @@ describe("eventService - createEvent", () => {
         expect(result).toBe(event);
     });
 
-    it("should create an online event with null location", async () => {
-        const event = { id: 1, title: "Online Event" };
-
-        Event.create.mockResolvedValue(event);
-        EventUserRole.create.mockResolvedValue({});
-
-        await eventService.createEvent({
-            title: "Online Event",
-            description: "Description",
-            type: "Workshop",
-            theme: "Remote",
-            mode: "online",
-            location: "Montreal",
-            startDateTime: "2026-12-20T10:00:00.000Z",
-            endDateTime: "2026-12-20T12:00:00.000Z"
-        }, 10);
-
-        expect(Event.create).toHaveBeenCalledWith(
-            expect.objectContaining({
-                mode: "online",
-                location: null
-            })
-        );
-    });
-
-    it("should create an event with maxParticipants and registrationDeadline", async () => {
-        const event = { id: 1 };
-
-        Event.create.mockResolvedValue(event);
-        EventUserRole.create.mockResolvedValue({});
-
-        await eventService.createEvent({
-            title: "Limited Event",
-            description: "Description",
-            type: "Meetup",
-            theme: "Tech",
-            mode: "in_person",
-            location: "Paris",
-            startDateTime: "2026-12-20T10:00:00.000Z",
-            endDateTime: "2026-12-20T12:00:00.000Z",
-            maxParticipants: 10,
-            registrationDeadline: "2026-12-19T10:00:00.000Z"
-        }, 10);
-
-        expect(Event.create).toHaveBeenCalledWith(
-            expect.objectContaining({
-                maxParticipants: 10,
-                registrationDeadline: "2026-12-19T10:00:00.000Z"
-            })
-        );
-    });
+    /* =============================
+       BUSINESS RULES
+    ============================= */
 
     it("should throw 400 when end date is before start date", async () => {
         await expect(
@@ -143,10 +123,22 @@ describe("eventService - createEvent", () => {
             statusCode: 400
         });
 
+        expect(buildEventCreateData).not.toHaveBeenCalled();
         expect(Event.create).not.toHaveBeenCalled();
+        expect(EventUserRole.create).not.toHaveBeenCalled();
     });
 
+    /* =============================
+       DATABASE ERRORS
+    ============================= */
+
     it("should forward database errors", async () => {
+        const eventData = {
+            creatorId: 10,
+            title: "Test Event"
+        };
+
+        buildEventCreateData.mockReturnValue(eventData);
         Event.create.mockRejectedValue(new Error("DB error"));
 
         await expect(

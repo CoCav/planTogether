@@ -1,5 +1,5 @@
 /* ==================================================
-   AUTH INTEGRATION - LOGOUT
+   AUTH INTEGRATION - LOGOUT TESTS
 
    Tests:
    - authenticated logout

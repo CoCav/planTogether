@@ -3,136 +3,165 @@
 
    Tests:
    - paginated event listing
-   - query filter helper usage
-   - Sequelize where filter forwarding
-   - creator filtering
+   - event filter forwarding
+   - creator include configuration
    - status enrichment
    - grouped count handling
    - database error forwarding
 
    Ensures:
-   - getAllEvents supports both full listing and filtered listing
-   - filters are applied before querying events
+   - event listing supports filters and pagination
+   - query helpers are called with expected arguments
    - pagination metadata is returned correctly
-   - events are formatted with computed status
+   - events are enriched with computed status
+   - database errors are forwarded correctly
 ================================================== */
 
 const Event = require("../../../../src/models/eventModel");
-
-const { getPaginationOptions } = require("../../../../src/utils/pagination");
-const { buildEventWhereConditions, buildEventCreatorInclude } = require("../../../../src/utils/eventQueryBuilder");
-const { getEventStatus } = require("../../../../src/utils/eventStatus");
+const User = require("../../../../src/models/userModel");
 
 const eventService = require("../../../../src/services/eventService");
 
+const { buildEventWhereConditions, buildEventCreatorInclude, } = require("../../../../src/utils/eventQueryBuilder");
+const { getPaginationOptions } = require("../../../../src/utils/pagination");
+const { getEventStatus } = require("../../../../src/utils/eventStatus");
+
 jest.mock("../../../../src/models/eventModel", () => ({
-    findAndCountAll: jest.fn()
+    findAndCountAll: jest.fn(),
 }));
 
-jest.mock("../../../../src/utils/pagination");
+jest.mock("../../../../src/models/userModel", () => ({}));
 
 jest.mock("../../../../src/utils/eventQueryBuilder", () => ({
     buildEventWhereConditions: jest.fn(),
-    buildEventCreatorInclude: jest.fn()
+    buildEventCreatorInclude: jest.fn(),
 }));
 
-jest.mock("../../../../src/utils/eventStatus");
+jest.mock("../../../../src/utils/pagination", () => ({
+    getPaginationOptions: jest.fn(),
+}));
+
+jest.mock("../../../../src/utils/eventStatus", () => ({
+    getEventStatus: jest.fn(),
+}));
 
 describe("eventService - getAllEvents", () => {
-    const basePagination = {
-        page: 1,
-        pageSize: 10,
-        limit: 10,
-        offset: 0,
-        orderField: "createdAt",
-        orderDirection: "DESC"
-    };
-
     beforeEach(() => {
         jest.clearAllMocks();
         jest.spyOn(console, "error").mockImplementation(() => { });
-
-        getPaginationOptions.mockReturnValue(basePagination);
-        getEventStatus.mockReturnValue("upcoming");
-        buildEventWhereConditions.mockImplementation((where) => where);
-
-        buildEventCreatorInclude.mockReturnValue({
-            model: {},
-            as: "creator",
-            attributes: ["id", "name"]
-        });
     });
 
     afterEach(() => {
         console.error.mockRestore();
     });
 
-    it("should return paginated events with status", async () => {
+    /* =============================
+         EVENTS RETRIEVAL SUCCESS
+      ============================= */
+
+    it("should return paginated events with computed status", async () => {
         const mockEvent = {
             toJSON: () => ({
                 id: 1,
-                title: "Event"
+                title: "Test Event"
             })
         };
 
+        getPaginationOptions.mockReturnValue({
+            page: 1,
+            pageSize: 10,
+            limit: 10,
+            offset: 0,
+            orderField: "createdAt",
+            orderDirection: "DESC"
+        });
+
+        buildEventCreatorInclude.mockReturnValue({
+            model: User,
+            as: "creator"
+        });
+
         Event.findAndCountAll.mockResolvedValue({
-            count: 1,
+            count: [{ count: 1 }],
             rows: [mockEvent]
         });
 
-        const result = await eventService.getAllEvents({
-            status: "upcoming"
-        });
+        getEventStatus.mockReturnValue("upcoming");
 
-        expect(buildEventWhereConditions).toHaveBeenCalledWith(
-            {},
-            { status: "upcoming" }
-        );
-
-        expect(Event.findAndCountAll).toHaveBeenCalled();
+        const result = await eventService.getAllEvents({});
 
         expect(result).toEqual({
             page: 1,
             pageSize: 10,
             totalEvents: 1,
             totalPages: 1,
+
             events: [
                 {
                     id: 1,
-                    title: "Event",
+                    title: "Test Event",
                     status: "upcoming"
                 }
             ]
         });
     });
 
-    it("should pass filters to Sequelize query", async () => {
-        buildEventWhereConditions.mockImplementation((where) => {
-            where.mode = "online";
-            return where;
+    /* =============================
+         QUERY FILTERS
+      ============================= */
+
+    it("should forward filters to buildEventWhereConditions", async () => {
+        getPaginationOptions.mockReturnValue({
+            page: 1,
+            pageSize: 10,
+            limit: 10,
+            offset: 0,
+            orderField: "createdAt",
+            orderDirection: "DESC"
+        });
+
+        buildEventCreatorInclude.mockReturnValue({
+            model: User,
+            as: "creator"
         });
 
         Event.findAndCountAll.mockResolvedValue({
-            count: 0,
+            count: [],
             rows: []
         });
 
         await eventService.getAllEvents({
-            mode: "online"
+            mode: "online",
+            theme: "Tech"
         });
 
-        expect(Event.findAndCountAll).toHaveBeenCalledWith(
-            expect.objectContaining({
-                where: expect.objectContaining({
-                    mode: "online"
-                })
-            })
+        expect(buildEventWhereConditions).toHaveBeenCalledWith({},
+            {
+                mode: "online",
+                theme: "Tech"
+            }
         );
     });
 
-    it("should include creator filter when creator query is provided", async () => {
+    it("should apply creator include configuration", async () => {
+        getPaginationOptions.mockReturnValue({
+            page: 1,
+            pageSize: 10,
+            limit: 10,
+            offset: 0,
+            orderField: "createdAt",
+            orderDirection: "DESC"
+        });
+
+        const creatorInclude = {
+            model: User,
+            as: "creator"
+        };
+
+        buildEventCreatorInclude.mockReturnValue(creatorInclude);
+
         Event.findAndCountAll.mockResolvedValue({
-            count: 0,
+            count: [],
             rows: []
         });
 
@@ -140,48 +169,95 @@ describe("eventService - getAllEvents", () => {
             creator: "john"
         });
 
-        expect(buildEventCreatorInclude).toHaveBeenCalledWith(
-            expect.anything(),
-            "john"
-        );
+        expect(buildEventCreatorInclude).toHaveBeenCalledWith(User, "john");
     });
 
-    it("should return events with computed status", async () => {
+    /* =============================
+         EVENT METADATA
+      ============================= */
+
+    it("should enrich events with computed status", async () => {
         const mockEvent = {
             toJSON: () => ({
-                id: 1
-            })
+                id: 1,
+                title: "Metadata Event"
+            }),
         };
 
+        getPaginationOptions.mockReturnValue({
+            page: 1,
+            pageSize: 10,
+            limit: 10,
+            offset: 0,
+            orderField: "createdAt",
+            orderDirection: "DESC"
+        });
+
+        buildEventCreatorInclude.mockReturnValue({
+            model: User,
+            as: "creator",
+        });
+
         Event.findAndCountAll.mockResolvedValue({
-            count: 1,
+            count: [{ count: 1 }],
             rows: [mockEvent]
         });
 
+        getEventStatus.mockReturnValue("past");
+
         const result = await eventService.getAllEvents({});
+
+        expect(getEventStatus).toHaveBeenCalledWith(mockEvent);
 
         expect(result.events[0]).toMatchObject({
-            id: 1,
-            status: "upcoming"
+            status: "past"
         });
     });
 
-    it("should handle grouped count array", async () => {
+    /* =============================
+         COUNT / PAGINATION
+      ============================= */
+
+    it("should handle grouped Sequelize count results", async () => {
+        getPaginationOptions.mockReturnValue({
+            page: 2,
+            pageSize: 5,
+            limit: 5,
+            offset: 5,
+            orderField: "createdAt",
+            orderDirection: "DESC"
+        });
+
+        buildEventCreatorInclude.mockReturnValue({
+            model: User,
+            as: "creator"
+        });
+
         Event.findAndCountAll.mockResolvedValue({
-            count: [{ count: 1 }, { count: 1 }],
-            rows: [
-                {
-                    toJSON: () => ({ id: 1 })
-                }
-            ]
+            count: [{ count: 1 }, { count: 1 }, { count: 1 }],
+            rows: [],
         });
 
         const result = await eventService.getAllEvents({});
 
-        expect(result.totalEvents).toBe(2);
+        expect(result.totalEvents).toBe(3);
+        expect(result.totalPages).toBe(1);
     });
 
+    /* =============================
+         DATABASE ERRORS
+      ============================= */
+
     it("should forward database errors", async () => {
+        getPaginationOptions.mockReturnValue({
+            page: 1,
+            pageSize: 10,
+            limit: 10,
+            offset: 0,
+            orderField: "createdAt",
+            orderDirection: "DESC"
+        });
+
         Event.findAndCountAll.mockRejectedValue(new Error("DB error"));
 
         await expect(eventService.getAllEvents({})).rejects.toThrow("DB error");

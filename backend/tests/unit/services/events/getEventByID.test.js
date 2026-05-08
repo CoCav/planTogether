@@ -11,12 +11,14 @@
    - single events are retrieved correctly
    - computed status is added before response
    - missing events return a 404 error
+   - database errors are forwarded correctly
 ================================================== */
 
 const Event = require("../../../../src/models/eventModel");
-const { getEventStatus } = require("../../../../src/utils/eventStatus");
 
 const eventService = require("../../../../src/services/eventService");
+
+const { getEventStatus } = require("../../../../src/utils/eventStatus");
 
 jest.mock("../../../../src/models/eventModel", () => ({
     findOne: jest.fn()
@@ -27,6 +29,7 @@ jest.mock("../../../../src/utils/eventStatus", () => ({
 }));
 
 describe("eventService - getEventByID", () => {
+
     beforeEach(() => {
         jest.clearAllMocks();
         jest.spyOn(console, "error").mockImplementation(() => { });
@@ -36,7 +39,11 @@ describe("eventService - getEventByID", () => {
         console.error.mockRestore();
     });
 
-    it("should return event with status", async () => {
+    /* =============================
+       EVENT RETRIEVAL SUCCESS
+    ============================= */
+
+    it("should return event with computed status", async () => {
         const mockEvent = {
             toJSON: () => ({
                 id: 1,
@@ -45,6 +52,7 @@ describe("eventService - getEventByID", () => {
         };
 
         Event.findOne.mockResolvedValue(mockEvent);
+
         getEventStatus.mockReturnValue("upcoming");
 
         const result = await eventService.getEventByID(1);
@@ -58,16 +66,47 @@ describe("eventService - getEventByID", () => {
         });
     });
 
+    /* =============================
+       EVENT METADATA
+    ============================= */
+
+    it("should enrich retrieved event with computed status", async () => {
+        const mockEvent = {
+            toJSON: () => ({
+                id: 1,
+                title: "Past Event"
+            })
+        };
+
+        Event.findOne.mockResolvedValue(mockEvent);
+
+        getEventStatus.mockReturnValue("past");
+
+        const result = await eventService.getEventByID(1);
+
+        expect(getEventStatus).toHaveBeenCalledWith(mockEvent);
+
+        expect(result).toMatchObject({
+            status: "past"
+        });
+    });
+
+    /* =============================
+       EDGE CASES
+    ============================= */
+
     it("should throw 404 when event is not found", async () => {
         Event.findOne.mockResolvedValue(null);
 
-        await expect(
-            eventService.getEventByID(999)
-        ).rejects.toMatchObject({
+        await expect(eventService.getEventByID(999)).rejects.toMatchObject({
             message: "Event not found",
             statusCode: 404
         });
     });
+
+    /* =============================
+       DATABASE ERRORS
+    ============================= */
 
     it("should forward database errors", async () => {
         Event.findOne.mockRejectedValue(new Error("DB error"));

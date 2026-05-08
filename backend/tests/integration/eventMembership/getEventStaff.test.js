@@ -1,5 +1,5 @@
-/* ==================================================
-   EVENT MEMBERSHIP INTEGRATION - GET EVENT STAFF
+/* =======================================================
+   EVENT MEMBERSHIP INTEGRATION - GET EVENT STAFF TESTS
 
    Tests:
    - event staff retrieval
@@ -13,7 +13,7 @@
    - public users can access event staff endpoint
    - event creator is automatically assigned organizer role
    - invalid requests are rejected correctly
-================================================== */
+========================================================== */
 
 const request = require("supertest");
 const app = require("../../../src/app");
@@ -145,16 +145,6 @@ describe("Get Event Staff API", () => {
     });
 
     /* =============================
-       EDGE CASES
-    ============================= */
-
-    it("should return 404 for nonexistent event", async () => {
-        const res = await request(app).get("/api/events/999999/staff");
-
-        expect(res.statusCode).toBe(404);
-    });
-
-    /* =============================
        VALIDATION ERRORS
     ============================= */
 
@@ -162,5 +152,15 @@ describe("Get Event Staff API", () => {
         const res = await request(app).get("/api/events/abc/staff");
 
         expect(res.statusCode).toBe(400);
+    });
+
+    /* =============================
+       EDGE CASES
+    ============================= */
+
+    it("should return 404 for nonexistent event", async () => {
+        const res = await request(app).get("/api/events/999999/staff");
+
+        expect(res.statusCode).toBe(404);
     });
 });

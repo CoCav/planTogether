@@ -2,12 +2,13 @@
    USER VALIDATOR TESTS
 
    Tests:
+   - current user events query validation
    - current user profile update validation
    - current user password update validation
-   - valid user ID param
-   - invalid user ID params
+   - public user ID param validation
 
    Ensures:
+   - current user query params are validated before service logic
    - current user payloads are validated before controller logic
    - public user routes only receive valid positive integer IDs
    - invalid route params are rejected before service lookup
@@ -18,6 +19,9 @@ const { getCurrentUserEventsValidator, updateCurrentUserProfileValidator, change
 const { runValidation } = require("../../helpers/validationHelper");
 
 describe("userValidator", () => {
+    /* =============================
+       CURRENT USER EVENTS QUERY VALIDATION
+    ============================= */
 
     describe("getCurrentUserEventsValidator", () => {
         it("should pass with valid query params", async () => {
@@ -38,7 +42,9 @@ describe("userValidator", () => {
 
         it("should fail with invalid view", async () => {
             const result = await runValidation(getCurrentUserEventsValidator, {
-                query: { view: "invalid" }
+                query: {
+                    view: "invalid"
+                }
             });
 
             expect(result.array()[0].msg).toMatch(/view must be one of/i);
@@ -46,7 +52,9 @@ describe("userValidator", () => {
 
         it("should fail with invalid date", async () => {
             const result = await runValidation(getCurrentUserEventsValidator, {
-                query: { date: "not-a-date" }
+                query: {
+                    date: "not-a-date"
+                }
             });
 
             expect(result.array()[0].msg).toMatch(/date must be a valid iso8601 date/i);
@@ -54,12 +62,18 @@ describe("userValidator", () => {
 
         it("should fail with invalid sortBy", async () => {
             const result = await runValidation(getCurrentUserEventsValidator, {
-                query: { sortBy: "creatorId" }
+                query: {
+                    sortBy: "creatorId"
+                }
             });
 
             expect(result.array()[0].msg).toMatch(/sort field must be one of/i);
         });
     });
+
+    /* =============================
+       CURRENT USER PROFILE UPDATE VALIDATION
+    ============================= */
 
     describe("updateCurrentUserProfileValidator", () => {
         it("should pass with valid optional fields", async () => {
@@ -93,6 +107,10 @@ describe("userValidator", () => {
             expect(result.array()[0].msg).toMatch(/invalid email/i);
         });
     });
+
+    /* =============================
+       CURRENT USER PASSWORD UPDATE VALIDATION
+    ============================= */
 
     describe("changeCurrentUserPasswordValidator", () => {
         it("should pass with valid data", async () => {
@@ -137,6 +155,10 @@ describe("userValidator", () => {
             expect(result.isEmpty()).toBe(false);
         });
     });
+
+    /* =============================
+       PUBLIC USER ID PARAM VALIDATION
+    ============================= */
 
     describe("userIdParamValidator", () => {
         it("should pass with valid user ID", async () => {

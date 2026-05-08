@@ -1,5 +1,5 @@
 /* ==================================================
-   EVENTS INTEGRATION - GET ALL EVENTS
+   EVENTS INTEGRATION - GET ALL EVENTS TESTS
 
    Tests:
    - public events retrieval
@@ -50,7 +50,7 @@ describe("Get All Events API", () => {
     });
 
     /* =============================
-       EVENTS RETRIEVAL
+       EVENTS RETRIEVAL SUCCESS
     ============================= */
 
     it("should retrieve all public events", async () => {
@@ -76,6 +76,10 @@ describe("Get All Events API", () => {
 
         expect(res.body.events.length).toBeGreaterThan(0);
     });
+
+    /* =============================
+       EVENT METADATA
+    ============================= */
 
     it("should include participant count in events", async () => {
         const creatorAuth = await registerAndGetToken({

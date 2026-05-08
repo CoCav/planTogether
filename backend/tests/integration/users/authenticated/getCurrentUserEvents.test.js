@@ -1,15 +1,15 @@
-/* ==================================================
-   USER INTEGRATION - CURRENT USER EVENTS
+/* =================================================
+   USER INTEGRATION - CURRENT USER EVENTS TESTS
 
    Tests:
    - authenticated user's events retrieval
-   - authentication requirement
+   - authentication protection
    - event status enrichment
    - participant count enrichment
    - pagination by view
    - created view filtering
    - joined view filtering
-   - created history filtering
+   - created history filteringp
    - joined history filtering
    - invalid query validation
 
@@ -18,18 +18,18 @@
    - response includes event metadata
    - view filters and pagination work correctly
    - query validators protect the route
-================================================== */
+=================================================== */
 
 const request = require("supertest");
-const app = require("../../../src/app");
+const app = require("../../../../src/app");
 
-const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
+const { initDB, sequelize, User, Event, EventUserRole } = require("../../../../src/models");
 
-const { registerAndGetToken } = require("../../helpers/authHelper");
-const { createEvent } = require("../../helpers/eventHelper");
-const { joinEvent } = require("../../helpers/eventMembershipHelper");
+const { registerAndGetToken } = require("../../../helpers/authHelper");
+const { createEvent } = require("../../../helpers/eventHelper");
+const { joinEvent } = require("../../../helpers/eventMembershipHelper");
 
-describe("Current User Events API", () => {
+describe("Get Current User Events API", () => {
 
     beforeAll(async () => {
         await initDB();
@@ -45,9 +45,9 @@ describe("Current User Events API", () => {
         await sequelize.close();
     });
 
-    /* =============================
-       CURRENT USER EVENTS
-    ============================= */
+    /* ============================
+       CURRENT USER EVENTS SUCCESS
+    ============================== */
 
     it("should get events for the authenticated user", async () => {
         const eventCreatorAuth = await registerAndGetToken({

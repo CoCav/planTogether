@@ -1,5 +1,5 @@
-/* ==================================================
-   USER INTEGRATION - PUBLIC USER PROFILE
+/* =================================================
+   USER INTEGRATION - PUBLIC USER PROFILE TESTS
 
    Tests:
    - authenticated public profile retrieval
@@ -14,18 +14,18 @@
    - private user fields are never exposed
    - public stats are included in the response
    - authentication and validators protect the route
-================================================== */
+=================================================== */
 
 const request = require("supertest");
-const app = require("../../../src/app");
+const app = require("../../../../src/app");
 
-const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
+const { initDB, sequelize, User, Event, EventUserRole } = require("../../../../src/models");
 
-const { registerAndGetToken } = require("../../helpers/authHelper");
-const { createEvent } = require("../../helpers/eventHelper");
-const { joinEvent } = require("../../helpers/eventMembershipHelper");
+const { registerAndGetToken } = require("../../../helpers/authHelper");
+const { createEvent } = require("../../../helpers/eventHelper");
+const { joinEvent } = require("../../../helpers/eventMembershipHelper");
 
-describe("Public User Profile API", () => {
+describe("Get Public User Profile API", () => {
 
     beforeAll(async () => {
         await initDB();
@@ -41,9 +41,9 @@ describe("Public User Profile API", () => {
         await sequelize.close();
     });
 
-    /* =============================
-       PUBLIC PROFILE RETRIEVAL
-    ============================= */
+    /* =================================
+       PUBLIC PROFILE RETRIEVAL SUCCESS
+    =================================== */
 
     it("should get public user profile when authenticated", async () => {
         const viewerAuth = await registerAndGetToken({
@@ -84,12 +84,7 @@ describe("Public User Profile API", () => {
             email: `targetstats${Date.now()}@test.com`
         });
 
-        const createdEventRes = await createEvent(
-            targetUserAuth.headers,
-            {
-                title: "Created Event"
-            }
-        );
+        await createEvent(targetUserAuth.headers, { title: "Created Event" });
 
         const joinedEventCreatorAuth = await registerAndGetToken({
             name: "Joined Event Creator",

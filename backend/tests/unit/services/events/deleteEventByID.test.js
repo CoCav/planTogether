@@ -3,20 +3,23 @@
 
    Tests:
    - successful event deletion
-   - missing event rejection
    - past event deletion rejection
+   - missing event rejection
    - database error forwarding
 
    Ensures:
    - events can be deleted only when allowed
    - past event rules are enforced
    - missing events are handled safely
+   - database errors are forwarded correctly
 ================================================== */
 
 const Event = require("../../../../src/models/eventModel");
-const { assertEventNotPast } = require("../../../../src/utils/eventStatus");
 
 const eventService = require("../../../../src/services/eventService");
+
+const { assertEventNotPast } = require("../../../../src/utils/eventStatus");
+
 
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
@@ -27,6 +30,7 @@ jest.mock("../../../../src/utils/eventStatus", () => ({
 }));
 
 describe("eventService - deleteEventByID", () => {
+
     beforeEach(() => {
         jest.clearAllMocks();
         jest.spyOn(console, "error").mockImplementation(() => { });
@@ -36,6 +40,10 @@ describe("eventService - deleteEventByID", () => {
         console.error.mockRestore();
     });
 
+    /* =============================
+       EVENT DELETION SUCCESS
+    ============================= */
+
     it("should delete an event", async () => {
         const event = {
             id: 1,
@@ -43,24 +51,19 @@ describe("eventService - deleteEventByID", () => {
         };
 
         Event.findByPk.mockResolvedValue(event);
+
         assertEventNotPast.mockImplementation(() => { });
 
         await eventService.deleteEventByID(1);
 
         expect(assertEventNotPast).toHaveBeenCalledWith(event);
+
         expect(event.destroy).toHaveBeenCalled();
     });
 
-    it("should throw 404 when event is not found", async () => {
-        Event.findByPk.mockResolvedValue(null);
-
-        await expect(
-            eventService.deleteEventByID(999)
-        ).rejects.toMatchObject({
-            message: "Event not found",
-            statusCode: 404
-        });
-    });
+    /* =============================
+       BUSINESS RULES
+    ============================= */
 
     it("should block deletion if event is past", async () => {
         const event = {
@@ -77,15 +80,30 @@ describe("eventService - deleteEventByID", () => {
             throw error;
         });
 
-        await expect(
-            eventService.deleteEventByID(1)
-        ).rejects.toMatchObject({
+        await expect(eventService.deleteEventByID(1)).rejects.toMatchObject({
             message: "No action is allowed on a past event",
             statusCode: 403
         });
 
         expect(event.destroy).not.toHaveBeenCalled();
     });
+
+    /* =============================
+       EDGE CASES
+    ============================= */
+
+    it("should throw 404 when event is not found", async () => {
+        Event.findByPk.mockResolvedValue(null);
+
+        await expect(eventService.deleteEventByID(999)).rejects.toMatchObject({
+            message: "Event not found",
+            statusCode: 404
+        });
+    });
+
+    /* =============================
+       DATABASE ERRORS
+    ============================= */
 
     it("should forward database errors", async () => {
         Event.findByPk.mockRejectedValue(new Error("DB error"));

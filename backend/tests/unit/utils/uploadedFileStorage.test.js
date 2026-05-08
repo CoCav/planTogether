@@ -22,17 +22,23 @@ jest.mock("fs", () => ({
 }));
 
 const fs = require("fs");
+
 const { deleteUploadedFile } = require("../../../src/utils/uploadedFileStorage");
 
-describe("uploadedFileStorage", () => {
+describe("uploadedFileStorage utils", () => {
+
     beforeEach(() => {
         jest.clearAllMocks();
         jest.spyOn(console, "warn").mockImplementation(() => { });
     });
 
     afterEach(() => {
-        jest.restoreAllMocks();
+        console.warn.mockRestore();
     });
+
+    /* =============================
+       MISSING FILE PATH
+    ============================= */
 
     it("should do nothing when file path is missing", async () => {
         await deleteUploadedFile(null);
@@ -42,6 +48,10 @@ describe("uploadedFileStorage", () => {
         expect(fs.existsSync).not.toHaveBeenCalled();
         expect(fs.promises.unlink).not.toHaveBeenCalled();
     });
+
+    /* =============================
+       FILE DELETION
+    ============================= */
 
     it("should delete file when it exists", async () => {
         fs.existsSync.mockReturnValue(true);
@@ -62,16 +72,22 @@ describe("uploadedFileStorage", () => {
         expect(fs.promises.unlink).not.toHaveBeenCalled();
     });
 
+    /* =============================
+       PATH SECURITY
+    ============================= */
+
     it("should not delete file outside upload directory", async () => {
         await deleteUploadedFile("/other-folder/file.png");
 
         expect(fs.existsSync).not.toHaveBeenCalled();
         expect(fs.promises.unlink).not.toHaveBeenCalled();
 
-        expect(console.warn).toHaveBeenCalledWith(
-            "Invalid file path, outside upload directory"
-        );
+        expect(console.warn).toHaveBeenCalledWith("Invalid file path, outside upload directory");
     });
+
+    /* =============================
+       UNLINK ERRORS
+    ============================= */
 
     it("should not throw when unlink fails", async () => {
         fs.existsSync.mockReturnValue(true);

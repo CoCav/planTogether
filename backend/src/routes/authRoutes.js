@@ -24,12 +24,12 @@ const { registerValidator, loginValidator } = require("../validators/authValidat
 ================================================== */
 
 // Register user
-router.post('/register', uploadAvatar.single("avatar"), registerValidator, handleValidationErrors, authController.register);
+router.post("/register", uploadAvatar.single("avatar"), registerValidator, handleValidationErrors, authController.register);
 
 // Login user
-router.post('/login', loginValidator, handleValidationErrors, authController.login);
+router.post("/login", loginValidator, handleValidationErrors, authController.login);
 
 // Logout user
-router.post('/logout', authenticateToken, authController.logout);
+router.post("/logout", authenticateToken, authController.logout);
 
 module.exports = router;

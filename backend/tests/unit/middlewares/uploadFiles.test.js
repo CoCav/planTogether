@@ -17,6 +17,11 @@
 const { uploadAvatar, uploadEventImage } = require("../../../src/middlewares/uploadFiles");
 
 describe("uploadFiles middleware", () => {
+
+    /* =============================
+       UPLOAD MIDDLEWARE EXPORTS
+    ============================= */
+
     it("should export avatar and event image upload middlewares", () => {
         expect(uploadAvatar).toBeDefined();
         expect(uploadEventImage).toBeDefined();
@@ -27,6 +32,10 @@ describe("uploadFiles middleware", () => {
         expect(typeof uploadEventImage.single).toBe("function");
     });
 
+    /* =============================
+       UPLOAD HANDLERS
+    ============================= */
+
     it("should create upload handlers for avatar and event image fields", () => {
         const avatarMiddleware = uploadAvatar.single("avatar");
         const eventImageMiddleware = uploadEventImage.single("image");
@@ -34,6 +43,10 @@ describe("uploadFiles middleware", () => {
         expect(typeof avatarMiddleware).toBe("function");
         expect(typeof eventImageMiddleware).toBe("function");
     });
+
+    /* =============================
+       UPLOAD LIMITS
+    ============================= */
 
     it("should set avatar upload file size limit to 2MB", () => {
         expect(uploadAvatar.limits.fileSize).toBe(2 * 1024 * 1024);

@@ -31,7 +31,7 @@ const { userIdParamValidator, getCurrentUserEventsValidator, updateCurrentUserPr
 ============================= */
 
 // Get all paginated events of the current user
-router.get('/me/events', authenticateToken, getCurrentUserEventsValidator, handleValidationErrors, userController.getCurrentUserEvents);
+router.get("/me/events", authenticateToken, getCurrentUserEventsValidator, handleValidationErrors, userController.getCurrentUserEvents);
 
 // Get current user profile
 router.get("/me", authenticateToken, userController.getCurrentUserProfile);

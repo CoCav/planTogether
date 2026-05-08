@@ -12,7 +12,14 @@
 ================================================== */
 
 // Create mocked Express req / res / next objects
-const createMockReqResNext = ({ params = {}, query = {}, body = {}, user = undefined, file = undefined } = {}) => {
+const createMockReqResNext = ({
+    params = {},
+    query = {},
+    body = {},
+    user = undefined,
+    file = undefined
+} = {}) => {
+
     const req = { params, query, body, user, file };
 
     const res = {

@@ -1,5 +1,5 @@
 /* ==================================================
-   EVENT MEMBERSHIP INTEGRATION - LEAVE EVENT
+   EVENT MEMBERSHIP INTEGRATION - LEAVE EVENT TESTS
 
    Tests:
    - leaving an event
@@ -42,7 +42,7 @@ describe("Leave Event API", () => {
     });
 
     /* =============================
-       LEAVE EVENT
+       LEAVE SUCCESS
     ============================= */
 
     it("should allow a user to leave an event", async () => {

@@ -4,20 +4,22 @@
    Tests:
    - organizer and co-organizer listing
    - missing event rejection
+   - database error forwarding
 
    Ensures:
    - role-based organizer filtering is applied
    - organizer data is returned with user information
    - missing events are rejected before membership query
+   - database errors are forwarded correctly
 ================================================== */
+
+const { Op } = require("sequelize");
 
 const Event = require("../../../../src/models/eventModel");
 const User = require("../../../../src/models/userModel");
 const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
 
-const { Op } = require("sequelize");
-
-const service = require("../../../../src/services/eventMembershipService");
+const eventMembershipService = require("../../../../src/services/eventMembershipService");
 
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
@@ -30,6 +32,7 @@ jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
 }));
 
 describe("eventMembershipService - GetEventStaff", () => {
+
     beforeEach(() => {
         jest.clearAllMocks();
         jest.spyOn(console, "error").mockImplementation(() => { });
@@ -39,15 +42,19 @@ describe("eventMembershipService - GetEventStaff", () => {
         console.error.mockRestore();
     });
 
+    /* =============================
+      STAFF RETRIEVAL
+    ============================= */
+
     it("should get event organizers and co-organizers", async () => {
-        const organizers = [
+        const eventStaff = [
             { id: 1, role: "organizer" }
         ];
 
         Event.findByPk.mockResolvedValue({ id: 1 });
-        EventUserRole.findAll.mockResolvedValue(organizers);
+        EventUserRole.findAll.mockResolvedValue(eventStaff);
 
-        const result = await service.getEventStaff(1);
+        const result = await eventMembershipService.getEventStaff(1);
 
         expect(Event.findByPk).toHaveBeenCalledWith(1);
 
@@ -65,19 +72,31 @@ describe("eventMembershipService - GetEventStaff", () => {
             order: [["role", "ASC"], ["createdAt", "ASC"]]
         });
 
-        expect(result).toBe(organizers);
+        expect(result).toBe(eventStaff);
     });
+
+    /* =============================
+      EDGE CASES
+    ============================= */
 
     it("should throw 404 if event is not found", async () => {
         Event.findByPk.mockResolvedValue(null);
 
-        await expect(
-            service.getEventStaff(999)
-        ).rejects.toMatchObject({
+        await expect(eventMembershipService.getEventStaff(999)).rejects.toMatchObject({
             message: "Event not found",
             statusCode: 404
         });
 
         expect(EventUserRole.findAll).not.toHaveBeenCalled();
+    });
+
+    /* =============================
+      DATABASE ERRORS
+    ============================= */
+
+    it("should forward database errors", async () => {
+        Event.findByPk.mockRejectedValue(new Error("DB error"));
+
+        await expect(eventMembershipService.getEventStaff(1)).rejects.toThrow("DB error");
     });
 });

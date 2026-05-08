@@ -16,14 +16,15 @@ const request = require("supertest");
 const app = require("../../src/app");
 
 // Register a test user and return reusable auth data
-const registerAndGetToken = async ({ name = "Test User", email = `user${Date.now()}@test.com`, password = "Password123" } = {}) => {
+const registerAndGetToken = async ({
+    name = "Test User",
+    email = `user${Date.now()}@test.com`,
+    password = "Password123"
+} = {}) => {
+
     const res = await request(app)
         .post("/api/auth/register")
-        .send({
-            name,
-            email,
-            password
-        });
+        .send({ name, email, password });
 
     return {
         token: res.body.token,

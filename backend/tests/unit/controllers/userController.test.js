@@ -2,9 +2,9 @@
    USER CONTROLLER TESTS
 
    Tests:
-   - authenticated profile retrieval
-   - authenticated profile update
-   - authenticated password update
+   - authenticated current user profile retrieval
+   - authenticated current user profile update
+   - authenticated current user password update
    - public user profile retrieval
    - public user events retrieval
 
@@ -22,14 +22,14 @@ const { createMockReqResNext } = require("../../helpers/mockExpress");
 
 jest.mock("../../../src/services/userService");
 
-const createUserControllerMocks = ({ params = { id: 1 }, query = {}, body = {}, user = { userId: 10 }, file = undefined } = {}) => {
-    return createMockReqResNext({
-        params,
-        query,
-        body,
-        user,
-        file
-    });
+const createUserControllerMocks = ({
+    params = { id: 1 },
+    query = {},
+    body = {},
+    user = { userId: 10 },
+    file = undefined
+} = {}) => {
+    return createMockReqResNext({ params, query, body, user, file });
 };
 
 const mockUser = {
@@ -40,14 +40,14 @@ const mockUser = {
 };
 
 describe("userController", () => {
+
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
-
-    /* =============================
-       AUTHENTICATED USER EVENTS
-    ============================= */
+    /* ====================================
+        AUTHENTICATED CURRENT USER EVENTS
+    ===================================== */
 
     describe("getCurrentUserEvents", () => {
         it("should get current user events", async () => {
@@ -93,9 +93,9 @@ describe("userController", () => {
     });
 
 
-    /* =============================
-       AUTHENTICATED PROFILE
-    ============================= */
+    /* =====================================
+        AUTHENTICATED CURRENT USER PROFILE
+    ===================================== */
 
     describe("getCurrentUserProfile", () => {
         it("should return authenticated user profile", async () => {
@@ -223,9 +223,9 @@ describe("userController", () => {
         });
     });
 
-    /* =============================
-       PASSWORD
-    ============================= */
+    /* ======================================
+        AUTHENTICATED CURRENT USER PASSWORD
+    ====================================== */
 
     describe("changeCurrentUserPassword", () => {
         it("should change authenticated user password", async () => {

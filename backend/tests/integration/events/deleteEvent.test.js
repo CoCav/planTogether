@@ -1,5 +1,5 @@
-/* ==================================================
-   EVENTS INTEGRATION - DELETE EVENT
+/* =============================================
+   EVENTS INTEGRATION - DELETE EVENT TESTS
 
    Tests:
    - organizer event deletion
@@ -15,7 +15,7 @@
    - deleted events are no longer retrievable
    - role middleware protects delete route
    - business rules prevent deleting past events
-================================================== */
+=============================================== */
 
 const request = require("supertest");
 const app = require("../../../src/app");
@@ -44,7 +44,7 @@ describe("Delete Event API", () => {
     });
 
     /* =============================
-       EVENT DELETION
+       EVENT DELETION SUCCESS
     ============================= */
 
     it("should allow organizer to delete event", async () => {
@@ -144,36 +144,6 @@ describe("Delete Event API", () => {
         expect(res.statusCode).toBe(403);
     });
 
-    it("should reject deleting nonexistent event", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Missing Event Deleter",
-            email: `missingdelete${Date.now()}@test.com`
-        });
-
-        const res = await request(app)
-            .delete("/api/events/999999")
-            .set(organizerAuth.headers);
-
-        expect(res.statusCode).toBe(403);
-    });
-
-    /* =============================
-       VALIDATION ERRORS
-    ============================= */
-
-    it("should reject invalid eventId", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Invalid ID User",
-            email: `invalidid${Date.now()}@test.com`
-        });
-
-        const res = await request(app)
-            .delete("/api/events/abc")
-            .set(organizerAuth.headers);
-
-        expect(res.statusCode).toBe(400);
-    });
-
     /* =============================
        BUSINESS RULES
     ============================= */
@@ -197,6 +167,40 @@ describe("Delete Event API", () => {
 
         const res = await request(app)
             .delete(`/api/events/${event.id}`)
+            .set(organizerAuth.headers);
+
+        expect(res.statusCode).toBe(403);
+    });
+
+    /* =============================
+       VALIDATION ERRORS
+    ============================= */
+
+    it("should reject invalid eventId", async () => {
+        const organizerAuth = await registerAndGetToken({
+            name: "Invalid ID User",
+            email: `invalidid${Date.now()}@test.com`
+        });
+
+        const res = await request(app)
+            .delete("/api/events/abc")
+            .set(organizerAuth.headers);
+
+        expect(res.statusCode).toBe(400);
+    });
+
+    /* =============================
+       EDGE CASES
+    ============================= */
+
+    it("should reject deleting nonexistent event", async () => {
+        const organizerAuth = await registerAndGetToken({
+            name: "Missing Event Deleter",
+            email: `missingdelete${Date.now()}@test.com`
+        });
+
+        const res = await request(app)
+            .delete("/api/events/999999")
             .set(organizerAuth.headers);
 
         expect(res.statusCode).toBe(403);

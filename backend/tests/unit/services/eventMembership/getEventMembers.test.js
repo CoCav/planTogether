@@ -9,14 +9,14 @@
    Ensures:
    - event members are retrieved with user data
    - missing events are rejected before membership query
-   - database errors are not swallowed
+   - database errors are forwarded correctly
 ================================================== */
 
 const Event = require("../../../../src/models/eventModel");
 const User = require("../../../../src/models/userModel");
 const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
 
-const service = require("../../../../src/services/eventMembershipService");
+const eventMembershipService = require("../../../../src/services/eventMembershipService");
 
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
@@ -29,6 +29,7 @@ jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
 }));
 
 describe("eventMembershipService - getEventMembers", () => {
+
     beforeEach(() => {
         jest.clearAllMocks();
         jest.spyOn(console, "error").mockImplementation(() => { });
@@ -38,15 +39,19 @@ describe("eventMembershipService - getEventMembers", () => {
         console.error.mockRestore();
     });
 
+    /* =============================
+       MEMBERS RETRIEVAL
+    ============================= */
+
     it("should get event members", async () => {
-        const memberships = [
+        const eventMembers = [
             { id: 1, role: "participant" }
         ];
 
         Event.findByPk.mockResolvedValue({ id: 1 });
-        EventUserRole.findAll.mockResolvedValue(memberships);
+        EventUserRole.findAll.mockResolvedValue(eventMembers);
 
-        const result = await service.getEventMembers(1);
+        const result = await eventMembershipService.getEventMembers(1);
 
         expect(Event.findByPk).toHaveBeenCalledWith(1);
 
@@ -59,15 +64,17 @@ describe("eventMembershipService - getEventMembers", () => {
             order: [["createdAt", "ASC"]]
         });
 
-        expect(result).toBe(memberships);
+        expect(result).toBe(eventMembers);
     });
+
+    /* =============================
+       EDGE CASES
+    ============================= */
 
     it("should throw 404 if event is not found", async () => {
         Event.findByPk.mockResolvedValue(null);
 
-        await expect(
-            service.getEventMembers(999)
-        ).rejects.toMatchObject({
+        await expect(eventMembershipService.getEventMembers(999)).rejects.toMatchObject({
             message: "Event not found",
             statusCode: 404
         });
@@ -75,9 +82,13 @@ describe("eventMembershipService - getEventMembers", () => {
         expect(EventUserRole.findAll).not.toHaveBeenCalled();
     });
 
+    /* =============================
+       DATABASE ERRORS
+    ============================= */
+
     it("should forward database errors", async () => {
         Event.findByPk.mockRejectedValue(new Error("DB error"));
 
-        await expect(service.getEventMembers(1)).rejects.toThrow("DB error");
+        await expect(eventMembershipService.getEventMembers(1)).rejects.toThrow("DB error");
     });
 });

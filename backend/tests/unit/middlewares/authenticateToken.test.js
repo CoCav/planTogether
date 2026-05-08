@@ -2,10 +2,10 @@
    AUTHENTICATE TOKEN MIDDLEWARE TESTS
 
    Tests:
-   - missing Authorization header
-   - malformed Authorization header
-   - empty Bearer token
-   - invalid or expired token
+   - missing Authorization header rejection
+   - malformed Authorization header rejection
+   - empty Bearer token rejection
+   - invalid or expired token rejection
    - valid token authentication
 
    Ensures:
@@ -14,13 +14,17 @@
    - next() is called only when token is valid
 ================================================== */
 
-const { authenticateToken } = require("../../../src/middlewares/authenticateToken");
 const jwt = require("jsonwebtoken");
+
+const { authenticateToken } = require("../../../src/middlewares/authenticateToken");
 
 jest.mock("jsonwebtoken");
 
 describe("authenticateToken middleware", () => {
-    let req, res, next;
+
+    let req;
+    let res;
+    let next;
 
     beforeEach(() => {
         req = {
@@ -37,22 +41,48 @@ describe("authenticateToken middleware", () => {
         jest.clearAllMocks();
     });
 
+    /* =============================
+        AUTHENTICATION SUCCESS
+    ============================= */
+
+    it("should attach user to request and call next when token is valid", () => {
+        req.headers.authorization = "Bearer valid-token";
+
+        const decodedToken = {
+            userId: 1
+        };
+
+        jwt.verify.mockImplementation((token, secret, cb) => {
+            cb(null, decodedToken);
+        });
+
+        authenticateToken(req, res, next);
+
+        expect(req.user).toEqual(decodedToken);
+        expect(next).toHaveBeenCalled();
+    });
+
+    /* =============================
+       AUTHENTICATION ERRORS
+    ============================= */
+
     it("should return 401 if authorization header is missing", () => {
         authenticateToken(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.json).toHaveBeenCalledWith({
-            message: "Authorization header missing or malformed"
-        });
+        expect(res.json).toHaveBeenCalledWith({ message: "Authorization header missing or malformed" });
+
         expect(next).not.toHaveBeenCalled();
     });
 
-    it("should return 401 if header does not start with Bearer", () => {
+    it("should return 401 if authorization header is malformed", () => {
         req.headers.authorization = "InvalidToken";
 
         authenticateToken(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({ message: "Authorization header missing or malformed" });
+
         expect(next).not.toHaveBeenCalled();
     });
 
@@ -62,14 +92,13 @@ describe("authenticateToken middleware", () => {
         authenticateToken(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.json).toHaveBeenCalledWith({
-            message: "No token provided"
-        });
+        expect(res.json).toHaveBeenCalledWith({ message: "No token provided" });
+
         expect(next).not.toHaveBeenCalled();
     });
 
     it("should return 401 if jwt verification fails", () => {
-        req.headers.authorization = "Bearer validtoken";
+        req.headers.authorization = "Bearer invalid-token";
 
         jwt.verify.mockImplementation((token, secret, cb) => {
             cb(new Error("Invalid token"), null);
@@ -78,25 +107,10 @@ describe("authenticateToken middleware", () => {
         authenticateToken(req, res, next);
 
         expect(jwt.verify).toHaveBeenCalled();
+
         expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.json).toHaveBeenCalledWith({
-            message: "Invalid or expired token"
-        });
+        expect(res.json).toHaveBeenCalledWith({ message: "Invalid or expired token" });
+
         expect(next).not.toHaveBeenCalled();
-    });
-
-    it("should attach user to request and call next when token is valid", () => {
-        req.headers.authorization = "Bearer validtoken";
-
-        const decoded = { userId: 1 };
-
-        jwt.verify.mockImplementation((token, secret, cb) => {
-            cb(null, decoded);
-        });
-
-        authenticateToken(req, res, next);
-
-        expect(req.user).toEqual(decoded);
-        expect(next).toHaveBeenCalled();
     });
 });

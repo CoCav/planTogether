@@ -4,11 +4,11 @@ const Event = require("../models/eventModel");
 const User = require("../models/userModel");
 const EventUserRole = require("../models/relations/eventUserRoleModel");
 
-const { deleteUploadedFile } = require("../utils/uploadedFileStorage");
-const { assertEventNotPast, getEventStatus } = require("../utils/eventStatus");
+const { buildEventCreateData, buildEventUpdateData } = require("../utils/eventDataBuilder");
 const { buildEventWhereConditions, buildEventCreatorInclude } = require("../utils/eventQueryBuilder");
+const { assertEventNotPast, getEventStatus } = require("../utils/eventStatus");
+const { deleteUploadedFile } = require("../utils/uploadedFileStorage");
 const { getPaginationOptions } = require("../utils/pagination");
-
 
 /* ==================================================
    EVENT SERVICE
@@ -27,6 +27,7 @@ const { getPaginationOptions } = require("../utils/pagination");
    - event images are cleaned after successful update
 ================================================== */
 
+
 /* =============================
    CREATE EVENT
 ============================= */
@@ -34,19 +35,7 @@ const { getPaginationOptions } = require("../utils/pagination");
 // Create a new event
 const createEvent = async (data, userId) => {
     try {
-        const {
-            title,
-            description,
-            type,
-            theme,
-            mode,
-            location,
-            startDateTime,
-            endDateTime,
-            maxParticipants,
-            registrationDeadline,
-            image
-        } = data;
+        const { startDateTime, endDateTime } = data;
 
         // Ensure event dates are coherent
         if (new Date(endDateTime) < new Date(startDateTime)) {
@@ -55,32 +44,21 @@ const createEvent = async (data, userId) => {
             throw error;
         }
 
-        const event = await Event.create({
-            title,
-            description,
-            type,
-            theme,
-            mode,
-            location: mode === "online" ? null : location,
-            startDateTime,
-            endDateTime,
-            maxParticipants: maxParticipants ?? null,
-            registrationDeadline: registrationDeadline ?? null,
-            image: image ?? null,
-            creatorId: userId
-        });
+        const eventData = buildEventCreateData(data, userId);
+
+        const event = await Event.create(eventData);
 
         // Creator automatically becomes organizer
         await EventUserRole.create({
             eventId: event.id,
             userId,
-            role: 'organizer'
+            role: "organizer"
         });
 
         return event;
 
     } catch (error) {
-        console.error('Error in creating the event:', error);
+        console.error("Error in creating the event:", error);
         throw error;
     }
 };
@@ -95,7 +73,7 @@ const getAllEvents = async (query = {}) => {
     try {
         const whereConditions = {};
 
-        // Applies status, date, search, type, theme, mode, location and creatorId filters
+        // Apply filters to Sequelize where conditions
         buildEventWhereConditions(whereConditions, query);
 
         const {
@@ -144,6 +122,7 @@ const getAllEvents = async (query = {}) => {
             pageSize,
             totalEvents,
             totalPages: Math.ceil(totalEvents / pageSize),
+
             events: rows.map((event) => ({
                 ...event.toJSON(),
                 status: getEventStatus(event)
@@ -202,6 +181,7 @@ const getEventByID = async (id) => {
     }
 };
 
+
 /* =============================
    UPDATE / DELETE EVENT
 ============================= */
@@ -212,7 +192,7 @@ const updateEventByID = async (id, data) => {
         const event = await Event.findByPk(id);
 
         if (!event) {
-            const error = new Error('Event not found');
+            const error = new Error("Event not found");
             error.statusCode = 404;
             throw error;
         }
@@ -222,19 +202,7 @@ const updateEventByID = async (id, data) => {
 
         const oldImage = event.image;
 
-        const {
-            title,
-            description,
-            type,
-            theme,
-            mode,
-            location,
-            startDateTime,
-            endDateTime,
-            maxParticipants,
-            registrationDeadline,
-            image
-        } = data;
+        const { startDateTime, endDateTime, image } = data;
 
         // Validate date order only when both dates are provided
         if (startDateTime && endDateTime) {
@@ -245,19 +213,7 @@ const updateEventByID = async (id, data) => {
             }
         }
 
-        const updatedData = {
-            title,
-            description,
-            type,
-            theme,
-            mode,
-            location: mode === "online" ? null : location,
-            startDateTime,
-            endDateTime,
-            maxParticipants: maxParticipants ?? null,
-            registrationDeadline: registrationDeadline ?? null,
-            image: image !== undefined ? image : event.image
-        };
+        const updatedData = buildEventUpdateData(event, data);
 
         await event.update(updatedData);
 
@@ -269,7 +225,7 @@ const updateEventByID = async (id, data) => {
         return event;
 
     } catch (error) {
-        console.error('Error in updating the event:', error);
+        console.error("Error in updating the event:", error);
         throw error;
     }
 };
@@ -281,7 +237,7 @@ const deleteEventByID = async (id) => {
         const event = await Event.findByPk(id);
 
         if (!event) {
-            const error = new Error('Event not found');
+            const error = new Error("Event not found");
             error.statusCode = 404;
             throw error;
         }
@@ -292,7 +248,7 @@ const deleteEventByID = async (id) => {
         await event.destroy();
 
     } catch (error) {
-        console.error('Error in deleting the event:', error);
+        console.error("Error in deleting the event:", error);
         throw error;
     }
 };

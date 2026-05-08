@@ -1,5 +1,5 @@
-/* ==================================================
-   EVENT MEMBERSHIP INTEGRATION - GET EVENT MEMBERS
+/* =======================================================
+   EVENT MEMBERSHIP INTEGRATION - GET EVENT MEMBERS TESTS
 
    Tests:
    - event members retrieval
@@ -11,7 +11,7 @@
    - event members are returned correctly
    - public users can access event members endpoint
    - invalid requests are rejected correctly
-================================================== */
+======================================================== */
 
 const request = require("supertest");
 const app = require("../../../src/app");
@@ -83,16 +83,6 @@ describe("Get Event Members API", () => {
     });
 
     /* =============================
-       EDGE CASES
-    ============================= */
-
-    it("should return 404 for nonexistent event", async () => {
-        const res = await request(app).get("/api/events/999999/members");
-
-        expect(res.statusCode).toBe(404);
-    });
-
-    /* =============================
        VALIDATION ERRORS
     ============================= */
 
@@ -100,5 +90,15 @@ describe("Get Event Members API", () => {
         const res = await request(app).get("/api/events/abc/members");
 
         expect(res.statusCode).toBe(400);
+    });
+
+    /* =============================
+       EDGE CASES
+    ============================= */
+
+    it("should return 404 for nonexistent event", async () => {
+        const res = await request(app).get("/api/events/999999/members");
+
+        expect(res.statusCode).toBe(404);
     });
 });

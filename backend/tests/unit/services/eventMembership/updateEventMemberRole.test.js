@@ -1,26 +1,29 @@
-/* ========================================================
-   EVENT MEMBERSHIP SERVICE - UPDATE MEMBER EVENT ROLE TESTS
+/* ===========================================================
+   EVENT MEMBERSHIP SERVICE - UPDATE EVENT MEMBER ROLE TESTS
 
    Tests:
    - successful role update
-   - missing event rejection
    - past event rejection
    - invalid role rejection
-   - missing membership rejection
    - same role rejection
+   - missing event rejection
+   - missing membership rejection
    - database error forwarding
 
    Ensures:
    - member roles are updated correctly
    - invalid role changes are rejected
+   - same-role updates are rejected
    - past event rules are respected
-========================================================== */
+   - missing events and memberships are rejected correctly
+   - database errors are forwarded correctly
+=========================================================== */
 
 const Event = require("../../../../src/models/eventModel");
 const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
 const { assertEventNotPast } = require("../../../../src/utils/eventStatus");
 
-const service = require("../../../../src/services/eventMembershipService");
+const eventMembershipService = require("../../../../src/services/eventMembershipService");
 
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
@@ -35,6 +38,7 @@ jest.mock("../../../../src/utils/eventStatus", () => ({
 }));
 
 describe("eventMembershipService - updateEventMemberRole", () => {
+
     beforeEach(() => {
         jest.clearAllMocks();
         jest.spyOn(console, "error").mockImplementation(() => { });
@@ -43,6 +47,10 @@ describe("eventMembershipService - updateEventMemberRole", () => {
     afterEach(() => {
         console.error.mockRestore();
     });
+
+    /* =============================
+      ROLE UPDATE
+    ============================= */
 
     it("should update event member role", async () => {
         const membership = {
@@ -54,7 +62,7 @@ describe("eventMembershipService - updateEventMemberRole", () => {
         assertEventNotPast.mockImplementation(() => { });
         EventUserRole.findOne.mockResolvedValue(membership);
 
-        const result = await service.updateEventMemberRole({
+        const result = await eventMembershipService.updateEventMemberRole({
             eventId: 1,
             userId: 10,
             newRole: "co_organizer"
@@ -65,20 +73,9 @@ describe("eventMembershipService - updateEventMemberRole", () => {
         expect(result).toBe(membership);
     });
 
-    it("should throw 404 if event is not found", async () => {
-        Event.findByPk.mockResolvedValue(null);
-
-        await expect(
-            service.updateEventMemberRole({
-                eventId: 1,
-                userId: 10,
-                newRole: "participant"
-            })
-        ).rejects.toMatchObject({
-            message: "Event not found",
-            statusCode: 404
-        });
-    });
+    /* =============================
+      BUSINESS RULES
+    ============================= */
 
     it("should block role update on past event", async () => {
         Event.findByPk.mockResolvedValue({ id: 1 });
@@ -90,13 +87,11 @@ describe("eventMembershipService - updateEventMemberRole", () => {
             throw error;
         });
 
-        await expect(
-            service.updateEventMemberRole({
-                eventId: 1,
-                userId: 10,
-                newRole: "participant"
-            })
-        ).rejects.toMatchObject({
+        await expect(eventMembershipService.updateEventMemberRole({
+            eventId: 1,
+            userId: 10,
+            newRole: "participant"
+        })).rejects.toMatchObject({
             statusCode: 403
         });
     });
@@ -105,32 +100,13 @@ describe("eventMembershipService - updateEventMemberRole", () => {
         Event.findByPk.mockResolvedValue({ id: 1 });
         assertEventNotPast.mockImplementation(() => { });
 
-        await expect(
-            service.updateEventMemberRole({
-                eventId: 1,
-                userId: 10,
-                newRole: "invalid"
-            })
-        ).rejects.toMatchObject({
+        await expect(eventMembershipService.updateEventMemberRole({
+            eventId: 1,
+            userId: 10,
+            newRole: "invalid"
+        })).rejects.toMatchObject({
             message: "Invalid role provided",
             statusCode: 400
-        });
-    });
-
-    it("should throw 404 if membership is not found", async () => {
-        Event.findByPk.mockResolvedValue({ id: 1 });
-        assertEventNotPast.mockImplementation(() => { });
-        EventUserRole.findOne.mockResolvedValue(null);
-
-        await expect(
-            service.updateEventMemberRole({
-                eventId: 1,
-                userId: 10,
-                newRole: "participant"
-            })
-        ).rejects.toMatchObject({
-            message: "User is not a member of this event",
-            statusCode: 404
         });
     });
 
@@ -143,27 +119,59 @@ describe("eventMembershipService - updateEventMemberRole", () => {
         assertEventNotPast.mockImplementation(() => { });
         EventUserRole.findOne.mockResolvedValue(membership);
 
-        await expect(
-            service.updateEventMemberRole({
-                eventId: 1,
-                userId: 10,
-                newRole: "participant"
-            })
-        ).rejects.toMatchObject({
+        await expect(eventMembershipService.updateEventMemberRole({
+            eventId: 1,
+            userId: 10,
+            newRole: "participant"
+        })).rejects.toMatchObject({
             message: "User already has this role",
             statusCode: 400
         });
     });
 
+    /* =============================
+      EDGE CASES
+    ============================= */
+
+    it("should throw 404 if event is not found", async () => {
+        Event.findByPk.mockResolvedValue(null);
+
+        await expect(eventMembershipService.updateEventMemberRole({
+            eventId: 1,
+            userId: 10,
+            newRole: "participant"
+        })).rejects.toMatchObject({
+            message: "Event not found",
+            statusCode: 404
+        });
+    });
+
+    it("should throw 404 if membership is not found", async () => {
+        Event.findByPk.mockResolvedValue({ id: 1 });
+        assertEventNotPast.mockImplementation(() => { });
+        EventUserRole.findOne.mockResolvedValue(null);
+
+        await expect(eventMembershipService.updateEventMemberRole({
+            eventId: 1,
+            userId: 10,
+            newRole: "participant"
+        })).rejects.toMatchObject({
+            message: "User is not a member of this event",
+            statusCode: 404
+        });
+    });
+
+    /* =============================
+        DATABASE ERRORS
+    ============================= */
+
     it("should forward database errors", async () => {
         Event.findByPk.mockRejectedValue(new Error("DB error"));
 
-        await expect(
-            service.updateEventMemberRole({
-                eventId: 1,
-                userId: 10,
-                newRole: "participant"
-            })
-        ).rejects.toThrow("DB error");
+        await expect(eventMembershipService.updateEventMemberRole({
+            eventId: 1,
+            userId: 10,
+            newRole: "participant"
+        })).rejects.toThrow("DB error");
     });
 });

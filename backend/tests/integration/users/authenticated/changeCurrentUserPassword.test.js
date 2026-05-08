@@ -1,5 +1,5 @@
 /* ==================================================
-   USER INTEGRATION - CURRENT USER PASSWORD
+   USER INTEGRATION - CURRENT USER PASSWORD TESTS
 
    Tests:
    - authenticated password update
@@ -15,16 +15,16 @@
    - authenticated users can change their password
    - validators protect password rules
    - old passwords become invalid after update
-================================================== */
+==================================================== */
 
 const request = require("supertest");
-const app = require("../../../src/app");
+const app = require("../../../../src/app");
 
-const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
+const { initDB, sequelize, User, Event, EventUserRole } = require("../../../../src/models");
 
-const { registerAndGetToken } = require("../../helpers/authHelper");
+const { registerAndGetToken } = require("../../../helpers/authHelper");
 
-describe("Current User Password API", () => {
+describe("Change Current User Password API", () => {
 
     beforeAll(async () => {
         await initDB();
@@ -40,8 +40,8 @@ describe("Current User Password API", () => {
         await sequelize.close();
     });
 
-    /* =============================
-       PASSWORD UPDATE
+    /* ============================
+       PASSWORD UPDATE SUCCESS
     ============================= */
 
     it("should update current user password", async () => {

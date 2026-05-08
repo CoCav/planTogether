@@ -17,8 +17,12 @@ const { runValidation } = require("../../helpers/validationHelper");
 
 describe("authValidator", () => {
 
+    /* =============================
+       REGISTER VALIDATION
+    ============================= */
+
     describe("registerValidator", () => {
-        it("should pass with valid data", async () => {
+        it("should pass with valid registration data", async () => {
             const result = await runValidation(registerValidator, {
                 body: {
                     name: "John",
@@ -26,6 +30,7 @@ describe("authValidator", () => {
                     password: "Password1"
                 }
             });
+
             expect(result.isEmpty()).toBe(true);
         });
 
@@ -65,8 +70,12 @@ describe("authValidator", () => {
         });
     });
 
+    /* =============================
+       LOGIN VALIDATION
+    ============================= */
+
     describe("loginValidator", () => {
-        it("should pass with valid data", async () => {
+        it("should pass with valid login data", async () => {
             const result = await runValidation(loginValidator, {
                 body: {
                     email: "john@test.com",

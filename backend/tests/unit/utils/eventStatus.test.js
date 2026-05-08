@@ -16,8 +16,10 @@
 const { isEventPast, getEventStatus, assertEventNotPast } = require("../../../src/utils/eventStatus");
 
 describe("eventStatus utils", () => {
+
     beforeEach(() => {
         jest.useFakeTimers();
+
         jest.setSystemTime(
             new Date("2026-04-25T12:00:00.000Z").getTime()
         );
@@ -26,6 +28,10 @@ describe("eventStatus utils", () => {
     afterEach(() => {
         jest.useRealTimers();
     });
+
+    /* =============================
+       PAST EVENT DETECTION
+    ============================= */
 
     it("should return false when event is missing", () => {
         expect(isEventPast(null)).toBe(false);
@@ -60,6 +66,10 @@ describe("eventStatus utils", () => {
         ).toBe(false);
     });
 
+    /* =============================
+       EVENT STATUS COMPUTATION
+    ============================= */
+
     it("should return past status for past event", () => {
         expect(
             getEventStatus({
@@ -75,6 +85,10 @@ describe("eventStatus utils", () => {
             })
         ).toBe("upcoming");
     });
+
+    /* =============================
+       PAST EVENT ACTION PROTECTION
+    ============================= */
 
     it("should not throw for upcoming event", () => {
         expect(() =>

@@ -1,5 +1,5 @@
-/* ==================================================
-   USER INTEGRATION - PUBLIC USER EVENTS
+/* ================================================
+   USER INTEGRATION - PUBLIC USER EVENTS TESTS
 
    Tests:
    - authenticated public events retrieval
@@ -18,15 +18,15 @@
 ================================================== */
 
 const request = require("supertest");
-const app = require("../../../src/app");
+const app = require("../../../../src/app");
 
-const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
+const { initDB, sequelize, User, Event, EventUserRole } = require("../../../../src/models");
 
-const { registerAndGetToken } = require("../../helpers/authHelper");
-const { createEvent } = require("../../helpers/eventHelper");
-const { joinEvent } = require("../../helpers/eventMembershipHelper");
+const { registerAndGetToken } = require("../../../helpers/authHelper");
+const { createEvent } = require("../../../helpers/eventHelper");
+const { joinEvent } = require("../../../helpers/eventMembershipHelper");
 
-describe("Public User Events API", () => {
+describe("Get Public User Events API", () => {
 
     beforeAll(async () => {
         await initDB();
@@ -42,8 +42,8 @@ describe("Public User Events API", () => {
         await sequelize.close();
     });
 
-    /* =============================
-       PUBLIC USER EVENTS
+    /* ============================
+       PUBLIC USER EVENTS SUCCESS
     ============================= */
 
     it("should retrieve public user events", async () => {
@@ -153,12 +153,7 @@ describe("Public User Events API", () => {
             email: `duplicatetarget${Date.now()}@test.com`
         });
 
-        const createdEventRes = await createEvent(
-            targetUserAuth.headers,
-            {
-                title: "Non Duplicated Event"
-            }
-        );
+        await createEvent(targetUserAuth.headers, { title: "Non Duplicated Event" });
 
         const res = await request(app)
             .get(`/api/users/${targetUserAuth.user.userId}/events`)
@@ -186,8 +181,7 @@ describe("Public User Events API", () => {
             password: "Password123"
         });
 
-        const res = await request(app)
-            .get(`/api/users/${targetUser.id}/events`);
+        const res = await request(app).get(`/api/users/${targetUser.id}/events`);
 
         expect(res.statusCode).toBe(401);
     });

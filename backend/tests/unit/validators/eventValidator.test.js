@@ -4,6 +4,7 @@
    Tests:
    - event creation validation
    - event update validation
+   - event query validation
    - eventId param validation
    - date order validation
    - mode and location validation
@@ -11,7 +12,7 @@
    Ensures:
    - invalid event payloads are rejected early
    - required event fields are enforced
-   - event dates and route params are validated
+   - event dates, query params and route params are validated
 ================================================== */
 
 const { createEventValidator, updateEventValidator, eventIdParamValidator, getAllEventsValidator } = require("../../../src/validators/eventValidator");
@@ -30,6 +31,10 @@ const validEventBody = {
 };
 
 describe("eventValidator", () => {
+
+    /* =============================
+       CREATE EVENT VALIDATION
+    ============================= */
 
     describe("createEventValidator", () => {
         it("should pass with valid event data", async () => {
@@ -67,12 +72,8 @@ describe("eventValidator", () => {
 
             expect(result.array()).toEqual(
                 expect.arrayContaining([
-                    expect.objectContaining({
-                        msg: "Start date and time must be a valid ISO8601 date"
-                    }),
-                    expect.objectContaining({
-                        msg: "End date and time must be a valid ISO8601 date"
-                    })
+                    expect.objectContaining({ msg: "Start date and time must be a valid ISO8601 date" }),
+                    expect.objectContaining({ msg: "End date and time must be a valid ISO8601 date" })
                 ])
             );
         });
@@ -88,9 +89,7 @@ describe("eventValidator", () => {
 
             expect(result.array()).toEqual(
                 expect.arrayContaining([
-                    expect.objectContaining({
-                        msg: "End date and time must be after start date and time"
-                    })
+                    expect.objectContaining({ msg: "End date and time must be after start date and time" })
                 ])
             );
         });
@@ -105,9 +104,7 @@ describe("eventValidator", () => {
 
             expect(result.array()).toEqual(
                 expect.arrayContaining([
-                    expect.objectContaining({
-                        msg: "Mode must be online or in_person"
-                    })
+                    expect.objectContaining({ msg: "Mode must be online or in_person" })
                 ])
             );
         });
@@ -123,9 +120,7 @@ describe("eventValidator", () => {
 
             expect(result.array()).toEqual(
                 expect.arrayContaining([
-                    expect.objectContaining({
-                        msg: "Location is required for in-person events"
-                    })
+                    expect.objectContaining({ msg: "Location is required for in-person events" })
                 ])
             );
         });
@@ -142,6 +137,10 @@ describe("eventValidator", () => {
             expect(result.isEmpty()).toBe(true);
         });
     });
+
+    /* =============================
+       UPDATE EVENT VALIDATION
+    ============================= */
 
     describe("updateEventValidator", () => {
         it("should pass with valid update data", async () => {
@@ -165,13 +164,15 @@ describe("eventValidator", () => {
 
             expect(result.array()).toEqual(
                 expect.arrayContaining([
-                    expect.objectContaining({
-                        msg: "End date and time must be after start date and time"
-                    })
+                    expect.objectContaining({ msg: "End date and time must be after start date and time" })
                 ])
             );
         });
     });
+
+    /* =============================
+       EVENT QUERY VALIDATION
+    ============================= */
 
     describe("getAllEventsValidator", () => {
         it("should pass with valid query params", async () => {
@@ -191,7 +192,9 @@ describe("eventValidator", () => {
 
         it("should fail with invalid sortBy", async () => {
             const result = await runValidation(getAllEventsValidator, {
-                query: { sortBy: "invalid" }
+                query: {
+                    sortBy: "invalid"
+                }
             });
 
             expect(result.array()[0].msg).toMatch(/invalid sort field/i);
@@ -199,7 +202,9 @@ describe("eventValidator", () => {
 
         it("should fail with invalid page", async () => {
             const result = await runValidation(getAllEventsValidator, {
-                query: { page: "0" }
+                query: {
+                    page: "0"
+                }
             });
 
             expect(result.array()[0].msg).toMatch(/page must be a positive integer/i);
@@ -207,17 +212,25 @@ describe("eventValidator", () => {
 
         it("should fail with invalid date", async () => {
             const result = await runValidation(getAllEventsValidator, {
-                query: { date: "bad-date" }
+                query: {
+                    date: "bad-date"
+                }
             });
 
             expect(result.array()[0].msg).toMatch(/date must be a valid iso8601 date/i);
         });
     });
 
+    /* =============================
+       EVENT ID PARAM VALIDATION
+    ============================= */
+
     describe("eventIdParamValidator", () => {
         it("should pass with valid eventId", async () => {
             const result = await runValidation(eventIdParamValidator, {
-                params: { eventId: "1" }
+                params: {
+                    eventId: "1"
+                }
             });
 
             expect(result.isEmpty()).toBe(true);
@@ -225,14 +238,14 @@ describe("eventValidator", () => {
 
         it("should fail with invalid eventId", async () => {
             const result = await runValidation(eventIdParamValidator, {
-                params: { eventId: "abc" }
+                params: {
+                    eventId: "abc"
+                }
             });
 
             expect(result.array()).toEqual(
                 expect.arrayContaining([
-                    expect.objectContaining({
-                        msg: "Event ID must be a positive integer"
-                    })
+                    expect.objectContaining({ msg: "Event ID must be a positive integer" })
                 ])
             );
         });

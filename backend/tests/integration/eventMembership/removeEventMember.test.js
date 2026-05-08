@@ -1,5 +1,5 @@
-/* ==================================================
-   EVENT MEMBERSHIP INTEGRATION - REMOVE EVENT MEMBER
+/* =========================================================
+   EVENT MEMBERSHIP INTEGRATION - REMOVE EVENT MEMBER TESTS
 
    Tests:
    - organizer member removal
@@ -16,7 +16,7 @@
    - authorized staff members can remove participants
    - protected memberships cannot be removed
    - unauthorized removals are rejected correctly
-================================================== */
+========================================================= */
 
 const request = require("supertest");
 const app = require("../../../src/app");
@@ -45,7 +45,7 @@ describe("Remove Event Member API", () => {
     });
 
     /* =============================
-       MEMBER REMOVAL
+       MEMBER REMOVAL SUCCESS
     ============================= */
 
     it("should allow organizer to remove participant", async () => {
@@ -226,36 +226,6 @@ describe("Remove Event Member API", () => {
     });
 
     /* =============================
-       VALIDATION ERRORS
-    ============================= */
-
-    it("should reject invalid eventId", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Organizer",
-            email: `organizer${Date.now()}@test.com`
-        });
-
-        const res = await request(app)
-            .delete("/api/events/abc/members/1")
-            .set(organizerAuth.headers);
-
-        expect(res.statusCode).toBe(400);
-    });
-
-    it("should reject invalid userId", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Organizer",
-            email: `organizer${Date.now()}@test.com`
-        });
-
-        const res = await request(app)
-            .delete("/api/events/1/members/abc")
-            .set(organizerAuth.headers);
-
-        expect(res.statusCode).toBe(400);
-    });
-
-    /* =============================
        BUSINESS RULES
     ============================= */
 
@@ -309,6 +279,36 @@ describe("Remove Event Member API", () => {
             .set(organizerAuth.headers);
 
         expect(res.statusCode).toBe(403);
+    });
+
+    /* =============================
+        VALIDATION ERRORS
+    ============================= */
+
+    it("should reject invalid eventId", async () => {
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `organizer${Date.now()}@test.com`
+        });
+
+        const res = await request(app)
+            .delete("/api/events/abc/members/1")
+            .set(organizerAuth.headers);
+
+        expect(res.statusCode).toBe(400);
+    });
+
+    it("should reject invalid userId", async () => {
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `organizer${Date.now()}@test.com`
+        });
+
+        const res = await request(app)
+            .delete("/api/events/1/members/abc")
+            .set(organizerAuth.headers);
+
+        expect(res.statusCode).toBe(400);
     });
 
     /* =============================

@@ -1,5 +1,5 @@
 /* ==================================================
-   AUTH INTEGRATION - LOGIN
+   AUTH INTEGRATION - LOGIN TESTS
 
    Tests:
    - successful login

@@ -1,5 +1,5 @@
 /* ==================================================
-   EVENT MEMBERSHIP INTEGRATION - JOIN EVENT
+   EVENT MEMBERSHIP INTEGRATION - JOIN EVENT TESTS
 
    Tests:
    - joining an event
@@ -44,7 +44,7 @@ describe("Join Event API", () => {
     });
 
     /* =============================
-       JOIN EVENT
+       JOIN SUCCESS
     ============================= */
 
     it("should allow an authenticated user to join an event", async () => {

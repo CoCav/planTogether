@@ -3,8 +3,8 @@
 
    Tests:
    - event creation
-   - event retrieval
    - event listing
+   - single event retrieval
    - event update
    - event deletion
 
@@ -22,17 +22,18 @@ const { createMockReqResNext } = require("../../helpers/mockExpress");
 
 jest.mock("../../../src/services/eventService");
 
-const createEventControllerMocks = ({ body = {}, params = { eventId: "1" }, query = {}, user = { userId: 10 }, file = undefined } = {}) => {
-    return createMockReqResNext({
-        body,
-        params,
-        query,
-        user,
-        file
-    });
+const createEventControllerMocks = ({
+    body = {},
+    params = { eventId: "1" },
+    query = {},
+    user = { userId: 10 },
+    file = undefined
+} = {}) => {
+    return createMockReqResNext({ body, params, query, user, file });
 };
 
 describe("eventController", () => {
+
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -103,7 +104,6 @@ describe("eventController", () => {
             const { req, res, next } = createEventControllerMocks();
 
             const error = new Error("Create failed");
-
             eventService.createEvent.mockRejectedValue(error);
 
             await eventController.createEvent(req, res, next);
@@ -113,7 +113,7 @@ describe("eventController", () => {
     });
 
     /* =============================
-       GET EVENTS
+       GET EVENT(S)
     ============================= */
 
     describe("getAllEvents", () => {
@@ -146,7 +146,6 @@ describe("eventController", () => {
             const { req, res, next } = createEventControllerMocks();
 
             const error = new Error("Fetch failed");
-
             eventService.getAllEvents.mockRejectedValue(error);
 
             await eventController.getAllEvents(req, res, next);
@@ -180,7 +179,6 @@ describe("eventController", () => {
             const { req, res, next } = createEventControllerMocks();
 
             const error = new Error("Not found");
-
             eventService.getEventByID.mockRejectedValue(error);
 
             await eventController.getEvent(req, res, next);
@@ -254,7 +252,6 @@ describe("eventController", () => {
             const { req, res, next } = createEventControllerMocks();
 
             const error = new Error("Update failed");
-
             eventService.updateEventByID.mockRejectedValue(error);
 
             await eventController.updateEvent(req, res, next);
@@ -284,7 +281,6 @@ describe("eventController", () => {
             const { req, res, next } = createEventControllerMocks();
 
             const error = new Error("Delete failed");
-
             eventService.deleteEventByID.mockRejectedValue(error);
 
             await eventController.deleteEvent(req, res, next);

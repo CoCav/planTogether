@@ -3,23 +3,26 @@
 
    Tests:
    - successful event leave
-   - missing event rejection
    - past event rejection
-   - missing participation rejection
    - organizer self-leave protection
+   - missing event rejection
+   - missing participation rejection
    - database error forwarding
 
    Ensures:
    - users can leave joined events
    - organizers cannot leave their own event
    - past event rules are respected
+   - missing memberships are rejected correctly
+   - database errors are forwarded correctly
 ================================================== */
+
 
 const Event = require("../../../../src/models/eventModel");
 const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
 const { assertEventNotPast } = require("../../../../src/utils/eventStatus");
 
-const service = require("../../../../src/services/eventMembershipService");
+const eventMembershipService = require("../../../../src/services/eventMembershipService");
 
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
@@ -34,6 +37,7 @@ jest.mock("../../../../src/utils/eventStatus", () => ({
 }));
 
 describe("eventMembershipService - leaveEvent", () => {
+
     beforeEach(() => {
         jest.clearAllMocks();
         jest.spyOn(console, "error").mockImplementation(() => { });
@@ -42,6 +46,10 @@ describe("eventMembershipService - leaveEvent", () => {
     afterEach(() => {
         console.error.mockRestore();
     });
+
+    /* =============================
+      LEAVE SUCCESS
+    ============================= */
 
     it("should leave event", async () => {
         const membership = {
@@ -53,7 +61,7 @@ describe("eventMembershipService - leaveEvent", () => {
         assertEventNotPast.mockImplementation(() => { });
         EventUserRole.findOne.mockResolvedValue(membership);
 
-        await service.leaveEvent({
+        await eventMembershipService.leaveEvent({
             eventId: 1,
             userId: 10
         });
@@ -67,16 +75,9 @@ describe("eventMembershipService - leaveEvent", () => {
         expect(membership.destroy).toHaveBeenCalled();
     });
 
-    it("should throw 404 if event is not found", async () => {
-        Event.findByPk.mockResolvedValue(null);
-
-        await expect(
-            service.leaveEvent({ eventId: 1, userId: 10 })
-        ).rejects.toMatchObject({
-            message: "Event not found",
-            statusCode: 404
-        });
-    });
+    /* =============================
+      BUSINESS RULES
+    ============================= */
 
     it("should block leaving a past event", async () => {
         Event.findByPk.mockResolvedValue({ id: 1 });
@@ -88,23 +89,8 @@ describe("eventMembershipService - leaveEvent", () => {
             throw error;
         });
 
-        await expect(
-            service.leaveEvent({ eventId: 1, userId: 10 })
-        ).rejects.toMatchObject({
+        await expect(eventMembershipService.leaveEvent({ eventId: 1, userId: 10 })).rejects.toMatchObject({
             statusCode: 403
-        });
-    });
-
-    it("should throw 404 if participation is not found", async () => {
-        Event.findByPk.mockResolvedValue({ id: 1 });
-        assertEventNotPast.mockImplementation(() => { });
-        EventUserRole.findOne.mockResolvedValue(null);
-
-        await expect(
-            service.leaveEvent({ eventId: 1, userId: 10 })
-        ).rejects.toMatchObject({
-            message: "Participation not found",
-            statusCode: 404
         });
     });
 
@@ -118,9 +104,7 @@ describe("eventMembershipService - leaveEvent", () => {
         assertEventNotPast.mockImplementation(() => { });
         EventUserRole.findOne.mockResolvedValue(membership);
 
-        await expect(
-            service.leaveEvent({ eventId: 1, userId: 10 })
-        ).rejects.toMatchObject({
+        await expect(eventMembershipService.leaveEvent({ eventId: 1, userId: 10 })).rejects.toMatchObject({
             message: "Organizers cannot leave their own event",
             statusCode: 403
         });
@@ -128,9 +112,37 @@ describe("eventMembershipService - leaveEvent", () => {
         expect(membership.destroy).not.toHaveBeenCalled();
     });
 
+    /* =============================
+      EDGE CASES
+    ============================= */
+
+    it("should throw 404 if event is not found", async () => {
+        Event.findByPk.mockResolvedValue(null);
+
+        await expect(eventMembershipService.leaveEvent({ eventId: 1, userId: 10 })).rejects.toMatchObject({
+            message: "Event not found",
+            statusCode: 404
+        });
+    });
+
+    it("should throw 404 if participation is not found", async () => {
+        Event.findByPk.mockResolvedValue({ id: 1 });
+        assertEventNotPast.mockImplementation(() => { });
+        EventUserRole.findOne.mockResolvedValue(null);
+
+        await expect(eventMembershipService.leaveEvent({ eventId: 1, userId: 10 })).rejects.toMatchObject({
+            message: "Participation not found",
+            statusCode: 404
+        });
+    });
+
+    /* =============================
+      DATABASE ERRORS
+    ============================= */
+
     it("should forward database errors", async () => {
         Event.findByPk.mockRejectedValue(new Error("DB error"));
 
-        await expect(service.leaveEvent({ eventId: 1, userId: 10 })).rejects.toThrow("DB error");
+        await expect(eventMembershipService.leaveEvent({ eventId: 1, userId: 10 })).rejects.toThrow("DB error");
     });
 });

@@ -1,37 +1,37 @@
 /* ==================================================
-   USER INTEGRATION - CURRENT USER PROFILE
+   USER INTEGRATION - UPDATE CURRENT USER PROFILE TESTS
 
    Tests:
-   - authenticated current profile retrieval
    - authenticated profile update
    - avatar upload update
    - previous avatar cleanup
-   - authentication protection
    - invalid email validation
    - invalid name validation
    - duplicate email rejection
    - invalid avatar file rejection
    - oversized avatar rejection
    - email normalization on update
+   - authentication protection
 
    Ensures:
-   - authenticated users can manage their profile
+   - authenticated users can update their profile
    - uploaded avatars are stored correctly
    - previous avatar files are cleaned up
    - validators protect profile updates
+   - duplicate emails are rejected safely
 ================================================== */
 
 const fs = require("fs");
 const path = require("path");
 
 const request = require("supertest");
-const app = require("../../../src/app");
+const app = require("../../../../src/app");
 
-const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
+const { initDB, sequelize, User, Event, EventUserRole } = require("../../../../src/models");
 
-const { registerAndGetToken } = require("../../helpers/authHelper");
+const { registerAndGetToken } = require("../../../helpers/authHelper");
 
-describe("Current User Profile API", () => {
+describe("Update Current User Profile API", () => {
 
     beforeAll(async () => {
         await initDB();
@@ -48,35 +48,8 @@ describe("Current User Profile API", () => {
     });
 
     /* =============================
-       CURRENT USER PROFILE
+       PROFILE UPDATE SUCCESS
     ============================= */
-
-    it("should get current authenticated user profile", async () => {
-        const userAuth = await registerAndGetToken({
-            name: "Profile User",
-            email: `profile${Date.now()}@test.com`
-        });
-
-        const res = await request(app)
-            .get("/api/users/me")
-            .set(userAuth.headers);
-
-        expect(res.statusCode).toBe(200);
-
-        expect(res.body).toHaveProperty(
-            "message",
-            "User profile retrieved successfully"
-        );
-
-        expect(res.body).toHaveProperty("user");
-
-        expect(res.body.user).toMatchObject({
-            name: "Profile User",
-            email: userAuth.email
-        });
-
-        expect(res.body.user).not.toHaveProperty("password");
-    });
 
     it("should update current user profile", async () => {
         const userAuth = await registerAndGetToken({
@@ -197,13 +170,6 @@ describe("Current User Profile API", () => {
        AUTHENTICATION ERRORS
     ============================= */
 
-    it("should reject getting current profile without token", async () => {
-        const res = await request(app)
-            .get("/api/users/me");
-
-        expect(res.statusCode).toBe(401);
-    });
-
     it("should reject updating current profile without token", async () => {
         const res = await request(app)
             .put("/api/users/me")
@@ -273,9 +239,7 @@ describe("Current User Profile API", () => {
             email: `oversized${Date.now()}@test.com`
         });
 
-        const oversizedBuffer = Buffer.alloc(
-            3 * 1024 * 1024
-        );
+        const oversizedBuffer = Buffer.alloc(3 * 1024 * 1024);
 
         const res = await request(app)
             .put("/api/users/me")

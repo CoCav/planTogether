@@ -1,5 +1,5 @@
-/* ==================================================
-   EVENTS INTEGRATION - UPDATE EVENT
+/* ================================================
+   EVENTS INTEGRATION - UPDATE EVENT TESTS
 
    Tests:
    - organizer event update
@@ -19,7 +19,7 @@
    - participants cannot update events
    - validators and authorization protect event updates
    - uploaded event images are updated correctly
-================================================== */
+================================================ */
 
 const request = require("supertest");
 const app = require("../../../src/app");
@@ -51,7 +51,7 @@ describe("Update Event API", () => {
     });
 
     /* =============================
-       EVENT UPDATE
+       EVENT UPDATE SUCCESS
     ============================= */
 
     it("should allow organizer to update event", async () => {
@@ -227,22 +227,6 @@ describe("Update Event API", () => {
         expect(res.statusCode).toBe(403);
     });
 
-    it("should reject update for nonexistent event", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Organizer",
-            email: `missing${Date.now()}@test.com`
-        });
-
-        const res = await request(app)
-            .put("/api/events/999999")
-            .set(organizerAuth.headers)
-            .send({
-                title: "Missing Event"
-            });
-
-        expect(res.statusCode).toBe(403);
-    });
-
     it("should reject updating past event", async () => {
         const organizerAuth = await registerAndGetToken({
             name: "Past Organizer",
@@ -351,5 +335,25 @@ describe("Update Event API", () => {
             });
 
         expect(res.statusCode).toBe(400);
+    });
+
+    /* =============================
+       EDGE CASES
+    ============================= */
+
+    it("should reject update for nonexistent event", async () => {
+        const organizerAuth = await registerAndGetToken({
+            name: "Organizer",
+            email: `missing${Date.now()}@test.com`
+        });
+
+        const res = await request(app)
+            .put("/api/events/999999")
+            .set(organizerAuth.headers)
+            .send({
+                title: "Missing Event"
+            });
+
+        expect(res.statusCode).toBe(403);
     });
 });

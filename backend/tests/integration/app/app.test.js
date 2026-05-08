@@ -15,19 +15,19 @@
 const request = require("supertest");
 const app = require("../../../src/app");
 
-describe('App API', () => {
+describe("App API", () => {
 
     /* =============================
        HEALTH CHECK
     ============================= */
 
     it('should return API health status', async () => {
-        const res = await request(app).get('/api/health');
+        const res = await request(app).get("/api/health");
 
         expect(res.statusCode).toBe(200);
         expect(res.body).toEqual({
             ok: true,
-            name: 'PlanTogether API'
+            name: "PlanTogether API"
         });
     });
 
@@ -40,7 +40,7 @@ describe('App API', () => {
         const res = await request(app).get('/');
 
         expect(res.statusCode).toBe(200);
-        expect(res.text).toBe('PlanTogether is online !');
+        expect(res.text).toBe("PlanTogether is online !");
     });
 
 
@@ -49,9 +49,9 @@ describe('App API', () => {
     ============================= */
 
     it('should return 404 for unknown route', async () => {
-        const res = await request(app).get('/api/unknown');
+        const res = await request(app).get("/api/unknown");
 
         expect(res.statusCode).toBe(404);
-        expect(res.body).toEqual({ message: 'Route not found' });
+        expect(res.body).toEqual({ message: "Route not found" });
     });
 });

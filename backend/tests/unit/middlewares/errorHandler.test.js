@@ -2,16 +2,17 @@
    ERROR HANDLER MIDDLEWARE TESTS
 
    Tests:
-   - Multer upload errors
-   - custom application errors
-   - default server errors
-   - custom validation error arrays
-   - Sequelize validation errors
+   - Multer upload error handling
+   - Sequelize validation error handling
+   - custom application error handling
+   - default server error handling
+   - custom errors array forwarding
    - production stack hiding
 
    Ensures:
    - API errors are formatted consistently
    - upload errors return clear messages
+   - ORM validation errors are formatted consistently
    - production responses do not expose stack traces
 ================================================== */
 
@@ -21,6 +22,7 @@ const errorHandler = require("../../../src/middlewares/errorHandler");
 const { createMockReqResNext } = require("../../helpers/mockExpress");
 
 describe("errorHandler middleware", () => {
+
     const originalEnv = process.env.NODE_ENV;
 
     beforeEach(() => {
@@ -67,10 +69,60 @@ describe("errorHandler middleware", () => {
     });
 
     /* =============================
+       SEQUELIZE ERRORS
+    ============================= */
+
+    it("should handle Sequelize validation errors", () => {
+        const { req, res, next } = createMockReqResNext();
+
+        const error = {
+            name: "SequelizeValidationError",
+            errors: [
+                { path: "email", message: "Email is invalid" },
+                { path: "name", message: "Name is required" }
+            ]
+        };
+
+        errorHandler(error, req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+            success: false,
+            message: "Validation error",
+            errors: [
+                { field: "email", message: "Email is invalid" },
+                { field: "name", message: "Name is required" }
+            ]
+        });
+    });
+
+    it("should handle Sequelize unique constraint errors", () => {
+        const { req, res, next } = createMockReqResNext();
+
+        const error = {
+            name: "SequelizeUniqueConstraintError",
+            errors: [
+                { path: "email", message: "Email already exists" }
+            ]
+        };
+
+        errorHandler(error, req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+            success: false,
+            message: "Validation error",
+            errors: [
+                { field: "email", message: "Email already exists" }
+            ]
+        });
+    });
+
+    /* =============================
        CUSTOM / DEFAULT ERRORS
     ============================= */
 
-    it("should handle generic errors with statusCode", () => {
+    it("should handle custom errors with statusCode", () => {
         const { req, res, next } = createMockReqResNext();
 
         const error = new Error("Not found");
@@ -127,7 +179,9 @@ describe("errorHandler middleware", () => {
 
         const error = new Error("Bad request");
         error.statusCode = 400;
-        error.errors = [{ field: "email", message: "Invalid email" }];
+        error.errors = [
+            { field: "email", message: "Invalid email" }
+        ];
 
         errorHandler(error, req, res, next);
 
@@ -136,55 +190,11 @@ describe("errorHandler middleware", () => {
             expect.objectContaining({
                 success: false,
                 message: "Bad request",
-                errors: [{ field: "email", message: "Invalid email" }]
+                errors: [
+                    { field: "email", message: "Invalid email" }
+                ]
             })
         );
-    });
-
-    /* =============================
-       SEQUELIZE ERRORS
-    ============================= */
-
-    it("should handle Sequelize validation errors", () => {
-        const { req, res, next } = createMockReqResNext();
-
-        const error = {
-            name: "SequelizeValidationError",
-            errors: [
-                { path: "email", message: "Email is invalid" },
-                { path: "name", message: "Name is required" }
-            ]
-        };
-
-        errorHandler(error, req, res, next);
-
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({
-            success: false,
-            message: "Validation error",
-            errors: [
-                { field: "email", message: "Email is invalid" },
-                { field: "name", message: "Name is required" }
-            ]
-        });
-    });
-
-    it("should handle Sequelize unique constraint errors", () => {
-        const { req, res, next } = createMockReqResNext();
-
-        const error = {
-            name: "SequelizeUniqueConstraintError",
-            errors: [{ path: "email", message: "Email already exists" }]
-        };
-
-        errorHandler(error, req, res, next);
-
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({
-            success: false,
-            message: "Validation error",
-            errors: [{ field: "email", message: "Email already exists" }]
-        });
     });
 
     /* =============================
@@ -208,6 +218,7 @@ describe("errorHandler middleware", () => {
             success: false,
             message: "Production error"
         });
+
         expect(payload.stack).toBeUndefined();
     });
 });

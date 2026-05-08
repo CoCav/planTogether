@@ -2,17 +2,18 @@
    AUTHORIZE EVENT ROLE MIDDLEWARE TESTS
 
    Tests:
+   - allowed role authorization
+   - membership query parameters
    - missing event ID rejection
    - missing membership rejection
    - insufficient role rejection
-   - allowed role authorization
-   - membership query parameters
-   - unexpected database errors
+   - unexpected database error handling
 
    Ensures:
    - event role permissions are enforced
    - membership is attached to req when authorized
    - next() is called only for allowed roles
+   - unexpected errors return a safe server response
 ================================================== */
 
 const authorizeEventRole = require("../../../src/middlewares/authorizeEventRole");
@@ -32,51 +33,19 @@ const createEventRoleMocks = ({ eventId = "1", userId = 1 } = {}) => {
 };
 
 describe("authorizeEventRole middleware", () => {
+
     beforeEach(() => {
         jest.clearAllMocks();
+        jest.spyOn(console, "error").mockImplementation(() => { });
     });
 
-    it("should return 400 when eventId is missing", async () => {
-        const { req, res, next } = createEventRoleMocks({ eventId: null });
-
-        const middleware = authorizeEventRole(["organizer"]);
-
-        await middleware(req, res, next);
-
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ message: "Event ID is required" });
-        expect(next).not.toHaveBeenCalled();
+    afterEach(() => {
+        console.error.mockRestore();
     });
 
-    it("should return 403 when membership is not found", async () => {
-        const { req, res, next } = createEventRoleMocks();
-
-        EventUserRole.findOne.mockResolvedValue(null);
-
-        const middleware = authorizeEventRole(["organizer"]);
-
-        await middleware(req, res, next);
-
-        expect(res.status).toHaveBeenCalledWith(403);
-        expect(res.json).toHaveBeenCalledWith({ message: "Forbidden: insufficient event role" });
-        expect(next).not.toHaveBeenCalled();
-    });
-
-    it("should return 403 when role is not allowed", async () => {
-        const { req, res, next } = createEventRoleMocks();
-
-        EventUserRole.findOne.mockResolvedValue({ role: "participant" });
-
-        const middleware = authorizeEventRole(["organizer", "co_organizer"]);
-
-        await middleware(req, res, next);
-
-        expect(res.status).toHaveBeenCalledWith(403);
-        expect(res.json).toHaveBeenCalledWith({
-            message: "Forbidden: insufficient event role"
-        });
-        expect(next).not.toHaveBeenCalled();
-    });
+    /* =============================
+       AUTHORIZATION SUCCESS
+    ============================= */
 
     it("should attach membership and call next when role is allowed", async () => {
         const { req, res, next } = createEventRoleMocks();
@@ -103,7 +72,9 @@ describe("authorizeEventRole middleware", () => {
             userId: 7
         });
 
-        EventUserRole.findOne.mockResolvedValue({ role: "co_organizer" });
+        EventUserRole.findOne.mockResolvedValue({
+            role: "co_organizer"
+        });
 
         const middleware = authorizeEventRole(["co_organizer"]);
 
@@ -117,10 +88,71 @@ describe("authorizeEventRole middleware", () => {
         });
     });
 
-    it("should return 500 on unexpected error", async () => {
+    /* =============================
+       AUTHORIZATION ERRORS
+    ============================= */
+
+    it("should return 403 when membership is not found", async () => {
         const { req, res, next } = createEventRoleMocks();
 
-        jest.spyOn(console, "error").mockImplementation(() => { });
+        EventUserRole.findOne.mockResolvedValue(null);
+
+        const middleware = authorizeEventRole(["organizer"]);
+
+        await middleware(req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(403);
+        expect(res.json).toHaveBeenCalledWith({ message: "Forbidden: insufficient event role" });
+
+        expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should return 403 when role is not allowed", async () => {
+        const { req, res, next } = createEventRoleMocks();
+
+        EventUserRole.findOne.mockResolvedValue({
+            role: "participant"
+        });
+
+        const middleware = authorizeEventRole([
+            "organizer",
+            "co_organizer"
+        ]);
+
+        await middleware(req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(403);
+        expect(res.json).toHaveBeenCalledWith({ message: "Forbidden: insufficient event role" });
+
+        expect(next).not.toHaveBeenCalled();
+    });
+
+    /* =============================
+       EDGE CASES
+    ============================= */
+
+    it("should return 400 when eventId is missing", async () => {
+        const { req, res, next } = createEventRoleMocks({
+            eventId: null
+        });
+
+        const middleware = authorizeEventRole(["organizer"]);
+
+        await middleware(req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({ message: "Event ID is required" });
+
+        expect(next).not.toHaveBeenCalled();
+    });
+
+    /* =============================
+       DATABASE ERRORS
+    ============================= */
+
+    it("should return 500 on unexpected database error", async () => {
+        const { req, res, next } = createEventRoleMocks();
+
         EventUserRole.findOne.mockRejectedValue(new Error("DB error"));
 
         const middleware = authorizeEventRole(["organizer"]);
@@ -129,8 +161,7 @@ describe("authorizeEventRole middleware", () => {
 
         expect(res.status).toHaveBeenCalledWith(500);
         expect(res.json).toHaveBeenCalledWith({ message: "Internal server error" });
-        expect(next).not.toHaveBeenCalled();
 
-        console.error.mockRestore();
+        expect(next).not.toHaveBeenCalled();
     });
 });

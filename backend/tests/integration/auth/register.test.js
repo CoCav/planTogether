@@ -1,5 +1,5 @@
 /* ==================================================
-   AUTH INTEGRATION - REGISTER
+   AUTH INTEGRATION - REGISTER TESTS
 
    Tests:
    - successful user registration
@@ -8,7 +8,8 @@
    - missing fields rejection
    - invalid email rejection
    - weak password rejection
-   - invalid avatar upload rejection
+   - invalid avatar file type rejection
+   - oversized avatar rejection
    - duplicate email rejection
 
    Ensures:

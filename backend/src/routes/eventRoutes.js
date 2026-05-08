@@ -33,7 +33,7 @@ const { eventIdParamValidator, createEventValidator, updateEventValidator, getAl
 // Get all events with optional filters and pagination
 router.get("/", getAllEventsValidator, handleValidationErrors, eventController.getAllEvents);
 // Get one event by ID
-router.get('/:eventId', eventIdParamValidator, handleValidationErrors, eventController.getEvent);
+router.get("/:eventId", eventIdParamValidator, handleValidationErrors, eventController.getEvent);
 
 
 /* =============================
@@ -41,12 +41,12 @@ router.get('/:eventId', eventIdParamValidator, handleValidationErrors, eventCont
 ============================= */
 
 // Create a new event
-router.post('/', authenticateToken, uploadEventImage.single("image"), createEventValidator, handleValidationErrors, eventController.createEvent);
+router.post("/", authenticateToken, uploadEventImage.single("image"), createEventValidator, handleValidationErrors, eventController.createEvent);
 
 // Update an event
 router.put("/:eventId", authenticateToken, uploadEventImage.single("image"), eventIdParamValidator, updateEventValidator, handleValidationErrors, authorizeEventRole(["organizer", "co_organizer"]), eventController.updateEvent);
 
 // Delete an event
-router.delete('/:eventId', authenticateToken, eventIdParamValidator, handleValidationErrors, authorizeEventRole(['organizer']), eventController.deleteEvent);
+router.delete("/:eventId", authenticateToken, eventIdParamValidator, handleValidationErrors, authorizeEventRole(["organizer"]), eventController.deleteEvent);
 
 module.exports = router;

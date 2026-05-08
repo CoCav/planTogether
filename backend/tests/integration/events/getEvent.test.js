@@ -1,5 +1,5 @@
-/* ==================================================
-   EVENTS INTEGRATION - GET EVENT BY ID
+/* ==============================================
+   EVENTS INTEGRATION - GET EVENT TESTS
 
    Tests:
    - public single event retrieval
@@ -13,7 +13,7 @@
    - a single event can be retrieved publicly by ID
    - invalid event requests are rejected correctly
    - event metadata is enriched in the response
-================================================== */
+=============================================== */
 
 const request = require("supertest");
 const app = require("../../../src/app");
@@ -24,7 +24,7 @@ const { registerAndGetToken } = require("../../helpers/authHelper");
 const { createEvent } = require("../../helpers/eventHelper");
 const { joinEvent } = require("../../helpers/eventMembershipHelper");
 
-describe("Get Event By ID API", () => {
+describe("Get Event API", () => {
 
     beforeAll(async () => {
         await initDB();
@@ -41,7 +41,7 @@ describe("Get Event By ID API", () => {
     });
 
     /* =============================
-       EVENT RETRIEVAL
+       EVENT RETRIEVAL SUCCESS
     ============================= */
 
     it("should retrieve a single event by ID", async () => {
@@ -187,16 +187,6 @@ describe("Get Event By ID API", () => {
     });
 
     /* =============================
-       VALIDATION ERRORS
-    ============================= */
-
-    it("should reject invalid eventId", async () => {
-        const res = await request(app).get("/api/events/abc");
-
-        expect(res.statusCode).toBe(400);
-    });
-
-    /* =============================
        EDGE CASES
     ============================= */
 
@@ -204,5 +194,15 @@ describe("Get Event By ID API", () => {
         const res = await request(app).get("/api/events/999999");
 
         expect(res.statusCode).toBe(404);
+    });
+
+    /* =============================
+       VALIDATION ERRORS
+    ============================= */
+
+    it("should reject invalid eventId", async () => {
+        const res = await request(app).get("/api/events/abc");
+
+        expect(res.statusCode).toBe(400);
     });
 });

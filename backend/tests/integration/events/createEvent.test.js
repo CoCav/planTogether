@@ -1,11 +1,11 @@
 /* ==================================================
-   EVENTS INTEGRATION - CREATE EVENT
+   EVENTS INTEGRATION - CREATE EVENT TESTS
 
    Tests:
    - authenticated event creation
    - event creation with image upload
    - online event creation without location
-   - organizer role assignment to creator
+   - organizer role assignment to event creator
    - authentication protection
    - missing required fields validation
    - invalid mode validation
@@ -45,7 +45,7 @@ describe("Create Event API", () => {
     });
 
     /* =============================
-       EVENT CREATION
+       EVENT CREATION SUCCESS
     ============================= */
 
     it("should create an event when authenticated", async () => {

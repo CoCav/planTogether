@@ -3,31 +3,33 @@
 
    Tests:
    - public profile retrieval
-   - stats computation
+   - public stats computation
    - null avatar handling
    - missing user rejection
+   - database error forwarding
 
    Ensures:
    - only public user fields are selected
    - user statistics are computed correctly
-   - private user data is never requested by the service
+   - null avatars are handled safely
+   - missing users and database errors are handled safely
 ================================================== */
 
-const User = require("../../../../src/models/userModel");
-const Event = require("../../../../src/models/eventModel");
-const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
+const User = require("../../../../../src/models/userModel");
+const Event = require("../../../../../src/models/eventModel");
+const EventUserRole = require("../../../../../src/models/relations/eventUserRoleModel");
 
-const userService = require("../../../../src/services/userService");
+const userService = require("../../../../../src/services/userService");
 
-jest.mock("../../../../src/models/userModel", () => ({
+jest.mock("../../../../../src/models/userModel", () => ({
     findByPk: jest.fn()
 }));
 
-jest.mock("../../../../src/models/eventModel", () => ({
+jest.mock("../../../../../src/models/eventModel", () => ({
     count: jest.fn()
 }));
 
-jest.mock("../../../../src/models/relations/eventUserRoleModel.js", () => ({
+jest.mock("../../../../../src/models/relations/eventUserRoleModel.js", () => ({
     count: jest.fn()
 }));
 
@@ -35,6 +37,10 @@ describe("userService - getPublicUserProfileByID", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
+
+    /* =============================
+       PUBLIC PROFILE RETRIEVAL SUCCESS
+    ============================= */
 
     it("should return public user profile with stats", async () => {
         const user = {
@@ -52,6 +58,31 @@ describe("userService - getPublicUserProfileByID", () => {
             attributes: ["name", "avatar"]
         });
 
+        expect(result).toEqual({
+            user,
+            stats: {
+                createdEventsCount: 3,
+                joinedEventsCount: 5
+            }
+        });
+    });
+
+    /* =============================
+       PUBLIC STATS
+    ============================= */
+
+    it("should compute public user stats", async () => {
+        const user = {
+            name: "John",
+            avatar: null
+        };
+
+        User.findByPk.mockResolvedValue(user);
+        Event.count.mockResolvedValue(2);
+        EventUserRole.count.mockResolvedValue(4);
+
+        const result = await userService.getPublicUserProfileByID(1);
+
         expect(Event.count).toHaveBeenCalledWith({
             where: { creatorId: 1 }
         });
@@ -60,12 +91,9 @@ describe("userService - getPublicUserProfileByID", () => {
             where: { userId: 1 }
         });
 
-        expect(result).toEqual({
-            user,
-            stats: {
-                createdEventsCount: 3,
-                joinedEventsCount: 5
-            }
+        expect(result.stats).toEqual({
+            createdEventsCount: 2,
+            joinedEventsCount: 4
         });
     });
 
@@ -92,17 +120,29 @@ describe("userService - getPublicUserProfileByID", () => {
         });
     });
 
-    it("should throw if user is not found", async () => {
+    /* =============================
+       EDGE CASES
+    ============================= */
+
+    it("should throw 404 when user is not found", async () => {
         User.findByPk.mockResolvedValue(null);
 
-        await expect(
-            userService.getPublicUserProfileByID(1)
-        ).rejects.toMatchObject({
+        await expect(userService.getPublicUserProfileByID(1)).rejects.toMatchObject({
             statusCode: 404,
             message: "User not found"
         });
 
         expect(Event.count).not.toHaveBeenCalled();
         expect(EventUserRole.count).not.toHaveBeenCalled();
+    });
+
+    /* =============================
+       DATABASE ERRORS
+    ============================= */
+
+    it("should forward database errors", async () => {
+        User.findByPk.mockRejectedValue(new Error("DB error"));
+
+        await expect(userService.getPublicUserProfileByID(1)).rejects.toThrow("DB error");
     });
 });

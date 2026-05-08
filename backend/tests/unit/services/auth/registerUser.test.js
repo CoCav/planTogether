@@ -3,17 +3,18 @@
 
    Tests:
    - successful registration
-   - avatar registration
-   - duplicate email rejection
+   - email normalization
    - password hashing
    - JWT token generation
-   - email normalization
+   - avatar registration
+   - duplicate email rejection
 
    Ensures:
    - users are created correctly
+   - emails are normalized before persistence
    - passwords are hashed before persistence
-   - duplicate emails are rejected
    - JWT tokens are generated after registration
+   - duplicate emails are rejected
 ================================================== */
 
 const bcrypt = require("bcrypt");
@@ -31,6 +32,7 @@ jest.mock("../../../../src/models/userModel", () => ({
 }));
 
 describe("authService - registerUser", () => {
+
     const mockUser = {
         id: 1,
         name: "John Doe",
@@ -46,6 +48,10 @@ describe("authService - registerUser", () => {
         bcrypt.hash.mockResolvedValue("hashed-password");
         jwt.sign.mockReturnValue("fake-token");
     });
+
+    /* =============================
+       REGISTER SUCCESS
+    ============================= */
 
     it("should register a user and return token", async () => {
         User.findOne.mockResolvedValue(null);
@@ -74,6 +80,10 @@ describe("authService - registerUser", () => {
         expect(result.user).toBe(mockUser);
     });
 
+    /* =============================
+       EMAIL NORMALIZATION
+    ============================= */
+
     it("should normalize email before user creation", async () => {
         User.findOne.mockResolvedValue(null);
         User.create.mockResolvedValue(mockUser);
@@ -91,6 +101,10 @@ describe("authService - registerUser", () => {
         );
     });
 
+    /* =============================
+       PASSWORD HASHING
+    ============================= */
+
     it("should hash password before creating user", async () => {
         User.findOne.mockResolvedValue(null);
         User.create.mockResolvedValue(mockUser);
@@ -103,6 +117,31 @@ describe("authService - registerUser", () => {
 
         expect(bcrypt.hash).toHaveBeenCalledWith("Password123", 10);
     });
+
+    /* =============================
+       TOKEN GENERATION
+    ============================= */
+
+    it("should generate JWT token with userId payload", async () => {
+        User.findOne.mockResolvedValue(null);
+        User.create.mockResolvedValue(mockUser);
+
+        await authService.registerUser({
+            name: "John",
+            email: "john@test.com",
+            password: "Password123"
+        });
+
+        expect(jwt.sign).toHaveBeenCalledWith(
+            { userId: mockUser.id },
+            "test-secret",
+            { expiresIn: "24h" }
+        );
+    });
+
+    /* =============================
+       AVATAR
+    ============================= */
 
     it("should register a user with avatar", async () => {
         const userWithAvatar = {
@@ -130,15 +169,17 @@ describe("authService - registerUser", () => {
         expect(result.user).toBe(userWithAvatar);
     });
 
+    /* =============================
+       BUSINESS RULES
+    ============================= */
+
     it("should throw if email already exists", async () => {
         User.findOne.mockResolvedValue(mockUser);
 
-        await expect(
-            authService.registerUser({
-                name: "John",
-                email: "john@test.com",
-                password: "Password123"
-            })
-        ).rejects.toMatchObject({ statusCode: 409 });
+        await expect(authService.registerUser({
+            name: "John",
+            email: "john@test.com",
+            password: "Password123"
+        })).rejects.toMatchObject({ statusCode: 409 });
     });
 });

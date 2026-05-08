@@ -30,10 +30,10 @@ const { eventIdParamValidator, updateEventMemberRoleValidator, removeEventMember
 ============================= */
 
 // Join an event
-router.post('/:eventId/members/join', authenticateToken, eventIdParamValidator, handleValidationErrors, eventMembershipController.joinEvent);
+router.post("/:eventId/members/join", authenticateToken, eventIdParamValidator, handleValidationErrors, eventMembershipController.joinEvent);
 
 // Leave an event
-router.delete('/:eventId/members/leave', authenticateToken, eventIdParamValidator, handleValidationErrors, eventMembershipController.leaveEvent);
+router.delete("/:eventId/members/leave", authenticateToken, eventIdParamValidator, handleValidationErrors, eventMembershipController.leaveEvent);
 
 
 /* ==================================================
@@ -41,10 +41,10 @@ router.delete('/:eventId/members/leave', authenticateToken, eventIdParamValidato
 ================================================== */
 
 // Get all members of an event
-router.get('/:eventId/members', eventIdParamValidator, handleValidationErrors, eventMembershipController.getEventMembers);
+router.get("/:eventId/members", eventIdParamValidator, handleValidationErrors, eventMembershipController.getEventMembers);
 
 // Get all organizers and co-organizers of an event
-router.get('/:eventId/staff', eventIdParamValidator, handleValidationErrors, eventMembershipController.getEventStaff);
+router.get("/:eventId/staff", eventIdParamValidator, handleValidationErrors, eventMembershipController.getEventStaff);
 
 
 /* =============================
@@ -52,9 +52,9 @@ router.get('/:eventId/staff', eventIdParamValidator, handleValidationErrors, eve
 ============================= */
 
 // Update a member role
-router.put('/:eventId/members/:userId/role', authenticateToken, updateEventMemberRoleValidator, handleValidationErrors, authorizeEventRole(['organizer']), authorizeEventMemberRoleUpdate, eventMembershipController.updateEventMemberRole);
+router.put("/:eventId/members/:userId/role", authenticateToken, updateEventMemberRoleValidator, handleValidationErrors, authorizeEventRole(["organizer"]), authorizeEventMemberRoleUpdate, eventMembershipController.updateEventMemberRole);
 
 // Remove a member from an event
-router.delete('/:eventId/members/:userId', authenticateToken, removeEventMemberValidator, handleValidationErrors, authorizeEventRole(['organizer', 'co_organizer']), authorizeEventMemberRemoval, eventMembershipController.removeEventMember);
+router.delete("/:eventId/members/:userId", authenticateToken, removeEventMemberValidator, handleValidationErrors, authorizeEventRole(["organizer", "co_organizer"]), authorizeEventMemberRemoval, eventMembershipController.removeEventMember);
 
 module.exports = router;

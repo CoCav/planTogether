@@ -4,12 +4,12 @@
    Tests:
    - user registration
    - user login
-   - logout responses
+   - logout response
 
    Ensures:
    - auth controller calls authService correctly
-   - HTTP responses are properly formatted
    - uploaded avatars are handled during registration
+   - HTTP responses are properly formatted
    - errors are forwarded to next()
 ================================================== */
 
@@ -28,6 +28,7 @@ const mockUser = {
 };
 
 describe("authController", () => {
+
     beforeEach(() => {
         jest.clearAllMocks();
     });

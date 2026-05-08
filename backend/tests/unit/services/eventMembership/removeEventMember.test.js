@@ -3,22 +3,24 @@
 
    Tests:
    - successful member removal
-   - missing event rejection
    - past event rejection
+   - missing event rejection
    - missing membership rejection
    - database error forwarding
 
    Ensures:
    - members can be removed from valid events
    - past event rules are respected
-   - missing memberships are rejected
+   - missing events and memberships are rejected correctly
+   - database errors are forwarded correctly
 ================================================== */
 
 const Event = require("../../../../src/models/eventModel");
 const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
-const { assertEventNotPast } = require("../../../../src/utils/eventStatus");
 
-const service = require("../../../../src/services/eventMembershipService");
+const eventMembershipService = require("../../../../src/services/eventMembershipService");
+
+const { assertEventNotPast } = require("../../../../src/utils/eventStatus");
 
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
@@ -33,6 +35,7 @@ jest.mock("../../../../src/utils/eventStatus", () => ({
 }));
 
 describe("eventMembershipService - removeEventMember", () => {
+
     beforeEach(() => {
         jest.clearAllMocks();
         jest.spyOn(console, "error").mockImplementation(() => { });
@@ -41,6 +44,10 @@ describe("eventMembershipService - removeEventMember", () => {
     afterEach(() => {
         console.error.mockRestore();
     });
+
+    /* =============================
+      MEMBER REMOVAL
+    ============================= */
 
     it("should remove event member", async () => {
         const membership = {
@@ -51,7 +58,7 @@ describe("eventMembershipService - removeEventMember", () => {
         assertEventNotPast.mockImplementation(() => { });
         EventUserRole.findOne.mockResolvedValue(membership);
 
-        await service.removeEventMember({
+        await eventMembershipService.removeEventMember({
             eventId: 1,
             userId: 10
         });
@@ -68,19 +75,9 @@ describe("eventMembershipService - removeEventMember", () => {
         expect(membership.destroy).toHaveBeenCalled();
     });
 
-    it("should throw 404 if event is not found", async () => {
-        Event.findByPk.mockResolvedValue(null);
-
-        await expect(
-            service.removeEventMember({
-                eventId: 1,
-                userId: 10
-            })
-        ).rejects.toMatchObject({
-            message: "Event not found",
-            statusCode: 404
-        });
-    });
+    /* =============================
+      BUSINESS RULES
+    ============================= */
 
     it("should block removing member from past event", async () => {
         Event.findByPk.mockResolvedValue({ id: 1 });
@@ -92,13 +89,27 @@ describe("eventMembershipService - removeEventMember", () => {
             throw error;
         });
 
-        await expect(
-            service.removeEventMember({
-                eventId: 1,
-                userId: 10
-            })
-        ).rejects.toMatchObject({
+        await expect(eventMembershipService.removeEventMember({
+            eventId: 1,
+            userId: 10
+        })).rejects.toMatchObject({
             statusCode: 403
+        });
+    });
+
+    /* =============================
+      EDGE CASES
+    ============================= */
+
+    it("should throw 404 if event is not found", async () => {
+        Event.findByPk.mockResolvedValue(null);
+
+        await expect(eventMembershipService.removeEventMember({
+            eventId: 1,
+            userId: 10
+        })).rejects.toMatchObject({
+            message: "Event not found",
+            statusCode: 404
         });
     });
 
@@ -107,25 +118,25 @@ describe("eventMembershipService - removeEventMember", () => {
         assertEventNotPast.mockImplementation(() => { });
         EventUserRole.findOne.mockResolvedValue(null);
 
-        await expect(
-            service.removeEventMember({
-                eventId: 1,
-                userId: 10
-            })
-        ).rejects.toMatchObject({
+        await expect(eventMembershipService.removeEventMember({
+            eventId: 1,
+            userId: 10
+        })).rejects.toMatchObject({
             message: "User is not a member of this event",
             statusCode: 404
         });
     });
 
+    /* =============================
+      DATABSE ERRORS
+    ============================= */
+
     it("should forward database errors", async () => {
         Event.findByPk.mockRejectedValue(new Error("DB error"));
 
-        await expect(
-            service.removeEventMember({
-                eventId: 1,
-                userId: 10
-            })
-        ).rejects.toThrow("DB error");
+        await expect(eventMembershipService.removeEventMember({
+            eventId: 1,
+            userId: 10
+        })).rejects.toThrow("DB error");
     });
 });

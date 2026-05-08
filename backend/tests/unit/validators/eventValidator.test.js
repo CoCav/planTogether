@@ -17,7 +17,7 @@
 
 const { createEventValidator, updateEventValidator, eventIdParamValidator, getAllEventsValidator } = require("../../../src/validators/eventValidator");
 
-const { runValidation } = require("../../helpers/validationHelper");
+const { runValidation } = require("../../helpers/validation/validationHelper");
 
 const validEventBody = {
     title: "Test Event",

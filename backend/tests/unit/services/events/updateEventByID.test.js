@@ -26,6 +26,8 @@ const { assertEventNotPast } = require("../../../../src/utils/eventStatus");
 const { deleteUploadedFile } = require("../../../../src/utils/uploadedFileStorage");
 const { buildEventUpdateData } = require("../../../../src/utils/eventDataBuilder");
 
+const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
+
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
 }));
@@ -44,13 +46,10 @@ jest.mock("../../../../src/utils/eventDataBuilder", () => ({
 
 describe("eventService - updateEventByID", () => {
 
+    mockConsoleError();
+
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => { });
-    });
-
-    afterEach(() => {
-        console.error.mockRestore();
     });
 
     /* =============================

@@ -15,19 +15,11 @@
 
 const { isEventPast, getEventStatus, assertEventNotPast } = require("../../../src/utils/eventStatus");
 
+const { mockSystemDate } = require("../../helpers/mocks/dateMocks");
+
 describe("eventStatus utils", () => {
 
-    beforeEach(() => {
-        jest.useFakeTimers();
-
-        jest.setSystemTime(
-            new Date("2026-04-25T12:00:00.000Z").getTime()
-        );
-    });
-
-    afterEach(() => {
-        jest.useRealTimers();
-    });
+    mockSystemDate("2026-04-25T12:00:00.000Z");
 
     /* =============================
        PAST EVENT DETECTION

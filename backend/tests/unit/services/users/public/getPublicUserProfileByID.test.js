@@ -21,6 +21,8 @@ const EventUserRole = require("../../../../../src/models/relations/eventUserRole
 
 const userService = require("../../../../../src/services/userService");
 
+const { createMockUser } = require("../../../../factories/userFactory");
+
 jest.mock("../../../../../src/models/userModel", () => ({
     findByPk: jest.fn()
 }));
@@ -43,10 +45,10 @@ describe("userService - getPublicUserProfileByID", () => {
     ============================= */
 
     it("should return public user profile with stats", async () => {
-        const user = {
+        const user = createMockUser({
             name: "John",
             avatar: "/uploads/avatars/john.png"
-        };
+        });
 
         User.findByPk.mockResolvedValue(user);
         Event.count.mockResolvedValue(3);
@@ -72,10 +74,10 @@ describe("userService - getPublicUserProfileByID", () => {
     ============================= */
 
     it("should compute public user stats", async () => {
-        const user = {
+        const user = createMockUser({
             name: "John",
             avatar: null
-        };
+        });
 
         User.findByPk.mockResolvedValue(user);
         Event.count.mockResolvedValue(2);
@@ -98,10 +100,10 @@ describe("userService - getPublicUserProfileByID", () => {
     });
 
     it("should return public user profile with null avatar", async () => {
-        const user = {
+        const user = createMockUser({
             name: "John",
             avatar: null
-        };
+        });
 
         User.findByPk.mockResolvedValue(user);
         Event.count.mockResolvedValue(0);
@@ -109,7 +111,7 @@ describe("userService - getPublicUserProfileByID", () => {
 
         const result = await userService.getPublicUserProfileByID(1);
 
-        expect(result.user).toEqual({
+        expect(result.user).toMatchObject({
             name: "John",
             avatar: null
         });

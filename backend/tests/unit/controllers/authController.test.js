@@ -16,16 +16,11 @@
 const authController = require("../../../src/controllers/authController");
 const authService = require("../../../src/services/authService");
 
-const { createMockReqResNext } = require("../../helpers/mockExpress");
+const { createMockReqResNext } = require("../../helpers/express/mockExpress");
+
+const { createMockUser } = require("../../factories/userFactory");
 
 jest.mock("../../../src/services/authService");
-
-const mockUser = {
-    id: 1,
-    name: "John Doe",
-    email: "john@test.com",
-    avatar: null
-};
 
 describe("authController", () => {
 
@@ -48,7 +43,7 @@ describe("authController", () => {
             });
 
             authService.registerUser.mockResolvedValue({
-                user: mockUser,
+                user: createMockUser(),
                 token: "fake-token"
             });
 
@@ -87,10 +82,9 @@ describe("authController", () => {
             });
 
             authService.registerUser.mockResolvedValue({
-                user: {
-                    ...mockUser,
+                user: createMockUser({
                     avatar: "/uploads/avatars/avatar-test.png"
-                },
+                }),
                 token: "fake-token"
             });
 
@@ -148,7 +142,7 @@ describe("authController", () => {
             });
 
             authService.loginUser.mockResolvedValue({
-                user: mockUser,
+                user: createMockUser(),
                 token: "fake-token"
             });
 

@@ -20,6 +20,7 @@ const eventService = require("../../../../src/services/eventService");
 
 const { assertEventNotPast } = require("../../../../src/utils/eventStatus");
 
+const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
@@ -31,13 +32,10 @@ jest.mock("../../../../src/utils/eventStatus", () => ({
 
 describe("eventService - deleteEventByID", () => {
 
+    mockConsoleError();
+
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => { });
-    });
-
-    afterEach(() => {
-        console.error.mockRestore();
     });
 
     /* =============================

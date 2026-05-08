@@ -21,6 +21,10 @@ const User = require("../../../../src/models/userModel");
 
 const authService = require("../../../../src/services/authService");
 
+const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
+
+const { createMockUser } = require("../../../factories/userFactory");
+
 jest.mock("bcrypt");
 jest.mock("jsonwebtoken");
 
@@ -30,11 +34,7 @@ jest.mock("../../../../src/models/userModel", () => ({
 
 describe("authService - loginUser", () => {
 
-    const mockUser = {
-        id: 1,
-        email: "john@test.com",
-        password: "hashed"
-    };
+    mockConsoleError();
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -42,12 +42,6 @@ describe("authService - loginUser", () => {
         process.env.JWT_SECRET = "test-secret";
 
         jwt.sign.mockReturnValue("token");
-
-        jest.spyOn(console, "error").mockImplementation(() => { });
-    });
-
-    afterEach(() => {
-        console.error.mockRestore();
     });
 
     /* =============================
@@ -56,7 +50,7 @@ describe("authService - loginUser", () => {
 
     it("should login user and return token", async () => {
         const scoped = {
-            findOne: jest.fn().mockResolvedValue(mockUser)
+            findOne: jest.fn().mockResolvedValue(createMockUser())
         };
 
         User.scope.mockReturnValue(scoped);
@@ -77,7 +71,7 @@ describe("authService - loginUser", () => {
 
     it("should normalize email before querying database", async () => {
         const scoped = {
-            findOne: jest.fn().mockResolvedValue(mockUser)
+            findOne: jest.fn().mockResolvedValue(createMockUser())
         };
 
         User.scope.mockReturnValue(scoped);
@@ -102,7 +96,7 @@ describe("authService - loginUser", () => {
 
     it("should throw if password is invalid", async () => {
         User.scope.mockReturnValue({
-            findOne: jest.fn().mockResolvedValue(mockUser)
+            findOne: jest.fn().mockResolvedValue(createMockUser())
         });
 
         bcrypt.compare.mockResolvedValue(false);
@@ -120,6 +114,10 @@ describe("authService - loginUser", () => {
     ============================= */
 
     it("should generate JWT token with userId payload", async () => {
+        const mockUser = createMockUser({
+            id: 1
+        });
+
         const scoped = {
             findOne: jest.fn().mockResolvedValue(mockUser)
         };

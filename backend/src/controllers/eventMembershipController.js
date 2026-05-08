@@ -86,7 +86,7 @@ const getEventStaff = async (req, res, next) => {
         const eventStaff = await eventMembershipService.getEventStaff(eventId);
 
         return res.status(200).json({
-            message: 'Event Staff retrieved successfully',
+            message: 'Event staff retrieved successfully',
             eventStaff
         });
 

@@ -22,6 +22,10 @@ const eventMembershipService = require("../../../../src/services/eventMembership
 
 const { assertEventNotPast } = require("../../../../src/utils/eventStatus");
 
+const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
+
+const { createMockMembership } = require("../../../factories/membershipFactory");
+
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
 }));
@@ -36,13 +40,10 @@ jest.mock("../../../../src/utils/eventStatus", () => ({
 
 describe("eventMembershipService - removeEventMember", () => {
 
+    mockConsoleError();
+
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => { });
-    });
-
-    afterEach(() => {
-        console.error.mockRestore();
     });
 
     /* =============================
@@ -50,9 +51,9 @@ describe("eventMembershipService - removeEventMember", () => {
     ============================= */
 
     it("should remove event member", async () => {
-        const membership = {
+        const membership = createMockMembership({
             destroy: jest.fn().mockResolvedValue()
-        };
+        });
 
         Event.findByPk.mockResolvedValue({ id: 1 });
         assertEventNotPast.mockImplementation(() => { });

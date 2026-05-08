@@ -21,6 +21,8 @@ const EventUserRole = require("../../../../src/models/relations/eventUserRoleMod
 
 const eventMembershipService = require("../../../../src/services/eventMembershipService");
 
+const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
+
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
 }));
@@ -33,13 +35,10 @@ jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
 
 describe("eventMembershipService - GetEventStaff", () => {
 
+    mockConsoleError();
+
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => { });
-    });
-
-    afterEach(() => {
-        console.error.mockRestore();
     });
 
     /* =============================

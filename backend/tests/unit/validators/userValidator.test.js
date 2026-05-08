@@ -16,7 +16,7 @@
 
 const { getCurrentUserEventsValidator, updateCurrentUserProfileValidator, changeCurrentUserPasswordValidator, userIdParamValidator } = require("../../../src/validators/userValidator");
 
-const { runValidation } = require("../../helpers/validationHelper");
+const { runValidation } = require("../../helpers/validation/validationHelper");
 
 describe("userValidator", () => {
     /* =============================

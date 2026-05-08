@@ -10,7 +10,7 @@
    - useful when tests need database user IDs after registration
 ================================================== */
 
-const { User } = require("../../src/models");
+const { User } = require("../../../src/models");
 
 // Retrieve user ID from database using email
 const getUserIdByEmail = async (email) => {

@@ -29,6 +29,8 @@ const { buildEventWhereConditions, buildEventCreatorInclude } = require("../../.
 const { getPaginationOptions } = require("../../../../../src/utils/pagination");
 const { getEventStatus } = require("../../../../../src/utils/eventStatus");
 
+const { mockConsoleError } = require("../../../../helpers/mocks/consoleMocks");
+
 jest.mock("../../../../../src/models/relations/eventUserRoleModel", () => ({
     findAndCountAll: jest.fn(),
     count: jest.fn()
@@ -60,10 +62,10 @@ describe("userService - getCurrentUserEventsByID", () => {
         orderDirection: "ASC"
     };
 
+    mockConsoleError();
+
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => { });
-
         buildEventWhereConditions.mockImplementation((where) => where);
 
         buildEventCreatorInclude.mockReturnValue({
@@ -73,10 +75,6 @@ describe("userService - getCurrentUserEventsByID", () => {
         });
 
         getPaginationOptions.mockReturnValue(pagination);
-    });
-
-    afterEach(() => {
-        console.error.mockRestore();
     });
 
     /* =============================

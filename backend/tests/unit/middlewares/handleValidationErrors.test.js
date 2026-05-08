@@ -18,7 +18,8 @@ const { validationResult } = require("express-validator");
 
 const handleValidationErrors = require("../../../src/middlewares/handleValidationErrors");
 
-const { createMockReqResNext } = require("../../helpers/mockExpress");
+const { createMockReqResNext } = require("../../helpers/express/mockExpress");
+const { mockConsoleLog } = require("../../helpers/mocks/consoleMocks");
 
 jest.mock("express-validator");
 
@@ -26,14 +27,14 @@ describe("handleValidationErrors middleware", () => {
 
     const originalEnv = process.env.NODE_ENV;
 
+    mockConsoleLog();
+
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "log").mockImplementation(() => { });
         process.env.NODE_ENV = "test";
     });
 
     afterEach(() => {
-        console.log.mockRestore();
         process.env.NODE_ENV = originalEnv;
     });
 

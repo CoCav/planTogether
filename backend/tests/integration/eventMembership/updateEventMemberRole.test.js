@@ -21,28 +21,20 @@
 const request = require("supertest");
 const app = require("../../../src/app");
 
-const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
+const { EventUserRole } = require("../../../src/models");
 
-const { registerAndGetToken } = require("../../helpers/authHelper");
-const { createEvent } = require("../../helpers/eventHelper");
-const { joinEvent, updateMemberRole } = require("../../helpers/eventMembershipHelper");
-const { getUserIdByEmail } = require("../../helpers/userHelper");
+const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
+
+const { registerAndGetToken } = require("../../helpers/api/authHelper");
+const { createEvent } = require("../../helpers/api/eventHelper");
+const { joinEvent, updateMemberRole } = require("../../helpers/api/eventMembershipHelper");
+const { getUserIdByEmail } = require("../../helpers/api/userHelper");
 
 describe("Update Event Member Role API", () => {
 
-    beforeAll(async () => {
-        await initDB();
-    });
-
-    afterEach(async () => {
-        await EventUserRole.destroy({ where: {} });
-        await Event.destroy({ where: {} });
-        await User.destroy({ where: {} });
-    });
-
-    afterAll(async () => {
-        await sequelize.close();
-    });
+    beforeAll(initDB);
+    afterEach(resetDB);
+    afterAll(closeDB);
 
     /* =============================
        ROLE MANAGEMENT SUCCESS

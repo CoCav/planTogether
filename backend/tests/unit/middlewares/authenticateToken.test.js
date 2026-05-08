@@ -17,6 +17,7 @@
 const jwt = require("jsonwebtoken");
 
 const { authenticateToken } = require("../../../src/middlewares/authenticateToken");
+const { createMockReqResNext } = require("../../helpers/express/mockExpress");
 
 jest.mock("jsonwebtoken");
 
@@ -27,16 +28,15 @@ describe("authenticateToken middleware", () => {
     let next;
 
     beforeEach(() => {
+        const mocks = createMockReqResNext();
+
         req = {
+            ...mocks.req,
             headers: {}
         };
 
-        res = {
-            status: jest.fn().mockReturnThis(),
-            json: jest.fn()
-        };
-
-        next = jest.fn();
+        res = mocks.res;
+        next = mocks.next;
 
         jest.clearAllMocks();
     });

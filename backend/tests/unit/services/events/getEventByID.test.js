@@ -20,6 +20,10 @@ const eventService = require("../../../../src/services/eventService");
 
 const { getEventStatus } = require("../../../../src/utils/eventStatus");
 
+const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
+
+const { createMockEvent } = require("../../../factories/eventFactory");
+
 jest.mock("../../../../src/models/eventModel", () => ({
     findOne: jest.fn()
 }));
@@ -30,13 +34,10 @@ jest.mock("../../../../src/utils/eventStatus", () => ({
 
 describe("eventService - getEventByID", () => {
 
+    mockConsoleError();
+
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => { });
-    });
-
-    afterEach(() => {
-        console.error.mockRestore();
     });
 
     /* =============================
@@ -44,14 +45,8 @@ describe("eventService - getEventByID", () => {
     ============================= */
 
     it("should return event with computed status", async () => {
-        const mockEvent = {
-            toJSON: () => ({
-                id: 1,
-                title: "Test Event"
-            })
-        };
 
-        Event.findOne.mockResolvedValue(mockEvent);
+        Event.findOne.mockResolvedValue(createMockEvent());
 
         getEventStatus.mockReturnValue("upcoming");
 
@@ -71,12 +66,9 @@ describe("eventService - getEventByID", () => {
     ============================= */
 
     it("should enrich retrieved event with computed status", async () => {
-        const mockEvent = {
-            toJSON: () => ({
-                id: 1,
-                title: "Past Event"
-            })
-        };
+        const mockEvent = createMockEvent({
+            title: "Past Event"
+        });
 
         Event.findOne.mockResolvedValue(mockEvent);
 

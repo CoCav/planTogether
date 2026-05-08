@@ -18,26 +18,11 @@
 const userController = require("../../../src/controllers/userController");
 const userService = require("../../../src/services/userService");
 
-const { createMockReqResNext } = require("../../helpers/mockExpress");
+const { createUserControllerMocks } = require("../../helpers/express/mockExpress");
+
+const { createMockUser } = require("../../factories/userFactory");
 
 jest.mock("../../../src/services/userService");
-
-const createUserControllerMocks = ({
-    params = { id: 1 },
-    query = {},
-    body = {},
-    user = { userId: 10 },
-    file = undefined
-} = {}) => {
-    return createMockReqResNext({ params, query, body, user, file });
-};
-
-const mockUser = {
-    id: 1,
-    name: "John Doe",
-    email: "john@test.com",
-    avatar: null
-};
 
 describe("userController", () => {
 
@@ -92,7 +77,6 @@ describe("userController", () => {
         });
     });
 
-
     /* =====================================
         AUTHENTICATED CURRENT USER PROFILE
     ===================================== */
@@ -103,7 +87,9 @@ describe("userController", () => {
                 user: { userId: 1 }
             });
 
-            userService.getCurrentUserProfileByID.mockResolvedValue(mockUser);
+            const user = createMockUser();
+
+            userService.getCurrentUserProfileByID.mockResolvedValue(user);
 
             await userController.getCurrentUserProfile(req, res, next);
 
@@ -112,10 +98,10 @@ describe("userController", () => {
             expect(res.json).toHaveBeenCalledWith({
                 message: "User profile retrieved successfully",
                 user: {
-                    userId: 1,
-                    name: "John Doe",
-                    email: "john@test.com",
-                    avatar: null
+                    userId: user.id,
+                    name: user.name,
+                    email: user.email,
+                    avatar: user.avatar
                 }
             });
         });
@@ -142,12 +128,10 @@ describe("userController", () => {
                 }
             });
 
-            const updatedUser = {
-                id: 1,
+            const updatedUser = createMockUser({
                 name: "Updated",
-                email: "updated@test.com",
-                avatar: null
-            };
+                email: "updated@test.com"
+            });
 
             userService.updateCurrentUserProfileByID.mockResolvedValue(updatedUser);
 
@@ -162,10 +146,10 @@ describe("userController", () => {
             expect(res.json).toHaveBeenCalledWith({
                 message: "User profile updated successfully",
                 user: {
-                    userId: 1,
-                    name: "Updated",
-                    email: "updated@test.com",
-                    avatar: null
+                    userId: updatedUser.id,
+                    name: updatedUser.name,
+                    email: updatedUser.email,
+                    avatar: updatedUser.avatar
                 }
             });
         });
@@ -182,12 +166,11 @@ describe("userController", () => {
                 }
             });
 
-            const updatedUser = {
-                id: 1,
+            const updatedUser = createMockUser({
                 name: "Updated",
                 email: "updated@test.com",
                 avatar: "/uploads/avatars/avatar-updated.png"
-            };
+            });
 
             userService.updateCurrentUserProfileByID.mockResolvedValue(updatedUser);
 
@@ -203,10 +186,10 @@ describe("userController", () => {
             expect(res.json).toHaveBeenCalledWith({
                 message: "User profile updated successfully",
                 user: {
-                    userId: 1,
-                    name: "Updated",
-                    email: "updated@test.com",
-                    avatar: "/uploads/avatars/avatar-updated.png"
+                    userId: updatedUser.id,
+                    name: updatedUser.name,
+                    email: updatedUser.email,
+                    avatar: updatedUser.avatar
                 }
             });
         });

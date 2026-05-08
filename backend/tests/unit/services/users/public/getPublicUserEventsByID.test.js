@@ -21,6 +21,8 @@ const EventUserRole = require("../../../../../src/models/relations/eventUserRole
 
 const userService = require("../../../../../src/services/userService");
 
+const { createMockUser } = require("../../../../factories/userFactory");
+
 jest.mock("../../../../../src/models/userModel", () => ({
     findByPk: jest.fn()
 }));
@@ -44,10 +46,10 @@ describe("userService - getPublicUserEventsByID", () => {
     ============================= */
 
     it("should return created and joined events", async () => {
-        const user = {
+        const user = createMockUser({
             name: "John",
             avatar: null
-        };
+        });
 
         const createdEvents = [
             {
@@ -95,10 +97,10 @@ describe("userService - getPublicUserEventsByID", () => {
     });
 
     it("should return empty arrays when user has no events", async () => {
-        const user = {
+        const user = createMockUser({
             name: "John",
             avatar: null
-        };
+        });
 
         User.findByPk.mockResolvedValue(user);
         Event.findAll.mockResolvedValue([]);
@@ -117,10 +119,10 @@ describe("userService - getPublicUserEventsByID", () => {
     ============================= */
 
     it("should exclude created events from joined events", async () => {
-        const user = {
+        const user = createMockUser({
             name: "John",
             avatar: null
-        };
+        });
 
         const createdEvent = {
             id: 1,

@@ -22,6 +22,10 @@ const User = require("../../../../../src/models/userModel");
 
 const userService = require("../../../../../src/services/userService");
 
+const { mockConsoleError } = require("../../../../helpers/mocks/consoleMocks");
+
+const { createMockUserWithPassword } = require("../../../../factories/userFactory");
+
 jest.mock("bcrypt");
 
 jest.mock("../../../../../src/models/userModel", () => ({
@@ -32,19 +36,14 @@ describe("userService - changeCurrentUserPasswordByID", () => {
 
     let user;
 
+    mockConsoleError();
+
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => { });
 
-        user = {
-            id: 1,
-            password: "hashed",
+        user = createMockUserWithPassword({
             save: jest.fn()
-        };
-    });
-
-    afterEach(() => {
-        console.error.mockRestore();
+        });
     });
 
     /* =============================

@@ -24,16 +24,14 @@ jest.mock("fs", () => ({
 const fs = require("fs");
 
 const { deleteUploadedFile } = require("../../../src/utils/uploadedFileStorage");
+const { mockConsoleWarn } = require("../../helpers/mocks/consoleMocks");
 
 describe("uploadedFileStorage utils", () => {
 
+    mockConsoleWarn();
+
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "warn").mockImplementation(() => { });
-    });
-
-    afterEach(() => {
-        console.warn.mockRestore();
     });
 
     /* =============================

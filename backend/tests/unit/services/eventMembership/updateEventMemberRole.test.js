@@ -25,6 +25,10 @@ const { assertEventNotPast } = require("../../../../src/utils/eventStatus");
 
 const eventMembershipService = require("../../../../src/services/eventMembershipService");
 
+const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
+
+const { createMockMembership } = require("../../../factories/membershipFactory");
+
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
 }));
@@ -39,13 +43,10 @@ jest.mock("../../../../src/utils/eventStatus", () => ({
 
 describe("eventMembershipService - updateEventMemberRole", () => {
 
+    mockConsoleError();
+
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => { });
-    });
-
-    afterEach(() => {
-        console.error.mockRestore();
     });
 
     /* =============================
@@ -53,10 +54,10 @@ describe("eventMembershipService - updateEventMemberRole", () => {
     ============================= */
 
     it("should update event member role", async () => {
-        const membership = {
+        const membership = createMockMembership({
             role: "participant",
             save: jest.fn().mockResolvedValue()
-        };
+        });
 
         Event.findByPk.mockResolvedValue({ id: 1 });
         assertEventNotPast.mockImplementation(() => { });
@@ -111,9 +112,9 @@ describe("eventMembershipService - updateEventMemberRole", () => {
     });
 
     it("should throw 400 if user already has this role", async () => {
-        const membership = {
+        const membership = createMockMembership({
             role: "participant"
-        };
+        });
 
         Event.findByPk.mockResolvedValue({ id: 1 });
         assertEventNotPast.mockImplementation(() => { });

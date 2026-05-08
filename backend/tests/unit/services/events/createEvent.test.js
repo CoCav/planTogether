@@ -21,6 +21,10 @@ const eventService = require("../../../../src/services/eventService");
 
 const { buildEventCreateData } = require("../../../../src/utils/eventDataBuilder");
 
+const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
+
+const { createEventPayload } = require("../../../factories/eventFactory");
+
 jest.mock("../../../../src/models/eventModel", () => ({
     create: jest.fn()
 }));
@@ -35,13 +39,10 @@ jest.mock("../../../../src/utils/eventDataBuilder", () => ({
 
 describe("eventService - createEvent", () => {
 
+    mockConsoleError();
+
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => { });
-    });
-
-    afterEach(() => {
-        console.error.mockRestore();
     });
 
     /* =============================
@@ -49,16 +50,18 @@ describe("eventService - createEvent", () => {
     ============================= */
 
     it("should create an event and organizer membership", async () => {
-        const eventData = {
-            creatorId: 10,
-            title: "Test Event",
+
+        const eventInput = createEventPayload({
             description: "Description",
-            type: "Meetup",
             theme: "Tech",
-            mode: "in_person",
-            location: "Montreal",
             startDateTime: "2026-12-20T10:00:00.000Z",
             endDateTime: "2026-12-20T12:00:00.000Z",
+            image: null
+        });
+
+        const builtEventData = {
+            creatorId: 10,
+            ...eventInput,
             maxParticipants: null,
             registrationDeadline: null,
             image: null
@@ -69,35 +72,16 @@ describe("eventService - createEvent", () => {
             title: "Test Event"
         };
 
-        buildEventCreateData.mockReturnValue(eventData);
+        buildEventCreateData.mockReturnValue(builtEventData);
+
         Event.create.mockResolvedValue(event);
         EventUserRole.create.mockResolvedValue({});
 
-        const result = await eventService.createEvent({
-            title: "Test Event",
-            description: "Description",
-            type: "Meetup",
-            theme: "Tech",
-            mode: "in_person",
-            location: "Montreal",
-            startDateTime: "2026-12-20T10:00:00.000Z",
-            endDateTime: "2026-12-20T12:00:00.000Z",
-            image: null
-        }, 10);
+        const result = await eventService.createEvent(eventInput, 10);
 
-        expect(buildEventCreateData).toHaveBeenCalledWith({
-            title: "Test Event",
-            description: "Description",
-            type: "Meetup",
-            theme: "Tech",
-            mode: "in_person",
-            location: "Montreal",
-            startDateTime: "2026-12-20T10:00:00.000Z",
-            endDateTime: "2026-12-20T12:00:00.000Z",
-            image: null
-        }, 10);
+        expect(buildEventCreateData).toHaveBeenCalledWith(eventInput, 10);
 
-        expect(Event.create).toHaveBeenCalledWith(eventData);
+        expect(Event.create).toHaveBeenCalledWith(builtEventData);
 
         expect(EventUserRole.create).toHaveBeenCalledWith({
             eventId: 1,
@@ -113,6 +97,7 @@ describe("eventService - createEvent", () => {
     ============================= */
 
     it("should throw 400 when end date is before start date", async () => {
+
         await expect(
             eventService.createEvent({
                 startDateTime: "2026-12-20T12:00:00.000Z",
@@ -124,6 +109,7 @@ describe("eventService - createEvent", () => {
         });
 
         expect(buildEventCreateData).not.toHaveBeenCalled();
+
         expect(Event.create).not.toHaveBeenCalled();
         expect(EventUserRole.create).not.toHaveBeenCalled();
     });
@@ -133,24 +119,24 @@ describe("eventService - createEvent", () => {
     ============================= */
 
     it("should forward database errors", async () => {
-        const eventData = {
+
+        const eventInput = createEventPayload({
+            mode: "online",
+            description: "Description",
+            theme: "Tech",
+            startDateTime: "2026-12-20T10:00:00.000Z",
+            endDateTime: "2026-12-20T12:00:00.000Z"
+        });
+
+        const builtEventData = {
             creatorId: 10,
             title: "Test Event"
         };
 
-        buildEventCreateData.mockReturnValue(eventData);
+        buildEventCreateData.mockReturnValue(builtEventData);
+
         Event.create.mockRejectedValue(new Error("DB error"));
 
-        await expect(
-            eventService.createEvent({
-                title: "Test Event",
-                description: "Description",
-                type: "Meetup",
-                theme: "Tech",
-                mode: "online",
-                startDateTime: "2026-12-20T10:00:00.000Z",
-                endDateTime: "2026-12-20T12:00:00.000Z"
-            }, 10)
-        ).rejects.toThrow("DB error");
+        await expect(eventService.createEvent(eventInput, 10)).rejects.toThrow("DB error");
     });
 });

@@ -24,6 +24,10 @@ const { assertEventNotPast } = require("../../../../src/utils/eventStatus");
 
 const eventMembershipService = require("../../../../src/services/eventMembershipService");
 
+const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
+
+const { createMockMembership } = require("../../../factories/membershipFactory");
+
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
 }));
@@ -38,13 +42,10 @@ jest.mock("../../../../src/utils/eventStatus", () => ({
 
 describe("eventMembershipService - leaveEvent", () => {
 
+    mockConsoleError();
+
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => { });
-    });
-
-    afterEach(() => {
-        console.error.mockRestore();
     });
 
     /* =============================
@@ -52,10 +53,10 @@ describe("eventMembershipService - leaveEvent", () => {
     ============================= */
 
     it("should leave event", async () => {
-        const membership = {
+        const membership = createMockMembership({
             role: "participant",
             destroy: jest.fn().mockResolvedValue()
-        };
+        });
 
         Event.findByPk.mockResolvedValue({ id: 1 });
         assertEventNotPast.mockImplementation(() => { });
@@ -95,10 +96,10 @@ describe("eventMembershipService - leaveEvent", () => {
     });
 
     it("should prevent organizer from leaving their own event", async () => {
-        const membership = {
+        const membership = createMockMembership({
             role: "organizer",
             destroy: jest.fn()
-        };
+        });
 
         Event.findByPk.mockResolvedValue({ id: 1 });
         assertEventNotPast.mockImplementation(() => { });

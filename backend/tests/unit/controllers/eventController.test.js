@@ -18,22 +18,13 @@
 const eventController = require("../../../src/controllers/eventController");
 const eventService = require("../../../src/services/eventService");
 
-const { createMockReqResNext } = require("../../helpers/mockExpress");
+const { createEventControllerMocks } = require("../../helpers/express/mockExpress");
+
+const { createMockEvent } = require("../../factories/eventFactory");
 
 jest.mock("../../../src/services/eventService");
 
-const createEventControllerMocks = ({
-    body = {},
-    params = { eventId: "1" },
-    query = {},
-    user = { userId: 10 },
-    file = undefined
-} = {}) => {
-    return createMockReqResNext({ body, params, query, user, file });
-};
-
 describe("eventController", () => {
-
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -49,11 +40,11 @@ describe("eventController", () => {
                 user: { userId: 10 }
             });
 
-            eventService.createEvent.mockResolvedValue({
-                id: 1,
-                title: "Test Event",
+            const event = createMockEvent({
                 image: null
-            });
+            }).toJSON();
+
+            eventService.createEvent.mockResolvedValue(event);
 
             await eventController.createEvent(req, res, next);
 
@@ -65,7 +56,7 @@ describe("eventController", () => {
             expect(res.status).toHaveBeenCalledWith(201);
             expect(res.json).toHaveBeenCalledWith({
                 message: "Event created successfully",
-                event: { id: 1, title: "Test Event", image: null }
+                event
             });
         });
 
@@ -76,11 +67,11 @@ describe("eventController", () => {
                 file: { filename: "event-123.png" }
             });
 
-            eventService.createEvent.mockResolvedValue({
-                id: 1,
-                title: "Test Event",
+            const event = createMockEvent({
                 image: "/uploads/events/event-123.png"
-            });
+            }).toJSON();
+
+            eventService.createEvent.mockResolvedValue(event);
 
             await eventController.createEvent(req, res, next);
 
@@ -92,11 +83,7 @@ describe("eventController", () => {
             expect(res.status).toHaveBeenCalledWith(201);
             expect(res.json).toHaveBeenCalledWith({
                 message: "Event created successfully",
-                event: {
-                    id: 1,
-                    title: "Test Event",
-                    image: "/uploads/events/event-123.png"
-                }
+                event
             });
         });
 
@@ -127,7 +114,7 @@ describe("eventController", () => {
                 pageSize: 4,
                 totalEvents: 1,
                 totalPages: 1,
-                events: [{ id: 1 }]
+                events: [createMockEvent().toJSON()]
             };
 
             eventService.getAllEvents.mockResolvedValue(result);
@@ -160,10 +147,12 @@ describe("eventController", () => {
                 params: { eventId: "42" }
             });
 
-            eventService.getEventByID.mockResolvedValue({
+            const event = createMockEvent({
                 id: 42,
                 title: "Event"
-            });
+            }).toJSON();
+
+            eventService.getEventByID.mockResolvedValue(event);
 
             await eventController.getEvent(req, res, next);
 
@@ -171,7 +160,7 @@ describe("eventController", () => {
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
                 message: "Event retrieved successfully",
-                event: { id: 42, title: "Event" }
+                event
             });
         });
 
@@ -198,10 +187,12 @@ describe("eventController", () => {
                 body: { title: "Updated Event" }
             });
 
-            eventService.updateEventByID.mockResolvedValue({
+            const event = createMockEvent({
                 id: 42,
                 title: "Updated Event"
-            });
+            }).toJSON();
+
+            eventService.updateEventByID.mockResolvedValue(event);
 
             await eventController.updateEvent(req, res, next);
 
@@ -213,7 +204,7 @@ describe("eventController", () => {
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
                 message: "Event updated successfully",
-                event: { id: 42, title: "Updated Event" }
+                event
             });
         });
 
@@ -224,11 +215,13 @@ describe("eventController", () => {
                 file: { filename: "event-updated.png" }
             });
 
-            eventService.updateEventByID.mockResolvedValue({
+            const event = createMockEvent({
                 id: 42,
                 title: "Updated Event",
                 image: "/uploads/events/event-updated.png"
-            });
+            }).toJSON();
+
+            eventService.updateEventByID.mockResolvedValue(event);
 
             await eventController.updateEvent(req, res, next);
 
@@ -240,11 +233,7 @@ describe("eventController", () => {
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
                 message: "Event updated successfully",
-                event: {
-                    id: 42,
-                    title: "Updated Event",
-                    image: "/uploads/events/event-updated.png"
-                }
+                event
             });
         });
 
@@ -271,10 +260,10 @@ describe("eventController", () => {
             await eventController.deleteEvent(req, res, next);
 
             expect(eventService.deleteEventByID).toHaveBeenCalledWith("42");
+
             expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({
-                message: "Event deleted successfully"
-            });
+
+            expect(res.json).toHaveBeenCalledWith({ message: "Event deleted successfully" });
         });
 
         it("should forward delete event errors to next", async () => {

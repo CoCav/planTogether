@@ -13,7 +13,7 @@
 
 const { registerValidator, loginValidator } = require("../../../src/validators/authValidator");
 
-const { runValidation } = require("../../helpers/validationHelper");
+const { runValidation } = require("../../helpers/validation/validationHelper");
 
 describe("authValidator", () => {
 

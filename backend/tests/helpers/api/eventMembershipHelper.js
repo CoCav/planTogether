@@ -12,7 +12,7 @@
 ================================================== */
 
 const request = require("supertest");
-const app = require("../../src/app");
+const app = require("../../../src/app");
 
 // Join an event as an authenticated user
 const joinEvent = async (eventId, headers) => {

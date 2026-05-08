@@ -16,32 +16,30 @@ const User = require("../../../../../src/models/userModel");
 
 const userService = require("../../../../../src/services/userService");
 
+const { mockConsoleError } = require("../../../../helpers/mocks/consoleMocks");
+
+const { createMockUser } = require("../../../../factories/userFactory");
+
 jest.mock("../../../../../src/models/userModel", () => ({
     findByPk: jest.fn()
 }));
 
 describe("userService - getCurrentUserProfileByID", () => {
 
+    mockConsoleError();
+
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => { });
     });
 
-    afterEach(() => {
-        console.error.mockRestore();
-    });
 
     /* ==================================
        CURRENT PROFILE RETRIEVAL SUCCESS
     ==================================== */
 
     it("should return current user profile", async () => {
-        const user = {
-            id: 1,
-            name: "John",
-            email: "john@test.com",
-            avatar: null
-        };
+
+        const user = createMockUser();
 
         User.findByPk.mockResolvedValue(user);
 

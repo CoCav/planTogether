@@ -23,6 +23,10 @@ const userService = require("../../../../../src/services/userService");
 
 const { deleteUploadedFile } = require("../../../../../src/utils/uploadedFileStorage");
 
+const { mockConsoleError } = require("../../../../helpers/mocks/consoleMocks");
+
+const { createMockUser } = require("../../../../factories/userFactory");
+
 jest.mock("../../../../../src/models/userModel", () => ({
     findByPk: jest.fn()
 }));
@@ -35,23 +39,16 @@ describe("userService - updateCurrentUserProfileByID", () => {
 
     let user;
 
+    mockConsoleError();
+
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => { });
 
-        user = {
-            id: 1,
-            name: "John",
-            email: "john@test.com",
-            avatar: null,
+        user = createMockUser({
             save: jest.fn()
-        };
+        });
 
         deleteUploadedFile.mockResolvedValue();
-    });
-
-    afterEach(() => {
-        console.error.mockRestore();
     });
 
     /* =============================

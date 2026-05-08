@@ -21,7 +21,10 @@ const EventUserRole = require("../../../src/models/relations/eventUserRoleModel"
 
 const { authorizeEventMemberRoleUpdate, authorizeEventMemberRemoval } = require("../../../src/middlewares/eventMemberAuthorization");
 
-const { createMockReqResNext } = require("../../helpers/mockExpress");
+const { createEventMemberAuthorizationMocks } = require("../../helpers/express/mockExpress");
+const { mockConsoleError } = require("../../helpers/mocks/consoleMocks");
+
+const { createMockEvent, createMockMembership } = require("../../factories/membershipFactory");
 
 jest.mock("../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
@@ -31,48 +34,13 @@ jest.mock("../../../src/models/relations/eventUserRoleModel", () => ({
     findOne: jest.fn()
 }));
 
-const createEventMemberAuthorizationMocks = ({
-    eventId = "1",
-    targetUserId = "2",
-    requesterUserId = 10,
-    newRole = "co_organizer"
-} = {}) => {
-    return createMockReqResNext({
-        params: {
-            eventId,
-            userId: targetUserId
-        },
-        user: {
-            userId: requesterUserId
-        },
-        body: {
-            newRole
-        }
-    });
-};
-
-const createMockEvent = (overrides = {}) => ({
-    id: 1,
-    creatorId: 99,
-    ...overrides
-});
-
-const createMockMembership = (overrides = {}) => ({
-    eventId: 1,
-    userId: 1,
-    role: "participant",
-    ...overrides
-});
 
 describe("eventMemberAuthorization middleware", () => {
 
+    mockConsoleError();
+
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => { });
-    });
-
-    afterEach(() => {
-        console.error.mockRestore();
     });
 
     /* =============================
@@ -331,9 +299,9 @@ describe("eventMemberAuthorization middleware", () => {
             expect(res.status).not.toHaveBeenCalled();
         });
 
-        /* ==================================
-           MEMBER REMOVAL AUTHORIZATION ERRORS
-        ================================== */
+        /* =============================
+            MEMBER REMOVAL AUTHORIZATION ERRORS
+        ============================= */
 
         it("should return 403 when requester is not organizer or co_organizer", async () => {
             const { req, res, next } = createEventMemberAuthorizationMocks();

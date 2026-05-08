@@ -21,25 +21,15 @@
 const request = require("supertest");
 const app = require("../../../src/app");
 
-const { initDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
+const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../helpers/authHelper");
+const { registerAndGetToken } = require("../../helpers/api/authHelper");
 
 describe("Login API", () => {
 
-    beforeAll(async () => {
-        await initDB();
-    });
-
-    afterEach(async () => {
-        await EventUserRole.destroy({ where: {} });
-        await Event.destroy({ where: {} });
-        await User.destroy({ where: {} });
-    });
-
-    afterAll(async () => {
-        await sequelize.close();
-    });
+    beforeAll(initDB);
+    afterEach(resetDB);
+    afterAll(closeDB);
 
     /* =============================
        LOGIN SUCCESS

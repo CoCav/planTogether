@@ -23,6 +23,8 @@ const User = require("../../../../src/models/userModel");
 
 const authService = require("../../../../src/services/authService");
 
+const { createMockUser } = require("../../../factories/userFactory");
+
 jest.mock("bcrypt");
 jest.mock("jsonwebtoken");
 
@@ -32,13 +34,6 @@ jest.mock("../../../../src/models/userModel", () => ({
 }));
 
 describe("authService - registerUser", () => {
-
-    const mockUser = {
-        id: 1,
-        name: "John Doe",
-        email: "john@test.com",
-        avatar: null
-    };
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -54,8 +49,11 @@ describe("authService - registerUser", () => {
     ============================= */
 
     it("should register a user and return token", async () => {
+
+        const createdUser = createMockUser();
+
         User.findOne.mockResolvedValue(null);
-        User.create.mockResolvedValue(mockUser);
+        User.create.mockResolvedValue(createdUser);
 
         const result = await authService.registerUser({
             name: "John",
@@ -77,7 +75,7 @@ describe("authService - registerUser", () => {
         });
 
         expect(result.token).toBe("fake-token");
-        expect(result.user).toBe(mockUser);
+        expect(result.user).toBe(createdUser);
     });
 
     /* =============================
@@ -86,7 +84,7 @@ describe("authService - registerUser", () => {
 
     it("should normalize email before user creation", async () => {
         User.findOne.mockResolvedValue(null);
-        User.create.mockResolvedValue(mockUser);
+        User.create.mockResolvedValue(createMockUser());
 
         await authService.registerUser({
             name: "John",
@@ -107,7 +105,7 @@ describe("authService - registerUser", () => {
 
     it("should hash password before creating user", async () => {
         User.findOne.mockResolvedValue(null);
-        User.create.mockResolvedValue(mockUser);
+        User.create.mockResolvedValue(createMockUser());
 
         await authService.registerUser({
             name: "John",
@@ -123,6 +121,10 @@ describe("authService - registerUser", () => {
     ============================= */
 
     it("should generate JWT token with userId payload", async () => {
+        const mockUser = createMockUser({
+            id: 1
+        });
+
         User.findOne.mockResolvedValue(null);
         User.create.mockResolvedValue(mockUser);
 
@@ -144,10 +146,9 @@ describe("authService - registerUser", () => {
     ============================= */
 
     it("should register a user with avatar", async () => {
-        const userWithAvatar = {
-            ...mockUser,
+        const userWithAvatar = createMockUser({
             avatar: "/uploads/avatars/avatar-test.png"
-        };
+        });
 
         User.findOne.mockResolvedValue(null);
         User.create.mockResolvedValue(userWithAvatar);
@@ -174,7 +175,7 @@ describe("authService - registerUser", () => {
     ============================= */
 
     it("should throw if email already exists", async () => {
-        User.findOne.mockResolvedValue(mockUser);
+        User.findOne.mockResolvedValue(createMockUser());
 
         await expect(authService.registerUser({
             name: "John",

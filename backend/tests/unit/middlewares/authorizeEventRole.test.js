@@ -19,28 +19,19 @@
 const authorizeEventRole = require("../../../src/middlewares/authorizeEventRole");
 const EventUserRole = require("../../../src/models/relations/eventUserRoleModel");
 
-const { createMockReqResNext } = require("../../helpers/mockExpress");
+const { createEventRoleMocks } = require("../../helpers/express/mockExpress");
+const { mockConsoleError } = require("../../helpers/mocks/consoleMocks");
 
 jest.mock("../../../src/models/relations/eventUserRoleModel", () => ({
     findOne: jest.fn()
 }));
 
-const createEventRoleMocks = ({ eventId = "1", userId = 1 } = {}) => {
-    return createMockReqResNext({
-        params: { eventId },
-        user: { userId }
-    });
-};
-
 describe("authorizeEventRole middleware", () => {
+
+    mockConsoleError();
 
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => { });
-    });
-
-    afterEach(() => {
-        console.error.mockRestore();
     });
 
     /* =============================

@@ -22,37 +22,39 @@ const User = require("../../../../src/models/userModel");
 
 const eventService = require("../../../../src/services/eventService");
 
-const { buildEventWhereConditions, buildEventCreatorInclude, } = require("../../../../src/utils/eventQueryBuilder");
+const { buildEventWhereConditions, buildEventCreatorInclude } = require("../../../../src/utils/eventQueryBuilder");
 const { getPaginationOptions } = require("../../../../src/utils/pagination");
 const { getEventStatus } = require("../../../../src/utils/eventStatus");
 
+const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
+
+const { createMockEvent } = require("../../../factories/eventFactory");
+
 jest.mock("../../../../src/models/eventModel", () => ({
-    findAndCountAll: jest.fn(),
+    findAndCountAll: jest.fn()
 }));
 
 jest.mock("../../../../src/models/userModel", () => ({}));
 
 jest.mock("../../../../src/utils/eventQueryBuilder", () => ({
     buildEventWhereConditions: jest.fn(),
-    buildEventCreatorInclude: jest.fn(),
+    buildEventCreatorInclude: jest.fn()
 }));
 
 jest.mock("../../../../src/utils/pagination", () => ({
-    getPaginationOptions: jest.fn(),
+    getPaginationOptions: jest.fn()
 }));
 
 jest.mock("../../../../src/utils/eventStatus", () => ({
-    getEventStatus: jest.fn(),
+    getEventStatus: jest.fn()
 }));
 
 describe("eventService - getAllEvents", () => {
+
+    mockConsoleError();
+
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => { });
-    });
-
-    afterEach(() => {
-        console.error.mockRestore();
     });
 
     /* =============================
@@ -60,12 +62,6 @@ describe("eventService - getAllEvents", () => {
       ============================= */
 
     it("should return paginated events with computed status", async () => {
-        const mockEvent = {
-            toJSON: () => ({
-                id: 1,
-                title: "Test Event"
-            })
-        };
 
         getPaginationOptions.mockReturnValue({
             page: 1,
@@ -83,7 +79,7 @@ describe("eventService - getAllEvents", () => {
 
         Event.findAndCountAll.mockResolvedValue({
             count: [{ count: 1 }],
-            rows: [mockEvent]
+            rows: [createMockEvent()]
         });
 
         getEventStatus.mockReturnValue("upcoming");
@@ -177,12 +173,9 @@ describe("eventService - getAllEvents", () => {
       ============================= */
 
     it("should enrich events with computed status", async () => {
-        const mockEvent = {
-            toJSON: () => ({
-                id: 1,
-                title: "Metadata Event"
-            }),
-        };
+        const mockEvent = createMockEvent({
+            title: "Metadata Event"
+        });
 
         getPaginationOptions.mockReturnValue({
             page: 1,

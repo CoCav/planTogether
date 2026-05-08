@@ -16,7 +16,7 @@
 
 const { updateEventMemberRoleValidator, removeEventMemberValidator } = require("../../../src/validators/eventMembershipValidator");
 
-const { runValidation } = require("../../helpers/validationHelper");
+const { runValidation } = require("../../helpers/validation/validationHelper");
 
 describe("eventMembershipValidator", () => {
 

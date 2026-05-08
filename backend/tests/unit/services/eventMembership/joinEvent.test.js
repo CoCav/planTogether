@@ -26,6 +26,10 @@ const { assertEventNotPast } = require("../../../../src/utils/eventStatus");
 
 const eventMembershipService = require("../../../../src/services/eventMembershipService");
 
+const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
+
+const { createMockEvent, createMockMembership } = require("../../../factories/membershipFactory");
+
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
 }));
@@ -42,13 +46,10 @@ jest.mock("../../../../src/utils/eventStatus", () => ({
 
 describe("eventMembershipService - joinEvent", () => {
 
+    mockConsoleError();
+
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, "error").mockImplementation(() => { });
-    });
-
-    afterEach(() => {
-        console.error.mockRestore();
     });
 
     /* =============================
@@ -56,15 +57,22 @@ describe("eventMembershipService - joinEvent", () => {
     ============================= */
 
     it("should join event as participant", async () => {
-        Event.findByPk.mockResolvedValue({ id: 1 });
+
+        Event.findByPk.mockResolvedValue(
+            createMockEvent({
+                id: 1
+            })
+        );
 
         EventUserRole.findOne.mockResolvedValue(null);
 
-        EventUserRole.create.mockResolvedValue({
-            eventId: 1,
-            userId: 10,
-            role: "participant"
-        });
+        EventUserRole.create.mockResolvedValue(
+            createMockMembership({
+                eventId: 1,
+                userId: 10,
+                role: "participant"
+            })
+        );
 
         const result = await eventMembershipService.joinEvent({
             eventId: 1,
@@ -87,11 +95,25 @@ describe("eventMembershipService - joinEvent", () => {
     ============================= */
 
     it("should throw 409 if user already joined", async () => {
-        Event.findByPk.mockResolvedValue({ id: 1 });
 
-        EventUserRole.findOne.mockResolvedValue({ id: 1 });
+        Event.findByPk.mockResolvedValue(
+            createMockEvent({
+                id: 1
+            })
+        );
 
-        await expect(eventMembershipService.joinEvent({ eventId: 1, userId: 10 })).rejects.toMatchObject({
+        EventUserRole.findOne.mockResolvedValue(
+            createMockMembership({
+                eventId: 1,
+                userId: 10,
+                role: "participant"
+            })
+        );
+
+        await expect(eventMembershipService.joinEvent({
+            eventId: 1,
+            userId: 10
+        })).rejects.toMatchObject({
             statusCode: 409
         });
 
@@ -99,7 +121,7 @@ describe("eventMembershipService - joinEvent", () => {
     });
 
     it("should block joining a past event", async () => {
-        Event.findByPk.mockResolvedValue({ id: 1 });
+        Event.findByPk.mockResolvedValue(createMockEvent({ id: 1 }));
 
         const error = new Error("No action is allowed on a past event");
         error.statusCode = 403;
@@ -114,11 +136,13 @@ describe("eventMembershipService - joinEvent", () => {
     it("should throw 409 if registration is closed", async () => {
         assertEventNotPast.mockImplementation(() => { });
 
-        Event.findByPk.mockResolvedValue({
-            id: 1,
-            maxParticipants: null,
-            registrationDeadline: new Date(Date.now() - 1000)
-        });
+        Event.findByPk.mockResolvedValue(
+            createMockEvent({
+                id: 1,
+                maxParticipants: null,
+                registrationDeadline: new Date(Date.now() - 1000)
+            })
+        );
 
         EventUserRole.findOne.mockResolvedValue(null);
 
@@ -129,19 +153,23 @@ describe("eventMembershipService - joinEvent", () => {
     });
 
     it("should not check participant count when maxParticipants is null", async () => {
-        Event.findByPk.mockResolvedValue({
-            id: 1,
-            maxParticipants: null,
-            registrationDeadline: null
-        });
+        Event.findByPk.mockResolvedValue(
+            createMockEvent({
+                id: 1,
+                maxParticipants: null,
+                registrationDeadline: null
+            })
+        );
 
         EventUserRole.findOne.mockResolvedValue(null);
 
-        EventUserRole.create.mockResolvedValue({
-            eventId: 1,
-            userId: 10,
-            role: "participant"
-        });
+        EventUserRole.create.mockResolvedValue(
+            createMockMembership({
+                eventId: 1,
+                userId: 10,
+                role: "participant"
+            })
+        );
 
         await eventMembershipService.joinEvent({
             eventId: 1,
@@ -154,11 +182,13 @@ describe("eventMembershipService - joinEvent", () => {
     it("should throw 409 if event is full", async () => {
         assertEventNotPast.mockImplementation(() => { });
 
-        Event.findByPk.mockResolvedValue({
-            id: 1,
-            maxParticipants: 1,
-            registrationDeadline: null
-        });
+        Event.findByPk.mockResolvedValue(
+            createMockEvent({
+                id: 1,
+                maxParticipants: 1,
+                registrationDeadline: null
+            })
+        );
 
         EventUserRole.findOne.mockResolvedValue(null);
         EventUserRole.count.mockResolvedValue(1);

@@ -19,6 +19,7 @@
    - view filters and pagination work correctly
    - query validators protect the route
    - shared event role constants are used for valid role scenarios
+   - shared event status constants are used for expected statuses
 =================================================== */
 
 const request = require("supertest");
@@ -27,6 +28,7 @@ const app = require("../../../../src/app");
 const { EventUserRole } = require("../../../../src/models");
 
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
+const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
 
 const { initDB, resetDB, closeDB } = require("../../../helpers/database/dbTestHelper");
 
@@ -119,7 +121,7 @@ describe("Get Current User Events API", () => {
 
         expect(eventMembership).toBeDefined();
 
-        expect(eventMembership.event).toHaveProperty("status", "past");
+        expect(eventMembership.event).toHaveProperty("status", EVENT_STATUS.PAST);
     });
 
     it("should include participant count and status in user events", async () => {
@@ -304,7 +306,7 @@ describe("Get Current User Events API", () => {
         expect(res.body.events.length).toBe(1);
 
         expect(res.body.events[0].event.title).toBe("Past Created Event");
-        expect(res.body.events[0].event.status).toBe("past");
+        expect(res.body.events[0].event.status).toBe(EVENT_STATUS.PAST);
     });
 
     it("should filter current user events by joined history view", async () => {
@@ -347,7 +349,7 @@ describe("Get Current User Events API", () => {
         expect(res.body.events.length).toBe(1);
 
         expect(res.body.events[0].event.title).toBe("Past Joined Event");
-        expect(res.body.events[0].event.status).toBe("past");
+        expect(res.body.events[0].event.status).toBe(EVENT_STATUS.PAST);
     });
 
     /* =============================

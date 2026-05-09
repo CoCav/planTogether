@@ -11,6 +11,7 @@
    - single events are retrieved correctly
    - computed status is added before response
    - missing events return a 404 error
+   - shared event status constants are used for expected statuses
    - database errors are forwarded correctly
 ================================================== */
 
@@ -18,6 +19,7 @@ const Event = require("../../../../src/models/eventModel");
 
 const eventService = require("../../../../src/services/eventService");
 
+const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
 const { getEventStatus } = require("../../../../src/utils/events/eventStatus");
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
@@ -48,7 +50,7 @@ describe("eventService - getEventByID", () => {
 
         Event.findOne.mockResolvedValue(createMockEvent());
 
-        getEventStatus.mockReturnValue("upcoming");
+        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
 
         const result = await eventService.getEventByID(1);
 
@@ -57,7 +59,7 @@ describe("eventService - getEventByID", () => {
         expect(result).toEqual({
             id: 1,
             title: "Test Event",
-            status: "upcoming"
+            status: EVENT_STATUS.UPCOMING
         });
     });
 
@@ -72,14 +74,14 @@ describe("eventService - getEventByID", () => {
 
         Event.findOne.mockResolvedValue(mockEvent);
 
-        getEventStatus.mockReturnValue("past");
+        getEventStatus.mockReturnValue(EVENT_STATUS.PAST);
 
         const result = await eventService.getEventByID(1);
 
         expect(getEventStatus).toHaveBeenCalledWith(mockEvent);
 
         expect(result).toMatchObject({
-            status: "past"
+            status: EVENT_STATUS.PAST
         });
     });
 

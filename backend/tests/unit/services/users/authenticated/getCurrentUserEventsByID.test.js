@@ -15,6 +15,7 @@
    - pagination metadata is returned correctly
    - event metadata is added before response
    - shared event role constants are used for role-based filters
+   - shared event status constants are used for expected statuses
    - missing users and database errors are handled safely
 ================================================== */
 
@@ -28,8 +29,10 @@ const userService = require("../../../../../src/services/userService");
 
 const { EVENT_ROLES } = require("../../../../../src/constants/eventRoles");
 
-const { buildEventWhereConditions, buildEventCreatorInclude } = require("../../../../../src/utils/events/eventQueryBuilder");
+const { EVENT_STATUS } = require("../../../../../src/constants/eventStatus");
 const { getEventStatus } = require("../../../../../src/utils/events/eventStatus");
+
+const { buildEventWhereConditions, buildEventCreatorInclude } = require("../../../../../src/utils/events/eventQueryBuilder");
 const { getPaginationOptions } = require("../../../../../src/utils/pagination");
 
 const { mockConsoleError } = require("../../../../helpers/mocks/consoleMocks");
@@ -103,7 +106,7 @@ describe("userService - getCurrentUserEventsByID", () => {
         });
 
         EventUserRole.count.mockResolvedValue(5);
-        getEventStatus.mockReturnValue("upcoming");
+        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
 
         const result = await userService.getCurrentUserEventsByID(1, {});
 
@@ -121,7 +124,7 @@ describe("userService - getCurrentUserEventsByID", () => {
                         id: 100,
                         title: "Event",
                         participantCount: 5,
-                        status: "upcoming"
+                        status: EVENT_STATUS.UPCOMING
                     }
                 }
             ]
@@ -251,7 +254,7 @@ describe("userService - getCurrentUserEventsByID", () => {
         });
 
         EventUserRole.count.mockResolvedValue(3);
-        getEventStatus.mockReturnValue("past");
+        getEventStatus.mockReturnValue(EVENT_STATUS.PAST);
 
         const result = await userService.getCurrentUserEventsByID(1, {});
 
@@ -269,7 +272,7 @@ describe("userService - getCurrentUserEventsByID", () => {
 
         expect(result.events[0].event).toMatchObject({
             participantCount: 3,
-            status: "past"
+            status: EVENT_STATUS.PAST
         });
     });
 

@@ -7,7 +7,10 @@
 
    Notes:
    - centralizes all time logic to avoid duplication
+   - event statuses are centralized through shared constants
 ================================================== */
+
+const { EVENT_STATUS } = require("../../constants/eventStatus");
 
 // Check if event has already ended
 const isEventPast = (event) => {
@@ -18,7 +21,7 @@ const isEventPast = (event) => {
 
 // Get event status
 const getEventStatus = (event) => {
-    return isEventPast(event) ? 'past' : 'upcoming';
+    return isEventPast(event) ? EVENT_STATUS.PAST : EVENT_STATUS.UPCOMING;
 };
 
 // Prevent actions on past events

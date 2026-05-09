@@ -22,10 +22,13 @@
    - filters and pagination behave correctly
    - event metadata is enriched in responses
    - validators protect query params
+   - shared event status constants are used for expected statuses
 ================================================== */
 
 const request = require("supertest");
 const app = require("../../../src/app");
+
+const { EVENT_STATUS } = require("../../../src/constants/eventStatus");
 
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
@@ -130,7 +133,7 @@ describe("Get All Events API", () => {
 
         expect(event).toBeDefined();
 
-        expect(event.status).toBe("past");
+        expect(event.status).toBe(EVENT_STATUS.PAST);
     });
 
     /* =============================
@@ -359,13 +362,13 @@ describe("Get All Events API", () => {
         const res = await request(app)
             .get("/api/events")
             .query({
-                status: "upcoming"
+                status: EVENT_STATUS.UPCOMING
             });
 
         expect(res.statusCode).toBe(200);
 
         expect(res.body.events.every(
-            (event) => event.status === "upcoming"
+            (event) => event.status === EVENT_STATUS.UPCOMING
         )).toBe(true);
     });
 

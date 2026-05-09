@@ -11,7 +11,10 @@
    - event status is based on endDateTime
    - active/future events remain actionable
    - past events throw a 403 business error
+   - shared event status constants are used for expected statuses
 ================================================== */
+
+const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
 
 const { isEventPast, getEventStatus, assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
 
@@ -67,7 +70,7 @@ describe("eventStatus utils", () => {
             getEventStatus({
                 endDateTime: "2026-04-25T11:59:00.000Z"
             })
-        ).toBe("past");
+        ).toBe(EVENT_STATUS.PAST);
     });
 
     it("should return upcoming status for active or future event", () => {
@@ -75,7 +78,7 @@ describe("eventStatus utils", () => {
             getEventStatus({
                 endDateTime: "2026-04-25T12:01:00.000Z"
             })
-        ).toBe("upcoming");
+        ).toBe(EVENT_STATUS.UPCOMING);
     });
 
     /* =============================

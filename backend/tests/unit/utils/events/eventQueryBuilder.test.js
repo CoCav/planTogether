@@ -12,11 +12,20 @@
    - Sequelize where conditions are built correctly
    - date overlap logic is applied
    - creator filtering is handled through includes
+   - shared event status constants are used for expected statuses
 ================================================== */
 
 const { Op } = require("sequelize");
 
-const { applyEventStatusFilter, applyEventBasicFilters, applyEventDateFilters, buildEventWhereConditions, buildEventCreatorInclude } = require("../../../../src/utils/events/eventQueryBuilder");
+const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
+
+const {
+    applyEventStatusFilter,
+    applyEventBasicFilters,
+    applyEventDateFilters,
+    buildEventWhereConditions,
+    buildEventCreatorInclude
+} = require("../../../../src/utils/events/eventQueryBuilder");
 
 describe("eventQueryBuilder utils", () => {
 
@@ -37,7 +46,7 @@ describe("eventQueryBuilder utils", () => {
         it("should initialize Op.and if not present", () => {
             const whereConditions = {};
 
-            applyEventStatusFilter(whereConditions, "upcoming");
+            applyEventStatusFilter(whereConditions, EVENT_STATUS.UPCOMING);
 
             expect(whereConditions[Op.and]).toBeDefined();
         });
@@ -45,7 +54,7 @@ describe("eventQueryBuilder utils", () => {
         it("should add upcoming condition", () => {
             const whereConditions = {};
 
-            applyEventStatusFilter(whereConditions, "upcoming");
+            applyEventStatusFilter(whereConditions, EVENT_STATUS.UPCOMING);
 
             expect(whereConditions[Op.and][0].endDateTime[Op.gte]).toBeInstanceOf(Date);
         });
@@ -53,7 +62,7 @@ describe("eventQueryBuilder utils", () => {
         it("should add past condition", () => {
             const whereConditions = {};
 
-            applyEventStatusFilter(whereConditions, "past");
+            applyEventStatusFilter(whereConditions, EVENT_STATUS.PAST);
 
             expect(whereConditions[Op.and][0].endDateTime[Op.lt]).toBeInstanceOf(Date);
         });
@@ -63,7 +72,7 @@ describe("eventQueryBuilder utils", () => {
                 [Op.and]: [{ test: true }]
             };
 
-            applyEventStatusFilter(whereConditions, "upcoming");
+            applyEventStatusFilter(whereConditions, EVENT_STATUS.UPCOMING);
 
             expect(whereConditions[Op.and].length).toBe(2);
         });
@@ -150,7 +159,7 @@ describe("eventQueryBuilder utils", () => {
             const whereConditions = {};
 
             buildEventWhereConditions(whereConditions, {
-                status: "upcoming",
+                status: EVENT_STATUS.UPCOMING,
                 search: "music",
                 mode: "online",
                 creatorId: "5"
@@ -167,7 +176,7 @@ describe("eventQueryBuilder utils", () => {
 
             buildEventWhereConditions(
                 whereConditions,
-                { status: "upcoming" },
+                { status: EVENT_STATUS.UPCOMING },
                 { includeStatus: false }
             );
 

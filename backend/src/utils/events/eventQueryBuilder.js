@@ -1,5 +1,7 @@
 const { Op } = require("sequelize");
 
+const { EVENT_STATUS } = require("../../constants/eventStatus");
+
 /* ==================================================
    EVENT QUERY BUILDER
 
@@ -60,13 +62,13 @@ const buildEventCreatorInclude = (User, creator) => ({
 const applyEventStatusFilter = (whereConditions, status) => {
     if (!status) return;
 
-    if (status === "upcoming") {
+    if (status === EVENT_STATUS.UPCOMING) {
         addAndCondition(whereConditions, {
             endDateTime: { [Op.gte]: new Date() }
         });
     }
 
-    if (status === "past") {
+    if (status === EVENT_STATUS.PAST) {
         addAndCondition(whereConditions, {
             endDateTime: { [Op.lt]: new Date() }
         });

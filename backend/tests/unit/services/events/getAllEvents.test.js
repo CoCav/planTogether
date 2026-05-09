@@ -14,6 +14,7 @@
    - query helpers are called with expected arguments
    - pagination metadata is returned correctly
    - events are enriched with computed status
+   - shared event status constants are used for expected statuses
    - database errors are forwarded correctly
 ================================================== */
 
@@ -22,8 +23,10 @@ const User = require("../../../../src/models/userModel");
 
 const eventService = require("../../../../src/services/eventService");
 
-const { buildEventWhereConditions, buildEventCreatorInclude } = require("../../../../src/utils/events/eventQueryBuilder");
+const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
 const { getEventStatus } = require("../../../../src/utils/events/eventStatus");
+
+const { buildEventWhereConditions, buildEventCreatorInclude } = require("../../../../src/utils/events/eventQueryBuilder");
 const { getPaginationOptions } = require("../../../../src/utils/pagination");
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
@@ -82,7 +85,7 @@ describe("eventService - getAllEvents", () => {
             rows: [createMockEvent()]
         });
 
-        getEventStatus.mockReturnValue("upcoming");
+        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
 
         const result = await eventService.getAllEvents({});
 
@@ -96,7 +99,7 @@ describe("eventService - getAllEvents", () => {
                 {
                     id: 1,
                     title: "Test Event",
-                    status: "upcoming"
+                    status: EVENT_STATUS.UPCOMING
                 }
             ]
         });
@@ -196,14 +199,14 @@ describe("eventService - getAllEvents", () => {
             rows: [mockEvent]
         });
 
-        getEventStatus.mockReturnValue("past");
+        getEventStatus.mockReturnValue(EVENT_STATUS.PAST);
 
         const result = await eventService.getAllEvents({});
 
         expect(getEventStatus).toHaveBeenCalledWith(mockEvent);
 
         expect(result.events[0]).toMatchObject({
-            status: "past"
+            status: EVENT_STATUS.PAST
         });
     });
 

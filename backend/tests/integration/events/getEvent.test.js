@@ -13,10 +13,13 @@
    - a single event can be retrieved publicly by ID
    - invalid event requests are rejected correctly
    - event metadata is enriched in the response
+   - shared event status constants are used for expected statuses
 =============================================== */
 
 const request = require("supertest");
 const app = require("../../../src/app");
+
+const { EVENT_STATUS } = require("../../../src/constants/eventStatus");
 
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
@@ -149,7 +152,7 @@ describe("Get Event API", () => {
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body.event.status).toBe("upcoming");
+        expect(res.body.event.status).toBe(EVENT_STATUS.UPCOMING);
     });
 
     it("should include past status for past event", async () => {
@@ -173,7 +176,7 @@ describe("Get Event API", () => {
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body.event.status).toBe("past");
+        expect(res.body.event.status).toBe(EVENT_STATUS.PAST);
     });
 
     /* =============================

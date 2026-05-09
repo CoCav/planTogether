@@ -41,6 +41,7 @@ const authorizeEventMemberRoleUpdate = async (req, res, next) => {
         // Only organizer can update member roles
         if (!requesterMembership || requesterMembership.role !== EVENT_ROLES.ORGANIZER) {
             return res.status(403).json({
+                success: false,
                 message: "Only the organizer can update member roles"
             });
         }
@@ -54,6 +55,7 @@ const authorizeEventMemberRoleUpdate = async (req, res, next) => {
 
         if (!targetMembership) {
             return res.status(404).json({
+                success: false,
                 message: "Target membership not found"
             });
         }
@@ -62,6 +64,7 @@ const authorizeEventMemberRoleUpdate = async (req, res, next) => {
 
         if (!event) {
             return res.status(404).json({
+                success: false,
                 message: "Event not found"
             });
         }
@@ -69,6 +72,7 @@ const authorizeEventMemberRoleUpdate = async (req, res, next) => {
         // Event creator keeps the organizer ownership role
         if (event.creatorId === targetMembership.userId) {
             return res.status(403).json({
+                success: false,
                 message: "You cannot change the role of the event creator"
             });
         }
@@ -76,6 +80,7 @@ const authorizeEventMemberRoleUpdate = async (req, res, next) => {
         // Only one organizer is allowed per event
         if (newRole === EVENT_ROLES.ORGANIZER) {
             return res.status(403).json({
+                success: false,
                 message: "Only one organizer is allowed per event"
             });
         }
@@ -88,6 +93,7 @@ const authorizeEventMemberRoleUpdate = async (req, res, next) => {
         console.error("Error authorizing member role update:", error);
 
         return res.status(500).json({
+            success: false,
             message: "Internal server error"
         });
     }
@@ -116,6 +122,7 @@ const authorizeEventMemberRemoval = async (req, res, next) => {
             ![EVENT_ROLES.ORGANIZER, EVENT_ROLES.CO_ORGANIZER].includes(requesterMembership.role)
         ) {
             return res.status(403).json({
+                success: false,
                 message: "Insufficient permissions to remove member"
             });
         }
@@ -129,6 +136,7 @@ const authorizeEventMemberRemoval = async (req, res, next) => {
 
         if (!targetMembership) {
             return res.status(404).json({
+                success: false,
                 message: "Target membership not found"
             });
         }
@@ -137,6 +145,7 @@ const authorizeEventMemberRemoval = async (req, res, next) => {
 
         if (!event) {
             return res.status(404).json({
+                success: false,
                 message: "Event not found"
             });
         }
@@ -144,6 +153,7 @@ const authorizeEventMemberRemoval = async (req, res, next) => {
         // Event creator cannot be removed from their own event
         if (event.creatorId === targetMembership.userId) {
             return res.status(403).json({
+                success: false,
                 message: "You cannot remove the event creator"
             });
         }
@@ -151,6 +161,7 @@ const authorizeEventMemberRemoval = async (req, res, next) => {
         // Admin removal route cannot be used for self-removal
         if (requesterMembership.userId === targetMembership.userId) {
             return res.status(403).json({
+                success: false,
                 message: "You cannot remove yourself from the event"
             });
         }
@@ -158,6 +169,7 @@ const authorizeEventMemberRemoval = async (req, res, next) => {
         // Organizer role cannot be removed through member removal
         if (targetMembership.role === EVENT_ROLES.ORGANIZER) {
             return res.status(403).json({
+                success: false,
                 message: "Organizer cannot be removed"
             });
         }
@@ -167,6 +179,7 @@ const authorizeEventMemberRemoval = async (req, res, next) => {
             requesterMembership.role === EVENT_ROLES.CO_ORGANIZER
         ) {
             return res.status(403).json({
+                success: false,
                 message: "Co-organizers cannot remove other co-organizers"
             });
         }
@@ -179,6 +192,7 @@ const authorizeEventMemberRemoval = async (req, res, next) => {
         console.error("Error authorizing member removal:", error);
 
         return res.status(500).json({
+            success: false,
             message: "Internal server error"
         });
     }

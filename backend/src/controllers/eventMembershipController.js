@@ -14,6 +14,7 @@ const eventMembershipService = require("../services/eventMembershipService");
    - current user event listing belongs to userController
    - authorization is handled by route middlewares
    - business logic is delegated to eventMembershipService
+   - successful responses include success, message and top-level payload fields when needed
 ================================================== */
 
 /* =============================
@@ -29,6 +30,7 @@ const joinEvent = async (req, res, next) => {
         const membership = await eventMembershipService.joinEvent({ eventId, userId });
 
         return res.status(200).json({
+            success: true,
             message: "User successfully joined the event",
             membership
         });
@@ -48,6 +50,7 @@ const leaveEvent = async (req, res, next) => {
         await eventMembershipService.leaveEvent({ eventId, userId });
 
         return res.status(200).json({
+            success: true,
             message: "User successfully left the event"
         });
 
@@ -68,6 +71,7 @@ const getEventMembers = async (req, res, next) => {
         const members = await eventMembershipService.getEventMembers(eventId);
 
         return res.status(200).json({
+            success: true,
             message: "Event members retrieved successfully",
             members
         });
@@ -86,6 +90,7 @@ const getEventStaff = async (req, res, next) => {
         const eventStaff = await eventMembershipService.getEventStaff(eventId);
 
         return res.status(200).json({
+            success: true,
             message: "Event staff retrieved successfully",
             eventStaff
         });
@@ -100,7 +105,7 @@ const getEventStaff = async (req, res, next) => {
    ROLE MANAGEMENT
 ============================= */
 
-// Update a member's in an event
+// Update a member's role in an event
 const updateEventMemberRole = async (req, res, next) => {
     try {
         const eventId = req.params.eventId;
@@ -114,7 +119,8 @@ const updateEventMemberRole = async (req, res, next) => {
         });
 
         return res.status(200).json({
-            message: "Event User role updated successfully",
+            success: true,
+            message: "Event member role updated successfully",
             membership
         });
 
@@ -136,6 +142,7 @@ const removeEventMember = async (req, res, next) => {
         });
 
         return res.status(200).json({
+            success: true,
             message: "Event member removed successfully"
         });
 
@@ -144,4 +151,11 @@ const removeEventMember = async (req, res, next) => {
     }
 };
 
-module.exports = { joinEvent, leaveEvent, getEventMembers, getEventStaff, updateEventMemberRole, removeEventMember };
+module.exports = {
+    joinEvent,
+    leaveEvent,
+    getEventMembers,
+    getEventStaff,
+    updateEventMemberRole,
+    removeEventMember
+};

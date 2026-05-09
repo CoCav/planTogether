@@ -2,6 +2,8 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
+const { createHttpError } = require("../utils/errors/httpError");
+
 /* ==================================================
    UPLOAD FILES MIDDLEWARE
 
@@ -49,9 +51,10 @@ const createImageUpload = ({ folder, prefix, maxSize }) => {
 
         // Reject non-image uploads before storage
         if (!allowedTypes.includes(file.mimetype)) {
-            const error = new Error("Only image files are allowed");
-            error.statusCode = 400;
-            return cb(error, false);
+            return cb(
+                createHttpError(400, "Only image files are allowed"),
+                false
+            );
         }
 
         cb(null, true);

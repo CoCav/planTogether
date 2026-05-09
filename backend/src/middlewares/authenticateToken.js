@@ -20,6 +20,7 @@ const authenticateToken = (req, res, next) => {
     // Require Authorization: Bearer <token>
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return res.status(401).json({
+            success: false,
             message: "Authorization header missing or malformed"
         });
     }
@@ -28,6 +29,7 @@ const authenticateToken = (req, res, next) => {
 
     if (!token) {
         return res.status(401).json({
+            success: false,
             message: "No token provided"
         });
     }
@@ -36,6 +38,7 @@ const authenticateToken = (req, res, next) => {
     jwt.verify(token, process.env.JWT_SECRET, (error, decodedToken) => {
         if (error) {
             return res.status(401).json({
+                success: false,
                 message: "Invalid or expired token"
             });
         }

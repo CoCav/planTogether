@@ -23,6 +23,7 @@ const authorizeEventRole = (allowedRoles) => {
 
             if (eventId == null) {
                 return res.status(400).json({
+                    success: false,
                     message: "Event ID is required"
                 });
             }
@@ -35,6 +36,7 @@ const authorizeEventRole = (allowedRoles) => {
             // Block users without required event role
             if (!membership || !allowedRoles.includes(membership.role)) {
                 return res.status(403).json({
+                    success: false,
                     message: "Forbidden: insufficient event role"
                 });
             }
@@ -48,6 +50,7 @@ const authorizeEventRole = (allowedRoles) => {
             console.error("Error authorizing event role:", error);
 
             return res.status(500).json({
+                success: false,
                 message: "Internal server error"
             });
         }

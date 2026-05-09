@@ -16,6 +16,7 @@ const userService = require("../services/userService");
    - current user routes use req.user.userId
    - public routes use req.params.id
    - sensitive public user fields are filtered in userService
+   - successful responses include success, message and top-level payload fields when needed
 ================================================== */
 
 /* =============================
@@ -30,6 +31,7 @@ const getCurrentUserEvents = async (req, res, next) => {
         const result = await userService.getCurrentUserEventsByID(userId, req.query);
 
         return res.status(200).json({
+            success: true,
             message: "Events retrieved successfully",
             ...result
         });
@@ -47,6 +49,7 @@ const getCurrentUserProfile = async (req, res, next) => {
         const user = await userService.getCurrentUserProfileByID(userId);
 
         return res.status(200).json({
+            success: true,
             message: "User profile retrieved successfully",
             user: {
                 userId: user.id,
@@ -79,6 +82,7 @@ const updateCurrentUserProfile = async (req, res, next) => {
         const user = await userService.updateCurrentUserProfileByID(userId, updatedData);
 
         return res.status(200).json({
+            success: true,
             message: "User profile updated successfully",
             user: {
                 userId: user.id,
@@ -106,6 +110,7 @@ const changeCurrentUserPassword = async (req, res, next) => {
         );
 
         return res.status(200).json({
+            success: true,
             message: "Password updated successfully"
         });
 
@@ -124,7 +129,11 @@ const getPublicUserProfile = async (req, res, next) => {
     try {
         const profile = await userService.getPublicUserProfileByID(req.params.id);
 
-        return res.status(200).json(profile);
+        return res.status(200).json({
+            success: true,
+            message: "Public user profile retrieved successfully",
+            ...profile
+        });
 
     } catch (error) {
         return next(error);
@@ -136,7 +145,11 @@ const getPublicUserEvents = async (req, res, next) => {
     try {
         const events = await userService.getPublicUserEventsByID(req.params.id);
 
-        return res.status(200).json(events);
+        return res.status(200).json({
+            success: true,
+            message: "Public user events retrieved successfully",
+            ...events
+        });
 
     } catch (error) {
         return next(error);

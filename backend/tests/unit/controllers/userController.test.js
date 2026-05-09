@@ -60,6 +60,7 @@ describe("userController", () => {
 
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
+                success: true,
                 message: "Events retrieved successfully",
                 ...result
             });
@@ -96,6 +97,7 @@ describe("userController", () => {
             expect(userService.getCurrentUserProfileByID).toHaveBeenCalledWith(1);
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
+                success: true,
                 message: "User profile retrieved successfully",
                 user: {
                     userId: user.id,
@@ -144,6 +146,7 @@ describe("userController", () => {
 
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
+                success: true,
                 message: "User profile updated successfully",
                 user: {
                     userId: updatedUser.id,
@@ -184,6 +187,7 @@ describe("userController", () => {
 
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
+                success: true,
                 message: "User profile updated successfully",
                 user: {
                     userId: updatedUser.id,
@@ -231,7 +235,10 @@ describe("userController", () => {
             );
 
             expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({ message: "Password updated successfully" });
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: "Password updated successfully"
+            });
         });
 
         it("should forward change password errors to next", async () => {
@@ -276,7 +283,11 @@ describe("userController", () => {
 
             expect(userService.getPublicUserProfileByID).toHaveBeenCalledWith(1);
             expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith(mockProfile);
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: "Public user profile retrieved successfully",
+                ...mockProfile
+            });
         });
 
         it("should forward public profile errors to next", async () => {
@@ -310,7 +321,11 @@ describe("userController", () => {
 
             expect(userService.getPublicUserEventsByID).toHaveBeenCalledWith(1);
             expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith(mockEvents);
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: "Public user events retrieved successfully",
+                ...mockEvents
+            });
         });
 
         it("should forward public events errors to next", async () => {

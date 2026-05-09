@@ -14,6 +14,7 @@ const eventService = require("../services/eventService");
    Notes:
    - business logic is delegated to eventService
    - uploaded event image paths are formatted here
+   - successful responses include success, message and top-level payload fields when needed
 ================================================== */
 
 /* =============================
@@ -34,6 +35,7 @@ const createEvent = async (req, res, next) => {
         );
 
         return res.status(201).json({
+            success: true,
             message: "Event created successfully",
             event
         });
@@ -54,6 +56,7 @@ const getAllEvents = async (req, res, next) => {
         const events = await eventService.getAllEvents(req.query);
 
         return res.status(200).json({
+            success: true,
             message: "Events retrieved successfully",
             ...events
         });
@@ -69,6 +72,7 @@ const getEvent = async (req, res, next) => {
         const event = await eventService.getEventByID(req.params.eventId);
 
         return res.status(200).json({
+            success: true,
             message: "Event retrieved successfully",
             event
         });
@@ -88,7 +92,7 @@ const updateEvent = async (req, res, next) => {
         // Undefined keeps existing image unchanged in service
         const image = req.file ? `/uploads/events/${req.file.filename}` : undefined;
 
-        const updatedEvent = await eventService.updateEventByID(
+        const event = await eventService.updateEventByID(
             req.params.eventId,
             {
                 ...req.body,
@@ -97,8 +101,9 @@ const updateEvent = async (req, res, next) => {
         );
 
         return res.status(200).json({
+            success: true,
             message: "Event updated successfully",
-            event: updatedEvent
+            event
         });
 
     } catch (error) {
@@ -113,6 +118,7 @@ const deleteEvent = async (req, res, next) => {
         await eventService.deleteEventByID(req.params.eventId);
 
         return res.status(200).json({
+            success: true,
             message: "Event deleted successfully"
         });
 
@@ -121,4 +127,10 @@ const deleteEvent = async (req, res, next) => {
     }
 };
 
-module.exports = { createEvent, getAllEvents, getEvent, updateEvent, deleteEvent };
+module.exports = {
+    createEvent,
+    getAllEvents,
+    getEvent,
+    updateEvent,
+    deleteEvent
+};

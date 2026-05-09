@@ -11,6 +11,7 @@
 ================================================== */
 
 const { EVENT_STATUS } = require("../../constants/eventStatus");
+const { throwHttpError } = require("../errors/httpError");
 
 // Check if event has already ended
 const isEventPast = (event) => {
@@ -27,9 +28,7 @@ const getEventStatus = (event) => {
 // Prevent actions on past events
 const assertEventNotPast = (event) => {
     if (isEventPast(event)) {
-        const error = new Error("No action is allowed on a past event");
-        error.statusCode = 403;
-        throw error;
+        throwHttpError(403, "No action is allowed on a past event");
     }
 };
 

@@ -73,6 +73,7 @@ describe("handleValidationErrors middleware", () => {
 
         expect(next).toHaveBeenCalledWith({
             statusCode: 400,
+            success: false,
             message: "Validation failed",
             errors: [
                 { field: "email", message: "Invalid email" },

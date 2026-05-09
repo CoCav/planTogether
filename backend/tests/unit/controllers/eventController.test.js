@@ -55,6 +55,7 @@ describe("eventController", () => {
 
             expect(res.status).toHaveBeenCalledWith(201);
             expect(res.json).toHaveBeenCalledWith({
+                success: true,
                 message: "Event created successfully",
                 event
             });
@@ -82,6 +83,7 @@ describe("eventController", () => {
 
             expect(res.status).toHaveBeenCalledWith(201);
             expect(res.json).toHaveBeenCalledWith({
+                success: true,
                 message: "Event created successfully",
                 event
             });
@@ -124,6 +126,7 @@ describe("eventController", () => {
             expect(eventService.getAllEvents).toHaveBeenCalledWith({ page: "1" });
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
+                success: true,
                 message: "Events retrieved successfully",
                 ...result
             });
@@ -159,6 +162,7 @@ describe("eventController", () => {
             expect(eventService.getEventByID).toHaveBeenCalledWith("42");
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
+                success: true,
                 message: "Event retrieved successfully",
                 event
             });
@@ -203,6 +207,7 @@ describe("eventController", () => {
 
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
+                success: true,
                 message: "Event updated successfully",
                 event
             });
@@ -232,6 +237,7 @@ describe("eventController", () => {
 
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
+                success: true,
                 message: "Event updated successfully",
                 event
             });
@@ -263,7 +269,10 @@ describe("eventController", () => {
 
             expect(res.status).toHaveBeenCalledWith(200);
 
-            expect(res.json).toHaveBeenCalledWith({ message: "Event deleted successfully" });
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: "Event deleted successfully"
+            });
         });
 
         it("should forward delete event errors to next", async () => {

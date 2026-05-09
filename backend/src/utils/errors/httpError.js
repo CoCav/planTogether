@@ -15,9 +15,7 @@
 // Create reusable HTTP error objects
 const createHttpError = (statusCode, message) => {
     const error = new Error(message);
-
     error.statusCode = statusCode;
-
     return error;
 };
 

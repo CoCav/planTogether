@@ -12,6 +12,7 @@ const authService = require("../services/authService");
    - business logic is delegated to authService
    - uploaded avatar paths are formatted here
    - user profile logic belongs to userController
+   - successful responses include success, message and top-level payload fields when needed
 ================================================== */
 
 /* =============================
@@ -34,6 +35,7 @@ const register = async (req, res, next) => {
         });
 
         return res.status(201).json({
+            success: true,
             message: "User registered successfully",
             user: {
                 userId: user.id,
@@ -58,6 +60,7 @@ const login = async (req, res, next) => {
         const { user, token } = await authService.loginUser({ email, password });
 
         return res.status(200).json({
+            success: true,
             message: "Login successful",
             user: {
                 userId: user.id,
@@ -79,8 +82,9 @@ const login = async (req, res, next) => {
 ============================= */
 
 // Logout authenticated user
-const logout = async (req, res) => {
+const logout = (req, res) => {
     return res.status(200).json({
+        success: true,
         message: "Logout successful"
     });
 };

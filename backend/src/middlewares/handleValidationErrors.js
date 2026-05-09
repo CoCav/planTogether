@@ -31,6 +31,7 @@ const handleValidationErrors = (req, res, next) => {
 
         return next({
             statusCode: 400,
+            success: false,
             message: "Validation failed",
             errors: formattedErrors
         });

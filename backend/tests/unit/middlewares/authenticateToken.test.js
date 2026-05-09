@@ -70,7 +70,10 @@ describe("authenticateToken middleware", () => {
         authenticateToken(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.json).toHaveBeenCalledWith({ message: "Authorization header missing or malformed" });
+        expect(res.json).toHaveBeenCalledWith({
+            success: false,
+            message: "Authorization header missing or malformed"
+        });
 
         expect(next).not.toHaveBeenCalled();
     });
@@ -81,7 +84,10 @@ describe("authenticateToken middleware", () => {
         authenticateToken(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.json).toHaveBeenCalledWith({ message: "Authorization header missing or malformed" });
+        expect(res.json).toHaveBeenCalledWith({
+            success: false,
+            message: "Authorization header missing or malformed"
+        });
 
         expect(next).not.toHaveBeenCalled();
     });
@@ -92,7 +98,10 @@ describe("authenticateToken middleware", () => {
         authenticateToken(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.json).toHaveBeenCalledWith({ message: "No token provided" });
+        expect(res.json).toHaveBeenCalledWith({
+            success: false,
+            message: "No token provided"
+        });
 
         expect(next).not.toHaveBeenCalled();
     });
@@ -109,7 +118,10 @@ describe("authenticateToken middleware", () => {
         expect(jwt.verify).toHaveBeenCalled();
 
         expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.json).toHaveBeenCalledWith({ message: "Invalid or expired token" });
+        expect(res.json).toHaveBeenCalledWith({
+            success: false,
+            message: "Invalid or expired token"
+        });
 
         expect(next).not.toHaveBeenCalled();
     });

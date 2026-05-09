@@ -102,7 +102,10 @@ describe("eventMemberAuthorization middleware", () => {
             await authorizeEventMemberRoleUpdate(req, res, next);
 
             expect(res.status).toHaveBeenCalledWith(403);
-            expect(res.json).toHaveBeenCalledWith({ message: "Only the organizer can update member roles" });
+            expect(res.json).toHaveBeenCalledWith({
+                success: false,
+                message: "Only the organizer can update member roles"
+            });
 
             expect(next).not.toHaveBeenCalled();
         });
@@ -135,7 +138,10 @@ describe("eventMemberAuthorization middleware", () => {
             await authorizeEventMemberRoleUpdate(req, res, next);
 
             expect(res.status).toHaveBeenCalledWith(403);
-            expect(res.json).toHaveBeenCalledWith({ message: "You cannot change the role of the event creator" });
+            expect(res.json).toHaveBeenCalledWith({
+                success: false,
+                message: "You cannot change the role of the event creator"
+            });
 
             expect(next).not.toHaveBeenCalled();
         });
@@ -165,7 +171,10 @@ describe("eventMemberAuthorization middleware", () => {
             await authorizeEventMemberRoleUpdate(req, res, next);
 
             expect(res.status).toHaveBeenCalledWith(403);
-            expect(res.json).toHaveBeenCalledWith({ message: "Only one organizer is allowed per event" });
+            expect(res.json).toHaveBeenCalledWith({
+                success: false,
+                message: "Only one organizer is allowed per event"
+            });
 
             expect(next).not.toHaveBeenCalled();
         });
@@ -196,7 +205,10 @@ describe("eventMemberAuthorization middleware", () => {
             await authorizeEventMemberRoleUpdate(req, res, next);
 
             expect(res.status).toHaveBeenCalledWith(404);
-            expect(res.json).toHaveBeenCalledWith({ message: "Event not found" });
+            expect(res.json).toHaveBeenCalledWith({
+                success: false,
+                message: "Event not found"
+            });
 
             expect(next).not.toHaveBeenCalled();
         });
@@ -216,7 +228,10 @@ describe("eventMemberAuthorization middleware", () => {
             await authorizeEventMemberRoleUpdate(req, res, next);
 
             expect(res.status).toHaveBeenCalledWith(404);
-            expect(res.json).toHaveBeenCalledWith({ message: "Target membership not found" });
+            expect(res.json).toHaveBeenCalledWith({
+                success: false,
+                message: "Target membership not found"
+            });
 
             expect(next).not.toHaveBeenCalled();
         });
@@ -233,7 +248,10 @@ describe("eventMemberAuthorization middleware", () => {
             await authorizeEventMemberRoleUpdate(req, res, next);
 
             expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({ message: "Internal server error" });
+            expect(res.json).toHaveBeenCalledWith({
+                success: false,
+                message: "Internal server error"
+            });
 
             expect(next).not.toHaveBeenCalled();
         });
@@ -351,7 +369,10 @@ describe("eventMemberAuthorization middleware", () => {
             await authorizeEventMemberRemoval(req, res, next);
 
             expect(res.status).toHaveBeenCalledWith(403);
-            expect(res.json).toHaveBeenCalledWith({ message: "You cannot remove the event creator" });
+            expect(res.json).toHaveBeenCalledWith({
+                success: false,
+                message: "You cannot remove the event creator"
+            });
 
             expect(next).not.toHaveBeenCalled();
         });
@@ -380,7 +401,10 @@ describe("eventMemberAuthorization middleware", () => {
             await authorizeEventMemberRemoval(req, res, next);
 
             expect(res.status).toHaveBeenCalledWith(403);
-            expect(res.json).toHaveBeenCalledWith({ message: "Organizer cannot be removed" });
+            expect(res.json).toHaveBeenCalledWith({
+                success: false,
+                message: "Organizer cannot be removed"
+            });
 
             expect(next).not.toHaveBeenCalled();
         });
@@ -410,7 +434,10 @@ describe("eventMemberAuthorization middleware", () => {
             await authorizeEventMemberRemoval(req, res, next);
 
             expect(res.status).toHaveBeenCalledWith(403);
-            expect(res.json).toHaveBeenCalledWith({ message: "You cannot remove yourself from the event" });
+            expect(res.json).toHaveBeenCalledWith({
+                success: false,
+                message: "You cannot remove yourself from the event"
+            });
 
             expect(next).not.toHaveBeenCalled();
         });
@@ -439,7 +466,10 @@ describe("eventMemberAuthorization middleware", () => {
             await authorizeEventMemberRemoval(req, res, next);
 
             expect(res.status).toHaveBeenCalledWith(403);
-            expect(res.json).toHaveBeenCalledWith({ message: "Co-organizers cannot remove other co-organizers" });
+            expect(res.json).toHaveBeenCalledWith({
+                success: false,
+                message: "Co-organizers cannot remove other co-organizers"
+            });
 
             expect(next).not.toHaveBeenCalled();
         });
@@ -470,7 +500,10 @@ describe("eventMemberAuthorization middleware", () => {
             await authorizeEventMemberRemoval(req, res, next);
 
             expect(res.status).toHaveBeenCalledWith(404);
-            expect(res.json).toHaveBeenCalledWith({ message: "Event not found" });
+            expect(res.json).toHaveBeenCalledWith({
+                success: false,
+                message: "Event not found"
+            });
 
             expect(next).not.toHaveBeenCalled();
         });
@@ -492,7 +525,10 @@ describe("eventMemberAuthorization middleware", () => {
             await authorizeEventMemberRemoval(req, res, next);
 
             expect(res.status).toHaveBeenCalledWith(404);
-            expect(res.json).toHaveBeenCalledWith({ message: "Target membership not found" });
+            expect(res.json).toHaveBeenCalledWith({
+                success: false,
+                message: "Target membership not found"
+            });
 
             expect(next).not.toHaveBeenCalled();
         });
@@ -509,7 +545,10 @@ describe("eventMemberAuthorization middleware", () => {
             await authorizeEventMemberRemoval(req, res, next);
 
             expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({ message: "Internal server error" });
+            expect(res.json).toHaveBeenCalledWith({
+                success: false,
+                message: "Internal server error"
+            });
 
             expect(next).not.toHaveBeenCalled();
         });

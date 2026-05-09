@@ -58,6 +58,7 @@ describe("authController", () => {
 
             expect(res.status).toHaveBeenCalledWith(201);
             expect(res.json).toHaveBeenCalledWith({
+                success: true,
                 message: "User registered successfully",
                 user: {
                     userId: 1,
@@ -99,6 +100,7 @@ describe("authController", () => {
 
             expect(res.status).toHaveBeenCalledWith(201);
             expect(res.json).toHaveBeenCalledWith({
+                success: true,
                 message: "User registered successfully",
                 user: {
                     userId: 1,
@@ -155,6 +157,7 @@ describe("authController", () => {
 
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
+                success: true,
                 message: "Login successful",
                 user: {
                     userId: 1,
@@ -194,7 +197,10 @@ describe("authController", () => {
             await authController.logout(req, res);
 
             expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({ message: "Logout successful" });
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: "Logout successful"
+            });
         });
     });
 });

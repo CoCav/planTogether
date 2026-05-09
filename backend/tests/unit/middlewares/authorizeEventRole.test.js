@@ -95,7 +95,10 @@ describe("authorizeEventRole middleware", () => {
         await middleware(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(403);
-        expect(res.json).toHaveBeenCalledWith({ message: "Forbidden: insufficient event role" });
+        expect(res.json).toHaveBeenCalledWith({
+            success: false,
+            message: "Forbidden: insufficient event role"
+        });
 
         expect(next).not.toHaveBeenCalled();
     });
@@ -115,7 +118,10 @@ describe("authorizeEventRole middleware", () => {
         await middleware(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(403);
-        expect(res.json).toHaveBeenCalledWith({ message: "Forbidden: insufficient event role" });
+        expect(res.json).toHaveBeenCalledWith({
+            success: false,
+            message: "Forbidden: insufficient event role"
+        });
 
         expect(next).not.toHaveBeenCalled();
     });
@@ -134,7 +140,10 @@ describe("authorizeEventRole middleware", () => {
         await middleware(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ message: "Event ID is required" });
+        expect(res.json).toHaveBeenCalledWith({
+            success: false,
+            message: "Event ID is required"
+        });
 
         expect(next).not.toHaveBeenCalled();
     });
@@ -153,7 +162,10 @@ describe("authorizeEventRole middleware", () => {
         await middleware(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(500);
-        expect(res.json).toHaveBeenCalledWith({ message: "Internal server error" });
+        expect(res.json).toHaveBeenCalledWith({
+            success: false,
+            message: "Internal server error"
+        });
 
         expect(next).not.toHaveBeenCalled();
     });

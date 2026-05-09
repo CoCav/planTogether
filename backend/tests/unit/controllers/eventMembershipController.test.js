@@ -59,6 +59,7 @@ describe("eventMembershipController", () => {
             expect(res.status).toHaveBeenCalledWith(200);
 
             expect(res.json).toHaveBeenCalledWith({
+                success: true,
                 message: "User successfully joined the event",
                 membership
             });
@@ -92,6 +93,7 @@ describe("eventMembershipController", () => {
             expect(res.status).toHaveBeenCalledWith(200);
 
             expect(res.json).toHaveBeenCalledWith({
+                success: true,
                 message: "User successfully left the event"
             });
         });
@@ -130,6 +132,7 @@ describe("eventMembershipController", () => {
             expect(res.status).toHaveBeenCalledWith(200);
 
             expect(res.json).toHaveBeenCalledWith({
+                success: true,
                 message: "Event members retrieved successfully",
                 members
             });
@@ -168,6 +171,7 @@ describe("eventMembershipController", () => {
             expect(res.status).toHaveBeenCalledWith(200);
 
             expect(res.json).toHaveBeenCalledWith({
+                success: true,
                 message: "Event staff retrieved successfully",
                 eventStaff
             });
@@ -221,7 +225,8 @@ describe("eventMembershipController", () => {
             expect(res.status).toHaveBeenCalledWith(200);
 
             expect(res.json).toHaveBeenCalledWith({
-                message: "Event User role updated successfully",
+                success: true,
+                message: "Event member role updated successfully",
                 membership
             });
         });
@@ -260,6 +265,7 @@ describe("eventMembershipController", () => {
             expect(res.status).toHaveBeenCalledWith(200);
 
             expect(res.json).toHaveBeenCalledWith({
+                success: true,
                 message: "Event member removed successfully"
             });
         });

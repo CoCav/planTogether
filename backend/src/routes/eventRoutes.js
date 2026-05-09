@@ -43,7 +43,13 @@ router.get("/:eventId", eventIdParamValidator, handleValidationErrors, eventCont
 ============================= */
 
 // Create a new event
-router.post("/", authenticateToken, uploadEventImage.single("image"), createEventValidator, handleValidationErrors, eventController.createEvent);
+router.post("/",
+    authenticateToken,
+    uploadEventImage.single("image"),
+    createEventValidator,
+    handleValidationErrors,
+    eventController.createEvent
+);
 
 // Update an event
 router.put("/:eventId",

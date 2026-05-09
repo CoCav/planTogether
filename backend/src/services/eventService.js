@@ -26,7 +26,7 @@ const { getPaginationOptions } = require("../utils/pagination");
    - getAllEvents supports filters through query params
    - past events cannot be updated or deleted
    - event images are cleaned after successful update
-    - uses shared HTTP error utilities
+   - uses shared HTTP error utilities
 ================================================== */
 
 

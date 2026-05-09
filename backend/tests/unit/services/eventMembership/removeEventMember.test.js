@@ -13,6 +13,9 @@
    - past event rules are respected
    - missing events and memberships are rejected correctly
    - database errors are forwarded correctly
+
+    Notes:
+   - role-based removal authorization is tested in eventMemberAuthorization middleware tests
 ================================================== */
 
 const Event = require("../../../../src/models/eventModel");
@@ -129,7 +132,7 @@ describe("eventMembershipService - removeEventMember", () => {
     });
 
     /* =============================
-      DATABSE ERRORS
+      DATABASE ERRORS
     ============================= */
 
     it("should forward database errors", async () => {

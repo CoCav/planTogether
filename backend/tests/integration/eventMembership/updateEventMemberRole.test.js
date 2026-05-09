@@ -16,12 +16,15 @@
    - non-organizers cannot manage roles
    - protected memberships cannot be modified
    - invalid role updates are rejected correctly
+   - shared event role constants are used for valid role scenarios
 ============================================================= */
 
 const request = require("supertest");
 const app = require("../../../src/app");
 
 const { EventUserRole } = require("../../../src/models");
+
+const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
@@ -58,10 +61,10 @@ describe("Update Event Member Role API", () => {
 
         await joinEvent(event.id, participantAuth.headers);
 
-        const res = await updateMemberRole(event.id, participantId, organizerAuth.headers, "co_organizer");
+        const res = await updateMemberRole(event.id, participantId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
 
         expect(res.statusCode).toBe(200);
-        expect(res.body.membership.role).toBe("co_organizer");
+        expect(res.body.membership.role).toBe(EVENT_ROLES.CO_ORGANIZER);
     });
 
     it("should allow organizer to demote co_organizer to participant", async () => {
@@ -82,12 +85,12 @@ describe("Update Event Member Role API", () => {
 
         await joinEvent(event.id, coOrganizerAuth.headers);
 
-        await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, "co_organizer");
-        const res = await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, "participant");
+        await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
+        const res = await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, EVENT_ROLES.PARTICIPANT);
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body.membership.role).toBe("participant");
+        expect(res.body.membership.role).toBe(EVENT_ROLES.PARTICIPANT);
     });
 
     /* =============================
@@ -119,8 +122,8 @@ describe("Update Event Member Role API", () => {
         await joinEvent(event.id, coOrganizerAuth.headers);
         await joinEvent(event.id, participantAuth.headers);
 
-        await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, "co_organizer");
-        const res = await updateMemberRole(event.id, participantId, coOrganizerAuth.headers, "co_organizer");
+        await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
+        const res = await updateMemberRole(event.id, participantId, coOrganizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
 
         expect(res.statusCode).toBe(403);
     });
@@ -149,7 +152,7 @@ describe("Update Event Member Role API", () => {
         await joinEvent(event.id, participantAuth.headers);
         await joinEvent(event.id, targetParticipantAuth.headers);
 
-        const res = await updateMemberRole(event.id, targetParticipantId, participantAuth.headers, "co_organizer");
+        const res = await updateMemberRole(event.id, targetParticipantId, participantAuth.headers, EVENT_ROLES.CO_ORGANIZER);
 
         expect(res.statusCode).toBe(403);
     });
@@ -176,7 +179,7 @@ describe("Update Event Member Role API", () => {
 
         await joinEvent(event.id, participantAuth.headers);
 
-        const res = await updateMemberRole(event.id, participantId, organizerAuth.headers, "participant");
+        const res = await updateMemberRole(event.id, participantId, organizerAuth.headers, EVENT_ROLES.PARTICIPANT);
 
         expect(res.statusCode).toBe(400);
     });
@@ -192,7 +195,7 @@ describe("Update Event Member Role API", () => {
         const eventRes = await createEvent(organizerAuth.headers);
         const event = eventRes.body.event;
 
-        const res = await updateMemberRole(event.id, organizerId, organizerAuth.headers, "participant");
+        const res = await updateMemberRole(event.id, organizerId, organizerAuth.headers, EVENT_ROLES.PARTICIPANT);
 
         expect(res.statusCode).toBe(403);
     });
@@ -223,10 +226,10 @@ describe("Update Event Member Role API", () => {
         await EventUserRole.create({
             eventId: event.id,
             userId: participantId,
-            role: "participant"
+            role: EVENT_ROLES.PARTICIPANT
         });
 
-        const res = await updateMemberRole(event.id, participantId, organizerAuth.headers, "co_organizer");
+        const res = await updateMemberRole(event.id, participantId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
 
         expect(res.statusCode).toBe(403);
     });
@@ -299,7 +302,7 @@ describe("Update Event Member Role API", () => {
             .put("/api/events/abc/members/1/role")
             .set(organizerAuth.headers)
             .send({
-                newRole: "participant"
+                newRole: EVENT_ROLES.PARTICIPANT
             });
 
         expect(res.statusCode).toBe(400);
@@ -315,7 +318,7 @@ describe("Update Event Member Role API", () => {
             .put("/api/events/1/members/abc/role")
             .set(organizerAuth.headers)
             .send({
-                newRole: "participant"
+                newRole: EVENT_ROLES.PARTICIPANT
             });
 
         expect(res.statusCode).toBe(400);
@@ -334,7 +337,7 @@ describe("Update Event Member Role API", () => {
         const eventRes = await createEvent(organizerAuth.headers);
         const event = eventRes.body.event;
 
-        const res = await updateMemberRole(event.id, 999999, organizerAuth.headers, "participant");
+        const res = await updateMemberRole(event.id, 999999, organizerAuth.headers, EVENT_ROLES.PARTICIPANT);
 
         expect(res.statusCode).toBe(404);
     });

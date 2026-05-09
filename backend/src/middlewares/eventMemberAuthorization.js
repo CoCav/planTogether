@@ -1,6 +1,8 @@
 const Event = require("../models/eventModel");
 const EventUserRole = require("../models/relations/eventUserRoleModel");
 
+const { EVENT_ROLES } = require("../constants/eventRoles");
+
 /* ==================================================
    EVENT MEMBER AUTHORIZATION MIDDLEWARE
 
@@ -14,6 +16,7 @@ const EventUserRole = require("../models/relations/eventUserRoleModel");
    - organizer can update participant/co-organizer roles
    - organizer and co-organizer can remove participants
    - event creator cannot be demoted or removed
+   - event roles are centralized through shared constants
 ================================================== */
 
 /* =============================
@@ -36,7 +39,7 @@ const authorizeEventMemberRoleUpdate = async (req, res, next) => {
         });
 
         // Only organizer can update member roles
-        if (!requesterMembership || requesterMembership.role !== "organizer") {
+        if (!requesterMembership || requesterMembership.role !== EVENT_ROLES.ORGANIZER) {
             return res.status(403).json({
                 message: "Only the organizer can update member roles"
             });
@@ -71,7 +74,7 @@ const authorizeEventMemberRoleUpdate = async (req, res, next) => {
         }
 
         // Only one organizer is allowed per event
-        if (newRole === "organizer") {
+        if (newRole === EVENT_ROLES.ORGANIZER) {
             return res.status(403).json({
                 message: "Only one organizer is allowed per event"
             });
@@ -109,9 +112,8 @@ const authorizeEventMemberRemoval = async (req, res, next) => {
         });
 
         // Only organizer or co-organizer can remove members
-        if (
-            !requesterMembership ||
-            !["organizer", "co_organizer"].includes(requesterMembership.role)
+        if (!requesterMembership ||
+            ![EVENT_ROLES.ORGANIZER, EVENT_ROLES.CO_ORGANIZER].includes(requesterMembership.role)
         ) {
             return res.status(403).json({
                 message: "Insufficient permissions to remove member"
@@ -154,16 +156,15 @@ const authorizeEventMemberRemoval = async (req, res, next) => {
         }
 
         // Organizer role cannot be removed through member removal
-        if (targetMembership.role === "organizer") {
+        if (targetMembership.role === EVENT_ROLES.ORGANIZER) {
             return res.status(403).json({
                 message: "Organizer cannot be removed"
             });
         }
 
         // Co-organizers cannot remove other co-organizers
-        if (
-            requesterMembership.role === "co_organizer" &&
-            targetMembership.role === "co_organizer"
+        if (targetMembership.role === EVENT_ROLES.CO_ORGANIZER &&
+            requesterMembership.role === EVENT_ROLES.CO_ORGANIZER
         ) {
             return res.status(403).json({
                 message: "Co-organizers cannot remove other co-organizers"

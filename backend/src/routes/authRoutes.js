@@ -5,9 +5,9 @@ const authController = require("../controllers/authController");
 
 const { authenticateToken } = require("../middlewares/authenticateToken");
 const { uploadAvatar } = require("../middlewares/uploadFiles");
-const handleValidationErrors = require("../middlewares/handleValidationErrors");
 
 const { registerValidator, loginValidator } = require("../validators/authValidator");
+const handleValidationErrors = require("../middlewares/handleValidationErrors");
 
 /* ==================================================
    AUTH ROUTES

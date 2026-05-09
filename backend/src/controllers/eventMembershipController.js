@@ -29,7 +29,7 @@ const joinEvent = async (req, res, next) => {
         const membership = await eventMembershipService.joinEvent({ eventId, userId });
 
         return res.status(200).json({
-            message: 'User successfully joined the event',
+            message: "User successfully joined the event",
             membership
         });
 
@@ -48,7 +48,7 @@ const leaveEvent = async (req, res, next) => {
         await eventMembershipService.leaveEvent({ eventId, userId });
 
         return res.status(200).json({
-            message: 'User successfully left the event'
+            message: "User successfully left the event"
         });
 
     } catch (error) {
@@ -68,7 +68,7 @@ const getEventMembers = async (req, res, next) => {
         const members = await eventMembershipService.getEventMembers(eventId);
 
         return res.status(200).json({
-            message: 'Event members retrieved successfully',
+            message: "Event members retrieved successfully",
             members
         });
 
@@ -86,7 +86,7 @@ const getEventStaff = async (req, res, next) => {
         const eventStaff = await eventMembershipService.getEventStaff(eventId);
 
         return res.status(200).json({
-            message: 'Event staff retrieved successfully',
+            message: "Event staff retrieved successfully",
             eventStaff
         });
 
@@ -114,7 +114,7 @@ const updateEventMemberRole = async (req, res, next) => {
         });
 
         return res.status(200).json({
-            message: 'Event User role updated successfully',
+            message: "Event User role updated successfully",
             membership
         });
 
@@ -136,7 +136,7 @@ const removeEventMember = async (req, res, next) => {
         });
 
         return res.status(200).json({
-            message: 'Event member removed successfully'
+            message: "Event member removed successfully"
         });
 
     } catch (error) {

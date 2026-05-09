@@ -16,12 +16,15 @@
    - authorized staff members can remove participants
    - protected memberships cannot be removed
    - unauthorized removals are rejected correctly
+   - shared event role constants are used for valid role scenarios
 ========================================================= */
 
 const request = require("supertest");
 const app = require("../../../src/app");
 
 const { EventUserRole } = require("../../../src/models");
+
+const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
@@ -91,7 +94,7 @@ describe("Remove Event Member API", () => {
         await joinEvent(event.id, coOrganizerAuth.headers);
         await joinEvent(event.id, participantAuth.headers);
 
-        await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, "co_organizer");
+        await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
 
         const res = await request(app)
             .delete(`/api/events/${event.id}/members/${participantId}`)
@@ -173,7 +176,7 @@ describe("Remove Event Member API", () => {
 
         await joinEvent(event.id, coOrganizerAuth.headers);
 
-        await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, "co_organizer");
+        await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
 
         const res = await request(app)
             .delete(`/api/events/${event.id}/members/${organizerId}`)
@@ -207,8 +210,8 @@ describe("Remove Event Member API", () => {
         await joinEvent(event.id, firstCoOrganizerAuth.headers);
         await joinEvent(event.id, secondCoOrganizerAuth.headers);
 
-        await updateMemberRole(event.id, firstCoOrganizerId, organizerAuth.headers, "co_organizer");
-        await updateMemberRole(event.id, secondCoOrganizerId, organizerAuth.headers, "co_organizer");
+        await updateMemberRole(event.id, firstCoOrganizerId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
+        await updateMemberRole(event.id, secondCoOrganizerId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
 
         const res = await request(app)
             .delete(`/api/events/${event.id}/members/${secondCoOrganizerId}`)
@@ -263,7 +266,7 @@ describe("Remove Event Member API", () => {
         await EventUserRole.create({
             eventId: event.id,
             userId: participantId,
-            role: "participant"
+            role: EVENT_ROLES.PARTICIPANT
         });
 
         const res = await request(app)

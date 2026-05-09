@@ -16,8 +16,10 @@
    - unexpected errors return a safe server response
 ================================================== */
 
-const authorizeEventRole = require("../../../src/middlewares/authorizeEventRole");
 const EventUserRole = require("../../../src/models/relations/eventUserRoleModel");
+
+const authorizeEventRole = require("../../../src/middlewares/authorizeEventRole");
+const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
 const { createEventRoleMocks } = require("../../helpers/express/mockExpress");
 const { mockConsoleError } = require("../../helpers/mocks/consoleMocks");
@@ -44,12 +46,12 @@ describe("authorizeEventRole middleware", () => {
         const membership = {
             eventId: 1,
             userId: 1,
-            role: "organizer"
+            role: EVENT_ROLES.ORGANIZER
         };
 
         EventUserRole.findOne.mockResolvedValue(membership);
 
-        const middleware = authorizeEventRole(["organizer"]);
+        const middleware = authorizeEventRole([EVENT_ROLES.ORGANIZER]);
 
         await middleware(req, res, next);
 
@@ -64,10 +66,10 @@ describe("authorizeEventRole middleware", () => {
         });
 
         EventUserRole.findOne.mockResolvedValue({
-            role: "co_organizer"
+            role: EVENT_ROLES.CO_ORGANIZER
         });
 
-        const middleware = authorizeEventRole(["co_organizer"]);
+        const middleware = authorizeEventRole([EVENT_ROLES.CO_ORGANIZER]);
 
         await middleware(req, res, next);
 
@@ -88,7 +90,7 @@ describe("authorizeEventRole middleware", () => {
 
         EventUserRole.findOne.mockResolvedValue(null);
 
-        const middleware = authorizeEventRole(["organizer"]);
+        const middleware = authorizeEventRole([EVENT_ROLES.ORGANIZER]);
 
         await middleware(req, res, next);
 
@@ -102,12 +104,12 @@ describe("authorizeEventRole middleware", () => {
         const { req, res, next } = createEventRoleMocks();
 
         EventUserRole.findOne.mockResolvedValue({
-            role: "participant"
+            role: EVENT_ROLES.PARTICIPANT
         });
 
         const middleware = authorizeEventRole([
-            "organizer",
-            "co_organizer"
+            EVENT_ROLES.ORGANIZER,
+            EVENT_ROLES.CO_ORGANIZER
         ]);
 
         await middleware(req, res, next);
@@ -127,7 +129,7 @@ describe("authorizeEventRole middleware", () => {
             eventId: null
         });
 
-        const middleware = authorizeEventRole(["organizer"]);
+        const middleware = authorizeEventRole([EVENT_ROLES.ORGANIZER]);
 
         await middleware(req, res, next);
 
@@ -146,7 +148,7 @@ describe("authorizeEventRole middleware", () => {
 
         EventUserRole.findOne.mockRejectedValue(new Error("DB error"));
 
-        const middleware = authorizeEventRole(["organizer"]);
+        const middleware = authorizeEventRole([EVENT_ROLES.ORGANIZER]);
 
         await middleware(req, res, next);
 

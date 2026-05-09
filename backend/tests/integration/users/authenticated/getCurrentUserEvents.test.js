@@ -18,12 +18,15 @@
    - response includes event metadata
    - view filters and pagination work correctly
    - query validators protect the route
+   - shared event role constants are used for valid role scenarios
 =================================================== */
 
 const request = require("supertest");
 const app = require("../../../../src/app");
 
 const { EventUserRole } = require("../../../../src/models");
+
+const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 
 const { initDB, resetDB, closeDB } = require("../../../helpers/database/dbTestHelper");
 
@@ -267,7 +270,7 @@ describe("Get Current User Events API", () => {
         expect(res.statusCode).toBe(200);
 
         expect(res.body.events.every(
-            (item) => item.role !== "organizer"
+            (item) => item.role !== EVENT_ROLES.ORGANIZER
         )).toBe(true);
     });
 
@@ -329,7 +332,7 @@ describe("Get Current User Events API", () => {
         await EventUserRole.create({
             eventId: pastEvent.id,
             userId: participantAuth.user.userId,
-            role: "participant"
+            role: EVENT_ROLES.PARTICIPANT
         });
 
         const res = await request(app)

@@ -1,4 +1,4 @@
-const { validationResult } = require('express-validator');
+const { validationResult } = require("express-validator");
 
 /* ==================================================
    HANDLE VALIDATION ERRORS MIDDLEWARE
@@ -19,8 +19,8 @@ const handleValidationErrors = (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-        if (process.env.NODE_ENV !== 'production') {
-            console.log('Validation errors:', errors.array());
+        if (process.env.NODE_ENV !== "production") {
+            console.log("Validation errors:", errors.array());
         }
 
         // Normalize express-validator errors for API responses
@@ -31,7 +31,7 @@ const handleValidationErrors = (req, res, next) => {
 
         return next({
             statusCode: 400,
-            message: 'Validation failed',
+            message: "Validation failed",
             errors: formattedErrors
         });
     }

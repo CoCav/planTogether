@@ -21,7 +21,7 @@ describe("App API", () => {
        HEALTH CHECK
     ============================= */
 
-    it('should return API health status', async () => {
+    it("should return API health status", async () => {
         const res = await request(app).get("/api/health");
 
         expect(res.statusCode).toBe(200);
@@ -36,7 +36,7 @@ describe("App API", () => {
        ROOT ROUTE
     ============================= */
 
-    it('should return root message', async () => {
+    it("should return root message", async () => {
         const res = await request(app).get('/');
 
         expect(res.statusCode).toBe(200);
@@ -48,7 +48,7 @@ describe("App API", () => {
        UNKNOWN ROUTE
     ============================= */
 
-    it('should return 404 for unknown route', async () => {
+    it("should return 404 for unknown route", async () => {
         const res = await request(app).get("/api/unknown");
 
         expect(res.statusCode).toBe(404);

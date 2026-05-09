@@ -5,9 +5,9 @@ const userController = require("../controllers/userController");
 
 const { authenticateToken } = require("../middlewares/authenticateToken");
 const { uploadAvatar } = require("../middlewares/uploadFiles");
-const handleValidationErrors = require("../middlewares/handleValidationErrors");
 
 const { userIdParamValidator, getCurrentUserEventsValidator, updateCurrentUserProfileValidator, changeCurrentUserPasswordValidator } = require("../validators/userValidator");
+const handleValidationErrors = require("../middlewares/handleValidationErrors");
 
 /* ==================================================
    USER ROUTES
@@ -37,10 +37,21 @@ router.get("/me/events", authenticateToken, getCurrentUserEventsValidator, handl
 router.get("/me", authenticateToken, userController.getCurrentUserProfile);
 
 // Update current user profile
-router.put("/me", uploadAvatar.single("avatar"), authenticateToken, updateCurrentUserProfileValidator, handleValidationErrors, userController.updateCurrentUserProfile);
+router.put("/me",
+    uploadAvatar.single("avatar"),
+    authenticateToken,
+    updateCurrentUserProfileValidator,
+    handleValidationErrors,
+    userController.updateCurrentUserProfile
+);
 
 // Change current user's password
-router.put("/me/password", authenticateToken, changeCurrentUserPasswordValidator, handleValidationErrors, userController.changeCurrentUserPassword);
+router.put("/me/password",
+    authenticateToken,
+    changeCurrentUserPasswordValidator,
+    handleValidationErrors,
+    userController.changeCurrentUserPassword
+);
 
 
 /* =============================

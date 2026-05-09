@@ -5,12 +5,17 @@ const User = require("../models/userModel");
 const Event = require("../models/eventModel");
 const EventUserRole = require("../models/relations/eventUserRoleModel");
 
+const { EVENT_ROLES } = require("../constants/eventRoles");
+
+const { throwHttpError } = require("../utils/errors/httpError");
+
 const { buildEventWhereConditions, buildEventCreatorInclude } = require("../utils/events/eventQueryBuilder");
 const { getEventStatus } = require("../utils/events/eventStatus");
-const { throwHttpError } = require("../utils/errors/httpError");
+
 const { normalizeEmail } = require("../utils/normalize");
-const { getPaginationOptions } = require("../utils/pagination");
+
 const { deleteUploadedFile } = require("../utils/uploadedFileStorage");
+const { getPaginationOptions } = require("../utils/pagination");
 
 /* ==================================================
    USER SERVICE
@@ -28,6 +33,7 @@ const { deleteUploadedFile } = require("../utils/uploadedFileStorage");
    - public profiles never expose id, email, password or dates
    - joined events exclude events created by the same user
    - EventUserRole includes events with alias "event"
+   - event roles are centralized through shared constants
    - uses shared HTTP error and normalization utilities
 ================================================== */
 
@@ -56,8 +62,8 @@ const getCurrentUserEventsByID = async (userId, query = {}) => {
         const roleFilter = !view
             ? undefined
             : view === "created" || view === "createdHistory"
-                ? "organizer"
-                : { [Op.in]: ["participant", "co_organizer"] };
+                ? EVENT_ROLES.ORGANIZER
+                : { [Op.in]: [EVENT_ROLES.PARTICIPANT, EVENT_ROLES.CO_ORGANIZER] };
 
         const eventDateFilter = !view
             ? {}
@@ -149,7 +155,7 @@ const getCurrentUserEventsByID = async (userId, query = {}) => {
                 const participantCount = await EventUserRole.count({
                     where: {
                         eventId: data.event.id,
-                        role: "participant"
+                        role: EVENT_ROLES.PARTICIPANT
                     }
                 });
 
@@ -221,7 +227,12 @@ const updateCurrentUserProfileByID = async (userId, updatedData) => {
             await user.save();
 
             // Delete previous avatar only after successful DB update
-            if (avatar !== undefined && avatar && oldAvatar && oldAvatar !== avatar) {
+            const shouldDeleteOldAvatar = avatar !== undefined &&
+                avatar &&
+                oldAvatar &&
+                oldAvatar !== avatar;
+
+            if (shouldDeleteOldAvatar) {
                 await deleteUploadedFile(oldAvatar);
             }
 
@@ -341,4 +352,11 @@ const getPublicUserEventsByID = async (userId) => {
     };
 };
 
-module.exports = { getCurrentUserEventsByID, getCurrentUserProfileByID, updateCurrentUserProfileByID, changeCurrentUserPasswordByID, getPublicUserProfileByID, getPublicUserEventsByID };
+module.exports = {
+    getCurrentUserEventsByID,
+    getCurrentUserProfileByID,
+    updateCurrentUserProfileByID,
+    changeCurrentUserPasswordByID,
+    getPublicUserProfileByID,
+    getPublicUserEventsByID
+};

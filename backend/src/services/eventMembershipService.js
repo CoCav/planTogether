@@ -6,8 +6,9 @@ const EventUserRole = require("../models/relations/eventUserRoleModel");
 
 const { EVENT_ROLES, VALID_EVENT_ROLES } = require("../constants/eventRoles");
 
-const { assertEventNotPast, getEventStatus } = require("../utils/events/eventStatus");
 const { throwHttpError } = require("../utils/errors/httpError");
+
+const { assertEventNotPast, getEventStatus } = require("../utils/events/eventStatus");
 const { getPaginationOptions } = require("../utils/pagination");
 
 /* ==================================================
@@ -22,8 +23,8 @@ const { getPaginationOptions } = require("../utils/pagination");
    Notes:
    - uses EventUserRole as join table
    - all event references use alias "event"
-   - uses shared HTTP error utilities
    - event roles are centralized through shared constants
+   - uses shared HTTP error utilities
 ================================================== */
 
 /* ==================================================

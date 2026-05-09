@@ -97,7 +97,7 @@ const updateEvent = async (req, res, next) => {
         );
 
         return res.status(200).json({
-            message: 'Event updated successfully',
+            message: "Event updated successfully",
             event: updatedEvent
         });
 
@@ -113,7 +113,7 @@ const deleteEvent = async (req, res, next) => {
         await eventService.deleteEventByID(req.params.eventId);
 
         return res.status(200).json({
-            message: 'Event deleted successfully'
+            message: "Event deleted successfully"
         });
 
     } catch (error) {

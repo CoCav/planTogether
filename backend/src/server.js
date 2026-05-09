@@ -1,7 +1,7 @@
-require('dotenv').config();
+require("dotenv").config();
 
-const app = require('./app');
-const { initDB } = require('./models');
+const app = require("./app");
+const { initDB } = require("./models");
 
 /* ==================================================
    SERVER ENTRY POINT
@@ -29,7 +29,7 @@ async function startServer() {
         });
 
     } catch (error) {
-        console.error('❌ Failed to start server:', error);
+        console.error("❌ Failed to start server:", error);
 
         // Exit process if startup fails
         process.exit(1);

@@ -9,6 +9,7 @@
    Ensures:
    - event members are retrieved with user data
    - missing events are rejected before membership query
+   - shared event role constants are used for valid role scenarios
    - database errors are forwarded correctly
 ================================================== */
 
@@ -17,6 +18,8 @@ const User = require("../../../../src/models/userModel");
 const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
 
 const eventMembershipService = require("../../../../src/services/eventMembershipService");
+
+const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
@@ -43,9 +46,10 @@ describe("eventMembershipService - getEventMembers", () => {
     ============================= */
 
     it("should get event members", async () => {
-        const eventMembers = [
-            { id: 1, role: "participant" }
-        ];
+        const eventMembers = [{
+            id: 1,
+            role: EVENT_ROLES.PARTICIPANT
+        }];
 
         Event.findByPk.mockResolvedValue({ id: 1 });
         EventUserRole.findAll.mockResolvedValue(eventMembers);

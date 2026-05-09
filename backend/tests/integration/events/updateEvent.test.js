@@ -19,6 +19,7 @@
    - participants cannot update events
    - validators and authorization protect event updates
    - uploaded event images are updated correctly
+   - shared event role constants are used for valid role scenarios
 ================================================ */
 
 const request = require("supertest");
@@ -26,6 +27,8 @@ const app = require("../../../src/app");
 
 const fs = require("fs");
 const path = require("path");
+
+const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
@@ -83,7 +86,7 @@ describe("Update Event API", () => {
 
         const coOrganizerId = await getUserIdByEmail(coOrganizerAuth.email);
 
-        await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, "co_organizer");
+        await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)

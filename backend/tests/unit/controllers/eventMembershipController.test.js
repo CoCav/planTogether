@@ -11,6 +11,7 @@
 
    Ensures:
    - controller calls service correctly
+   - shared event role constants are used for valid role scenarios
    - HTTP responses are properly formatted
    - route params and authenticated user payload are passed correctly
    - errors are forwarded to next()
@@ -19,6 +20,8 @@
 const eventMembershipController = require("../../../src/controllers/eventMembershipController");
 
 const eventMembershipService = require("../../../src/services/eventMembershipService");
+
+const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
 const { createEventControllerMocks } = require("../../helpers/express/mockExpress");
 
@@ -41,7 +44,7 @@ describe("eventMembershipController", () => {
             const membership = {
                 eventId: "1",
                 userId: 10,
-                role: "participant"
+                role: EVENT_ROLES.PARTICIPANT
             };
 
             eventMembershipService.joinEvent.mockResolvedValue(membership);
@@ -113,9 +116,10 @@ describe("eventMembershipController", () => {
         it("should get event members", async () => {
             const { req, res, next } = createEventControllerMocks();
 
-            const members = [
-                { id: 1, role: "participant" }
-            ];
+            const members = [{
+                id: 1,
+                role: EVENT_ROLES.PARTICIPANT
+            }];
 
             eventMembershipService.getEventMembers.mockResolvedValue(members);
 
@@ -147,10 +151,13 @@ describe("eventMembershipController", () => {
         it("should get event staff with organizer and co-organizer roles", async () => {
             const { req, res, next } = createEventControllerMocks();
 
-            const eventStaff = [
-                { id: 1, role: "organizer" },
-                { id: 2, role: "co_organizer" }
-            ];
+            const eventStaff = [{
+                id: 1,
+                role: EVENT_ROLES.ORGANIZER
+            }, {
+                id: 2,
+                role: EVENT_ROLES.CO_ORGANIZER
+            }];
 
             eventMembershipService.getEventStaff.mockResolvedValue(eventStaff);
 
@@ -191,14 +198,14 @@ describe("eventMembershipController", () => {
                         userId: "2"
                     },
                     body: {
-                        newRole: "co_organizer"
+                        newRole: EVENT_ROLES.CO_ORGANIZER
                     }
                 });
 
             const membership = {
                 eventId: "1",
                 userId: "2",
-                role: "co_organizer"
+                role: EVENT_ROLES.CO_ORGANIZER
             };
 
             eventMembershipService.updateEventMemberRole.mockResolvedValue(membership);
@@ -208,7 +215,7 @@ describe("eventMembershipController", () => {
             expect(eventMembershipService.updateEventMemberRole).toHaveBeenCalledWith({
                 eventId: "1",
                 userId: "2",
-                newRole: "co_organizer"
+                newRole: EVENT_ROLES.CO_ORGANIZER
             });
 
             expect(res.status).toHaveBeenCalledWith(200);

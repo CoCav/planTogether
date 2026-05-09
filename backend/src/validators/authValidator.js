@@ -19,33 +19,33 @@ const { body } = require("express-validator");
 
 // Validate user registration data
 const registerValidator = [
-    body('name')
+    body("name")
         .trim()
-        .notEmpty().withMessage('Name is required'),
+        .notEmpty().withMessage("Name is required"),
 
-    body('email')
+    body("email")
         .trim()
-        .notEmpty().withMessage('Email is required')
-        .isEmail().withMessage('Invalid email')
+        .notEmpty().withMessage("Email is required")
+        .isEmail().withMessage("Invalid email")
         .normalizeEmail(),
 
-    body('password')
-        .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
-        .matches(/\d/).withMessage('Password must contain a number')
-        .matches(/[A-Z]/).withMessage('Password must contain an uppercase letter')
-        .matches(/[a-z]/).withMessage('Password must contain a lowercase letter')
+    body("password")
+        .isLength({ min: 6 }).withMessage("Password must be at least 6 characters long")
+        .matches(/\d/).withMessage("Password must contain a number")
+        .matches(/[A-Z]/).withMessage("Password must contain an uppercase letter")
+        .matches(/[a-z]/).withMessage("Password must contain a lowercase letter")
 ];
 
 // Validate user login data
 const loginValidator = [
-    body('email')
+    body("email")
         .trim()
-        .notEmpty().withMessage('Email is required')
-        .isEmail().withMessage('Invalid email')
+        .notEmpty().withMessage("Email is required")
+        .isEmail().withMessage("Invalid email")
         .normalizeEmail(),
 
-    body('password')
-        .notEmpty().withMessage('Password is required')
+    body("password")
+        .notEmpty().withMessage("Password is required")
 ];
 
 module.exports = { registerValidator, loginValidator };

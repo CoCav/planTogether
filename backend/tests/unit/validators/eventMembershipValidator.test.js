@@ -12,7 +12,10 @@
    - invalid event role payloads are rejected early
    - route params are valid positive integers
    - roles are restricted to allowed values
+   - shared event role constants are used for valid role scenarios
 ================================================== */
+
+const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
 const { updateEventMemberRoleValidator, removeEventMemberValidator } = require("../../../src/validators/eventMembershipValidator");
 
@@ -34,7 +37,7 @@ describe("eventMembershipValidator", () => {
                         userId: "2"
                     },
                     body: {
-                        newRole: "co_organizer"
+                        newRole: EVENT_ROLES.CO_ORGANIZER
                     }
                 }
             );
@@ -51,7 +54,7 @@ describe("eventMembershipValidator", () => {
                         userId: "2"
                     },
                     body: {
-                        newRole: "participant"
+                        newRole: EVENT_ROLES.PARTICIPANT
                     }
                 }
             );
@@ -72,7 +75,7 @@ describe("eventMembershipValidator", () => {
                         userId: "abc"
                     },
                     body: {
-                        newRole: "participant"
+                        newRole: EVENT_ROLES.PARTICIPANT
                     }
                 }
             );

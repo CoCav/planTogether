@@ -4,11 +4,13 @@ const router = express.Router();
 const eventMembershipController = require("../controllers/eventMembershipController");
 
 const { authenticateToken } = require("../middlewares/authenticateToken");
-const handleValidationErrors = require("../middlewares/handleValidationErrors");
+
+const { EVENT_ROLES } = require("../constants/eventRoles");
 const authorizeEventRole = require("../middlewares/authorizeEventRole");
 const { authorizeEventMemberRoleUpdate, authorizeEventMemberRemoval } = require("../middlewares/eventMemberAuthorization");
 
 const { eventIdParamValidator, updateEventMemberRoleValidator, removeEventMemberValidator } = require("../validators/eventMembershipValidator");
+const handleValidationErrors = require("../middlewares/handleValidationErrors");
 
 /* ==================================================
    EVENT MEMBERSHIP ROUTES
@@ -52,9 +54,23 @@ router.get("/:eventId/staff", eventIdParamValidator, handleValidationErrors, eve
 ============================= */
 
 // Update a member role
-router.put("/:eventId/members/:userId/role", authenticateToken, updateEventMemberRoleValidator, handleValidationErrors, authorizeEventRole(["organizer"]), authorizeEventMemberRoleUpdate, eventMembershipController.updateEventMemberRole);
+router.put("/:eventId/members/:userId/role",
+    authenticateToken,
+    updateEventMemberRoleValidator,
+    handleValidationErrors,
+    authorizeEventRole([EVENT_ROLES.ORGANIZER]),
+    authorizeEventMemberRoleUpdate,
+    eventMembershipController.updateEventMemberRole
+);
 
 // Remove a member from an event
-router.delete("/:eventId/members/:userId", authenticateToken, removeEventMemberValidator, handleValidationErrors, authorizeEventRole(["organizer", "co_organizer"]), authorizeEventMemberRemoval, eventMembershipController.removeEventMember);
+router.delete("/:eventId/members/:userId",
+    authenticateToken,
+    removeEventMemberValidator,
+    handleValidationErrors,
+    authorizeEventRole([EVENT_ROLES.ORGANIZER, EVENT_ROLES.CO_ORGANIZER]),
+    authorizeEventMemberRemoval,
+    eventMembershipController.removeEventMember
+);
 
 module.exports = router;

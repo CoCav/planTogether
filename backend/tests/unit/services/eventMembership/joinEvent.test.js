@@ -17,6 +17,7 @@
    - registration deadlines are enforced
    - past event rules are respected
    - missing events are rejected before membership creation
+   - shared event role constants are used for valid role scenarios
    - database errors are forwarded correctly
 ================================================== */
 
@@ -24,6 +25,8 @@ const Event = require("../../../../src/models/eventModel");
 const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
 
 const eventMembershipService = require("../../../../src/services/eventMembershipService");
+
+const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 
 const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
 
@@ -71,7 +74,7 @@ describe("eventMembershipService - joinEvent", () => {
             createMockMembership({
                 eventId: 1,
                 userId: 10,
-                role: "participant"
+                role: EVENT_ROLES.PARTICIPANT
             })
         );
 
@@ -85,10 +88,10 @@ describe("eventMembershipService - joinEvent", () => {
         expect(EventUserRole.create).toHaveBeenCalledWith({
             eventId: 1,
             userId: 10,
-            role: "participant"
+            role: EVENT_ROLES.PARTICIPANT
         });
 
-        expect(result.role).toBe("participant");
+        expect(result.role).toBe(EVENT_ROLES.PARTICIPANT);
     });
 
     /* =============================
@@ -107,7 +110,7 @@ describe("eventMembershipService - joinEvent", () => {
             createMockMembership({
                 eventId: 1,
                 userId: 10,
-                role: "participant"
+                role: EVENT_ROLES.PARTICIPANT
             })
         );
 
@@ -168,7 +171,7 @@ describe("eventMembershipService - joinEvent", () => {
             createMockMembership({
                 eventId: 1,
                 userId: 10,
-                role: "participant"
+                role: EVENT_ROLES.PARTICIPANT
             })
         );
 

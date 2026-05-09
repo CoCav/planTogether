@@ -143,4 +143,11 @@ const getPublicUserEvents = async (req, res, next) => {
     }
 };
 
-module.exports = { getCurrentUserEvents, getCurrentUserProfile, updateCurrentUserProfile, changeCurrentUserPassword, getPublicUserProfile, getPublicUserEvents };
+module.exports = {
+    getCurrentUserEvents,
+    getCurrentUserProfile,
+    updateCurrentUserProfile,
+    changeCurrentUserPassword,
+    getPublicUserProfile,
+    getPublicUserEvents
+};

@@ -19,12 +19,15 @@
    - uploaded images are stored correctly
    - event creator automatically becomes organizer
    - validators protect event creation payloads
+   - shared event role constants are used for valid role scenarios
 ================================================== */
 
 const request = require("supertest");
 const app = require("../../../src/app");
 
 const { EventUserRole } = require("../../../src/models");
+
+const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
@@ -155,7 +158,7 @@ describe("Create Event API", () => {
         });
 
         expect(membership).toBeDefined();
-        expect(membership.role).toBe("organizer");
+        expect(membership.role).toBe(EVENT_ROLES.ORGANIZER);
     });
 
     /* =============================

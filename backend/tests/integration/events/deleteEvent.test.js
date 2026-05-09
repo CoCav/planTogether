@@ -15,10 +15,13 @@
    - deleted events are no longer retrievable
    - role middleware protects delete route
    - business rules prevent deleting past events
+   - shared event role constants are used for valid role scenarios
 =============================================== */
 
 const request = require("supertest");
 const app = require("../../../src/app");
+
+const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
@@ -125,7 +128,7 @@ describe("Delete Event API", () => {
 
         const coOrganizerId = await getUserIdByEmail(coOrganizerAuth.email);
 
-        await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, "co_organizer");
+        await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
 
         const res = await request(app)
             .delete(`/api/events/${event.id}`)

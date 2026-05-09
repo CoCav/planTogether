@@ -1,15 +1,15 @@
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
+const express = require("express");
+const cors = require("cors");
+require("dotenv").config();
 
 const path = require("path");
 
-const errorHandler = require('./middlewares/errorHandler');
+const errorHandler = require("./middlewares/errorHandler");
 
-const authRoutes = require('./routes/authRoutes');
-const eventRoutes = require('./routes/eventRoutes');
-const eventMembershipRoutes = require('./routes/eventMembershipRoutes');
-const userRoutes = require('./routes/userRoutes');
+const authRoutes = require("./routes/authRoutes");
+const eventRoutes = require("./routes/eventRoutes");
+const eventMembershipRoutes = require("./routes/eventMembershipRoutes");
+const userRoutes = require("./routes/userRoutes");
 
 /* ==================================================
    EXPRESS APPLICATION SETUP
@@ -47,8 +47,8 @@ app.use(
 
 // Configure CORS for frontend access
 app.use(cors({
-    origin: process.env.CORS_ORIGIN?.split(',')
-        ?? ['http://localhost:5173'],
+    origin: process.env.CORS_ORIGIN?.split(",")
+        ?? ["http://localhost:5173"],
     credentials: true
 }));
 
@@ -64,16 +64,16 @@ app.use(express.urlencoded({ extended: true }));
 ============================= */
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get("/api/health", (req, res) => {
     return res.json({
         ok: true,
-        name: 'PlanTogether API'
+        name: "PlanTogether API"
     });
 });
 
 // Root API message
-app.get('/', (req, res) => {
-    res.send('PlanTogether is online !');
+app.get("/", (req, res) => {
+    res.send("PlanTogether is online !");
 });
 
 
@@ -82,16 +82,16 @@ app.get('/', (req, res) => {
 ============================= */
 
 // Authentication routes
-app.use('/api/auth', authRoutes);
+app.use("/api/auth", authRoutes);
 
 // Event membership routes
-app.use('/api/events', eventMembershipRoutes);
+app.use("/api/events", eventMembershipRoutes);
 
 // Event CRUD routes
-app.use('/api/events', eventRoutes);
+app.use("/api/events", eventRoutes);
 
 // Public user routes
-app.use('/api/users', userRoutes);
+app.use("/api/users", userRoutes);
 
 
 /* =============================
@@ -101,7 +101,7 @@ app.use('/api/users', userRoutes);
 // Handle unknown routes
 app.use((req, res) => {
     res.status(404).json({
-        message: 'Route not found'
+        message: "Route not found"
     });
 });
 

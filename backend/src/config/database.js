@@ -1,4 +1,4 @@
-const { Sequelize } = require('sequelize');
+const { Sequelize } = require("sequelize");
 
 /* ==================================================
    DATABASE CONFIGURATION
@@ -16,7 +16,7 @@ const { Sequelize } = require('sequelize');
 ================================================== */
 
 // Use a dedicated database for automated tests
-const databaseName = process.env.NODE_ENV === 'test' ? process.env.DB_NAME_TEST : process.env.DB_NAME;
+const databaseName = process.env.NODE_ENV === "test" ? process.env.DB_NAME_TEST : process.env.DB_NAME;
 
 // Create Sequelize connection instance
 const sequelize = new Sequelize(
@@ -26,13 +26,13 @@ const sequelize = new Sequelize(
     {
         host: process.env.DB_HOST,
         port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
-        dialect: 'postgres',
+        dialect: "postgres",
 
         // Enable SQL logs only when explicitly requested
-        logging: process.env.DB_LOGGING === 'true' ? console.log : false,
+        logging: process.env.DB_LOGGING === "true" ? console.log : false,
 
         // Enable SSL for production-like hosted databases
-        ...(process.env.DB_SSL === 'true'
+        ...(process.env.DB_SSL === "true"
             ? {
                 dialectOptions: {
                     ssl: {
@@ -46,8 +46,8 @@ const sequelize = new Sequelize(
 );
 
 // Log target database outside production for debugging
-if (process.env.NODE_ENV !== 'production') {
-    console.log(`📡 Connecting to ${(process.env.NODE_ENV || 'development')} DB: ${databaseName}`);
+if (process.env.NODE_ENV !== "production") {
+    console.log(`📡 Connecting to ${(process.env.NODE_ENV || "development")} DB: ${databaseName}`);
 }
 
 module.exports = sequelize;

@@ -14,6 +14,7 @@
    - current user event lists are filtered correctly
    - pagination metadata is returned correctly
    - event metadata is added before response
+   - shared event role constants are used for role-based filters
    - missing users and database errors are handled safely
 ================================================== */
 
@@ -24,6 +25,8 @@ const Event = require("../../../../../src/models/eventModel");
 const User = require("../../../../../src/models/userModel");
 
 const userService = require("../../../../../src/services/userService");
+
+const { EVENT_ROLES } = require("../../../../../src/constants/eventRoles");
 
 const { buildEventWhereConditions, buildEventCreatorInclude } = require("../../../../../src/utils/events/eventQueryBuilder");
 const { getEventStatus } = require("../../../../../src/utils/events/eventStatus");
@@ -162,7 +165,7 @@ describe("userService - getCurrentUserEventsByID", () => {
 
         const queryOptions = EventUserRole.findAndCountAll.mock.calls[0][0];
 
-        expect(queryOptions.where.role).toBe("organizer");
+        expect(queryOptions.where.role).toBe(EVENT_ROLES.ORGANIZER);
     });
 
     it("should apply role filter for joined view", async () => {
@@ -180,8 +183,8 @@ describe("userService - getCurrentUserEventsByID", () => {
         const queryOptions = EventUserRole.findAndCountAll.mock.calls[0][0];
 
         expect(queryOptions.where.role[Op.in]).toEqual([
-            "participant",
-            "co_organizer"
+            EVENT_ROLES.PARTICIPANT,
+            EVENT_ROLES.CO_ORGANIZER
         ]);
     });
 
@@ -255,7 +258,7 @@ describe("userService - getCurrentUserEventsByID", () => {
         expect(EventUserRole.count).toHaveBeenCalledWith({
             where: {
                 eventId: 100,
-                role: "participant"
+                role: EVENT_ROLES.PARTICIPANT
             }
         });
 

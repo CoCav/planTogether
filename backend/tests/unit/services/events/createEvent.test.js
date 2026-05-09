@@ -11,6 +11,7 @@
    - events are created with normalized data
    - creators are automatically linked as organizers
    - business rules are enforced before persistence
+   - shared event role constants are used for valid role scenarios
    - database errors are forwarded correctly
 ================================================== */
 
@@ -18,6 +19,8 @@ const Event = require("../../../../src/models/eventModel");
 const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
 
 const eventService = require("../../../../src/services/eventService");
+
+const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 
 const { buildEventCreateData } = require("../../../../src/utils/events/eventDataBuilder");
 
@@ -86,7 +89,7 @@ describe("eventService - createEvent", () => {
         expect(EventUserRole.create).toHaveBeenCalledWith({
             eventId: 1,
             userId: 10,
-            role: "organizer"
+            role: EVENT_ROLES.ORGANIZER
         });
 
         expect(result).toBe(event);

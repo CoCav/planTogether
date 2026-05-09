@@ -5,10 +5,12 @@ const eventController = require("../controllers/eventController");
 
 const { authenticateToken } = require("../middlewares/authenticateToken");
 const { uploadEventImage } = require("../middlewares/uploadFiles");
-const handleValidationErrors = require("../middlewares/handleValidationErrors");
+
+const { EVENT_ROLES } = require("../constants/eventRoles");
 const authorizeEventRole = require("../middlewares/authorizeEventRole");
 
 const { eventIdParamValidator, createEventValidator, updateEventValidator, getAllEventsValidator } = require("../validators/eventValidator");
+const handleValidationErrors = require("../middlewares/handleValidationErrors");
 
 /* ==================================================
    EVENT ROUTES
@@ -44,9 +46,23 @@ router.get("/:eventId", eventIdParamValidator, handleValidationErrors, eventCont
 router.post("/", authenticateToken, uploadEventImage.single("image"), createEventValidator, handleValidationErrors, eventController.createEvent);
 
 // Update an event
-router.put("/:eventId", authenticateToken, uploadEventImage.single("image"), eventIdParamValidator, updateEventValidator, handleValidationErrors, authorizeEventRole(["organizer", "co_organizer"]), eventController.updateEvent);
+router.put("/:eventId",
+    authenticateToken,
+    uploadEventImage.single("image"),
+    eventIdParamValidator,
+    updateEventValidator,
+    handleValidationErrors,
+    authorizeEventRole([EVENT_ROLES.ORGANIZER, EVENT_ROLES.CO_ORGANIZER]),
+    eventController.updateEvent
+);
 
 // Delete an event
-router.delete("/:eventId", authenticateToken, eventIdParamValidator, handleValidationErrors, authorizeEventRole(["organizer"]), eventController.deleteEvent);
+router.delete("/:eventId",
+    authenticateToken,
+    eventIdParamValidator,
+    handleValidationErrors,
+    authorizeEventRole([EVENT_ROLES.ORGANIZER]),
+    eventController.deleteEvent
+);
 
 module.exports = router;

@@ -14,12 +14,16 @@
    - unauthorized role changes are rejected
    - unauthorized removals are rejected
    - valid actions continue with next()
+
+   Notes:
+   - shared event role constants are used for valid role scenarios
 ================================================== */
 
 const Event = require("../../../src/models/eventModel");
 const EventUserRole = require("../../../src/models/relations/eventUserRoleModel");
 
 const { authorizeEventMemberRoleUpdate, authorizeEventMemberRemoval } = require("../../../src/middlewares/eventMemberAuthorization");
+const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
 const { createEventMemberAuthorizationMocks } = require("../../helpers/express/mockExpress");
 const { mockConsoleError } = require("../../helpers/mocks/consoleMocks");
@@ -56,20 +60,20 @@ describe("eventMemberAuthorization middleware", () => {
         it("should call next when organizer updates participant role", async () => {
             const { req, res, next } = createEventMemberAuthorizationMocks({
                 targetUserId: "2",
-                newRole: "co_organizer"
+                newRole: EVENT_ROLES.CO_ORGANIZER
             });
 
             EventUserRole.findOne
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 10,
-                        role: "organizer"
+                        role: EVENT_ROLES.ORGANIZER
                     })
                 )
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 2,
-                        role: "participant"
+                        role: EVENT_ROLES.PARTICIPANT
                     })
                 );
 
@@ -91,7 +95,7 @@ describe("eventMemberAuthorization middleware", () => {
             EventUserRole.findOne.mockResolvedValueOnce(
                 createMockMembership({
                     userId: 10,
-                    role: "co_organizer"
+                    role: EVENT_ROLES.CO_ORGANIZER
                 })
             );
 
@@ -112,13 +116,13 @@ describe("eventMemberAuthorization middleware", () => {
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 10,
-                        role: "organizer"
+                        role: EVENT_ROLES.ORGANIZER
                     })
                 )
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 2,
-                        role: "participant"
+                        role: EVENT_ROLES.PARTICIPANT
                     })
                 );
 
@@ -139,20 +143,20 @@ describe("eventMemberAuthorization middleware", () => {
         it("should prevent promoting a member to organizer", async () => {
             const { req, res, next } = createEventMemberAuthorizationMocks({
                 targetUserId: "2",
-                newRole: "organizer"
+                newRole: EVENT_ROLES.ORGANIZER
             });
 
             EventUserRole.findOne
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 10,
-                        role: "organizer"
+                        role: EVENT_ROLES.ORGANIZER
                     })
                 )
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 2,
-                        role: "participant"
+                        role: EVENT_ROLES.PARTICIPANT
                     })
                 );
 
@@ -177,13 +181,13 @@ describe("eventMemberAuthorization middleware", () => {
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 10,
-                        role: "organizer"
+                        role: EVENT_ROLES.ORGANIZER
                     })
                 )
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 2,
-                        role: "participant"
+                        role: EVENT_ROLES.PARTICIPANT
                     })
                 );
 
@@ -204,7 +208,7 @@ describe("eventMemberAuthorization middleware", () => {
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 10,
-                        role: "organizer"
+                        role: EVENT_ROLES.ORGANIZER
                     })
                 )
                 .mockResolvedValueOnce(null);
@@ -254,13 +258,13 @@ describe("eventMemberAuthorization middleware", () => {
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 10,
-                        role: "organizer"
+                        role: EVENT_ROLES.ORGANIZER
                     })
                 )
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 2,
-                        role: "participant"
+                        role: EVENT_ROLES.PARTICIPANT
                     })
                 );
 
@@ -281,13 +285,13 @@ describe("eventMemberAuthorization middleware", () => {
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 10,
-                        role: "co_organizer"
+                        role: EVENT_ROLES.CO_ORGANIZER
                     })
                 )
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 2,
-                        role: "participant"
+                        role: EVENT_ROLES.PARTICIPANT
                     })
                 );
 
@@ -309,7 +313,7 @@ describe("eventMemberAuthorization middleware", () => {
             EventUserRole.findOne.mockResolvedValueOnce(
                 createMockMembership({
                     userId: 10,
-                    role: "participant"
+                    role: EVENT_ROLES.PARTICIPANT
                 })
             );
 
@@ -328,13 +332,13 @@ describe("eventMemberAuthorization middleware", () => {
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 10,
-                        role: "organizer"
+                        role: EVENT_ROLES.ORGANIZER
                     })
                 )
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 2,
-                        role: "participant"
+                        role: EVENT_ROLES.PARTICIPANT
                     })
                 );
 
@@ -361,13 +365,13 @@ describe("eventMemberAuthorization middleware", () => {
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 10,
-                        role: "organizer"
+                        role: EVENT_ROLES.ORGANIZER
                     })
                 )
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 2,
-                        role: "organizer"
+                        role: EVENT_ROLES.ORGANIZER
                     })
                 );
 
@@ -391,13 +395,13 @@ describe("eventMemberAuthorization middleware", () => {
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 10,
-                        role: "organizer"
+                        role: EVENT_ROLES.ORGANIZER
                     })
                 )
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 10,
-                        role: "participant"
+                        role: EVENT_ROLES.PARTICIPANT
                     })
                 );
 
@@ -420,13 +424,13 @@ describe("eventMemberAuthorization middleware", () => {
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 10,
-                        role: "co_organizer"
+                        role: EVENT_ROLES.CO_ORGANIZER
                     })
                 )
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 2,
-                        role: "co_organizer"
+                        role: EVENT_ROLES.CO_ORGANIZER
                     })
                 );
 
@@ -451,13 +455,13 @@ describe("eventMemberAuthorization middleware", () => {
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 10,
-                        role: "organizer"
+                        role: EVENT_ROLES.ORGANIZER
                     })
                 )
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 2,
-                        role: "participant"
+                        role: EVENT_ROLES.PARTICIPANT
                     })
                 );
 
@@ -478,7 +482,7 @@ describe("eventMemberAuthorization middleware", () => {
                 .mockResolvedValueOnce(
                     createMockMembership({
                         userId: 10,
-                        role: "organizer"
+                        role: EVENT_ROLES.ORGANIZER
                     })
                 )
                 .mockResolvedValueOnce(null);

@@ -14,6 +14,7 @@
    - organizers cannot leave their own event
    - past event rules are respected
    - missing memberships are rejected correctly
+   - shared event role constants are used for valid role scenarios
    - database errors are forwarded correctly
 ================================================== */
 
@@ -22,6 +23,8 @@ const Event = require("../../../../src/models/eventModel");
 const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
 
 const eventMembershipService = require("../../../../src/services/eventMembershipService");
+
+const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 
 const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
 
@@ -55,7 +58,7 @@ describe("eventMembershipService - leaveEvent", () => {
 
     it("should leave event", async () => {
         const membership = createMockMembership({
-            role: "participant",
+            role: EVENT_ROLES.PARTICIPANT,
             destroy: jest.fn().mockResolvedValue()
         });
 
@@ -98,7 +101,7 @@ describe("eventMembershipService - leaveEvent", () => {
 
     it("should prevent organizer from leaving their own event", async () => {
         const membership = createMockMembership({
-            role: "organizer",
+            role: EVENT_ROLES.ORGANIZER,
             destroy: jest.fn()
         });
 

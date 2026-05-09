@@ -4,10 +4,14 @@ const Event = require("../models/eventModel");
 const User = require("../models/userModel");
 const EventUserRole = require("../models/relations/eventUserRoleModel");
 
+const { EVENT_ROLES } = require("../constants/eventRoles");
+
+const { throwHttpError } = require("../utils/errors/httpError");
+
 const { buildEventCreateData, buildEventUpdateData } = require("../utils/events/eventDataBuilder");
 const { buildEventWhereConditions, buildEventCreatorInclude } = require("../utils/events/eventQueryBuilder");
 const { assertEventNotPast, getEventStatus } = require("../utils/events/eventStatus");
-const { throwHttpError } = require("../utils/errors/httpError");
+
 const { deleteUploadedFile } = require("../utils/uploadedFileStorage");
 const { getPaginationOptions } = require("../utils/pagination");
 
@@ -26,6 +30,7 @@ const { getPaginationOptions } = require("../utils/pagination");
    - getAllEvents supports filters through query params
    - past events cannot be updated or deleted
    - event images are cleaned after successful update
+   - event roles are centralized through shared constants
    - uses shared HTTP error utilities
 ================================================== */
 
@@ -52,7 +57,7 @@ const createEvent = async (data, userId) => {
         await EventUserRole.create({
             eventId: event.id,
             userId,
-            role: "organizer"
+            role: EVENT_ROLES.ORGANIZER
         });
 
         return event;
@@ -105,7 +110,7 @@ const getAllEvents = async (query = {}) => {
                     attributes: [],
                     through: {
                         attributes: [],
-                        where: { role: "participant" }
+                        where: { role: EVENT_ROLES.PARTICIPANT }
                     },
                     required: false
                 }
@@ -135,7 +140,7 @@ const getAllEvents = async (query = {}) => {
 };
 
 
-// Get one event by ID
+// Get a single event by ID
 const getEventByID = async (id) => {
     try {
         const event = await Event.findOne({
@@ -155,7 +160,7 @@ const getEventByID = async (id) => {
                     attributes: [],
                     through: {
                         attributes: [],
-                        where: { role: "participant" }
+                        where: { role: EVENT_ROLES.PARTICIPANT }
                     },
                     required: false
                 }

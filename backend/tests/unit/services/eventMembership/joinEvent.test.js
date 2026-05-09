@@ -22,9 +22,10 @@
 
 const Event = require("../../../../src/models/eventModel");
 const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
-const { assertEventNotPast } = require("../../../../src/utils/eventStatus");
 
 const eventMembershipService = require("../../../../src/services/eventMembershipService");
+
+const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
@@ -40,7 +41,7 @@ jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
     count: jest.fn()
 }));
 
-jest.mock("../../../../src/utils/eventStatus", () => ({
+jest.mock("../../../../src/utils/events/eventStatus", () => ({
     assertEventNotPast: jest.fn()
 }));
 

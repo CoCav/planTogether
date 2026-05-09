@@ -18,7 +18,7 @@ const Event = require("../../../../src/models/eventModel");
 
 const eventService = require("../../../../src/services/eventService");
 
-const { getEventStatus } = require("../../../../src/utils/eventStatus");
+const { getEventStatus } = require("../../../../src/utils/events/eventStatus");
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
@@ -28,7 +28,7 @@ jest.mock("../../../../src/models/eventModel", () => ({
     findOne: jest.fn()
 }));
 
-jest.mock("../../../../src/utils/eventStatus", () => ({
+jest.mock("../../../../src/utils/events/eventStatus", () => ({
     getEventStatus: jest.fn()
 }));
 

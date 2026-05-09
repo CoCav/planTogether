@@ -16,9 +16,9 @@
 ================================================== */
 
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const User = require("../../../../src/models/userModel");
+const { generateAuthToken } = require("../../../../src/utils/auth/authToken");
 
+const User = require("../../../../src/models/userModel");
 const authService = require("../../../../src/services/authService");
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
@@ -26,7 +26,10 @@ const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 const { createMockUser } = require("../../../factories/userFactory");
 
 jest.mock("bcrypt");
-jest.mock("jsonwebtoken");
+
+jest.mock("../../../../src/utils/auth/authToken", () => ({
+    generateAuthToken: jest.fn()
+}));
 
 jest.mock("../../../../src/models/userModel", () => ({
     scope: jest.fn()
@@ -39,9 +42,7 @@ describe("authService - loginUser", () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        process.env.JWT_SECRET = "test-secret";
-
-        jwt.sign.mockReturnValue("token");
+        generateAuthToken.mockReturnValue("token");
     });
 
     /* =============================
@@ -131,11 +132,7 @@ describe("authService - loginUser", () => {
             password: "Password123"
         });
 
-        expect(jwt.sign).toHaveBeenCalledWith(
-            { userId: mockUser.id },
-            "test-secret",
-            { expiresIn: "24h" }
-        );
+        expect(generateAuthToken).toHaveBeenCalledWith(mockUser.id);
     });
 
 

@@ -13,9 +13,9 @@
    - past events throw a 403 business error
 ================================================== */
 
-const { isEventPast, getEventStatus, assertEventNotPast } = require("../../../src/utils/eventStatus");
+const { isEventPast, getEventStatus, assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
 
-const { mockSystemDate } = require("../../helpers/mocks/dateMocks");
+const { mockSystemDate } = require("../../../helpers/mocks/dateMocks");
 
 describe("eventStatus utils", () => {
 

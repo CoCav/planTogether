@@ -16,7 +16,7 @@
 
 const { Op } = require("sequelize");
 
-const { applyEventStatusFilter, applyEventBasicFilters, applyEventDateFilters, buildEventWhereConditions, buildEventCreatorInclude } = require("../../../src/utils/eventQueryBuilder");
+const { applyEventStatusFilter, applyEventBasicFilters, applyEventDateFilters, buildEventWhereConditions, buildEventCreatorInclude } = require("../../../../src/utils/events/eventQueryBuilder");
 
 describe("eventQueryBuilder utils", () => {
 

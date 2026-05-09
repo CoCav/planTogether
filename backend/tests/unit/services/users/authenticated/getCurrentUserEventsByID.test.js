@@ -25,9 +25,9 @@ const User = require("../../../../../src/models/userModel");
 
 const userService = require("../../../../../src/services/userService");
 
-const { buildEventWhereConditions, buildEventCreatorInclude } = require("../../../../../src/utils/eventQueryBuilder");
+const { buildEventWhereConditions, buildEventCreatorInclude } = require("../../../../../src/utils/events/eventQueryBuilder");
+const { getEventStatus } = require("../../../../../src/utils/events/eventStatus");
 const { getPaginationOptions } = require("../../../../../src/utils/pagination");
-const { getEventStatus } = require("../../../../../src/utils/eventStatus");
 
 const { mockConsoleError } = require("../../../../helpers/mocks/consoleMocks");
 
@@ -44,9 +44,9 @@ jest.mock("../../../../../src/models/userModel", () => ({
 
 jest.mock("../../../../../src/utils/pagination");
 
-jest.mock("../../../../../src/utils/eventStatus");
+jest.mock("../../../../../src/utils/events/eventStatus");
 
-jest.mock("../../../../../src/utils/eventQueryBuilder", () => ({
+jest.mock("../../../../../src/utils/events/eventQueryBuilder", () => ({
     buildEventWhereConditions: jest.fn(),
     buildEventCreatorInclude: jest.fn()
 }));

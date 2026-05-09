@@ -4,7 +4,7 @@ const Event = require("../models/eventModel");
 const User = require("../models/userModel");
 const EventUserRole = require("../models/relations/eventUserRoleModel");
 
-const { assertEventNotPast, getEventStatus } = require("../utils/eventStatus");
+const { assertEventNotPast, getEventStatus } = require("../utils/events/eventStatus");
 const { getPaginationOptions } = require("../utils/pagination");
 
 // Valid roles for event members

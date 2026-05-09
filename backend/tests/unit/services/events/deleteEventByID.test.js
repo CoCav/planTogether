@@ -18,7 +18,7 @@ const Event = require("../../../../src/models/eventModel");
 
 const eventService = require("../../../../src/services/eventService");
 
-const { assertEventNotPast } = require("../../../../src/utils/eventStatus");
+const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
@@ -26,7 +26,7 @@ jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
 }));
 
-jest.mock("../../../../src/utils/eventStatus", () => ({
+jest.mock("../../../../src/utils/events/eventStatus", () => ({
     assertEventNotPast: jest.fn()
 }));
 

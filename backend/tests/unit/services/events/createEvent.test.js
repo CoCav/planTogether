@@ -19,7 +19,7 @@ const EventUserRole = require("../../../../src/models/relations/eventUserRoleMod
 
 const eventService = require("../../../../src/services/eventService");
 
-const { buildEventCreateData } = require("../../../../src/utils/eventDataBuilder");
+const { buildEventCreateData } = require("../../../../src/utils/events/eventDataBuilder");
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
@@ -33,7 +33,7 @@ jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
     create: jest.fn()
 }));
 
-jest.mock("../../../../src/utils/eventDataBuilder", () => ({
+jest.mock("../../../../src/utils/events/eventDataBuilder", () => ({
     buildEventCreateData: jest.fn()
 }));
 

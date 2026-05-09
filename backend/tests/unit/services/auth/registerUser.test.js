@@ -18,15 +18,18 @@
 ================================================== */
 
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const User = require("../../../../src/models/userModel");
+const { generateAuthToken } = require("../../../../src/utils/auth/authToken");
 
+const User = require("../../../../src/models/userModel");
 const authService = require("../../../../src/services/authService");
 
 const { createMockUser } = require("../../../factories/userFactory");
 
 jest.mock("bcrypt");
-jest.mock("jsonwebtoken");
+
+jest.mock("../../../../src/utils/auth/authToken", () => ({
+    generateAuthToken: jest.fn()
+}));
 
 jest.mock("../../../../src/models/userModel", () => ({
     findOne: jest.fn(),
@@ -38,10 +41,8 @@ describe("authService - registerUser", () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        process.env.JWT_SECRET = "test-secret";
-
         bcrypt.hash.mockResolvedValue("hashed-password");
-        jwt.sign.mockReturnValue("fake-token");
+        generateAuthToken.mockReturnValue("token");
     });
 
     /* =============================
@@ -74,7 +75,7 @@ describe("authService - registerUser", () => {
             avatar: null
         });
 
-        expect(result.token).toBe("fake-token");
+        expect(result.token).toBe("token");
         expect(result.user).toBe(createdUser);
     });
 
@@ -134,11 +135,7 @@ describe("authService - registerUser", () => {
             password: "Password123"
         });
 
-        expect(jwt.sign).toHaveBeenCalledWith(
-            { userId: mockUser.id },
-            "test-secret",
-            { expiresIn: "24h" }
-        );
+        expect(generateAuthToken).toHaveBeenCalledWith(mockUser.id);
     });
 
     /* =============================

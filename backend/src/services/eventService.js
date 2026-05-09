@@ -4,9 +4,9 @@ const Event = require("../models/eventModel");
 const User = require("../models/userModel");
 const EventUserRole = require("../models/relations/eventUserRoleModel");
 
-const { buildEventCreateData, buildEventUpdateData } = require("../utils/eventDataBuilder");
-const { buildEventWhereConditions, buildEventCreatorInclude } = require("../utils/eventQueryBuilder");
-const { assertEventNotPast, getEventStatus } = require("../utils/eventStatus");
+const { buildEventCreateData, buildEventUpdateData } = require("../utils/events/eventDataBuilder");
+const { buildEventWhereConditions, buildEventCreatorInclude } = require("../utils/events/eventQueryBuilder");
+const { assertEventNotPast, getEventStatus } = require("../utils/events/eventStatus");
 const { deleteUploadedFile } = require("../utils/uploadedFileStorage");
 const { getPaginationOptions } = require("../utils/pagination");
 

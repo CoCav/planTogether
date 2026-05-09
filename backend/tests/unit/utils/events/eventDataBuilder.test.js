@@ -17,7 +17,7 @@
    - existing images are preserved unless explicitly updated
 ================================================== */
 
-const { buildEventCreateData, buildEventUpdateData } = require("../../../src/utils/eventDataBuilder");
+const { buildEventCreateData, buildEventUpdateData } = require("../../../../src/utils/events/eventDataBuilder");
 
 describe("eventDataBuilder utils", () => {
 

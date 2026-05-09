@@ -20,7 +20,7 @@ const EventUserRole = require("../../../../src/models/relations/eventUserRoleMod
 
 const eventMembershipService = require("../../../../src/services/eventMembershipService");
 
-const { assertEventNotPast } = require("../../../../src/utils/eventStatus");
+const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
@@ -34,7 +34,7 @@ jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
     findOne: jest.fn()
 }));
 
-jest.mock("../../../../src/utils/eventStatus", () => ({
+jest.mock("../../../../src/utils/events/eventStatus", () => ({
     assertEventNotPast: jest.fn()
 }));
 

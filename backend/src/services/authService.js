@@ -1,7 +1,10 @@
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 
 const User = require("../models/userModel");
+
+const { throwHttpError } = require("../utils/errors/httpError");
+const { generateAuthToken } = require("../utils/auth/authToken");
+const { normalizeEmail } = require("../utils/normalize");
 
 /* ==================================================
    AUTH SERVICE
@@ -24,7 +27,7 @@ const User = require("../models/userModel");
 // Register a new user
 const registerUser = async ({ name, email, password, avatar }) => {
     try {
-        const normalizedEmail = String(email).toLowerCase().trim();
+        const normalizedEmail = normalizeEmail(email);
 
         // Prevent duplicate email registration
         const existingUser = await User.findOne({
@@ -32,9 +35,7 @@ const registerUser = async ({ name, email, password, avatar }) => {
         });
 
         if (existingUser) {
-            const error = new Error('Email already in use');
-            error.statusCode = 409;
-            throw error;
+            throwHttpError(409, "Email already in use");
         }
 
         // Hash password before saving user
@@ -48,11 +49,7 @@ const registerUser = async ({ name, email, password, avatar }) => {
         });
 
         // Generate authentication token
-        const token = jwt.sign(
-            { userId: user.id },
-            process.env.JWT_SECRET,
-            { expiresIn: '24h' }
-        );
+        const token = generateAuthToken(user.id);
 
         return { user, token };
 
@@ -62,37 +59,28 @@ const registerUser = async ({ name, email, password, avatar }) => {
     }
 };
 
-
 // Login an existing user
 const loginUser = async ({ email, password }) => {
     try {
-        const normalizedEmail = String(email).toLowerCase().trim();
+        const normalizedEmail = normalizeEmail(email);
 
         // Password is included only for login verification
-        const user = await User.scope('withPassword').findOne({
+        const user = await User.scope("withPassword").findOne({
             where: { email: normalizedEmail }
         });
 
         if (!user) {
-            const error = new Error('Invalid email or invalid password');
-            error.statusCode = 401;
-            throw error;
+            throwHttpError(401, "Invalid email or invalid password");
         }
 
         // Compare provided password with hashed password
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if (!isPasswordValid) {
-            const error = new Error('Invalid email or invalid password');
-            error.statusCode = 401;
-            throw error;
+            throwHttpError(401, "Invalid email or invalid password");
         }
 
-        const token = jwt.sign(
-            { userId: user.id },
-            process.env.JWT_SECRET,
-            { expiresIn: '24h' }
-        );
+        const token = generateAuthToken(user.id);
 
         return { user, token };
 

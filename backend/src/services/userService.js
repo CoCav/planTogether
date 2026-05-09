@@ -6,8 +6,8 @@ const Event = require("../models/eventModel");
 const EventUserRole = require("../models/relations/eventUserRoleModel");
 
 const { deleteUploadedFile } = require("../utils/uploadedFileStorage");
-const { buildEventWhereConditions, buildEventCreatorInclude } = require("../utils/eventQueryBuilder");
-const { getEventStatus } = require("../utils/eventStatus");
+const { buildEventWhereConditions, buildEventCreatorInclude } = require("../utils/events/eventQueryBuilder");
+const { getEventStatus } = require("../utils/events/eventStatus");
 const { getPaginationOptions } = require("../utils/pagination");
 
 /* ==================================================

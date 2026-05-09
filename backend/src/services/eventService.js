@@ -7,6 +7,7 @@ const EventUserRole = require("../models/relations/eventUserRoleModel");
 const { buildEventCreateData, buildEventUpdateData } = require("../utils/events/eventDataBuilder");
 const { buildEventWhereConditions, buildEventCreatorInclude } = require("../utils/events/eventQueryBuilder");
 const { assertEventNotPast, getEventStatus } = require("../utils/events/eventStatus");
+const { throwHttpError } = require("../utils/errors/httpError");
 const { deleteUploadedFile } = require("../utils/uploadedFileStorage");
 const { getPaginationOptions } = require("../utils/pagination");
 
@@ -25,6 +26,7 @@ const { getPaginationOptions } = require("../utils/pagination");
    - getAllEvents supports filters through query params
    - past events cannot be updated or deleted
    - event images are cleaned after successful update
+    - uses shared HTTP error utilities
 ================================================== */
 
 
@@ -37,11 +39,9 @@ const createEvent = async (data, userId) => {
     try {
         const { startDateTime, endDateTime } = data;
 
-        // Ensure event dates are coherent
+        // Ensure event dates are coherent before persistence
         if (new Date(endDateTime) < new Date(startDateTime)) {
-            const error = new Error("End date must be after start date");
-            error.statusCode = 400;
-            throw error;
+            throwHttpError(400, "End date must be after start date");
         }
 
         const eventData = buildEventCreateData(data, userId);
@@ -62,7 +62,6 @@ const createEvent = async (data, userId) => {
         throw error;
     }
 };
-
 
 /* =============================
    GET EVENTS
@@ -165,9 +164,7 @@ const getEventByID = async (id) => {
         });
 
         if (!event) {
-            const error = new Error("Event not found");
-            error.statusCode = 404;
-            throw error;
+            throwHttpError(404, "Event not found");
         }
 
         return {
@@ -186,31 +183,26 @@ const getEventByID = async (id) => {
    UPDATE / DELETE EVENT
 ============================= */
 
-// Update an event
+// Update an existing event
 const updateEventByID = async (id, data) => {
     try {
         const event = await Event.findByPk(id);
 
         if (!event) {
-            const error = new Error("Event not found");
-            error.statusCode = 404;
-            throw error;
+            throwHttpError(404, "Event not found");
         }
 
         // Past events are locked
         assertEventNotPast(event);
 
         const oldImage = event.image;
-
         const { startDateTime, endDateTime, image } = data;
 
         // Validate date order only when both dates are provided
-        if (startDateTime && endDateTime) {
-            if (new Date(endDateTime) < new Date(startDateTime)) {
-                const error = new Error("End date must be after start date");
-                error.statusCode = 400;
-                throw error;
-            }
+        const hasBothDates = startDateTime && endDateTime;
+
+        if (hasBothDates && new Date(endDateTime) < new Date(startDateTime)) {
+            throwHttpError(400, "End date must be after start date");
         }
 
         const updatedData = buildEventUpdateData(event, data);
@@ -237,9 +229,7 @@ const deleteEventByID = async (id) => {
         const event = await Event.findByPk(id);
 
         if (!event) {
-            const error = new Error("Event not found");
-            error.statusCode = 404;
-            throw error;
+            throwHttpError(404, "Event not found");
         }
 
         // Past events cannot be deleted

@@ -18,6 +18,8 @@ const { normalizeEmail } = require("../utils/normalize");
    - passwords are hashed with bcrypt
    - JWT payload stores userId only
    - user profile logic belongs to userService
+   - authentication tokens are generated through shared auth utilities
+   - uses shared HTTP error and normalization utilities
 ================================================== */
 
 /* =============================

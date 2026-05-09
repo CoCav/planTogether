@@ -5,10 +5,12 @@ const User = require("../models/userModel");
 const Event = require("../models/eventModel");
 const EventUserRole = require("../models/relations/eventUserRoleModel");
 
-const { deleteUploadedFile } = require("../utils/uploadedFileStorage");
 const { buildEventWhereConditions, buildEventCreatorInclude } = require("../utils/events/eventQueryBuilder");
 const { getEventStatus } = require("../utils/events/eventStatus");
+const { throwHttpError } = require("../utils/errors/httpError");
+const { normalizeEmail } = require("../utils/normalize");
 const { getPaginationOptions } = require("../utils/pagination");
+const { deleteUploadedFile } = require("../utils/uploadedFileStorage");
 
 /* ==================================================
    USER SERVICE
@@ -26,6 +28,7 @@ const { getPaginationOptions } = require("../utils/pagination");
    - public profiles never expose id, email, password or dates
    - joined events exclude events created by the same user
    - EventUserRole includes events with alias "event"
+   - uses shared HTTP error and normalization utilities
 ================================================== */
 
 /* ==================================================
@@ -41,9 +44,7 @@ const getCurrentUserEventsByID = async (userId, query = {}) => {
         const user = await User.findByPk(userId);
 
         if (!user) {
-            const error = new Error("User not found");
-            error.statusCode = 404;
-            throw error;
+            throwHttpError(404, "User not found");
         }
 
         /* =========================
@@ -183,9 +184,7 @@ const getCurrentUserProfileByID = async (userId) => {
         const user = await User.findByPk(userId);
 
         if (!user) {
-            const error = new Error("User not found");
-            error.statusCode = 404;
-            throw error;
+            throwHttpError(404, "User not found");
         }
 
         return user;
@@ -203,9 +202,7 @@ const updateCurrentUserProfileByID = async (userId, updatedData) => {
         const user = await User.findByPk(userId);
 
         if (!user) {
-            const error = new Error("User not found");
-            error.statusCode = 404;
-            throw error;
+            throwHttpError(404, "User not found");
         }
 
         const oldAvatar = user.avatar;
@@ -213,7 +210,7 @@ const updateCurrentUserProfileByID = async (userId, updatedData) => {
 
         // Update only provided fields
         if (name) user.name = name;
-        if (email) user.email = String(email).toLowerCase().trim();
+        if (email) user.email = normalizeEmail(email);
 
         // Avatar can be updated, cleared, or left unchanged
         if (avatar !== undefined) {
@@ -231,9 +228,7 @@ const updateCurrentUserProfileByID = async (userId, updatedData) => {
         } catch (err) {
             // Convert Sequelize unique constraint into API-friendly error
             if (err.name === "SequelizeUniqueConstraintError") {
-                const error = new Error("Email already in use");
-                error.statusCode = 409;
-                throw error;
+                throwHttpError(409, "Email already in use");
             }
 
             throw err;
@@ -253,27 +248,21 @@ const changeCurrentUserPasswordByID = async (userId, currentPassword, newPasswor
         const user = await User.scope("withPassword").findByPk(userId);
 
         if (!user) {
-            const error = new Error("User not found");
-            error.statusCode = 404;
-            throw error;
+            throwHttpError(404, "User not found");
         }
 
         // Verify current password before allowing update
         const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
 
         if (!isPasswordValid) {
-            const error = new Error("Current password is incorrect");
-            error.statusCode = 401;
-            throw error;
+            throwHttpError(401, "Current password is incorrect");
         }
 
         // Prevent reusing the same password
         const isSamePassword = await bcrypt.compare(newPassword, user.password);
 
         if (isSamePassword) {
-            const error = new Error("New password must be different from the current password");
-            error.statusCode = 400;
-            throw error;
+            throwHttpError(400, "New password must be different from the current password");
         }
 
         // Save hashed new password
@@ -298,9 +287,7 @@ const getPublicUserProfileByID = async (userId) => {
     });
 
     if (!user) {
-        const error = new Error("User not found");
-        error.statusCode = 404;
-        throw error;
+        throwHttpError(404, "User not found");
     }
 
     const createdEventsCount = await Event.count({
@@ -325,9 +312,7 @@ const getPublicUserEventsByID = async (userId) => {
     const user = await User.findByPk(userId);
 
     if (!user) {
-        const error = new Error("User not found");
-        error.statusCode = 404;
-        throw error;
+        throwHttpError(404, "User not found");
     }
 
     const createdEvents = await Event.findAll({

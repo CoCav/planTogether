@@ -4,12 +4,11 @@ const Event = require("../models/eventModel");
 const User = require("../models/userModel");
 const EventUserRole = require("../models/relations/eventUserRoleModel");
 
+const { EVENT_ROLES, VALID_EVENT_ROLES } = require("../constants/eventRoles");
+
 const { assertEventNotPast, getEventStatus } = require("../utils/events/eventStatus");
 const { throwHttpError } = require("../utils/errors/httpError");
 const { getPaginationOptions } = require("../utils/pagination");
-
-// Valid roles for event members
-const VALID_ROLES = ["organizer", "co_organizer", "participant"];
 
 /* ==================================================
    EVENT MEMBERSHIP SERVICE
@@ -24,6 +23,7 @@ const VALID_ROLES = ["organizer", "co_organizer", "participant"];
    - uses EventUserRole as join table
    - all event references use alias "event"
    - uses shared HTTP error utilities
+   - event roles are centralized through shared constants
 ================================================== */
 
 /* ==================================================
@@ -42,7 +42,7 @@ const joinEvent = async ({ eventId, userId }) => {
         // Prevent joining past events
         assertEventNotPast(event);
 
-        // Prevent joidning when registration period is over
+        // Prevent joining when registration period is over
         const hasRegistrationDeadline = event.registrationDeadline;
         const isRegistrationClosed = hasRegistrationDeadline && new Date() > new Date(event.registrationDeadline);
 
@@ -55,7 +55,7 @@ const joinEvent = async ({ eventId, userId }) => {
             const participantCount = await EventUserRole.count({
                 where: {
                     eventId,
-                    role: "participant"
+                    role: EVENT_ROLES.PARTICIPANT
                 }
             });
 
@@ -79,7 +79,7 @@ const joinEvent = async ({ eventId, userId }) => {
         return await EventUserRole.create({
             eventId,
             userId,
-            role: "participant"
+            role: EVENT_ROLES.PARTICIPANT
         });
 
     } catch (error) {
@@ -107,7 +107,7 @@ const leaveEvent = async ({ eventId, userId }) => {
         }
 
         // Prevent organizer from leaving
-        if (membership.role === "organizer") {
+        if (membership.role === EVENT_ROLES.ORGANIZER) {
             throwHttpError(403, "Organizers cannot leave their own event");
         }
 
@@ -161,7 +161,7 @@ const getEventStaff = async (eventId) => {
         return await EventUserRole.findAll({
             where: {
                 eventId,
-                role: { [Op.in]: ["organizer", "co_organizer"] }
+                role: { [Op.in]: [EVENT_ROLES.ORGANIZER, EVENT_ROLES.CO_ORGANIZER] }
             },
             include: [{
                 model: User,
@@ -192,7 +192,7 @@ const updateEventMemberRole = async ({ eventId, userId, newRole }) => {
 
         assertEventNotPast(event);
 
-        if (!VALID_ROLES.includes(newRole)) {
+        if (!VALID_EVENT_ROLES.includes(newRole)) {
             throwHttpError(400, "Invalid role provided");
         }
 

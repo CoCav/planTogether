@@ -43,247 +43,227 @@ const { getPaginationOptions } = require("../utils/pagination");
 
 // Get all paginated events of the current user by ID
 const getCurrentUserEventsByID = async (userId, query = {}) => {
-    try {
-        const { view } = query;
-        const now = new Date();
+    const { view } = query;
+    const now = new Date();
 
-        const user = await User.findByPk(userId);
+    const user = await User.findByPk(userId);
 
-        if (!user) {
-            throwHttpError(404, "User not found");
-        }
-
-        /* =========================
-           View-based filters
-        ========================= */
-
-        const isHistoryView = view === "createdHistory" || view === "joinedHistory";
-
-        const roleFilter = !view
-            ? undefined
-            : view === "created" || view === "createdHistory"
-                ? EVENT_ROLES.ORGANIZER
-                : { [Op.in]: [EVENT_ROLES.PARTICIPANT, EVENT_ROLES.CO_ORGANIZER] };
-
-        const eventDateFilter = !view
-            ? {}
-            : isHistoryView
-                ? { endDateTime: { [Op.lt]: now } }
-                : { endDateTime: { [Op.gte]: now } };
-
-
-        /* =========================
-           Event filters
-        ========================= */
-
-        const { creator, ...eventQuery } = query;
-
-        const eventFilter = { ...eventDateFilter };
-        buildEventWhereConditions(eventFilter, eventQuery, { includeStatus: false });
-
-
-        /* =========================
-           Pagination
-        ========================= */
-
-        const paginationQuery = {
-            ...query,
-            sortBy: query.sortBy || "startDateTime",
-            order: query.order || (isHistoryView ? "desc" : "asc")
-        };
-
-        const {
-            page,
-            pageSize,
-            limit,
-            offset,
-            orderField,
-            orderDirection
-        } = getPaginationOptions(
-            paginationQuery,
-            ["startDateTime", "title", "createdAt"],
-            "startDateTime",
-            isHistoryView ? "DESC" : "ASC"
-        );
-
-
-        /* =========================
-           Query database
-        ========================= */
-
-        const { count, rows } = await EventUserRole.findAndCountAll({
-            where: {
-                userId,
-                ...(roleFilter && { role: roleFilter })
-            },
-            include: [{
-                model: Event,
-                as: "event",
-                where: eventFilter,
-                attributes: [
-                    "id",
-                    "title",
-                    "description",
-                    "type",
-                    "theme",
-                    "mode",
-                    "location",
-                    "startDateTime",
-                    "endDateTime",
-                    "maxParticipants",
-                    "registrationDeadline",
-                    "creatorId"
-                ],
-                include: [
-                    buildEventCreatorInclude(User, creator)
-                ]
-            }],
-            limit,
-            offset,
-            order: [[{ model: Event, as: "event" }, orderField, orderDirection]]
-        });
-
-
-        /* =========================
-           Data enrichment
-        ========================= */
-
-        const events = await Promise.all(
-            rows.map(async (membership) => {
-                const data = membership.toJSON();
-
-                const participantCount = await EventUserRole.count({
-                    where: {
-                        eventId: data.event.id,
-                        role: EVENT_ROLES.PARTICIPANT
-                    }
-                });
-
-                return {
-                    ...data,
-                    event: {
-                        ...data.event,
-                        participantCount,
-                        status: getEventStatus(data.event)
-                    }
-                };
-            })
-        );
-
-        return {
-            page,
-            pageSize,
-            totalEvents: count,
-            totalPages: Math.ceil(count / pageSize),
-            events
-        };
-
-    } catch (error) {
-        console.error("Error in getCurrentUserEvents service:", error);
-        throw error;
+    if (!user) {
+        throwHttpError(404, "User not found");
     }
+
+    /* =========================
+       View-based filters
+    ========================= */
+
+    const isHistoryView = view === "createdHistory" || view === "joinedHistory";
+
+    const roleFilter = !view
+        ? undefined
+        : view === "created" || view === "createdHistory"
+            ? EVENT_ROLES.ORGANIZER
+            : {
+                [Op.in]: [
+                    EVENT_ROLES.PARTICIPANT,
+                    EVENT_ROLES.CO_ORGANIZER
+                ]
+            };
+
+    const eventDateFilter = !view
+        ? {}
+        : isHistoryView
+            ? { endDateTime: { [Op.lt]: now } }
+            : { endDateTime: { [Op.gte]: now } };
+
+
+    /* =========================
+       Event filters
+    ========================= */
+
+    const { creator, ...eventQuery } = query;
+
+    const eventFilter = { ...eventDateFilter };
+    buildEventWhereConditions(eventFilter, eventQuery, { includeStatus: false });
+
+
+    /* =========================
+       Pagination
+    ========================= */
+
+    const paginationQuery = {
+        ...query,
+        sortBy: query.sortBy || "startDateTime",
+        order: query.order || (isHistoryView ? "desc" : "asc")
+    };
+
+    const {
+        page,
+        pageSize,
+        limit,
+        offset,
+        orderField,
+        orderDirection
+    } = getPaginationOptions(
+        paginationQuery,
+        ["startDateTime", "title", "createdAt"],
+        "startDateTime",
+        isHistoryView ? "DESC" : "ASC"
+    );
+
+
+    /* =========================
+       Query database
+    ========================= */
+
+    const { count, rows } = await EventUserRole.findAndCountAll({
+        where: {
+            userId,
+            ...(roleFilter && { role: roleFilter })
+        },
+        include: [{
+            model: Event,
+            as: "event",
+            where: eventFilter,
+            attributes: [
+                "id",
+                "title",
+                "description",
+                "type",
+                "theme",
+                "mode",
+                "location",
+                "startDateTime",
+                "endDateTime",
+                "maxParticipants",
+                "registrationDeadline",
+                "creatorId"
+            ],
+            include: [
+                buildEventCreatorInclude(User, creator)
+            ]
+        }],
+        limit,
+        offset,
+        order: [[{ model: Event, as: "event" }, orderField, orderDirection]]
+    });
+
+
+    /* =========================
+       Data enrichment
+    ========================= */
+
+    const events = await Promise.all(
+        rows.map(async (membership) => {
+            const data = membership.toJSON();
+
+            const participantCount = await EventUserRole.count({
+                where: {
+                    eventId: data.event.id,
+                    role: EVENT_ROLES.PARTICIPANT
+                }
+            });
+
+            return {
+                ...data,
+                event: {
+                    ...data.event,
+                    participantCount,
+                    status: getEventStatus(data.event)
+                }
+            };
+        })
+    );
+
+    return {
+        page,
+        pageSize,
+        totalEvents: count,
+        totalPages: Math.ceil(count / pageSize),
+        events
+    };
 };
 
 // Get current user profile by ID
 const getCurrentUserProfileByID = async (userId) => {
-    try {
-        const user = await User.findByPk(userId);
+    const user = await User.findByPk(userId);
 
-        if (!user) {
-            throwHttpError(404, "User not found");
-        }
-
-        return user;
-
-    } catch (error) {
-        console.error(`Error fetching user profile: ${error.message}`);
-        throw error;
+    if (!user) {
+        throwHttpError(404, "User not found");
     }
+
+    return user;
 };
 
 
 // Update current user profile by ID
 const updateCurrentUserProfileByID = async (userId, updatedData) => {
-    try {
-        const user = await User.findByPk(userId);
+    const user = await User.findByPk(userId);
 
-        if (!user) {
-            throwHttpError(404, "User not found");
-        }
-
-        const oldAvatar = user.avatar;
-        const { name, email, avatar } = updatedData;
-
-        // Update only provided fields
-        if (name) user.name = name;
-        if (email) user.email = normalizeEmail(email);
-
-        // Avatar can be updated, cleared, or left unchanged
-        if (avatar !== undefined) {
-            user.avatar = avatar || null;
-        }
-
-        try {
-            await user.save();
-
-            // Delete previous avatar only after successful DB update
-            const shouldDeleteOldAvatar = avatar !== undefined &&
-                avatar &&
-                oldAvatar &&
-                oldAvatar !== avatar;
-
-            if (shouldDeleteOldAvatar) {
-                await deleteUploadedFile(oldAvatar);
-            }
-
-        } catch (err) {
-            // Convert Sequelize unique constraint into API-friendly error
-            if (err.name === "SequelizeUniqueConstraintError") {
-                throwHttpError(409, "Email already in use");
-            }
-
-            throw err;
-        }
-
-        return user;
-
-    } catch (error) {
-        console.error(`Error updating user profile: ${error.message}`);
-        throw error;
+    if (!user) {
+        throwHttpError(404, "User not found");
     }
+
+    const oldAvatar = user.avatar;
+    const { name, email, avatar } = updatedData;
+
+    // Update only provided fields
+    if (name) user.name = name;
+    if (email) user.email = normalizeEmail(email);
+
+    // Avatar can be updated, cleared, or left unchanged
+    if (avatar !== undefined) {
+        user.avatar = avatar || null;
+    }
+
+    try {
+        await user.save();
+
+        // Delete previous avatar only after successful DB update
+        const shouldDeleteOldAvatar = avatar !== undefined &&
+            avatar &&
+            oldAvatar &&
+            oldAvatar !== avatar;
+
+        if (shouldDeleteOldAvatar) {
+            await deleteUploadedFile(oldAvatar);
+        }
+
+    } catch (err) {
+        // Convert Sequelize unique constraint into API-friendly error
+        if (err.name === "SequelizeUniqueConstraintError") {
+            throwHttpError(409, "Email already in use");
+        }
+        throw err;
+    }
+
+    return user;
 };
 
 // Change current user password by ID
 const changeCurrentUserPasswordByID = async (userId, currentPassword, newPassword) => {
-    try {
-        const user = await User.scope("withPassword").findByPk(userId);
+    const user = await User.scope("withPassword").findByPk(userId);
 
-        if (!user) {
-            throwHttpError(404, "User not found");
-        }
-
-        // Verify current password before allowing update
-        const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
-
-        if (!isPasswordValid) {
-            throwHttpError(401, "Current password is incorrect");
-        }
-
-        // Prevent reusing the same password
-        const isSamePassword = await bcrypt.compare(newPassword, user.password);
-
-        if (isSamePassword) {
-            throwHttpError(400, "New password must be different from the current password");
-        }
-
-        // Save hashed new password
-        user.password = await bcrypt.hash(newPassword, 10);
-        await user.save();
-
-    } catch (error) {
-        console.error(`Error changing user password: ${error.message}`);
-        throw error;
+    if (!user) {
+        throwHttpError(404, "User not found");
     }
+
+    // Verify current password before allowing update
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isPasswordValid) {
+        throwHttpError(401, "Current password is incorrect");
+    }
+
+    // Prevent reusing the same password
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+
+    if (isSamePassword) {
+        throwHttpError(400, "New password must be different from the current password");
+    }
+
+    // Save hashed new password
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
 };
 
 

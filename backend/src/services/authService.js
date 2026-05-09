@@ -29,68 +29,56 @@ const { normalizeEmail } = require("../utils/normalize");
 
 // Register a new user
 const registerUser = async ({ name, email, password, avatar }) => {
-    try {
-        const normalizedEmail = normalizeEmail(email);
+    const normalizedEmail = normalizeEmail(email);
 
-        // Prevent duplicate email registration
-        const existingUser = await User.findOne({
-            where: { email: normalizedEmail }
-        });
+    // Prevent duplicate email registration
+    const existingUser = await User.findOne({
+        where: { email: normalizedEmail }
+    });
 
-        if (existingUser) {
-            throwHttpError(409, "Email already in use");
-        }
-
-        // Hash password before saving user
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const user = await User.create({
-            name,
-            email: normalizedEmail,
-            password: hashedPassword,
-            avatar: avatar || null
-        });
-
-        // Generate authentication token
-        const token = generateAuthToken(user.id);
-
-        return { user, token };
-
-    } catch (error) {
-        console.error(`Error during registration: ${error.message}`);
-        throw error;
+    if (existingUser) {
+        throwHttpError(409, "Email already in use");
     }
+
+    // Hash password before saving user
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+        name,
+        email: normalizedEmail,
+        password: hashedPassword,
+        avatar: avatar || null
+    });
+
+    // Generate authentication token
+    const token = generateAuthToken(user.id);
+
+    return { user, token };
 };
 
 // Login an existing user
 const loginUser = async ({ email, password }) => {
-    try {
-        const normalizedEmail = normalizeEmail(email);
+    const normalizedEmail = normalizeEmail(email);
 
-        // Password is included only for login verification
-        const user = await User.scope("withPassword").findOne({
-            where: { email: normalizedEmail }
-        });
+    // Password is included only for login verification
+    const user = await User.scope("withPassword").findOne({
+        where: { email: normalizedEmail }
+    });
 
-        if (!user) {
-            throwHttpError(401, "Invalid email or invalid password");
-        }
-
-        // Compare provided password with hashed password
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-
-        if (!isPasswordValid) {
-            throwHttpError(401, "Invalid email or invalid password");
-        }
-
-        const token = generateAuthToken(user.id);
-
-        return { user, token };
-
-    } catch (error) {
-        console.error(`Error during login: ${error.message}`);
-        throw error;
+    if (!user) {
+        throwHttpError(401, "Invalid email or invalid password");
     }
+
+    // Compare provided password with hashed password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+        throwHttpError(401, "Invalid email or invalid password");
+    }
+
+    const token = generateAuthToken(user.id);
+
+    return { user, token };
 };
 
 module.exports = { registerUser, loginUser };

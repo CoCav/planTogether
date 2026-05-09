@@ -41,31 +41,25 @@ const { getPaginationOptions } = require("../utils/pagination");
 
 // Create a new event
 const createEvent = async (data, userId) => {
-    try {
-        const { startDateTime, endDateTime } = data;
+    const { startDateTime, endDateTime } = data;
 
-        // Ensure event dates are coherent before persistence
-        if (new Date(endDateTime) < new Date(startDateTime)) {
-            throwHttpError(400, "End date must be after start date");
-        }
-
-        const eventData = buildEventCreateData(data, userId);
-
-        const event = await Event.create(eventData);
-
-        // Creator automatically becomes organizer
-        await EventUserRole.create({
-            eventId: event.id,
-            userId,
-            role: EVENT_ROLES.ORGANIZER
-        });
-
-        return event;
-
-    } catch (error) {
-        console.error("Error in creating the event:", error);
-        throw error;
+    // Ensure event dates are coherent before persistence
+    if (new Date(endDateTime) < new Date(startDateTime)) {
+        throwHttpError(400, "End date must be after start date");
     }
+
+    const eventData = buildEventCreateData(data, userId);
+
+    const event = await Event.create(eventData);
+
+    // Creator automatically becomes organizer
+    await EventUserRole.create({
+        eventId: event.id,
+        userId,
+        role: EVENT_ROLES.ORGANIZER
+    });
+
+    return event;
 };
 
 /* =============================
@@ -74,113 +68,102 @@ const createEvent = async (data, userId) => {
 
 // Get all events with optional filters and pagination
 const getAllEvents = async (query = {}) => {
-    try {
-        const whereConditions = {};
+    const whereConditions = {};
 
-        // Apply filters to Sequelize where conditions
-        buildEventWhereConditions(whereConditions, query);
+    // Apply filters to Sequelize where conditions
+    buildEventWhereConditions(whereConditions, query);
 
-        const {
-            page,
-            pageSize,
-            limit,
-            offset,
-            orderField,
-            orderDirection
-        } = getPaginationOptions(
-            query,
-            ["startDateTime", "title", "creatorId", "createdAt"],
-            "createdAt",
-            "DESC"
-        );
+    const {
+        page,
+        pageSize,
+        limit,
+        offset,
+        orderField,
+        orderDirection
+    } = getPaginationOptions(
+        query,
+        ["startDateTime", "title", "creatorId", "createdAt"],
+        "createdAt",
+        "DESC"
+    );
 
-        const { count, rows } = await Event.findAndCountAll({
-            where: whereConditions,
-            limit,
-            offset,
-            order: [[orderField, orderDirection]],
-            attributes: {
-                include: [[fn("COUNT", col("participants.id")), "participantCount"]]
-            },
-            include: [
-                buildEventCreatorInclude(User, query.creator),
-                {
-                    model: User,
-                    as: "participants",
+    const { count, rows } = await Event.findAndCountAll({
+        where: whereConditions,
+        limit,
+        offset,
+        order: [[orderField, orderDirection]],
+        attributes: {
+            include: [[fn("COUNT", col("participants.id")), "participantCount"]]
+        },
+        include: [
+            buildEventCreatorInclude(User, query.creator),
+            {
+                model: User,
+                as: "participants",
+                attributes: [],
+                through: {
                     attributes: [],
-                    through: {
-                        attributes: [],
-                        where: { role: EVENT_ROLES.PARTICIPANT }
-                    },
-                    required: false
-                }
-            ],
-            group: ["Event.id", "creator.id"],
-            subQuery: false
-        });
+                    where: { role: EVENT_ROLES.PARTICIPANT }
+                },
+                required: false
+            }
+        ],
+        group: ["Event.id", "creator.id"],
+        subQuery: false
+    });
 
-        const totalEvents = Array.isArray(count) ? count.length : count;
+    const totalEvents = Array.isArray(count) ? count.length : count;
 
-        return {
-            page,
-            pageSize,
-            totalEvents,
-            totalPages: Math.ceil(totalEvents / pageSize),
+    return {
+        page,
+        pageSize,
+        totalEvents,
+        totalPages: Math.ceil(totalEvents / pageSize),
 
-            events: rows.map((event) => ({
-                ...event.toJSON(),
-                status: getEventStatus(event)
-            }))
-        };
-
-    } catch (error) {
-        console.error("Error in getEvents service:", error);
-        throw error;
-    }
+        events: rows.map((event) => ({
+            ...event.toJSON(),
+            status: getEventStatus(event)
+        }))
+    };
 };
 
 
 // Get a single event by ID
 const getEventByID = async (id) => {
-    try {
-        const event = await Event.findOne({
-            where: { id },
-            attributes: {
-                include: [[fn("COUNT", col("participants.id")), "participantCount"]]
+
+    const event = await Event.findOne({
+        where: { id },
+        attributes: {
+            include: [[fn("COUNT", col("participants.id")), "participantCount"]]
+        },
+        include: [
+            {
+                model: User,
+                as: "creator",
+                attributes: ["id", "name"]
             },
-            include: [
-                {
-                    model: User,
-                    as: "creator",
-                    attributes: ["id", "name"]
-                },
-                {
-                    model: User,
-                    as: "participants",
+            {
+                model: User,
+                as: "participants",
+                attributes: [],
+                through: {
                     attributes: [],
-                    through: {
-                        attributes: [],
-                        where: { role: EVENT_ROLES.PARTICIPANT }
-                    },
-                    required: false
-                }
-            ],
-            group: ["Event.id", "creator.id"]
-        });
+                    where: { role: EVENT_ROLES.PARTICIPANT }
+                },
+                required: false
+            }
+        ],
+        group: ["Event.id", "creator.id"]
+    });
 
-        if (!event) {
-            throwHttpError(404, "Event not found");
-        }
-
-        return {
-            ...event.toJSON(),
-            status: getEventStatus(event)
-        };
-
-    } catch (error) {
-        console.error("Error in getting the event:", error);
-        throw error;
+    if (!event) {
+        throwHttpError(404, "Event not found");
     }
+
+    return {
+        ...event.toJSON(),
+        status: getEventStatus(event)
+    };
 };
 
 
@@ -230,22 +213,22 @@ const updateEventByID = async (id, data) => {
 
 // Delete an event
 const deleteEventByID = async (id) => {
-    try {
-        const event = await Event.findByPk(id);
+    const event = await Event.findByPk(id);
 
-        if (!event) {
-            throwHttpError(404, "Event not found");
-        }
-
-        // Past events cannot be deleted
-        assertEventNotPast(event);
-
-        await event.destroy();
-
-    } catch (error) {
-        console.error("Error in deleting the event:", error);
-        throw error;
+    if (!event) {
+        throwHttpError(404, "Event not found");
     }
+
+    // Past events cannot be deleted
+    assertEventNotPast(event);
+
+    await event.destroy();
 };
 
-module.exports = { createEvent, getAllEvents, getEventByID, updateEventByID, deleteEventByID };
+module.exports = {
+    createEvent,
+    getAllEvents,
+    getEventByID,
+    updateEventByID,
+    deleteEventByID
+};

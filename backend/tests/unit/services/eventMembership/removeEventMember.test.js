@@ -6,28 +6,16 @@
    - past event rejection
    - missing event rejection
    - missing membership rejection
-   - database error forwarding
+   - database error propagation
 
    Ensures:
    - members can be removed from valid events
    - past event rules are respected
    - missing events and memberships are rejected correctly
-   - database errors are forwarded correctly
 
     Notes:
    - role-based removal authorization is tested in eventMemberAuthorization middleware tests
 ================================================== */
-
-const Event = require("../../../../src/models/eventModel");
-const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
-
-const eventMembershipService = require("../../../../src/services/eventMembershipService");
-
-const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
-
-const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
-
-const { createMockMembership } = require("../../../factories/membershipFactory");
 
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
@@ -40,6 +28,17 @@ jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
 jest.mock("../../../../src/utils/events/eventStatus", () => ({
     assertEventNotPast: jest.fn()
 }));
+
+const Event = require("../../../../src/models/eventModel");
+const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
+
+const eventMembershipService = require("../../../../src/services/eventMembershipService");
+
+const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
+
+const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
+
+const { createMockMembership } = require("../../../factories/membershipFactory");
 
 describe("eventMembershipService - removeEventMember", () => {
 

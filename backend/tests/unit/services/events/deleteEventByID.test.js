@@ -3,60 +3,140 @@
 
    Tests:
    - successful event deletion
+   - membership cleanup before event deletion
+   - event image cleanup after successful DB commit
    - past event deletion rejection
    - missing event rejection
-   - database error forwarding
+   - transaction rollback on database errors
 
    Ensures:
    - events can be deleted only when allowed
+   - related memberships are deleted with the event
+   - event image files are deleted only after successful DB commit
    - past event rules are enforced
-   - missing events are handled safely
-   - database errors are forwarded correctly
+   - Sequelize transactions are committed on successful deletions
+   - Sequelize transactions are rolled back on failed deletions
 ================================================== */
 
-const Event = require("../../../../src/models/eventModel");
+jest.mock("../../../../src/config/database", () => ({
+    transaction: jest.fn()
+}));
 
-const eventService = require("../../../../src/services/eventService");
-
-const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
-
-const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
+jest.mock("../../../../src/models/userModel", () => ({}));
 
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
+}));
+
+jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
+    destroy: jest.fn()
 }));
 
 jest.mock("../../../../src/utils/events/eventStatus", () => ({
     assertEventNotPast: jest.fn()
 }));
 
+jest.mock("../../../../src/utils/uploadedFileStorage", () => ({
+    deleteUploadedFile: jest.fn()
+}));
+
+const sequelize = require("../../../../src/config/database");
+const Event = require("../../../../src/models/eventModel");
+const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
+
+const eventService = require("../../../../src/services/eventService");
+
+const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
+const { deleteUploadedFile } = require("../../../../src/utils/uploadedFileStorage");
+
+const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
+
+const { createMockEvent } = require("../../../factories/eventFactory");
+
 describe("eventService - deleteEventByID", () => {
+    let transaction;
 
     mockConsoleError();
 
     beforeEach(() => {
         jest.clearAllMocks();
+
+        transaction = {
+            commit: jest.fn().mockResolvedValue(),
+            rollback: jest.fn().mockResolvedValue()
+        };
+
+        sequelize.transaction.mockResolvedValue(transaction);
     });
 
     /* =============================
        EVENT DELETION SUCCESS
     ============================= */
 
-    it("should delete an event", async () => {
-        const event = {
+    it("should delete event and related memberships", async () => {
+        const event = createMockEvent({
             id: 1,
+            image: null,
             destroy: jest.fn().mockResolvedValue()
-        };
+        });
 
         Event.findByPk.mockResolvedValue(event);
-
         assertEventNotPast.mockImplementation(() => { });
+        EventUserRole.destroy.mockResolvedValue(1);
 
         await eventService.deleteEventByID(1);
 
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
+
         expect(assertEventNotPast).toHaveBeenCalledWith(event);
 
-        expect(event.destroy).toHaveBeenCalled();
+        expect(EventUserRole.destroy).toHaveBeenCalledWith({
+            where: { eventId: 1 },
+            transaction
+        });
+
+        expect(event.destroy).toHaveBeenCalledWith({ transaction });
+
+        expect(transaction.commit).toHaveBeenCalled();
+        expect(transaction.rollback).not.toHaveBeenCalled();
+
+        expect(deleteUploadedFile).not.toHaveBeenCalled();
+    });
+
+    it("should delete event image after successful DB commit", async () => {
+        const event = createMockEvent({
+            id: 1,
+            image: "/uploads/events/event-image.png",
+            destroy: jest.fn().mockResolvedValue()
+        });
+
+        Event.findByPk.mockResolvedValue(event);
+        assertEventNotPast.mockImplementation(() => { });
+        EventUserRole.destroy.mockResolvedValue(1);
+
+        await eventService.deleteEventByID(1);
+
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
+
+        expect(assertEventNotPast).toHaveBeenCalledWith(event);
+
+        expect(EventUserRole.destroy).toHaveBeenCalledWith({
+            where: { eventId: 1 },
+            transaction
+        });
+
+        expect(event.destroy).toHaveBeenCalledWith({ transaction });
+
+        expect(transaction.commit).toHaveBeenCalled();
+        expect(transaction.rollback).not.toHaveBeenCalled();
+
+        expect(deleteUploadedFile).toHaveBeenCalledWith(
+            "/uploads/events/event-image.png"
+        );
     });
 
     /* =============================
@@ -64,10 +144,11 @@ describe("eventService - deleteEventByID", () => {
     ============================= */
 
     it("should block deletion if event is past", async () => {
-        const event = {
+        const event = createMockEvent({
             id: 1,
+            image: null,
             destroy: jest.fn()
-        };
+        });
 
         Event.findByPk.mockResolvedValue(event);
 
@@ -83,7 +164,19 @@ describe("eventService - deleteEventByID", () => {
             statusCode: 403
         });
 
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
+
+        expect(assertEventNotPast).toHaveBeenCalledWith(event);
+
+        expect(EventUserRole.destroy).not.toHaveBeenCalled();
         expect(event.destroy).not.toHaveBeenCalled();
+
+        expect(transaction.rollback).toHaveBeenCalled();
+        expect(transaction.commit).not.toHaveBeenCalled();
+
+        expect(deleteUploadedFile).not.toHaveBeenCalled();
     });
 
     /* =============================
@@ -97,15 +190,36 @@ describe("eventService - deleteEventByID", () => {
             message: "Event not found",
             statusCode: 404
         });
+
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(Event.findByPk).toHaveBeenCalledWith(999, { transaction });
+
+        expect(assertEventNotPast).not.toHaveBeenCalled();
+        expect(EventUserRole.destroy).not.toHaveBeenCalled();
+
+        expect(transaction.rollback).toHaveBeenCalled();
+        expect(transaction.commit).not.toHaveBeenCalled();
+
+        expect(deleteUploadedFile).not.toHaveBeenCalled();
     });
 
     /* =============================
        DATABASE ERRORS
     ============================= */
 
-    it("should forward database errors", async () => {
+    it("should rollback transaction when database error occurs", async () => {
         Event.findByPk.mockRejectedValue(new Error("DB error"));
 
         await expect(eventService.deleteEventByID(1)).rejects.toThrow("DB error");
+
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
+
+        expect(transaction.rollback).toHaveBeenCalled();
+        expect(transaction.commit).not.toHaveBeenCalled();
+
+        expect(deleteUploadedFile).not.toHaveBeenCalled();
     });
 });

@@ -12,6 +12,7 @@
    - HTTP responses are properly formatted
    - errors are forwarded to next()
 ================================================== */
+jest.mock("../../../src/services/authService");
 
 const authController = require("../../../src/controllers/authController");
 const authService = require("../../../src/services/authService");
@@ -19,8 +20,6 @@ const authService = require("../../../src/services/authService");
 const { createMockReqResNext } = require("../../helpers/express/mockExpress");
 
 const { createMockUser } = require("../../factories/userFactory");
-
-jest.mock("../../../src/services/authService");
 
 describe("authController", () => {
 

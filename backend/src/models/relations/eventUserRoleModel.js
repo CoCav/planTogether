@@ -1,5 +1,7 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../../config/database');
+const { DataTypes } = require("sequelize");
+const sequelize = require("../../config/database");
+
+const { EVENT_ROLES } = require("../../constants/eventRoles");
 
 /* ==================================================
    EVENT USER ROLE MODEL
@@ -13,9 +15,10 @@ const sequelize = require('../../config/database');
    Notes:
    - links users and events together
    - one user can only have one membership per event
+   - role values should stay aligned with EVENT_ROLES constants
 ================================================== */
 
-const EventUserRole = sequelize.define('EventUserRole', {
+const EventUserRole = sequelize.define("EventUserRole", {
     eventId: {
         type: DataTypes.INTEGER,
         allowNull: false
@@ -27,9 +30,9 @@ const EventUserRole = sequelize.define('EventUserRole', {
     },
 
     role: {
-        type: DataTypes.ENUM('organizer', 'co_organizer', 'participant'),
+        type: DataTypes.ENUM(EVENT_ROLES.ORGANIZER, EVENT_ROLES.CO_ORGANIZER, EVENT_ROLES.PARTICIPANT),
         allowNull: false,
-        defaultValue: 'participant'
+        defaultValue: EVENT_ROLES.PARTICIPANT
     },
 
     joinedAt: {
@@ -44,7 +47,7 @@ const EventUserRole = sequelize.define('EventUserRole', {
     indexes: [
         {
             unique: true,
-            fields: ['eventId', 'userId']
+            fields: ["eventId", "userId"]
         }
     ]
 });

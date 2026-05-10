@@ -17,6 +17,8 @@
    - errors are forwarded to next()
 ================================================== */
 
+jest.mock("../../../src/services/eventMembershipService");
+
 const eventMembershipController = require("../../../src/controllers/eventMembershipController");
 
 const eventMembershipService = require("../../../src/services/eventMembershipService");
@@ -24,8 +26,6 @@ const eventMembershipService = require("../../../src/services/eventMembershipSer
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
 const { createEventControllerMocks } = require("../../helpers/express/mockExpress");
-
-jest.mock("../../../src/services/eventMembershipService");
 
 describe("eventMembershipController", () => {
 

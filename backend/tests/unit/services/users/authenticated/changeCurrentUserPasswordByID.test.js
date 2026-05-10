@@ -7,15 +7,20 @@
    - missing user rejection
    - invalid current password rejection
    - same password rejection
-   - database error forwarding
+   - database error propagation
 
    Ensures:
    - password updates follow security rules
    - current password verification is enforced
    - users cannot reuse their current password
    - passwords are always hashed before persistence
-   - database errors are forwarded correctly
 ================================================== */
+
+jest.mock("bcrypt");
+
+jest.mock("../../../../../src/models/userModel", () => ({
+    scope: jest.fn()
+}));
 
 const bcrypt = require("bcrypt");
 const User = require("../../../../../src/models/userModel");
@@ -25,12 +30,6 @@ const userService = require("../../../../../src/services/userService");
 const { mockConsoleError } = require("../../../../helpers/mocks/consoleMocks");
 
 const { createMockUserWithPassword } = require("../../../../factories/userFactory");
-
-jest.mock("bcrypt");
-
-jest.mock("../../../../../src/models/userModel", () => ({
-    scope: jest.fn()
-}));
 
 describe("userService - changeCurrentUserPasswordByID", () => {
 

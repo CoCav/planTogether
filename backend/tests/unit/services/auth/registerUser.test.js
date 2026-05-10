@@ -17,14 +17,6 @@
    - duplicate emails are rejected
 ================================================== */
 
-const bcrypt = require("bcrypt");
-const { generateAuthToken } = require("../../../../src/utils/auth/authToken");
-
-const User = require("../../../../src/models/userModel");
-const authService = require("../../../../src/services/authService");
-
-const { createMockUser } = require("../../../factories/userFactory");
-
 jest.mock("bcrypt");
 
 jest.mock("../../../../src/utils/auth/authToken", () => ({
@@ -35,6 +27,14 @@ jest.mock("../../../../src/models/userModel", () => ({
     findOne: jest.fn(),
     create: jest.fn()
 }));
+
+const bcrypt = require("bcrypt");
+const { generateAuthToken } = require("../../../../src/utils/auth/authToken");
+
+const User = require("../../../../src/models/userModel");
+const authService = require("../../../../src/services/authService");
+
+const { createMockUser } = require("../../../factories/userFactory");
 
 describe("authService - registerUser", () => {
 

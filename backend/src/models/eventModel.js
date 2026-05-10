@@ -1,5 +1,5 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
 /* ==================================================
    EVENT MODEL
@@ -17,7 +17,7 @@ const sequelize = require('../config/database');
    - null registrationDeadline means users can join until event starts
 ================================================== */
 
-const Event = sequelize.define('Event', {
+const Event = sequelize.define("Event", {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,

@@ -7,7 +7,7 @@
    - public stats computation
    - null avatar handling
    - missing user rejection
-   - database error forwarding
+   - database error propagation
 
    Ensures:
    - only public user fields are selected
@@ -15,14 +15,6 @@
    - null avatars are handled safely
    - missing users and database errors are handled safely
 ================================================== */
-
-const User = require("../../../../../src/models/userModel");
-const Event = require("../../../../../src/models/eventModel");
-const EventUserRole = require("../../../../../src/models/relations/eventUserRoleModel");
-
-const userService = require("../../../../../src/services/userService");
-
-const { createMockUser } = require("../../../../factories/userFactory");
 
 jest.mock("../../../../../src/models/userModel", () => ({
     findByPk: jest.fn()
@@ -35,6 +27,14 @@ jest.mock("../../../../../src/models/eventModel", () => ({
 jest.mock("../../../../../src/models/relations/eventUserRoleModel.js", () => ({
     count: jest.fn()
 }));
+
+const User = require("../../../../../src/models/userModel");
+const Event = require("../../../../../src/models/eventModel");
+const EventUserRole = require("../../../../../src/models/relations/eventUserRoleModel");
+
+const userService = require("../../../../../src/services/userService");
+
+const { createMockUser } = require("../../../../factories/userFactory");
 
 describe("userService - getPublicUserProfileByID", () => {
     beforeEach(() => {

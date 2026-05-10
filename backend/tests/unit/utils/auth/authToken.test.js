@@ -10,12 +10,11 @@
    - auth tokens are generated consistently
    - JWT payload and options remain centralized
 ================================================== */
+jest.mock("jsonwebtoken");
 
 const jwt = require("jsonwebtoken");
 
 const { generateAuthToken } = require("../../../../src/utils/auth/authToken");
-
-jest.mock("jsonwebtoken");
 
 describe("authToken utils", () => {
 

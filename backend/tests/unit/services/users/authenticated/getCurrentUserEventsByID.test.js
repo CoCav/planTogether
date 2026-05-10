@@ -8,7 +8,7 @@
    - created / joined / history views
    - creator filter handling
    - missing user rejection
-   - database error forwarding
+   - database error propagation
 
    Ensures:
    - current user event lists are filtered correctly
@@ -18,24 +18,6 @@
    - shared event status constants are used for expected statuses
    - missing users and database errors are handled safely
 ================================================== */
-
-const { Op } = require("sequelize");
-
-const EventUserRole = require("../../../../../src/models/relations/eventUserRoleModel");
-const Event = require("../../../../../src/models/eventModel");
-const User = require("../../../../../src/models/userModel");
-
-const userService = require("../../../../../src/services/userService");
-
-const { EVENT_ROLES } = require("../../../../../src/constants/eventRoles");
-
-const { EVENT_STATUS } = require("../../../../../src/constants/eventStatus");
-const { getEventStatus } = require("../../../../../src/utils/events/eventStatus");
-
-const { buildEventWhereConditions, buildEventCreatorInclude } = require("../../../../../src/utils/events/eventQueryBuilder");
-const { getPaginationOptions } = require("../../../../../src/utils/pagination");
-
-const { mockConsoleError } = require("../../../../helpers/mocks/consoleMocks");
 
 jest.mock("../../../../../src/models/relations/eventUserRoleModel", () => ({
     findAndCountAll: jest.fn(),
@@ -56,6 +38,24 @@ jest.mock("../../../../../src/utils/events/eventQueryBuilder", () => ({
     buildEventWhereConditions: jest.fn(),
     buildEventCreatorInclude: jest.fn()
 }));
+
+const { Op } = require("sequelize");
+
+const EventUserRole = require("../../../../../src/models/relations/eventUserRoleModel");
+const Event = require("../../../../../src/models/eventModel");
+const User = require("../../../../../src/models/userModel");
+
+const userService = require("../../../../../src/services/userService");
+
+const { EVENT_ROLES } = require("../../../../../src/constants/eventRoles");
+
+const { EVENT_STATUS } = require("../../../../../src/constants/eventStatus");
+const { getEventStatus } = require("../../../../../src/utils/events/eventStatus");
+
+const { buildEventWhereConditions, buildEventCreatorInclude } = require("../../../../../src/utils/events/eventQueryBuilder");
+const { getPaginationOptions } = require("../../../../../src/utils/pagination");
+
+const { mockConsoleError } = require("../../../../helpers/mocks/consoleMocks");
 
 describe("userService - getCurrentUserEventsByID", () => {
 

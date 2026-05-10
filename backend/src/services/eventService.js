@@ -1,5 +1,7 @@
 const { fn, col } = require("sequelize");
 
+const sequelize = require("../config/database");
+
 const Event = require("../models/eventModel");
 const User = require("../models/userModel");
 const EventUserRole = require("../models/relations/eventUserRoleModel");
@@ -26,14 +28,14 @@ const { getPaginationOptions } = require("../utils/pagination");
    - participant count and status enrichment
 
    Notes:
+   - critical write operations use Sequelize transactions
    - creator is automatically added as organizer
    - getAllEvents supports filters through query params
    - past events cannot be updated or deleted
-   - event images are cleaned after successful update
+   - event images are cleaned only after successful DB commits
    - event roles are centralized through shared constants
    - uses shared HTTP error utilities
 ================================================== */
-
 
 /* =============================
    CREATE EVENT
@@ -41,25 +43,37 @@ const { getPaginationOptions } = require("../utils/pagination");
 
 // Create a new event
 const createEvent = async (data, userId) => {
-    const { startDateTime, endDateTime } = data;
+    const transaction = await sequelize.transaction();
 
-    // Ensure event dates are coherent before persistence
-    if (new Date(endDateTime) < new Date(startDateTime)) {
-        throwHttpError(400, "End date must be after start date");
+    try {
+        const { startDateTime, endDateTime } = data;
+
+        // Ensure event dates are coherent before persistence
+        if (new Date(endDateTime) < new Date(startDateTime)) {
+            throwHttpError(400, "End date must be after start date");
+        }
+
+        const eventData = buildEventCreateData(data, userId);
+
+        const event = await Event.create(eventData, { transaction });
+
+        // Creator automatically becomes organizer
+        await EventUserRole.create({
+            eventId: event.id,
+            userId,
+            role: EVENT_ROLES.ORGANIZER
+        }, {
+            transaction
+        });
+
+        await transaction.commit();
+
+        return event;
+
+    } catch (error) {
+        await transaction.rollback();
+        throw error;
     }
-
-    const eventData = buildEventCreateData(data, userId);
-
-    const event = await Event.create(eventData);
-
-    // Creator automatically becomes organizer
-    await EventUserRole.create({
-        eventId: event.id,
-        userId,
-        role: EVENT_ROLES.ORGANIZER
-    });
-
-    return event;
 };
 
 /* =============================
@@ -130,7 +144,6 @@ const getAllEvents = async (query = {}) => {
 
 // Get a single event by ID
 const getEventByID = async (id) => {
-
     const event = await Event.findOne({
         where: { id },
         attributes: {
@@ -173,20 +186,20 @@ const getEventByID = async (id) => {
 
 // Update an existing event
 const updateEventByID = async (id, data) => {
+    const transaction = await sequelize.transaction();
+
     try {
-        const event = await Event.findByPk(id);
+        const event = await Event.findByPk(id, { transaction });
 
         if (!event) {
             throwHttpError(404, "Event not found");
         }
 
-        // Past events are locked
         assertEventNotPast(event);
 
         const oldImage = event.image;
         const { startDateTime, endDateTime, image } = data;
 
-        // Validate date order only when both dates are provided
         const hasBothDates = startDateTime && endDateTime;
 
         if (hasBothDates && new Date(endDateTime) < new Date(startDateTime)) {
@@ -195,9 +208,11 @@ const updateEventByID = async (id, data) => {
 
         const updatedData = buildEventUpdateData(event, data);
 
-        await event.update(updatedData);
+        await event.update(updatedData, { transaction });
 
-        // Delete old image only after successful DB update
+        await transaction.commit();
+
+        // Delete old image only after successful DB commit
         if (image !== undefined && image && oldImage && oldImage !== image) {
             await deleteUploadedFile(oldImage);
         }
@@ -205,7 +220,7 @@ const updateEventByID = async (id, data) => {
         return event;
 
     } catch (error) {
-        console.error("Error in updating the event:", error);
+        await transaction.rollback();
         throw error;
     }
 };
@@ -213,16 +228,38 @@ const updateEventByID = async (id, data) => {
 
 // Delete an event
 const deleteEventByID = async (id) => {
-    const event = await Event.findByPk(id);
+    const transaction = await sequelize.transaction();
 
-    if (!event) {
-        throwHttpError(404, "Event not found");
+    try {
+        const event = await Event.findByPk(id, { transaction });
+
+        if (!event) {
+            throwHttpError(404, "Event not found");
+        }
+
+        // Past events cannot be deleted
+        assertEventNotPast(event);
+
+        const oldImage = event.image;
+
+        await EventUserRole.destroy({
+            where: { eventId: id },
+            transaction
+        });
+
+        await event.destroy({ transaction });
+
+        await transaction.commit();
+
+        // Delete event image only after successful DB commit
+        if (oldImage) {
+            await deleteUploadedFile(oldImage);
+        }
+
+    } catch (error) {
+        await transaction.rollback();
+        throw error;
     }
-
-    // Past events cannot be deleted
-    assertEventNotPast(event);
-
-    await event.destroy();
 };
 
 module.exports = {

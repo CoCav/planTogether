@@ -1,5 +1,7 @@
 const { Op } = require("sequelize");
 
+const sequelize = require("../config/database");
+
 const Event = require("../models/eventModel");
 const User = require("../models/userModel");
 const EventUserRole = require("../models/relations/eventUserRoleModel");
@@ -21,6 +23,7 @@ const { getPaginationOptions } = require("../utils/pagination");
    - enforcing business rules (capacity, roles, time)
 
    Notes:
+   - critical membership creation flow uses Sequelize transactions
    - uses EventUserRole as join table
    - all event references use alias "event"
    - event roles are centralized through shared constants
@@ -32,55 +35,76 @@ const { getPaginationOptions } = require("../utils/pagination");
 ================================================== */
 
 // User joins an event
+// User joins an event
 const joinEvent = async ({ eventId, userId }) => {
-    const event = await Event.findByPk(eventId);
+    const transaction = await sequelize.transaction();
 
-    if (!event) {
-        throwHttpError(404, "Event not found");
-    }
+    try {
+        const event = await Event.findByPk(eventId, { transaction });
 
-    // Prevent joining past events
-    assertEventNotPast(event);
+        if (!event) {
+            throwHttpError(404, "Event not found");
+        }
 
-    // Prevent joining when registration period is over
-    const hasRegistrationDeadline = event.registrationDeadline;
-    const isRegistrationClosed = hasRegistrationDeadline && new Date() > new Date(event.registrationDeadline);
+        // Prevent joining past events
+        assertEventNotPast(event);
 
-    if (isRegistrationClosed) {
-        throwHttpError(409, "Registration period is over for this event");
-    }
+        // Prevent joining when registration period is over
+        const hasRegistrationDeadline = event.registrationDeadline;
+        const isRegistrationClosed =
+            hasRegistrationDeadline &&
+            new Date() > new Date(event.registrationDeadline);
 
-    // Prevent joining when participant capacity is reached
-    if (event.maxParticipants !== null) {
-        const participantCount = await EventUserRole.count({
-            where: {
-                eventId,
-                role: EVENT_ROLES.PARTICIPANT
+        if (isRegistrationClosed) {
+            throwHttpError(409, "Registration period is over for this event");
+        }
+
+        // Prevent joining when participant capacity is reached
+        if (event.maxParticipants !== null) {
+            const participantCount = await EventUserRole.count({
+                where: {
+                    eventId,
+                    role: EVENT_ROLES.PARTICIPANT
+                },
+                transaction
+            });
+
+            const hasReachedParticipantLimit =
+                participantCount >= event.maxParticipants;
+
+            if (hasReachedParticipantLimit) {
+                throwHttpError(409, "Event has reached maximum number of participants");
             }
+        }
+
+        // Prevent duplicate join
+        const existingMembership = await EventUserRole.findOne({
+            where: { eventId, userId },
+            transaction
         });
 
-        const hasReachedParticipantLimit = participantCount >= event.maxParticipants;
-
-        if (hasReachedParticipantLimit) {
-            throwHttpError(409, "Event has reached maximum number of participants");
+        if (existingMembership) {
+            throwHttpError(409, "User already joined this event");
         }
+
+        // Create membership
+        const membership = await EventUserRole.create(
+            {
+                eventId,
+                userId,
+                role: EVENT_ROLES.PARTICIPANT
+            },
+            { transaction }
+        );
+
+        await transaction.commit();
+
+        return membership;
+
+    } catch (error) {
+        await transaction.rollback();
+        throw error;
     }
-
-    // Prevent duplicate join
-    const existingMembership = await EventUserRole.findOne({
-        where: { eventId, userId }
-    });
-
-    if (existingMembership) {
-        throwHttpError(409, "User already joined this event");
-    }
-
-    // Create membership
-    return EventUserRole.create({
-        eventId,
-        userId,
-        role: EVENT_ROLES.PARTICIPANT
-    });
 };
 
 

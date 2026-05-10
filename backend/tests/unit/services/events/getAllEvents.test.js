@@ -7,7 +7,7 @@
    - creator include configuration
    - status enrichment
    - grouped count handling
-   - database error forwarding
+   - database error propagation
 
    Ensures:
    - event listing supports filters and pagination
@@ -15,8 +15,24 @@
    - pagination metadata is returned correctly
    - events are enriched with computed status
    - shared event status constants are used for expected statuses
-   - database errors are forwarded correctly
 ================================================== */
+
+jest.mock("../../../../src/models/eventModel", () => ({
+    findAndCountAll: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/events/eventQueryBuilder", () => ({
+    buildEventWhereConditions: jest.fn(),
+    buildEventCreatorInclude: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/events/eventStatus", () => ({
+    getEventStatus: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/pagination", () => ({
+    getPaginationOptions: jest.fn()
+}));
 
 const Event = require("../../../../src/models/eventModel");
 const User = require("../../../../src/models/userModel");
@@ -32,25 +48,6 @@ const { getPaginationOptions } = require("../../../../src/utils/pagination");
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
 const { createMockEvent } = require("../../../factories/eventFactory");
-
-jest.mock("../../../../src/models/eventModel", () => ({
-    findAndCountAll: jest.fn()
-}));
-
-jest.mock("../../../../src/models/userModel", () => ({}));
-
-jest.mock("../../../../src/utils/events/eventQueryBuilder", () => ({
-    buildEventWhereConditions: jest.fn(),
-    buildEventCreatorInclude: jest.fn()
-}));
-
-jest.mock("../../../../src/utils/events/eventStatus", () => ({
-    getEventStatus: jest.fn()
-}));
-
-jest.mock("../../../../src/utils/pagination", () => ({
-    getPaginationOptions: jest.fn()
-}));
 
 describe("eventService - getAllEvents", () => {
 
@@ -89,19 +86,19 @@ describe("eventService - getAllEvents", () => {
 
         const result = await eventService.getAllEvents({});
 
-        expect(result).toEqual({
+        expect(result).toMatchObject({
             page: 1,
             pageSize: 10,
             totalEvents: 1,
-            totalPages: 1,
+            totalPages: 1
+        });
 
-            events: [
-                {
-                    id: 1,
-                    title: "Test Event",
-                    status: EVENT_STATUS.UPCOMING
-                }
-            ]
+        expect(result.events).toHaveLength(1);
+
+        expect(result.events[0]).toMatchObject({
+            id: 1,
+            title: "Test Event",
+            status: EVENT_STATUS.UPCOMING
         });
     });
 

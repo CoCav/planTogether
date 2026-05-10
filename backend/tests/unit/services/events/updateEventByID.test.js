@@ -8,28 +8,29 @@
    - invalid date order rejection
    - past event update rejection
    - missing event rejection
-   - database error forwarding
+   - transaction rollback on database errors
 
    Ensures:
    - event updates are applied through normalized update data
    - partial updates preserve omitted fields
-   - old images are deleted only when replaced
+   - old images are deleted only after successful DB commit
    - past event rules are enforced
-   - database errors are forwarded correctly
+   - Sequelize transactions are committed on successful updates
+   - Sequelize transactions are rolled back on failed updates
 ================================================== */
 
-const Event = require("../../../../src/models/eventModel");
+jest.mock("../../../../src/config/database", () => ({
+    transaction: jest.fn()
+}));
 
-const eventService = require("../../../../src/services/eventService");
-
-const { buildEventUpdateData } = require("../../../../src/utils/events/eventDataBuilder");
-const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
-const { deleteUploadedFile } = require("../../../../src/utils/uploadedFileStorage");
-
-const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
+jest.mock("../../../../src/models/userModel", () => ({}));
 
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
+}));
+
+jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
+    create: jest.fn()
 }));
 
 jest.mock("../../../../src/utils/events/eventDataBuilder", () => ({
@@ -44,12 +45,34 @@ jest.mock("../../../../src/utils/uploadedFileStorage", () => ({
     deleteUploadedFile: jest.fn()
 }));
 
+const sequelize = require("../../../../src/config/database");
+const Event = require("../../../../src/models/eventModel");
+
+const eventService = require("../../../../src/services/eventService");
+
+const { buildEventUpdateData } = require("../../../../src/utils/events/eventDataBuilder");
+const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
+const { deleteUploadedFile } = require("../../../../src/utils/uploadedFileStorage");
+
+const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
+
+const { createMockEvent } = require("../../../factories/eventFactory");
+
 describe("eventService - updateEventByID", () => {
+
+    let transaction;
 
     mockConsoleError();
 
     beforeEach(() => {
         jest.clearAllMocks();
+
+        transaction = {
+            commit: jest.fn().mockResolvedValue(),
+            rollback: jest.fn().mockResolvedValue()
+        };
+
+        sequelize.transaction.mockResolvedValue(transaction);
     });
 
     /* =============================
@@ -57,15 +80,15 @@ describe("eventService - updateEventByID", () => {
     ============================= */
 
     it("should update event successfully", async () => {
-        const event = {
+        const event = createMockEvent({
             id: 1,
             image: null,
             update: jest.fn().mockResolvedValue()
-        };
+        });
 
-        const updateData = {
+        const updateData = createMockEvent({
             title: "Updated Event"
-        };
+        });
 
         Event.findByPk.mockResolvedValue(event);
         assertEventNotPast.mockImplementation(() => { });
@@ -75,30 +98,39 @@ describe("eventService - updateEventByID", () => {
             title: "Updated Event"
         });
 
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
+
         expect(assertEventNotPast).toHaveBeenCalledWith(event);
 
         expect(buildEventUpdateData).toHaveBeenCalledWith(event, {
             title: "Updated Event"
         });
 
-        expect(event.update).toHaveBeenCalledWith(updateData);
+        expect(event.update).toHaveBeenCalledWith(updateData, { transaction });
+
+        expect(transaction.commit).toHaveBeenCalled();
+        expect(transaction.rollback).not.toHaveBeenCalled();
+
+        expect(deleteUploadedFile).not.toHaveBeenCalled();
 
         expect(result).toBe(event);
     });
 
     it("should preserve existing fields when partial update data is omitted", async () => {
-        const event = {
+        const event = createMockEvent({
             id: 1,
             image: "/uploads/events/current-event.png",
             maxParticipants: 20,
             registrationDeadline: "2026-12-19T10:00:00.000Z",
             update: jest.fn().mockResolvedValue()
-        };
+        });
 
-        const updateData = {
+        const updateData = createMockEvent({
             title: "Updated Event",
             image: "/uploads/events/current-event.png"
-        };
+        });
 
         Event.findByPk.mockResolvedValue(event);
         assertEventNotPast.mockImplementation(() => { });
@@ -107,26 +139,33 @@ describe("eventService - updateEventByID", () => {
         await eventService.updateEventByID(1, {
             title: "Updated Event"
         });
+
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
 
         expect(buildEventUpdateData).toHaveBeenCalledWith(event, {
             title: "Updated Event"
         });
 
-        expect(event.update).toHaveBeenCalledWith(updateData);
+        expect(event.update).toHaveBeenCalledWith(updateData, { transaction });
+
+        expect(transaction.commit).toHaveBeenCalled();
+        expect(transaction.rollback).not.toHaveBeenCalled();
 
         expect(deleteUploadedFile).not.toHaveBeenCalled();
     });
 
     it("should replace event image and delete previous image", async () => {
-        const event = {
+        const event = createMockEvent({
             id: 1,
             image: "/uploads/events/old-event.png",
             update: jest.fn().mockResolvedValue()
-        };
+        });
 
-        const updateData = {
+        const updateData = createMockEvent({
             image: "/uploads/events/new-event.png"
-        };
+        });
 
         Event.findByPk.mockResolvedValue(event);
         assertEventNotPast.mockImplementation(() => { });
@@ -136,7 +175,13 @@ describe("eventService - updateEventByID", () => {
             image: "/uploads/events/new-event.png"
         });
 
-        expect(event.update).toHaveBeenCalledWith(updateData);
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
+        expect(event.update).toHaveBeenCalledWith(updateData, { transaction });
+
+        expect(transaction.commit).toHaveBeenCalled();
+        expect(transaction.rollback).not.toHaveBeenCalled();
 
         expect(deleteUploadedFile).toHaveBeenCalledWith("/uploads/events/old-event.png");
     });
@@ -146,10 +191,10 @@ describe("eventService - updateEventByID", () => {
     ============================= */
 
     it("should throw 400 when end date is before start date", async () => {
-        const event = {
+        const event = createMockEvent({
             id: 1,
             update: jest.fn()
-        };
+        });
 
         Event.findByPk.mockResolvedValue(event);
         assertEventNotPast.mockImplementation(() => { });
@@ -162,15 +207,25 @@ describe("eventService - updateEventByID", () => {
             statusCode: 400
         });
 
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
+        expect(assertEventNotPast).toHaveBeenCalledWith(event);
+
         expect(buildEventUpdateData).not.toHaveBeenCalled();
         expect(event.update).not.toHaveBeenCalled();
+
+        expect(transaction.rollback).toHaveBeenCalled();
+        expect(transaction.commit).not.toHaveBeenCalled();
+
+        expect(deleteUploadedFile).not.toHaveBeenCalled();
     });
 
     it("should block update if event is past", async () => {
-        const event = {
+        const event = createMockEvent({
             id: 1,
             update: jest.fn()
-        };
+        });
 
         Event.findByPk.mockResolvedValue(event);
 
@@ -188,8 +243,18 @@ describe("eventService - updateEventByID", () => {
             statusCode: 403
         });
 
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
+        expect(assertEventNotPast).toHaveBeenCalledWith(event);
+
         expect(buildEventUpdateData).not.toHaveBeenCalled();
         expect(event.update).not.toHaveBeenCalled();
+
+        expect(transaction.rollback).toHaveBeenCalled();
+        expect(transaction.commit).not.toHaveBeenCalled();
+
+        expect(deleteUploadedFile).not.toHaveBeenCalled();
     });
 
     /* =============================
@@ -206,18 +271,36 @@ describe("eventService - updateEventByID", () => {
             statusCode: 404
         });
 
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(Event.findByPk).toHaveBeenCalledWith(999, { transaction });
+
         expect(buildEventUpdateData).not.toHaveBeenCalled();
+
+        expect(transaction.rollback).toHaveBeenCalled();
+        expect(transaction.commit).not.toHaveBeenCalled();
+
+        expect(deleteUploadedFile).not.toHaveBeenCalled();
     });
 
     /* =============================
        DATABASE ERRORS
     ============================= */
 
-    it("should forward database errors", async () => {
+    it("should forward database errors and rollback transaction", async () => {
         Event.findByPk.mockRejectedValue(new Error("DB error"));
 
         await expect(eventService.updateEventByID(1, {
             title: "Updated Event"
         })).rejects.toThrow("DB error");
+
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
+
+        expect(transaction.rollback).toHaveBeenCalled();
+        expect(transaction.commit).not.toHaveBeenCalled();
+
+        expect(deleteUploadedFile).not.toHaveBeenCalled();
     });
 });

@@ -4,13 +4,16 @@
    Tests:
    - current user profile retrieval
    - missing user rejection
-   - database error forwarding
+   - database error propagation
 
    Ensures:
    - current user profile data is retrieved correctly
    - missing users are handled safely
-   - database errors are forwarded correctly
 ================================================== */
+
+jest.mock("../../../../../src/models/userModel", () => ({
+    findByPk: jest.fn()
+}));
 
 const User = require("../../../../../src/models/userModel");
 
@@ -19,10 +22,6 @@ const userService = require("../../../../../src/services/userService");
 const { mockConsoleError } = require("../../../../helpers/mocks/consoleMocks");
 
 const { createMockUser } = require("../../../../factories/userFactory");
-
-jest.mock("../../../../../src/models/userModel", () => ({
-    findByPk: jest.fn()
-}));
 
 describe("userService - getCurrentUserProfileByID", () => {
 

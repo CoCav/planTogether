@@ -1,6 +1,8 @@
 const { Op } = require("sequelize");
 const bcrypt = require("bcrypt");
 
+const sequelize = require("../config/database");
+
 const User = require("../models/userModel");
 const Event = require("../models/eventModel");
 const EventUserRole = require("../models/relations/eventUserRoleModel");
@@ -32,6 +34,7 @@ const { getPaginationOptions } = require("../utils/pagination");
    - public profile statistics
 
    Notes:
+   - critical profile update flow uses Sequelize transactions
    - public profiles never expose id, email, password or dates
    - joined events exclude events created by the same user
    - EventUserRole includes events with alias "event"
@@ -198,30 +201,36 @@ const getCurrentUserProfileByID = async (userId) => {
 
 
 // Update current user profile by ID
+// Update current user profile by ID
 const updateCurrentUserProfileByID = async (userId, updatedData) => {
-    const user = await User.findByPk(userId);
-
-    if (!user) {
-        throwHttpError(404, "User not found");
-    }
-
-    const oldAvatar = user.avatar;
-    const { name, email, avatar } = updatedData;
-
-    // Update only provided fields
-    if (name) user.name = name;
-    if (email) user.email = normalizeEmail(email);
-
-    // Avatar can be updated, cleared, or left unchanged
-    if (avatar !== undefined) {
-        user.avatar = avatar || null;
-    }
+    const transaction = await sequelize.transaction();
 
     try {
-        await user.save();
+        const user = await User.findByPk(userId, { transaction });
 
-        // Delete previous avatar only after successful DB update
-        const shouldDeleteOldAvatar = avatar !== undefined &&
+        if (!user) {
+            throwHttpError(404, "User not found");
+        }
+
+        const oldAvatar = user.avatar;
+        const { name, email, avatar } = updatedData;
+
+        // Update only provided fields
+        if (name) user.name = name;
+        if (email) user.email = normalizeEmail(email);
+
+        // Avatar can be updated, cleared, or left unchanged
+        if (avatar !== undefined) {
+            user.avatar = avatar || null;
+        }
+
+        await user.save({ transaction });
+
+        await transaction.commit();
+
+        // Delete previous avatar only after successful DB commit
+        const shouldDeleteOldAvatar =
+            avatar !== undefined &&
             avatar &&
             oldAvatar &&
             oldAvatar !== avatar;
@@ -230,15 +239,18 @@ const updateCurrentUserProfileByID = async (userId, updatedData) => {
             await deleteUploadedFile(oldAvatar);
         }
 
+        return user;
+
     } catch (err) {
+        await transaction.rollback();
+
         // Convert Sequelize unique constraint into API-friendly error
         if (err.name === "SequelizeUniqueConstraintError") {
             throwHttpError(409, "Email already in use");
         }
+
         throw err;
     }
-
-    return user;
 };
 
 // Change current user password by ID

@@ -8,7 +8,7 @@
    - closed registration rejection
    - participant limit enforcement
    - missing event rejection
-   - database error forwarding
+   - transaction rollback on database errors
 
    Ensures:
    - users can join only valid events
@@ -17,22 +17,16 @@
    - registration deadlines are enforced
    - past event rules are respected
    - missing events are rejected before membership creation
+   - Sequelize transactions are committed on successful joins
+   - Sequelize transactions are rolled back on failed joins
    - shared event role constants are used for valid role scenarios
-   - database errors are forwarded correctly
 ================================================== */
 
-const Event = require("../../../../src/models/eventModel");
-const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
+jest.mock("../../../../src/config/database", () => ({
+    transaction: jest.fn()
+}));
 
-const eventMembershipService = require("../../../../src/services/eventMembershipService");
-
-const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
-
-const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
-
-const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
-
-const { createMockEvent, createMockMembership } = require("../../../factories/membershipFactory");
+jest.mock("../../../../src/models/userModel", () => ({}));
 
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
@@ -48,12 +42,35 @@ jest.mock("../../../../src/utils/events/eventStatus", () => ({
     assertEventNotPast: jest.fn()
 }));
 
+const sequelize = require("../../../../src/config/database");
+const Event = require("../../../../src/models/eventModel");
+const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
+
+const eventMembershipService = require("../../../../src/services/eventMembershipService");
+
+const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
+
+const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
+
+const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
+
+const { createMockEvent, createMockMembership } = require("../../../factories/membershipFactory");
+
 describe("eventMembershipService - joinEvent", () => {
+
+    let transaction;
 
     mockConsoleError();
 
     beforeEach(() => {
         jest.clearAllMocks();
+
+        transaction = {
+            commit: jest.fn().mockResolvedValue(),
+            rollback: jest.fn().mockResolvedValue()
+        };
+
+        sequelize.transaction.mockResolvedValue(transaction);
     });
 
     /* =============================
@@ -62,11 +79,7 @@ describe("eventMembershipService - joinEvent", () => {
 
     it("should join event as participant", async () => {
 
-        Event.findByPk.mockResolvedValue(
-            createMockEvent({
-                id: 1
-            })
-        );
+        Event.findByPk.mockResolvedValue(createMockEvent({ id: 1 }));
 
         EventUserRole.findOne.mockResolvedValue(null);
 
@@ -83,13 +96,30 @@ describe("eventMembershipService - joinEvent", () => {
             userId: 10
         });
 
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
+
         expect(assertEventNotPast).toHaveBeenCalled();
+
+        expect(EventUserRole.findOne).toHaveBeenCalledWith({
+            where: {
+                eventId: 1,
+                userId: 10
+            },
+            transaction
+        });
 
         expect(EventUserRole.create).toHaveBeenCalledWith({
             eventId: 1,
             userId: 10,
             role: EVENT_ROLES.PARTICIPANT
+        }, {
+            transaction
         });
+
+        expect(transaction.commit).toHaveBeenCalled();
+        expect(transaction.rollback).not.toHaveBeenCalled();
 
         expect(result.role).toBe(EVENT_ROLES.PARTICIPANT);
     });
@@ -100,11 +130,7 @@ describe("eventMembershipService - joinEvent", () => {
 
     it("should throw 409 if user already joined", async () => {
 
-        Event.findByPk.mockResolvedValue(
-            createMockEvent({
-                id: 1
-            })
-        );
+        Event.findByPk.mockResolvedValue(createMockEvent({ id: 1 }));
 
         EventUserRole.findOne.mockResolvedValue(
             createMockMembership({
@@ -121,11 +147,21 @@ describe("eventMembershipService - joinEvent", () => {
             statusCode: 409
         });
 
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
+
         expect(EventUserRole.create).not.toHaveBeenCalled();
+
+        expect(transaction.rollback).toHaveBeenCalled();
+        expect(transaction.commit).not.toHaveBeenCalled();
     });
 
     it("should block joining a past event", async () => {
-        Event.findByPk.mockResolvedValue(createMockEvent({ id: 1 }));
+
+        const event = createMockEvent({ id: 1 });
+
+        Event.findByPk.mockResolvedValue(event);
 
         const error = new Error("No action is allowed on a past event");
         error.statusCode = 403;
@@ -134,10 +170,27 @@ describe("eventMembershipService - joinEvent", () => {
             throw error;
         });
 
-        await expect(eventMembershipService.joinEvent({ eventId: 1, userId: 10 })).rejects.toMatchObject({ statusCode: 403 });
+        await expect(eventMembershipService.joinEvent({
+            eventId: 1,
+            userId: 10
+        })).rejects.toMatchObject({
+            statusCode: 403
+        });
+
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
+
+        expect(assertEventNotPast).toHaveBeenCalledWith(event);
+
+        expect(EventUserRole.create).not.toHaveBeenCalled();
+
+        expect(transaction.rollback).toHaveBeenCalled();
+        expect(transaction.commit).not.toHaveBeenCalled();
     });
 
     it("should throw 409 if registration is closed", async () => {
+
         assertEventNotPast.mockImplementation(() => { });
 
         Event.findByPk.mockResolvedValue(
@@ -150,13 +203,22 @@ describe("eventMembershipService - joinEvent", () => {
 
         EventUserRole.findOne.mockResolvedValue(null);
 
-        await expect(eventMembershipService.joinEvent({ eventId: 1, userId: 10 })).rejects.toMatchObject({
+        await expect(eventMembershipService.joinEvent({
+            eventId: 1,
+            userId: 10
+        })).rejects.toMatchObject({
             message: "Registration period is over for this event",
             statusCode: 409
         });
+
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(transaction.rollback).toHaveBeenCalled();
+        expect(transaction.commit).not.toHaveBeenCalled();
     });
 
     it("should not check participant count when maxParticipants is null", async () => {
+
         Event.findByPk.mockResolvedValue(
             createMockEvent({
                 id: 1,
@@ -180,10 +242,16 @@ describe("eventMembershipService - joinEvent", () => {
             userId: 10
         });
 
+        expect(sequelize.transaction).toHaveBeenCalled();
+
         expect(EventUserRole.count).not.toHaveBeenCalled();
+
+        expect(transaction.commit).toHaveBeenCalled();
+        expect(transaction.rollback).not.toHaveBeenCalled();
     });
 
     it("should throw 409 if event is full", async () => {
+
         assertEventNotPast.mockImplementation(() => { });
 
         Event.findByPk.mockResolvedValue(
@@ -195,12 +263,29 @@ describe("eventMembershipService - joinEvent", () => {
         );
 
         EventUserRole.findOne.mockResolvedValue(null);
+
         EventUserRole.count.mockResolvedValue(1);
 
-        await expect(eventMembershipService.joinEvent({ eventId: 1, userId: 10 })).rejects.toMatchObject({
+        await expect(eventMembershipService.joinEvent({
+            eventId: 1,
+            userId: 10
+        })).rejects.toMatchObject({
             message: "Event has reached maximum number of participants",
             statusCode: 409
         });
+
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(EventUserRole.count).toHaveBeenCalledWith({
+            where: {
+                eventId: 1,
+                role: EVENT_ROLES.PARTICIPANT
+            },
+            transaction
+        });
+
+        expect(transaction.rollback).toHaveBeenCalled();
+        expect(transaction.commit).not.toHaveBeenCalled();
     });
 
     /* =============================
@@ -208,24 +293,45 @@ describe("eventMembershipService - joinEvent", () => {
     ============================= */
 
     it("should throw 404 if event is not found", async () => {
+
         Event.findByPk.mockResolvedValue(null);
 
-        await expect(eventMembershipService.joinEvent({ eventId: 1, userId: 10 })).rejects.toMatchObject({
+        await expect(eventMembershipService.joinEvent({
+            eventId: 1,
+            userId: 10
+        })).rejects.toMatchObject({
             message: "Event not found",
             statusCode: 404
         });
+
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
+
+        expect(EventUserRole.create).not.toHaveBeenCalled();
+
+        expect(transaction.rollback).toHaveBeenCalled();
+        expect(transaction.commit).not.toHaveBeenCalled();
     });
 
     /* =============================
       DATABASE ERRORS
     ============================= */
 
-    it("should forward database errors", async () => {
+    it("should rollback transaction when database error occurs", async () => {
+
         Event.findByPk.mockRejectedValue(new Error("DB error"));
 
         await expect(eventMembershipService.joinEvent({
             eventId: 1,
             userId: 10
         })).rejects.toThrow("DB error");
+
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
+
+        expect(transaction.rollback).toHaveBeenCalled();
+        expect(transaction.commit).not.toHaveBeenCalled();
     });
 });

@@ -1,12 +1,13 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
 /* ==================================================
    USER MODEL
 
    Handles:
    - user account data
-   - email normalization
+   - email normalization before persistence
+   - email must remain unique for authentication
    - avatar path storage
    - password field protection
 
@@ -15,7 +16,7 @@ const sequelize = require('../config/database');
    - withPassword scope is used only for authentication
 ================================================== */
 
-const User = sequelize.define('User', {
+const User = sequelize.define("User", {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -34,7 +35,7 @@ const User = sequelize.define('User', {
 
         // Normalize email before saving
         set(value) {
-            this.setDataValue('email', value.toLowerCase().trim());
+            this.setDataValue("email", value.toLowerCase().trim());
         },
 
         validate: {
@@ -57,13 +58,13 @@ const User = sequelize.define('User', {
 
     // Hide password from regular queries
     defaultScope: {
-        attributes: { exclude: ['password'] }
+        attributes: { exclude: ["password"] }
     },
 
     // Explicit scope for login/password checks
     scopes: {
         withPassword: {
-            attributes: { include: ['password'] }
+            attributes: { include: ["password"] }
         }
     }
 });

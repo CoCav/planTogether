@@ -4,15 +4,22 @@
    Tests:
    - organizer and co-organizer listing
    - missing event rejection
-   - database error forwarding
+   - database error propagation
 
    Ensures:
    - role-based organizer filtering is applied
    - organizer data is returned with user information
    - missing events are rejected before membership query
    - shared event role constants are used for valid role scenarios
-   - database errors are forwarded correctly
 ================================================== */
+
+jest.mock("../../../../src/models/eventModel", () => ({
+    findByPk: jest.fn()
+}));
+
+jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
+    findAll: jest.fn()
+}));
 
 const { Op } = require("sequelize");
 
@@ -25,16 +32,6 @@ const eventMembershipService = require("../../../../src/services/eventMembership
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
-
-jest.mock("../../../../src/models/eventModel", () => ({
-    findByPk: jest.fn()
-}));
-
-jest.mock("../../../../src/models/userModel", () => ({}));
-
-jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
-    findAll: jest.fn()
-}));
 
 describe("eventMembershipService - GetEventStaff", () => {
 

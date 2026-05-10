@@ -15,14 +15,14 @@
    - errors are forwarded to next()
 ================================================== */
 
+jest.mock("../../../src/services/userService");
+
 const userController = require("../../../src/controllers/userController");
 const userService = require("../../../src/services/userService");
 
 const { createUserControllerMocks } = require("../../helpers/express/mockExpress");
 
 const { createMockUser } = require("../../factories/userFactory");
-
-jest.mock("../../../src/services/userService");
 
 describe("userController", () => {
 

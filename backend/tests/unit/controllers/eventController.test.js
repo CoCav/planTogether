@@ -15,14 +15,14 @@
    - errors are forwarded to next()
 ================================================== */
 
+jest.mock("../../../src/services/eventService");
+
 const eventController = require("../../../src/controllers/eventController");
 const eventService = require("../../../src/services/eventService");
 
 const { createEventControllerMocks } = require("../../helpers/express/mockExpress");
 
 const { createMockEvent } = require("../../factories/eventFactory");
-
-jest.mock("../../../src/services/eventService");
 
 describe("eventController", () => {
     beforeEach(() => {

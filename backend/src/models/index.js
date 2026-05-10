@@ -1,7 +1,8 @@
-const sequelize = require('../config/database');
-const User = require('./userModel');
-const Event = require('./eventModel');
-const EventUserRole = require('./relations/eventUserRoleModel');
+const sequelize = require("../config/database");
+
+const User = require("./userModel");
+const Event = require("./eventModel");
+const EventUserRole = require("./relations/eventUserRoleModel");
 
 /* ==================================================
    DATABASE INITIALIZATION
@@ -9,29 +10,40 @@ const EventUserRole = require('./relations/eventUserRoleModel');
    Handles:
    - database connection
    - model synchronization by environment
+
+   Notes:
+   - development uses alter sync for safer schema updates
+   - test environment resets database with force sync
+   - production uses safe synchronization
 ================================================== */
 
 // Initialize database connection and synchronize models
 const initDB = async () => {
     try {
-        console.log('👉 Attempting connection to the database..');
-        await sequelize.authenticate(); // Test DB connection
-        console.log('✅ Database connection has been established successfully !');
+        console.log("👉 Attempting connection to the database...");
+        await sequelize.authenticate();
 
-        console.log('👉 Synchronizing models...');
+        console.log("✅ Database connection has been established successfully!");
 
-        if (process.env.NODE_ENV === 'development') {
-            await sequelize.sync({ alter: true }); // Safely update schema in dev
-        } else if (process.env.NODE_ENV === 'test') {
-            await sequelize.sync({ force: true }); // Reset DB for clean tests
+        console.log("👉 Synchronizing models...");
+
+        if (process.env.NODE_ENV === "development") {
+            // Safely update schema during development
+            await sequelize.sync({ alter: true });
+
+        } else if (process.env.NODE_ENV === "test") {
+            // Reset database for isolated test runs
+            await sequelize.sync({ force: true });
+
         } else {
-            await sequelize.sync(); // Production-safe sync
+            // Production-safe synchronization
+            await sequelize.sync();
         }
 
-        console.log('✅ Database synchronized successfully !');
+        console.log("✅ Database synchronized successfully!");
 
     } catch (error) {
-        console.error('Error initializing the database:', error);
+        console.error("Error initializing the database:", error);
         throw error;
     }
 };
@@ -50,57 +62,57 @@ const initDB = async () => {
 ================================================== */
 
 /* =============================
-   Creator relationships
+   CREATOR RELATIONSHIPS
 ============================= */
 
 // A user can create multiple events
-User.hasMany(Event, { foreignKey: 'creatorId' });
+User.hasMany(Event, { foreignKey: "creatorId" });
 
 // Each event has one creator
-Event.belongsTo(User, { foreignKey: 'creatorId', as: 'creator' });
+Event.belongsTo(User, { foreignKey: "creatorId", as: "creator" });
 
 
 /* =============================
-   Participation relationships
+   PARTICIPATION RELATIONSHIPS
 ============================= */
 
 // A user can participate in many events through EventUserRole
 User.belongsToMany(Event, {
     through: {
         model: EventUserRole,
-        attributes: ['role', 'joinedAt']
+        attributes: ["role", "joinedAt"]
     },
-    foreignKey: 'userId',
-    otherKey: 'eventId',
-    as: 'events'
+    foreignKey: "userId",
+    otherKey: "eventId",
+    as: "events"
 });
 
 // An event can have many participants through EventUserRole
 Event.belongsToMany(User, {
     through: {
         model: EventUserRole,
-        attributes: ['role', 'joinedAt']
+        attributes: ["role", "joinedAt"]
     },
-    foreignKey: 'eventId',
-    otherKey: 'userId',
-    as: 'participants'
+    foreignKey: "eventId",
+    otherKey: "userId",
+    as: "participants"
 });
 
 
 /* =============================
-   Direct membership relationships
+   DIRECT MEMBERSHIP RELATIONSHIPS
 ============================= */
 
 // Each membership belongs to one user
-EventUserRole.belongsTo(User, { foreignKey: 'userId' });
+EventUserRole.belongsTo(User, { foreignKey: "userId" });
 
 // Each membership belongs to one event
-EventUserRole.belongsTo(Event, { foreignKey: 'eventId', as: 'event' });
+EventUserRole.belongsTo(Event, { foreignKey: "eventId", as: "event" });
 
-// A user can belong to multiple events (via memberships)
-User.hasMany(EventUserRole, { foreignKey: 'userId' });
+// A user can belong to multiple events via memberships
+User.hasMany(EventUserRole, { foreignKey: "userId" });
 
-// An event can have multiple participants (via memberships
-Event.hasMany(EventUserRole, { foreignKey: 'eventId' });
+// An event can have multiple memberships
+Event.hasMany(EventUserRole, { foreignKey: "eventId" });
 
 module.exports = { sequelize, initDB, User, Event, EventUserRole };

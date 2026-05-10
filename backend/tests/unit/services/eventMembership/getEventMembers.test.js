@@ -4,14 +4,21 @@
    Tests:
    - successful member listing
    - missing event rejection
-   - database error forwarding
+   - database error propagation
 
    Ensures:
    - event members are retrieved with user data
    - missing events are rejected before membership query
    - shared event role constants are used for valid role scenarios
-   - database errors are forwarded correctly
 ================================================== */
+
+jest.mock("../../../../src/models/eventModel", () => ({
+    findByPk: jest.fn()
+}));
+
+jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
+    findAll: jest.fn()
+}));
 
 const Event = require("../../../../src/models/eventModel");
 const User = require("../../../../src/models/userModel");
@@ -22,16 +29,6 @@ const eventMembershipService = require("../../../../src/services/eventMembership
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
-
-jest.mock("../../../../src/models/eventModel", () => ({
-    findByPk: jest.fn()
-}));
-
-jest.mock("../../../../src/models/userModel", () => ({}));
-
-jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
-    findAll: jest.fn()
-}));
 
 describe("eventMembershipService - getEventMembers", () => {
 

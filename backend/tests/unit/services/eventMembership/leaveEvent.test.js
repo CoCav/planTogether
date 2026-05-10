@@ -7,7 +7,7 @@
    - organizer self-leave protection
    - missing event rejection
    - missing participation rejection
-   - database error forwarding
+   - database error propagation
 
    Ensures:
    - users can leave joined events
@@ -15,9 +15,19 @@
    - past event rules are respected
    - missing memberships are rejected correctly
    - shared event role constants are used for valid role scenarios
-   - database errors are forwarded correctly
 ================================================== */
 
+jest.mock("../../../../src/models/eventModel", () => ({
+    findByPk: jest.fn()
+}));
+
+jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
+    findOne: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/events/eventStatus", () => ({
+    assertEventNotPast: jest.fn()
+}));
 
 const Event = require("../../../../src/models/eventModel");
 const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
@@ -31,18 +41,6 @@ const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
 const { createMockMembership } = require("../../../factories/membershipFactory");
-
-jest.mock("../../../../src/models/eventModel", () => ({
-    findByPk: jest.fn()
-}));
-
-jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
-    findOne: jest.fn()
-}));
-
-jest.mock("../../../../src/utils/events/eventStatus", () => ({
-    assertEventNotPast: jest.fn()
-}));
 
 describe("eventMembershipService - leaveEvent", () => {
 

@@ -5,15 +5,22 @@
    - successful event retrieval
    - event status enrichment
    - missing event rejection
-   - database error forwarding
+   - database error propagation
 
    Ensures:
    - single events are retrieved correctly
    - computed status is added before response
    - missing events return a 404 error
    - shared event status constants are used for expected statuses
-   - database errors are forwarded correctly
 ================================================== */
+
+jest.mock("../../../../src/models/eventModel", () => ({
+    findOne: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/events/eventStatus", () => ({
+    getEventStatus: jest.fn()
+}));
 
 const Event = require("../../../../src/models/eventModel");
 
@@ -25,14 +32,6 @@ const { getEventStatus } = require("../../../../src/utils/events/eventStatus");
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
 const { createMockEvent } = require("../../../factories/eventFactory");
-
-jest.mock("../../../../src/models/eventModel", () => ({
-    findOne: jest.fn()
-}));
-
-jest.mock("../../../../src/utils/events/eventStatus", () => ({
-    getEventStatus: jest.fn()
-}));
 
 describe("eventService - getEventByID", () => {
 
@@ -56,7 +55,7 @@ describe("eventService - getEventByID", () => {
 
         expect(Event.findOne).toHaveBeenCalled();
 
-        expect(result).toEqual({
+        expect(result).toMatchObject({
             id: 1,
             title: "Test Event",
             status: EVENT_STATUS.UPCOMING

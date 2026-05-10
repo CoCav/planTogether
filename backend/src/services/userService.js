@@ -9,6 +9,8 @@ const { EVENT_ROLES } = require("../constants/eventRoles");
 
 const { throwHttpError } = require("../utils/errors/httpError");
 
+const { formatPublicUser } = require("../utils/users/userFormatter");
+
 const { buildEventWhereConditions, buildEventCreatorInclude } = require("../utils/events/eventQueryBuilder");
 const { getEventStatus } = require("../utils/events/eventStatus");
 
@@ -290,7 +292,7 @@ const getPublicUserProfileByID = async (userId) => {
     });
 
     return {
-        user,
+        user: formatPublicUser(user),
         stats: {
             createdEventsCount,
             joinedEventsCount

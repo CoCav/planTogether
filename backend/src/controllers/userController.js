@@ -1,5 +1,7 @@
 const userService = require("../services/userService");
 
+const { formatAuthenticatedUser } = require("../utils/users/userFormatter");
+
 /* ==================================================
    USER CONTROLLER
 
@@ -16,6 +18,7 @@ const userService = require("../services/userService");
    - current user routes use req.user.userId
    - public routes use req.params.id
    - sensitive public user fields are filtered in userService
+   - user response payloads are centralized through shared formatter utilities
    - successful responses include success, message and top-level payload fields when needed
 ================================================== */
 
@@ -51,12 +54,7 @@ const getCurrentUserProfile = async (req, res, next) => {
         return res.status(200).json({
             success: true,
             message: "User profile retrieved successfully",
-            user: {
-                userId: user.id,
-                name: user.name,
-                email: user.email,
-                avatar: user.avatar || null
-            }
+            user: formatAuthenticatedUser(user)
         });
 
     } catch (error) {
@@ -84,12 +82,7 @@ const updateCurrentUserProfile = async (req, res, next) => {
         return res.status(200).json({
             success: true,
             message: "User profile updated successfully",
-            user: {
-                userId: user.id,
-                name: user.name,
-                email: user.email,
-                avatar: user.avatar || null
-            }
+            user: formatAuthenticatedUser(user)
         });
 
     } catch (error) {

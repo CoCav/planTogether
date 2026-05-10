@@ -1,3 +1,4 @@
+
 /* ==================================================
    USER SERVICE - GET PUBLIC USER PROFILE BY ID TESTS
 
@@ -61,7 +62,10 @@ describe("userService - getPublicUserProfileByID", () => {
         });
 
         expect(result).toEqual({
-            user,
+            user: {
+                name: "John",
+                avatar: "/uploads/avatars/john.png"
+            },
             stats: {
                 createdEventsCount: 3,
                 joinedEventsCount: 5

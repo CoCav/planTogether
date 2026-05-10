@@ -1,5 +1,7 @@
 const authService = require("../services/authService");
 
+const { formatAuthenticatedUser } = require("../utils/users/userFormatter");
+
 /* ==================================================
    AUTH CONTROLLER
 
@@ -12,6 +14,7 @@ const authService = require("../services/authService");
    - business logic is delegated to authService
    - uploaded avatar paths are formatted here
    - user profile logic belongs to userController
+   - user response payloads are centralized through shared formatter utilities
    - successful responses include success, message and top-level payload fields when needed
 ================================================== */
 
@@ -37,12 +40,7 @@ const register = async (req, res, next) => {
         return res.status(201).json({
             success: true,
             message: "User registered successfully",
-            user: {
-                userId: user.id,
-                name: user.name,
-                email: user.email,
-                avatar: user.avatar || null
-            },
+            user: formatAuthenticatedUser(user),
             token
         });
 
@@ -62,12 +60,7 @@ const login = async (req, res, next) => {
         return res.status(200).json({
             success: true,
             message: "Login successful",
-            user: {
-                userId: user.id,
-                name: user.name,
-                email: user.email,
-                avatar: user.avatar || null
-            },
+            user: formatAuthenticatedUser(user),
             token
         });
 

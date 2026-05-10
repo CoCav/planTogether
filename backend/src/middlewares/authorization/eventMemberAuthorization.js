@@ -20,6 +20,55 @@ const { EVENT_ROLES } = require("../../constants/eventRoles");
 ================================================== */
 
 /* =============================
+   HELPERS
+============================= */
+
+const sendForbidden = (res, message) => {
+    return res.status(403).json({
+        success: false,
+        message
+    });
+};
+
+const sendNotFound = (res, message) => {
+    return res.status(404).json({
+        success: false,
+        message
+    });
+};
+
+const sendServerError = (res) => {
+    return res.status(500).json({
+        success: false,
+        message: "Internal server error"
+    });
+};
+
+const getMembership = (eventId, userId) => {
+    return EventUserRole.findOne({
+        where: {
+            eventId,
+            userId
+        }
+    });
+};
+
+const isOrganizer = (membership) => {
+    return membership?.role === EVENT_ROLES.ORGANIZER;
+};
+
+const canRemoveMembers = (membership) => {
+    return [
+        EVENT_ROLES.ORGANIZER,
+        EVENT_ROLES.CO_ORGANIZER
+    ].includes(membership?.role);
+};
+
+const isEventCreator = (event, membership) => {
+    return event.creatorId === membership.userId;
+};
+
+/* =============================
    ROLE UPDATE AUTHORIZATION
 ============================= */
 
@@ -31,58 +80,33 @@ const authorizeEventMemberRoleUpdate = async (req, res, next) => {
         const targetUserId = parseInt(req.params.userId, 10);
         const { newRole } = req.body;
 
-        const requesterMembership = await EventUserRole.findOne({
-            where: {
-                eventId,
-                userId: requestingUserId
-            }
-        });
+        const requesterMembership = await getMembership(eventId, requestingUserId);
 
         // Only organizer can update member roles
-        if (!requesterMembership || requesterMembership.role !== EVENT_ROLES.ORGANIZER) {
-            return res.status(403).json({
-                success: false,
-                message: "Only the organizer can update member roles"
-            });
+        if (!isOrganizer(requesterMembership)) {
+            return sendForbidden(res, "Only the organizer can update member roles");
         }
 
-        const targetMembership = await EventUserRole.findOne({
-            where: {
-                eventId,
-                userId: targetUserId
-            }
-        });
+        const targetMembership = await getMembership(eventId, targetUserId);
 
         if (!targetMembership) {
-            return res.status(404).json({
-                success: false,
-                message: "Target membership not found"
-            });
+            return sendNotFound(res, "Target membership not found");
         }
 
         const event = await Event.findByPk(eventId);
 
         if (!event) {
-            return res.status(404).json({
-                success: false,
-                message: "Event not found"
-            });
+            return sendNotFound(res, "Event not found");
         }
 
         // Event creator keeps the organizer ownership role
-        if (event.creatorId === targetMembership.userId) {
-            return res.status(403).json({
-                success: false,
-                message: "You cannot change the role of the event creator"
-            });
+        if (isEventCreator(event, targetMembership)) {
+            return sendForbidden(res, "You cannot change the role of the event creator");
         }
 
         // Only one organizer is allowed per event
         if (newRole === EVENT_ROLES.ORGANIZER) {
-            return res.status(403).json({
-                success: false,
-                message: "Only one organizer is allowed per event"
-            });
+            return sendForbidden(res, "Only one organizer is allowed per event");
         }
 
         req.targetMembership = targetMembership;
@@ -91,13 +115,10 @@ const authorizeEventMemberRoleUpdate = async (req, res, next) => {
 
     } catch (error) {
         console.error("Error authorizing member role update:", error);
-
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
+        return sendServerError(res);
     }
 };
+
 
 /* =============================
    MEMBER REMOVAL AUTHORIZATION
@@ -110,78 +131,46 @@ const authorizeEventMemberRemoval = async (req, res, next) => {
         const requestingUserId = req.user.userId;
         const targetUserId = parseInt(req.params.userId, 10);
 
-        const requesterMembership = await EventUserRole.findOne({
-            where: {
-                eventId,
-                userId: requestingUserId
-            }
-        });
+        const requesterMembership = await getMembership(eventId, requestingUserId);
 
         // Only organizer or co-organizer can remove members
-        if (!requesterMembership ||
-            ![EVENT_ROLES.ORGANIZER, EVENT_ROLES.CO_ORGANIZER].includes(requesterMembership.role)
-        ) {
-            return res.status(403).json({
-                success: false,
-                message: "Insufficient permissions to remove member"
-            });
+        if (!canRemoveMembers(requesterMembership)) {
+            return sendForbidden(res, "Insufficient permissions to remove member");
         }
 
-        const targetMembership = await EventUserRole.findOne({
-            where: {
-                eventId,
-                userId: targetUserId
-            }
-        });
+        const targetMembership = await getMembership(eventId, targetUserId);
 
         if (!targetMembership) {
-            return res.status(404).json({
-                success: false,
-                message: "Target membership not found"
-            });
+            return sendNotFound(res, "Target membership not found");
         }
 
         const event = await Event.findByPk(eventId);
 
         if (!event) {
-            return res.status(404).json({
-                success: false,
-                message: "Event not found"
-            });
+            return sendNotFound(res, "Event not found");
         }
 
         // Event creator cannot be removed from their own event
-        if (event.creatorId === targetMembership.userId) {
-            return res.status(403).json({
-                success: false,
-                message: "You cannot remove the event creator"
-            });
+        if (isEventCreator(event, targetMembership)) {
+            return sendForbidden(res, "You cannot remove the event creator");
         }
 
         // Admin removal route cannot be used for self-removal
         if (requesterMembership.userId === targetMembership.userId) {
-            return res.status(403).json({
-                success: false,
-                message: "You cannot remove yourself from the event"
-            });
+            return sendForbidden(res, "You cannot remove yourself from the event");
         }
 
         // Organizer role cannot be removed through member removal
         if (targetMembership.role === EVENT_ROLES.ORGANIZER) {
-            return res.status(403).json({
-                success: false,
-                message: "Organizer cannot be removed"
-            });
+            return sendForbidden(res, "Organizer cannot be removed");
         }
 
         // Co-organizers cannot remove other co-organizers
-        if (targetMembership.role === EVENT_ROLES.CO_ORGANIZER &&
+        if (
+            targetMembership.role === EVENT_ROLES.CO_ORGANIZER &&
             requesterMembership.role === EVENT_ROLES.CO_ORGANIZER
         ) {
-            return res.status(403).json({
-                success: false,
-                message: "Co-organizers cannot remove other co-organizers"
-            });
+            return sendForbidden(res, "Co-organizers cannot remove other co-organizers");
         }
 
         req.targetMembership = targetMembership;
@@ -190,11 +179,7 @@ const authorizeEventMemberRemoval = async (req, res, next) => {
 
     } catch (error) {
         console.error("Error authorizing member removal:", error);
-
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
+        return sendServerError(res);
     }
 };
 

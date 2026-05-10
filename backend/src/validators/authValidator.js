@@ -1,5 +1,7 @@
 const { body } = require("express-validator");
 
+const { PASSWORD_REQUIREMENTS, PASSWORD_MESSAGES } = require("../config/security/passwordPolicy");
+
 /* ==================================================
    AUTH VALIDATORS
 
@@ -10,6 +12,7 @@ const { body } = require("express-validator");
    Notes:
    - handleValidationErrors must run after these validators
    - email values are normalized before reaching controllers
+   - password rules are centralized in utils/auth/passwordRules
    - user profile/password validators belong to userValidator
 ================================================== */
 
@@ -30,10 +33,14 @@ const registerValidator = [
         .normalizeEmail(),
 
     body("password")
-        .isLength({ min: 6 }).withMessage("Password must be at least 6 characters long")
-        .matches(/\d/).withMessage("Password must contain a number")
-        .matches(/[A-Z]/).withMessage("Password must contain an uppercase letter")
-        .matches(/[a-z]/).withMessage("Password must contain a lowercase letter")
+        .isLength({ min: PASSWORD_REQUIREMENTS.minLength })
+        .withMessage(PASSWORD_MESSAGES.minLength)
+        .matches(PASSWORD_REQUIREMENTS.hasNumber)
+        .withMessage(PASSWORD_MESSAGES.number)
+        .matches(PASSWORD_REQUIREMENTS.hasUppercase)
+        .withMessage(PASSWORD_MESSAGES.uppercase)
+        .matches(PASSWORD_REQUIREMENTS.hasLowercase)
+        .withMessage(PASSWORD_MESSAGES.lowercase)
 ];
 
 // Validate user login data

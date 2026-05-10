@@ -8,10 +8,13 @@
    Ensures:
    - invalid auth payloads are rejected early
    - registration password security rules are enforced
+   - centralized password policy rules are enforced
    - login credentials are validated before controller logic
 ================================================== */
 
 const { registerValidator, loginValidator } = require("../../../src/validators/authValidator");
+
+const { PASSWORD_MIN_LENGTH } = require("../../../src/config/security/passwordPolicy");
 
 const { runValidation } = require("../../helpers/validation/validationHelper");
 
@@ -55,6 +58,18 @@ describe("authValidator", () => {
             });
 
             expect(result.array()[0].msg).toMatch(/invalid email/i);
+        });
+
+        it("should fail if password is shorter than password policy minimum", async () => {
+            const result = await runValidation(registerValidator, {
+                body: {
+                    name: "John",
+                    email: "john@test.com",
+                    password: `Aa1${"x".repeat(PASSWORD_MIN_LENGTH - 4)}`
+                }
+            });
+
+            expect(result.isEmpty()).toBe(false);
         });
 
         it("should fail with weak password", async () => {

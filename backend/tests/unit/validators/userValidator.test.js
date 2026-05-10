@@ -10,15 +10,24 @@
    Ensures:
    - current user query params are validated before service logic
    - current user payloads are validated before controller logic
+   - current user password policy is enforced
    - public user routes only receive valid positive integer IDs
    - invalid route params are rejected before service lookup
 ================================================== */
 
-const { getCurrentUserEventsValidator, updateCurrentUserProfileValidator, changeCurrentUserPasswordValidator, userIdParamValidator } = require("../../../src/validators/userValidator");
+const {
+    getCurrentUserEventsValidator,
+    updateCurrentUserProfileValidator,
+    changeCurrentUserPasswordValidator,
+    userIdParamValidator
+} = require("../../../src/validators/userValidator");
+
+const { PASSWORD_MIN_LENGTH } = require("../../../src/config/security/passwordPolicy");
 
 const { runValidation } = require("../../helpers/validation/validationHelper");
 
 describe("userValidator", () => {
+
     /* =============================
        CURRENT USER EVENTS QUERY VALIDATION
     ============================= */
@@ -142,6 +151,17 @@ describe("userValidator", () => {
             });
 
             expect(result.array()[0].msg).toMatch(/new password is required/i);
+        });
+
+        it("should fail if newPassword is shorter than password policy minimum", async () => {
+            const result = await runValidation(changeCurrentUserPasswordValidator, {
+                body: {
+                    currentPassword: "oldPass1",
+                    newPassword: `Aa1${"x".repeat(PASSWORD_MIN_LENGTH - 4)}`
+                }
+            });
+
+            expect(result.isEmpty()).toBe(false);
         });
 
         it("should fail if newPassword is weak", async () => {

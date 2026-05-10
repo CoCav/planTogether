@@ -1,5 +1,7 @@
 const { body, param, query } = require("express-validator");
 
+const { PASSWORD_REQUIREMENTS, PASSWORD_MESSAGES } = require("../config/security/passwordPolicy");
+
 /* ==================================================
    USER VALIDATORS
 
@@ -123,12 +125,15 @@ const changeCurrentUserPasswordValidator = [
 
     body("newPassword")
         .notEmpty().withMessage("New password is required")
-        .isLength({ min: 6 }).withMessage("New password must be at least 6 characters long")
-        .matches(/\d/).withMessage("New password must contain a number")
-        .matches(/[A-Z]/).withMessage("New password must contain an uppercase letter")
-        .matches(/[a-z]/).withMessage("New password must contain a lowercase letter")
+        .isLength({ min: PASSWORD_REQUIREMENTS.minLength })
+        .withMessage(PASSWORD_MESSAGES.newPasswordMinLength)
+        .matches(PASSWORD_REQUIREMENTS.hasNumber)
+        .withMessage(PASSWORD_MESSAGES.newPasswordNumber)
+        .matches(PASSWORD_REQUIREMENTS.hasUppercase)
+        .withMessage(PASSWORD_MESSAGES.newPasswordUppercase)
+        .matches(PASSWORD_REQUIREMENTS.hasLowercase)
+        .withMessage(PASSWORD_MESSAGES.newPasswordLowercase)
 ];
-
 
 /* =============================
    PUBLIC USER

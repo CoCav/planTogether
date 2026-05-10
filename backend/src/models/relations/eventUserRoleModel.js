@@ -11,11 +11,13 @@ const { EVENT_ROLES } = require("../../constants/eventRoles");
    - user roles inside events
    - join timestamps
    - duplicate membership prevention
+   - membership lookup indexes
 
    Notes:
    - links users and events together
    - one user can only have one membership per event
    - role values should stay aligned with EVENT_ROLES constants
+   - indexes support common membership and role queries
 ================================================== */
 
 const EventUserRole = sequelize.define("EventUserRole", {
@@ -43,12 +45,21 @@ const EventUserRole = sequelize.define("EventUserRole", {
 }, {
     tableName: "event_user_roles",
 
-    // Prevent the same user from joining the same event twice
+    // Optimize common membership queries:
+    // - event participant retrieval
+    // - user joined events lookup
+    // - organizer/co-organizer filtering
+    // - participant count queries
     indexes: [
         {
             unique: true,
             fields: ["eventId", "userId"]
-        }
+        },
+        { fields: ["eventId"] },
+        { fields: ["userId"] },
+        { fields: ["role"] },
+        { fields: ["eventId", "role"] },
+        { fields: ["userId", "role"] }
     ]
 });
 

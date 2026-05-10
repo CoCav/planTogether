@@ -10,6 +10,7 @@ const sequelize = require("../config/database");
    - event schedule
    - participant limits
    - event image path
+   - query indexes for filtering and sorting
 
    Notes:
    - creator relationship is defined in models/index.js
@@ -86,7 +87,21 @@ const Event = sequelize.define("Event", {
     }
 }, {
     tableName: "events",
-    timestamps: true
+    timestamps: true,
+
+    // Optimize common event queries:
+    // - creator profile pages
+    // - upcoming/past event filtering
+    // - event listing pagination/sorting
+    // - mode/type/theme filtering
+    indexes: [
+        { fields: ["creatorId"] },
+        { fields: ["startDateTime"] },
+        { fields: ["endDateTime"] },
+        { fields: ["mode"] },
+        { fields: ["type"] },
+        { fields: ["theme"] }
+    ]
 });
 
 module.exports = Event;

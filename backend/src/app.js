@@ -6,6 +6,8 @@ require("dotenv").config();
 
 const path = require("path");
 
+const corsOptions = require("./config/cors");
+
 const errorHandler = require("./middlewares/errors/errorHandler");
 
 const authRoutes = require("./routes/authRoutes");
@@ -46,11 +48,7 @@ app.use(
 );
 
 // Configure CORS for frontend access
-app.use(cors({
-    origin: process.env.CORS_ORIGIN?.split(",")
-        ?? ["http://localhost:5173"],
-    credentials: true
-}));
+app.use(cors(corsOptions));
 
 // Parse JSON request bodies
 app.use(express.json());

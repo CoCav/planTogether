@@ -9,6 +9,7 @@
    - invalid email rejection
    - weak password rejection
    - invalid avatar file type rejection
+   - invalid avatar extension rejection
    - oversized avatar rejection
    - duplicate email rejection
 
@@ -163,6 +164,20 @@ describe("Register API", () => {
             .attach("avatar", Buffer.from("fake file"), {
                 filename: "avatar.txt",
                 contentType: "text/plain"
+            });
+
+        expect(res.statusCode).toBe(400);
+    });
+
+    it("should reject invalid avatar extension even with image mimetype", async () => {
+        const res = await request(app)
+            .post("/api/auth/register")
+            .field("name", "Invalid Extension User")
+            .field("email", `invalidext${Date.now()}@test.com`)
+            .field("password", "Password123")
+            .attach("avatar", Buffer.from("fake image"), {
+                filename: "avatar.txt",
+                contentType: "image/png"
             });
 
         expect(res.statusCode).toBe(400);

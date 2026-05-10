@@ -12,6 +12,7 @@
    - invalid date validation
    - invalid registration deadline validation
    - invalid image type rejection
+   - invalid image extension rejection
    - oversized image rejection
 
    Ensures:
@@ -289,6 +290,31 @@ describe("Create Event API", () => {
             .attach("image", Buffer.from("fake pdf"), {
                 filename: "document.pdf",
                 contentType: "application/pdf"
+            });
+
+        expect(res.statusCode).toBe(400);
+    });
+
+    it("should reject invalid image extension even with image mimetype", async () => {
+        const userAuth = await registerAndGetToken({
+            name: "Invalid Extension User",
+            email: `invalidext${Date.now()}@test.com`
+        });
+
+        const res = await request(app)
+            .post("/api/events")
+            .set(userAuth.headers)
+            .field("title", "Invalid Extension Event")
+            .field("description", "Invalid extension")
+            .field("type", "Meetup")
+            .field("theme", "Technology")
+            .field("mode", "in_person")
+            .field("location", "Montreal")
+            .field("startDateTime", "2026-12-31T10:00:00.000Z")
+            .field("endDateTime", "2026-12-31T12:00:00.000Z")
+            .attach("image", Buffer.from("fake image"), {
+                filename: "image.txt",
+                contentType: "image/png"
             });
 
         expect(res.statusCode).toBe(400);

@@ -4,6 +4,8 @@ const fs = require("fs");
 
 const { createHttpError } = require("../utils/errors/httpError");
 
+const { ALLOWED_IMAGE_MIME_TYPES, ALLOWED_IMAGE_EXTENSIONS, MAX_AVATAR_SIZE, MAX_EVENT_IMAGE_SIZE } = require("../config/security/uploadPolicy");
+
 /* ==================================================
    UPLOAD FILES MIDDLEWARE
 
@@ -12,15 +14,25 @@ const { createHttpError } = require("../utils/errors/httpError");
    - avatar uploads
    - event image uploads
    - upload folder creation
-   - image-only validation
+   - image MIME type validation
+   - image extension validation
    - upload size limits
 
    Notes:
    - files are stored under UPLOAD_DIR or "uploads"
+   - generated filenames do not trust original filenames
    - upload errors are handled by the global error handler
 ================================================== */
 
 const baseUploadDir = process.env.UPLOAD_DIR || "uploads";
+
+// Create a safe random filename while preserving validated extension
+const createSafeFileName = (prefix, originalName) => {
+    const ext = path.extname(originalName).toLowerCase();
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+
+    return `${prefix}-${uniqueSuffix}${ext}`;
+};
 
 // Create a reusable Multer image uploader
 const createImageUpload = ({ folder, prefix, maxSize }) => {
@@ -37,22 +49,20 @@ const createImageUpload = ({ folder, prefix, maxSize }) => {
         },
 
         filename: (req, file, cb) => {
-            const ext = path.extname(file.originalname);
-
-            // Prefix + timestamp + random number prevents filename collisions
-            const uniqueName = `${prefix}-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-
-            cb(null, uniqueName);
+            cb(null, createSafeFileName(prefix, file.originalname));
         }
     });
 
     const fileFilter = (req, file, cb) => {
-        const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+        const ext = path.extname(file.originalname).toLowerCase();
 
-        // Reject non-image uploads before storage
-        if (!allowedTypes.includes(file.mimetype)) {
+        const hasAllowedMimeType = ALLOWED_IMAGE_MIME_TYPES.includes(file.mimetype);
+        const hasAllowedExtension = ALLOWED_IMAGE_EXTENSIONS.includes(ext);
+
+        // Reject files that do not match allowed image MIME types and extensions
+        if (!hasAllowedMimeType || !hasAllowedExtension) {
             return cb(
-                createHttpError(400, "Only image files are allowed"),
+                createHttpError(400, "Only valid image files are allowed"),
                 false
             );
         }
@@ -73,14 +83,14 @@ const createImageUpload = ({ folder, prefix, maxSize }) => {
 const uploadAvatar = createImageUpload({
     folder: "avatars",
     prefix: "avatar",
-    maxSize: 2 * 1024 * 1024
+    maxSize: MAX_AVATAR_SIZE
 });
 
 // Event image upload configuration
 const uploadEventImage = createImageUpload({
     folder: "events",
     prefix: "event",
-    maxSize: 3 * 1024 * 1024
+    maxSize: MAX_EVENT_IMAGE_SIZE
 });
 
 module.exports = { uploadAvatar, uploadEventImage };

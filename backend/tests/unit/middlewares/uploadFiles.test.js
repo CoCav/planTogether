@@ -12,6 +12,8 @@
    - reusable upload middlewares are configured
    - upload handlers expose expected Multer APIs
    - upload size limits match application rules
+   - upload security policies are centralized
+   - image MIME types and extensions are validated
 ================================================== */
 
 const { uploadAvatar, uploadEventImage } = require("../../../src/middlewares/uploadFiles");

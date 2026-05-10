@@ -1,10 +1,12 @@
 const express = require("express");
+const helmet = require("helmet");
 const cors = require("cors");
+
 require("dotenv").config();
 
 const path = require("path");
 
-const errorHandler = require("./middlewares/errorHandler");
+const errorHandler = require("./middlewares/errors/errorHandler");
 
 const authRoutes = require("./routes/authRoutes");
 const eventRoutes = require("./routes/eventRoutes");
@@ -16,6 +18,7 @@ const userRoutes = require("./routes/userRoutes");
 
    Handles:
    - Express app initialization
+   - security middlewares
    - global middlewares
    - static uploads access
    - API route registration
@@ -25,25 +28,22 @@ const userRoutes = require("./routes/userRoutes");
    Notes:
    - uploaded files are exposed through /uploads
    - CORS origins are configurable via environment variables
+   - Helmet adds common HTTP security protections
 ================================================== */
 
 const app = express();
 
 /* =============================
-   STATIC FILES
-============================= */
-
-// Serve uploaded files publicly
-// Example: /uploads/avatars/avatar-123.png
-app.use(
-    "/uploads",
-    express.static(path.join(__dirname, "../uploads"))
-);
-
-
-/* =============================
    GLOBAL MIDDLEWARES
 ============================= */
+
+// Add common security-related HTTP headers
+// Disable cross-origin resource policy to allow frontend access to uploaded files
+app.use(
+    helmet({
+        crossOriginResourcePolicy: false
+    })
+);
 
 // Configure CORS for frontend access
 app.use(cors({
@@ -57,6 +57,18 @@ app.use(express.json());
 
 // Parse URL-encoded request bodies
 app.use(express.urlencoded({ extended: true }));
+
+
+/* =============================
+   STATIC FILES
+============================= */
+
+// Serve uploaded files publicly
+// Example: /uploads/avatars/avatar-123.png
+app.use(
+    "/uploads",
+    express.static(path.join(__dirname, "../uploads"))
+);
 
 
 /* =============================

@@ -3,11 +3,11 @@ const router = express.Router();
 
 const eventController = require("../controllers/eventController");
 
-const { authenticateToken } = require("../middlewares/authenticateToken");
+const { authenticateToken } = require("../middlewares/auth/authenticateToken");
 const { uploadEventImage } = require("../middlewares/uploadFiles");
 
 const { EVENT_ROLES } = require("../constants/eventRoles");
-const authorizeEventRole = require("../middlewares/authorizeEventRole");
+const authorizeEventRole = require("../middlewares/authorization/authorizeEventRole");
 
 const { eventIdParamValidator, createEventValidator, updateEventValidator, getAllEventsValidator } = require("../validators/eventValidator");
 const handleValidationErrors = require("../middlewares/handleValidationErrors");

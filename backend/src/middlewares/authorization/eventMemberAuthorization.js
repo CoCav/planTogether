@@ -1,7 +1,7 @@
-const Event = require("../models/eventModel");
-const EventUserRole = require("../models/relations/eventUserRoleModel");
+const Event = require("../../models/eventModel");
+const EventUserRole = require("../../models/relations/eventUserRoleModel");
 
-const { EVENT_ROLES } = require("../constants/eventRoles");
+const { EVENT_ROLES } = require("../../constants/eventRoles");
 
 /* ==================================================
    EVENT MEMBER AUTHORIZATION MIDDLEWARE

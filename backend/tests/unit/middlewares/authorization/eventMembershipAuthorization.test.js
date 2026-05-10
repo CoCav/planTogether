@@ -19,22 +19,22 @@
    - shared event role constants are used for valid role scenarios
 ================================================== */
 
-const Event = require("../../../src/models/eventModel");
-const EventUserRole = require("../../../src/models/relations/eventUserRoleModel");
+const Event = require("../../../../src/models/eventModel");
+const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
 
-const { authorizeEventMemberRoleUpdate, authorizeEventMemberRemoval } = require("../../../src/middlewares/eventMemberAuthorization");
-const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
+const { authorizeEventMemberRoleUpdate, authorizeEventMemberRemoval } = require("../../../../src/middlewares/authorization/eventMemberAuthorization");
+const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 
-const { createEventMemberAuthorizationMocks } = require("../../helpers/express/mockExpress");
-const { mockConsoleError } = require("../../helpers/mocks/consoleMocks");
+const { createEventMemberAuthorizationMocks } = require("../../../helpers/express/mockExpress");
+const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
-const { createMockEvent, createMockMembership } = require("../../factories/membershipFactory");
+const { createMockEvent, createMockMembership } = require("../../../factories/membershipFactory");
 
-jest.mock("../../../src/models/eventModel", () => ({
+jest.mock("../../../../src/models/eventModel.js", () => ({
     findByPk: jest.fn()
 }));
 
-jest.mock("../../../src/models/relations/eventUserRoleModel", () => ({
+jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
     findOne: jest.fn()
 }));
 

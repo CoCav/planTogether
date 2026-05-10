@@ -1,4 +1,4 @@
-const EventUserRole = require("../models/relations/eventUserRoleModel");
+const EventUserRole = require("../../models/relations/eventUserRoleModel");
 
 /* ==================================================
    AUTHORIZE EVENT ROLE MIDDLEWARE

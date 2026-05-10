@@ -3,8 +3,10 @@ const router = express.Router();
 
 const authController = require("../controllers/authController");
 
-const { authenticateToken } = require("../middlewares/authenticateToken");
+const { authenticateToken } = require("../middlewares/auth/authenticateToken");
 const { uploadAvatar } = require("../middlewares/uploadFiles");
+
+const authRateLimiter = require("../middlewares/authRateLimiter");
 
 const { registerValidator, loginValidator } = require("../validators/authValidator");
 const handleValidationErrors = require("../middlewares/handleValidationErrors");
@@ -24,10 +26,23 @@ const handleValidationErrors = require("../middlewares/handleValidationErrors");
 ================================================== */
 
 // Register user
-router.post("/register", uploadAvatar.single("avatar"), registerValidator, handleValidationErrors, authController.register);
+router.post(
+    "/register",
+    authRateLimiter,
+    uploadAvatar.single("avatar"),
+    registerValidator,
+    handleValidationErrors,
+    authController.register
+);
 
 // Login user
-router.post("/login", loginValidator, handleValidationErrors, authController.login);
+router.post(
+    "/login",
+    authRateLimiter,
+    loginValidator,
+    handleValidationErrors,
+    authController.login
+);
 
 // Logout user
 router.post("/logout", authenticateToken, authController.logout);

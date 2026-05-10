@@ -16,15 +16,15 @@
    - unexpected errors return a safe server response
 ================================================== */
 
-const EventUserRole = require("../../../src/models/relations/eventUserRoleModel");
+const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
 
-const authorizeEventRole = require("../../../src/middlewares/authorizeEventRole");
-const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
+const authorizeEventRole = require("../../../../src/middlewares/authorization/authorizeEventRole");
+const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 
-const { createEventRoleMocks } = require("../../helpers/express/mockExpress");
-const { mockConsoleError } = require("../../helpers/mocks/consoleMocks");
+const { createEventRoleMocks } = require("../../../helpers/express/mockExpress");
+const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
-jest.mock("../../../src/models/relations/eventUserRoleModel", () => ({
+jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
     findOne: jest.fn()
 }));
 

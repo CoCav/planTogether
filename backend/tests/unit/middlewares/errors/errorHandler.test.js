@@ -17,10 +17,10 @@
 ================================================== */
 
 const multer = require("multer");
-const errorHandler = require("../../../src/middlewares/errorHandler");
+const errorHandler = require("../../../../src/middlewares/errors/errorHandler");
 
-const { createMockReqResNext } = require("../../helpers/express/mockExpress");
-const { mockConsoleError } = require("../../helpers/mocks/consoleMocks");
+const { createMockReqResNext } = require("../../../helpers/express/mockExpress");
+const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
 describe("errorHandler middleware", () => {
 

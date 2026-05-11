@@ -129,8 +129,11 @@ The backend follows a modular **MVC architecture** with a clear separation of co
 ```txt
 project-root
 │
+├── docs/
+│   └── testing.md
+│
 ├── src
-│   ├── config
+│   ├── config/
 │   │   ├── database.js
 │   │   ├── cors.js
 │   │   └── security/

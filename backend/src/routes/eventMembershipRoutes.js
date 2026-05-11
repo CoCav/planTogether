@@ -10,7 +10,7 @@ const authorizeEventRole = require("../middlewares/authorization/authorizeEventR
 const { authorizeEventMemberRoleUpdate, authorizeEventMemberRemoval } = require("../middlewares/authorization/eventMemberAuthorization");
 
 const { eventIdParamValidator, updateEventMemberRoleValidator, removeEventMemberValidator } = require("../validators/eventMembershipValidator");
-const handleValidationErrors = require("../middlewares/handleValidationErrors");
+const handleValidationErrors = require("../middlewares/errors/handleValidationErrors");
 
 /* ==================================================
    EVENT MEMBERSHIP ROUTES

@@ -23,8 +23,8 @@ jest.mock("fs", () => ({
 
 const fs = require("fs");
 
-const { deleteUploadedFile } = require("../../../src/utils/uploadedFileStorage");
-const { mockConsoleWarn } = require("../../helpers/mocks/consoleMocks");
+const { deleteUploadedFile } = require("../../../../src/utils/files/uploadedFileStorage");
+const { mockConsoleWarn } = require("../../../helpers/mocks/consoleMocks");
 
 describe("uploadedFileStorage utils", () => {
 

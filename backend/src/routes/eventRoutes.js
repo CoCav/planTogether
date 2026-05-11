@@ -10,7 +10,7 @@ const { EVENT_ROLES } = require("../constants/eventRoles");
 const authorizeEventRole = require("../middlewares/authorization/authorizeEventRole");
 
 const { eventIdParamValidator, createEventValidator, updateEventValidator, getAllEventsValidator } = require("../validators/eventValidator");
-const handleValidationErrors = require("../middlewares/handleValidationErrors");
+const handleValidationErrors = require("../middlewares/errors/handleValidationErrors");
 
 /* ==================================================
    EVENT ROUTES

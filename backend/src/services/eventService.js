@@ -14,7 +14,8 @@ const { buildEventCreateData, buildEventUpdateData } = require("../utils/events/
 const { buildEventWhereConditions, buildEventCreatorInclude } = require("../utils/events/eventQueryBuilder");
 const { assertEventNotPast, getEventStatus } = require("../utils/events/eventStatus");
 
-const { deleteUploadedFile } = require("../utils/uploadedFileStorage");
+const { deleteUploadedFile } = require("../utils/files/uploadedFileStorage");
+
 const { getPaginationOptions } = require("../utils/pagination");
 
 /* ==================================================

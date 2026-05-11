@@ -9,7 +9,7 @@ const { uploadAvatar } = require("../middlewares/uploadFiles");
 const authRateLimiter = require("../middlewares/authRateLimiter");
 
 const { registerValidator, loginValidator } = require("../validators/authValidator");
-const handleValidationErrors = require("../middlewares/handleValidationErrors");
+const handleValidationErrors = require("../middlewares/errors/handleValidationErrors");
 
 /* ==================================================
    AUTH ROUTES

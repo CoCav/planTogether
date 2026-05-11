@@ -1,6 +1,6 @@
 const userService = require("../services/userService");
 
-const { formatAuthenticatedUser } = require("../utils/users/userFormatter");
+const { formatAuthenticatedUser } = require("../utils/formatting/userFormatter");
 
 /* ==================================================
    USER CONTROLLER

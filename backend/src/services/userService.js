@@ -11,14 +11,15 @@ const { EVENT_ROLES } = require("../constants/eventRoles");
 
 const { throwHttpError } = require("../utils/errors/httpError");
 
-const { formatPublicUser } = require("../utils/users/userFormatter");
+const { formatPublicUser } = require("../utils/formatting/userFormatter");
 
 const { buildEventWhereConditions, buildEventCreatorInclude } = require("../utils/events/eventQueryBuilder");
 const { getEventStatus } = require("../utils/events/eventStatus");
 
 const { normalizeEmail } = require("../utils/normalize");
 
-const { deleteUploadedFile } = require("../utils/uploadedFileStorage");
+const { deleteUploadedFile } = require("../utils/files/uploadedFileStorage");
+
 const { getPaginationOptions } = require("../utils/pagination");
 
 /* ==================================================

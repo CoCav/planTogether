@@ -16,10 +16,10 @@
 
 const { validationResult } = require("express-validator");
 
-const handleValidationErrors = require("../../../src/middlewares/handleValidationErrors");
+const handleValidationErrors = require("../../../../src/middlewares/errors/handleValidationErrors");
 
-const { createMockReqResNext } = require("../../helpers/express/mockExpress");
-const { mockConsoleLog } = require("../../helpers/mocks/consoleMocks");
+const { createMockReqResNext } = require("../../../helpers/express/mockExpress");
+const { mockConsoleLog } = require("../../../helpers/mocks/consoleMocks");
 
 jest.mock("express-validator");
 

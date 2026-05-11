@@ -1,6 +1,6 @@
 const authService = require("../services/authService");
 
-const { formatAuthenticatedUser } = require("../utils/users/userFormatter");
+const { formatAuthenticatedUser } = require("../utils/formatting/userFormatter");
 
 /* ==================================================
    AUTH CONTROLLER

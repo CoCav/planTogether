@@ -7,7 +7,7 @@ const { authenticateToken } = require("../middlewares/auth/authenticateToken");
 const { uploadAvatar } = require("../middlewares/uploadFiles");
 
 const { userIdParamValidator, getCurrentUserEventsValidator, updateCurrentUserProfileValidator, changeCurrentUserPasswordValidator } = require("../validators/userValidator");
-const handleValidationErrors = require("../middlewares/handleValidationErrors");
+const handleValidationErrors = require("../middlewares/errors/handleValidationErrors");
 
 /* ==================================================
    USER ROUTES

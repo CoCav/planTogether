@@ -31,7 +31,7 @@ jest.mock("../../../../../src/models/userModel", () => ({
     findByPk: jest.fn()
 }));
 
-jest.mock("../../../../../src/utils/uploadedFileStorage", () => ({
+jest.mock("../../../../../src/utils/files/uploadedFileStorage", () => ({
     deleteUploadedFile: jest.fn()
 }));
 
@@ -40,7 +40,7 @@ const User = require("../../../../../src/models/userModel");
 
 const userService = require("../../../../../src/services/userService");
 
-const { deleteUploadedFile } = require("../../../../../src/utils/uploadedFileStorage");
+const { deleteUploadedFile } = require("../../../../../src/utils/files/uploadedFileStorage");
 
 const { mockConsoleError } = require("../../../../helpers/mocks/consoleMocks");
 

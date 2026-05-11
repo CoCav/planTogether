@@ -41,7 +41,7 @@ jest.mock("../../../../src/utils/events/eventStatus", () => ({
     assertEventNotPast: jest.fn()
 }));
 
-jest.mock("../../../../src/utils/uploadedFileStorage", () => ({
+jest.mock("../../../../src/utils/files/uploadedFileStorage", () => ({
     deleteUploadedFile: jest.fn()
 }));
 
@@ -52,7 +52,7 @@ const eventService = require("../../../../src/services/eventService");
 
 const { buildEventUpdateData } = require("../../../../src/utils/events/eventDataBuilder");
 const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
-const { deleteUploadedFile } = require("../../../../src/utils/uploadedFileStorage");
+const { deleteUploadedFile } = require("../../../../src/utils/files/uploadedFileStorage");
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 

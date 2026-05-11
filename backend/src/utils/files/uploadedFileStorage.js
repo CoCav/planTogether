@@ -33,7 +33,7 @@ const deleteUploadedFile = async (filePath) => {
         }
 
         // Resolve absolute path from project root
-        const absolutePath = path.join(__dirname, "..", "..", normalizedPath);
+        const absolutePath = path.join(__dirname, "..", "..", "..", normalizedPath);
 
         // Delete file only if it exists
         if (fs.existsSync(absolutePath)) {

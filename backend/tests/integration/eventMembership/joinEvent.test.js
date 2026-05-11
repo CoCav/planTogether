@@ -24,7 +24,7 @@ const app = require("../../../src/app");
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
 const { registerAndGetToken } = require("../../helpers/api/authHelper");
-const { createEvent } = require("../../helpers/api/eventHelper");
+const { createEventWithOrganizer } = require("../../helpers/api/eventHelper");
 const { joinEvent } = require("../../helpers/api/eventMembershipHelper");
 
 describe("Join Event API", () => {
@@ -33,18 +33,8 @@ describe("Join Event API", () => {
     afterEach(resetDB);
     afterAll(closeDB);
 
-    /* =============================
-       JOIN SUCCESS
-    ============================= */
-
     it("should allow an authenticated user to join an event", async () => {
-        const eventCreatorAuth = await registerAndGetToken({
-            name: "Creator",
-            email: `creator${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(eventCreatorAuth.headers);
-        const event = eventRes.body.event;
+        const { event } = await createEventWithOrganizer();
 
         const participantAuth = await registerAndGetToken({
             name: "Participant",
@@ -56,27 +46,13 @@ describe("Join Event API", () => {
         expect(res.statusCode).toBe(200);
     });
 
-    /* =============================
-       AUTHENTICATION ERRORS
-    ============================= */
-
     it("should reject joining without token", async () => {
-        const eventCreatorAuth = await registerAndGetToken({
-            name: "Creator",
-            email: `creator${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(eventCreatorAuth.headers);
-        const event = eventRes.body.event;
+        const { event } = await createEventWithOrganizer();
 
         const res = await request(app).post(`/api/events/${event.id}/members/join`);
 
         expect(res.statusCode).toBe(401);
     });
-
-    /* =============================
-       VALIDATION ERRORS
-    ============================= */
 
     it("should reject invalid eventId", async () => {
         const participantAuth = await registerAndGetToken({
@@ -91,18 +67,8 @@ describe("Join Event API", () => {
         expect(res.statusCode).toBe(400);
     });
 
-    /* =============================
-       BUSINESS RULES
-    ============================= */
-
     it("should reject joining the same event twice", async () => {
-        const eventCreatorAuth = await registerAndGetToken({
-            name: "Creator",
-            email: `creator${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(eventCreatorAuth.headers);
-        const event = eventRes.body.event;
+        const { event } = await createEventWithOrganizer();
 
         const participantAuth = await registerAndGetToken({
             name: "Participant",
@@ -117,20 +83,12 @@ describe("Join Event API", () => {
     });
 
     it("should reject joining a past event", async () => {
-        const eventCreatorAuth = await registerAndGetToken({
-            name: "Creator",
-            email: `creator${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(
-            eventCreatorAuth.headers,
-            {
+        const { event } = await createEventWithOrganizer({
+            event: {
                 startDateTime: "2020-01-01T10:00:00.000Z",
                 endDateTime: "2020-01-01T12:00:00.000Z"
             }
-        );
-
-        const event = eventRes.body.event;
+        });
 
         const participantAuth = await registerAndGetToken({
             name: "Participant",
@@ -143,25 +101,17 @@ describe("Join Event API", () => {
     });
 
     it("should reject joining after registration deadline", async () => {
-        const eventCreatorAuth = await registerAndGetToken({
-            name: "Creator",
-            email: `creator${Date.now()}@test.com`
-        });
-
         const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
         const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
         const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-        const eventRes = await createEvent(
-            eventCreatorAuth.headers,
-            {
+        const { event } = await createEventWithOrganizer({
+            event: {
                 registrationDeadline: yesterday,
                 startDateTime: tomorrow,
                 endDateTime: nextWeek
             }
-        );
-
-        const event = eventRes.body.event;
+        });
 
         const participantAuth = await registerAndGetToken({
             name: "Participant",
@@ -174,19 +124,11 @@ describe("Join Event API", () => {
     });
 
     it("should reject joining when event is full", async () => {
-        const eventCreatorAuth = await registerAndGetToken({
-            name: "Creator",
-            email: `creator${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(
-            eventCreatorAuth.headers,
-            {
+        const { event } = await createEventWithOrganizer({
+            event: {
                 maxParticipants: 1
             }
-        );
-
-        const event = eventRes.body.event;
+        });
 
         const firstParticipantAuth = await registerAndGetToken({
             name: "First Participant",
@@ -204,10 +146,6 @@ describe("Join Event API", () => {
 
         expect(res.statusCode).toBe(409);
     });
-
-    /* =============================
-       EDGE CASES
-    ============================= */
 
     it("should reject joining a nonexistent event", async () => {
         const participantAuth = await registerAndGetToken({

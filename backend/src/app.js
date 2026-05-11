@@ -2,6 +2,7 @@ const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
 
+// Load environment variables for app config and tests
 require("dotenv").config();
 
 const path = require("path");
@@ -77,6 +78,7 @@ app.use(
 app.get("/api/health", (req, res) => {
     return res.json({
         ok: true,
+        success: true,
         name: "PlanTogether API"
     });
 });
@@ -111,6 +113,7 @@ app.use("/api/users", userRoutes);
 // Handle unknown routes
 app.use((req, res) => {
     res.status(404).json({
+        success: false,
         message: "Route not found"
     });
 });

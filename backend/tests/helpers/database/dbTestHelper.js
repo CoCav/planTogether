@@ -12,7 +12,13 @@
    - keeps integration test lifecycle consistent
 ================================================== */
 
-const { initDB: initializeDB, sequelize, User, Event, EventUserRole } = require("../../../src/models");
+const {
+    initDB: initializeDB,
+    sequelize,
+    User,
+    Event,
+    EventUserRole
+} = require("../../../src/models");
 
 // Initialize test database
 const initDB = async () => {

@@ -3,16 +3,18 @@
 
    Handles:
    - valid event payload generation
-   - reusable event test data
-   - mock Sequelize-like event instances
+   - serialized event response generation
+   - mock Sequelize-like event model generation
 
    Notes:
    - shared across unit and integration tests
    - accepts overrides for flexible scenarios
    - createEventPayload returns API-valid request data
+   - createEventResponse returns serialized event data
+   - createMockEventModel simulates Sequelize model instances
 ================================================== */
 
-// Generate a valid API event payload with optional overrides
+// Generate a valid API event payload
 const createEventPayload = (overrides = {}) => ({
     title: "Test Event",
     description: "This is a test event",
@@ -27,8 +29,8 @@ const createEventPayload = (overrides = {}) => ({
     ...overrides
 });
 
-// Generate a mock Sequelize-like event instance
-const createMockEvent = (overrides = {}) => ({
+// Generate serialized event response data
+const createEventResponse = (overrides = {}) => ({
     id: 1,
     title: "Test Event",
     description: "This is a test event",
@@ -44,29 +46,23 @@ const createMockEvent = (overrides = {}) => ({
     registrationDeadline: null,
     image: null,
 
+    ...overrides
+});
+
+// Generate a mock Sequelize-like event model instance
+const createMockEventModel = (overrides = {}) => ({
+    ...createEventResponse(),
+
     update: jest.fn(),
     destroy: jest.fn(),
 
     toJSON() {
-        return {
-            id: this.id,
-            title: this.title,
-            description: this.description,
-            type: this.type,
-            theme: this.theme,
-            mode: this.mode,
-            location: this.location,
-
-            startDateTime: this.startDateTime,
-            endDateTime: this.endDateTime,
-
-            maxParticipants: this.maxParticipants,
-            registrationDeadline: this.registrationDeadline,
-            image: this.image
-        };
+        return createEventResponse({
+            ...this
+        });
     },
 
     ...overrides
 });
 
-module.exports = { createEventPayload, createMockEvent };
+module.exports = { createEventPayload, createEventResponse, createMockEventModel };

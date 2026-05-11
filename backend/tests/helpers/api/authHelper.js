@@ -3,19 +3,19 @@
 
    Handles:
    - test user registration
-   - authenticated token retrieval
-   - reusable authenticated test users
+   - authentication token retrieval
+   - reusable authenticated test setup
 
    Notes:
    - shared across integration tests
-   - returns auth token, auth headers, email, password and raw response
+   - returns token, auth headers, user, email, password, and raw response
    - auth headers can be passed directly to Supertest .set()
 ================================================== */
 
 const request = require("supertest");
 const app = require("../../../src/app");
 
-// Register a test user and return reusable auth data
+// Register a test user and return reusable authentication data
 const registerAndGetToken = async ({
     name = "Test User",
     email = `user${Date.now()}@test.com`,
@@ -31,9 +31,11 @@ const registerAndGetToken = async ({
         user: res.body.user,
         email,
         password,
+
         headers: {
             Authorization: `Bearer ${res.body.token}`
         },
+
         response: res
     };
 };

@@ -13,7 +13,7 @@
    - past event rules are respected
    - missing events and memberships are rejected correctly
 
-    Notes:
+   Notes:
    - role-based removal authorization is tested in eventMemberAuthorization middleware tests
 ================================================== */
 
@@ -38,7 +38,7 @@ const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
-const { createMockMembership } = require("../../../factories/membershipFactory");
+const { createMockMembership } = require("../../../factories/eventMembershipFactory");
 
 describe("eventMembershipService - removeEventMember", () => {
 

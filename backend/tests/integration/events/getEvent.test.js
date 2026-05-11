@@ -2,7 +2,7 @@
    EVENTS INTEGRATION - GET EVENT TESTS
 
    Tests:
-   - public single event retrieval
+   - public event retrieval by ID
    - nonexistent event handling
    - invalid event ID validation
    - participant count enrichment
@@ -24,7 +24,7 @@ const { EVENT_STATUS } = require("../../../src/constants/eventStatus");
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
 const { registerAndGetToken } = require("../../helpers/api/authHelper");
-const { createEvent } = require("../../helpers/api/eventHelper");
+const { createEventWithOrganizer } = require("../../helpers/api/eventHelper");
 const { joinEvent } = require("../../helpers/api/eventMembershipHelper");
 
 describe("Get Event API", () => {
@@ -38,19 +38,15 @@ describe("Get Event API", () => {
     ============================= */
 
     it("should retrieve a single event by ID", async () => {
-        const creatorAuth = await registerAndGetToken({
-            name: "Single Event User",
-            email: `single${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(
-            creatorAuth.headers,
-            {
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Single Event User",
+                email: `single${Date.now()}@test.com`
+            },
+            event: {
                 title: "Single Event"
             }
-        );
-
-        const event = eventRes.body.event;
+        });
 
         const res = await request(app).get(`/api/events/${event.id}`);
 
@@ -74,24 +70,20 @@ describe("Get Event API", () => {
     ============================= */
 
     it("should include participant count", async () => {
-        const creatorAuth = await registerAndGetToken({
-            name: "Count Creator",
-            email: `countcreator${Date.now()}@test.com`
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Count Creator",
+                email: `countcreator${Date.now()}@test.com`
+            },
+            event: {
+                title: "Count Event"
+            }
         });
 
         const participantAuth = await registerAndGetToken({
             name: "Participant",
             email: `participant${Date.now()}@test.com`
         });
-
-        const eventRes = await createEvent(
-            creatorAuth.headers,
-            {
-                title: "Count Event"
-            }
-        );
-
-        const event = eventRes.body.event;
 
         await joinEvent(event.id, participantAuth.headers);
 
@@ -100,53 +92,44 @@ describe("Get Event API", () => {
         expect(res.statusCode).toBe(200);
 
         expect(res.body.event).toHaveProperty("participantCount");
-        expect(Number(res.body.event.participantCount)).toBeGreaterThanOrEqual(1);
+        expect(Number(res.body.event.participantCount)).toBe(1);
     });
 
     it("should include creator data", async () => {
-        const creatorAuth = await registerAndGetToken({
-            name: "Creator Data User",
-            email: `creatordata${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(
-            creatorAuth.headers,
-            {
+        const { organizerAuth, event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Creator Data User",
+                email: `creatordata${Date.now()}@test.com`
+            },
+            event: {
                 title: "Creator Data Event"
             }
-        );
+        });
 
-        const event = eventRes.body.event;
-
-        const res = await request(app)
-            .get(`/api/events/${event.id}`);
+        const res = await request(app).get(`/api/events/${event.id}`);
 
         expect(res.statusCode).toBe(200);
 
         expect(res.body.event).toHaveProperty("creator");
 
         expect(res.body.event.creator).toMatchObject({
-            id: creatorAuth.user.userId,
+            id: organizerAuth.user.userId,
             name: "Creator Data User"
         });
     });
 
     it("should include upcoming status for future event", async () => {
-        const creatorAuth = await registerAndGetToken({
-            name: "Upcoming User",
-            email: `upcoming${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(
-            creatorAuth.headers,
-            {
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Upcoming User",
+                email: `upcoming${Date.now()}@test.com`
+            },
+            event: {
                 title: "Upcoming Event",
                 startDateTime: "2030-01-01T10:00:00.000Z",
                 endDateTime: "2030-01-01T12:00:00.000Z"
             }
-        );
-
-        const event = eventRes.body.event;
+        });
 
         const res = await request(app).get(`/api/events/${event.id}`);
 
@@ -156,21 +139,17 @@ describe("Get Event API", () => {
     });
 
     it("should include past status for past event", async () => {
-        const creatorAuth = await registerAndGetToken({
-            name: "Past User",
-            email: `past${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(
-            creatorAuth.headers,
-            {
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Past User",
+                email: `past${Date.now()}@test.com`
+            },
+            event: {
                 title: "Past Event",
                 startDateTime: "2020-01-01T10:00:00.000Z",
                 endDateTime: "2020-01-01T12:00:00.000Z"
             }
-        );
-
-        const event = eventRes.body.event;
+        });
 
         const res = await request(app).get(`/api/events/${event.id}`);
 

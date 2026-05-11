@@ -10,6 +10,7 @@
    - duplicate email rejection
    - invalid avatar file rejection
    - oversized avatar rejection
+   - email-only profile update
    - email normalization on update
    - authentication protection
 
@@ -151,7 +152,7 @@ describe("Update Current User Profile API", () => {
 
         expect(secondAvatarPath).not.toBe(firstAvatarPath);
 
-        const oldAvatarAbsolutePath = path.join(__dirname, "../../../", firstAvatarPath);
+        const oldAvatarAbsolutePath = path.join(__dirname, "../../../../..", firstAvatarPath);
 
         expect(fs.existsSync(oldAvatarAbsolutePath)).toBe(false);
     });

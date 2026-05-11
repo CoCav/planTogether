@@ -111,7 +111,7 @@ describe("eventMembershipController", () => {
     });
 
     /* ==================================================
-       MEMBERS / ORGANIZER / CO-ORGANIZERS
+       MEMBERS / STAFF
     ================================================== */
 
     describe("getEventMembers", () => {

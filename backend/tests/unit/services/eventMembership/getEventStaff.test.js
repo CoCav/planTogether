@@ -33,7 +33,7 @@ const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
-describe("eventMembershipService - GetEventStaff", () => {
+describe("eventMembershipService - getEventStaff", () => {
 
     mockConsoleError();
 

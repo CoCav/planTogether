@@ -25,7 +25,7 @@ const { User } = require("../../../../src/models");
 const { initDB, resetDB, closeDB } = require("../../../helpers/database/dbTestHelper");
 
 const { registerAndGetToken } = require("../../../helpers/api/authHelper");
-const { createEvent } = require("../../../helpers/api/eventHelper");
+const { createAuthenticatedEvent } = require("../../../helpers/api/eventHelper");
 const { joinEvent } = require("../../../helpers/api/eventMembershipHelper");
 
 describe("Get Public User Events API", () => {
@@ -49,7 +49,7 @@ describe("Get Public User Events API", () => {
             email: `target${Date.now()}@test.com`
         });
 
-        await createEvent(
+        await createAuthenticatedEvent(
             targetUserAuth.headers,
             {
                 title: "Created Event"
@@ -80,7 +80,7 @@ describe("Get Public User Events API", () => {
             email: `createdtarget${Date.now()}@test.com`
         });
 
-        await createEvent(
+        await createAuthenticatedEvent(
             targetUserAuth.headers,
             {
                 title: "Created Public Event"
@@ -114,7 +114,7 @@ describe("Get Public User Events API", () => {
             email: `eventcreator${Date.now()}@test.com`
         });
 
-        const eventRes = await createEvent(
+        const eventRes = await createAuthenticatedEvent(
             eventCreatorAuth.headers,
             {
                 title: "Joined Public Event"
@@ -145,7 +145,7 @@ describe("Get Public User Events API", () => {
             email: `duplicatetarget${Date.now()}@test.com`
         });
 
-        await createEvent(targetUserAuth.headers, { title: "Non Duplicated Event" });
+        await createAuthenticatedEvent(targetUserAuth.headers, { title: "Non Duplicated Event" });
 
         const res = await request(app)
             .get(`/api/users/${targetUserAuth.user.userId}/events`)

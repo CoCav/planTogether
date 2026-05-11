@@ -20,7 +20,7 @@ describe("userFormatter utils", () => {
 
     const baseUser = createMockUserWithPassword({
         name: "John",
-        avatar: "/uploads/avatar.png",
+        avatar: "/uploads/avatars/avatar.png",
         password: "secret"
     });
 
@@ -37,7 +37,7 @@ describe("userFormatter utils", () => {
                 userId: 1,
                 name: "John",
                 email: "john@test.com",
-                avatar: "/uploads/avatar.png"
+                avatar: "/uploads/avatars/avatar.png"
             });
         });
 
@@ -62,7 +62,7 @@ describe("userFormatter utils", () => {
 
             expect(result).toEqual({
                 name: "John",
-                avatar: "/uploads/avatar.png"
+                avatar: "/uploads/avatars/avatar.png"
             });
 
             expect(result.email).toBeUndefined();

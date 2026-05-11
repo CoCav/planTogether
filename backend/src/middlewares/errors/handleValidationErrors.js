@@ -1,5 +1,7 @@
 const { validationResult } = require("express-validator");
 
+const { createHttpError } = require("../../utils/errors/httpError");
+
 /* ==================================================
    HANDLE VALIDATION ERRORS MIDDLEWARE
 
@@ -11,7 +13,7 @@ const { validationResult } = require("express-validator");
    Notes:
    - validators run before this middleware
    - this middleware does not validate by itself
-   - formatted errors are returned with status 400
+   - formatted errors are forwarded with status 400
 ================================================== */
 
 // Handle validation errors after express-validator rules
@@ -19,22 +21,22 @@ const handleValidationErrors = (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
+        const rawErrors = errors.array();
+
         if (process.env.NODE_ENV !== "production") {
-            console.log("Validation errors:", errors.array());
+            console.log("Validation errors:", rawErrors);
         }
 
-        // Normalize express-validator errors for API responses
-        const formattedErrors = errors.array().map((err) => ({
+        const formattedErrors = rawErrors.map((err) => ({
             field: err.path || err.param,
             message: err.msg
         }));
 
-        return next({
-            statusCode: 400,
-            success: false,
-            message: "Validation failed",
-            errors: formattedErrors
-        });
+        const error = createHttpError(400, "Validation failed");
+
+        error.errors = formattedErrors;
+
+        return next(error);
     }
 
     return next();

@@ -3,12 +3,14 @@
 
    Tests:
    - event members retrieval
+   - participant membership retrieval
    - public access to event members endpoint
    - nonexistent event handling
    - invalid event ID validation
 
    Ensures:
    - event members are returned correctly
+   - joined participants are included in the response
    - public users can access event members endpoint
    - invalid requests are rejected correctly
 ======================================================== */
@@ -19,7 +21,7 @@ const app = require("../../../src/app");
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
 const { registerAndGetToken } = require("../../helpers/api/authHelper");
-const { createEvent } = require("../../helpers/api/eventHelper");
+const { createEventWithOrganizer } = require("../../helpers/api/eventHelper");
 const { joinEvent } = require("../../helpers/api/eventMembershipHelper");
 
 describe("Get Event Members API", () => {
@@ -33,13 +35,12 @@ describe("Get Event Members API", () => {
     ============================= */
 
     it("should retrieve event members", async () => {
-        const eventCreatorAuth = await registerAndGetToken({
-            name: "Event Creator",
-            email: `creator${Date.now()}@test.com`
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Event Creator",
+                email: `creator${Date.now()}@test.com`
+            }
         });
-
-        const eventRes = await createEvent(eventCreatorAuth.headers);
-        const event = eventRes.body.event;
 
         const participantAuth = await registerAndGetToken({
             name: "Participant",
@@ -54,17 +55,19 @@ describe("Get Event Members API", () => {
 
         expect(res.body).toHaveProperty("members");
         expect(Array.isArray(res.body.members)).toBe(true);
-        expect(res.body.members.length).toBeGreaterThan(0);
+
+        const memberEmails = res.body.members.map((member) => member.email || member.User?.email);
+
+        expect(memberEmails).toContain(participantAuth.email);
     });
 
     it("should allow public access to event members endpoint", async () => {
-        const eventCreatorAuth = await registerAndGetToken({
-            name: "Event Creator",
-            email: `creator${Date.now()}@test.com`
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Event Creator",
+                email: `creator${Date.now()}@test.com`
+            }
         });
-
-        const eventRes = await createEvent(eventCreatorAuth.headers);
-        const event = eventRes.body.event;
 
         const res = await request(app).get(`/api/events/${event.id}/members`);
 

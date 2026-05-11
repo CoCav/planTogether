@@ -27,6 +27,7 @@ describe("App API", () => {
         expect(res.statusCode).toBe(200);
         expect(res.body).toEqual({
             ok: true,
+            success: true,
             name: "PlanTogether API"
         });
     });
@@ -37,7 +38,7 @@ describe("App API", () => {
     ============================= */
 
     it("should return root message", async () => {
-        const res = await request(app).get('/');
+        const res = await request(app).get("/");
 
         expect(res.statusCode).toBe(200);
         expect(res.text).toBe("PlanTogether is online !");
@@ -52,6 +53,9 @@ describe("App API", () => {
         const res = await request(app).get("/api/unknown");
 
         expect(res.statusCode).toBe(404);
-        expect(res.body).toEqual({ message: "Route not found" });
+        expect(res.body).toEqual({
+            success: false,
+            message: "Route not found"
+        });
     });
 });

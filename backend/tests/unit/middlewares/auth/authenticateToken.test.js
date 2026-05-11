@@ -11,12 +11,14 @@
    Ensures:
    - protected routes reject invalid authentication
    - decoded JWT payload is attached to req.user
+   - authentication errors are forwarded to next()
    - next() is called only when token is valid
 ================================================== */
 
 const jwt = require("jsonwebtoken");
 
 const { authenticateToken } = require("../../../../src/middlewares/auth/authenticateToken");
+
 const { createMockReqResNext } = require("../../../helpers/express/mockExpress");
 
 jest.mock("jsonwebtoken");
@@ -42,7 +44,7 @@ describe("authenticateToken middleware", () => {
     });
 
     /* =============================
-        AUTHENTICATION SUCCESS
+       AUTHENTICATION SUCCESS
     ============================= */
 
     it("should attach user to request and call next when token is valid", () => {
@@ -59,54 +61,60 @@ describe("authenticateToken middleware", () => {
         authenticateToken(req, res, next);
 
         expect(req.user).toEqual(decodedToken);
-        expect(next).toHaveBeenCalled();
+
+        expect(next).toHaveBeenCalledWith();
+
+        expect(res.status).not.toHaveBeenCalled();
     });
 
     /* =============================
        AUTHENTICATION ERRORS
     ============================= */
 
-    it("should return 401 if authorization header is missing", () => {
+    it("should forward 401 if authorization header is missing", () => {
         authenticateToken(req, res, next);
 
-        expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.json).toHaveBeenCalledWith({
-            success: false,
-            message: "Authorization header missing or malformed"
-        });
+        expect(next).toHaveBeenCalledWith(
+            expect.objectContaining({
+                statusCode: 401,
+                message: "Authorization header missing or malformed"
+            })
+        );
 
-        expect(next).not.toHaveBeenCalled();
+        expect(res.status).not.toHaveBeenCalled();
     });
 
-    it("should return 401 if authorization header is malformed", () => {
+    it("should forward 401 if authorization header is malformed", () => {
         req.headers.authorization = "InvalidToken";
 
         authenticateToken(req, res, next);
 
-        expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.json).toHaveBeenCalledWith({
-            success: false,
-            message: "Authorization header missing or malformed"
-        });
+        expect(next).toHaveBeenCalledWith(
+            expect.objectContaining({
+                statusCode: 401,
+                message: "Authorization header missing or malformed"
+            })
+        );
 
-        expect(next).not.toHaveBeenCalled();
+        expect(res.status).not.toHaveBeenCalled();
     });
 
-    it("should return 401 if token is empty", () => {
+    it("should forward 401 if token is empty", () => {
         req.headers.authorization = "Bearer   ";
 
         authenticateToken(req, res, next);
 
-        expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.json).toHaveBeenCalledWith({
-            success: false,
-            message: "No token provided"
-        });
+        expect(next).toHaveBeenCalledWith(
+            expect.objectContaining({
+                statusCode: 401,
+                message: "No token provided"
+            })
+        );
 
-        expect(next).not.toHaveBeenCalled();
+        expect(res.status).not.toHaveBeenCalled();
     });
 
-    it("should return 401 if jwt verification fails", () => {
+    it("should forward 401 if jwt verification fails", () => {
         req.headers.authorization = "Bearer invalid-token";
 
         jwt.verify.mockImplementation((token, secret, cb) => {
@@ -117,12 +125,13 @@ describe("authenticateToken middleware", () => {
 
         expect(jwt.verify).toHaveBeenCalled();
 
-        expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.json).toHaveBeenCalledWith({
-            success: false,
-            message: "Invalid or expired token"
-        });
+        expect(next).toHaveBeenCalledWith(
+            expect.objectContaining({
+                statusCode: 401,
+                message: "Invalid or expired token"
+            })
+        );
 
-        expect(next).not.toHaveBeenCalled();
+        expect(res.status).not.toHaveBeenCalled();
     });
 });

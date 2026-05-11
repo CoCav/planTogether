@@ -1,5 +1,7 @@
 const jwt = require("jsonwebtoken");
 
+const { createHttpError } = require("../../utils/errors/httpError");
+
 /* ==================================================
    AUTHENTICATE TOKEN MIDDLEWARE
 
@@ -11,6 +13,7 @@ const jwt = require("jsonwebtoken");
    Notes:
    - expected header format is: Bearer <token>
    - decoded token should contain userId
+   - authentication errors are forwarded to the global errorHandler
 ================================================== */
 
 // Verify JWT access token
@@ -19,34 +22,34 @@ const authenticateToken = (req, res, next) => {
 
     // Require Authorization: Bearer <token>
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({
-            success: false,
-            message: "Authorization header missing or malformed"
-        });
+        return next(createHttpError(401, "Authorization header missing or malformed"));
     }
 
-    const token = authHeader.slice("Bearer ".length).trim();
+    const token = authHeader
+        .slice("Bearer ".length)
+        .trim();
 
+    // Reject empty Bearer token
     if (!token) {
-        return res.status(401).json({
-            success: false,
-            message: "No token provided"
-        });
+        return next(createHttpError(401, "No token provided"));
     }
 
     // Verify token signature and expiration
-    jwt.verify(token, process.env.JWT_SECRET, (error, decodedToken) => {
-        if (error) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid or expired token"
-            });
-        }
+    jwt.verify(
+        token,
+        process.env.JWT_SECRET,
+        (error, decodedToken) => {
 
-        // Make authenticated user data available to controllers
-        req.user = decodedToken;
-        next();
-    });
+            if (error) {
+                return next(createHttpError(401, "Invalid or expired token"));
+            }
+
+            // Make authenticated user data available downstream
+            req.user = decodedToken;
+
+            return next();
+        }
+    );
 };
 
 module.exports = { authenticateToken };

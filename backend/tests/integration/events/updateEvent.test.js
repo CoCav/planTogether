@@ -33,7 +33,7 @@ const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
 const { registerAndGetToken } = require("../../helpers/api/authHelper");
-const { createEvent } = require("../../helpers/api/eventHelper");
+const { createEventWithOrganizer } = require("../../helpers/api/eventHelper");
 const { joinEvent, updateMemberRole } = require("../../helpers/api/eventMembershipHelper");
 const { getUserIdByEmail } = require("../../helpers/api/userHelper");
 
@@ -48,13 +48,7 @@ describe("Update Event API", () => {
     ============================= */
 
     it("should allow organizer to update event", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Organizer",
-            email: `organizer${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(organizerAuth.headers);
-        const event = eventRes.body.event;
+        const { organizerAuth, event } = await createEventWithOrganizer();
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)
@@ -64,23 +58,21 @@ describe("Update Event API", () => {
             });
 
         expect(res.statusCode).toBe(200);
-
         expect(res.body.event.title).toBe("Updated Event Title");
     });
 
     it("should allow co-organizer to update event", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Organizer",
-            email: `mainorganizer${Date.now()}@test.com`
+        const { organizerAuth, event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Organizer",
+                email: `mainorganizer${Date.now()}@test.com`
+            }
         });
 
         const coOrganizerAuth = await registerAndGetToken({
             name: "Co Organizer",
             email: `coorganizer${Date.now()}@test.com`
         });
-
-        const eventRes = await createEvent(organizerAuth.headers);
-        const event = eventRes.body.event;
 
         await joinEvent(event.id, coOrganizerAuth.headers);
 
@@ -96,18 +88,16 @@ describe("Update Event API", () => {
             });
 
         expect(res.statusCode).toBe(200);
-
         expect(res.body.event.title).toBe("Co Organizer Updated Event");
     });
 
     it("should update event image", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Image Organizer",
-            email: `imageorganizer${Date.now()}@test.com`
+        const { organizerAuth, event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Image Organizer",
+                email: `imageorganizer${Date.now()}@test.com`
+            }
         });
-
-        const eventRes = await createEvent(organizerAuth.headers);
-        const event = eventRes.body.event;
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)
@@ -119,14 +109,15 @@ describe("Update Event API", () => {
             });
 
         expect(res.statusCode).toBe(200);
-
         expect(res.body.event.image).toMatch(/^\/uploads\/events\/event-/);
     });
 
     it("should delete old image when replacing event image", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Cleanup Organizer",
-            email: `cleanup${Date.now()}@test.com`
+        const { organizerAuth } = await createEventWithOrganizer({
+            organizer: {
+                name: "Cleanup Organizer",
+                email: `cleanup${Date.now()}@test.com`
+            }
         });
 
         // Create event with initial image
@@ -173,13 +164,12 @@ describe("Update Event API", () => {
     ============================= */
 
     it("should reject update without token", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Organizer",
-            email: `unauth${Date.now()}@test.com`
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Organizer",
+                email: `unauth${Date.now()}@test.com`
+            }
         });
-
-        const eventRes = await createEvent(organizerAuth.headers);
-        const event = eventRes.body.event;
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)
@@ -195,18 +185,17 @@ describe("Update Event API", () => {
     ============================= */
 
     it("should reject update by participant", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Organizer",
-            email: `authorganizer${Date.now()}@test.com`
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Organizer",
+                email: `authorganizer${Date.now()}@test.com`
+            }
         });
 
         const participantAuth = await registerAndGetToken({
             name: "Participant",
             email: `participant${Date.now()}@test.com`
         });
-
-        const eventRes = await createEvent(organizerAuth.headers);
-        const event = eventRes.body.event;
 
         await joinEvent(event.id, participantAuth.headers);
 
@@ -221,21 +210,17 @@ describe("Update Event API", () => {
     });
 
     it("should reject updating past event", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Past Organizer",
-            email: `pastorganizer${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(
-            organizerAuth.headers,
-            {
+        const { organizerAuth, event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Past Organizer",
+                email: `pastorganizer${Date.now()}@test.com`
+            },
+            event: {
                 title: "Past Event",
                 startDateTime: "2020-01-01T10:00:00.000Z",
                 endDateTime: "2020-01-01T12:00:00.000Z"
             }
-        );
-
-        const event = eventRes.body.event;
+        });
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)
@@ -252,9 +237,11 @@ describe("Update Event API", () => {
     ============================= */
 
     it("should reject invalid eventId", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Validator Organizer",
-            email: `validator${Date.now()}@test.com`
+        const { organizerAuth } = await createEventWithOrganizer({
+            organizer: {
+                name: "Validator Organizer",
+                email: `validator${Date.now()}@test.com`
+            }
         });
 
         const res = await request(app)
@@ -268,13 +255,12 @@ describe("Update Event API", () => {
     });
 
     it("should reject invalid payload", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Payload Organizer",
-            email: `payload${Date.now()}@test.com`
+        const { organizerAuth, event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Payload Organizer",
+                email: `payload${Date.now()}@test.com`
+            }
         });
-
-        const eventRes = await createEvent(organizerAuth.headers);
-        const event = eventRes.body.event;
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)
@@ -287,13 +273,12 @@ describe("Update Event API", () => {
     });
 
     it("should reject invalid image type", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Invalid Image Organizer",
-            email: `invalidimage${Date.now()}@test.com`
+        const { organizerAuth, event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Invalid Image Organizer",
+                email: `invalidimage${Date.now()}@test.com`
+            }
         });
-
-        const eventRes = await createEvent(organizerAuth.headers);
-        const event = eventRes.body.event;
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)
@@ -308,13 +293,12 @@ describe("Update Event API", () => {
     });
 
     it("should reject oversized image upload", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Oversized Organizer",
-            email: `oversized${Date.now()}@test.com`
+        const { organizerAuth, event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Oversized Organizer",
+                email: `oversized${Date.now()}@test.com`
+            }
         });
-
-        const eventRes = await createEvent(organizerAuth.headers);
-        const event = eventRes.body.event;
 
         const oversizedBuffer = Buffer.alloc(4 * 1024 * 1024);
 
@@ -334,10 +318,12 @@ describe("Update Event API", () => {
        EDGE CASES
     ============================= */
 
-    it("should reject update for nonexistent event", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Organizer",
-            email: `missing${Date.now()}@test.com`
+    it("should reject updating inaccessible event", async () => {
+        const { organizerAuth } = await createEventWithOrganizer({
+            organizer: {
+                name: "Organizer",
+                email: `missing${Date.now()}@test.com`
+            }
         });
 
         const res = await request(app)

@@ -24,8 +24,6 @@ jest.mock("../../../../../src/models/relations/eventUserRoleModel", () => ({
     count: jest.fn()
 }));
 
-jest.mock("../../../../../src/models/eventModel");
-
 jest.mock("../../../../../src/models/userModel", () => ({
     findByPk: jest.fn()
 }));

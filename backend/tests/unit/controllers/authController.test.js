@@ -12,12 +12,13 @@
    - HTTP responses are properly formatted
    - errors are forwarded to next()
 ================================================== */
+
 jest.mock("../../../src/services/authService");
 
 const authController = require("../../../src/controllers/authController");
 const authService = require("../../../src/services/authService");
 
-const { createMockReqResNext } = require("../../helpers/express/mockExpress");
+const { createAuthControllerMocks } = require("../../helpers/express/mockExpress");
 
 const { createMockUser } = require("../../factories/userFactory");
 
@@ -33,7 +34,7 @@ describe("authController", () => {
 
     describe("register", () => {
         it("should register user and return token", async () => {
-            const { req, res, next } = createMockReqResNext({
+            const { req, res, next } = createAuthControllerMocks({
                 body: {
                     name: "John Doe",
                     email: "john@test.com",
@@ -70,7 +71,7 @@ describe("authController", () => {
         });
 
         it("should register user with uploaded avatar", async () => {
-            const { req, res, next } = createMockReqResNext({
+            const { req, res, next } = createAuthControllerMocks({
                 body: {
                     name: "John Doe",
                     email: "john@test.com",
@@ -112,7 +113,7 @@ describe("authController", () => {
         });
 
         it("should forward register errors to next", async () => {
-            const { req, res, next } = createMockReqResNext({
+            const { req, res, next } = createAuthControllerMocks({
                 body: {
                     name: "John Doe",
                     email: "john@test.com",
@@ -135,7 +136,7 @@ describe("authController", () => {
 
     describe("login", () => {
         it("should login user and return token", async () => {
-            const { req, res, next } = createMockReqResNext({
+            const { req, res, next } = createAuthControllerMocks({
                 body: {
                     email: "john@test.com",
                     password: "Password1"
@@ -169,7 +170,7 @@ describe("authController", () => {
         });
 
         it("should forward login errors to next", async () => {
-            const { req, res, next } = createMockReqResNext({
+            const { req, res, next } = createAuthControllerMocks({
                 body: {
                     email: "john@test.com",
                     password: "Password1"
@@ -191,7 +192,7 @@ describe("authController", () => {
 
     describe("logout", () => {
         it("should return logout success message", async () => {
-            const { req, res } = createMockReqResNext();
+            const { req, res } = createAuthControllerMocks();
 
             await authController.logout(req, res);
 

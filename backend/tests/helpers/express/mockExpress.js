@@ -5,14 +5,19 @@
    - Express request mocking
    - Express response mocking
    - next() function mocking
-   - reusable controller test setup
+   - reusable controller and middleware test setup
 
    Notes:
    - shared across unit controller and middleware tests
-   - keep helpers generic and reusable
+   - provides both low-level and domain-specific helpers
+   - keep helpers focused and reusable
 ================================================== */
 
-// Create mocked Express req / res / next objects
+const defaultAuthUser = {
+    userId: 10
+};
+
+// Create low-level mocked Express req / res / next objects
 const createMockReqResNext = ({
     params = {},
     query = {},
@@ -33,35 +38,34 @@ const createMockReqResNext = ({
     return { req, res, next };
 };
 
-// Create generic controller mocks with authenticated user defaults
-const createControllerMocks = ({
+// Create auth controller mocks
+const createAuthControllerMocks = ({
     body = {},
-    params = {},
-    query = {},
-    user = { userId: 10 },
+    user = defaultAuthUser,
     file = undefined
 } = {}) => {
 
-    return createMockReqResNext({ body, params, query, user, file });
+    return createMockReqResNext({ body, user, file });
 };
 
-// Create user controller mocks with default public user id param
+// Create user controller mocks
 const createUserControllerMocks = ({
     params = { id: 1 },
     query = {},
     body = {},
-    user = { userId: 10 },
+    user = defaultAuthUser,
     file = undefined
 } = {}) => {
+
     return createMockReqResNext({ params, query, body, user, file });
 };
 
-// Create event controller mocks with default eventId param
+// Create event controller mocks
 const createEventControllerMocks = ({
     body = {},
     params = { eventId: "1" },
     query = {},
-    user = { userId: 10 },
+    user = defaultAuthUser,
     file = undefined
 } = {}) => {
 
@@ -81,9 +85,11 @@ const createEventMemberAuthorizationMocks = ({
             eventId,
             userId: targetUserId
         },
+
         user: {
             userId: requesterUserId
         },
+
         body: {
             newRole
         }
@@ -95,10 +101,18 @@ const createEventRoleMocks = ({
     eventId = "1",
     userId = 1
 } = {}) => {
+
     return createMockReqResNext({
         params: { eventId },
         user: { userId }
     });
 };
 
-module.exports = { createMockReqResNext, createUserControllerMocks, createControllerMocks, createEventControllerMocks, createEventMemberAuthorizationMocks, createEventRoleMocks };
+module.exports = {
+    createMockReqResNext,
+    createAuthControllerMocks,
+    createUserControllerMocks,
+    createEventControllerMocks,
+    createEventMemberAuthorizationMocks,
+    createEventRoleMocks
+};

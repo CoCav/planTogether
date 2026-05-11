@@ -22,7 +22,7 @@ const app = require("../../../src/app");
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
 const { registerAndGetToken } = require("../../helpers/api/authHelper");
-const { createEvent } = require("../../helpers/api/eventHelper");
+const { createEventWithOrganizer } = require("../../helpers/api/eventHelper");
 const { joinEvent } = require("../../helpers/api/eventMembershipHelper");
 
 describe("Leave Event API", () => {
@@ -31,18 +31,8 @@ describe("Leave Event API", () => {
     afterEach(resetDB);
     afterAll(closeDB);
 
-    /* =============================
-       LEAVE SUCCESS
-    ============================= */
-
     it("should allow a user to leave an event", async () => {
-        const eventCreatorAuth = await registerAndGetToken({
-            name: "Event Creator",
-            email: `creator${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(eventCreatorAuth.headers);
-        const event = eventRes.body.event;
+        const { event } = await createEventWithOrganizer();
 
         const participantAuth = await registerAndGetToken({
             name: "Participant",
@@ -58,27 +48,13 @@ describe("Leave Event API", () => {
         expect(res.statusCode).toBe(200);
     });
 
-    /* =============================
-       AUTHENTICATION ERRORS
-    ============================= */
-
     it("should reject leaving without token", async () => {
-        const eventCreatorAuth = await registerAndGetToken({
-            name: "Event Creator",
-            email: `creator${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(eventCreatorAuth.headers);
-        const event = eventRes.body.event;
+        const { event } = await createEventWithOrganizer();
 
         const res = await request(app).delete(`/api/events/${event.id}/members/leave`);
 
         expect(res.statusCode).toBe(401);
     });
-
-    /* =============================
-       VALIDATION ERRORS
-    ============================= */
 
     it("should reject invalid eventId", async () => {
         const participantAuth = await registerAndGetToken({
@@ -93,18 +69,8 @@ describe("Leave Event API", () => {
         expect(res.statusCode).toBe(400);
     });
 
-    /* =============================
-       BUSINESS RULES
-    ============================= */
-
     it("should reject leaving an event without being a member", async () => {
-        const eventCreatorAuth = await registerAndGetToken({
-            name: "Event Creator",
-            email: `creator${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(eventCreatorAuth.headers);
-        const event = eventRes.body.event;
+        const { event } = await createEventWithOrganizer();
 
         const participantAuth = await registerAndGetToken({
             name: "Participant",
@@ -119,36 +85,22 @@ describe("Leave Event API", () => {
     });
 
     it("should reject organizer leaving own event", async () => {
-        const eventCreatorAuth = await registerAndGetToken({
-            name: "Event Creator",
-            email: `creator${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(eventCreatorAuth.headers);
-        const event = eventRes.body.event;
+        const { organizerAuth, event } = await createEventWithOrganizer();
 
         const res = await request(app)
             .delete(`/api/events/${event.id}/members/leave`)
-            .set(eventCreatorAuth.headers);
+            .set(organizerAuth.headers);
 
         expect(res.statusCode).toBe(403);
     });
 
     it("should reject leaving a past event", async () => {
-        const eventCreatorAuth = await registerAndGetToken({
-            name: "Event Creator",
-            email: `creator${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(
-            eventCreatorAuth.headers,
-            {
+        const { event } = await createEventWithOrganizer({
+            event: {
                 startDateTime: "2020-01-01T10:00:00.000Z",
                 endDateTime: "2020-01-01T12:00:00.000Z"
             }
-        );
-
-        const event = eventRes.body.event;
+        });
 
         const participantAuth = await registerAndGetToken({
             name: "Participant",
@@ -163,10 +115,6 @@ describe("Leave Event API", () => {
 
         expect(res.statusCode).toBe(403);
     });
-
-    /* =============================
-       EDGE CASES
-    ============================= */
 
     it("should reject leaving a nonexistent event", async () => {
         const participantAuth = await registerAndGetToken({

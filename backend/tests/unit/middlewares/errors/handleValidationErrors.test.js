@@ -71,15 +71,14 @@ describe("handleValidationErrors middleware", () => {
 
         handleValidationErrors(req, res, next);
 
-        expect(next).toHaveBeenCalledWith({
+        expect(next).toHaveBeenCalledWith(expect.objectContaining({
             statusCode: 400,
-            success: false,
             message: "Validation failed",
             errors: [
                 { field: "email", message: "Invalid email" },
                 { field: "password", message: "Too short" }
             ]
-        });
+        }));
     });
 
     it("should fallback to param when path is missing", () => {

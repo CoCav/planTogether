@@ -19,16 +19,7 @@ const { createEventValidator, updateEventValidator, eventIdParamValidator, getAl
 
 const { runValidation } = require("../../helpers/validation/validationHelper");
 
-const validEventBody = {
-    title: "Test Event",
-    description: "Event description",
-    startDateTime: "2026-12-20T10:00:00.000Z",
-    endDateTime: "2026-12-20T12:00:00.000Z",
-    mode: "in_person",
-    location: "Montreal",
-    type: "Meetup",
-    theme: "Tech"
-};
+const { createValidEventBody } = require("../../factories/eventValidationFactory");
 
 describe("eventValidator", () => {
 
@@ -39,7 +30,7 @@ describe("eventValidator", () => {
     describe("createEventValidator", () => {
         it("should pass with valid event data", async () => {
             const result = await runValidation(createEventValidator, {
-                body: validEventBody
+                body: createValidEventBody()
             });
 
             expect(result.isEmpty()).toBe(true);
@@ -64,7 +55,7 @@ describe("eventValidator", () => {
         it("should fail when dates are invalid", async () => {
             const result = await runValidation(createEventValidator, {
                 body: {
-                    ...validEventBody,
+                    ...createValidEventBody(),
                     startDateTime: "invalid-date",
                     endDateTime: "invalid-date"
                 }
@@ -81,7 +72,7 @@ describe("eventValidator", () => {
         it("should fail when endDateTime is before startDateTime", async () => {
             const result = await runValidation(createEventValidator, {
                 body: {
-                    ...validEventBody,
+                    ...createValidEventBody(),
                     startDateTime: "2026-12-20T12:00:00.000Z",
                     endDateTime: "2026-12-20T10:00:00.000Z"
                 }
@@ -97,7 +88,7 @@ describe("eventValidator", () => {
         it("should fail when mode is invalid", async () => {
             const result = await runValidation(createEventValidator, {
                 body: {
-                    ...validEventBody,
+                    ...createValidEventBody(),
                     mode: "hybrid"
                 }
             });
@@ -112,7 +103,7 @@ describe("eventValidator", () => {
         it("should require location for in-person events", async () => {
             const result = await runValidation(createEventValidator, {
                 body: {
-                    ...validEventBody,
+                    ...createValidEventBody(),
                     mode: "in_person",
                     location: ""
                 }
@@ -128,7 +119,7 @@ describe("eventValidator", () => {
         it("should allow empty location for online events", async () => {
             const result = await runValidation(createEventValidator, {
                 body: {
-                    ...validEventBody,
+                    ...createValidEventBody(),
                     mode: "online",
                     location: ""
                 }
@@ -146,7 +137,7 @@ describe("eventValidator", () => {
         it("should pass with valid update data", async () => {
             const result = await runValidation(updateEventValidator, {
                 params: { eventId: "1" },
-                body: validEventBody
+                body: createValidEventBody()
             });
 
             expect(result.isEmpty()).toBe(true);
@@ -156,7 +147,7 @@ describe("eventValidator", () => {
             const result = await runValidation(updateEventValidator, {
                 params: { eventId: "1" },
                 body: {
-                    ...validEventBody,
+                    ...createValidEventBody(),
                     startDateTime: "2026-12-20T12:00:00.000Z",
                     endDateTime: "2026-12-20T10:00:00.000Z"
                 }

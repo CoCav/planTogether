@@ -31,13 +31,9 @@ const { generateAuthToken } = require("../../../../src/utils/auth/authToken");
 const User = require("../../../../src/models/userModel");
 const authService = require("../../../../src/services/authService");
 
-const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
-
 const { createMockUser } = require("../../../factories/userFactory");
 
 describe("authService - loginUser", () => {
-
-    mockConsoleError();
 
     beforeEach(() => {
         jest.clearAllMocks();

@@ -9,7 +9,7 @@
 
    Notes:
    - shared across validator unit tests
-   - supports body-only, params/body, and params/body/query validators
+   - supports body, params, and query validation testing
 ================================================== */
 
 const { validationResult } = require("express-validator");

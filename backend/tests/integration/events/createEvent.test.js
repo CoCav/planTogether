@@ -34,6 +34,8 @@ const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelpe
 
 const { registerAndGetToken } = require("../../helpers/api/authHelper");
 
+const { createEventPayload } = require("../../factories/eventFactory");
+
 describe("Create Event API", () => {
 
     beforeAll(initDB);
@@ -53,16 +55,10 @@ describe("Create Event API", () => {
         const res = await request(app)
             .post("/api/events")
             .set(userAuth.headers)
-            .send({
+            .send(createEventPayload({
                 title: "Tech Meetup",
-                description: "A technology meetup",
-                type: "Meetup",
-                theme: "Technology",
-                mode: "in_person",
-                location: "Montreal",
-                startDateTime: "2026-12-31T10:00:00.000Z",
-                endDateTime: "2026-12-31T12:00:00.000Z"
-            });
+                description: "A technology meetup"
+            }));
 
         expect(res.statusCode).toBe(201);
 
@@ -116,15 +112,13 @@ describe("Create Event API", () => {
         const res = await request(app)
             .post("/api/events")
             .set(userAuth.headers)
-            .send({
+            .send(createEventPayload({
                 title: "Online Event",
                 description: "Remote event",
                 type: "Workshop",
-                theme: "Technology",
                 mode: "online",
-                startDateTime: "2026-12-31T10:00:00.000Z",
-                endDateTime: "2026-12-31T12:00:00.000Z"
-            });
+                location: undefined
+            }));
 
         expect(res.statusCode).toBe(201);
 
@@ -140,16 +134,10 @@ describe("Create Event API", () => {
         const res = await request(app)
             .post("/api/events")
             .set(userAuth.headers)
-            .send({
+            .send(createEventPayload({
                 title: "Organizer Event",
-                description: "Organizer test",
-                type: "Meetup",
-                theme: "Technology",
-                mode: "in_person",
-                location: "Montreal",
-                startDateTime: "2026-12-31T10:00:00.000Z",
-                endDateTime: "2026-12-31T12:00:00.000Z"
-            });
+                description: "Organizer test"
+            }));
 
         const membership = await EventUserRole.findOne({
             where: {
@@ -209,16 +197,11 @@ describe("Create Event API", () => {
         const res = await request(app)
             .post("/api/events")
             .set(userAuth.headers)
-            .send({
+            .send(createEventPayload({
                 title: "Invalid Mode Event",
                 description: "Invalid mode",
-                type: "Meetup",
-                theme: "Technology",
-                mode: "physical",
-                location: "Montreal",
-                startDateTime: "2026-12-31T10:00:00.000Z",
-                endDateTime: "2026-12-31T12:00:00.000Z"
-            });
+                mode: "physical"
+            }));
 
         expect(res.statusCode).toBe(400);
     });
@@ -232,16 +215,12 @@ describe("Create Event API", () => {
         const res = await request(app)
             .post("/api/events")
             .set(userAuth.headers)
-            .send({
+            .send(createEventPayload({
                 title: "Invalid Dates Event",
                 description: "Bad dates",
-                type: "Meetup",
-                theme: "Technology",
-                mode: "in_person",
-                location: "Montreal",
                 startDateTime: "2026-12-31T12:00:00.000Z",
                 endDateTime: "2026-12-31T10:00:00.000Z"
-            });
+            }));
 
         expect(res.statusCode).toBe(400);
     });
@@ -255,17 +234,11 @@ describe("Create Event API", () => {
         const res = await request(app)
             .post("/api/events")
             .set(userAuth.headers)
-            .send({
+            .send(createEventPayload({
                 title: "Deadline Event",
                 description: "Deadline validation",
-                type: "Meetup",
-                theme: "Technology",
-                mode: "in_person",
-                location: "Montreal",
-                registrationDeadline: "2026-12-31T11:00:00.000Z",
-                startDateTime: "2026-12-31T10:00:00.000Z",
-                endDateTime: "2026-12-31T12:00:00.000Z"
-            });
+                registrationDeadline: "2026-12-31T11:00:00.000Z"
+            }));
 
         expect(res.statusCode).toBe(400);
     });

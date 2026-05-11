@@ -25,12 +25,10 @@ jest.mock("../../../../src/config/database", () => ({
 
 jest.mock("../../../../src/models/userModel", () => ({}));
 
+jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({}));
+
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
-}));
-
-jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
-    create: jest.fn()
 }));
 
 jest.mock("../../../../src/utils/events/eventDataBuilder", () => ({
@@ -56,7 +54,7 @@ const { deleteUploadedFile } = require("../../../../src/utils/files/uploadedFile
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
-const { createMockEvent } = require("../../../factories/eventFactory");
+const { createMockEventModel } = require("../../../factories/eventFactory");
 
 describe("eventService - updateEventByID", () => {
 
@@ -80,13 +78,13 @@ describe("eventService - updateEventByID", () => {
     ============================= */
 
     it("should update event successfully", async () => {
-        const event = createMockEvent({
+        const event = createMockEventModel({
             id: 1,
             image: null,
             update: jest.fn().mockResolvedValue()
         });
 
-        const updateData = createMockEvent({
+        const updateData = createMockEventModel({
             title: "Updated Event"
         });
 
@@ -119,7 +117,7 @@ describe("eventService - updateEventByID", () => {
     });
 
     it("should preserve existing fields when partial update data is omitted", async () => {
-        const event = createMockEvent({
+        const event = createMockEventModel({
             id: 1,
             image: "/uploads/events/current-event.png",
             maxParticipants: 20,
@@ -127,7 +125,7 @@ describe("eventService - updateEventByID", () => {
             update: jest.fn().mockResolvedValue()
         });
 
-        const updateData = createMockEvent({
+        const updateData = createMockEventModel({
             title: "Updated Event",
             image: "/uploads/events/current-event.png"
         });
@@ -157,13 +155,13 @@ describe("eventService - updateEventByID", () => {
     });
 
     it("should replace event image and delete previous image", async () => {
-        const event = createMockEvent({
+        const event = createMockEventModel({
             id: 1,
             image: "/uploads/events/old-event.png",
             update: jest.fn().mockResolvedValue()
         });
 
-        const updateData = createMockEvent({
+        const updateData = createMockEventModel({
             image: "/uploads/events/new-event.png"
         });
 
@@ -191,7 +189,7 @@ describe("eventService - updateEventByID", () => {
     ============================= */
 
     it("should throw 400 when end date is before start date", async () => {
-        const event = createMockEvent({
+        const event = createMockEventModel({
             id: 1,
             update: jest.fn()
         });
@@ -222,7 +220,7 @@ describe("eventService - updateEventByID", () => {
     });
 
     it("should block update if event is past", async () => {
-        const event = createMockEvent({
+        const event = createMockEventModel({
             id: 1,
             update: jest.fn()
         });

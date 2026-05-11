@@ -26,7 +26,7 @@ const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
 const { registerAndGetToken } = require("../../helpers/api/authHelper");
-const { createEvent } = require("../../helpers/api/eventHelper");
+const { createEventWithOrganizer } = require("../../helpers/api/eventHelper");
 const { joinEvent, updateMemberRole } = require("../../helpers/api/eventMembershipHelper");
 const { getUserIdByEmail } = require("../../helpers/api/userHelper");
 
@@ -41,13 +41,12 @@ describe("Delete Event API", () => {
     ============================= */
 
     it("should allow organizer to delete event", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Event Deleter",
-            email: `deleter${Date.now()}@test.com`
+        const { organizerAuth, event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Event Deleter",
+                email: `deleter${Date.now()}@test.com`
+            }
         });
-
-        const eventRes = await createEvent(organizerAuth.headers);
-        const event = eventRes.body.event;
 
         const res = await request(app)
             .delete(`/api/events/${event.id}`)
@@ -70,13 +69,12 @@ describe("Delete Event API", () => {
     ============================= */
 
     it("should reject delete without token", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Organizer",
-            email: `unauthdelete${Date.now()}@test.com`
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Organizer",
+                email: `unauthdelete${Date.now()}@test.com`
+            }
         });
-
-        const eventRes = await createEvent(organizerAuth.headers);
-        const event = eventRes.body.event;
 
         const res = await request(app).delete(`/api/events/${event.id}`);
 
@@ -88,18 +86,17 @@ describe("Delete Event API", () => {
     ============================= */
 
     it("should reject delete by participant", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Organizer",
-            email: `organizer${Date.now()}@test.com`
+        const { organizerAuth, event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Organizer",
+                email: `organizer${Date.now()}@test.com`
+            }
         });
 
         const participantAuth = await registerAndGetToken({
             name: "Participant",
             email: `participant${Date.now()}@test.com`
         });
-
-        const eventRes = await createEvent(organizerAuth.headers);
-        const event = eventRes.body.event;
 
         await joinEvent(event.id, participantAuth.headers);
 
@@ -111,18 +108,17 @@ describe("Delete Event API", () => {
     });
 
     it("should reject delete by co_organizer", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Organizer",
-            email: `organizer${Date.now()}@test.com`
+        const { organizerAuth, event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Organizer",
+                email: `organizer${Date.now()}@test.com`
+            }
         });
 
         const coOrganizerAuth = await registerAndGetToken({
             name: "Co Organizer",
             email: `coorganizer${Date.now()}@test.com`
         });
-
-        const eventRes = await createEvent(organizerAuth.headers);
-        const event = eventRes.body.event;
 
         await joinEvent(event.id, coOrganizerAuth.headers);
 
@@ -142,21 +138,17 @@ describe("Delete Event API", () => {
     ============================= */
 
     it("should reject deleting past event", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Past Event Deleter",
-            email: `pastdelete${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(
-            organizerAuth.headers,
-            {
+        const { organizerAuth, event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Past Event Deleter",
+                email: `pastdelete${Date.now()}@test.com`
+            },
+            event: {
                 title: "Past Event",
                 startDateTime: "2020-01-01T10:00:00.000Z",
                 endDateTime: "2020-01-01T12:00:00.000Z"
             }
-        );
-
-        const event = eventRes.body.event;
+        });
 
         const res = await request(app)
             .delete(`/api/events/${event.id}`)
@@ -170,9 +162,11 @@ describe("Delete Event API", () => {
     ============================= */
 
     it("should reject invalid eventId", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Invalid ID User",
-            email: `invalidid${Date.now()}@test.com`
+        const { organizerAuth } = await createEventWithOrganizer({
+            organizer: {
+                name: "Invalid ID User",
+                email: `invalidid${Date.now()}@test.com`
+            }
         });
 
         const res = await request(app)
@@ -186,10 +180,12 @@ describe("Delete Event API", () => {
        EDGE CASES
     ============================= */
 
-    it("should reject deleting nonexistent event", async () => {
-        const organizerAuth = await registerAndGetToken({
-            name: "Missing Event Deleter",
-            email: `missingdelete${Date.now()}@test.com`
+    it("should reject deleting inaccessible event", async () => {
+        const { organizerAuth } = await createEventWithOrganizer({
+            organizer: {
+                name: "Missing Event Deleter",
+                email: `missingdelete${Date.now()}@test.com`
+            }
         });
 
         const res = await request(app)

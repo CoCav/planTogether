@@ -24,7 +24,7 @@ jest.mock("../../../../../src/models/eventModel", () => ({
     count: jest.fn()
 }));
 
-jest.mock("../../../../../src/models/relations/eventUserRoleModel.js", () => ({
+jest.mock("../../../../../src/models/relations/eventUserRoleModel", () => ({
     count: jest.fn()
 }));
 

@@ -9,7 +9,7 @@
    - pagination by view
    - created view filtering
    - joined view filtering
-   - created history filteringp
+   - created history filtering
    - joined history filtering
    - invalid query validation
 
@@ -33,7 +33,7 @@ const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
 const { initDB, resetDB, closeDB } = require("../../../helpers/database/dbTestHelper");
 
 const { registerAndGetToken } = require("../../../helpers/api/authHelper");
-const { createEvent } = require("../../../helpers/api/eventHelper");
+const { createAuthenticatedEvent, createEventWithOrganizer } = require("../../../helpers/api/eventHelper");
 const { joinEvent } = require("../../../helpers/api/eventMembershipHelper");
 
 describe("Get Current User Events API", () => {
@@ -47,26 +47,22 @@ describe("Get Current User Events API", () => {
     ============================== */
 
     it("should get events for the authenticated user", async () => {
-        const eventCreatorAuth = await registerAndGetToken({
-            name: "Creator",
-            email: `creator${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(
-            eventCreatorAuth.headers,
-            {
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Creator",
+                email: `creator${Date.now()}@test.com`
+            },
+            event: {
                 title: "User Events Test"
             }
-        );
-
-        const eventId = eventRes.body.event.id;
+        });
 
         const participantAuth = await registerAndGetToken({
             name: "Participant",
             email: `participant${Date.now()}@test.com`
         });
 
-        await joinEvent(eventId, participantAuth.headers);
+        await joinEvent(event.id, participantAuth.headers);
 
         const res = await request(app)
             .get("/api/users/me/events")
@@ -93,31 +89,25 @@ describe("Get Current User Events API", () => {
     ============================= */
 
     it("should include event status in current user events", async () => {
-        const eventCreatorAuth = await registerAndGetToken({
-            name: "Status Creator",
-            email: `statuscreator${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(
-            eventCreatorAuth.headers,
-            {
+        const { organizerAuth, event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Status Creator",
+                email: `statuscreator${Date.now()}@test.com`
+            },
+            event: {
                 title: "Past Status Event",
                 startDateTime: "2020-01-01T10:00:00.000Z",
                 endDateTime: "2020-01-01T12:00:00.000Z"
             }
-        );
-
-        const eventId = eventRes.body.event.id;
+        });
 
         const res = await request(app)
             .get("/api/users/me/events")
-            .set(eventCreatorAuth.headers);
+            .set(organizerAuth.headers);
 
         expect(res.statusCode).toBe(200);
 
-        const eventMembership = res.body.events.find(
-            (item) => item.event.id === eventId
-        );
+        const eventMembership = res.body.events.find((item) => item.event.id === event.id);
 
         expect(eventMembership).toBeDefined();
 
@@ -125,41 +115,35 @@ describe("Get Current User Events API", () => {
     });
 
     it("should include participant count and status in user events", async () => {
-        const eventCreatorAuth = await registerAndGetToken({
-            name: "Count Creator",
-            email: `countcreator${Date.now()}@test.com`
-        });
-
-        const eventRes = await createEvent(
-            eventCreatorAuth.headers,
-            {
+        const { organizerAuth, event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Count Creator",
+                email: `countcreator${Date.now()}@test.com`
+            },
+            event: {
                 title: "Count Event"
             }
-        );
-
-        const eventId = eventRes.body.event.id;
+        });
 
         const participantAuth = await registerAndGetToken({
             name: "Count Participant",
             email: `countparticipant${Date.now()}@test.com`
         });
 
-        await joinEvent(eventId, participantAuth.headers);
+        await joinEvent(event.id, participantAuth.headers);
 
         const res = await request(app)
             .get("/api/users/me/events")
-            .set(eventCreatorAuth.headers);
+            .set(organizerAuth.headers);
 
         expect(res.statusCode).toBe(200);
 
-        const eventMembership = res.body.events.find(
-            (item) => item.event.id === eventId
-        );
+        const eventMembership = res.body.events.find((item) => item.event.id === event.id);
 
         expect(eventMembership).toBeDefined();
 
         expect(eventMembership.event).toHaveProperty("participantCount");
-        expect(eventMembership.event.participantCount).toBeGreaterThanOrEqual(1);
+        expect(Number(eventMembership.event.participantCount)).toBe(1);
 
         expect(eventMembership.event).toHaveProperty("status");
     });
@@ -174,17 +158,9 @@ describe("Get Current User Events API", () => {
             email: `paginatedcreator${Date.now()}@test.com`
         });
 
-        await createEvent(eventCreatorAuth.headers, {
-            title: "Created Event A"
-        });
-
-        await createEvent(eventCreatorAuth.headers, {
-            title: "Created Event B"
-        });
-
-        await createEvent(eventCreatorAuth.headers, {
-            title: "Created Event C"
-        });
+        await createAuthenticatedEvent(eventCreatorAuth.headers, { title: "Created Event A" });
+        await createAuthenticatedEvent(eventCreatorAuth.headers, { title: "Created Event B" });
+        await createAuthenticatedEvent(eventCreatorAuth.headers, { title: "Created Event C" });
 
         const res = await request(app)
             .get("/api/users/me/events")
@@ -215,16 +191,11 @@ describe("Get Current User Events API", () => {
             email: `participant${Date.now()}@test.com`
         });
 
-        await createEvent(eventCreatorAuth.headers, {
-            title: "Created Event"
-        });
+        await createAuthenticatedEvent(eventCreatorAuth.headers, { title: "Created Event" });
 
-        const joinedEventRes = await createEvent(
-            participantAuth.headers,
-            {
-                title: "Joined Event"
-            }
-        );
+        const joinedEventRes = await createAuthenticatedEvent(participantAuth.headers, {
+            title: "Joined Event"
+        });
 
         await joinEvent(joinedEventRes.body.event.id, eventCreatorAuth.headers);
 
@@ -237,15 +208,18 @@ describe("Get Current User Events API", () => {
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body.events.every(
-            (item) => item.event.creatorId === eventCreatorAuth.user.userId
-        )).toBe(true);
+        expect(res.body.events.every((item) => item.event.creatorId === eventCreatorAuth.user.userId)).toBe(true);
     });
 
     it("should filter current user events by joined view", async () => {
-        const eventCreatorAuth = await registerAndGetToken({
-            name: "Event Creator",
-            email: `eventcreator${Date.now()}@test.com`
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Event Creator",
+                email: `eventcreator${Date.now()}@test.com`
+            },
+            event: {
+                title: "Joined Event"
+            }
         });
 
         const participantAuth = await registerAndGetToken({
@@ -253,14 +227,7 @@ describe("Get Current User Events API", () => {
             email: `joinedview${Date.now()}@test.com`
         });
 
-        const eventRes = await createEvent(
-            eventCreatorAuth.headers,
-            {
-                title: "Joined Event"
-            }
-        );
-
-        await joinEvent(eventRes.body.event.id, participantAuth.headers);
+        await joinEvent(event.id, participantAuth.headers);
 
         const res = await request(app)
             .get("/api/users/me/events")
@@ -271,9 +238,7 @@ describe("Get Current User Events API", () => {
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body.events.every(
-            (item) => item.role !== EVENT_ROLES.ORGANIZER
-        )).toBe(true);
+        expect(res.body.events.every((item) => item.role !== EVENT_ROLES.ORGANIZER)).toBe(true);
     });
 
     it("should filter current user events by history view", async () => {
@@ -282,13 +247,13 @@ describe("Get Current User Events API", () => {
             email: `historycreator${Date.now()}@test.com`
         });
 
-        await createEvent(eventCreatorAuth.headers, {
+        await createAuthenticatedEvent(eventCreatorAuth.headers, {
             title: "Active Created Event",
             startDateTime: "2026-12-31T10:00:00.000Z",
             endDateTime: "2026-12-31T12:00:00.000Z"
         });
 
-        await createEvent(eventCreatorAuth.headers, {
+        await createAuthenticatedEvent(eventCreatorAuth.headers, {
             title: "Past Created Event",
             startDateTime: "2020-01-01T10:00:00.000Z",
             endDateTime: "2020-01-01T12:00:00.000Z"
@@ -310,26 +275,22 @@ describe("Get Current User Events API", () => {
     });
 
     it("should filter current user events by joined history view", async () => {
-        const eventCreatorAuth = await registerAndGetToken({
-            name: "History Event Creator",
-            email: `historyevent${Date.now()}@test.com`
+        const { event: pastEvent } = await createEventWithOrganizer({
+            organizer: {
+                name: "History Event Creator",
+                email: `historyevent${Date.now()}@test.com`
+            },
+            event: {
+                title: "Past Joined Event",
+                startDateTime: "2020-01-01T10:00:00.000Z",
+                endDateTime: "2020-01-01T12:00:00.000Z"
+            }
         });
 
         const participantAuth = await registerAndGetToken({
             name: "History Participant",
             email: `historyparticipant${Date.now()}@test.com`
         });
-
-        const pastEventRes = await createEvent(
-            eventCreatorAuth.headers,
-            {
-                title: "Past Joined Event",
-                startDateTime: "2020-01-01T10:00:00.000Z",
-                endDateTime: "2020-01-01T12:00:00.000Z"
-            }
-        );
-
-        const pastEvent = pastEventRes.body.event;
 
         await EventUserRole.create({
             eventId: pastEvent.id,

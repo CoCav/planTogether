@@ -23,7 +23,7 @@ jest.mock("../../../../../src/models/eventModel", () => ({
     findAll: jest.fn()
 }));
 
-jest.mock("../../../../../src/models/relations/eventUserRoleModel.js", () => ({
+jest.mock("../../../../../src/models/relations/eventUserRoleModel", () => ({
     findAll: jest.fn()
 }));
 

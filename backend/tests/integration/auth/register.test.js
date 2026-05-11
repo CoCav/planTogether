@@ -12,6 +12,7 @@
    - invalid avatar extension rejection
    - oversized avatar rejection
    - duplicate email rejection
+   - duplicate email casing rejection
 
    Ensures:
    - full registration pipeline works end-to-end

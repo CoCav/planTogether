@@ -7,13 +7,14 @@
    - protected creator rules
    - protected organizer rules
    - co-organizer restrictions
-   - unexpected database error handling
+   - unexpected database error forwarding
 
    Ensures:
    - event role hierarchy is enforced
    - unauthorized role changes are rejected
    - unauthorized removals are rejected
    - valid actions continue with next()
+   - authorization errors are forwarded to the global errorHandler
 
    Notes:
    - shared event role constants are used for valid role scenarios
@@ -23,12 +24,11 @@ const Event = require("../../../../src/models/eventModel");
 const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
 
 const { authorizeEventMemberRoleUpdate, authorizeEventMemberRemoval } = require("../../../../src/middlewares/authorization/eventMemberAuthorization");
+
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 
 const { createEventMemberAuthorizationMocks } = require("../../../helpers/express/mockExpress");
-const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
-
-const { createMockEvent, createMockMembership } = require("../../../factories/membershipFactory");
+const { createMockMembershipEvent, createMockMembership } = require("../../../factories/eventMembershipFactory");
 
 jest.mock("../../../../src/models/eventModel.js", () => ({
     findByPk: jest.fn()
@@ -38,10 +38,7 @@ jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
     findOne: jest.fn()
 }));
 
-
 describe("eventMemberAuthorization middleware", () => {
-
-    mockConsoleError();
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -77,11 +74,11 @@ describe("eventMemberAuthorization middleware", () => {
                     })
                 );
 
-            Event.findByPk.mockResolvedValue(createMockEvent());
+            Event.findByPk.mockResolvedValue(createMockMembershipEvent());
 
             await authorizeEventMemberRoleUpdate(req, res, next);
 
-            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith();
             expect(res.status).not.toHaveBeenCalled();
         });
 
@@ -89,7 +86,7 @@ describe("eventMemberAuthorization middleware", () => {
            ROLE UPDATE AUTHORIZATION ERRORS
         ============================= */
 
-        it("should return 403 when requester is not organizer", async () => {
+        it("should forward 403 when requester is not organizer", async () => {
             const { req, res, next } = createEventMemberAuthorizationMocks();
 
             EventUserRole.findOne.mockResolvedValueOnce(
@@ -101,13 +98,14 @@ describe("eventMemberAuthorization middleware", () => {
 
             await authorizeEventMemberRoleUpdate(req, res, next);
 
-            expect(res.status).toHaveBeenCalledWith(403);
-            expect(res.json).toHaveBeenCalledWith({
-                success: false,
-                message: "Only the organizer can update member roles"
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 403,
+                    message: "Only the organizer can update member roles"
+                })
+            );
 
-            expect(next).not.toHaveBeenCalled();
+            expect(res.status).not.toHaveBeenCalled();
         });
 
         it("should prevent changing the event creator role", async () => {
@@ -130,20 +128,21 @@ describe("eventMemberAuthorization middleware", () => {
                 );
 
             Event.findByPk.mockResolvedValue(
-                createMockEvent({
+                createMockMembershipEvent({
                     creatorId: 2
                 })
             );
 
             await authorizeEventMemberRoleUpdate(req, res, next);
 
-            expect(res.status).toHaveBeenCalledWith(403);
-            expect(res.json).toHaveBeenCalledWith({
-                success: false,
-                message: "You cannot change the role of the event creator"
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 403,
+                    message: "You cannot change the role of the event creator"
+                })
+            );
 
-            expect(next).not.toHaveBeenCalled();
+            expect(res.status).not.toHaveBeenCalled();
         });
 
         it("should prevent promoting a member to organizer", async () => {
@@ -166,24 +165,25 @@ describe("eventMemberAuthorization middleware", () => {
                     })
                 );
 
-            Event.findByPk.mockResolvedValue(createMockEvent());
+            Event.findByPk.mockResolvedValue(createMockMembershipEvent());
 
             await authorizeEventMemberRoleUpdate(req, res, next);
 
-            expect(res.status).toHaveBeenCalledWith(403);
-            expect(res.json).toHaveBeenCalledWith({
-                success: false,
-                message: "Only one organizer is allowed per event"
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 403,
+                    message: "Only one organizer is allowed per event"
+                })
+            );
 
-            expect(next).not.toHaveBeenCalled();
+            expect(res.status).not.toHaveBeenCalled();
         });
 
         /* =============================
            ROLE UPDATE EDGE CASES
         ============================= */
 
-        it("should return 404 when event is not found", async () => {
+        it("should forward 404 when event is not found", async () => {
             const { req, res, next } = createEventMemberAuthorizationMocks();
 
             EventUserRole.findOne
@@ -204,16 +204,17 @@ describe("eventMemberAuthorization middleware", () => {
 
             await authorizeEventMemberRoleUpdate(req, res, next);
 
-            expect(res.status).toHaveBeenCalledWith(404);
-            expect(res.json).toHaveBeenCalledWith({
-                success: false,
-                message: "Event not found"
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 404,
+                    message: "Event not found"
+                })
+            );
 
-            expect(next).not.toHaveBeenCalled();
+            expect(res.status).not.toHaveBeenCalled();
         });
 
-        it("should return 404 when target membership is not found", async () => {
+        it("should forward 404 when target membership is not found", async () => {
             const { req, res, next } = createEventMemberAuthorizationMocks();
 
             EventUserRole.findOne
@@ -227,33 +228,32 @@ describe("eventMemberAuthorization middleware", () => {
 
             await authorizeEventMemberRoleUpdate(req, res, next);
 
-            expect(res.status).toHaveBeenCalledWith(404);
-            expect(res.json).toHaveBeenCalledWith({
-                success: false,
-                message: "Target membership not found"
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 404,
+                    message: "Target membership not found"
+                })
+            );
 
-            expect(next).not.toHaveBeenCalled();
+            expect(res.status).not.toHaveBeenCalled();
         });
 
         /* =============================
            ROLE UPDATE DATABASE ERRORS
         ============================= */
 
-        it("should return 500 on unexpected database error", async () => {
+        it("should forward unexpected database errors", async () => {
             const { req, res, next } = createEventMemberAuthorizationMocks();
 
-            EventUserRole.findOne.mockRejectedValue(new Error("DB error"));
+            const error = new Error("DB error");
+
+            EventUserRole.findOne.mockRejectedValue(error);
 
             await authorizeEventMemberRoleUpdate(req, res, next);
 
-            expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({
-                success: false,
-                message: "Internal server error"
-            });
+            expect(next).toHaveBeenCalledWith(error);
 
-            expect(next).not.toHaveBeenCalled();
+            expect(res.status).not.toHaveBeenCalled();
         });
     });
 
@@ -286,11 +286,11 @@ describe("eventMemberAuthorization middleware", () => {
                     })
                 );
 
-            Event.findByPk.mockResolvedValue(createMockEvent());
+            Event.findByPk.mockResolvedValue(createMockMembershipEvent());
 
             await authorizeEventMemberRemoval(req, res, next);
 
-            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith();
             expect(res.status).not.toHaveBeenCalled();
         });
 
@@ -313,19 +313,19 @@ describe("eventMemberAuthorization middleware", () => {
                     })
                 );
 
-            Event.findByPk.mockResolvedValue(createMockEvent());
+            Event.findByPk.mockResolvedValue(createMockMembershipEvent());
 
             await authorizeEventMemberRemoval(req, res, next);
 
-            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith();
             expect(res.status).not.toHaveBeenCalled();
         });
 
         /* =============================
-            MEMBER REMOVAL AUTHORIZATION ERRORS
+           MEMBER REMOVAL AUTHORIZATION ERRORS
         ============================= */
 
-        it("should return 403 when requester is not organizer or co_organizer", async () => {
+        it("should forward 403 when requester is not organizer or co_organizer", async () => {
             const { req, res, next } = createEventMemberAuthorizationMocks();
 
             EventUserRole.findOne.mockResolvedValueOnce(
@@ -337,8 +337,14 @@ describe("eventMemberAuthorization middleware", () => {
 
             await authorizeEventMemberRemoval(req, res, next);
 
-            expect(res.status).toHaveBeenCalledWith(403);
-            expect(next).not.toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 403,
+                    message: "Only organizers and co-organizers can remove members"
+                })
+            );
+
+            expect(res.status).not.toHaveBeenCalled();
         });
 
         it("should prevent removing the event creator", async () => {
@@ -361,20 +367,21 @@ describe("eventMemberAuthorization middleware", () => {
                 );
 
             Event.findByPk.mockResolvedValue(
-                createMockEvent({
+                createMockMembershipEvent({
                     creatorId: 2
                 })
             );
 
             await authorizeEventMemberRemoval(req, res, next);
 
-            expect(res.status).toHaveBeenCalledWith(403);
-            expect(res.json).toHaveBeenCalledWith({
-                success: false,
-                message: "You cannot remove the event creator"
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 403,
+                    message: "You cannot remove the event creator"
+                })
+            );
 
-            expect(next).not.toHaveBeenCalled();
+            expect(res.status).not.toHaveBeenCalled();
         });
 
         it("should prevent removing organizer", async () => {
@@ -396,17 +403,18 @@ describe("eventMemberAuthorization middleware", () => {
                     })
                 );
 
-            Event.findByPk.mockResolvedValue(createMockEvent());
+            Event.findByPk.mockResolvedValue(createMockMembershipEvent());
 
             await authorizeEventMemberRemoval(req, res, next);
 
-            expect(res.status).toHaveBeenCalledWith(403);
-            expect(res.json).toHaveBeenCalledWith({
-                success: false,
-                message: "Organizer cannot be removed"
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 403,
+                    message: "Organizer cannot be removed"
+                })
+            );
 
-            expect(next).not.toHaveBeenCalled();
+            expect(res.status).not.toHaveBeenCalled();
         });
 
         it("should prevent self-removal through admin route", async () => {
@@ -429,17 +437,18 @@ describe("eventMemberAuthorization middleware", () => {
                     })
                 );
 
-            Event.findByPk.mockResolvedValue(createMockEvent());
+            Event.findByPk.mockResolvedValue(createMockMembershipEvent());
 
             await authorizeEventMemberRemoval(req, res, next);
 
-            expect(res.status).toHaveBeenCalledWith(403);
-            expect(res.json).toHaveBeenCalledWith({
-                success: false,
-                message: "You cannot remove yourself from the event"
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 403,
+                    message: "You cannot remove yourself from the event"
+                })
+            );
 
-            expect(next).not.toHaveBeenCalled();
+            expect(res.status).not.toHaveBeenCalled();
         });
 
         it("should prevent co_organizer from removing another co_organizer", async () => {
@@ -461,24 +470,25 @@ describe("eventMemberAuthorization middleware", () => {
                     })
                 );
 
-            Event.findByPk.mockResolvedValue(createMockEvent());
+            Event.findByPk.mockResolvedValue(createMockMembershipEvent());
 
             await authorizeEventMemberRemoval(req, res, next);
 
-            expect(res.status).toHaveBeenCalledWith(403);
-            expect(res.json).toHaveBeenCalledWith({
-                success: false,
-                message: "Co-organizers cannot remove other co-organizers"
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 403,
+                    message: "Co-organizers cannot remove other co-organizers"
+                })
+            );
 
-            expect(next).not.toHaveBeenCalled();
+            expect(res.status).not.toHaveBeenCalled();
         });
 
         /* =============================
            MEMBER REMOVAL EDGE CASES
         ============================= */
 
-        it("should return 404 when event is not found", async () => {
+        it("should forward 404 when event is not found", async () => {
             const { req, res, next } = createEventMemberAuthorizationMocks();
 
             EventUserRole.findOne
@@ -499,16 +509,17 @@ describe("eventMemberAuthorization middleware", () => {
 
             await authorizeEventMemberRemoval(req, res, next);
 
-            expect(res.status).toHaveBeenCalledWith(404);
-            expect(res.json).toHaveBeenCalledWith({
-                success: false,
-                message: "Event not found"
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 404,
+                    message: "Event not found"
+                })
+            );
 
-            expect(next).not.toHaveBeenCalled();
+            expect(res.status).not.toHaveBeenCalled();
         });
 
-        it("should return 404 when target membership is not found", async () => {
+        it("should forward 404 when target membership is not found", async () => {
             const { req, res, next } = createEventMemberAuthorizationMocks();
 
             EventUserRole.findOne
@@ -520,37 +531,34 @@ describe("eventMemberAuthorization middleware", () => {
                 )
                 .mockResolvedValueOnce(null);
 
-            Event.findByPk.mockReset();
-
             await authorizeEventMemberRemoval(req, res, next);
 
-            expect(res.status).toHaveBeenCalledWith(404);
-            expect(res.json).toHaveBeenCalledWith({
-                success: false,
-                message: "Target membership not found"
-            });
+            expect(next).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    statusCode: 404,
+                    message: "Target membership not found"
+                })
+            );
 
-            expect(next).not.toHaveBeenCalled();
+            expect(res.status).not.toHaveBeenCalled();
         });
 
         /* =============================
            MEMBER REMOVAL DATABASE ERRORS
         ============================= */
 
-        it("should return 500 on unexpected database error", async () => {
+        it("should forward unexpected database errors", async () => {
             const { req, res, next } = createEventMemberAuthorizationMocks();
 
-            EventUserRole.findOne.mockRejectedValue(new Error("DB error"));
+            const error = new Error("DB error");
+
+            EventUserRole.findOne.mockRejectedValue(error);
 
             await authorizeEventMemberRemoval(req, res, next);
 
-            expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({
-                success: false,
-                message: "Internal server error"
-            });
+            expect(next).toHaveBeenCalledWith(error);
 
-            expect(next).not.toHaveBeenCalled();
+            expect(res.status).not.toHaveBeenCalled();
         });
     });
 });

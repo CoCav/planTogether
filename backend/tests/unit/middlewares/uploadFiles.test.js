@@ -18,6 +18,8 @@
 
 const { uploadAvatar, uploadEventImage } = require("../../../src/middlewares/uploadFiles");
 
+const { MAX_AVATAR_SIZE, MAX_EVENT_IMAGE_SIZE } = require("../../../src/config/security/uploadPolicy");
+
 describe("uploadFiles middleware", () => {
 
     /* =============================
@@ -51,10 +53,10 @@ describe("uploadFiles middleware", () => {
     ============================= */
 
     it("should set avatar upload file size limit to 2MB", () => {
-        expect(uploadAvatar.limits.fileSize).toBe(2 * 1024 * 1024);
+        expect(uploadAvatar.limits.fileSize).toBe(MAX_AVATAR_SIZE);
     });
 
     it("should set event image upload file size limit to 3MB", () => {
-        expect(uploadEventImage.limits.fileSize).toBe(3 * 1024 * 1024);
+        expect(uploadEventImage.limits.fileSize).toBe(MAX_EVENT_IMAGE_SIZE);
     });
 });

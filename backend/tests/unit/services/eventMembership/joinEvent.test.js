@@ -54,7 +54,7 @@ const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
-const { createMockEvent, createMockMembership } = require("../../../factories/membershipFactory");
+const { createMockMembershipEvent, createMockMembership } = require("../../../factories/eventMembershipFactory");
 
 describe("eventMembershipService - joinEvent", () => {
 
@@ -79,7 +79,7 @@ describe("eventMembershipService - joinEvent", () => {
 
     it("should join event as participant", async () => {
 
-        Event.findByPk.mockResolvedValue(createMockEvent({ id: 1 }));
+        Event.findByPk.mockResolvedValue(createMockMembershipEvent({ id: 1 }));
 
         EventUserRole.findOne.mockResolvedValue(null);
 
@@ -130,7 +130,7 @@ describe("eventMembershipService - joinEvent", () => {
 
     it("should throw 409 if user already joined", async () => {
 
-        Event.findByPk.mockResolvedValue(createMockEvent({ id: 1 }));
+        Event.findByPk.mockResolvedValue(createMockMembershipEvent({ id: 1 }));
 
         EventUserRole.findOne.mockResolvedValue(
             createMockMembership({
@@ -159,7 +159,7 @@ describe("eventMembershipService - joinEvent", () => {
 
     it("should block joining a past event", async () => {
 
-        const event = createMockEvent({ id: 1 });
+        const event = createMockMembershipEvent({ id: 1 });
 
         Event.findByPk.mockResolvedValue(event);
 
@@ -194,7 +194,7 @@ describe("eventMembershipService - joinEvent", () => {
         assertEventNotPast.mockImplementation(() => { });
 
         Event.findByPk.mockResolvedValue(
-            createMockEvent({
+            createMockMembershipEvent({
                 id: 1,
                 maxParticipants: null,
                 registrationDeadline: new Date(Date.now() - 1000)
@@ -220,7 +220,7 @@ describe("eventMembershipService - joinEvent", () => {
     it("should not check participant count when maxParticipants is null", async () => {
 
         Event.findByPk.mockResolvedValue(
-            createMockEvent({
+            createMockMembershipEvent({
                 id: 1,
                 maxParticipants: null,
                 registrationDeadline: null
@@ -255,7 +255,7 @@ describe("eventMembershipService - joinEvent", () => {
         assertEventNotPast.mockImplementation(() => { });
 
         Event.findByPk.mockResolvedValue(
-            createMockEvent({
+            createMockMembershipEvent({
                 id: 1,
                 maxParticipants: 1,
                 registrationDeadline: null

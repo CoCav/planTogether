@@ -47,7 +47,7 @@ const { getPaginationOptions } = require("../../../../src/utils/pagination");
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
-const { createMockEvent } = require("../../../factories/eventFactory");
+const { createMockEventModel } = require("../../../factories/eventFactory");
 
 describe("eventService - getAllEvents", () => {
 
@@ -79,7 +79,7 @@ describe("eventService - getAllEvents", () => {
 
         Event.findAndCountAll.mockResolvedValue({
             count: [{ count: 1 }],
-            rows: [createMockEvent()]
+            rows: [createMockEventModel()]
         });
 
         getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
@@ -173,7 +173,7 @@ describe("eventService - getAllEvents", () => {
       ============================= */
 
     it("should enrich events with computed status", async () => {
-        const mockEvent = createMockEvent({
+        const mockEvent = createMockEventModel({
             title: "Metadata Event"
         });
 

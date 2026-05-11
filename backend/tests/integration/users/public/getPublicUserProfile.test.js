@@ -24,7 +24,7 @@ const { User } = require("../../../../src/models");
 const { initDB, resetDB, closeDB } = require("../../../helpers/database/dbTestHelper");
 
 const { registerAndGetToken } = require("../../../helpers/api/authHelper");
-const { createEvent } = require("../../../helpers/api/eventHelper");
+const { createAuthenticatedEvent } = require("../../../helpers/api/eventHelper");
 const { joinEvent } = require("../../../helpers/api/eventMembershipHelper");
 
 describe("Get Public User Profile API", () => {
@@ -76,14 +76,14 @@ describe("Get Public User Profile API", () => {
             email: `targetstats${Date.now()}@test.com`
         });
 
-        await createEvent(targetUserAuth.headers, { title: "Created Event" });
+        await createAuthenticatedEvent(targetUserAuth.headers, { title: "Created Event" });
 
         const joinedEventCreatorAuth = await registerAndGetToken({
             name: "Joined Event Creator",
             email: `joinedcreator${Date.now()}@test.com`
         });
 
-        const joinedEventRes = await createEvent(
+        const joinedEventRes = await createAuthenticatedEvent(
             joinedEventCreatorAuth.headers,
             {
                 title: "Joined Event"

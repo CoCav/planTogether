@@ -31,7 +31,7 @@ const { getEventStatus } = require("../../../../src/utils/events/eventStatus");
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
-const { createMockEvent } = require("../../../factories/eventFactory");
+const { createMockEventModel } = require("../../../factories/eventFactory");
 
 describe("eventService - getEventByID", () => {
 
@@ -47,7 +47,7 @@ describe("eventService - getEventByID", () => {
 
     it("should return event with computed status", async () => {
 
-        Event.findOne.mockResolvedValue(createMockEvent());
+        Event.findOne.mockResolvedValue(createMockEventModel());
 
         getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
 
@@ -67,7 +67,7 @@ describe("eventService - getEventByID", () => {
     ============================= */
 
     it("should enrich retrieved event with computed status", async () => {
-        const mockEvent = createMockEvent({
+        const mockEvent = createMockEventModel({
             title: "Past Event"
         });
 

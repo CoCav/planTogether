@@ -51,7 +51,7 @@ const { deleteUploadedFile } = require("../../../../src/utils/files/uploadedFile
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
-const { createMockEvent } = require("../../../factories/eventFactory");
+const { createMockEventModel } = require("../../../factories/eventFactory");
 
 describe("eventService - deleteEventByID", () => {
     let transaction;
@@ -74,7 +74,7 @@ describe("eventService - deleteEventByID", () => {
     ============================= */
 
     it("should delete event and related memberships", async () => {
-        const event = createMockEvent({
+        const event = createMockEventModel({
             id: 1,
             image: null,
             destroy: jest.fn().mockResolvedValue()
@@ -106,7 +106,7 @@ describe("eventService - deleteEventByID", () => {
     });
 
     it("should delete event image after successful DB commit", async () => {
-        const event = createMockEvent({
+        const event = createMockEventModel({
             id: 1,
             image: "/uploads/events/event-image.png",
             destroy: jest.fn().mockResolvedValue()
@@ -144,7 +144,7 @@ describe("eventService - deleteEventByID", () => {
     ============================= */
 
     it("should block deletion if event is past", async () => {
-        const event = createMockEvent({
+        const event = createMockEventModel({
             id: 1,
             image: null,
             destroy: jest.fn()

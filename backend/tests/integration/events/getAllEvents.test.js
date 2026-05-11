@@ -33,7 +33,7 @@ const { EVENT_STATUS } = require("../../../src/constants/eventStatus");
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
 const { registerAndGetToken } = require("../../helpers/api/authHelper");
-const { createEvent } = require("../../helpers/api/eventHelper");
+const { createAuthenticatedEvent, createEventWithOrganizer } = require("../../helpers/api/eventHelper");
 const { joinEvent } = require("../../helpers/api/eventMembershipHelper");
 
 describe("Get All Events API", () => {
@@ -47,13 +47,14 @@ describe("Get All Events API", () => {
     ============================= */
 
     it("should retrieve all public events", async () => {
-        const creatorAuth = await registerAndGetToken({
-            name: "Event Creator",
-            email: `creator${Date.now()}@test.com`
-        });
-
-        await createEvent(creatorAuth.headers, {
-            title: "Public Event"
+        await createEventWithOrganizer({
+            organizer: {
+                name: "Event Creator",
+                email: `creator${Date.now()}@test.com`
+            },
+            event: {
+                title: "Public Event"
+            }
         });
 
         const res = await request(app).get("/api/events");
@@ -75,9 +76,14 @@ describe("Get All Events API", () => {
     ============================= */
 
     it("should include participant count in events", async () => {
-        const creatorAuth = await registerAndGetToken({
-            name: "Participant Count Creator",
-            email: `participantcount${Date.now()}@test.com`
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Participant Count Creator",
+                email: `participantcount${Date.now()}@test.com`
+            },
+            event: {
+                title: "Participant Count Event"
+            }
         });
 
         const participantAuth = await registerAndGetToken({
@@ -85,54 +91,40 @@ describe("Get All Events API", () => {
             email: `participant${Date.now()}@test.com`
         });
 
-        const eventRes = await createEvent(
-            creatorAuth.headers,
-            {
-                title: "Participant Count Event"
-            }
-        );
-
-        await joinEvent(eventRes.body.event.id, participantAuth.headers);
+        await joinEvent(event.id, participantAuth.headers);
 
         const res = await request(app).get("/api/events");
 
         expect(res.statusCode).toBe(200);
 
-        const event = res.body.events.find(
-            (item) => item.title === "Participant Count Event"
-        );
+        const foundEvent = res.body.events.find((item) => item.title === "Participant Count Event");
 
-        expect(event).toBeDefined();
+        expect(foundEvent).toBeDefined();
 
-        expect(event).toHaveProperty("participantCount");
-        expect(Number(event.participantCount)).toBeGreaterThanOrEqual(1);
+        expect(foundEvent).toHaveProperty("participantCount");
+        expect(Number(foundEvent.participantCount)).toBe(1);
     });
 
     it("should include event status in events", async () => {
-        const creatorAuth = await registerAndGetToken({
-            name: "Status Creator",
-            email: `status${Date.now()}@test.com`
-        });
-
-        await createEvent(
-            creatorAuth.headers,
-            {
+        await createEventWithOrganizer({
+            organizer: {
+                name: "Status Creator",
+                email: `status${Date.now()}@test.com`
+            },
+            event: {
                 title: "Past Event",
                 startDateTime: "2020-01-01T10:00:00.000Z",
                 endDateTime: "2020-01-01T12:00:00.000Z"
             }
-        );
+        });
 
         const res = await request(app).get("/api/events");
 
         expect(res.statusCode).toBe(200);
 
-        const event = res.body.events.find(
-            (item) => item.title === "Past Event"
-        );
+        const event = res.body.events.find((item) => item.title === "Past Event");
 
         expect(event).toBeDefined();
-
         expect(event.status).toBe(EVENT_STATUS.PAST);
     });
 
@@ -141,82 +133,63 @@ describe("Get All Events API", () => {
     ============================= */
 
     it("should filter events by creatorId", async () => {
-        const creatorAuth = await registerAndGetToken({
-            name: "Creator Filter",
-            email: `creatorfilter${Date.now()}@test.com`
-        });
-
-        await createEvent(
-            creatorAuth.headers,
-            {
+        const { organizerAuth } = await createEventWithOrganizer({
+            organizer: {
+                name: "Creator Filter",
+                email: `creatorfilter${Date.now()}@test.com`
+            },
+            event: {
                 title: "Creator Event"
             }
-        );
+        });
 
         const res = await request(app)
             .get("/api/events")
-            .query({
-                creatorId: creatorAuth.user.userId
-            });
+            .query({ creatorId: organizerAuth.user.userId });
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body.events.every(
-            (event) => event.creatorId === creatorAuth.user.userId
-        )).toBe(true);
+        expect(res.body.events.every((event) => event.creatorId === organizerAuth.user.userId)).toBe(true);
     });
 
     it("should filter events by creator name", async () => {
-        const creatorAuth = await registerAndGetToken({
-            name: "Unique Creator",
-            email: `creatorname${Date.now()}@test.com`
-        });
-
-        await createEvent(
-            creatorAuth.headers,
-            {
+        await createEventWithOrganizer({
+            organizer: {
+                name: "Unique Creator",
+                email: `creatorname${Date.now()}@test.com`
+            },
+            event: {
                 title: "Creator Name Event"
             }
-        );
-
-        const res = await request(app)
-            .get("/api/events")
-            .query({
-                creator: "Unique Creator"
-            });
-
-        expect(res.statusCode).toBe(200);
-
-        expect(res.body.events.every(
-            (event) => event.creator.name === "Unique Creator"
-        )).toBe(true);
-    });
-
-
-    it("should filter events by search", async () => {
-        const creatorAuth = await registerAndGetToken({
-            name: "Search Creator",
-            email: `search${Date.now()}@test.com`
         });
 
-        await createEvent(
-            creatorAuth.headers,
-            {
-                title: "JavaScript Meetup"
-            }
-        );
-
         const res = await request(app)
             .get("/api/events")
-            .query({
-                search: "JavaScript"
-            });
+            .query({ creator: "Unique Creator" });
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body.events.some(
-            (event) => event.title.includes("JavaScript")
-        )).toBe(true);
+        expect(res.body.events.every((event) => event.creator.name === "Unique Creator")).toBe(true);
+    });
+
+    it("should filter events by search", async () => {
+        await createEventWithOrganizer({
+            organizer: {
+                name: "Search Creator",
+                email: `search${Date.now()}@test.com`
+            },
+            event: {
+                title: "JavaScript Meetup"
+            }
+        });
+
+        const res = await request(app)
+            .get("/api/events")
+            .query({ search: "JavaScript" });
+
+        expect(res.statusCode).toBe(200);
+
+        expect(res.body.events.some((event) => event.title.includes("JavaScript"))).toBe(true);
     });
 
     it("should filter events by type", async () => {
@@ -225,114 +198,86 @@ describe("Get All Events API", () => {
             email: `type${Date.now()}@test.com`
         });
 
-        await createEvent(
-            creatorAuth.headers,
-            {
-                title: "Workshop Event",
-                type: "Workshop"
-            }
-        );
+        await createAuthenticatedEvent(creatorAuth.headers, {
+            title: "Workshop Event",
+            type: "Workshop"
+        });
 
-        await createEvent(
-            creatorAuth.headers,
-            {
-                title: "Meetup Event",
-                type: "Meetup"
-            }
-        );
+        await createAuthenticatedEvent(creatorAuth.headers, {
+            title: "Meetup Event",
+            type: "Meetup"
+        });
 
         const res = await request(app)
             .get("/api/events")
-            .query({
-                type: "Workshop"
-            });
+            .query({ type: "Workshop" });
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body.events.every(
-            (event) => event.type === "Workshop"
-        )).toBe(true);
+        expect(res.body.events.every((event) => event.type === "Workshop")).toBe(true);
     });
 
     it("should filter events by theme", async () => {
-        const creatorAuth = await registerAndGetToken({
-            name: "Theme Creator",
-            email: `theme${Date.now()}@test.com`
-        });
-
-        await createEvent(
-            creatorAuth.headers,
-            {
+        await createEventWithOrganizer({
+            organizer: {
+                name: "Theme Creator",
+                email: `theme${Date.now()}@test.com`
+            },
+            event: {
                 title: "Gaming Event",
                 theme: "Gaming"
             }
-        );
+        });
 
         const res = await request(app)
             .get("/api/events")
-            .query({
-                theme: "Gaming"
-            });
+            .query({ theme: "Gaming" });
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body.events.every(
-            (event) => event.theme === "Gaming"
-        )).toBe(true);
+        expect(res.body.events.every((event) => event.theme === "Gaming")).toBe(true);
     });
 
     it("should filter events by mode", async () => {
-        const creatorAuth = await registerAndGetToken({
-            name: "Mode Creator",
-            email: `mode${Date.now()}@test.com`
-        });
-
-        await createEvent(
-            creatorAuth.headers,
-            {
+        await createEventWithOrganizer({
+            organizer: {
+                name: "Mode Creator",
+                email: `mode${Date.now()}@test.com`
+            },
+            event: {
                 title: "Online Event",
                 mode: "online"
             }
-        );
+        });
 
         const res = await request(app)
             .get("/api/events")
-            .query({
-                mode: "online"
-            });
+            .query({ mode: "online" });
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body.events.every(
-            (event) => event.mode === "online"
-        )).toBe(true);
+        expect(res.body.events.every((event) => event.mode === "online")).toBe(true);
     });
 
     it("should filter events by location", async () => {
-        const creatorAuth = await registerAndGetToken({
-            name: "Location Creator",
-            email: `location${Date.now()}@test.com`
-        });
-
-        await createEvent(
-            creatorAuth.headers,
-            {
+        await createEventWithOrganizer({
+            organizer: {
+                name: "Location Creator",
+                email: `location${Date.now()}@test.com`
+            },
+            event: {
                 title: "Montreal Event",
                 location: "Montreal"
             }
-        );
+        });
 
         const res = await request(app)
             .get("/api/events")
-            .query({
-                location: "Montreal"
-            });
+            .query({ location: "Montreal" });
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body.events.every(
-            (event) => event.location === "Montreal"
-        )).toBe(true);
+        expect(res.body.events.every((event) => event.location === "Montreal")).toBe(true);
     });
 
     it("should filter events by status", async () => {
@@ -341,79 +286,62 @@ describe("Get All Events API", () => {
             email: `statusfilter${Date.now()}@test.com`
         });
 
-        await createEvent(
-            creatorAuth.headers,
+        await createAuthenticatedEvent(creatorAuth.headers,
             {
                 title: "Upcoming Event",
                 startDateTime: "2030-01-01T10:00:00.000Z",
                 endDateTime: "2030-01-01T12:00:00.000Z"
-            }
-        );
+            });
 
-        await createEvent(
-            creatorAuth.headers,
-            {
-                title: "Past Event",
-                startDateTime: "2020-01-01T10:00:00.000Z",
-                endDateTime: "2020-01-01T12:00:00.000Z"
-            }
-        );
+        await createAuthenticatedEvent(creatorAuth.headers, {
+            title: "Past Event",
+            startDateTime: "2020-01-01T10:00:00.000Z",
+            endDateTime: "2020-01-01T12:00:00.000Z"
+        });
 
         const res = await request(app)
             .get("/api/events")
-            .query({
-                status: EVENT_STATUS.UPCOMING
-            });
+            .query({ status: EVENT_STATUS.UPCOMING });
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body.events.every(
-            (event) => event.status === EVENT_STATUS.UPCOMING
-        )).toBe(true);
+        expect(res.body.events.every((event) => event.status === EVENT_STATUS.UPCOMING)).toBe(true);
     });
 
     it("should filter events by exact date", async () => {
-        const creatorAuth = await registerAndGetToken({
-            name: "Date Creator",
-            email: `date${Date.now()}@test.com`
-        });
-
-        await createEvent(
-            creatorAuth.headers,
-            {
+        await createEventWithOrganizer({
+            organizer: {
+                name: "Date Creator",
+                email: `date${Date.now()}@test.com`
+            },
+            event: {
                 title: "Christmas Event",
                 startDateTime: "2026-12-25T10:00:00.000Z",
                 endDateTime: "2026-12-25T12:00:00.000Z"
             }
-        );
+        });
 
         const res = await request(app)
             .get("/api/events")
-            .query({
-                date: "2026-12-25"
-            });
+            .query({ date: "2026-12-25" });
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body.events.some(
-            (event) => event.title === "Christmas Event"
-        )).toBe(true);
+        expect(res.body.events.some((event) => event.title === "Christmas Event")).toBe(true);
     });
 
     it("should filter events by date range", async () => {
-        const creatorAuth = await registerAndGetToken({
-            name: "Range Creator",
-            email: `range${Date.now()}@test.com`
-        });
-
-        await createEvent(
-            creatorAuth.headers,
-            {
+        await createEventWithOrganizer({
+            organizer: {
+                name: "Range Creator",
+                email: `range${Date.now()}@test.com`
+            },
+            event: {
                 title: "Range Event",
                 startDateTime: "2026-06-15T10:00:00.000Z",
                 endDateTime: "2026-06-15T12:00:00.000Z"
             }
-        );
+        });
 
         const res = await request(app)
             .get("/api/events")
@@ -424,9 +352,7 @@ describe("Get All Events API", () => {
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body.events.some(
-            (event) => event.title === "Range Event"
-        )).toBe(true);
+        expect(res.body.events.some((event) => event.title === "Range Event")).toBe(true);
     });
 
     /* =============================
@@ -439,17 +365,9 @@ describe("Get All Events API", () => {
             email: `pagination${Date.now()}@test.com`
         });
 
-        await createEvent(creatorAuth.headers, {
-            title: "Event A"
-        });
-
-        await createEvent(creatorAuth.headers, {
-            title: "Event B"
-        });
-
-        await createEvent(creatorAuth.headers, {
-            title: "Event C"
-        });
+        await createAuthenticatedEvent(creatorAuth.headers, { title: "Event A" });
+        await createAuthenticatedEvent(creatorAuth.headers, { title: "Event B" });
+        await createAuthenticatedEvent(creatorAuth.headers, { title: "Event C" });
 
         const res = await request(app)
             .get("/api/events")
@@ -472,13 +390,8 @@ describe("Get All Events API", () => {
             email: `sort${Date.now()}@test.com`
         });
 
-        await createEvent(creatorAuth.headers, {
-            title: "Z Event"
-        });
-
-        await createEvent(creatorAuth.headers, {
-            title: "A Event"
-        });
+        await createAuthenticatedEvent(creatorAuth.headers, { title: "Z Event" });
+        await createAuthenticatedEvent(creatorAuth.headers, { title: "A Event" });
 
         const res = await request(app)
             .get("/api/events")
@@ -489,9 +402,7 @@ describe("Get All Events API", () => {
 
         expect(res.statusCode).toBe(200);
 
-        const titles = res.body.events.map(
-            (event) => event.title
-        );
+        const titles = res.body.events.map((event) => event.title);
 
         const sortedTitles = [...titles].sort();
 
@@ -505,9 +416,7 @@ describe("Get All Events API", () => {
     it("should reject invalid mode filter", async () => {
         const res = await request(app)
             .get("/api/events")
-            .query({
-                mode: "physical"
-            });
+            .query({ mode: "physical" });
 
         expect(res.statusCode).toBe(400);
     });
@@ -515,9 +424,7 @@ describe("Get All Events API", () => {
     it("should reject invalid creatorId", async () => {
         const res = await request(app)
             .get("/api/events")
-            .query({
-                creatorId: "abc"
-            });
+            .query({ creatorId: "abc" });
 
         expect(res.statusCode).toBe(400);
     });
@@ -525,9 +432,7 @@ describe("Get All Events API", () => {
     it("should reject invalid status filter", async () => {
         const res = await request(app)
             .get("/api/events")
-            .query({
-                status: "active"
-            });
+            .query({ status: "active" });
 
         expect(res.statusCode).toBe(400);
     });
@@ -535,9 +440,7 @@ describe("Get All Events API", () => {
     it("should reject invalid page", async () => {
         const res = await request(app)
             .get("/api/events")
-            .query({
-                page: 0
-            });
+            .query({ page: 0 });
 
         expect(res.statusCode).toBe(400);
     });
@@ -545,9 +448,7 @@ describe("Get All Events API", () => {
     it("should reject invalid pageSize", async () => {
         const res = await request(app)
             .get("/api/events")
-            .query({
-                pageSize: 500
-            });
+            .query({ pageSize: 500 });
 
         expect(res.statusCode).toBe(400);
     });
@@ -555,9 +456,7 @@ describe("Get All Events API", () => {
     it("should reject invalid order", async () => {
         const res = await request(app)
             .get("/api/events")
-            .query({
-                order: "invalid"
-            });
+            .query({ order: "invalid" });
 
         expect(res.statusCode).toBe(400);
     });

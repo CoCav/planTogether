@@ -18,7 +18,6 @@
 
 jest.mock("../../../../src/config/database", () => ({
     transaction: jest.fn()
-
 }));
 
 jest.mock("../../../../src/models/userModel", () => ({}));

@@ -1,4 +1,5 @@
 const EventUserRole = require("../../models/relations/eventUserRoleModel");
+const { createHttpError } = require("../../utils/errors/httpError");
 
 /* ==================================================
    AUTHORIZE EVENT ROLE MIDDLEWARE
@@ -12,6 +13,8 @@ const EventUserRole = require("../../models/relations/eventUserRoleModel");
    - used as a middleware factory
    - allowedRoles is defined per route
    - attaches membership to req.eventMembership
+   - returns 403 when no matching membership is found
+   - nonexistent events may be rejected before reaching the service layer
 ================================================== */
 
 // Authorize authenticated user based on event role
@@ -22,10 +25,7 @@ const authorizeEventRole = (allowedRoles) => {
             const userId = req.user.userId;
 
             if (eventId == null) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Event ID is required"
-                });
+                return next(createHttpError(400, "Event ID is required"));
             }
 
             // Find authenticated user's membership for this event
@@ -34,11 +34,9 @@ const authorizeEventRole = (allowedRoles) => {
             });
 
             // Block users without required event role
+            // Also covers nonexistent events when no membership exists for eventId
             if (!membership || !allowedRoles.includes(membership.role)) {
-                return res.status(403).json({
-                    success: false,
-                    message: "Forbidden: insufficient event role"
-                });
+                return next(createHttpError(403, "Forbidden: insufficient event role"));
             }
 
             // Reuse membership in downstream handlers if needed
@@ -47,12 +45,7 @@ const authorizeEventRole = (allowedRoles) => {
             return next();
 
         } catch (error) {
-            console.error("Error authorizing event role:", error);
-
-            return res.status(500).json({
-                success: false,
-                message: "Internal server error"
-            });
+            return next(error);
         }
     };
 };

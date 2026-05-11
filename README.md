@@ -12,7 +12,7 @@
 ![Auth](https://img.shields.io/badge/Auth-JWT-yellow)
 
 ![Backend Tests](https://img.shields.io/badge/backend-478%20passing-brightgreen)
-![Backend Coverage](https://img.shields.io/badge/backend%20coverage-98.29%25%20statements%20%7C%2089.27%25%20branches-brightgreen)
+![Backend Coverage](https://img.shields.io/badge/backend%20coverage-98%25%20statements%20%7C%2091%25%20branches-brightgreen)
 
 ![Frontend Tests](https://img.shields.io/badge/frontend-425%20passing-brightgreen)
 ![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-91.39%25%20statements%20%7C%2087.96%25%20branches-brightgreen)
@@ -25,12 +25,12 @@ PlanTogether is a **fullstack event management platform** that enables users to 
 
 The project is composed of:
 
-- a **Node.js / Express backend API** responsible for authentication, business logic, permissions, event management, filtering, uploads, and data persistence
-- a **React frontend application** providing a responsive and interactive user experience with advanced filtering, protected routes, and dynamic UI behavior
+- a **Node.js / Express backend API** responsible for authentication, business logic, permissions, filtering, uploads, transactions, and data persistence
+- a **React frontend application** providing a responsive and interactive user experience with protected routes, advanced filtering, and dynamic UI behavior
 
-Together, they provide a complete end-to-end experience, from secure API operations and database workflows to modern frontend interactions and user-focused features.
+Together, they provide a complete end-to-end experience, from secure API workflows and database operations to modern frontend interactions and user-focused features.
 
-The application focuses on **clean architecture, scalability, security, and comprehensive automated testing**, helping ensure reliability, consistency, and long-term maintainability across both backend and frontend layers.
+The application focuses on **clean architecture, scalability, security, API consistency, and comprehensive automated testing**, helping ensure reliability, maintainability, and predictable behavior across both backend and frontend layers.
 
 ---
 
@@ -43,9 +43,9 @@ The application focuses on **clean architecture, scalability, security, and comp
 - 🔄 **Transaction-based backend workflows** for critical operations
 - 🔍 **Advanced event filtering** (search, creator, date range, sorting, pagination)
 - 🔗 **URL-synchronized filters, pagination, and views**
-- 🖼️ **Image upload system** with validation, preview, drag-and-drop, and automatic cleanup
+- 🖼️ **Secure image upload system** with validation, preview, drag-and-drop, replacement cleanup, and upload protection
 - ⚛️ **Modern React frontend** with protected routes and dynamic UI behavior
-- 🛡️ **Centralized validation, security, and error handling** across API and UI
+- 🛡️ **Centralized validation, security, error handling, and API consistency** across backend and frontend layers
 
 ---
 
@@ -62,7 +62,7 @@ Users can:
 - Interact with events through a role-based system (`organizer`, `co_organizer`, `participant`)
 - Manage their profile and authentication securely
 
-The platform is designed to provide a smooth and intuitive user experience through dynamic UI behavior, protected frontend flows, and centralized backend permission management.
+The platform is designed to provide a smooth and intuitive user experience through dynamic UI behavior, protected frontend flows, centralized backend permission management, and consistent API-driven interactions.
 
 Additional frontend capabilities include:
 
@@ -70,8 +70,9 @@ Additional frontend capabilities include:
 - contextual empty states
 - protected routes
 - responsive interactive UI behavior
+- reusable frontend form and filtering components
 
-Together, the frontend and backend layers provide consistent API-driven interactions, reliable data handling, and scalable fullstack architecture.
+Together, the frontend and backend layers provide reliable data handling, secure workflows, scalable architecture, and consistent fullstack behavior across the application.
 
 ---
 
@@ -97,9 +98,12 @@ Create a `.env` file inside the `backend` directory:
 
 ```env
 PORT=3000
+
 JWT_SECRET=your_secret_key
 
 DB_NAME=plantogether_db
+DB_NAME_TEST=plantogether_test_db
+
 DB_USER=postgres
 DB_PASSWORD=your_password
 DB_HOST=localhost
@@ -111,14 +115,19 @@ DB_LOGGING=false
 DB_SSL=false
 
 NODE_ENV=development
+
 CORS_ORIGIN=http://localhost:5173
 ```
+
+📌 A `.env.example` file is provided as a reference configuration.
 
 Start the backend server:
 
 ```bash
 npm start
 ```
+
+📌 The backend server starts only if the database connection succeeds.
 
 ### 3️⃣ Setup the Frontend
 
@@ -155,14 +164,13 @@ The backend API is fully documented in the backend README:
 
 It includes:
 
-- API architecture
-- Available endpoints
-- Request and response formats
-- Authentication and authorization
-- Security and validation
-- Error handling
-- Filtering and permissions
-- Testing overview
+- backend architecture and project structure
+- API endpoints and response formats
+- authentication and authorization
+- security, validation, and upload handling
+- filtering, pagination, and permissions
+- transactions and database consistency
+- testing overview
 
 Dedicated backend testing documentation is also available:
 
@@ -170,21 +178,21 @@ Dedicated backend testing documentation is also available:
 
 It includes:
 
-- testing architecture
-- integration vs unit testing strategy
-- helpers and factories
-- transaction testing
+- testing architecture and strategy
+- integration vs unit testing
+- reusable helpers and factories
+- transaction and upload testing
 - database isolation
-- upload and validator testing
-- mocking strategy
+- validator and middleware testing
+- mocking strategies
 
-The frontend is fully documented in the frontend README:
+The frontend application is documented in the frontend README:
 
 👉 [`/frontend/README.md`](./frontend/README.md)
 
 It includes:
 
-- application architecture
+- frontend architecture and project structure
 - core features and UI behavior
 - state management and routing
 - API integration details
@@ -207,7 +215,8 @@ The project uses a modern fullstack architecture combining a secure backend API,
 - express-validator (input validation)
 - Multer (file uploads)
 - Helmet (HTTP security)
-- CORS configuration
+- express-rate-limit (authentication protection)
+- centralized CORS configuration
 - Sequelize transactions
 
 ### ⚛️ Frontend
@@ -250,6 +259,7 @@ planTogether/
 │   │
 │   ├── src/
 │   │   ├── config/
+│   │   │   └── security/
 │   │   ├── constants/
 │   │   ├── controllers/
 │   │   ├── middlewares/
@@ -257,6 +267,11 @@ planTogether/
 │   │   ├── routes/
 │   │   ├── services/
 │   │   ├── utils/
+│   │   │   ├── auth/
+│   │   │   ├── errors/
+│   │   │   ├── events/
+│   │   │   ├── files/
+│   │   │   └── formatting/
 │   │   └── validators/
 │   │
 │   ├── tests/
@@ -304,12 +319,12 @@ planTogether/
 └── README.md
 ```
 
-This structure helps maintain a clean separation of concerns across backend and frontend layers while supporting scalability, maintainability, and long-term project organization.
+This structure supports clear separation of concerns across backend and frontend layers while improving scalability, maintainability, testing, and long-term project organization.
 
 Testing strategies are intentionally separated:
 
-- backend tests are organized at the project root level with dedicated integration and unit testing layers
-- frontend tests are colocated within the frontend source structure alongside application features and UI components
+- backend tests are organized with dedicated integration and unit testing layers
+- frontend tests are colocated with application features and UI components
 
 ---
 
@@ -333,6 +348,7 @@ Testing strategies are intentionally separated:
 - Strong frontend and backend validation
 - Date consistency rules and protected event restrictions
 - Transaction-based backend operations for critical workflows
+- Centralized filtering, pagination, and sorting behavior
 
 ### 👥 Event Participation
 
@@ -358,6 +374,7 @@ Testing strategies are intentionally separated:
 - Remove uploaded files before submission
 - Default image fallback for missing or broken images
 - Automatic cleanup of replaced uploaded files
+- Secure upload validation and protected file handling
 
 ### 🎭 Roles & Permissions
 
@@ -417,9 +434,7 @@ This architecture supports:
 - centralized event filtering and query handling
 - uploaded file management and cleanup
 - reusable and consistent API responses
-- high testability and maintainability
-
----
+- strong testability and maintainability
 
 ### ⚛️ Frontend
 
@@ -440,8 +455,9 @@ This structure enables:
 - URL-synchronized state (filters, pagination, views)
 - advanced user experience (uploads, previews, empty states)
 - scalable and maintainable frontend organization
+- reusable UI and feature logic
 
-Together, this architecture ensures a clean separation of concerns and allows both backend and frontend layers to evolve independently while maintaining reliable API-driven interactions and consistent data flow.
+Together, this architecture ensures a clean separation of concerns and allows both backend and frontend layers to evolve independently while maintaining reliable API-driven interactions, predictable data flow, and scalable fullstack development.
 
 ---
 
@@ -449,7 +465,7 @@ Together, this architecture ensures a clean separation of concerns and allows bo
 
 PlanTogether includes a comprehensive automated testing architecture covering both backend and frontend layers.
 
-These tests help ensure reliability, reduce regressions, validate business rules, and maintain consistent behavior across the entire fullstack application.
+These tests help ensure reliability, reduce regressions, validate business rules, and maintain consistent behavior across the fullstack application.
 
 ### ▶️ Run Tests
 
@@ -485,7 +501,7 @@ npm run test:run
 - Validation, edge cases, and security rules
 - File upload handling and cleanup
 - Transaction-based workflows
-- API response consistency and error handling
+- API response consistency and centralized error handling
 - Database isolation and rollback behavior
 - Internal utilities (filtering, pagination, formatting, uploads)
 
@@ -508,16 +524,16 @@ npm run test:run
 - Frontend tests simulate user interactions using React Testing Library and Vitest
 - Backend integration tests use the real Express application with a dedicated PostgreSQL test database
 - Frontend API calls are mocked to isolate UI behavior
-- Tests cover success cases, edge cases, validation, permissions, uploads, and error handling
-- Critical logic (filtering, uploads, pagination, transactions) is tested in isolation
-- Reusable helpers and factories reduce duplication across the test architecture
-- Tests are isolated and ensure consistent application behavior across the stack
+- Tests cover success cases, edge cases, validation, permissions, uploads, transactions, and error handling
+- Critical backend logic is tested in isolation for maintainability and predictable behavior
+- Reusable helpers and factories reduce duplication across the testing architecture
+- Tests are isolated to ensure deterministic and consistent behavior across the stack
 
 Dedicated backend testing documentation is also available:
 
 👉 [`/backend/docs/testing.md`](./backend/docs/testing.md)
 
-These tests provide strong confidence in both backend and frontend reliability, maintainability, and long-term scalability.
+These tests provide strong confidence in backend and frontend reliability, maintainability, scalability, and safer long-term refactoring.
 
 ---
 
@@ -545,6 +561,7 @@ The application implements multiple security mechanisms to protect data, enforce
 - Validation of request bodies, query parameters, and route parameters
 - Protection against malformed or invalid data
 - Password policy enforcement
+- Centralized validation error formatting
 
 Upload validation includes:
 
@@ -552,6 +569,7 @@ Upload validation includes:
 - File extension validation
 - File size limits
 - Controlled upload destinations
+- Secure uploaded file replacement and cleanup
 
 ### 🔒 Data Protection
 
@@ -559,6 +577,7 @@ Upload validation includes:
 - Sensitive data protection via Sequelize scopes
 - Secure uploaded file handling with cleanup and path normalization
 - Consistent API response formatting and centralized error handling
+- Email normalization before persistence and authentication
 
 ### ⚙️ Additional Security Measures
 
@@ -567,6 +586,7 @@ Upload validation includes:
 - SQL injection protection through Sequelize ORM parameterized queries
 - Secure file upload flow with validation and cleanup
 - Transaction-based critical operations for safer database consistency
+- Database indexes for optimized and safer query behavior
 
 These mechanisms help ensure secure data handling, predictable application behavior, and strong protection against unauthorized access and unsafe operations across the entire fullstack application.
 
@@ -585,14 +605,15 @@ These mechanisms help ensure secure data handling, predictable application behav
 ### 🔧 Backend
 
 - Refactored the backend into a more modular and scalable architecture
-- Centralized event filtering and query handling using reusable utilities
+- Centralized event filtering, pagination, and query handling using reusable utilities
 - Added creator-based filtering across public and authenticated event listings
 - Introduced centralized formatting utilities and reusable API response structures
 - Added transaction-based workflows for critical operations
 - Implemented centralized security policies (uploads, password rules, CORS)
 - Improved authorization architecture and protected action handling
 - Added automatic uploaded file cleanup with path normalization protection
-- Strengthened upload validation, error handling, and API consistency
+- Strengthened upload validation, centralized error handling, and API consistency
+- Added database indexes and improved Sequelize query consistency
 - Added dedicated backend testing documentation (`backend/docs/testing.md`)
 
 ### 🧪 Testing
@@ -601,7 +622,7 @@ These mechanisms help ensure secure data handling, predictable application behav
 - Added dedicated backend testing documentation and testing strategy structure
 - Improved database isolation, transaction testing, and rollback validation
 - Expanded coverage across permissions, uploads, filtering, validation, and business rules
-- Improved reusable helpers, factories, and testing maintainability across the full stack
+- Improved reusable helpers, factories, and testing maintainability across the fullstack architecture
 
 ---
 
@@ -609,12 +630,13 @@ These mechanisms help ensure secure data handling, predictable application behav
 
 | Area | Status |
 |---|---|
-| Backend Architecture | ✅ Modular & scalable |
+| Backend Architecture | ✅ Modular, scalable & well-tested |
 | Frontend Application | ✅ Functional & feature-rich |
 | Authentication & RBAC | ✅ Complete |
 | Security | ✅ Centralized & robust |
 | Testing | ✅ 900+ automated tests |
-| Documentation | ✅ Backend & testing docs available |
+| Documentation | ✅ Backend and testing documentation available |
+| Backend API | ✅ Stable and production-oriented |
 | UX & Frontend Refactor | 🚧 Ongoing improvements |
 
 ---
@@ -632,6 +654,7 @@ These mechanisms help ensure secure data handling, predictable application behav
 
 - Improve handling of past events (archiving, visibility, and UI states)
 - Add organizer ownership transfer and advanced membership management
+- Introduce soft-delete support for memberships and archived events
 
 ### ⚛️ Frontend & UX
 
@@ -639,6 +662,7 @@ These mechanisms help ensure secure data handling, predictable application behav
 - Improve mobile responsiveness and accessibility
 - Enhance UI consistency, animations, and loading transitions
 - Improve frontend state management and API synchronization
+- Expand reusable frontend hooks and feature abstractions
 
 ### ⚙️ Infrastructure & Deployment
 
@@ -646,12 +670,13 @@ These mechanisms help ensure secure data handling, predictable application behav
 - Deploy the application (Vercel, Railway, Render, or Fly.io)
 - Improve environment-based configuration for production
 - Add CI automation for testing and deployment workflows
+- Improve production-ready file storage and upload strategies
 
 ---
 
 ## 🧠 What I Learned
 
-Through this project, I strengthened my fullstack development skills and gained hands-on experience building a production-oriented application with a strong focus on architecture, security, testing, and maintainability.
+Through this project, I strengthened my fullstack development skills and gained hands-on experience building a production-oriented application with a strong focus on architecture, security, testing, maintainability, and long-term scalability.
 
 ### 🔧 Backend
 
@@ -663,9 +688,8 @@ Through this project, I strengthened my fullstack development skills and gained 
 - Designing reusable utilities for filtering, pagination, formatting, and data processing
 - Implementing secure file upload systems with validation and lifecycle management
 - Working with transaction-based workflows and protected database operations
-- Centralizing validation, security, and API response handling
-
----
+- Centralizing validation, security policies, and API response handling
+- Improving query consistency, maintainability, and backend organization through refactoring
 
 ### ⚛️ Frontend
 
@@ -677,18 +701,14 @@ Through this project, I strengthened my fullstack development skills and gained 
 - Designing interactive UX patterns (drag-and-drop uploads, previews, empty states)
 - Improving frontend maintainability through reusable and scalable component architecture
 
----
-
 ### 🧪 Testing & Quality
 
 - Writing backend tests using Jest and Supertest
 - Building frontend tests with Vitest and React Testing Library
 - Testing full API workflows and complex UI interactions
 - Designing reusable testing helpers, factories, and isolated test environments
-- Validating business rules, permissions, uploads, filtering, and transactions
-- Improving reliability through automated testing, edge cases, and database isolation
-
----
+- Validating business rules, permissions, uploads, filtering, transactions, and security behavior
+- Improving reliability through automated testing, edge cases, database isolation, and rollback validation
 
 ### 🧱 Architecture & Practices
 

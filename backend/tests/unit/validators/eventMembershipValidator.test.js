@@ -17,7 +17,7 @@
 
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
-const { updateEventMemberRoleValidator, removeEventMemberValidator } = require("../../../src/validators/eventMembershipValidator");
+const { updateEventMemberRoleValidator, removeEventMemberValidator, transferEventOwnershipValidator } = require("../../../src/validators/eventMembershipValidator");
 
 const { runValidation } = require("../../helpers/validation/validationHelper");
 
@@ -181,6 +181,86 @@ describe("eventMembershipValidator", () => {
             expect(result.array()).toEqual(
                 expect.arrayContaining([
                     expect.objectContaining({ msg: "User ID must be a positive integer" })
+                ])
+            );
+        });
+    });
+
+    /* =============================
+       OWNERSHIP TRANSFER VALIDATION
+    ============================= */
+
+    describe("transferEventOwnershipValidator", () => {
+        it("should pass with valid eventId and targetUserId", async () => {
+            const result = await runValidation(
+                transferEventOwnershipValidator,
+                {
+                    params: {
+                        eventId: "1"
+                    },
+                    body: {
+                        targetUserId: "2"
+                    }
+                }
+            );
+
+            expect(result.isEmpty()).toBe(true);
+        });
+
+        it("should fail if eventId is not a positive integer", async () => {
+            const result = await runValidation(
+                transferEventOwnershipValidator,
+                {
+                    params: {
+                        eventId: "abc"
+                    },
+                    body: {
+                        targetUserId: "2"
+                    }
+                }
+            );
+
+            expect(result.array()).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({ msg: "Event ID must be a positive integer" })
+                ])
+            );
+        });
+
+        it("should fail if targetUserId is missing", async () => {
+            const result = await runValidation(
+                transferEventOwnershipValidator,
+                {
+                    params: {
+                        eventId: "1"
+                    },
+                    body: {}
+                }
+            );
+
+            expect(result.array()).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({ msg: "targetUserId is required" })
+                ])
+            );
+        });
+
+        it("should fail if targetUserId is not a positive integer", async () => {
+            const result = await runValidation(
+                transferEventOwnershipValidator,
+                {
+                    params: {
+                        eventId: "1"
+                    },
+                    body: {
+                        targetUserId: "abc"
+                    }
+                }
+            );
+
+            expect(result.array()).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({ msg: "targetUserId must be a positive integer" })
                 ])
             );
         });

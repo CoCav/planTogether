@@ -39,6 +39,10 @@ describe("Update Event Member Role API", () => {
     afterEach(resetDB);
     afterAll(closeDB);
 
+    /* =============================
+       ROLE UPDATE SUCCESS
+    ============================= */
+
     it("should allow organizer to promote participant to co_organizer", async () => {
         const { organizerAuth, event } = await createEventWithOrganizer();
 
@@ -76,6 +80,10 @@ describe("Update Event Member Role API", () => {
         expect(res.statusCode).toBe(200);
         expect(res.body.membership.role).toBe(EVENT_ROLES.PARTICIPANT);
     });
+
+    /* =============================
+       AUTHORIZATION ERRORS
+    ============================= */
 
     it("should reject role update by co_organizer", async () => {
         const { organizerAuth, event } = await createEventWithOrganizer();
@@ -126,23 +134,6 @@ describe("Update Event Member Role API", () => {
         expect(res.statusCode).toBe(403);
     });
 
-    it("should reject updating member to same role", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer();
-
-        const participantAuth = await registerAndGetToken({
-            name: "Participant",
-            email: `participant${Date.now()}@test.com`
-        });
-
-        const participantId = await getUserIdByEmail(participantAuth.email);
-
-        await joinEvent(event.id, participantAuth.headers);
-
-        const res = await updateMemberRole(event.id, participantId, organizerAuth.headers, EVENT_ROLES.PARTICIPANT);
-
-        expect(res.statusCode).toBe(400);
-    });
-
     it("should reject changing event creator role", async () => {
         const { organizerAuth, event } = await createEventWithOrganizer();
 
@@ -153,31 +144,9 @@ describe("Update Event Member Role API", () => {
         expect(res.statusCode).toBe(403);
     });
 
-    it("should reject updating role for past event", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer({
-            event: {
-                startDateTime: "2020-01-01T10:00:00.000Z",
-                endDateTime: "2020-01-01T12:00:00.000Z"
-            }
-        });
-
-        const participantAuth = await registerAndGetToken({
-            name: "Participant",
-            email: `participant${Date.now()}@test.com`
-        });
-
-        const participantId = await getUserIdByEmail(participantAuth.email);
-
-        await EventUserRole.create({
-            eventId: event.id,
-            userId: participantId,
-            role: EVENT_ROLES.PARTICIPANT
-        });
-
-        const res = await updateMemberRole(event.id, participantId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
-
-        expect(res.statusCode).toBe(403);
-    });
+    /* =============================
+       VALIDATION ERRORS
+    ============================= */
 
     it("should reject missing newRole", async () => {
         const { organizerAuth, event } = await createEventWithOrganizer();
@@ -245,6 +214,53 @@ describe("Update Event Member Role API", () => {
             });
 
         expect(res.statusCode).toBe(400);
+    });
+
+    /* =============================
+       BUSINESS RULES
+    ============================= */
+
+    it("should reject updating member to same role", async () => {
+        const { organizerAuth, event } = await createEventWithOrganizer();
+
+        const participantAuth = await registerAndGetToken({
+            name: "Participant",
+            email: `participant${Date.now()}@test.com`
+        });
+
+        const participantId = await getUserIdByEmail(participantAuth.email);
+
+        await joinEvent(event.id, participantAuth.headers);
+
+        const res = await updateMemberRole(event.id, participantId, organizerAuth.headers, EVENT_ROLES.PARTICIPANT);
+
+        expect(res.statusCode).toBe(400);
+    });
+
+    it("should reject updating role for past event", async () => {
+        const { organizerAuth, event } = await createEventWithOrganizer({
+            event: {
+                startDateTime: "2020-01-01T10:00:00.000Z",
+                endDateTime: "2020-01-01T12:00:00.000Z"
+            }
+        });
+
+        const participantAuth = await registerAndGetToken({
+            name: "Participant",
+            email: `participant${Date.now()}@test.com`
+        });
+
+        const participantId = await getUserIdByEmail(participantAuth.email);
+
+        await EventUserRole.create({
+            eventId: event.id,
+            userId: participantId,
+            role: EVENT_ROLES.PARTICIPANT
+        });
+
+        const res = await updateMemberRole(event.id, participantId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
+
+        expect(res.statusCode).toBe(403);
     });
 
     it("should reject updating nonexistent member", async () => {

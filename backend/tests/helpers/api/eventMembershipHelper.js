@@ -4,6 +4,7 @@
    Handles:
    - joining events
    - updating member roles
+   - transferring event ownership
 
    Notes:
    - shared across event membership integration tests
@@ -29,4 +30,12 @@ const updateMemberRole = async (eventId, userId, headers, newRole) => {
         .send({ newRole });
 };
 
-module.exports = { joinEvent, updateMemberRole };
+// Transfer event ownership to another member
+const transferEventOwnership = async (eventId, targetUserId, headers) => {
+    return request(app)
+        .put(`/api/events/${eventId}/ownership`)
+        .set(headers)
+        .send({ targetUserId });
+};
+
+module.exports = { joinEvent, updateMemberRole, transferEventOwnership };

@@ -39,6 +39,10 @@ describe("Remove Event Member API", () => {
     afterEach(resetDB);
     afterAll(closeDB);
 
+    /* =============================
+       MEMBER REMOVAL SUCCESS
+    ============================= */
+
     it("should allow organizer to remove participant", async () => {
         const { organizerAuth, event } = await createEventWithOrganizer();
 
@@ -85,6 +89,10 @@ describe("Remove Event Member API", () => {
 
         expect(res.statusCode).toBe(200);
     });
+
+    /* =============================
+       AUTHORIZATION ERRORS
+    ============================= */
 
     it("should reject removal by participant", async () => {
         const { event } = await createEventWithOrganizer();
@@ -175,6 +183,34 @@ describe("Remove Event Member API", () => {
         expect(res.statusCode).toBe(403);
     });
 
+    /* =============================
+       VALIDATION ERRORS
+    ============================= */
+
+    it("should reject invalid eventId", async () => {
+        const { organizerAuth } = await createEventWithOrganizer();
+
+        const res = await request(app)
+            .delete("/api/events/abc/members/1")
+            .set(organizerAuth.headers);
+
+        expect(res.statusCode).toBe(400);
+    });
+
+    it("should reject invalid userId", async () => {
+        const { organizerAuth } = await createEventWithOrganizer();
+
+        const res = await request(app)
+            .delete("/api/events/1/members/abc")
+            .set(organizerAuth.headers);
+
+        expect(res.statusCode).toBe(400);
+    });
+
+    /* =============================
+       BUSINESS RULES
+    ============================= */
+
     it("should reject removing nonexistent member", async () => {
         const { organizerAuth, event } = await createEventWithOrganizer();
 
@@ -213,25 +249,9 @@ describe("Remove Event Member API", () => {
         expect(res.statusCode).toBe(403);
     });
 
-    it("should reject invalid eventId", async () => {
-        const { organizerAuth } = await createEventWithOrganizer();
-
-        const res = await request(app)
-            .delete("/api/events/abc/members/1")
-            .set(organizerAuth.headers);
-
-        expect(res.statusCode).toBe(400);
-    });
-
-    it("should reject invalid userId", async () => {
-        const { organizerAuth } = await createEventWithOrganizer();
-
-        const res = await request(app)
-            .delete("/api/events/1/members/abc")
-            .set(organizerAuth.headers);
-
-        expect(res.statusCode).toBe(400);
-    });
+    /* =============================
+       EDGE CASES
+    ============================= */
 
     it("should reject removing member from inaccessible event", async () => {
         const { organizerAuth } = await createEventWithOrganizer();

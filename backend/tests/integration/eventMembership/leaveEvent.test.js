@@ -31,6 +31,10 @@ describe("Leave Event API", () => {
     afterEach(resetDB);
     afterAll(closeDB);
 
+    /* =============================
+       LEAVE EVENT SUCCESS
+    ============================= */
+
     it("should allow a user to leave an event", async () => {
         const { event } = await createEventWithOrganizer();
 
@@ -48,6 +52,10 @@ describe("Leave Event API", () => {
         expect(res.statusCode).toBe(200);
     });
 
+    /* =============================
+       AUTHENTICATION ERRORS
+    ============================= */
+
     it("should reject leaving without token", async () => {
         const { event } = await createEventWithOrganizer();
 
@@ -55,6 +63,10 @@ describe("Leave Event API", () => {
 
         expect(res.statusCode).toBe(401);
     });
+
+    /* =============================
+       VALIDATION ERRORS
+    ============================= */
 
     it("should reject invalid eventId", async () => {
         const participantAuth = await registerAndGetToken({
@@ -68,6 +80,10 @@ describe("Leave Event API", () => {
 
         expect(res.statusCode).toBe(400);
     });
+
+    /* =============================
+       BUSINESS RULES
+    ============================= */
 
     it("should reject leaving an event without being a member", async () => {
         const { event } = await createEventWithOrganizer();
@@ -115,6 +131,10 @@ describe("Leave Event API", () => {
 
         expect(res.statusCode).toBe(403);
     });
+
+    /* =============================
+       EDGE CASES
+    ============================= */
 
     it("should reject leaving a nonexistent event", async () => {
         const participantAuth = await registerAndGetToken({

@@ -18,8 +18,10 @@ const { getPaginationOptions } = require("../utils/pagination");
 
    Handles:
    - event participation (join / leave)
-   - retrieving event members and staff
+   - retrieving event members
+   - retrieving organizer and co_organizer members
    - managing event member roles
+   - transferring event ownership
    - enforcing business rules (capacity, roles, time)
 
    Notes:
@@ -34,7 +36,6 @@ const { getPaginationOptions } = require("../utils/pagination");
    JOIN / LEAVE EVENTS
 ================================================== */
 
-// User joins an event
 // User joins an event
 const joinEvent = async ({ eventId, userId }) => {
     const transaction = await sequelize.transaction();
@@ -237,11 +238,83 @@ const removeEventMember = async ({ eventId, userId }) => {
     await membership.destroy();
 };
 
+
+// Transfer event ownership to another existing member
+const transferEventOwnership = async ({ eventId, currentUserId, targetUserId }) => {
+    const transaction = await sequelize.transaction();
+
+    try {
+        const event = await Event.findByPk(eventId, { transaction });
+
+        if (!event) {
+            throwHttpError(404, "Event not found");
+        }
+
+        assertEventNotPast(event);
+
+        // Prevent organizer from transferring ownership to themselves
+        if (currentUserId === targetUserId) {
+            throwHttpError(400, "You cannot transfer ownership to yourself");
+        }
+
+        // Retrieve current organizer membership
+        const currentOrganizerMembership = await EventUserRole.findOne({
+            where: {
+                eventId,
+                userId: currentUserId
+            },
+            transaction
+        });
+
+        if (!currentOrganizerMembership) {
+            throwHttpError(404, "Current organizer membership not found");
+        }
+
+        // Ensure current user is the organizer of the event0
+        if (currentOrganizerMembership.role !== EVENT_ROLES.ORGANIZER) {
+            throwHttpError(403, "Only the organizer can transfer event ownership");
+        }
+
+        // Retrieve target member membership
+        const targetMembership = await EventUserRole.findOne({
+            where: {
+                eventId,
+                userId: targetUserId
+            },
+            transaction
+        });
+
+        if (!targetMembership) {
+            throwHttpError(404, "Target member is not part of this event");
+        }
+
+        // Transfer organizer role
+        currentOrganizerMembership.role = EVENT_ROLES.CO_ORGANIZER;
+        targetMembership.role = EVENT_ROLES.ORGANIZER;
+
+        // Persist both role updates atomically
+        await currentOrganizerMembership.save({ transaction });
+        await targetMembership.save({ transaction });
+
+        await transaction.commit();
+
+        return {
+            previousOrganizer: currentOrganizerMembership,
+            newOrganizer: targetMembership
+        };
+
+    } catch (error) {
+        await transaction.rollback();
+        throw error;
+    }
+};
+
 module.exports = {
     joinEvent,
     leaveEvent,
     getEventMembers,
     getEventStaff,
     updateEventMemberRole,
-    removeEventMember
+    removeEventMember,
+    transferEventOwnership
 };

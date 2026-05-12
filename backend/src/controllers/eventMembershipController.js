@@ -6,9 +6,10 @@ const eventMembershipService = require("../services/eventMembershipService");
    Handles:
    - joining and leaving events
    - retrieving event members
-   - retrieving event staff (organizer and co-organizers)
+   - retrieving organizer and co_organizer members
    - updating member roles
    - removing members from events
+   - transferring event ownership
 
    Notes:
    - current user event listing belongs to userController
@@ -16,7 +17,6 @@ const eventMembershipService = require("../services/eventMembershipService");
    - business logic is delegated to eventMembershipService
    - successful responses include success, message and top-level payload fields when needed
 ================================================== */
-
 /* =============================
    JOIN / LEAVE EVENTS
 ============================= */
@@ -151,11 +151,35 @@ const removeEventMember = async (req, res, next) => {
     }
 };
 
+// Transfer event ownership to another member
+const transferEventOwnership = async (req, res, next) => {
+    try {
+        const { eventId } = req.params;
+        const { targetUserId } = req.body;
+
+        const result = await eventMembershipService.transferEventOwnership({
+            eventId,
+            currentUserId: req.user.userId,
+            targetUserId
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Event ownership transferred successfully",
+            data: result
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     joinEvent,
     leaveEvent,
     getEventMembers,
     getEventStaff,
     updateEventMemberRole,
-    removeEventMember
+    removeEventMember,
+    transferEventOwnership
 };

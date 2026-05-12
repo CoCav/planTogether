@@ -9,6 +9,7 @@ const { VALID_EVENT_ROLES } = require("../constants/eventRoles");
    - event ID param validation
    - event member role update validation
    - event member removal validation
+   - event ownership transfer validation
 
    Notes:
    - handleValidationErrors must run after these validators
@@ -26,6 +27,10 @@ const eventIdParamValidator = [
         .isInt({ min: 1 }).withMessage("Event ID must be a positive integer")
         .toInt()
 ];
+
+/* =============================
+   ROLE MANAGEMENT
+============================= */
 
 // Validate member role update data
 const updateEventMemberRoleValidator = [
@@ -56,4 +61,20 @@ const removeEventMemberValidator = [
         .toInt()
 ];
 
-module.exports = { eventIdParamValidator, updateEventMemberRoleValidator, removeEventMemberValidator };
+// Validate transfer event ownership data
+const transferEventOwnershipValidator = [
+    param("eventId")
+        .isInt({ min: 1 })
+        .withMessage("Event ID must be a positive integer")
+        .toInt(),
+
+    body("targetUserId")
+        .notEmpty()
+        .withMessage("targetUserId is required")
+        .bail()
+        .isInt({ min: 1 })
+        .withMessage("targetUserId must be a positive integer")
+        .toInt()
+];
+
+module.exports = { eventIdParamValidator, updateEventMemberRoleValidator, removeEventMemberValidator, transferEventOwnershipValidator };

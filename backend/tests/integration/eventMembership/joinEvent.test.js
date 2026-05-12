@@ -33,6 +33,11 @@ describe("Join Event API", () => {
     afterEach(resetDB);
     afterAll(closeDB);
 
+
+    /* =============================
+       JOIN EVENT SUCCESS
+    ============================= */
+
     it("should allow an authenticated user to join an event", async () => {
         const { event } = await createEventWithOrganizer();
 
@@ -46,6 +51,10 @@ describe("Join Event API", () => {
         expect(res.statusCode).toBe(200);
     });
 
+    /* =============================
+       AUTHENTICATION ERRORS
+    ============================= */
+
     it("should reject joining without token", async () => {
         const { event } = await createEventWithOrganizer();
 
@@ -53,6 +62,10 @@ describe("Join Event API", () => {
 
         expect(res.statusCode).toBe(401);
     });
+
+    /* =============================
+       VALIDATION ERRORS
+    ============================= */
 
     it("should reject invalid eventId", async () => {
         const participantAuth = await registerAndGetToken({
@@ -66,6 +79,10 @@ describe("Join Event API", () => {
 
         expect(res.statusCode).toBe(400);
     });
+
+    /* =============================
+       BUSINESS RULES
+    ============================= */
 
     it("should reject joining the same event twice", async () => {
         const { event } = await createEventWithOrganizer();
@@ -146,6 +163,10 @@ describe("Join Event API", () => {
 
         expect(res.statusCode).toBe(409);
     });
+
+    /* =============================
+       EDGE CASES
+    ============================= */
 
     it("should reject joining a nonexistent event", async () => {
         const participantAuth = await registerAndGetToken({

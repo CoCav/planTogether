@@ -35,6 +35,10 @@ describe("Get Event Staff API", () => {
     afterEach(resetDB);
     afterAll(closeDB);
 
+    /* =============================
+       EVENT STAFF RETRIEVAL
+    ============================= */
+
     it("should retrieve event staff", async () => {
         const { organizerAuth, event } = await createEventWithOrganizer({
             organizer: {
@@ -125,11 +129,19 @@ describe("Get Event Staff API", () => {
         expect(creatorStaffMember.role).toBe(EVENT_ROLES.ORGANIZER);
     });
 
+    /* =============================
+       VALIDATION ERRORS
+    ============================= */
+
     it("should reject invalid eventId", async () => {
         const res = await request(app).get("/api/events/abc/staff");
 
         expect(res.statusCode).toBe(400);
     });
+
+    /* =============================
+       EDGE CASES
+    ============================= */
 
     it("should return 404 for nonexistent event", async () => {
         const res = await request(app).get("/api/events/999999/staff");

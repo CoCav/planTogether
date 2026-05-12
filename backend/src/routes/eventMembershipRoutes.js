@@ -9,7 +9,7 @@ const { EVENT_ROLES } = require("../constants/eventRoles");
 const authorizeEventRole = require("../middlewares/authorization/authorizeEventRole");
 const { authorizeEventMemberRoleUpdate, authorizeEventMemberRemoval } = require("../middlewares/authorization/eventMemberAuthorization");
 
-const { eventIdParamValidator, updateEventMemberRoleValidator, removeEventMemberValidator } = require("../validators/eventMembershipValidator");
+const { eventIdParamValidator, updateEventMemberRoleValidator, removeEventMemberValidator, transferEventOwnershipValidator } = require("../validators/eventMembershipValidator");
 const handleValidationErrors = require("../middlewares/errors/handleValidationErrors");
 
 /* ==================================================
@@ -17,9 +17,10 @@ const handleValidationErrors = require("../middlewares/errors/handleValidationEr
 
    Handles:
    - joining and leaving events
-   - event members and event staff retrieval
+   - event members and organizer / co_organizer retrieval
    - event member role management
    - event member removal
+   - event ownership transfer
 
    Notes:
    - protected routes require authentication
@@ -71,6 +72,16 @@ router.delete("/:eventId/members/:userId",
     authorizeEventRole([EVENT_ROLES.ORGANIZER, EVENT_ROLES.CO_ORGANIZER]),
     authorizeEventMemberRemoval,
     eventMembershipController.removeEventMember
+);
+
+// Transfer event ownership to another member
+router.put(
+    "/:eventId/ownership",
+    authenticateToken,
+    transferEventOwnershipValidator,
+    handleValidationErrors,
+    authorizeEventRole([EVENT_ROLES.ORGANIZER]),
+    eventMembershipController.transferEventOwnership
 );
 
 module.exports = router;

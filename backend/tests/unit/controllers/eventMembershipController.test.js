@@ -8,10 +8,12 @@
    - retrieving event staff
    - updating member roles
    - removing members
+   - transferring event ownership
 
    Ensures:
    - controller calls service correctly
    - shared event role constants are used for valid role scenarios
+   - ownership transfer payload is passed correctly
    - HTTP responses are properly formatted
    - route params and authenticated user payload are passed correctly
    - errors are forwarded to next()
@@ -277,6 +279,62 @@ describe("eventMembershipController", () => {
             eventMembershipService.removeEventMember.mockRejectedValue(error);
 
             await eventMembershipController.removeEventMember(req, res, next);
+
+            expect(next).toHaveBeenCalledWith(error);
+        });
+    });
+
+    describe("transferEventOwnership", () => {
+
+        it("should transfer event ownership", async () => {
+            const { req, res, next } =
+                createEventControllerMocks({
+                    params: {
+                        eventId: "1"
+                    },
+                    body: {
+                        targetUserId: 2
+                    }
+                });
+
+            const result = {
+                previousOrganizer: {
+                    userId: 10,
+                    role: EVENT_ROLES.CO_ORGANIZER
+                },
+                newOrganizer: {
+                    userId: 2,
+                    role: EVENT_ROLES.ORGANIZER
+                }
+            };
+
+            eventMembershipService.transferEventOwnership.mockResolvedValue(result);
+
+            await eventMembershipController.transferEventOwnership(req, res, next);
+
+            expect(eventMembershipService.transferEventOwnership).toHaveBeenCalledWith({
+                eventId: "1",
+                currentUserId: 10,
+                targetUserId: 2
+            });
+
+            expect(res.status).toHaveBeenCalledWith(200);
+
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: "Event ownership transferred successfully",
+                data: result
+            });
+        });
+
+        it("should forward ownership transfer errors to next", async () => {
+            const { req, res, next } = createEventControllerMocks();
+
+            const error = new Error("Ownership transfer failed");
+
+            eventMembershipService.transferEventOwnership.mockRejectedValue(error);
+
+            await eventMembershipController.transferEventOwnership(req, res, next);
 
             expect(next).toHaveBeenCalledWith(error);
         });

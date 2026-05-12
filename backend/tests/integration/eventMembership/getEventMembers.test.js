@@ -52,8 +52,9 @@ describe("Get Event Members API", () => {
         const res = await request(app).get(`/api/events/${event.id}/members`);
 
         expect(res.statusCode).toBe(200);
-
+        expect(res.body).toHaveProperty("message", "Event members retrieved successfully");
         expect(res.body).toHaveProperty("members");
+
         expect(Array.isArray(res.body.members)).toBe(true);
 
         const memberEmails = res.body.members.map((member) => member.email || member.User?.email);
@@ -72,6 +73,7 @@ describe("Get Event Members API", () => {
         const res = await request(app).get(`/api/events/${event.id}/members`);
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Event members retrieved successfully");
         expect(res.body).toHaveProperty("members");
     });
 

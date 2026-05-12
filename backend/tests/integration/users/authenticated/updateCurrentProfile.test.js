@@ -77,6 +77,7 @@ describe("Update Current User Profile API", () => {
             });
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "User profile updated successfully");
 
         expect(res.body.user.email).toContain("updated");
 
@@ -97,6 +98,7 @@ describe("Update Current User Profile API", () => {
             });
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "User profile updated successfully");
 
         expect(res.body.user.email).toBe("normalized@test.com");
     });
@@ -120,6 +122,7 @@ describe("Update Current User Profile API", () => {
             });
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "User profile updated successfully");
 
         expect(res.body.user.avatar).toMatch(/^\/uploads\/avatars\/avatar-/);
     });
@@ -155,6 +158,9 @@ describe("Update Current User Profile API", () => {
         const oldAvatarAbsolutePath = path.join(__dirname, "../../../../..", firstAvatarPath);
 
         expect(fs.existsSync(oldAvatarAbsolutePath)).toBe(false);
+
+        expect(secondUploadRes.statusCode).toBe(200);
+        expect(secondUploadRes.body).toHaveProperty("message", "User profile updated successfully");
     });
 
     /* =============================

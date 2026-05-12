@@ -51,12 +51,7 @@ describe("Get Event API", () => {
         const res = await request(app).get(`/api/events/${event.id}`);
 
         expect(res.statusCode).toBe(200);
-
-        expect(res.body).toHaveProperty(
-            "message",
-            "Event retrieved successfully"
-        );
-
+        expect(res.body).toHaveProperty("message", "Event retrieved successfully");
         expect(res.body).toHaveProperty("event");
 
         expect(res.body.event).toMatchObject({

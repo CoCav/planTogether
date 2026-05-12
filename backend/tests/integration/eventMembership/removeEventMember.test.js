@@ -60,6 +60,7 @@ describe("Remove Event Member API", () => {
             .set(organizerAuth.headers);
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Event member removed successfully");
     });
 
     it("should allow co_organizer to remove participant", async () => {
@@ -88,6 +89,7 @@ describe("Remove Event Member API", () => {
             .set(coOrganizerAuth.headers);
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Event member removed successfully");
     });
 
     /* =============================

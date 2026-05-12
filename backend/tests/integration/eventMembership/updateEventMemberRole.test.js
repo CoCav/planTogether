@@ -58,6 +58,8 @@ describe("Update Event Member Role API", () => {
         const res = await updateMemberRole(event.id, participantId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Event member role updated successfully");
+
         expect(res.body.membership.role).toBe(EVENT_ROLES.CO_ORGANIZER);
     });
 
@@ -78,6 +80,8 @@ describe("Update Event Member Role API", () => {
         const res = await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, EVENT_ROLES.PARTICIPANT);
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Event member role updated successfully");
+
         expect(res.body.membership.role).toBe(EVENT_ROLES.PARTICIPANT);
     });
 

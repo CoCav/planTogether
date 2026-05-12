@@ -50,6 +50,7 @@ describe("Leave Event API", () => {
             .set(participantAuth.headers);
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "User successfully left the event");
     });
 
     /* =============================

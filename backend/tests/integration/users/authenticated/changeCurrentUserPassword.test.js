@@ -50,11 +50,7 @@ describe("Change Current User Password API", () => {
             });
 
         expect(res.statusCode).toBe(200);
-
-        expect(res.body).toHaveProperty(
-            "message",
-            "Password updated successfully"
-        );
+        expect(res.body).toHaveProperty("message", "Password updated successfully");
     });
 
     it("should allow login with new password after update", async () => {
@@ -82,7 +78,7 @@ describe("Change Current User Password API", () => {
             });
 
         expect(res.statusCode).toBe(200);
-
+        expect(res.body).toHaveProperty("message", "Login successful");
         expect(res.body).toHaveProperty("token");
     });
 

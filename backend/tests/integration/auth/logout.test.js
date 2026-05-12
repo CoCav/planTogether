@@ -44,11 +44,7 @@ describe("Logout API", () => {
             .set(userAuth.headers);
 
         expect(res.statusCode).toBe(200);
-
-        expect(res.body).toHaveProperty(
-            "message",
-            "Logout successful"
-        );
+        expect(res.body).toHaveProperty("message", "Logout successful");
     });
 
     /* =============================

@@ -69,6 +69,11 @@ const loginUser = async ({ email, password }) => {
         throwHttpError(401, "Invalid email or invalid password");
     }
 
+    // Prevent login for deleted accounts
+    if (user.deletedAt) {
+        throwHttpError(403, "Account has been deleted");
+    }
+
     // Compare provided password with hashed password
     const isPasswordValid = await bcrypt.compare(password, user.password);
 

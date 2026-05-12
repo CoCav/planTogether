@@ -10,6 +10,7 @@ const { formatAuthenticatedUser } = require("../utils/formatting/userFormatter")
    - authenticated user profile retrieval
    - authenticated profile update
    - authenticated password update
+   - authenticated account deletion
    - public user profile retrieval
    - public user events retrieval
    - API response formatting
@@ -35,7 +36,7 @@ const getCurrentUserEvents = async (req, res, next) => {
 
         return res.status(200).json({
             success: true,
-            message: "Events retrieved successfully",
+            message: "User events retrieved successfully",
             ...result
         });
 
@@ -112,6 +113,22 @@ const changeCurrentUserPassword = async (req, res, next) => {
     }
 };
 
+// Delete authenticated user account
+const deleteCurrentUser = async (req, res, next) => {
+    try {
+        const userId = req.user.userId;
+
+        await userService.deleteCurrentUserByID(userId);
+
+        return res.status(200).json({
+            success: true,
+            message: "Account deleted successfully"
+        });
+
+    } catch (error) {
+        return next(error);
+    }
+};
 
 /* =============================
    PUBLIC USER
@@ -154,6 +171,7 @@ module.exports = {
     getCurrentUserProfile,
     updateCurrentUserProfile,
     changeCurrentUserPassword,
+    deleteCurrentUser,
     getPublicUserProfile,
     getPublicUserEvents
 };

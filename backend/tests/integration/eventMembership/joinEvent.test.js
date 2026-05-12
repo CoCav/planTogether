@@ -49,6 +49,7 @@ describe("Join Event API", () => {
         const res = await joinEvent(event.id, participantAuth.headers);
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "User successfully joined the event");
     });
 
     /* =============================

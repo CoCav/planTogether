@@ -49,11 +49,7 @@ describe("Register API", () => {
             });
 
         expect(res.statusCode).toBe(201);
-
-        expect(res.body).toHaveProperty(
-            "message",
-            "User registered successfully"
-        );
+        expect(res.body).toHaveProperty("message", "User registered successfully");
 
         expect(res.body).toHaveProperty("token");
         expect(res.body).toHaveProperty("user");
@@ -81,7 +77,7 @@ describe("Register API", () => {
             });
 
         expect(res.statusCode).toBe(201);
-
+        expect(res.body).toHaveProperty("message", "User registered successfully");
         expect(res.body).toHaveProperty("token");
 
         expect(res.body.user).toMatchObject({

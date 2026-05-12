@@ -61,7 +61,7 @@ describe("Get Public User Events API", () => {
             .set(viewerAuth.headers);
 
         expect(res.statusCode).toBe(200);
-
+        expect(res.body).toHaveProperty("message", "Public user events retrieved successfully");
         expect(res.body).toHaveProperty("createdEvents");
         expect(res.body).toHaveProperty("joinedEvents");
 
@@ -92,6 +92,7 @@ describe("Get Public User Events API", () => {
             .set(viewerAuth.headers);
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Public user events retrieved successfully");
 
         expect(res.body.createdEvents.some(
             (event) => event.title === "Created Public Event"
@@ -128,6 +129,7 @@ describe("Get Public User Events API", () => {
             .set(viewerAuth.headers);
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Public user events retrieved successfully");
 
         expect(res.body.joinedEvents.some(
             (event) => event.title === "Joined Public Event"
@@ -152,6 +154,7 @@ describe("Get Public User Events API", () => {
             .set(viewerAuth.headers);
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Public user events retrieved successfully");
 
         expect(res.body.createdEvents.some(
             (event) => event.title === "Non Duplicated Event"

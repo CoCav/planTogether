@@ -73,6 +73,8 @@ describe("Transfer Event Ownership API", () => {
         });
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Event ownership transferred successfully");
+
         expect(previousOrganizerMembership.role).toBe(EVENT_ROLES.CO_ORGANIZER);
         expect(newOrganizerMembership.role).toBe(EVENT_ROLES.ORGANIZER);
     });
@@ -109,6 +111,8 @@ describe("Transfer Event Ownership API", () => {
         });
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Event ownership transferred successfully");
+
         expect(previousOrganizerMembership.role).toBe(EVENT_ROLES.CO_ORGANIZER);
         expect(newOrganizerMembership.role).toBe(EVENT_ROLES.ORGANIZER);
     });

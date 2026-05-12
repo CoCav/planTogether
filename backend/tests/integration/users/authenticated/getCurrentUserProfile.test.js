@@ -39,12 +39,7 @@ describe("Get Current User Profile API", () => {
             .set(userAuth.headers);
 
         expect(res.statusCode).toBe(200);
-
-        expect(res.body).toHaveProperty(
-            "message",
-            "User profile retrieved successfully"
-        );
-
+        expect(res.body).toHaveProperty("message", "User profile retrieved successfully");
         expect(res.body).toHaveProperty("user");
 
         expect(res.body.user).toMatchObject({

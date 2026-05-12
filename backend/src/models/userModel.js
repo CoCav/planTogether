@@ -7,13 +7,15 @@ const sequelize = require("../config/database");
    Handles:
    - user account data
    - email normalization before persistence
-   - email must remain unique for authentication
+   - email uniqueness for authentication
    - avatar path storage
    - password field protection
+   - account deletion support
 
    Notes:
    - password is excluded by default
    - withPassword scope is used only for authentication
+   - deletedAt is used for deleted accounts
 ================================================== */
 
 const User = sequelize.define("User", {
@@ -51,6 +53,12 @@ const User = sequelize.define("User", {
     avatar: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+
+    deletedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: null
     }
 }, {
     tableName: "users",

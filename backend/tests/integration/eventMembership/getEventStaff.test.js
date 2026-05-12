@@ -61,7 +61,9 @@ describe("Get Event Staff API", () => {
         const res = await request(app).get(`/api/events/${event.id}/staff`);
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Event staff retrieved successfully");
         expect(res.body).toHaveProperty("eventStaff");
+
         expect(Array.isArray(res.body.eventStaff)).toBe(true);
 
         const staffEmails = res.body.eventStaff.map((staffMember) => staffMember.email || staffMember.User?.email);
@@ -88,6 +90,7 @@ describe("Get Event Staff API", () => {
         const res = await request(app).get(`/api/events/${event.id}/staff`);
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Event staff retrieved successfully");
 
         const staffEmails = res.body.eventStaff.map((staffMember) => staffMember.email || staffMember.User?.email);
 
@@ -105,6 +108,7 @@ describe("Get Event Staff API", () => {
         const res = await request(app).get(`/api/events/${event.id}/staff`);
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Event staff retrieved successfully");
         expect(res.body).toHaveProperty("eventStaff");
     });
 
@@ -119,6 +123,8 @@ describe("Get Event Staff API", () => {
         const res = await request(app).get(`/api/events/${event.id}/staff`);
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Event staff retrieved successfully");
+
         expect(Array.isArray(res.body.eventStaff)).toBe(true);
 
         const creatorStaffMember = res.body.eventStaff.find(

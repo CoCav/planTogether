@@ -9,6 +9,7 @@
    - wrong password rejection
    - unknown email rejection
    - password exposure protection
+   - deleted account login rejection
 
    Ensures:
    - validators run correctly
@@ -16,6 +17,7 @@
    - JWT token is returned
    - normalized emails are supported
    - password is never exposed
+   - deleted account cannot login
 ================================================== */
 
 const request = require("supertest");
@@ -50,12 +52,7 @@ describe("Login API", () => {
             });
 
         expect(res.statusCode).toBe(200);
-
-        expect(res.body).toHaveProperty(
-            "message",
-            "Login successful"
-        );
-
+        expect(res.body).toHaveProperty("message", "Login successful");
         expect(res.body).toHaveProperty("token");
         expect(res.body).toHaveProperty("user");
 
@@ -82,6 +79,7 @@ describe("Login API", () => {
             });
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Login successful");
     });
 
     /* =============================
@@ -137,6 +135,27 @@ describe("Login API", () => {
             .send({
                 email: `unknown${Date.now()}@test.com`,
                 password: "Password123"
+            });
+
+        expect(res.statusCode).toBe(401);
+    });
+
+    it("should reject login after account deletion", async () => {
+        const userAuth = await registerAndGetToken({
+            name: "Deleted Login User",
+            email: `deletedlogin${Date.now()}@test.com`,
+            password: "Password123"
+        });
+
+        await request(app)
+            .delete("/api/users/me")
+            .set(userAuth.headers);
+
+        const res = await request(app)
+            .post("/api/auth/login")
+            .send({
+                email: userAuth.email,
+                password: userAuth.password
             });
 
         expect(res.statusCode).toBe(401);

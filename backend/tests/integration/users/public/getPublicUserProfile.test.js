@@ -55,7 +55,7 @@ describe("Get Public User Profile API", () => {
             .set(viewerAuth.headers);
 
         expect(res.statusCode).toBe(200);
-
+        expect(res.body).toHaveProperty("message", "Public user profile retrieved successfully");
         expect(res.body).toHaveProperty("user");
         expect(res.body).toHaveProperty("stats");
 
@@ -97,6 +97,7 @@ describe("Get Public User Profile API", () => {
             .set(viewerAuth.headers);
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Public user profile retrieved successfully");
 
         expect(res.body.stats).toHaveProperty("createdEventsCount", 1);
         expect(res.body.stats).toHaveProperty("joinedEventsCount", 2);
@@ -124,6 +125,7 @@ describe("Get Public User Profile API", () => {
             .set(viewerAuth.headers);
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Public user profile retrieved successfully");
 
         expect(res.body.user).not.toHaveProperty("id");
         expect(res.body.user).not.toHaveProperty("email");

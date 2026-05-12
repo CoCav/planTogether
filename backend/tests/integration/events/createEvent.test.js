@@ -61,12 +61,7 @@ describe("Create Event API", () => {
             }));
 
         expect(res.statusCode).toBe(201);
-
-        expect(res.body).toHaveProperty(
-            "message",
-            "Event created successfully"
-        );
-
+        expect(res.body).toHaveProperty("message", "Event created successfully");
         expect(res.body).toHaveProperty("event");
 
         expect(res.body.event).toMatchObject({
@@ -99,6 +94,7 @@ describe("Create Event API", () => {
             });
 
         expect(res.statusCode).toBe(201);
+        expect(res.body).toHaveProperty("message", "Event created successfully");
 
         expect(res.body.event.image).toMatch(/^\/uploads\/events\/event-/);
     });
@@ -121,6 +117,7 @@ describe("Create Event API", () => {
             }));
 
         expect(res.statusCode).toBe(201);
+        expect(res.body).toHaveProperty("message", "Event created successfully");
 
         expect(res.body.event.location).toBeNull();
     });
@@ -147,6 +144,9 @@ describe("Create Event API", () => {
         });
 
         expect(membership).toBeDefined();
+
+        expect(res.body).toHaveProperty("message", "Event created successfully");
+
         expect(membership.role).toBe(EVENT_ROLES.ORGANIZER);
     });
 

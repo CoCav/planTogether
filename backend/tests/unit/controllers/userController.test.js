@@ -5,6 +5,7 @@
    - authenticated current user profile retrieval
    - authenticated current user profile update
    - authenticated current user password update
+   - authenticated current user account deletion
    - public user profile retrieval
    - public user events retrieval
 
@@ -61,7 +62,7 @@ describe("userController", () => {
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
                 success: true,
-                message: "Events retrieved successfully",
+                message: "User events retrieved successfully",
                 ...result
             });
         });
@@ -253,6 +254,45 @@ describe("userController", () => {
             userService.changeCurrentUserPasswordByID.mockRejectedValue(error);
 
             await userController.changeCurrentUserPassword(req, res, next);
+
+            expect(next).toHaveBeenCalledWith(error);
+        });
+    });
+
+    /* ======================================
+        AUTHENTICATED CURRENT USER DELETION
+    ====================================== */
+
+    describe("deleteCurrentUser", () => {
+        it("should delete authenticated user account", async () => {
+            const { req, res, next } = createUserControllerMocks({
+                user: { userId: 1 }
+            });
+
+            userService.deleteCurrentUserByID.mockResolvedValue();
+
+            await userController.deleteCurrentUser(req, res, next);
+
+            expect(userService.deleteCurrentUserByID).toHaveBeenCalledWith(1);
+
+            expect(res.status).toHaveBeenCalledWith(200);
+
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: "Account deleted successfully"
+            });
+        });
+
+        it("should forward delete account errors to next", async () => {
+            const { req, res, next } = createUserControllerMocks({
+                user: { userId: 1 }
+            });
+
+            const error = new Error("Delete failed");
+
+            userService.deleteCurrentUserByID.mockRejectedValue(error);
+
+            await userController.deleteCurrentUser(req, res, next);
 
             expect(next).toHaveBeenCalledWith(error);
         });

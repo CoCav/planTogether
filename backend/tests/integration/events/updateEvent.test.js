@@ -58,6 +58,8 @@ describe("Update Event API", () => {
             });
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Event updated successfully");
+
         expect(res.body.event.title).toBe("Updated Event Title");
     });
 
@@ -88,6 +90,8 @@ describe("Update Event API", () => {
             });
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Event updated successfully");
+
         expect(res.body.event.title).toBe("Co Organizer Updated Event");
     });
 
@@ -109,6 +113,8 @@ describe("Update Event API", () => {
             });
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Event updated successfully");
+
         expect(res.body.event.image).toMatch(/^\/uploads\/events\/event-/);
     });
 
@@ -154,6 +160,7 @@ describe("Update Event API", () => {
             });
 
         expect(updateRes.statusCode).toBe(200);
+        expect(updateRes.body).toHaveProperty("message", "Event updated successfully");
 
         // Old image should be deleted
         expect(fs.existsSync(oldImagePath)).toBe(false);

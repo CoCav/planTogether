@@ -53,11 +53,7 @@ describe("Delete Event API", () => {
             .set(organizerAuth.headers);
 
         expect(res.statusCode).toBe(200);
-
-        expect(res.body).toHaveProperty(
-            "message",
-            "Event deleted successfully"
-        );
+        expect(res.body).toHaveProperty("message", "Event deleted successfully");
 
         const getRes = await request(app).get(`/api/events/${event.id}`);
 

@@ -17,6 +17,7 @@ const handleValidationErrors = require("../middlewares/errors/handleValidationEr
    - authenticated current user profile retrieval
    - authenticated current user profile update
    - authenticated current user password update
+   - authenticated current user account deletion
    - public user profile retrieval
    - public user events retrieval
 
@@ -58,6 +59,8 @@ router.put("/me/password",
     userController.changeCurrentUserPassword
 );
 
+// Delete current user account
+router.delete("/me", authenticateToken, userController.deleteCurrentUser);
 
 /* =============================
    PUBLIC USER

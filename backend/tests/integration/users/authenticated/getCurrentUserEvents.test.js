@@ -69,6 +69,7 @@ describe("Get Current User Events API", () => {
             .set(participantAuth.headers);
 
         expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "User events retrieved successfully");
 
         expect(Array.isArray(res.body.events)).toBe(true);
         expect(res.body.events.length).toBeGreaterThan(0);

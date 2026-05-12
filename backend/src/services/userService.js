@@ -30,6 +30,7 @@ const { getPaginationOptions } = require("../utils/pagination");
    - authenticated current user profile retrieval
    - authenticated current user profile update
    - authenticated current user password update
+   - authenticated current user account deletion
    - public user profile retrieval
    - public user events retrieval
    - public profile statistics
@@ -281,6 +282,68 @@ const changeCurrentUserPasswordByID = async (userId, currentPassword, newPasswor
     await user.save();
 };
 
+// Delete current user account by ID
+const deleteCurrentUserByID = async (userId) => {
+    const transaction = await sequelize.transaction();
+
+    try {
+        const user = await User.findByPk(userId, { transaction });
+
+        if (!user) {
+            throwHttpError(404, "User not found");
+        }
+
+        // Prevent deleting an account that still owns active or upcoming events
+        const activeOrganizerMembership = await EventUserRole.findOne({
+            where: {
+                userId,
+                role: EVENT_ROLES.ORGANIZER
+            },
+            include: [{
+                model: Event,
+                as: "event",
+                where: {
+                    endDateTime: {
+                        [Op.gte]: new Date()
+                    }
+                }
+            }],
+            transaction
+        });
+
+        if (activeOrganizerMembership) {
+            throwHttpError(403, "You must transfer ownership of your active or upcoming events before deleting your account");
+        }
+
+        const oldAvatar = user.avatar;
+        const deletionToken = Date.now();
+
+        // Keep historical user identity visible while disabling account access
+        user.deletedAt = new Date();
+        user.email = `deleted_user_${user.id}_${deletionToken}@deleted.local`;
+        user.password = await bcrypt.hash(
+            `deleted_user_${user.id}_${deletionToken}`,
+            10
+        );
+        user.avatar = null;
+
+        await user.save({ transaction });
+
+        await transaction.commit();
+
+        // Delete avatar only after successful DB commit
+        if (oldAvatar) {
+            await deleteUploadedFile(oldAvatar);
+        }
+
+        return user;
+
+    } catch (error) {
+        await transaction.rollback();
+        throw error;
+    }
+};
+
 
 /* =============================
    PUBLIC USER
@@ -352,6 +415,7 @@ module.exports = {
     getCurrentUserProfileByID,
     updateCurrentUserProfileByID,
     changeCurrentUserPasswordByID,
+    deleteCurrentUserByID,
     getPublicUserProfileByID,
     getPublicUserEventsByID
 };

@@ -7,12 +7,14 @@
    - invalid password rejection
    - JWT token generation
    - unknown email rejection
+   - deleted account rejection
 
    Ensures:
    - credentials are validated correctly
    - emails are normalized before querying users
    - JWT tokens are generated after authentication
    - invalid login attempts are rejected
+   - deleted accounts cannot login
 ================================================== */
 
 jest.mock("bcrypt");
@@ -31,7 +33,7 @@ const { generateAuthToken } = require("../../../../src/utils/auth/authToken");
 const User = require("../../../../src/models/userModel");
 const authService = require("../../../../src/services/authService");
 
-const { createMockUser } = require("../../../factories/userFactory");
+const { createMockUserWithPassword } = require("../../../factories/userFactory");
 
 describe("authService - loginUser", () => {
 
@@ -47,7 +49,7 @@ describe("authService - loginUser", () => {
 
     it("should login user and return token", async () => {
         const scoped = {
-            findOne: jest.fn().mockResolvedValue(createMockUser())
+            findOne: jest.fn().mockResolvedValue(createMockUserWithPassword())
         };
 
         User.scope.mockReturnValue(scoped);
@@ -68,7 +70,7 @@ describe("authService - loginUser", () => {
 
     it("should normalize email before querying database", async () => {
         const scoped = {
-            findOne: jest.fn().mockResolvedValue(createMockUser())
+            findOne: jest.fn().mockResolvedValue(createMockUserWithPassword())
         };
 
         User.scope.mockReturnValue(scoped);
@@ -93,7 +95,7 @@ describe("authService - loginUser", () => {
 
     it("should throw if password is invalid", async () => {
         User.scope.mockReturnValue({
-            findOne: jest.fn().mockResolvedValue(createMockUser())
+            findOne: jest.fn().mockResolvedValue(createMockUserWithPassword())
         });
 
         bcrypt.compare.mockResolvedValue(false);
@@ -111,7 +113,7 @@ describe("authService - loginUser", () => {
     ============================= */
 
     it("should generate JWT token with userId payload", async () => {
-        const mockUser = createMockUser({
+        const mockUser = createMockUserWithPassword({
             id: 1
         });
 
@@ -147,5 +149,24 @@ describe("authService - loginUser", () => {
         })).rejects.toMatchObject({
             statusCode: 401
         });
+    });
+
+    it("should throw if account is deleted", async () => {
+        User.scope.mockReturnValue({
+            findOne: jest.fn().mockResolvedValue(createMockUserWithPassword({
+                deletedAt: new Date()
+            }))
+        });
+
+        await expect(authService.loginUser({
+            email: "john@test.com",
+            password: "Password123"
+        })).rejects.toMatchObject({
+            message: "Account has been deleted",
+            statusCode: 403
+        });
+
+        expect(bcrypt.compare).not.toHaveBeenCalled();
+        expect(generateAuthToken).not.toHaveBeenCalled();
     });
 });

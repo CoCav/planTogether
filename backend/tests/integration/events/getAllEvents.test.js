@@ -60,11 +60,7 @@ describe("Get All Events API", () => {
         const res = await request(app).get("/api/events");
 
         expect(res.statusCode).toBe(200);
-
-        expect(res.body).toHaveProperty(
-            "message",
-            "Events retrieved successfully"
-        );
+        expect(res.body).toHaveProperty("message", "Events retrieved successfully");
 
         expect(Array.isArray(res.body.events)).toBe(true);
 

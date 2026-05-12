@@ -3,6 +3,7 @@
 
    Tests:
    - successful member removal
+   - membership soft deletion on removal
    - past event rejection
    - missing event rejection
    - missing membership rejection
@@ -10,6 +11,7 @@
 
    Ensures:
    - members can be removed from valid events
+   - removing a member soft-deletes the membership instead of destroying it
    - past event rules are respected
    - missing events and memberships are rejected correctly
 
@@ -54,7 +56,8 @@ describe("eventMembershipService - removeEventMember", () => {
 
     it("should remove event member", async () => {
         const membership = createMockMembership({
-            destroy: jest.fn().mockResolvedValue()
+            deletedAt: null,
+            save: jest.fn().mockResolvedValue()
         });
 
         Event.findByPk.mockResolvedValue({ id: 1 });
@@ -71,11 +74,13 @@ describe("eventMembershipService - removeEventMember", () => {
         expect(EventUserRole.findOne).toHaveBeenCalledWith({
             where: {
                 eventId: 1,
-                userId: 10
+                userId: 10,
+                deletedAt: null
             }
         });
 
-        expect(membership.destroy).toHaveBeenCalled();
+        expect(membership.deletedAt).toBeInstanceOf(Date);
+        expect(membership.save).toHaveBeenCalled();
     });
 
     /* =============================

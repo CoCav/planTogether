@@ -5,6 +5,7 @@
    - joining an event
    - authentication requirement
    - duplicate join rejection
+   - membership restoration after leave
    - nonexistent event handling
    - past event restriction
    - registration deadline restriction
@@ -14,6 +15,7 @@
    Ensures:
    - authenticated users can join events
    - duplicate memberships are prevented
+   - inactive memberships can be restored
    - expired or full events reject new members
    - invalid join requests are rejected correctly
 ================================================== */
@@ -32,7 +34,6 @@ describe("Join Event API", () => {
     beforeAll(initDB);
     afterEach(resetDB);
     afterAll(closeDB);
-
 
     /* =============================
        JOIN EVENT SUCCESS
@@ -163,6 +164,58 @@ describe("Join Event API", () => {
         const res = await joinEvent(event.id, secondParticipantAuth.headers);
 
         expect(res.statusCode).toBe(409);
+    });
+
+    it("should restore inactive membership when user rejoins event", async () => {
+        const { event } = await createEventWithOrganizer();
+
+        const participantAuth = await registerAndGetToken({
+            name: "Returning Participant",
+            email: `returning${Date.now()}@test.com`
+        });
+
+        // Initial join
+        await joinEvent(event.id, participantAuth.headers);
+
+        // Leave event
+        await request(app)
+            .delete(`/api/events/${event.id}/members/leave`)
+            .set(participantAuth.headers);
+
+        // Rejoin event
+        const res = await joinEvent(event.id, participantAuth.headers);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "User successfully joined the event");
+    });
+
+    it("should allow joining when inactive memberships exist", async () => {
+        const { event } = await createEventWithOrganizer({
+            event: {
+                maxParticipants: 1
+            }
+        });
+
+        const firstParticipantAuth = await registerAndGetToken({
+            name: "First Participant",
+            email: `first${Date.now()}@test.com`
+        });
+
+        await joinEvent(event.id, firstParticipantAuth.headers);
+
+        // Leave event -> membership becomes inactive
+        await request(app)
+            .delete(`/api/events/${event.id}/members/leave`)
+            .set(firstParticipantAuth.headers);
+
+        const secondParticipantAuth = await registerAndGetToken({
+            name: "Second Participant",
+            email: `second${Date.now()}@test.com`
+        });
+
+        const res = await joinEvent(event.id, secondParticipantAuth.headers);
+
+        expect(res.statusCode).toBe(200);
     });
 
     /* =============================

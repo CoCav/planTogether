@@ -2,9 +2,10 @@
    EVENT MEMBERSHIP SERVICE - TRANSFER OWNERSHIP TESTS
 
    Tests:
-   - successful ownership transfer to participant
-   - successful ownership transfer to co_organizer
+   - successful ownership transfer to active participant
+   - successful ownership transfer to active co_organizer
    - self-transfer rejection
+   - inactive target membership rejection
    - target non-member rejection
    - organizer authorization rejection
    - past event rejection
@@ -13,6 +14,7 @@
 
    Ensures:
    - ownership is transferred atomically
+   - only active memberships can receive ownership transfer
    - selected members become organizer
    - previous organizers become co_organizer
    - only organizers can transfer ownership
@@ -114,7 +116,8 @@ describe("eventMembershipService - transferEventOwnership", () => {
         expect(EventUserRole.findOne).toHaveBeenNthCalledWith(1, {
             where: {
                 eventId: 1,
-                userId: 10
+                userId: 10,
+                deletedAt: null
             },
             transaction
         });
@@ -122,7 +125,8 @@ describe("eventMembershipService - transferEventOwnership", () => {
         expect(EventUserRole.findOne).toHaveBeenNthCalledWith(2, {
             where: {
                 eventId: 1,
-                userId: 20
+                userId: 20,
+                deletedAt: null
             },
             transaction
         });
@@ -274,6 +278,34 @@ describe("eventMembershipService - transferEventOwnership", () => {
         expect(assertEventNotPast).toHaveBeenCalledWith(event);
 
         expect(EventUserRole.findOne).not.toHaveBeenCalled();
+
+        expect(transaction.rollback).toHaveBeenCalled();
+        expect(transaction.commit).not.toHaveBeenCalled();
+    });
+
+    it("should reject ownership transfer to inactive membership", async () => {
+        const currentOrganizerMembership = createMockMembership({
+            eventId: 1,
+            userId: 10,
+            role: EVENT_ROLES.ORGANIZER
+        });
+
+        Event.findByPk.mockResolvedValue(
+            createMockMembershipEvent({ id: 1 })
+        );
+
+        EventUserRole.findOne
+            .mockResolvedValueOnce(currentOrganizerMembership)
+            .mockResolvedValueOnce(null);
+
+        await expect(eventMembershipService.transferEventOwnership({
+            eventId: 1,
+            currentUserId: 10,
+            targetUserId: 20
+        })).rejects.toMatchObject({
+            message: "Target member is not part of this event",
+            statusCode: 404
+        });
 
         expect(transaction.rollback).toHaveBeenCalled();
         expect(transaction.commit).not.toHaveBeenCalled();

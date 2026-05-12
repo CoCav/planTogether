@@ -2,18 +2,20 @@
    USER SERVICE - GET CURRENT USER EVENTS BY ID TESTS
 
    Tests:
-   - paginated current user events retrieval
-   - participant count enrichment
+   - paginated active current user events retrieval
+   - active participant count enrichment
    - event status enrichment
    - created / joined / history views
    - creator filter handling
+   - inactive membership exclusion
    - missing user rejection
    - database error propagation
 
    Ensures:
-   - current user event lists are filtered correctly
+   - current user event lists only include active memberships
    - pagination metadata is returned correctly
    - event metadata is added before response
+   - participant counts only include active participants
    - shared event role constants are used for role-based filters
    - shared event status constants are used for expected statuses
    - missing users and database errors are handled safely
@@ -109,6 +111,13 @@ describe("userService - getCurrentUserEventsByID", () => {
         const result = await userService.getCurrentUserEventsByID(1, {});
 
         expect(User.findByPk).toHaveBeenCalledWith(1);
+
+        const queryOptions = EventUserRole.findAndCountAll.mock.calls[0][0];
+
+        expect(queryOptions.where).toMatchObject({
+            userId: 1,
+            deletedAt: null
+        });
 
         expect(result).toEqual({
             page: 1,
@@ -259,7 +268,8 @@ describe("userService - getCurrentUserEventsByID", () => {
         expect(EventUserRole.count).toHaveBeenCalledWith({
             where: {
                 eventId: 100,
-                role: EVENT_ROLES.PARTICIPANT
+                role: EVENT_ROLES.PARTICIPANT,
+                deletedAt: null
             }
         });
 

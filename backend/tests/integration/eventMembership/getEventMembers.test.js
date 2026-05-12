@@ -4,6 +4,7 @@
    Tests:
    - event members retrieval
    - participant membership retrieval
+   - inactive membership exclusion
    - public access to event members endpoint
    - nonexistent event handling
    - invalid event ID validation
@@ -11,6 +12,7 @@
    Ensures:
    - event members are returned correctly
    - joined participants are included in the response
+   - inactive memberships are excluded from public member listings
    - public users can access event members endpoint
    - invalid requests are rejected correctly
 ======================================================== */
@@ -75,6 +77,30 @@ describe("Get Event Members API", () => {
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty("message", "Event members retrieved successfully");
         expect(res.body).toHaveProperty("members");
+    });
+
+    it("should exclude inactive memberships from event members", async () => {
+        const { event } = await createEventWithOrganizer();
+
+        const participantAuth = await registerAndGetToken({
+            name: "Inactive Participant",
+            email: `inactive${Date.now()}@test.com`
+        });
+
+        await joinEvent(event.id, participantAuth.headers);
+
+        await request(app)
+            .delete(`/api/events/${event.id}/members/leave`)
+            .set(participantAuth.headers);
+
+        const res = await request(app).get(`/api/events/${event.id}/members`);
+
+        const memberEmails = res.body.members.map((member) => member.email || member.User?.email);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Event members retrieved successfully");
+
+        expect(memberEmails).not.toContain(participantAuth.email);
     });
 
     /* =============================

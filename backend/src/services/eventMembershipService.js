@@ -18,6 +18,7 @@ const { getPaginationOptions } = require("../utils/pagination");
 
    Handles:
    - event participation (join / leave)
+   - soft-deleted memberships
    - retrieving event members
    - retrieving organizer and co_organizer members
    - managing event member roles
@@ -26,6 +27,7 @@ const { getPaginationOptions } = require("../utils/pagination");
 
    Notes:
    - critical membership creation flow uses Sequelize transactions
+   - deletedAt marks inactive memberships
    - uses EventUserRole as join table
    - all event references use alias "event"
    - event roles are centralized through shared constants
@@ -65,7 +67,8 @@ const joinEvent = async ({ eventId, userId }) => {
             const participantCount = await EventUserRole.count({
                 where: {
                     eventId,
-                    role: EVENT_ROLES.PARTICIPANT
+                    role: EVENT_ROLES.PARTICIPANT,
+                    deletedAt: null
                 },
                 transaction
             });
@@ -78,25 +81,37 @@ const joinEvent = async ({ eventId, userId }) => {
             }
         }
 
-        // Prevent duplicate join
+        // Retrieve existing membership (active or inactive)
         const existingMembership = await EventUserRole.findOne({
             where: { eventId, userId },
             transaction
         });
 
-        if (existingMembership) {
+        // Prevent duplicate active membership
+        if (existingMembership && existingMembership.deletedAt === null) {
             throwHttpError(409, "User already joined this event");
         }
 
+        // Restore previously deleted membership
+        if (existingMembership && existingMembership.deletedAt !== null) {
+            existingMembership.deletedAt = null;
+            existingMembership.role = EVENT_ROLES.PARTICIPANT;
+
+            await existingMembership.save({ transaction });
+
+            await transaction.commit();
+
+            return existingMembership;
+        }
+
         // Create membership
-        const membership = await EventUserRole.create(
-            {
-                eventId,
-                userId,
-                role: EVENT_ROLES.PARTICIPANT
-            },
-            { transaction }
-        );
+        const membership = await EventUserRole.create({
+            eventId,
+            userId,
+            role: EVENT_ROLES.PARTICIPANT
+        }, {
+            transaction
+        });
 
         await transaction.commit();
 
@@ -119,7 +134,13 @@ const leaveEvent = async ({ eventId, userId }) => {
 
     assertEventNotPast(event);
 
-    const membership = await EventUserRole.findOne({ where: { eventId, userId } });
+    const membership = await EventUserRole.findOne({
+        where: {
+            eventId,
+            userId,
+            deletedAt: null
+        }
+    });
 
     if (!membership) {
         throwHttpError(404, "Participation not found");
@@ -130,7 +151,10 @@ const leaveEvent = async ({ eventId, userId }) => {
         throwHttpError(403, "Organizers cannot leave their own event");
     }
 
-    await membership.destroy();
+    // Soft delete membership instead of permanently removing it
+    membership.deletedAt = new Date();
+
+    await membership.save();
 };
 
 
@@ -147,7 +171,10 @@ const getEventMembers = async (eventId) => {
     }
 
     return EventUserRole.findAll({
-        where: { eventId },
+        where: {
+            eventId,
+            deletedAt: null
+        },
         include: [{
             model: User,
             attributes: ["id", "name", "email"]
@@ -168,6 +195,7 @@ const getEventStaff = async (eventId) => {
     return EventUserRole.findAll({
         where: {
             eventId,
+            deletedAt: null,
             role: {
                 [Op.in]: [
                     EVENT_ROLES.ORGANIZER,
@@ -202,7 +230,13 @@ const updateEventMemberRole = async ({ eventId, userId, newRole }) => {
         throwHttpError(400, "Invalid role provided");
     }
 
-    const membership = await EventUserRole.findOne({ where: { eventId, userId } });
+    const membership = await EventUserRole.findOne({
+        where: {
+            eventId,
+            userId,
+            deletedAt: null
+        }
+    });
 
     if (!membership) {
         throwHttpError(404, "User is not a member of this event");
@@ -229,13 +263,21 @@ const removeEventMember = async ({ eventId, userId }) => {
 
     assertEventNotPast(event);
 
-    const membership = await EventUserRole.findOne({ where: { eventId, userId } });
+    const membership = await EventUserRole.findOne({
+        where: {
+            eventId,
+            userId,
+            deletedAt: null
+        }
+    });
 
     if (!membership) {
         throwHttpError(404, "User is not a member of this event");
     }
 
-    await membership.destroy();
+    membership.deletedAt = new Date();
+
+    await membership.save();
 };
 
 
@@ -261,7 +303,8 @@ const transferEventOwnership = async ({ eventId, currentUserId, targetUserId }) 
         const currentOrganizerMembership = await EventUserRole.findOne({
             where: {
                 eventId,
-                userId: currentUserId
+                userId: currentUserId,
+                deletedAt: null
             },
             transaction
         });
@@ -279,7 +322,8 @@ const transferEventOwnership = async ({ eventId, currentUserId, targetUserId }) 
         const targetMembership = await EventUserRole.findOne({
             where: {
                 eventId,
-                userId: targetUserId
+                userId: targetUserId,
+                deletedAt: null
             },
             transaction
         });

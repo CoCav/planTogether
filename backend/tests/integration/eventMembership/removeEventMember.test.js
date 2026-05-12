@@ -5,6 +5,7 @@
    - organizer member removal
    - co-organizer member removal
    - participant removal restriction
+   - membership soft deletion on removal
    - organizer protection
    - event creator protection
    - co-organizer protection
@@ -15,6 +16,8 @@
    Ensures:
    - authorized staff members can remove participants
    - protected memberships cannot be removed
+   - removed memberships keep historical data
+   - memberships are soft-deleted instead of permanently removed
    - unauthorized removals are rejected correctly
    - shared event role constants are used for valid role scenarios
 ========================================================= */
@@ -59,8 +62,18 @@ describe("Remove Event Member API", () => {
             .delete(`/api/events/${event.id}/members/${participantId}`)
             .set(organizerAuth.headers);
 
+        const membership = await EventUserRole.findOne({
+            where: {
+                eventId: event.id,
+                userId: participantId
+            }
+        });
+
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty("message", "Event member removed successfully");
+
+        expect(membership).not.toBeNull();
+        expect(membership.deletedAt).not.toBeNull();
     });
 
     it("should allow co_organizer to remove participant", async () => {
@@ -88,8 +101,18 @@ describe("Remove Event Member API", () => {
             .delete(`/api/events/${event.id}/members/${participantId}`)
             .set(coOrganizerAuth.headers);
 
+        const membership = await EventUserRole.findOne({
+            where: {
+                eventId: event.id,
+                userId: participantId
+            }
+        });
+
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty("message", "Event member removed successfully");
+
+        expect(membership).not.toBeNull();
+        expect(membership.deletedAt).not.toBeNull();
     });
 
     /* =============================

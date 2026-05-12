@@ -2,14 +2,16 @@
    USER SERVICE - GET PUBLIC USER EVENTS BY ID TESTS
 
    Tests:
-   - created and joined events retrieval
+   - active created and joined events retrieval
    - created events exclusion from joined events
+   - inactive membership exclusion
    - empty event lists
    - missing user rejection
    - database error propagation
 
    Ensures:
    - public user events are correctly separated
+   - only active memberships are included in joined events
    - created events are not duplicated in joined events
    - empty event lists are handled safely
    - missing users and database errors are handled safely
@@ -81,7 +83,10 @@ describe("userService - getPublicUserEventsByID", () => {
         });
 
         expect(EventUserRole.findAll).toHaveBeenCalledWith({
-            where: { userId: 1 },
+            where: {
+                userId: 1,
+                deletedAt: null
+            },
             include: [
                 {
                     model: Event,
@@ -149,6 +154,36 @@ describe("userService - getPublicUserEventsByID", () => {
             createdEvents: [createdEvent],
             joinedEvents: [joinedEvent]
         });
+    });
+
+    it("should exclude inactive memberships from joined events", async () => {
+        const user = createMockUser({
+            name: "John",
+            avatar: null
+        });
+
+        User.findByPk.mockResolvedValue(user);
+
+        Event.findAll.mockResolvedValue([]);
+
+        EventUserRole.findAll.mockResolvedValue([]);
+
+        const result = await userService.getPublicUserEventsByID(1);
+
+        expect(EventUserRole.findAll).toHaveBeenCalledWith({
+            where: {
+                userId: 1,
+                deletedAt: null
+            },
+            include: [
+                {
+                    model: Event,
+                    as: "event"
+                }
+            ]
+        });
+
+        expect(result.joinedEvents).toEqual([]);
     });
 
     /* =============================

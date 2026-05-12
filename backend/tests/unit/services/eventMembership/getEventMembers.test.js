@@ -2,11 +2,14 @@
    EVENT MEMBERSHIP SERVICE - GET EVENT MEMBERS TESTS
 
    Tests:
-   - successful member listing
+   - successful active member listing
+   - inactive membership exclusion
    - missing event rejection
    - database error propagation
 
    Ensures:
+   - only active event memberships are retrieved
+   - inactive memberships are excluded from member listings
    - event members are retrieved with user data
    - missing events are rejected before membership query
    - shared event role constants are used for valid role scenarios
@@ -56,7 +59,10 @@ describe("eventMembershipService - getEventMembers", () => {
         expect(Event.findByPk).toHaveBeenCalledWith(1);
 
         expect(EventUserRole.findAll).toHaveBeenCalledWith({
-            where: { eventId: 1 },
+            where: {
+                eventId: 1,
+                deletedAt: null
+            },
             include: [{
                 model: User,
                 attributes: ["id", "name", "email"]

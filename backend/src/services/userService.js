@@ -125,6 +125,7 @@ const getCurrentUserEventsByID = async (userId, query = {}) => {
     const { count, rows } = await EventUserRole.findAndCountAll({
         where: {
             userId,
+            deletedAt: null,
             ...(roleFilter && { role: roleFilter })
         },
         include: [{
@@ -166,7 +167,8 @@ const getCurrentUserEventsByID = async (userId, query = {}) => {
             const participantCount = await EventUserRole.count({
                 where: {
                     eventId: data.event.id,
-                    role: EVENT_ROLES.PARTICIPANT
+                    role: EVENT_ROLES.PARTICIPANT,
+                    deletedAt: null
                 }
             });
 
@@ -297,7 +299,8 @@ const deleteCurrentUserByID = async (userId) => {
         const activeOrganizerMembership = await EventUserRole.findOne({
             where: {
                 userId,
-                role: EVENT_ROLES.ORGANIZER
+                role: EVENT_ROLES.ORGANIZER,
+                deletedAt: null
             },
             include: [{
                 model: Event,
@@ -364,7 +367,10 @@ const getPublicUserProfileByID = async (userId) => {
     });
 
     const joinedEventsCount = await EventUserRole.count({
-        where: { userId }
+        where: {
+            userId,
+            deletedAt: null
+        }
     });
 
     return {
@@ -390,7 +396,10 @@ const getPublicUserEventsByID = async (userId) => {
     });
 
     const joinedEventsRaw = await EventUserRole.findAll({
-        where: { userId },
+        where: {
+            userId,
+            deletedAt: null
+        },
         include: [
             {
                 model: Event,

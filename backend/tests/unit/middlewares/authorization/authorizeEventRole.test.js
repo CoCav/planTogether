@@ -2,15 +2,16 @@
    AUTHORIZE EVENT ROLE MIDDLEWARE TESTS
 
    Tests:
-   - allowed role authorization
-   - membership query parameters
+   - allowed active role authorization
+   - active membership query parameters
    - missing event ID error forwarding
    - missing membership error forwarding
    - insufficient role error forwarding
    - unexpected database error forwarding
 
    Ensures:
-   - event role permissions are enforced
+   - event role permissions are enforced for active memberships only
+   - inactive memberships are ignored
    - membership is attached to req when authorized
    - next() is called without error only for allowed roles
    - authorization errors are forwarded to the global errorHandler
@@ -58,7 +59,7 @@ describe("authorizeEventRole middleware", () => {
         expect(res.json).not.toHaveBeenCalled();
     });
 
-    it("should query membership with eventId and userId", async () => {
+    it("should query active membership with eventId and userId", async () => {
         const { req, res, next } = createEventRoleMocks({
             eventId: "42",
             userId: 7
@@ -75,7 +76,8 @@ describe("authorizeEventRole middleware", () => {
         expect(EventUserRole.findOne).toHaveBeenCalledWith({
             where: {
                 eventId: "42",
-                userId: 7
+                userId: 7,
+                deletedAt: null
             }
         });
 

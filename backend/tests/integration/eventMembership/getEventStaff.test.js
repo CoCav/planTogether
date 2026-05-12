@@ -4,6 +4,7 @@
    Tests:
    - event staff retrieval
    - participant exclusion from staff
+   - inactive staff exclusion
    - public access to event staff endpoint
    - organizer assignment to event creator
    - nonexistent event handling
@@ -12,6 +13,7 @@
    Ensures:
    - organizers and co-organizers are returned correctly
    - participants are excluded from event staff
+   - inactive organizer/co_organizer memberships are excluded from staff listings
    - public users can access event staff endpoint
    - event creator is automatically assigned organizer role
    - invalid requests are rejected correctly
@@ -133,6 +135,39 @@ describe("Get Event Staff API", () => {
 
         expect(creatorStaffMember).toBeDefined();
         expect(creatorStaffMember.role).toBe(EVENT_ROLES.ORGANIZER);
+    });
+
+    it("should exclude inactive co_organizer memberships from event staff", async () => {
+        const { organizerAuth, event } = await createEventWithOrganizer();
+
+        const coOrganizerAuth = await registerAndGetToken({
+            name: "Inactive Co Organizer",
+            email: `inactivecoorg${Date.now()}@test.com`
+        });
+
+        const coOrganizerId = await getUserIdByEmail(coOrganizerAuth.email);
+
+        await joinEvent(event.id, coOrganizerAuth.headers);
+
+        await updateMemberRole(
+            event.id,
+            coOrganizerId,
+            organizerAuth.headers,
+            EVENT_ROLES.CO_ORGANIZER
+        );
+
+        await request(app)
+            .delete(`/api/events/${event.id}/members/${coOrganizerId}`)
+            .set(organizerAuth.headers);
+
+        const res = await request(app).get(`/api/events/${event.id}/staff`);
+
+        const staffEmails = res.body.eventStaff.map((staffMember) => staffMember.email || staffMember.User?.email);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Event staff retrieved successfully");
+
+        expect(staffEmails).not.toContain(coOrganizerAuth.email);
     });
 
     /* =============================

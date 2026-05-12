@@ -12,12 +12,16 @@
 
    Ensures:
    - authenticated members can leave events
+   - leaving an event keeps membership history
+   - memberships are soft-deleted instead of permanently removed
    - organizers cannot leave their own events
    - invalid leave requests are rejected correctly
 ================================================== */
 
 const request = require("supertest");
 const app = require("../../../src/app");
+
+const { EventUserRole } = require("../../../src/models");
 
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
@@ -49,8 +53,18 @@ describe("Leave Event API", () => {
             .delete(`/api/events/${event.id}/members/leave`)
             .set(participantAuth.headers);
 
+        const membership = await EventUserRole.findOne({
+            where: {
+                eventId: event.id,
+                userId: participantAuth.user.userId
+            }
+        });
+
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty("message", "User successfully left the event");
+
+        expect(membership).not.toBeNull();
+        expect(membership.deletedAt).not.toBeNull();
     });
 
     /* =============================

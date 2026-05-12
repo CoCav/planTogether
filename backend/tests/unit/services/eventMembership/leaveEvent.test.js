@@ -3,6 +3,7 @@
 
    Tests:
    - successful event leave
+   - membership soft deletion on leave
    - past event rejection
    - organizer self-leave protection
    - missing event rejection
@@ -11,6 +12,7 @@
 
    Ensures:
    - users can leave joined events
+   - leaving an event soft-deletes the membership instead of destroying it
    - organizers cannot leave their own event
    - past event rules are respected
    - missing memberships are rejected correctly
@@ -57,7 +59,8 @@ describe("eventMembershipService - leaveEvent", () => {
     it("should leave event", async () => {
         const membership = createMockMembership({
             role: EVENT_ROLES.PARTICIPANT,
-            destroy: jest.fn().mockResolvedValue()
+            deletedAt: null,
+            save: jest.fn().mockResolvedValue()
         });
 
         Event.findByPk.mockResolvedValue({ id: 1 });
@@ -72,10 +75,15 @@ describe("eventMembershipService - leaveEvent", () => {
         expect(assertEventNotPast).toHaveBeenCalledWith({ id: 1 });
 
         expect(EventUserRole.findOne).toHaveBeenCalledWith({
-            where: { eventId: 1, userId: 10 }
+            where: {
+                eventId: 1,
+                userId: 10,
+                deletedAt: null
+            }
         });
 
-        expect(membership.destroy).toHaveBeenCalled();
+        expect(membership.deletedAt).toBeInstanceOf(Date);
+        expect(membership.save).toHaveBeenCalled();
     });
 
     /* =============================
@@ -100,9 +108,9 @@ describe("eventMembershipService - leaveEvent", () => {
     it("should prevent organizer from leaving their own event", async () => {
         const membership = createMockMembership({
             role: EVENT_ROLES.ORGANIZER,
-            destroy: jest.fn()
+            deletedAt: null,
+            save: jest.fn()
         });
-
         Event.findByPk.mockResolvedValue({ id: 1 });
         assertEventNotPast.mockImplementation(() => { });
         EventUserRole.findOne.mockResolvedValue(membership);
@@ -112,7 +120,7 @@ describe("eventMembershipService - leaveEvent", () => {
             statusCode: 403
         });
 
-        expect(membership.destroy).not.toHaveBeenCalled();
+        expect(membership.save).not.toHaveBeenCalled();
     });
 
     /* =============================

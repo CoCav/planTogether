@@ -2,7 +2,7 @@
    EVENT MEMBERSHIP SERVICE - UPDATE EVENT MEMBER ROLE TESTS
 
    Tests:
-   - successful role update
+   - successful active membership role update
    - past event rejection
    - invalid role rejection
    - same role rejection
@@ -11,7 +11,8 @@
    - database error propagation
 
    Ensures:
-   - member roles are updated correctly
+   - active member roles are updated correctly
+   - inactive memberships cannot be updated
    - invalid role changes are rejected
    - same-role updates are rejected
    - past event rules are respected
@@ -70,6 +71,14 @@ describe("eventMembershipService - updateEventMemberRole", () => {
             eventId: 1,
             userId: 10,
             newRole: EVENT_ROLES.CO_ORGANIZER
+        });
+
+        expect(EventUserRole.findOne).toHaveBeenCalledWith({
+            where: {
+                eventId: 1,
+                userId: 10,
+                deletedAt: null
+            }
         });
 
         expect(membership.role).toBe(EVENT_ROLES.CO_ORGANIZER);

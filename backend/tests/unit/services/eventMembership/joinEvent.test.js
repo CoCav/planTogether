@@ -3,7 +3,8 @@
 
    Tests:
    - successful event join
-   - duplicate membership rejection
+   - active membership duplicate rejection
+   - inactive membership restoration
    - past event rejection
    - closed registration rejection
    - participant limit enforcement
@@ -12,8 +13,9 @@
 
    Ensures:
    - users can join only valid events
-   - duplicate memberships are prevented
-   - participant limits are enforced correctly
+   - duplicate active memberships are prevented
+   - inactive memberships can be restored
+   - participant limits only count active participants
    - registration deadlines are enforced
    - past event rules are respected
    - missing events are rejected before membership creation
@@ -136,7 +138,8 @@ describe("eventMembershipService - joinEvent", () => {
             createMockMembership({
                 eventId: 1,
                 userId: 10,
-                role: EVENT_ROLES.PARTICIPANT
+                role: EVENT_ROLES.PARTICIPANT,
+                deletedAt: null
             })
         );
 
@@ -258,7 +261,8 @@ describe("eventMembershipService - joinEvent", () => {
             createMockMembershipEvent({
                 id: 1,
                 maxParticipants: 1,
-                registrationDeadline: null
+                registrationDeadline: null,
+                deletedAt: null
             })
         );
 
@@ -279,13 +283,54 @@ describe("eventMembershipService - joinEvent", () => {
         expect(EventUserRole.count).toHaveBeenCalledWith({
             where: {
                 eventId: 1,
-                role: EVENT_ROLES.PARTICIPANT
+                role: EVENT_ROLES.PARTICIPANT,
+                deletedAt: null
             },
             transaction
         });
 
         expect(transaction.rollback).toHaveBeenCalled();
         expect(transaction.commit).not.toHaveBeenCalled();
+    });
+
+    it("should restore inactive membership instead of creating a new one", async () => {
+
+        const inactiveMembership = {
+            ...createMockMembership({
+                eventId: 1,
+                userId: 10,
+                role: EVENT_ROLES.CO_ORGANIZER,
+                deletedAt: new Date()
+            }),
+            save: jest.fn().mockResolvedValue()
+        };
+
+        Event.findByPk.mockResolvedValue(
+            createMockMembershipEvent({ id: 1 })
+        );
+
+        EventUserRole.findOne.mockResolvedValue(inactiveMembership);
+
+        const result = await eventMembershipService.joinEvent({
+            eventId: 1,
+            userId: 10
+        });
+
+        expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(EventUserRole.create).not.toHaveBeenCalled();
+
+        expect(inactiveMembership.deletedAt).toBeNull();
+        expect(inactiveMembership.role).toBe(EVENT_ROLES.PARTICIPANT);
+
+        expect(inactiveMembership.save).toHaveBeenCalledWith({
+            transaction
+        });
+
+        expect(transaction.commit).toHaveBeenCalled();
+        expect(transaction.rollback).not.toHaveBeenCalled();
+
+        expect(result).toBe(inactiveMembership);
     });
 
     /* =============================

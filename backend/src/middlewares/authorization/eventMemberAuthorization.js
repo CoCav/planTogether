@@ -26,12 +26,13 @@ const { createHttpError } = require("../../utils/errors/httpError");
    HELPERS
 ============================= */
 
-// Retrieve event membership for a specific user
+// Retrieve active event membership for a specific user
 const getMembership = (eventId, userId) => {
     return EventUserRole.findOne({
         where: {
             eventId,
-            userId
+            userId,
+            deletedAt: null
         }
     });
 };

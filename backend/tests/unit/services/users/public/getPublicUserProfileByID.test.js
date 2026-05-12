@@ -1,10 +1,10 @@
-
 /* ==================================================
    USER SERVICE - GET PUBLIC USER PROFILE BY ID TESTS
 
    Tests:
    - public profile retrieval
    - public stats computation
+   - active joined events count
    - null avatar handling
    - missing user rejection
    - database error propagation
@@ -12,6 +12,7 @@
    Ensures:
    - only public user fields are selected
    - user statistics are computed correctly
+   - joined event stats only count active memberships
    - null avatars are handled safely
    - missing users and database errors are handled safely
 ================================================== */
@@ -94,7 +95,10 @@ describe("userService - getPublicUserProfileByID", () => {
         });
 
         expect(EventUserRole.count).toHaveBeenCalledWith({
-            where: { userId: 1 }
+            where: {
+                userId: 1,
+                deletedAt: null
+            }
         });
 
         expect(result.stats).toEqual({

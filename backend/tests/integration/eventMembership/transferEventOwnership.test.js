@@ -8,6 +8,7 @@
    - organizer-only authorization
    - authentication protection
    - non-member ownership rejection
+   - inactive ownership transfer rejection
    - self-transfer rejection
    - invalid params validation
 
@@ -15,6 +16,7 @@
    - only organizers can transfer event ownership
    - selected members can become organizer
    - previous organizer becomes co_organizer
+   - inactive memberships cannot receive ownership transfer
    - ownership transfer rules are enforced correctly
    - shared event role constants are used for valid role scenarios
 ============================================================= */
@@ -293,6 +295,27 @@ describe("Transfer Event Ownership API", () => {
         const res = await transferEventOwnership(event.id, participantId, organizerAuth.headers);
 
         expect(res.statusCode).toBe(403);
+    });
+
+    it("should reject ownership transfer to inactive member", async () => {
+        const { organizerAuth, event } = await createEventWithOrganizer();
+
+        const participantAuth = await registerAndGetToken({
+            name: "Inactive Participant",
+            email: `inactive${Date.now()}@test.com`
+        });
+
+        const participantId = await getUserIdByEmail(participantAuth.email);
+
+        await joinEvent(event.id, participantAuth.headers);
+
+        await request(app)
+            .delete(`/api/events/${event.id}/members/leave`)
+            .set(participantAuth.headers);
+
+        const res = await transferEventOwnership(event.id, participantId, organizerAuth.headers);
+
+        expect(res.statusCode).toBe(404);
     });
 
     /* =============================

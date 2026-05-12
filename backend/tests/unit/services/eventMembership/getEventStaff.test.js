@@ -2,11 +2,14 @@
    EVENT MEMBERSHIP SERVICE - GET EVENT STAFF TESTS
 
    Tests:
-   - organizer and co-organizer listing
+   - successful active staff listing
+   - inactive staff membership exclusion
    - missing event rejection
    - database error propagation
 
    Ensures:
+   - only active organizer and co_organizer memberships are retrieved
+   - inactive staff memberships are excluded from staff listings
    - role-based organizer filtering is applied
    - organizer data is returned with user information
    - missing events are rejected before membership query
@@ -61,6 +64,7 @@ describe("eventMembershipService - getEventStaff", () => {
         expect(EventUserRole.findAll).toHaveBeenCalledWith({
             where: {
                 eventId: 1,
+                deletedAt: null,
                 role: {
                     [Op.in]: [EVENT_ROLES.ORGANIZER, EVENT_ROLES.CO_ORGANIZER]
                 }

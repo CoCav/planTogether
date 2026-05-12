@@ -4,10 +4,12 @@
    Handles:
    - minimal event mocks for membership logic
    - mock membership records
+   - soft-delete membership state
    - reusable authorization test data
 
    Notes:
    - shared across membership and authorization tests
+   - deletedAt defaults to null for active memberships
    - accepts overrides for flexible scenarios
 ================================================== */
 
@@ -24,6 +26,7 @@ const createMockMembership = (overrides = {}) => ({
     eventId: 1,
     userId: 1,
     role: "participant",
+    deletedAt: null,
     ...overrides
 });
 

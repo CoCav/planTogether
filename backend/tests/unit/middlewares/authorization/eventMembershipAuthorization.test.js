@@ -2,15 +2,16 @@
    EVENT MEMBER AUTHORIZATION MIDDLEWARE TESTS
 
    Tests:
-   - role change authorization
-   - member removal authorization
+   - active role change authorization
+   - active member removal authorization
    - protected creator rules
    - protected organizer rules
    - co-organizer restrictions
    - unexpected database error forwarding
 
    Ensures:
-   - event role hierarchy is enforced
+   - event role hierarchy is enforced for active memberships only
+   - inactive memberships are ignored by authorization checks
    - unauthorized role changes are rejected
    - unauthorized removals are rejected
    - valid actions continue with next()
@@ -77,6 +78,22 @@ describe("eventMemberAuthorization middleware", () => {
             Event.findByPk.mockResolvedValue(createMockMembershipEvent());
 
             await authorizeEventMemberRoleUpdate(req, res, next);
+
+            expect(EventUserRole.findOne).toHaveBeenNthCalledWith(1, {
+                where: {
+                    eventId: "1",
+                    userId: 10,
+                    deletedAt: null
+                }
+            });
+
+            expect(EventUserRole.findOne).toHaveBeenNthCalledWith(2, {
+                where: {
+                    eventId: "1",
+                    userId: 2,
+                    deletedAt: null
+                }
+            });
 
             expect(next).toHaveBeenCalledWith();
             expect(res.status).not.toHaveBeenCalled();
@@ -289,6 +306,22 @@ describe("eventMemberAuthorization middleware", () => {
             Event.findByPk.mockResolvedValue(createMockMembershipEvent());
 
             await authorizeEventMemberRemoval(req, res, next);
+
+            expect(EventUserRole.findOne).toHaveBeenNthCalledWith(1, {
+                where: {
+                    eventId: "1",
+                    userId: 10,
+                    deletedAt: null
+                }
+            });
+
+            expect(EventUserRole.findOne).toHaveBeenNthCalledWith(2, {
+                where: {
+                    eventId: "1",
+                    userId: 2,
+                    deletedAt: null
+                }
+            });
 
             expect(next).toHaveBeenCalledWith();
             expect(res.status).not.toHaveBeenCalled();

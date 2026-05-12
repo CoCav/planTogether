@@ -10,12 +10,14 @@ const { EVENT_ROLES } = require("../../constants/eventRoles");
    - event membership records
    - user roles inside events
    - join timestamps
+   - soft-deleted memberships
    - duplicate membership prevention
    - membership lookup indexes
 
    Notes:
    - links users and events together
    - one user can only have one membership per event
+   - deletedAt marks inactive memberships
    - role values should stay aligned with EVENT_ROLES constants
    - indexes support common membership and role queries
 ================================================== */
@@ -41,6 +43,12 @@ const EventUserRole = sequelize.define("EventUserRole", {
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW
+    },
+
+    deletedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: null
     }
 }, {
     tableName: "event_user_roles",

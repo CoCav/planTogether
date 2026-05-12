@@ -2,17 +2,19 @@
    USER INTEGRATION - PUBLIC USER EVENTS TESTS
 
    Tests:
-   - authenticated public events retrieval
+   - authenticated public active events retrieval
    - authentication protection
    - invalid user ID validation
    - nonexistent user handling
    - created events retrieval
-   - joined events retrieval
+   - joined active events retrieval
+   - inactive membership exclusion
    - duplicate event exclusion
 
    Ensures:
    - public user events are retrieved correctly
-   - created and joined events are separated correctly
+   - created and joined active events are separated correctly
+   - inactive memberships are excluded from public joined events
    - created events are not duplicated in joined events
    - authentication and validators protect the route
 ================================================== */
@@ -49,12 +51,9 @@ describe("Get Public User Events API", () => {
             email: `target${Date.now()}@test.com`
         });
 
-        await createAuthenticatedEvent(
-            targetUserAuth.headers,
-            {
-                title: "Created Event"
-            }
-        );
+        await createAuthenticatedEvent(targetUserAuth.headers, {
+            title: "Created Event"
+        });
 
         const res = await request(app)
             .get(`/api/users/${targetUserAuth.user.userId}/events`)
@@ -80,12 +79,9 @@ describe("Get Public User Events API", () => {
             email: `createdtarget${Date.now()}@test.com`
         });
 
-        await createAuthenticatedEvent(
-            targetUserAuth.headers,
-            {
-                title: "Created Public Event"
-            }
-        );
+        await createAuthenticatedEvent(targetUserAuth.headers, {
+            title: "Created Public Event"
+        });
 
         const res = await request(app)
             .get(`/api/users/${targetUserAuth.user.userId}/events`)
@@ -115,12 +111,9 @@ describe("Get Public User Events API", () => {
             email: `eventcreator${Date.now()}@test.com`
         });
 
-        const eventRes = await createAuthenticatedEvent(
-            eventCreatorAuth.headers,
-            {
-                title: "Joined Public Event"
-            }
-        );
+        const eventRes = await createAuthenticatedEvent(eventCreatorAuth.headers, {
+            title: "Joined Public Event"
+        });
 
         await joinEvent(eventRes.body.event.id, targetUserAuth.headers);
 
@@ -136,6 +129,44 @@ describe("Get Public User Events API", () => {
         )).toBe(true);
     });
 
+    it("should exclude inactive memberships from joined public user events", async () => {
+        const viewerAuth = await registerAndGetToken({
+            name: "Viewer",
+            email: `inactiveviewer${Date.now()}@test.com`
+        });
+
+        const targetUserAuth = await registerAndGetToken({
+            name: "Inactive Participant",
+            email: `inactiveparticipant${Date.now()}@test.com`
+        });
+
+        const eventCreatorAuth = await registerAndGetToken({
+            name: "Event Creator",
+            email: `inactivecreator${Date.now()}@test.com`
+        });
+
+        const eventRes = await createAuthenticatedEvent(eventCreatorAuth.headers, {
+            title: "Inactive Joined Public Event"
+        });
+
+        await joinEvent(eventRes.body.event.id, targetUserAuth.headers);
+
+        await request(app)
+            .delete(`/api/events/${eventRes.body.event.id}/members/leave`)
+            .set(targetUserAuth.headers);
+
+        const res = await request(app)
+            .get(`/api/users/${targetUserAuth.user.userId}/events`)
+            .set(viewerAuth.headers);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Public user events retrieved successfully");
+
+        expect(res.body.joinedEvents.some(
+            (event) => event.title === "Inactive Joined Public Event"
+        )).toBe(false);
+    });
+
     it("should not duplicate created events in joined events", async () => {
         const viewerAuth = await registerAndGetToken({
             name: "Viewer",
@@ -147,7 +178,9 @@ describe("Get Public User Events API", () => {
             email: `duplicatetarget${Date.now()}@test.com`
         });
 
-        await createAuthenticatedEvent(targetUserAuth.headers, { title: "Non Duplicated Event" });
+        await createAuthenticatedEvent(targetUserAuth.headers, {
+            title: "Non Duplicated Event"
+        });
 
         const res = await request(app)
             .get(`/api/users/${targetUserAuth.user.userId}/events`)

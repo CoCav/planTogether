@@ -7,11 +7,12 @@
    - invalid user ID validation
    - nonexistent user handling
    - sensitive data protection
-   - public stats retrieval
+   - public active stats retrieval
 
    Ensures:
    - public user profiles are correctly retrieved
    - private user fields are never exposed
+   - public stats only count active memberships
    - public stats are included in the response
    - authentication and validators protect the route
 =================================================== */
@@ -83,12 +84,9 @@ describe("Get Public User Profile API", () => {
             email: `joinedcreator${Date.now()}@test.com`
         });
 
-        const joinedEventRes = await createAuthenticatedEvent(
-            joinedEventCreatorAuth.headers,
-            {
-                title: "Joined Event"
-            }
-        );
+        const joinedEventRes = await createAuthenticatedEvent(joinedEventCreatorAuth.headers, {
+            title: "Joined Event"
+        });
 
         await joinEvent(joinedEventRes.body.event.id, targetUserAuth.headers);
 
@@ -101,6 +99,42 @@ describe("Get Public User Profile API", () => {
 
         expect(res.body.stats).toHaveProperty("createdEventsCount", 1);
         expect(res.body.stats).toHaveProperty("joinedEventsCount", 2);
+    });
+
+    it("should exclude inactive memberships from public user stats", async () => {
+        const viewerAuth = await registerAndGetToken({
+            name: "Viewer",
+            email: `inactiveprofileviewer${Date.now()}@test.com`
+        });
+
+        const targetUserAuth = await registerAndGetToken({
+            name: "Inactive Stats User",
+            email: `inactivestats${Date.now()}@test.com`
+        });
+
+        const eventCreatorAuth = await registerAndGetToken({
+            name: "Event Creator",
+            email: `inactiveprofilecreator${Date.now()}@test.com`
+        });
+
+        const eventRes = await createAuthenticatedEvent(eventCreatorAuth.headers, {
+            title: "Inactive Stats Event"
+        });
+
+        await joinEvent(eventRes.body.event.id, targetUserAuth.headers);
+
+        await request(app)
+            .delete(`/api/events/${eventRes.body.event.id}/members/leave`)
+            .set(targetUserAuth.headers);
+
+        const res = await request(app)
+            .get(`/api/users/${targetUserAuth.user.userId}`)
+            .set(viewerAuth.headers);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("message", "Public user profile retrieved successfully");
+
+        expect(res.body.stats).toHaveProperty("joinedEventsCount", 0);
     });
 
     /* =============================

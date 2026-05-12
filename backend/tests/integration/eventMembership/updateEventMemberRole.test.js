@@ -7,6 +7,7 @@
    - participant role restrictions
    - invalid role validation
    - same role update rejection
+   - inactive member role update rejection
    - event creator protection
    - nonexistent member handling
    - invalid params validation
@@ -14,10 +15,11 @@
    Ensures:
    - organizers can manage participant roles
    - non-organizers cannot manage roles
+   - inactive memberships cannot be updated
    - protected memberships cannot be modified
    - invalid role updates are rejected correctly
    - shared event role constants are used for valid role scenarios
-============================================================= */
+============================================================== */
 
 const request = require("supertest");
 const app = require("../../../src/app");
@@ -271,6 +273,27 @@ describe("Update Event Member Role API", () => {
         const { organizerAuth, event } = await createEventWithOrganizer();
 
         const res = await updateMemberRole(event.id, 999999, organizerAuth.headers, EVENT_ROLES.PARTICIPANT);
+
+        expect(res.statusCode).toBe(404);
+    });
+
+    it("should reject updating role for inactive membership", async () => {
+        const { organizerAuth, event } = await createEventWithOrganizer();
+
+        const participantAuth = await registerAndGetToken({
+            name: "Inactive Participant",
+            email: `inactive${Date.now()}@test.com`
+        });
+
+        const participantId = await getUserIdByEmail(participantAuth.email);
+
+        await joinEvent(event.id, participantAuth.headers);
+
+        await request(app)
+            .delete(`/api/events/${event.id}/members/leave`)
+            .set(participantAuth.headers);
+
+        const res = await updateMemberRole(event.id, participantId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
 
         expect(res.statusCode).toBe(404);
     });

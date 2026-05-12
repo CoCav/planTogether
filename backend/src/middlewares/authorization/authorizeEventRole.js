@@ -28,9 +28,13 @@ const authorizeEventRole = (allowedRoles) => {
                 return next(createHttpError(400, "Event ID is required"));
             }
 
-            // Find authenticated user's membership for this event
+            // Find authenticated user's active membership for this event
             const membership = await EventUserRole.findOne({
-                where: { eventId, userId }
+                where: {
+                    eventId,
+                    userId,
+                    deletedAt: null
+                }
             });
 
             // Block users without required event role

@@ -2,20 +2,23 @@
    USER INTEGRATION - CURRENT USER EVENTS TESTS
 
    Tests:
-   - authenticated user's events retrieval
+   - authenticated user's active events retrieval
    - authentication protection
    - event status enrichment
-   - participant count enrichment
+   - active participant count enrichment
    - pagination by view
    - created view filtering
    - joined view filtering
+   - inactive membership exclusion
    - created history filtering
    - joined history filtering
    - invalid query validation
 
    Ensures:
-   - authenticated users can retrieve their related events
+   - authenticated users can retrieve their active related events
+   - inactive memberships are excluded from current user events
    - response includes event metadata
+   - participant counts only include active memberships
    - view filters and pagination work correctly
    - query validators protect the route
    - shared event role constants are used for valid role scenarios
@@ -312,6 +315,39 @@ describe("Get Current User Events API", () => {
 
         expect(res.body.events[0].event.title).toBe("Past Joined Event");
         expect(res.body.events[0].event.status).toBe(EVENT_STATUS.PAST);
+    });
+
+    it("should exclude inactive memberships from current user events", async () => {
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Inactive Event Creator",
+                email: `inactivecreator${Date.now()}@test.com`
+            },
+            event: {
+                title: "Inactive Membership Event"
+            }
+        });
+
+        const participantAuth = await registerAndGetToken({
+            name: "Inactive Membership User",
+            email: `inactivemembership${Date.now()}@test.com`
+        });
+
+        await joinEvent(event.id, participantAuth.headers);
+
+        await request(app)
+            .delete(`/api/events/${event.id}/members/leave`)
+            .set(participantAuth.headers);
+
+        const res = await request(app)
+            .get("/api/users/me/events")
+            .set(participantAuth.headers);
+
+        expect(res.statusCode).toBe(200);
+
+        const eventIds = res.body.events.map((item) => item.event.id);
+
+        expect(eventIds).not.toContain(event.id);
     });
 
     /* =============================

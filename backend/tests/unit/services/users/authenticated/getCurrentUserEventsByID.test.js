@@ -3,7 +3,7 @@
 
    Tests:
    - paginated active current user events retrieval
-   - active participant count enrichment
+   - optimized participant count enrichment
    - event status enrichment
    - created / joined / history views
    - creator filter handling
@@ -15,15 +15,14 @@
    - current user event lists only include active memberships
    - pagination metadata is returned correctly
    - event metadata is added before response
-   - participant counts only include active participants
+   - participant counts are retrieved through optimized grouped queries
    - shared event role constants are used for role-based filters
    - shared event status constants are used for expected statuses
    - missing users and database errors are handled safely
 ================================================== */
 
 jest.mock("../../../../../src/models/relations/eventUserRoleModel", () => ({
-    findAndCountAll: jest.fn(),
-    count: jest.fn()
+    findAndCountAll: jest.fn()
 }));
 
 jest.mock("../../../../../src/models/userModel", () => ({
@@ -36,7 +35,8 @@ jest.mock("../../../../../src/utils/events/eventStatus");
 
 jest.mock("../../../../../src/utils/events/eventQueryBuilder", () => ({
     buildEventWhereConditions: jest.fn(),
-    buildEventCreatorInclude: jest.fn()
+    buildEventCreatorInclude: jest.fn(),
+    countActiveParticipantsByEventIds: jest.fn()
 }));
 
 const { Op } = require("sequelize");
@@ -48,11 +48,16 @@ const User = require("../../../../../src/models/userModel");
 const userService = require("../../../../../src/services/userService");
 
 const { EVENT_ROLES } = require("../../../../../src/constants/eventRoles");
-
 const { EVENT_STATUS } = require("../../../../../src/constants/eventStatus");
+
 const { getEventStatus } = require("../../../../../src/utils/events/eventStatus");
 
-const { buildEventWhereConditions, buildEventCreatorInclude } = require("../../../../../src/utils/events/eventQueryBuilder");
+const {
+    buildEventWhereConditions,
+    buildEventCreatorInclude,
+    countActiveParticipantsByEventIds
+} = require("../../../../../src/utils/events/eventQueryBuilder");
+
 const { getPaginationOptions } = require("../../../../../src/utils/pagination");
 
 const { mockConsoleError } = require("../../../../helpers/mocks/consoleMocks");
@@ -80,6 +85,10 @@ describe("userService - getCurrentUserEventsByID", () => {
             attributes: ["id", "name"]
         });
 
+        countActiveParticipantsByEventIds.mockResolvedValue({
+            100: 5
+        });
+
         getPaginationOptions.mockReturnValue(pagination);
     });
 
@@ -93,7 +102,8 @@ describe("userService - getCurrentUserEventsByID", () => {
                 id: 1,
                 event: {
                     id: 100,
-                    title: "Event"
+                    title: "Event",
+                    participantCount: 5
                 }
             })
         };
@@ -105,7 +115,6 @@ describe("userService - getCurrentUserEventsByID", () => {
             rows: [membership]
         });
 
-        EventUserRole.count.mockResolvedValue(5);
         getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
 
         const result = await userService.getCurrentUserEventsByID(1, {});
@@ -248,7 +257,8 @@ describe("userService - getCurrentUserEventsByID", () => {
                 id: 1,
                 event: {
                     id: 100,
-                    title: "Metadata Event"
+                    title: "Metadata Event",
+                    participantCount: 5
                 }
             })
         };
@@ -260,28 +270,41 @@ describe("userService - getCurrentUserEventsByID", () => {
             rows: [membership]
         });
 
-        EventUserRole.count.mockResolvedValue(3);
         getEventStatus.mockReturnValue(EVENT_STATUS.PAST);
 
         const result = await userService.getCurrentUserEventsByID(1, {});
 
-        expect(EventUserRole.count).toHaveBeenCalledWith({
-            where: {
-                eventId: 100,
-                role: EVENT_ROLES.PARTICIPANT,
-                deletedAt: null
-            }
-        });
-
         expect(getEventStatus).toHaveBeenCalledWith({
             id: 100,
-            title: "Metadata Event"
+            title: "Metadata Event",
+            participantCount: 5
         });
 
         expect(result.events[0].event).toMatchObject({
-            participantCount: 3,
+            participantCount: 5,
             status: EVENT_STATUS.PAST
         });
+    });
+
+    /* =============================
+       PARTICIPANT COUNT
+    ============================= */
+
+    it("should use optimized participant count query helpers", async () => {
+        User.findByPk.mockResolvedValue({ id: 1 });
+
+        EventUserRole.findAndCountAll.mockResolvedValue({
+            count: 0,
+            rows: []
+        });
+
+        await userService.getCurrentUserEventsByID(1, {});
+
+        expect(countActiveParticipantsByEventIds).toHaveBeenCalledWith(
+            EventUserRole,
+            expect.any(Object),
+            []
+        );
     });
 
     /* =============================

@@ -1,5 +1,3 @@
-const { fn, col } = require("sequelize");
-
 const sequelize = require("../config/database");
 
 const Event = require("../models/eventModel");
@@ -10,12 +8,18 @@ const { EVENT_ROLES } = require("../constants/eventRoles");
 
 const { throwHttpError } = require("../utils/errors/httpError");
 
+const {
+    buildEventWhereConditions,
+    buildEventCreatorInclude,
+    buildParticipantCountAttribute,
+    buildActiveParticipantInclude
+} = require("../utils/events/eventQueryBuilder");
+
 const { buildEventCreateData, buildEventUpdateData } = require("../utils/events/eventDataBuilder");
-const { buildEventWhereConditions, buildEventCreatorInclude } = require("../utils/events/eventQueryBuilder");
+
 const { assertEventNotPast, getEventStatus } = require("../utils/events/eventStatus");
 
 const { deleteUploadedFile } = require("../utils/files/uploadedFileStorage");
-
 const { getPaginationOptions } = require("../utils/pagination");
 
 /* ==================================================
@@ -23,14 +27,16 @@ const { getPaginationOptions } = require("../utils/pagination");
 
    Handles:
    - event creation
-   - event listing with optional filters and pagination
-   - single event retrieval
+   - optimized event listing with optional filters and pagination
+   - single event retrieval with optimized participant counts
    - event update and deletion
    - participant count and status enrichment
 
    Notes:
    - critical write operations use Sequelize transactions
    - creator is automatically added as organizer
+   - event listings count active participants with COUNT DISTINCT
+   - participant count queries ignore soft-deleted memberships
    - getAllEvents supports filters through query params
    - past events cannot be updated or deleted
    - event images are cleaned only after successful DB commits
@@ -108,20 +114,13 @@ const getAllEvents = async (query = {}) => {
         offset,
         order: [[orderField, orderDirection]],
         attributes: {
-            include: [[fn("COUNT", col("participants.id")), "participantCount"]]
+            include: [
+                buildParticipantCountAttribute(sequelize, "participants.id")
+            ]
         },
         include: [
             buildEventCreatorInclude(User, query.creator),
-            {
-                model: User,
-                as: "participants",
-                attributes: [],
-                through: {
-                    attributes: [],
-                    where: { role: EVENT_ROLES.PARTICIPANT }
-                },
-                required: false
-            }
+            buildActiveParticipantInclude(User)
         ],
         group: ["Event.id", "creator.id"],
         subQuery: false
@@ -148,24 +147,13 @@ const getEventByID = async (id) => {
     const event = await Event.findOne({
         where: { id },
         attributes: {
-            include: [[fn("COUNT", col("participants.id")), "participantCount"]]
+            include: [
+                buildParticipantCountAttribute(sequelize, "participants.id")
+            ]
         },
         include: [
-            {
-                model: User,
-                as: "creator",
-                attributes: ["id", "name"]
-            },
-            {
-                model: User,
-                as: "participants",
-                attributes: [],
-                through: {
-                    attributes: [],
-                    where: { role: EVENT_ROLES.PARTICIPANT }
-                },
-                required: false
-            }
+            buildEventCreatorInclude(User),
+            buildActiveParticipantInclude(User)
         ],
         group: ["Event.id", "creator.id"]
     });

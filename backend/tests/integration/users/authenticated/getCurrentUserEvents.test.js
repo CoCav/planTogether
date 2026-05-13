@@ -71,6 +71,8 @@ describe("Get Current User Events API", () => {
             .get("/api/users/me/events")
             .set(participantAuth.headers);
 
+        console.log(res.body)
+
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty("message", "User events retrieved successfully");
 

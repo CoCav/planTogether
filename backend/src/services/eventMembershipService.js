@@ -19,15 +19,16 @@ const { getPaginationOptions } = require("../utils/pagination");
    Handles:
    - event participation (join / leave)
    - soft-deleted memberships
-   - retrieving event members
-   - retrieving organizer and co_organizer members
-   - managing event member roles
-   - transferring event ownership
+   - active member retrieval
+   - active organizer and co_organizer retrieval
+   - event member role management
+   - event ownership transfer
    - enforcing business rules (capacity, roles, time)
 
    Notes:
-   - critical membership creation flow uses Sequelize transactions
+   - critical membership creation and ownership transfer flows use Sequelize transactions
    - deletedAt marks inactive memberships
+   - membership queries only target active memberships when required
    - uses EventUserRole as join table
    - all event references use alias "event"
    - event roles are centralized through shared constants
@@ -313,7 +314,7 @@ const transferEventOwnership = async ({ eventId, currentUserId, targetUserId }) 
             throwHttpError(404, "Current organizer membership not found");
         }
 
-        // Ensure current user is the organizer of the event0
+        // Ensure current user is the organizer of the event
         if (currentOrganizerMembership.role !== EVENT_ROLES.ORGANIZER) {
             throwHttpError(403, "Only the organizer can transfer event ownership");
         }

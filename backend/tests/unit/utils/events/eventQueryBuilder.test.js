@@ -7,16 +7,23 @@
    - date filters
    - combined query filters
    - creator include builder
+   - active participant include builder
+   - participant count attribute builder
 
    Ensures:
    - Sequelize where conditions are built correctly
    - date overlap logic is applied
    - creator filtering is handled through includes
-   - shared event status constants are used for expected statuses
+   - active participant includes exclude soft-deleted memberships
+   - participant count attributes use COUNT DISTINCT
+   - shared event status and role constants are used correctly
 ================================================== */
 
 const { Op } = require("sequelize");
 
+const sequelize = require("../../../../src/config/database");
+
+const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
 
 const {
@@ -24,7 +31,9 @@ const {
     applyEventBasicFilters,
     applyEventDateFilters,
     buildEventWhereConditions,
-    buildEventCreatorInclude
+    buildEventCreatorInclude,
+    buildActiveParticipantInclude,
+    buildParticipantCountAttribute
 } = require("../../../../src/utils/events/eventQueryBuilder");
 
 describe("eventQueryBuilder utils", () => {
@@ -221,6 +230,44 @@ describe("eventQueryBuilder utils", () => {
                 },
                 required: true
             });
+        });
+    });
+
+    /* =============================
+       PARTICIPANT HELPERS
+    ============================= */
+
+    describe("buildActiveParticipantInclude", () => {
+        const User = {
+            name: "UserModel"
+        };
+
+        it("should build active participant include", () => {
+            expect(buildActiveParticipantInclude(User)).toEqual({
+                model: User,
+                as: "participants",
+                attributes: [],
+                through: {
+                    attributes: [],
+                    where: {
+                        role: EVENT_ROLES.PARTICIPANT,
+                        deletedAt: null
+                    }
+                },
+                required: false
+            });
+        });
+    });
+
+    describe("buildParticipantCountAttribute", () => {
+
+        it("should build DISTINCT participant count attribute", () => {
+            const result = buildParticipantCountAttribute(
+                sequelize,
+                "participants.id"
+            );
+
+            expect(result[1]).toBe("participantCount");
         });
     });
 });

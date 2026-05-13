@@ -13,20 +13,23 @@ const { throwHttpError } = require("../utils/errors/httpError");
 
 const { formatPublicUser } = require("../utils/formatting/userFormatter");
 
-const { buildEventWhereConditions, buildEventCreatorInclude } = require("../utils/events/eventQueryBuilder");
+const {
+    buildEventWhereConditions,
+    buildEventCreatorInclude,
+    countActiveParticipantsByEventIds
+} = require("../utils/events/eventQueryBuilder");
+
 const { getEventStatus } = require("../utils/events/eventStatus");
-
-const { normalizeEmail } = require("../utils/normalize");
-
 const { deleteUploadedFile } = require("../utils/files/uploadedFileStorage");
 
+const { normalizeEmail } = require("../utils/normalize");
 const { getPaginationOptions } = require("../utils/pagination");
 
 /* ==================================================
    USER SERVICE
 
    Handles:
-   - authenticated current user events retrieval
+   - authenticated current user events retrieval with optimized participant counts
    - authenticated current user profile retrieval
    - authenticated current user profile update
    - authenticated current user password update
@@ -36,6 +39,8 @@ const { getPaginationOptions } = require("../utils/pagination");
    - public profile statistics
 
    Notes:
+   - current user event listings avoid per-event participant count queries
+   - grouped participant count queries exclude soft-deleted memberships
    - critical profile update flow uses Sequelize transactions
    - public profiles never expose id, email, password or dates
    - joined events exclude events created by the same user
@@ -152,42 +157,47 @@ const getCurrentUserEventsByID = async (userId, query = {}) => {
         }],
         limit,
         offset,
-        order: [[{ model: Event, as: "event" }, orderField, orderDirection]]
+        order: [[{ model: Event, as: "event" }, orderField, orderDirection]],
+        subQuery: false
     });
+
+    const eventIds = rows.map((membership) => membership.toJSON().event.id);
+
+    const participantCountByEventId = await countActiveParticipantsByEventIds(
+        EventUserRole,
+        sequelize,
+        eventIds
+    );
 
 
     /* =========================
        Data enrichment
     ========================= */
 
-    const events = await Promise.all(
-        rows.map(async (membership) => {
-            const data = membership.toJSON();
+    const events = rows.map((membership) => {
+        const data = membership.toJSON();
 
-            const participantCount = await EventUserRole.count({
-                where: {
-                    eventId: data.event.id,
-                    role: EVENT_ROLES.PARTICIPANT,
-                    deletedAt: null
-                }
-            });
+        const event = {
+            ...data.event,
+            participantCount: participantCountByEventId[data.event.id] || 0
+        };
 
-            return {
-                ...data,
-                event: {
-                    ...data.event,
-                    participantCount,
-                    status: getEventStatus(data.event)
-                }
-            };
-        })
-    );
+        return {
+            ...data,
+            event: {
+                ...event,
+                status: getEventStatus(event)
+            }
+        };
+    });
+
+    const totalEvents = Array.isArray(count) ? count.length : count;
 
     return {
         page,
         pageSize,
-        totalEvents: count,
-        totalPages: Math.ceil(count / pageSize),
+        totalEvents,
+        totalPages: Math.ceil(totalEvents / pageSize),
         events
     };
 };
@@ -204,7 +214,6 @@ const getCurrentUserProfileByID = async (userId) => {
 };
 
 
-// Update current user profile by ID
 // Update current user profile by ID
 const updateCurrentUserProfileByID = async (userId, updatedData) => {
     const transaction = await sequelize.transaction();

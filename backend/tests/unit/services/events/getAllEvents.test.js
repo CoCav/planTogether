@@ -2,9 +2,10 @@
    EVENT SERVICE - GET ALL EVENTS TESTS
 
    Tests:
-   - paginated event listing
+   - paginated event listing with optimized participant count
    - event filter forwarding
    - creator include configuration
+   - active participant include configuration
    - status enrichment
    - grouped count handling
    - database error propagation
@@ -12,6 +13,7 @@
    Ensures:
    - event listing supports filters and pagination
    - query helpers are called with expected arguments
+   - active participants are counted through optimized query helpers
    - pagination metadata is returned correctly
    - events are enriched with computed status
    - shared event status constants are used for expected statuses
@@ -23,7 +25,9 @@ jest.mock("../../../../src/models/eventModel", () => ({
 
 jest.mock("../../../../src/utils/events/eventQueryBuilder", () => ({
     buildEventWhereConditions: jest.fn(),
-    buildEventCreatorInclude: jest.fn()
+    buildEventCreatorInclude: jest.fn(),
+    buildActiveParticipantInclude: jest.fn(),
+    buildParticipantCountAttribute: jest.fn()
 }));
 
 jest.mock("../../../../src/utils/events/eventStatus", () => ({
@@ -42,7 +46,13 @@ const eventService = require("../../../../src/services/eventService");
 const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
 const { getEventStatus } = require("../../../../src/utils/events/eventStatus");
 
-const { buildEventWhereConditions, buildEventCreatorInclude } = require("../../../../src/utils/events/eventQueryBuilder");
+const {
+    buildEventWhereConditions,
+    buildEventCreatorInclude,
+    buildActiveParticipantInclude,
+    buildParticipantCountAttribute
+} = require("../../../../src/utils/events/eventQueryBuilder");
+
 const { getPaginationOptions } = require("../../../../src/utils/pagination");
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
@@ -55,11 +65,19 @@ describe("eventService - getAllEvents", () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+
+        buildParticipantCountAttribute.mockReturnValue(["COUNT_DISTINCT_PARTICIPANTS", "participantCount"]);
+
+        buildActiveParticipantInclude.mockReturnValue({
+            model: User,
+            as: "participants",
+            attributes: []
+        });
     });
 
     /* =============================
-         EVENTS RETRIEVAL SUCCESS
-      ============================= */
+        EVENTS RETRIEVAL SUCCESS
+    ============================= */
 
     it("should return paginated events with computed status", async () => {
 
@@ -103,8 +121,8 @@ describe("eventService - getAllEvents", () => {
     });
 
     /* =============================
-         QUERY FILTERS
-      ============================= */
+        QUERY FILTERS
+    ============================= */
 
     it("should forward filters to buildEventWhereConditions", async () => {
         getPaginationOptions.mockReturnValue({
@@ -169,8 +187,8 @@ describe("eventService - getAllEvents", () => {
     });
 
     /* =============================
-         EVENT METADATA
-      ============================= */
+        EVENT METADATA
+    ============================= */
 
     it("should enrich events with computed status", async () => {
         const mockEvent = createMockEventModel({
@@ -208,8 +226,42 @@ describe("eventService - getAllEvents", () => {
     });
 
     /* =============================
-         COUNT / PAGINATION
-      ============================= */
+        PARTICIPANT COUNT
+    ============================= */
+
+    it("should use optimized active participant count helpers", async () => {
+        getPaginationOptions.mockReturnValue({
+            page: 1,
+            pageSize: 10,
+            limit: 10,
+            offset: 0,
+            orderField: "createdAt",
+            orderDirection: "DESC"
+        });
+
+        buildEventCreatorInclude.mockReturnValue({
+            model: User,
+            as: "creator"
+        });
+
+        Event.findAndCountAll.mockResolvedValue({
+            count: [],
+            rows: []
+        });
+
+        await eventService.getAllEvents({});
+
+        expect(buildParticipantCountAttribute).toHaveBeenCalledWith(
+            expect.any(Object),
+            "participants.id"
+        );
+
+        expect(buildActiveParticipantInclude).toHaveBeenCalledWith(User);
+    });
+
+    /* =============================
+        COUNT / PAGINATION
+    ============================= */
 
     it("should handle grouped Sequelize count results", async () => {
         getPaginationOptions.mockReturnValue({
@@ -238,8 +290,8 @@ describe("eventService - getAllEvents", () => {
     });
 
     /* =============================
-         DATABASE ERRORS
-      ============================= */
+        DATABASE ERRORS
+    ============================= */
 
     it("should forward database errors", async () => {
         getPaginationOptions.mockReturnValue({

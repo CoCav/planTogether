@@ -5,7 +5,8 @@
    - public event retrieval by ID
    - nonexistent event handling
    - invalid event ID validation
-   - participant count enrichment
+   - active participant count enrichment
+   - inactive membership exclusion from participant count
    - event status enrichment
    - creator data enrichment
 
@@ -13,6 +14,7 @@
    - a single event can be retrieved publicly by ID
    - invalid event requests are rejected correctly
    - event metadata is enriched in the response
+   - participant counts only include active memberships
    - shared event status constants are used for expected statuses
 =============================================== */
 
@@ -88,6 +90,36 @@ describe("Get Event API", () => {
 
         expect(res.body.event).toHaveProperty("participantCount");
         expect(Number(res.body.event.participantCount)).toBe(1);
+    });
+
+    it("should exclude inactive memberships from participant count", async () => {
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Inactive Count Creator",
+                email: `inactivecountcreator${Date.now()}@test.com`
+            },
+            event: {
+                title: "Inactive Count Event"
+            }
+        });
+
+        const participantAuth = await registerAndGetToken({
+            name: "Inactive Participant",
+            email: `inactiveparticipant${Date.now()}@test.com`
+        });
+
+        await joinEvent(event.id, participantAuth.headers);
+
+        await request(app)
+            .delete(`/api/events/${event.id}/members/leave`)
+            .set(participantAuth.headers);
+
+        const res = await request(app).get(`/api/events/${event.id}`);
+
+        expect(res.statusCode).toBe(200);
+
+        expect(res.body.event).toHaveProperty("participantCount");
+        expect(Number(res.body.event.participantCount)).toBe(0);
     });
 
     it("should include creator data", async () => {

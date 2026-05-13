@@ -2,13 +2,15 @@
    EVENT SERVICE - GET EVENT BY ID TESTS
 
    Tests:
-   - successful event retrieval
+   - successful event retrieval with optimized participant count
    - event status enrichment
+   - active participant include configuration
    - missing event rejection
    - database error propagation
 
    Ensures:
    - single events are retrieved correctly
+   - active participants are counted through optimized query helpers
    - computed status is added before response
    - missing events return a 404 error
    - shared event status constants are used for expected statuses
@@ -18,16 +20,29 @@ jest.mock("../../../../src/models/eventModel", () => ({
     findOne: jest.fn()
 }));
 
+jest.mock("../../../../src/utils/events/eventQueryBuilder", () => ({
+    buildEventCreatorInclude: jest.fn(),
+    buildActiveParticipantInclude: jest.fn(),
+    buildParticipantCountAttribute: jest.fn()
+}));
+
 jest.mock("../../../../src/utils/events/eventStatus", () => ({
     getEventStatus: jest.fn()
 }));
 
 const Event = require("../../../../src/models/eventModel");
+const User = require("../../../../src/models/userModel");
 
 const eventService = require("../../../../src/services/eventService");
 
 const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
 const { getEventStatus } = require("../../../../src/utils/events/eventStatus");
+
+const {
+    buildEventCreatorInclude,
+    buildActiveParticipantInclude,
+    buildParticipantCountAttribute
+} = require("../../../../src/utils/events/eventQueryBuilder");
 
 const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
 
@@ -39,6 +54,22 @@ describe("eventService - getEventByID", () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+
+        buildEventCreatorInclude.mockReturnValue({
+            model: User,
+            as: "creator"
+        });
+
+        buildActiveParticipantInclude.mockReturnValue({
+            model: User,
+            as: "participants",
+            attributes: []
+        });
+
+        buildParticipantCountAttribute.mockReturnValue([
+            "COUNT_DISTINCT_PARTICIPANTS",
+            "participantCount"
+        ]);
     });
 
     /* =============================
@@ -82,6 +113,26 @@ describe("eventService - getEventByID", () => {
         expect(result).toMatchObject({
             status: EVENT_STATUS.PAST
         });
+    });
+
+    /* =============================
+       PARTICIPANT COUNT
+    ============================= */
+
+    it("should use optimized active participant count helpers", async () => {
+        Event.findOne.mockResolvedValue(createMockEventModel());
+
+        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
+
+        await eventService.getEventByID(1);
+
+        expect(buildParticipantCountAttribute).toHaveBeenCalledWith(
+            expect.any(Object),
+            "participants.id"
+        );
+
+        expect(buildEventCreatorInclude).toHaveBeenCalledWith(User);
+        expect(buildActiveParticipantInclude).toHaveBeenCalledWith(User);
     });
 
     /* =============================

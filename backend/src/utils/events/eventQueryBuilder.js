@@ -1,6 +1,7 @@
 const { Op } = require("sequelize");
 
 const { EVENT_STATUS } = require("../../constants/eventStatus");
+const { EVENT_ROLES } = require("../../constants/eventRoles");
 
 /* ==================================================
    EVENT QUERY BUILDER
@@ -11,9 +12,16 @@ const { EVENT_STATUS } = require("../../constants/eventStatus");
    - event date overlap filtering
    - text search and category filters
    - event creator include with optional filtering
+   - active participant include building
+   - optimized participant count attribute building
+   - grouped active participant count queries
 
    Notes:
    - designed to be reused across services
+   - participant count queries exclude soft-deleted memberships
+   - grouped participant counts avoid N+1 queries
+   - participant count attributes use COUNT DISTINCT
+   - participant includes exclude soft-deleted memberships
    - keeps controllers/services clean
    - mutates the provided whereConditions object
 ================================================== */
@@ -171,4 +179,76 @@ const buildEventWhereConditions = (whereConditions, query = {}, options = {}) =>
     return whereConditions;
 };
 
-module.exports = { addAndCondition, buildEventCreatorInclude, applyEventStatusFilter, applyEventDateFilters, applyEventBasicFilters, buildEventWhereConditions };
+/* =============================
+   PARTICIPANT COUNT HELPERS
+============================= */
+
+// Build active participant include used for participant counts
+const buildActiveParticipantInclude = (User) => ({
+    model: User,
+    as: "participants",
+    attributes: [],
+    through: {
+        attributes: [],
+        where: {
+            role: EVENT_ROLES.PARTICIPANT,
+            deletedAt: null
+        }
+    },
+    required: false
+});
+
+// Build participant count attribute with DISTINCT to avoid duplicate counts
+const buildParticipantCountAttribute = (sequelize, participantIdPath) => ([
+    sequelize.fn(
+        "COUNT",
+        sequelize.fn(
+            "DISTINCT",
+            sequelize.col(participantIdPath)
+        )
+    ),
+    "participantCount"
+]);
+
+// Count active participants for multiple events in one grouped query
+const countActiveParticipantsByEventIds = async (EventUserRole, sequelize, eventIds) => {
+    if (!eventIds.length) {
+        return {};
+    }
+
+    const participantCounts = await EventUserRole.findAll({
+        attributes: [
+            "eventId",
+            [
+                sequelize.fn("COUNT", sequelize.col("eventId")),
+                "participantCount"
+            ]
+        ],
+        where: {
+            eventId: {
+                [Op.in]: eventIds
+            },
+            role: EVENT_ROLES.PARTICIPANT,
+            deletedAt: null
+        },
+        group: ["eventId"],
+        raw: true
+    });
+
+    return participantCounts.reduce((acc, item) => {
+        acc[item.eventId] = Number(item.participantCount);
+        return acc;
+    }, {});
+};
+
+module.exports = {
+    addAndCondition,
+    buildEventCreatorInclude,
+    applyEventStatusFilter,
+    applyEventDateFilters,
+    applyEventBasicFilters,
+    buildEventWhereConditions,
+    buildActiveParticipantInclude,
+    buildParticipantCountAttribute,
+    countActiveParticipantsByEventIds
+};

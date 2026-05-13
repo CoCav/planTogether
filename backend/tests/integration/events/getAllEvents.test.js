@@ -3,7 +3,8 @@
 
    Tests:
    - public events retrieval
-   - participant count enrichment
+   - active participant count enrichment
+   - inactive membership exclusion from participant count
    - event status enrichment
    - filtering by type
    - filtering by theme
@@ -22,6 +23,7 @@
    - filters and pagination behave correctly
    - event metadata is enriched in responses
    - validators protect query params
+   - participant counts only include active memberships
    - shared event status constants are used for expected statuses
 ================================================== */
 
@@ -99,6 +101,39 @@ describe("Get All Events API", () => {
 
         expect(foundEvent).toHaveProperty("participantCount");
         expect(Number(foundEvent.participantCount)).toBe(1);
+    });
+
+    it("should exclude inactive memberships from participant count", async () => {
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Inactive Count Creator",
+                email: `inactivecountcreator${Date.now()}@test.com`
+            },
+            event: {
+                title: "Inactive Count Event"
+            }
+        });
+
+        const participantAuth = await registerAndGetToken({
+            name: "Inactive Participant",
+            email: `inactiveparticipant${Date.now()}@test.com`
+        });
+
+        await joinEvent(event.id, participantAuth.headers);
+
+        await request(app)
+            .delete(`/api/events/${event.id}/members/leave`)
+            .set(participantAuth.headers);
+
+        const res = await request(app).get("/api/events");
+
+        const foundEvent = res.body.events.find(
+            (item) => item.title === "Inactive Count Event"
+        );
+
+        expect(foundEvent).toBeDefined();
+        expect(foundEvent).toHaveProperty("participantCount");
+        expect(Number(foundEvent.participantCount)).toBe(0);
     });
 
     it("should include event status in events", async () => {

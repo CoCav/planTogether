@@ -5,6 +5,7 @@
    - successful account deletion
    - deleted account data update
    - active organizer deletion rejection
+   - inactive organizer membership exclusion
    - past organizer deletion allowance
    - missing user rejection
    - transaction rollback on database errors
@@ -13,6 +14,7 @@
    - current users can soft delete their account
    - deleted accounts keep historical display name
    - deleted accounts anonymize email and avatar data
+   - only active organizer memberships block account deletion
    - active or upcoming organizer ownership must be transferred first
    - Sequelize transactions are committed on success
    - Sequelize transactions are rolled back on failures
@@ -45,6 +47,8 @@ const User = require("../../../../../src/models/userModel");
 const EventUserRole = require("../../../../../src/models/relations/eventUserRoleModel");
 
 const userService = require("../../../../../src/services/userService");
+
+const { EVENT_ROLES } = require("../../../../../src/constants/eventRoles");
 
 const { deleteUploadedFile } = require("../../../../../src/utils/files/uploadedFileStorage");
 
@@ -120,6 +124,27 @@ describe("userService - deleteCurrentUserByID", () => {
         await userService.deleteCurrentUserByID(1);
 
         expect(EventUserRole.findOne).toHaveBeenCalled();
+
+        expect(user.deletedAt).toBeInstanceOf(Date);
+
+        expect(transaction.commit).toHaveBeenCalled();
+        expect(transaction.rollback).not.toHaveBeenCalled();
+    });
+
+    it("should ignore inactive organizer memberships when checking deletion blocker", async () => {
+        User.findByPk.mockResolvedValue(user);
+        EventUserRole.findOne.mockResolvedValue(null);
+
+        await userService.deleteCurrentUserByID(1);
+
+        expect(EventUserRole.findOne).toHaveBeenCalledWith(expect.objectContaining({
+            where: {
+                userId: 1,
+                role: EVENT_ROLES.ORGANIZER,
+                deletedAt: null
+            },
+            transaction
+        }));
 
         expect(user.deletedAt).toBeInstanceOf(Date);
 

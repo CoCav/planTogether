@@ -2,8 +2,9 @@
 
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
 ![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
-![Tests](https://img.shields.io/badge/tests-478%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-98%25%20statements%20%7C%2091%25%20branches-brightgreen)
+![Test Suites](https://img.shields.io/badge/test%20suites-68%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-539%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-98.44%25%20statements%20%7C%2091.01%25%20branches-brightgreen)
 
 This document describes the testing architecture and overall testing strategy used in the PlanTogether backend.
 
@@ -14,10 +15,9 @@ The testing architecture focuses on:
 - backend reliability and long-term maintainability
 - API consistency and business rule validation
 - security and authorization testing
+- soft-delete lifecycle and ownership protection testing
 - reusable test helpers and factories
 - isolated and predictable automated test flows
-
----
 
 ## 🎯 Overview
 
@@ -31,17 +31,20 @@ The testing architecture is designed to validate:
 - service-layer business logic
 - database interactions and transactions
 - filtering, pagination, and query behavior
+- soft-delete lifecycle handling
+- ownership transfer and membership protection flows
+- optimized query and participant count behavior
 
 The current backend test suite includes:
 
-- **64 test suites**
-- **478 passing tests**
-- **98.40% statement coverage**
-- **90.59% branch coverage**
-- **99.26% function coverage**
-- **98.57% line coverage**
+- **68 test suites**
+- **539 passing tests**
+- **98.44% statement coverage**
+- **91.01% branch coverage**
+- **99.31% function coverage**
+- **98.59% line coverage**
 
-The combination of integration and unit testing helps ensure backend reliability, maintainability, security, and safer long-term refactoring across the application.
+The combination of integration and unit testing helps ensure backend reliability, maintainability, security, query consistency, and safer long-term refactoring across the application.
 
 ---
 
@@ -63,6 +66,7 @@ The backend testing architecture relies on the following tools and libraries:
 
 - Reusable factories for consistent test data generation
 - Reusable helpers for API flows, validation, authentication, and database setup
+- Reusable query, formatting, and validation test utilities
 - Express request/response mocks for isolated middleware and controller testing
 - Shared mock utilities for dates, console output, and isolated behaviors
 
@@ -119,28 +123,29 @@ These tests use the real Express application together with a dedicated PostgreSQ
 Covered areas include:
 
 - authentication flows
-- user profile and password flows
+- user profile, password, and account deletion flows
+- public and authenticated user routes
 - event CRUD operations
-- event filtering, sorting, and pagination
+- event filtering, sorting, pagination, and query behavior
 - event membership workflows
+- organizer ownership transfer flows
+- soft-delete membership restoration flows
+- inactive membership protection rules
 - role-based authorization
 - upload workflows
 - validation errors
 - global error handling
-- public and authenticated user routes
 
 Integration tests intentionally avoid heavy mocking in order to validate:
 
 - real application behavior
-- database interactions and transactions
+- database interactions, transactions, and optimized query behavior
 - middleware chaining
 - authorization flows
-- end-to-end business rules
+- end-to-end business rules and membership lifecycle protections
 - consistent API responses
 
 This approach provides stronger confidence during refactors and helps ensure stable backend behavior under realistic application conditions.
-
----
 
 ## 🧩 Unit Tests
 
@@ -155,20 +160,23 @@ Covered modules include:
 - utilities
 - formatters
 - security-related helpers
+- query builders and optimization utilities
 
 Unit tests are used to verify:
 
 - service business rules
 - transaction-related behavior
+- soft-delete lifecycle handling
+- ownership transfer restrictions
 - validation chains
 - middleware responses
-- utility output
+- utility and query-builder output
 - error propagation
 - reusable helper and formatter behavior
 
 Dependencies are mocked when necessary to isolate the module under test and keep unit tests fast, focused, and deterministic.
 
-This testing layer provides rapid feedback during development while helping maintain safer long-term backend refactoring.
+This testing layer provides rapid feedback during development while helping maintain safer long-term backend refactoring, query optimization consistency, and reusable business rule validation.
 
 ---
 
@@ -180,6 +188,7 @@ Examples include:
 
 - API helpers for authenticated request flows
 - database helpers for initialization, reset, and cleanup
+- reusable pagination, filtering, and query testing helpers
 - Express request/response mocks for controller and middleware testing
 - console and date mocks for stable and predictable test behavior
 - validation helpers for `express-validator` chains
@@ -210,6 +219,8 @@ Factories are especially useful for:
 - integration flows
 - middleware testing
 - transaction-related scenarios
+- soft-delete lifecycle scenarios
+- ownership transfer and membership role scenarios
 - complex business rule validation
 
 This approach reduces duplicated test data and improves long-term test maintainability and scalability.
@@ -226,7 +237,7 @@ The test database is synchronized, cleaned, and reset between test runs to ensur
 - repeatable and deterministic results
 - no dependency on test execution order
 - safe database mutation during API testing
-- reliable integration behavior across the full backend stack
+- reliable integration behavior across the full backend and transaction stack
 
 The testing environment uses:
 
@@ -235,7 +246,7 @@ The testing environment uses:
 - Sequelize test synchronization utilities
 - automated database cleanup helpers
 
-This approach helps maintain stable automated testing, safer backend refactoring, and prevents accidental interaction with development data.
+This approach helps maintain stable automated testing, safer backend refactoring, transaction safety validation, and prevents accidental interaction with development data.
 
 ---
 
@@ -259,7 +270,9 @@ This approach helps verify:
 - middleware chaining
 - authorization flows
 - database interactions and transactions
+- optimized query behavior
 - validation behavior
+- soft-delete lifecycle protections
 - end-to-end business rules
 
 ### 🧩 Unit Tests
@@ -272,7 +285,9 @@ Examples include:
 - database transactions
 - uploaded file cleanup
 - event status helpers
-- query builders
+- query builders and optimization utilities
+- soft-delete lifecycle utilities
+- ownership transfer business rules
 - service dependencies
 - console and date utilities
 
@@ -291,6 +306,7 @@ The tests verify that:
 - failed operations trigger `rollback`
 - uploaded files are deleted only after successful commits
 - transaction failures properly propagate application errors
+- soft-delete operations preserve historical consistency
 - partial operations do not leave inconsistent backend state
 
 This helps ensure database consistency and prevents partial or unsafe operations during critical backend workflows.
@@ -301,6 +317,8 @@ Covered transaction scenarios include:
 - event update
 - event deletion
 - event joining
+- organizer ownership transfer
+- secure account deletion and anonymization
 - profile update with avatar replacement
 
 Transaction testing is especially important for operations involving both database mutations and file system changes.
@@ -323,6 +341,7 @@ Covered upload behavior includes:
 - invalid upload rejection
 - old file cleanup on replacement
 - safe uploaded file deletion
+- upload rollback protection during failed operations
 - upload path normalization and protection
 
 These tests help ensure secure, predictable, and consistent upload behavior across the backend.
@@ -333,7 +352,7 @@ Upload testing is especially important because file handling combines:
 - filesystem operations
 - validation logic
 - database updates
-- transaction-related workflows
+- transaction-safe workflows
 
 This testing layer helps validate secure upload handling and prevents unsafe file operations during backend mutations.
 
@@ -349,6 +368,8 @@ Covered validation areas include:
 - password policy enforcement
 - event creation and update payloads
 - event membership parameters and role validation
+- ownership transfer validation
+- account deletion protection flows
 - user profile updates
 - query parameters
 - filtering, pagination, and sorting inputs
@@ -405,6 +426,8 @@ The testing architecture aims to provide:
 - predictable database isolation
 - confidence during refactors
 - maintainable and readable test files
+- reusable query and filtering consistency
+- safer transaction and soft-delete lifecycle validation
 - strong coverage across critical backend layers
 
 These design goals help support long-term backend maintainability, safer feature development, more reliable production behavior, and easier large-scale backend refactoring.
@@ -419,7 +442,8 @@ Potential future testing improvements include:
 - further test deduplication and simplification
 - reduced coupling in selected Sequelize unit tests
 - expanded edge-case coverage for membership and authorization rules
-- additional integration coverage for transaction-related workflows
+- deeper integration coverage for advanced transaction rollback scenarios
+- performance-oriented testing for complex query behavior
 - dedicated testing documentation for frontend integration
 - automated test pipelines using GitHub Actions
 

@@ -55,13 +55,9 @@ const {
 
 const { getPaginationOptions } = require("../../../../src/utils/pagination");
 
-const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
-
 const { createMockEventModel } = require("../../../factories/eventFactory");
 
 describe("eventService - getAllEvents", () => {
-
-    mockConsoleError();
 
     beforeEach(() => {
         jest.clearAllMocks();

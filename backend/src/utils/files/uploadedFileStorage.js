@@ -1,6 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
+const logger = require("../../config/logger");
+
 /* ==================================================
    UPLOADED FILE STORAGE
 
@@ -8,6 +10,7 @@ const path = require("path");
    - safe deletion of uploaded files
    - path normalization
    - protection against directory traversal
+   - file deletion warnings use centralized structured logging
 
    Notes:
    - only files inside UPLOAD_DIR can be deleted
@@ -28,7 +31,7 @@ const deleteUploadedFile = async (filePath) => {
 
         // Prevent deleting files outside upload directory
         if (!normalizedPath.startsWith(baseUploadDir)) {
-            console.warn("Invalid file path, outside upload directory");
+            logger.warn("Invalid file path, outside upload directory");
             return;
         }
 
@@ -41,7 +44,7 @@ const deleteUploadedFile = async (filePath) => {
         }
 
     } catch (error) {
-        console.warn("Failed to delete uploaded file:", error.message);
+        logger.warn({ error }, "Failed to delete uploaded file");
     }
 };
 

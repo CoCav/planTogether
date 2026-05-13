@@ -52,15 +52,11 @@ const { buildEventUpdateData } = require("../../../../src/utils/events/eventData
 const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
 const { deleteUploadedFile } = require("../../../../src/utils/files/uploadedFileStorage");
 
-const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
-
 const { createMockEventModel } = require("../../../factories/eventFactory");
 
 describe("eventService - updateEventByID", () => {
 
     let transaction;
-
-    mockConsoleError();
 
     beforeEach(() => {
         jest.clearAllMocks();

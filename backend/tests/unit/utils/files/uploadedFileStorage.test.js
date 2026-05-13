@@ -21,17 +21,22 @@ jest.mock("fs", () => ({
     }
 }));
 
+jest.mock("../../../../src/config/logger", () => ({
+    warn: jest.fn()
+}));
+
 const fs = require("fs");
 
+const logger = require("../../../../src/config/logger");
+
 const { deleteUploadedFile } = require("../../../../src/utils/files/uploadedFileStorage");
-const { mockConsoleWarn } = require("../../../helpers/mocks/consoleMocks");
 
 describe("uploadedFileStorage utils", () => {
 
-    mockConsoleWarn();
-
     beforeEach(() => {
         jest.clearAllMocks();
+
+        logger.warn.mockClear();
     });
 
     /* =============================
@@ -80,7 +85,7 @@ describe("uploadedFileStorage utils", () => {
         expect(fs.existsSync).not.toHaveBeenCalled();
         expect(fs.promises.unlink).not.toHaveBeenCalled();
 
-        expect(console.warn).toHaveBeenCalledWith("Invalid file path, outside upload directory");
+        expect(logger.warn).toHaveBeenCalledWith("Invalid file path, outside upload directory");
     });
 
     /* =============================
@@ -93,9 +98,11 @@ describe("uploadedFileStorage utils", () => {
 
         await expect(deleteUploadedFile("/uploads/events/event-test.png")).resolves.toBeUndefined();
 
-        expect(console.warn).toHaveBeenCalledWith(
-            "Failed to delete uploaded file:",
-            "unlink failed"
+        expect(logger.warn).toHaveBeenCalledWith(
+            expect.objectContaining({
+                error: expect.any(Error)
+            }),
+            "Failed to delete uploaded file"
         );
     });
 });

@@ -40,13 +40,9 @@ const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 
 const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
 
-const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
-
 const { createMockMembership } = require("../../../factories/eventMembershipFactory");
 
 describe("eventMembershipService - leaveEvent", () => {
-
-    mockConsoleError();
 
     beforeEach(() => {
         jest.clearAllMocks();

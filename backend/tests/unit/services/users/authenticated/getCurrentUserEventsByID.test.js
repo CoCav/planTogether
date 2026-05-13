@@ -60,8 +60,6 @@ const {
 
 const { getPaginationOptions } = require("../../../../../src/utils/pagination");
 
-const { mockConsoleError } = require("../../../../helpers/mocks/consoleMocks");
-
 describe("userService - getCurrentUserEventsByID", () => {
 
     const pagination = {
@@ -72,8 +70,6 @@ describe("userService - getCurrentUserEventsByID", () => {
         orderField: "startDateTime",
         orderDirection: "ASC"
     };
-
-    mockConsoleError();
 
     beforeEach(() => {
         jest.clearAllMocks();

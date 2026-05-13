@@ -38,13 +38,9 @@ const eventMembershipService = require("../../../../src/services/eventMembership
 
 const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
 
-const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
-
 const { createMockMembership } = require("../../../factories/eventMembershipFactory");
 
 describe("eventMembershipService - removeEventMember", () => {
-
-    mockConsoleError();
 
     beforeEach(() => {
         jest.clearAllMocks();

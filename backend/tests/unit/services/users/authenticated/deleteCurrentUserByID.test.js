@@ -52,15 +52,11 @@ const { EVENT_ROLES } = require("../../../../../src/constants/eventRoles");
 
 const { deleteUploadedFile } = require("../../../../../src/utils/files/uploadedFileStorage");
 
-const { mockConsoleError } = require("../../../../helpers/mocks/consoleMocks");
-
 const { createMockUserWithPassword } = require("../../../../factories/userFactory");
 
 describe("userService - deleteCurrentUserByID", () => {
     let transaction;
     let user;
-
-    mockConsoleError();
 
     beforeEach(() => {
         jest.clearAllMocks();

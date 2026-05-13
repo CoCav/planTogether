@@ -1,5 +1,7 @@
 const multer = require("multer");
 
+const logger = require("../../config/logger");
+
 /* ==================================================
    ERROR HANDLER MIDDLEWARE
 
@@ -12,7 +14,7 @@ const multer = require("multer");
    Notes:
    - returns consistent JSON responses
    - hides stack trace in production
-   - logs detailed errors outside production
+   - uses centralized structured logging
 ================================================== */
 
 // Centralize API error responses
@@ -24,9 +26,15 @@ function errorHandler(error, req, res, next) {
     ============================= */
 
     if (!isProd) {
-        console.error("Error caught by error middleware:", error);
+        logger.error(
+            { error },
+            "Error caught by error middleware"
+        );
     } else {
-        console.error("Error:", error.message);
+        logger.error(
+            { message: error.message },
+            "Error"
+        );
     }
 
     /* =============================

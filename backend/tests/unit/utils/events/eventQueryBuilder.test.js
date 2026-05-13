@@ -33,7 +33,8 @@ const {
     buildEventWhereConditions,
     buildEventCreatorInclude,
     buildActiveParticipantInclude,
-    buildParticipantCountAttribute
+    buildParticipantCountAttribute,
+    countActiveParticipantsByEventIds
 } = require("../../../../src/utils/events/eventQueryBuilder");
 
 describe("eventQueryBuilder utils", () => {
@@ -268,6 +269,76 @@ describe("eventQueryBuilder utils", () => {
             );
 
             expect(result[1]).toBe("participantCount");
+        });
+    });
+
+    /* =============================
+       GROUPED PARTICIPANT COUNTS
+    ============================= */
+
+    describe("countActiveParticipantsByEventIds", () => {
+
+        const EventUserRole = {
+            findAll: jest.fn()
+        };
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+        });
+
+        it("should return empty object when eventIds is empty", async () => {
+            const result = await countActiveParticipantsByEventIds(
+                EventUserRole,
+                sequelize,
+                []
+            );
+
+            expect(result).toEqual({});
+
+            expect(EventUserRole.findAll).not.toHaveBeenCalled();
+        });
+
+        it("should build grouped participant counts", async () => {
+            EventUserRole.findAll.mockResolvedValue([
+                {
+                    eventId: 1,
+                    participantCount: "3"
+                },
+                {
+                    eventId: 2,
+                    participantCount: "5"
+                }
+            ]);
+
+            const result = await countActiveParticipantsByEventIds(
+                EventUserRole,
+                sequelize,
+                [1, 2]
+            );
+
+            expect(EventUserRole.findAll).toHaveBeenCalledWith({
+                attributes: [
+                    "eventId",
+                    [
+                        sequelize.fn("COUNT", sequelize.col("eventId")),
+                        "participantCount"
+                    ]
+                ],
+                where: {
+                    eventId: {
+                        [Op.in]: [1, 2]
+                    },
+                    role: EVENT_ROLES.PARTICIPANT,
+                    deletedAt: null
+                },
+                group: ["eventId"],
+                raw: true
+            });
+
+            expect(result).toEqual({
+                1: 3,
+                2: 5
+            });
         });
     });
 });

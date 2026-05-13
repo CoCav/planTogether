@@ -34,11 +34,7 @@ const eventMembershipService = require("../../../../src/services/eventMembership
 
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 
-const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
-
 describe("eventMembershipService - getEventStaff", () => {
-
-    mockConsoleError();
 
     beforeEach(() => {
         jest.clearAllMocks();

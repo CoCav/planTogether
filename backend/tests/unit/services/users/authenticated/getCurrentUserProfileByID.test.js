@@ -19,13 +19,9 @@ const User = require("../../../../../src/models/userModel");
 
 const userService = require("../../../../../src/services/userService");
 
-const { mockConsoleError } = require("../../../../helpers/mocks/consoleMocks");
-
 const { createMockUser } = require("../../../../factories/userFactory");
 
 describe("userService - getCurrentUserProfileByID", () => {
-
-    mockConsoleError();
 
     beforeEach(() => {
         jest.clearAllMocks();

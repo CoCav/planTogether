@@ -17,6 +17,7 @@ const { ALLOWED_IMAGE_MIME_TYPES, ALLOWED_IMAGE_EXTENSIONS, MAX_AVATAR_SIZE, MAX
    - image MIME type validation
    - image extension validation
    - upload size limits
+   - centralized file deletion warnings
 
    Notes:
    - files are stored under UPLOAD_DIR or "uploads"

@@ -1,18 +1,21 @@
 const { Sequelize } = require("sequelize");
 
+const logger = require("./logger");
+
 /* ==================================================
    DATABASE CONFIGURATION
 
    Handles:
    - Sequelize PostgreSQL connection
    - environment-specific database selection
-   - optional SQL logging
+   - optional SQL logging through centralized logger
    - optional SSL configuration
 
    Notes:
    - test environment uses DB_NAME_TEST
    - other environments use DB_NAME
    - SSL is enabled only when DB_SSL=true
+   - SQL logs use centralized structured logging
 ================================================== */
 
 // Use a dedicated database for automated tests
@@ -29,7 +32,7 @@ const sequelize = new Sequelize(
         dialect: "postgres",
 
         // Enable SQL logs only when explicitly requested
-        logging: process.env.DB_LOGGING === "true" ? console.log : false,
+        logging: process.env.DB_LOGGING === "true" ? (message) => logger.debug(message) : false,
 
         // Enable SSL for production-like hosted databases
         ...(process.env.DB_SSL === "true"
@@ -47,7 +50,7 @@ const sequelize = new Sequelize(
 
 // Log target database outside production for debugging
 if (process.env.NODE_ENV !== "production") {
-    console.log(`📡 Connecting to ${(process.env.NODE_ENV || "development")} DB: ${databaseName}`);
+    logger.info(`📡 Connecting to ${(process.env.NODE_ENV || "development")} DB: ${databaseName}`);
 }
 
 module.exports = sequelize;

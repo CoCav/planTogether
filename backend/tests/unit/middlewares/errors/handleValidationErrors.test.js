@@ -14,20 +14,23 @@
    - production does not log validation details
 ================================================== */
 
+jest.mock("express-validator");
+
+jest.mock("../../../../src/config/logger", () => ({
+    warn: jest.fn()
+}));
+
 const { validationResult } = require("express-validator");
+
+const logger = require("../../../../src/config/logger");
 
 const handleValidationErrors = require("../../../../src/middlewares/errors/handleValidationErrors");
 
 const { createMockReqResNext } = require("../../../helpers/express/mockExpress");
-const { mockConsoleLog } = require("../../../helpers/mocks/consoleMocks");
-
-jest.mock("express-validator");
 
 describe("handleValidationErrors middleware", () => {
 
     const originalEnv = process.env.NODE_ENV;
-
-    mockConsoleLog();
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -118,9 +121,10 @@ describe("handleValidationErrors middleware", () => {
 
         handleValidationErrors(req, res, next);
 
-        expect(console.log).toHaveBeenCalledWith(
-            "Validation errors:",
-            [{ path: "email", msg: "Invalid email" }]
+        expect(logger.warn).toHaveBeenCalledWith({
+            errors: [{ path: "email", msg: "Invalid email" }]
+        },
+            "Validation errors"
         );
     });
 
@@ -138,6 +142,6 @@ describe("handleValidationErrors middleware", () => {
 
         handleValidationErrors(req, res, next);
 
-        expect(console.log).not.toHaveBeenCalled();
+        expect(logger.warn).not.toHaveBeenCalled();
     });
 });

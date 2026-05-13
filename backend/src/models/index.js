@@ -1,4 +1,5 @@
 const sequelize = require("../config/database");
+const logger = require("../config/logger");
 
 const User = require("./userModel");
 const Event = require("./eventModel");
@@ -10,22 +11,24 @@ const EventUserRole = require("./relations/eventUserRoleModel");
    Handles:
    - database connection
    - model synchronization by environment
+   - centralized database initialization logging
 
    Notes:
    - development uses alter sync for safer schema updates
    - test environment resets database with force sync
    - production uses safe synchronization
+   - initialization logs use centralized structured logging
 ================================================== */
 
 // Initialize database connection and synchronize models
 const initDB = async () => {
     try {
-        console.log("👉 Attempting connection to the database...");
+        logger.info("👉 Attempting connection to the database...");
         await sequelize.authenticate();
 
-        console.log("✅ Database connection has been established successfully!");
+        logger.info("✅ Database connection has been established successfully!");
 
-        console.log("👉 Synchronizing models...");
+        logger.info("👉 Synchronizing models...");
 
         if (process.env.NODE_ENV === "development") {
             // Safely update schema during development
@@ -40,10 +43,10 @@ const initDB = async () => {
             await sequelize.sync();
         }
 
-        console.log("✅ Database synchronized successfully!");
+        logger.info("✅ Database synchronized successfully!");
 
     } catch (error) {
-        console.error("Error initializing the database:", error);
+        logger.error({ error }, "Error initializing the database");
         throw error;
     }
 };

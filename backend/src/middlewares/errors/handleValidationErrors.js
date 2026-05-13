@@ -1,5 +1,7 @@
 const { validationResult } = require("express-validator");
 
+const logger = require("../../config/logger");
+
 const { createHttpError } = require("../../utils/errors/httpError");
 
 /* ==================================================
@@ -9,6 +11,7 @@ const { createHttpError } = require("../../utils/errors/httpError");
    - express-validator result checking
    - validation error formatting
    - forwarding validation errors to errorHandler
+   - centralized validation warning logging
 
    Notes:
    - validators run before this middleware
@@ -24,7 +27,7 @@ const handleValidationErrors = (req, res, next) => {
         const rawErrors = errors.array();
 
         if (process.env.NODE_ENV !== "production") {
-            console.log("Validation errors:", rawErrors);
+            logger.warn({ errors: rawErrors }, "Validation errors");
         }
 
         const formattedErrors = rawErrors.map((err) => ({

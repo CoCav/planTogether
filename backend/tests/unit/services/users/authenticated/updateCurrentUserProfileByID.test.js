@@ -42,16 +42,12 @@ const userService = require("../../../../../src/services/userService");
 
 const { deleteUploadedFile } = require("../../../../../src/utils/files/uploadedFileStorage");
 
-const { mockConsoleError } = require("../../../../helpers/mocks/consoleMocks");
-
 const { createMockUser } = require("../../../../factories/userFactory");
 
 describe("userService - updateCurrentUserProfileByID", () => {
 
     let user;
     let transaction;
-
-    mockConsoleError();
 
     beforeEach(() => {
         jest.clearAllMocks();

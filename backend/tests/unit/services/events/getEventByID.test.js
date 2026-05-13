@@ -44,13 +44,9 @@ const {
     buildParticipantCountAttribute
 } = require("../../../../src/utils/events/eventQueryBuilder");
 
-const { mockConsoleError } = require("../../../helpers/mocks/consoleMocks");
-
 const { createMockEventModel } = require("../../../factories/eventFactory");
 
 describe("eventService - getEventByID", () => {
-
-    mockConsoleError();
 
     beforeEach(() => {
         jest.clearAllMocks();

@@ -13,9 +13,9 @@ PlanTogether is a collaborative event management platform where users can create
 
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
 ![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
-![Test Suites](https://img.shields.io/badge/test%20suites-64%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-478%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-98%25%20statements%20%7C%2091%25%20branches-brightgreen)
+![Test Suites](https://img.shields.io/badge/test%20suites-68%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-539%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-98.44%25%20statements%20%7C%2091.01%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -40,18 +40,14 @@ The backend focuses on:
 - security and role-based access control
 - high automated test coverage
 
-It also includes advanced backend features such as:
+The backend architecture also emphasizes:
 
-- secure JWT authentication
-- role-based authorization system
-- reusable event filtering system (search, creator, categories, dates, status)
-- consistent filtering across public and authenticated event listings
-- secure avatar and event image upload handling
-- centralized security policies (passwords, uploads, CORS)
-- Helmet, CORS, and authentication rate limiting protections
-- Sequelize transactions for critical operations
-- database query optimization through indexes
-- reusable formatting and pagination utilities
+- layered role-based authorization
+- centralized validation, security, and error handling
+- reusable filtering, formatting, and pagination utilities
+- secure upload and authentication flows
+- transaction-safe critical operations
+- optimized and scalable database query patterns
 - extensive unit and integration test coverage
 
 ---
@@ -122,7 +118,9 @@ The backend is built using scalable and modular technologies focused on performa
 - **Middleware architecture** – authentication, validation, authorization, upload, and error handling layers
 - **MVC architecture** – modular and maintainable application structure
 - **Service layer** – centralized business logic abstraction
-- **Centralized constants and utilities** – reusable business rules and API consistency
+- **Centralized constants and utilities** – reusable business rules, query helpers, and API consistency
+- **Soft-delete architecture** – membership and account lifecycle preservation
+- **Query optimization utilities** – grouped participant counts and reusable filtering helpers
 - **Reusable formatting and pagination utilities**
 - **Sequelize transactions** – critical operation safety and data consistency
 
@@ -130,7 +128,7 @@ The backend is built using scalable and modular technologies focused on performa
 
 - **Jest** – unit testing framework
 - **Supertest** – integration testing for API endpoints
-- **Comprehensive testing strategy** – validators, services, middlewares, controllers, utilities, and full API flows
+- **Comprehensive testing strategy** – validators, services, middlewares, controllers, query utilities, security flows, and full API integrations
 
 ---
 
@@ -221,7 +219,7 @@ The `relations` folder contains linking models used to represent many-to-many re
 
 The `utils` layer centralizes reusable logic such as:
 
-- pagination and filtering
+- pagination, filtering, and query optimization
 - event status computation
 - authentication token generation
 - reusable response formatting
@@ -233,7 +231,7 @@ The `middlewares` layer contains reusable authentication, authorization, validat
 
 The testing architecture mirrors the backend structure and separates reusable helpers, factories, unit tests, and full API integration flows to improve maintainability, readability, and coverage consistency.
 
-This structure promotes scalability, testability, reusable business logic, secure API design, and safer database operations through transactions and centralized validation patterns
+This structure promotes scalability, testability, reusable business logic, secure API design, soft-delete lifecycle management, and safer database operations through transactions and centralized validation patterns.
 
 ---
 
@@ -254,6 +252,8 @@ The API provides a complete set of endpoints to manage users, events, membership
 - Secure password update flow with current password verification
 - Email normalization and password hashing using **bcrypt**
 - Centralized validation and error handling middleware
+- Secure authenticated account deletion with anonymization
+- Soft-delete account lifecycle preservation
 - Consistent JSON API responses
 
 Additional security features:
@@ -272,6 +272,7 @@ Additional security features:
 - Delete events *(organizer only)*
 - Event image upload and replacement (`multipart/form-data`)
 - Automatic old event image cleanup when replaced
+- Organizer ownership transfer between active event members
 
 Additional capabilities:
 
@@ -296,6 +297,8 @@ Users interact with events through a membership system that associates users wit
 - View event organizers and staff
 - Retrieve authenticated user event listings
 - Retrieve public user event listings
+- Automatic membership restoration after rejoining an event
+- Soft-delete membership lifecycle management
 
 #### Roles
 
@@ -343,6 +346,9 @@ The API prevents invalid or unsafe operations:
 - Co_organizers cannot manage other co_organizers
 - Past events cannot be modified through protected actions
 - Invalid memberships and unauthorized actions are blocked consistently
+- Ownership transfer is restricted to active event members
+- Inactive memberships cannot manage or receive protected roles
+- Active organizers cannot delete their account before transferring ownership
 
 ### 🧠 Authorization System
 
@@ -360,6 +366,9 @@ The backend uses a layered middleware architecture:
   - organizer protection
   - membership management restrictions
   - event state restrictions
+  - ownership transfer restrictions
+  - soft-delete membership protection
+  - inactive membership handling
 
 This ensures a clear separation between:
 
@@ -405,6 +414,8 @@ Additional features:
 - Pagination support
 - Creator filtering across public and authenticated event listings
 - Consistent filtering behavior across endpoints
+- Optimized participant count queries without N+1 database queries
+- Active participant counting excluding soft-deleted memberships
 
 #### Examples
 
@@ -454,17 +465,17 @@ npm run test:coverage
 
 ### 📊 Results
 
-- 64 test suites
-- 478 tests
+- 68 test suites
+- 539 tests
 - ✅ All passing
 
 **Coverage:**
-- 98.40% statements coverage
-- 90.59% branch coverage
-- 99.26% functions coverage
-- 98.57% lines coverage
+- 98.44% statements coverage
+- 91.01% branch coverage
+- 99.31% functions coverage
+- 98.59% lines coverage
 
-✅ High coverage across authentication, authorization, filtering, uploads, business rules, transactions, and API flows.
+✅ High coverage across authentication, authorization, filtering, uploads, soft-delete flows, ownership transfer, transactions, query optimization, and full API flows.
 
 ### 📦 Test Coverage
 
@@ -482,14 +493,26 @@ Integration tests run against the real Express application using Supertest and a
 
 📌 Covered areas:
 
+📌 Covered areas:
+
+📌 Covered areas:
+
 - **Authentication**
   - Register
   - Login
   - Logout
-  - Profile retrieval and updates
-  - Password updates
-  - Avatar upload and replacement
+  - JWT authentication flows
   - Authentication rate limiting
+
+- **User**
+  - Authenticated profile retrieval and updates
+  - Public profile retrieval
+  - Password update flows
+  - Avatar upload and replacement
+  - Secure account deletion and anonymization
+  - Soft-delete account lifecycle protection
+  - Authenticated and public user event listings
+  - Validation and protected user flows
 
 - **Events**
   - CRUD operations
@@ -505,7 +528,10 @@ Integration tests run against the real Express application using Supertest and a
   - Event member and organizer listing
   - Role management and access control
   - Membership restrictions and edge cases
-  - Authenticated and public user event listings
+  - Ownership transfer flows
+  - Automatic membership restoration
+  - Soft-delete membership lifecycle handling
+  - Inactive membership protection
 
 - **Application**
   - Health check endpoint (`/api/health`)
@@ -529,6 +555,8 @@ These tests validate isolated internal application logic independently from HTTP
   - Database operations
   - Rule enforcement
   - Transaction-based flows
+  - Soft-delete lifecycle handling
+  - Query optimization helpers
 
 - **Middlewares**
   - Authentication (`authenticateToken`)
@@ -545,7 +573,8 @@ These tests validate isolated internal application logic independently from HTTP
 
 - **Utils**
   - Authentication token utilities
-  - Event filtering and status utilities
+  - Event filtering, query optimization, and status utilities
+  - Grouped participant count helpers
   - Pagination utilities
   - User formatting utilities
   - Uploaded file storage and cleanup
@@ -561,6 +590,7 @@ These tests validate isolated internal application logic independently from HTTP
 - Reusable factories and helpers reduce duplication
 - Validation, permissions, uploads, filtering, and business rules are extensively tested
 - High coverage helps ensure strong reliability across critical backend features
+- Query optimization and soft-delete edge cases are validated through both unit and integration tests
 
 For more details about the testing architecture, factories, helpers, database isolation, transaction testing, and mocking strategy, see [`docs/testing.md`](./docs/testing.md).
 
@@ -600,6 +630,9 @@ Additional protections include:
 - protected role management operations
 - past event restrictions
 - unauthorized action prevention
+- ownership transfer restrictions
+- inactive membership protection
+- soft-delete membership access protection
 
 Unauthenticated users only have read-only access to public resources.
 
@@ -625,6 +658,7 @@ Upload validation includes:
 - Sensitive fields excluded through Sequelize scopes
 - Email normalization before persistence
 - Safe public user formatting utilities
+- Secure account anonymization during soft-delete flows
 - Consistent JSON API response structures
 
 ### ⚙️ Additional Security Measures
@@ -632,12 +666,13 @@ Upload validation includes:
 - Helmet security headers protection
 - Centralized CORS configuration
 - SQL injection protection through Sequelize parameterized queries
+- Query optimization strategies to avoid unsafe N+1 database access patterns
 - Centralized HTTP error utilities and global error handling
 - Secure upload handling with path normalization and cleanup protection
 - Sequelize transactions for critical operations
 - Database indexes for optimized query performance
 
-These mechanisms help ensure secure data handling, reusable security patterns, predictable API behavior, and strong protection against unauthorized access and unsafe operations across the application.
+These mechanisms help ensure secure data handling, reusable security patterns, predictable API behavior, soft-delete lifecycle protection, and strong protection against unauthorized access and unsafe operations across the application.
 
 ---
 
@@ -736,7 +771,7 @@ CORS_ORIGIN=http://localhost:5173
 - `DB_LOGGING` → enables Sequelize query logging (`true` or `false`)
 - `DB_SSL` → enables SSL for production/cloud-hosted databases
 - `CORS_ORIGIN` → allowed frontend origins (comma-separated values supported)
-- `UPLOAD_DIR` → base directory used for avatar and event image uploads
+- `UPLOAD_DIR` → configurable upload root directory for avatars and event images
 
 👉 A `.env.example` file is provided as a reference configuration.
 
@@ -812,6 +847,7 @@ Endpoints related to authenticated and public user data.
 GET    /api/users/me
 PUT    /api/users/me                   (supports avatar upload via multipart/form-data)
 PUT    /api/users/me/password
+DELETE /api/users/me
 
 GET    /api/users/:id
 GET    /api/users/:id/events
@@ -844,6 +880,7 @@ GET    /api/events/:eventId/members
 GET    /api/events/:eventId/organizers
 
 PUT    /api/events/:eventId/members/:userId/role
+PUT    /api/events/:eventId/transfer-ownership
 DELETE /api/events/:eventId/members/:userId
 ```
 
@@ -852,7 +889,6 @@ DELETE /api/events/:eventId/members/:userId
 GET    /api/health
 GET    /
 ```
-
 ---
 
 ## 🚀 Recent Improvements
@@ -861,47 +897,38 @@ GET    /
 
 - Reorganized the backend into dedicated layers for authentication, authorization, error handling, configuration, constants, and reusable utilities
 - Centralized shared business constants (`EVENT_ROLES`, `EVENT_STATUS`)
-- Improved service and middleware consistency across the application
-- Introduced reusable formatting, normalization, pagination, and HTTP error utilities
+- Introduced reusable formatting, normalization, pagination, query-building, and HTTP error utilities
 - Standardized JSON API response structures across endpoints
-- Refactored reusable test helpers and factories for better maintainability
 
 ### 🔐 Security & Validation
 
-- Added Helmet security protections
-- Added authentication rate limiting
-- Centralized password policy configuration
-- Centralized upload validation policies
-- Strengthened upload security with MIME type, extension, and file size validation
-- Added secure uploaded file cleanup and path normalization protections
+- Added Helmet security protections and authentication rate limiting
+- Centralized password, upload, and CORS security policies
+- Strengthened upload security with MIME type, extension, file size validation, cleanup, and path normalization protections
 - Improved centralized validation and error-handling middleware
 
 ### 📅 Events & Membership System
 
-- Centralized event filtering and query-building logic
-- Added reusable creator filtering utilities
-- Refined role-based authorization architecture
-- Simplified membership authorization flows
-- Strengthened organizer and co-organizer protection rules
-- Improved event status handling and past-event restrictions
+- Added organizer ownership transfer flows
+- Added soft-delete membership and account deletion lifecycle handling
+- Refined layered role-based authorization and membership protection rules
+- Improved event status handling, past-event restrictions, and membership restoration flows
 - Added Sequelize transactions for critical operations
 
 ### 🗄️ Database & Performance
 
 - Added database indexes for optimized query performance
 - Standardized Sequelize association aliases and relationship consistency
-- Optimized filtering and membership query behavior
-- Improved pagination and sorting consistency
+- Optimized participant count queries to avoid N+1 database queries
+- Improved filtering, pagination, and sorting consistency
 
 ### 🧪 Testing
 
 - Refactored the testing architecture for improved maintainability
-- Added reusable factories and test helpers
 - Expanded unit and integration test coverage across all backend layers
-- Added tests for security policies, uploads, formatting utilities, and middleware behavior
-- Improved isolation and consistency of automated test flows
-- Reached 64 passing test suites and 478 passing tests
-- Achieved high coverage across authentication, authorization, filtering, uploads, validation, and business rules
+- Added coverage for security policies, soft-delete flows, ownership transfer, account deletion, and query optimization
+- Reached 68 passing test suites and 539 passing tests
+- Achieved high coverage across authentication, authorization, filtering, uploads, validation, business rules, and API flows
 
 ---
 
@@ -911,14 +938,15 @@ GET    /
 |---|---|
 | Backend API | ✅ Fully functional |
 | Architecture | ✅ Modular, scalable, and layered |
-| Authentication | ✅ JWT authentication, profile management, password updates |
-| Authorization | ✅ Advanced role-based access control |
+| Authentication & Users | ✅ JWT authentication, profile management, password updates, secure account deletion |
+| Authorization | ✅ Advanced role-based access control and ownership transfer |
+| Membership System | ✅ Role management, restoration flows, and soft-delete lifecycle handling |
 | Security | ✅ Helmet, rate limiting, validation, upload protection |
 | File Uploads | ✅ Avatar and event image uploads supported |
-| Database | ✅ PostgreSQL + Sequelize with transactions and indexes |
+| Database | ✅ PostgreSQL + Sequelize with transactions, indexes, and optimized queries |
 | API Consistency | ✅ Standardized JSON responses and centralized error handling |
-| Testing | ✅ 478 tests across 64 test suites |
-| Coverage | ✅ ~98% statements / ~91% branches / ~99% functions |
+| Testing | ✅ 539 tests across 68 test suites |
+| Coverage | ✅ 98.44% statements / 91.01% branches / 99.31% functions |
 | Frontend Integration | 🔗 Connected and functional |
 
 ---
@@ -930,13 +958,14 @@ GET    /
 - Event invitation system (email invitations or shareable links)
 - Email notifications for invitations, reminders, and event updates
 - Public and private event visibility management
-- Organizer ownership transfer system
-- Soft-delete support for memberships and archived events
+- Membership role history and audit logs
+- Archived events lifecycle and cleanup strategy
 - Improved event participation and moderation workflows
+- Event activity feeds and moderation audit trails
 
 ### 🧠 Backend & Architecture
 
-- Additional query and aggregation optimization
+- Advanced query aggregation and analytics optimization
 - Advanced database performance tuning
 - Improved logging system using Pino or Winston
 - API versioning strategy (`/api/v1`)
@@ -957,6 +986,6 @@ GET    /
 - Cloud deployment (AWS, Render, Fly.io, etc.)
 - Production-ready environment configuration improvements
 - CI/CD pipeline integration
-- Secure production file storage strategy
+- Secure cloud-based production file storage strategy
 
 ---

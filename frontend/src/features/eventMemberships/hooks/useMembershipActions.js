@@ -1,5 +1,7 @@
 import { joinEvent, leaveEvent } from "../../../api/events/eventMembershipApi";
 
+import { EVENT_ROLES } from "../../shared/eventRoles";
+
 /* ==================================================
    MEMBERSHIP ACTIONS HOOK
    Handles current user event membership actions
@@ -37,13 +39,13 @@ export default function useMembershipActions({
     const handleLeaveEvent = async (eventId) => {
         const currentRole = getRoleByEventId(eventId);
 
-        if (currentRole === "organizer") {
+        if (currentRole === EVENT_ROLES.ORGANIZER) {
             setError("❌ Organizer cannot leave their own event");
             return;
         }
 
         const confirmLeaveMessage =
-            currentRole === "co_organizer"
+            currentRole === EVENT_ROLES.CO_ORGANIZER
                 ? "Are you sure you want to leave this event? You will lose your co-organizer role and will rejoin later as a participant."
                 : "Are you sure you want to leave this event?";
 

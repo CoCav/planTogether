@@ -1,3 +1,5 @@
+import { EVENT_STATUS } from "../shared/eventStatus";
+
 /* ==================================================
    EVENT VIEW CONFIG
    Centralizes public event tab configuration
@@ -49,7 +51,7 @@ export const PUBLIC_EVENT_VIEWS = [
     },
 
     {
-        key: "upcoming",
+        key: EVENT_STATUS.UPCOMING,
         label: "Upcoming",
         icon: "📅",
         title: "Upcoming Events",
@@ -63,7 +65,7 @@ export const PUBLIC_EVENT_VIEWS = [
     },
 
     {
-        key: "archives",
+        key: EVENT_STATUS.PAST,
         label: "Archives",
         icon: "🗂️",
         title: "Archives",

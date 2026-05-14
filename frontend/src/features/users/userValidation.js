@@ -1,4 +1,6 @@
-import { PASSWORD_REQUIREMENTS, PASSWORD_MESSAGES } from "../auth/passwordPolicy";
+import { PASSWORD_REQUIREMENTS, PASSWORD_MESSAGES } from "../shared/passwordPolicy";
+
+import { validateAvatarFile } from "../shared/uploadPolicy";
 
 /* ==================================================
    USER VALIDATION
@@ -20,45 +22,27 @@ import { PASSWORD_REQUIREMENTS, PASSWORD_MESSAGES } from "../auth/passwordPolicy
 // Checks if an email has a valid format
 const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
 
-// Validates password strength rules
-const validatePasswordRules = (password) => {
+// Validates new password strength rules
+const validateNewPasswordRules = (password) => {
     const errors = [];
 
-    if (password.length < 6) {
-        errors.push("New password must be at least 6 characters");
+    if (password.length < PASSWORD_REQUIREMENTS.minLength) {
+        errors.push(PASSWORD_MESSAGES.newPasswordMinLength);
     }
 
-    if (!/\d/.test(password)) {
-        errors.push("New password must contain at least 1 number");
+    if (!PASSWORD_REQUIREMENTS.hasNumber.test(password)) {
+        errors.push(PASSWORD_MESSAGES.newPasswordNumber);
     }
 
-    if (!/[A-Z]/.test(password)) {
-        errors.push("New password must contain at least 1 uppercase letter");
+    if (!PASSWORD_REQUIREMENTS.hasUppercase.test(password)) {
+        errors.push(PASSWORD_MESSAGES.newPasswordUppercase);
     }
 
-    if (!/[a-z]/.test(password)) {
-        errors.push("New password must contain at least 1 lowercase letter");
+    if (!PASSWORD_REQUIREMENTS.hasLowercase.test(password)) {
+        errors.push(PASSWORD_MESSAGES.newPasswordLowercase);
     }
 
     return errors;
-};
-
-// Validates avatar file constraints
-const validateAvatarFile = (avatar) => {
-    if (!avatar) return null;
-
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-    const maxSize = 2 * 1024 * 1024;
-
-    if (!allowedTypes.includes(avatar.type)) {
-        return "Avatar must be an image file";
-    }
-
-    if (avatar.size > maxSize) {
-        return "Avatar must be less than 2MB";
-    }
-
-    return null;
 };
 
 /* =============================
@@ -105,7 +89,7 @@ export const validateChangePasswordForm = ({ currentPassword, newPassword, confi
     if (!newPassword) {
         errors.newPassword = "New password is required";
     } else {
-        const passwordErrors = validatePasswordRules(newPassword);
+        const passwordErrors = validateNewPasswordRules(newPassword);
 
         if (currentPassword && currentPassword === newPassword) {
             passwordErrors.push(

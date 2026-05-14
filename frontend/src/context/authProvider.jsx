@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { AuthContext } from "./AuthContext";
 
-import { logOutUser } from "../../api/auth/authApi";
+import { logoutUser } from "../../api/auth/authApi";
 import { getCurrentUserProfile } from "../../api/users/userApi";
 
 import { getToken, removeToken, setToken } from "../../features/auth/authToken";
@@ -55,7 +55,7 @@ export default function AuthProvider({ children }) {
     // Logs out the current user
     const logout = async () => {
         try {
-            await logOutUser();
+            await logoutUser();
         } catch (error) {
             console.error("Logout API error:", error);
         } finally {

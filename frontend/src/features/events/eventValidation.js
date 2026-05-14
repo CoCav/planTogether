@@ -1,3 +1,7 @@
+import { validateEventImageFile } from "../shared/uploadPolicy";
+
+import { EVENT_MODES } from "../shared/eventModes";
+
 /* ==================================================
    EVENT VALIDATION
    Provides frontend validation for create/edit event forms
@@ -11,8 +15,9 @@
    - event image validation
 
    Notes:
-   - aligned with backend eventValidator
+   - aligned with backend eventValidator and eventDataBuilder
    - frontend event forms should use startDateTime / endDateTime
+   - online events do not require location
 ================================================== */
 
 /* =============================
@@ -28,29 +33,16 @@ const isPositiveInteger = (value) => {
     return Number.isInteger(Number(value)) && Number(value) >= 1;
 };
 
-// Validates event image file constraints
-const validateEventImageFile = (image) => {
-    if (!image) return null;
-
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-    const maxSize = 3 * 1024 * 1024;
-
-    if (!allowedTypes.includes(image.type)) {
-        return "Event image must be an image file";
-    }
-
-    if (image.size > maxSize) {
-        return "Event image must be less than 3MB";
-    }
-
-    return null;
-};
-
 // Checks if a value is a valid date
 const isValidDate = (value) => {
     if (!value) return false;
 
     return !Number.isNaN(new Date(value).getTime());
+};
+
+// Checks if a mode value is valid
+const isValidEventMode = (mode) => {
+    return [EVENT_MODES.ONLINE, EVENT_MODES.IN_PERSON].includes(mode);
 };
 
 /* =============================
@@ -70,7 +62,7 @@ export const validateEventForm = (
         endDateTime,
         maxParticipants,
         registrationDeadline,
-        image,
+        image
     },
     options = {}
 ) => {
@@ -78,9 +70,15 @@ export const validateEventForm = (
 
     const errors = {};
 
+    /* =============================
+       REQUIRED TEXT FIELDS
+    ============================= */
+
     if (!allowPartial || title !== undefined) {
         if (!title?.trim()) {
-            errors.title = allowPartial ? "Title cannot be empty" : "Title is required";
+            errors.title = allowPartial
+                ? "Title cannot be empty"
+                : "Title is required";
         }
     }
 
@@ -104,17 +102,25 @@ export const validateEventForm = (
         }
     }
 
+    /* =============================
+       MODE / LOCATION
+    ============================= */
+
     if (!allowPartial || mode !== undefined) {
         if (!mode) {
             errors.mode = "Mode is required";
-        } else if (!["online", "in_person"].includes(mode)) {
+        } else if (!isValidEventMode(mode)) {
             errors.mode = "Mode must be online or in_person";
         }
     }
 
-    if (mode === "in_person" && !location?.trim()) {
+    if (mode === EVENT_MODES.IN_PERSON && !location?.trim()) {
         errors.location = "Location is required for in-person events";
     }
+
+    /* =============================
+       DATE / TIME
+    ============================= */
 
     if (!allowPartial || startDateTime !== undefined) {
         if (!startDateTime) {
@@ -133,12 +139,17 @@ export const validateEventForm = (
     }
 
     const start = isValidDate(startDateTime) ? new Date(startDateTime) : null;
+
     const end = isValidDate(endDateTime) ? new Date(endDateTime) : null;
 
     if (start && end && end <= start) {
         errors.endDateTime =
             "End date and time must be after start date and time";
     }
+
+    /* =============================
+       PARTICIPANTS / REGISTRATION
+    ============================= */
 
     if (!isPositiveInteger(maxParticipants)) {
         errors.maxParticipants = "Max participants must be a positive integer";
@@ -153,6 +164,10 @@ export const validateEventForm = (
                 "Registration deadline must be before event start date";
         }
     }
+
+    /* =============================
+       EVENT IMAGE
+    ============================= */
 
     const imageError = validateEventImageFile(image);
 

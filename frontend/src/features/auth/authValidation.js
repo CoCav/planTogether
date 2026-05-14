@@ -1,4 +1,6 @@
-import { PASSWORD_REQUIREMENTS, PASSWORD_MESSAGES } from "./passwordPolicy";
+import { PASSWORD_REQUIREMENTS, PASSWORD_MESSAGES } from "../shared/passwordPolicy";
+
+import { validateAvatarFile } from "../shared/uploadPolicy";
 
 /* ==================================================
    AUTH VALIDATION
@@ -24,41 +26,23 @@ const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
 const validatePasswordRules = (password) => {
     const errors = [];
 
-    if (password.length < 6) {
-        errors.push("At least 6 characters");
+    if (password.length < PASSWORD_REQUIREMENTS.minLength) {
+        errors.push(PASSWORD_MESSAGES.minLength);
     }
 
-    if (!/\d/.test(password)) {
-        errors.push("At least 1 number");
+    if (!PASSWORD_REQUIREMENTS.hasNumber.test(password)) {
+        errors.push(PASSWORD_MESSAGES.number);
     }
 
-    if (!/[A-Z]/.test(password)) {
-        errors.push("At least 1 uppercase letter");
+    if (!PASSWORD_REQUIREMENTS.hasUppercase.test(password)) {
+        errors.push(PASSWORD_MESSAGES.uppercase);
     }
 
-    if (!/[a-z]/.test(password)) {
-        errors.push("At least 1 lowercase letter");
+    if (!PASSWORD_REQUIREMENTS.hasLowercase.test(password)) {
+        errors.push(PASSWORD_MESSAGES.lowercase);
     }
 
     return errors;
-};
-
-// Validates avatar file constraints
-const validateAvatarFile = (avatar) => {
-    if (!avatar) return null;
-
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-    const maxSize = 2 * 1024 * 1024;
-
-    if (!allowedTypes.includes(avatar.type)) {
-        return "Avatar must be an image file";
-    }
-
-    if (avatar.size > maxSize) {
-        return "Avatar must be less than 2MB";
-    }
-
-    return null;
 };
 
 /* =============================

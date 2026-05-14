@@ -26,7 +26,7 @@ export const loginUser = async (credentials) => {
 };
 
 // Logs out the currently authenticated user
-export const logOutUser = async () => {
+export const logoutUser = async () => {
     const response = await apiClient.post("/auth/logout");
     return unwrapApiResponse(response);
 };

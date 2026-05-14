@@ -1,3 +1,5 @@
+import { EVENT_STATUS } from "../shared/eventStatus";
+
 /* ==================================================
    EVENT EMPTY STATES
    Builds contextual empty states for public event pages
@@ -55,14 +57,14 @@ export const getEventEmptyState = ({ filters = {}, activeView = "all" }) => {
         };
     }
 
-    if (activeView === "upcoming") {
+    if (activeView === EVENT_STATUS.UPCOMING) {
         return {
             title: "No upcoming events.",
             description: "Check back later or create your own event."
         };
     }
 
-    if (activeView === "archives") {
+    if (activeView === EVENT_STATUS.PAST) {
         return {
             title: "No archived events.",
             description: "Past events will appear here once they are finished."

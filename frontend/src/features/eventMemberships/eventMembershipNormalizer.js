@@ -11,6 +11,10 @@ import { getApiPayload } from "../../api/apiResponse";
    - ownership transfer result
 ================================================== */
 
+/* =============================
+   MEMBERSHIP NORMALIZATION
+============================= */
+
 // Normalizes one membership item
 export const normalizeMembership = (membership = {}) => {
     const user = membership.User ?? membership.user ?? {};
@@ -20,14 +24,17 @@ export const normalizeMembership = (membership = {}) => {
         eventId: membership.eventId ?? null,
         userId: membership.userId ?? user.id ?? null,
         role: membership.role ?? null,
-        deletedAt: membership.deletedAt ?? null,
+
+        joinedAt: membership.joinedAt ?? null,
         createdAt: membership.createdAt ?? null,
         updatedAt: membership.updatedAt ?? null,
+        deletedAt: membership.deletedAt ?? null,
+
         user: {
             id: user.id ?? membership.userId ?? null,
             name: user.name ?? "",
-            email: user.email ?? "",
-        },
+            email: user.email ?? ""
+        }
     };
 };
 
@@ -38,15 +45,26 @@ export const normalizeMemberships = (memberships = []) => {
     return memberships.map(normalizeMembership);
 };
 
+/* =============================
+   MEMBER / STAFF LISTS
+============================= */
+
 // Normalizes membership data for member/staff UI lists
 export const normalizeMemberList = (memberships = []) => {
     return normalizeMemberships(memberships).map((membership) => ({
         id: membership.user.id,
         name: membership.user.name,
         email: membership.user.email,
+
         role: membership.role,
+
         membershipId: membership.id,
         eventId: membership.eventId,
+
+        joinedAt: membership.joinedAt,
+        createdAt: membership.createdAt,
+        updatedAt: membership.updatedAt,
+        deletedAt: membership.deletedAt
     }));
 };
 
@@ -64,6 +82,10 @@ export const getNormalizedEventStaff = (payload = {}) => {
     return normalizeMemberList(eventStaff);
 };
 
+/* =============================
+   SINGLE MEMBERSHIP
+============================= */
+
 // Extracts and normalizes one membership from join/update role responses
 export const getNormalizedMembership = (payload = {}) => {
     const membership = getApiPayload(payload, "membership");
@@ -71,12 +93,16 @@ export const getNormalizedMembership = (payload = {}) => {
     return normalizeMembership(membership);
 };
 
+/* =============================
+   OWNERSHIP TRANSFER
+============================= */
+
 // Extracts and normalizes ownership transfer result
 export const getNormalizedOwnershipTransfer = (payload = {}) => {
     const data = getApiPayload(payload, "data");
 
     return {
         previousOrganizer: normalizeMembership(data?.previousOrganizer),
-        newOrganizer: normalizeMembership(data?.newOrganizer),
+        newOrganizer: normalizeMembership(data?.newOrganizer)
     };
 };

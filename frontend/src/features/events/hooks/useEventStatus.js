@@ -1,3 +1,5 @@
+import { EVENT_STATUS } from "../../shared/eventStatus";
+
 /* ==================================================
    EVENT STATUS HOOK
    Centralizes event availability and status logic
@@ -14,7 +16,7 @@ export default function useEventStatus({ user, event, isMember = false }) {
        EVENT STATUS
     ============================= */
 
-    const isPast = event?.status === "past";
+    const isPast = event?.status === EVENT_STATUS.PAST;
 
     const participantCount = event?.participantCount ?? 0;
     const maxParticipants = event?.maxParticipants ?? null;

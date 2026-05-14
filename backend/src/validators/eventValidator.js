@@ -1,5 +1,7 @@
 const { body, param, query } = require("express-validator");
 
+const { EVENT_MODES } = require("../constants/eventModes");
+
 /* ==================================================
    EVENT VALIDATORS
 
@@ -52,13 +54,13 @@ const createEventValidator = [
     body("mode")
         .trim()
         .notEmpty().withMessage("Mode is required")
-        .isIn(["online", "in_person"]).withMessage("Mode must be online or in_person"),
+        .isIn([EVENT_MODES.ONLINE, EVENT_MODES.IN_PERSON]).withMessage("Mode must be online or in_person"),
 
     body("location")
         .optional({ nullable: true })
         .trim()
         .custom((value, { req }) => {
-            if (req.body.mode === "in_person" && !value?.trim()) {
+            if (req.body.mode === EVENT_MODES.IN_PERSON && !value?.trim()) {
                 throw new Error("Location is required for in-person events");
             }
 
@@ -129,13 +131,13 @@ const updateEventValidator = [
     body("mode")
         .optional()
         .trim()
-        .isIn(["online", "in_person"]).withMessage("Mode must be online or in_person"),
+        .isIn([EVENT_MODES.ONLINE, EVENT_MODES.IN_PERSON]).withMessage("Mode must be online or in_person"),
 
     body("location")
         .optional({ nullable: true })
         .trim()
         .custom((value, { req }) => {
-            if (req.body.mode === "in_person" && !value?.trim()) {
+            if (req.body.mode === EVENT_MODES.IN_PERSON && !value?.trim()) {
                 throw new Error("Location is required for in-person events");
             }
 
@@ -207,7 +209,7 @@ const getAllEventsValidator = [
 
     query("mode")
         .optional()
-        .isIn(["online", "in_person"]).withMessage("Mode must be online or in_person"),
+        .isIn([EVENT_MODES.ONLINE, EVENT_MODES.IN_PERSON]).withMessage("Mode must be online or in_person"),
 
     query("location")
         .optional()

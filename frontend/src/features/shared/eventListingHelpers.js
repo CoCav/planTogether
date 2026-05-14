@@ -1,3 +1,5 @@
+import { EVENT_STATUS } from "./eventStatus";
+
 /* ==================================================
    EVENT LISTING HELPERS
    Provides shared event listing and filtering helpers
@@ -64,12 +66,12 @@ export const EVENT_SORT_MAP = {
 // Returns sort labels adapted to the active view
 export const getSortLabels = (view) => ({
     "startDateTime-asc":
-        view === "archives"
+        view === EVENT_STATUS.PAST
             ? "Oldest first"
             : "Soonest first",
 
     "startDateTime-desc":
-        view === "archives"
+        view === EVENT_STATUS.PAST
             ? "Most recent"
             : "Farthest first",
 

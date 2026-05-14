@@ -1,3 +1,5 @@
+const { EVENT_MODES } = require("../../constants/eventModes");
+
 /* ==================================================
    EVENT DATA BUILDER UTILS
 
@@ -26,7 +28,7 @@ const buildEventCreateData = (data, creatorId) => {
         type: data.type,
         theme: data.theme,
         mode: data.mode,
-        location: data.mode === "online" ? null : data.location,
+        location: data.mode === EVENT_MODES.ONLINE ? null : data.location,
         startDateTime: data.startDateTime,
         endDateTime: data.endDateTime,
         maxParticipants: data.maxParticipants ?? null,
@@ -64,7 +66,7 @@ const buildEventUpdateData = (event, data) => {
     }
 
     // Online events never keep a physical location
-    if (data.mode === "online") {
+    if (data.mode === EVENT_MODES.ONLINE) {
         updatedData.location = null;
 
     } else if (data.location !== undefined) {

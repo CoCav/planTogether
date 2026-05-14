@@ -1,5 +1,7 @@
 import { removeEventMember, transferEventOwnership, updateEventMemberRole } from "../../../api/events/eventMembershipApi";
 
+import { EVENT_ROLES } from "../../shared/eventRoles";
+
 /* ==================================================
    MEMBERSHIP MANAGEMENT HOOK
    Handles organizer membership management actions
@@ -24,7 +26,7 @@ export default function useMembershipManagement({
             setMessage("");
             setError("");
 
-            await updateEventMemberRole(eventId, userId, "co_organizer");
+            await updateEventMemberRole(eventId, userId, EVENT_ROLES.CO_ORGANIZER);
 
             setMessage("✅ User promoted to co-organizer");
 
@@ -41,7 +43,7 @@ export default function useMembershipManagement({
             setMessage("");
             setError("");
 
-            await updateEventMemberRole(eventId, userId, "participant");
+            await updateEventMemberRole(eventId, userId, EVENT_ROLES.PARTICIPANT);
 
             setMessage("⬇️ User demoted to participant");
 
@@ -54,9 +56,7 @@ export default function useMembershipManagement({
 
     // Removes a member from the event
     const handleRemoveMember = async (userId) => {
-        const confirmed = window.confirm(
-            "Are you sure you want to remove this member from the event?"
-        );
+        const confirmed = window.confirm("Are you sure you want to remove this member from the event?");
 
         if (!confirmed) return;
 
@@ -77,9 +77,7 @@ export default function useMembershipManagement({
 
     // Transfers event ownership to another member
     const handleTransferOwnership = async (targetUserId) => {
-        const confirmed = window.confirm(
-            "Are you sure you want to transfer ownership of this event?"
-        );
+        const confirmed = window.confirm("Are you sure you want to transfer ownership of this event?");
 
         if (!confirmed) return;
 

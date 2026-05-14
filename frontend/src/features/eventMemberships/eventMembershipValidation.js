@@ -1,26 +1,41 @@
-/* ==================================================
-  EVENT MEMBERSHIP VALIDATION
-  Provides frontend validation rules for event membership actions
+import { VALID_EVENT_ROLES } from "../shared/eventRoles";
 
-  Handles:
-  - member role updates
-  - member removal
-  - ownership transfer
+/* ==================================================
+   EVENT MEMBERSHIP VALIDATION
+   Provides frontend validation rules for event membership actions
+
+   Handles:
+   - member role updates
+   - member removal
+   - ownership transfer
+
+   Notes:
+   - aligned with backend eventMembershipValidator
+   - backend remains the source of truth for security
 ================================================== */
 
-export const EVENT_MEMBER_ROLES = [
-    "organizer",
-    "co_organizer",
-    "participant"
-];
+/* =============================
+   SHARED HELPERS
+============================= */
 
-export const isValidEventMemberRole = (role) =>
-    EVENT_MEMBER_ROLES.includes(role);
+// Checks if a user ID is valid
+export const validateTargetUserId = (userId) => {
+    return (
+        Number.isInteger(Number(userId)) &&
+        Number(userId) > 0
+    );
+};
 
-export const validateTargetUserId = (userId) =>
-    Number.isInteger(Number(userId)) &&
-    Number(userId) > 0;
+// Checks if an event member role is valid
+export const isValidEventMemberRole = (role) => {
+    return VALID_EVENT_ROLES.includes(role);
+};
 
+/* =============================
+   ROLE MANAGEMENT
+============================= */
+
+// Validates member role update data
 export const validateEventMemberRoleUpdate = ({ userId, newRole }) => {
     return (
         validateTargetUserId(userId) &&
@@ -28,6 +43,13 @@ export const validateEventMemberRoleUpdate = ({ userId, newRole }) => {
     );
 };
 
-export const validateOwnershipTransfer = ({ targetUserId }) => {
+/* =============================
+   OWNERSHIP TRANSFER
+============================= */
+
+// Validates ownership transfer data
+export const validateOwnershipTransfer = ({
+    targetUserId
+}) => {
     return validateTargetUserId(targetUserId);
 };

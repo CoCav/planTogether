@@ -1,6 +1,8 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
 
+const { EVENT_MODES } = require("../constants/eventModes");
+
 /* ==================================================
    EVENT MODEL
 
@@ -51,9 +53,9 @@ const Event = sequelize.define("Event", {
     },
 
     mode: {
-        type: DataTypes.ENUM("online", "in_person"),
+        type: DataTypes.ENUM(EVENT_MODES.ONLINE, EVENT_MODES.IN_PERSON),
         allowNull: false,
-        defaultValue: "in_person"
+        defaultValue: EVENT_MODES.IN_PERSON
     },
 
     location: {

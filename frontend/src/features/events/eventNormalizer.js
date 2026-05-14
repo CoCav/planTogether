@@ -1,5 +1,8 @@
 import { getApiPayload } from "../../api/apiResponse";
 
+import { EVENT_STATUS } from "../shared/eventStatus";
+import { EVENT_MODES } from "../shared/eventModes";
+
 /* ==================================================
    EVENT NORMALIZER
    Converts backend event payloads into frontend-friendly data
@@ -17,7 +20,7 @@ export const normalizeEvent = (event = {}) => ({
     description: event.description ?? "",
     theme: event.theme ?? "",
     type: event.type ?? "",
-    mode: event.mode ?? "in_person",
+    mode: event.mode ?? EVENT_MODES.IN_PERSON,
     location: event.location ?? "",
     startDateTime: event.startDateTime ?? null,
     endDateTime: event.endDateTime ?? null,
@@ -30,7 +33,7 @@ export const normalizeEvent = (event = {}) => ({
             : Number(event.maxParticipants),
     registrationDeadline: event.registrationDeadline ?? null,
     participantCount: Number(event.participantCount ?? 0),
-    status: event.status ?? "upcoming",
+    status: event.status ?? EVENT_STATUS.UPCOMING,
     createdAt: event.createdAt ?? null,
     updatedAt: event.updatedAt ?? null
 });

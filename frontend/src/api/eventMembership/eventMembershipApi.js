@@ -59,12 +59,11 @@ export const getEventStaff = async (eventId) => {
 // Updates a member role
 export const updateEventMemberRole = async (eventId, userId, newRole) => {
     const response = await apiClient.put(`/events/${eventId}/members/${userId}/role`, {
-        newRole,
+        newRole
     });
 
     return unwrapApiResponse(response);
 };
-
 // Removes a member from an event
 export const removeEventMember = async (eventId, userId) => {
     const response = await apiClient.delete(`/events/${eventId}/members/${userId}`);
@@ -74,7 +73,7 @@ export const removeEventMember = async (eventId, userId) => {
 // Transfers event ownership to another member
 export const transferEventOwnership = async (eventId, targetUserId) => {
     const response = await apiClient.put(`/events/${eventId}/ownership`, {
-        targetUserId,
+        targetUserId
     });
 
     return unwrapApiResponse(response);

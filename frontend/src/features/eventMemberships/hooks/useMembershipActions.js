@@ -13,7 +13,12 @@ import { EVENT_ROLES } from "../../shared/eventRoles";
    - refresh data after success
 ================================================== */
 
-export default function useMembershipActions({ loadData, setMessage, setError, getRoleByEventId }) {
+export default function useMembershipActions({
+    loadData,
+    setMessage,
+    setError,
+    getRoleByEventId
+}) {
 
     /* =============================
        JOIN EVENT

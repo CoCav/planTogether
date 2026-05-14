@@ -83,7 +83,7 @@ export const getSortLabels = (view) => ({
 });
 
 /* =============================
-   QUICK DATE FILTERS
+   TODAY FILTERS
 ============================= */
 
 // Builds filters for today's events
@@ -97,6 +97,10 @@ export const getTodayEventFilters = (currentFilters = {}) => {
         endDate: ""
     };
 };
+
+/* =============================
+   WEEKEND FILTERS
+============================= */
 
 // Returns the current weekend date range
 export const getCurrentWeekendDateRange = () => {

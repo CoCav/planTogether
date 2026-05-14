@@ -12,8 +12,9 @@ import { EVENT_STATUS } from "../../shared/eventStatus";
 ================================================== */
 
 export default function useEventStatus({ user, event, isMember = false }) {
+
     /* =============================
-       EVENT STATUS
+       EVENT AVAILABILITY
     ============================= */
 
     const isPast = event?.status === EVENT_STATUS.PAST;

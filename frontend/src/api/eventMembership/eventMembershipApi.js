@@ -64,6 +64,7 @@ export const updateEventMemberRole = async (eventId, userId, newRole) => {
 
     return unwrapApiResponse(response);
 };
+
 // Removes a member from an event
 export const removeEventMember = async (eventId, userId) => {
     const response = await apiClient.delete(`/events/${eventId}/members/${userId}`);

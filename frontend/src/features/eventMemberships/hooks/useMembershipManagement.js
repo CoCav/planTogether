@@ -16,7 +16,12 @@ import { EVENT_ROLES } from "../../shared/eventRoles";
    - refresh data after mutations
 ================================================== */
 
-export default function useMembershipManagement({ eventId, loadData, setMessage, setError }) {
+export default function useMembershipManagement({
+    eventId,
+    loadData,
+    setMessage,
+    setError
+}) {
 
     /* =============================
        ROLE MANAGEMENT
@@ -28,7 +33,11 @@ export default function useMembershipManagement({ eventId, loadData, setMessage,
             setMessage("");
             setError("");
 
-            await updateEventMemberRole(eventId, userId, EVENT_ROLES.CO_ORGANIZER);
+            await updateEventMemberRole(
+                eventId,
+                userId,
+                EVENT_ROLES.CO_ORGANIZER
+            );
 
             setMessage("✅ User promoted to co-organizer");
 
@@ -44,7 +53,11 @@ export default function useMembershipManagement({ eventId, loadData, setMessage,
             setMessage("");
             setError("");
 
-            await updateEventMemberRole(eventId, userId, EVENT_ROLES.PARTICIPANT);
+            await updateEventMemberRole(
+                eventId,
+                userId,
+                EVENT_ROLES.PARTICIPANT
+            );
 
             setMessage("⬇️ User demoted to participant");
 
@@ -60,7 +73,9 @@ export default function useMembershipManagement({ eventId, loadData, setMessage,
 
     // Removes a member from the event
     const handleRemoveMember = async (userId) => {
-        const confirmed = window.confirm("Are you sure you want to remove this member from the event?");
+        const confirmed = window.confirm(
+            "Are you sure you want to remove this member from the event?"
+        );
 
         if (!confirmed) return;
 
@@ -74,7 +89,10 @@ export default function useMembershipManagement({ eventId, loadData, setMessage,
 
             await loadData();
         } catch (error) {
-            setError(getApiErrorMessage(error, "❌ Unable to remove member"));
+            setError(getApiErrorMessage(
+                error,
+                "❌ Unable to remove member"
+            ));
         }
     };
 
@@ -84,7 +102,9 @@ export default function useMembershipManagement({ eventId, loadData, setMessage,
 
     // Transfers event ownership to another member
     const handleTransferOwnership = async (targetUserId) => {
-        const confirmed = window.confirm("Are you sure you want to transfer ownership of this event?");
+        const confirmed = window.confirm(
+            "Are you sure you want to transfer ownership of this event?"
+        );
 
         if (!confirmed) return;
 
@@ -98,7 +118,10 @@ export default function useMembershipManagement({ eventId, loadData, setMessage,
 
             await loadData();
         } catch (error) {
-            setError(getApiErrorMessage(error, "❌ Unable to transfer ownership"));
+            setError(getApiErrorMessage(
+                error,
+                "❌ Unable to transfer ownership"
+            ));
         }
     };
 

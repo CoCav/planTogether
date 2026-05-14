@@ -1,52 +1,66 @@
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 
-import { useAuth } from "../features/auth/hooks/useAuth";
+import ProtectedRoute from "./ProtectedRoute";
 
 import HomePage from "../pages/HomePage";
+
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
+
+import EventsPage from "../pages/EventsPage";
+import EventDetailsPage from "../pages/EventDetailsPage";
+
 import ProfilePage from "../pages/ProfilePage";
 import MyEventsPage from "../pages/MyEventsPage";
-import EventsPage from "../pages/EventsPage";
-import CreateEventPage from "../pages/CreateEventPage";
-import EventDetailsPage from "../pages/EventDetailsPage";
-import EditEventPage from "../pages/EditEventPage";
 
-import PageLoading from "../components/ui/PageLoader";
+import CreateEventPage from "../pages/CreateEventPage";
+import EditEventPage from "../pages/EditEventPage";
 
 /* ==================================================
    APP ROUTER
-   Defines application routes and protected pages
+   Defines application routes
 
    Handles:
    - public routes
    - protected routes
-   - login redirects
 ================================================== */
-
-function ProtectedRoute({ children }) {
-    const { user, loading } = useAuth();
-    const location = useLocation();
-
-    if (loading) {
-        return <PageLoading>Loading...</PageLoading>;
-    }
-
-    if (!user) {
-        return <Navigate to="/login" state={{ from: location }} replace />;
-    }
-
-    return children;
-}
 
 export default function AppRouter() {
     return (
         <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/events" element={<EventsPage />} />
-            <Route path="/events/:eventId" element={<EventDetailsPage />} />
+
+            {/* =============================
+                PUBLIC ROUTES
+            ============================== */}
+
+            <Route
+                path="/"
+                element={<HomePage />}
+            />
+
+            <Route
+                path="/login"
+                element={<LoginPage />}
+            />
+
+            <Route
+                path="/register"
+                element={<RegisterPage />}
+            />
+
+            <Route
+                path="/events"
+                element={<EventsPage />}
+            />
+
+            <Route
+                path="/events/:eventId"
+                element={<EventDetailsPage />}
+            />
+
+            {/* =============================
+                PROTECTED ROUTES
+            ============================== */}
 
             <Route
                 path="/profile"
@@ -83,6 +97,7 @@ export default function AppRouter() {
                     </ProtectedRoute>
                 }
             />
+
         </Routes>
     );
 }

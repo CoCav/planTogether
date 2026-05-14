@@ -1,15 +1,22 @@
-import { getApiPayload } from "../../api/apiResponse";
-import { normalizeEvent, normalizeEvents } from "../events/eventNormalizer";
+import { getApiPayload } from "../../../api/apiResponse";
+
+import { normalizeEvent } from "../../events/eventNormalizer";
 
 /* ==================================================
-   USER EVENT NORMALIZER
-   Converts backend user event payloads into frontend-friendly data
+   MY EVENT NORMALIZER
+   Converts current user event payloads into frontend-friendly data
 
    Handles:
    - current user events from GET /users/me/events
-   - public user events from GET /users/:id/events
    - membership role enrichment
+
+   Notes:
+   - aligned with authenticated current user event payloads
 ================================================== */
+
+/* =============================
+   CURRENT USER EVENTS
+============================= */
 
 // Normalizes one current user event membership item
 export const normalizeMyEventItem = (item = {}) => {
@@ -48,17 +55,3 @@ export const getNormalizedMyEvents = (payload = {}) => {
 
     return normalizeMyEvents(events);
 };
-
-// Normalizes public user event payload from GET /users/:id/events
-export const normalizePublicUserEvents = (payload = {}) => ({
-    createdEvents: normalizeEvents(payload.createdEvents),
-    joinedEvents: normalizeEvents(payload.joinedEvents),
-    message: payload.message ?? "",
-    success: payload.success ?? false
-});
-
-// Extracts and normalizes public user created/joined events
-export const getNormalizedPublicUserEvents = (payload = {}) => ({
-    createdEvents: normalizeEvents(getApiPayload(payload, "createdEvents")),
-    joinedEvents: normalizeEvents(getApiPayload(payload, "joinedEvents"))
-});

@@ -1,7 +1,7 @@
 import defaultAvatar from "../assets/avatar_user_per_default.png";
 import defaultEventImage from "../assets/event_image_per_default.jpg";
 
-const API_ORIGIN = import.meta.env.VITE_API_URL.replace("/api", "");
+const API_ORIGIN = import.meta.env.VITE_API_URL?.replace("/api", "") ?? "";
 
 /* ==================================================
    UPLOADED FILE UTILS
@@ -13,6 +13,10 @@ const API_ORIGIN = import.meta.env.VITE_API_URL.replace("/api", "");
    - backend relative upload paths
    - default avatar and event images
 ================================================== */
+
+/* =============================
+   SHARED HELPERS
+============================= */
 
 // Resolves an uploaded file URL with fallback support
 export const getUploadedFile = (file, fallback) => {
@@ -26,7 +30,7 @@ export const getUploadedFile = (file, fallback) => {
 };
 
 /* =============================
-   SPECIFIC HELPERS
+   IMAGE HELPERS
 ============================= */
 
 // Resolves a user avatar image
@@ -39,7 +43,4 @@ export const getEventImage = (image) => {
     return getUploadedFile(image, defaultEventImage);
 };
 
-export {
-    defaultAvatar,
-    defaultEventImage
-};
+export { defaultAvatar, defaultEventImage };

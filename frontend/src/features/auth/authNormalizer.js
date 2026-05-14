@@ -1,5 +1,5 @@
 import { getApiPayload } from "../../api/apiResponse";
-import { normalizeAuthenticatedUser } from "../users/userNormalizer";
+import { normalizeAuthenticatedUser } from "../users/authenticated/myUserNormalizer";
 
 /* ==================================================
    AUTH NORMALIZER
@@ -15,6 +15,10 @@ import { normalizeAuthenticatedUser } from "../users/userNormalizer";
    - aligned with authController register/login responses
    - user profile normalization belongs to features/users
 ================================================== */
+
+/* =============================
+   AUTH PAYLOAD
+============================= */
 
 // Normalizes auth response payload from register/login
 export const normalizeAuthPayload = (payload = {}) => ({

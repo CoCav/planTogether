@@ -9,6 +9,11 @@
    - verb agreement
 ================================================== */
 
+
+/* =============================
+   DATE / TIME
+============================= */
+
 // Formats a date string
 export const formatDate = (date, locale = "en-GB") => {
     if (!date) return "No date";
@@ -39,6 +44,10 @@ export const formatEventDateRange = (start, end) => {
 
     return `${startDate} → ${endDate}`;
 };
+
+/* =============================
+   TEXT HELPERS
+============================= */
 
 // Formats singular/plural labels
 export const formatCount = (count, singular, plural = `${singular}s`) => {

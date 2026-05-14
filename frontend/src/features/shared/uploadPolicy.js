@@ -23,12 +23,17 @@ export const ALLOWED_IMAGE_MIME_TYPES = [
 export const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
 export const MAX_EVENT_IMAGE_SIZE = 3 * 1024 * 1024;
 
+/* =============================
+   SHARED VALIDATION
+============================= */
+
 // Validates an uploaded image file
 export const validateImageFile = ({
     file,
     maxSize,
     label = "Image"
 }) => {
+
     if (!file) return null;
 
     if (!ALLOWED_IMAGE_MIME_TYPES.includes(file.type)) {
@@ -41,6 +46,10 @@ export const validateImageFile = ({
 
     return null;
 };
+
+/* =============================
+   SPECIFIC VALIDATORS
+============================= */
 
 // Validates an uploaded avatar file
 export const validateAvatarFile = (file) => {

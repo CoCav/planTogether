@@ -1,9 +1,10 @@
 import axios from "axios";
+
 import { getToken } from "../features/auth/authToken";
 
 /* ==================================================
    API CLIENT
-   Centralized Axios instance used by all API modules.
+   Centralized Axios instance used by all API modules
 
    Responsibilities:
    - define the backend base URL
@@ -13,7 +14,7 @@ import { getToken } from "../features/auth/authToken";
 
 // Creates a reusable Axios instance for all API requests
 const apiClient = axios.create({
-    baseURL: import.meta.env.VITE_API_URL,
+    baseURL: import.meta.env.VITE_API_URL
 });
 
 // Automatically attaches the JWT token to authenticated requests

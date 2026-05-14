@@ -14,7 +14,12 @@ import { deleteEvent } from "../../../api/events/eventApi";
    - membership actions belong to eventMemberships
 ================================================== */
 
-export default function useEventActions({ eventId, setMessage, setError }) {
+export default function useEventActions({
+    eventId,
+    setMessage,
+    setError
+}) {
+
     const navigate = useNavigate();
 
     /* =============================
@@ -23,7 +28,9 @@ export default function useEventActions({ eventId, setMessage, setError }) {
 
     // Deletes an event after confirmation
     const handleDeleteEvent = async () => {
-        const confirmed = window.confirm("Are you sure you want to delete this event?");
+        const confirmed = window.confirm(
+            "Are you sure you want to delete this event?"
+        );
 
         if (!confirmed) return;
 

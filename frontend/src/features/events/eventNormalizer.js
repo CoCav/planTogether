@@ -13,6 +13,10 @@ import { EVENT_MODES } from "../shared/eventModes";
    - paginated public event payloads
 ================================================== */
 
+/* =============================
+   SINGLE EVENT
+============================= */
+
 // Normalizes a single event object
 export const normalizeEvent = (event = {}) => ({
     id: event.id ?? null,
@@ -37,6 +41,11 @@ export const normalizeEvent = (event = {}) => ({
     createdAt: event.createdAt ?? null,
     updatedAt: event.updatedAt ?? null
 });
+
+
+/* =============================
+   EVENT LISTS
+============================= */
 
 // Normalizes an array of events
 export const normalizeEvents = (events = []) => {

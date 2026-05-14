@@ -1,5 +1,5 @@
 /* ==================================================
-   USER EVENT VIEW CONFIG
+   MY EVENT VIEW CONFIG
    Centralizes current user event tab configuration
 
    Handles:
@@ -13,7 +13,7 @@
    - aligned with GET /users/me/events
 ================================================== */
 
-export const DEFAULT_USER_EVENT_VIEW_CONTENT = {
+export const DEFAULT_MY_EVENT_VIEW_CONTENT = {
     key: "created",
     label: "Created",
     icon: "🛠️",
@@ -30,7 +30,7 @@ export const DEFAULT_USER_EVENT_VIEW_CONTENT = {
    CURRENT USER EVENT VIEWS
 ============================= */
 
-export const USER_EVENT_VIEWS = [
+export const MY_EVENT_VIEWS = [
     {
         key: "created",
         label: "Created",
@@ -43,6 +43,7 @@ export const USER_EVENT_VIEWS = [
         showQuickActions: true,
         clearDateFiltersOnEnter: false
     },
+
     {
         key: "createdHistory",
         label: "Created History",
@@ -55,6 +56,7 @@ export const USER_EVENT_VIEWS = [
         showQuickActions: false,
         clearDateFiltersOnEnter: true
     },
+
     {
         key: "joined",
         label: "Joined",
@@ -67,6 +69,7 @@ export const USER_EVENT_VIEWS = [
         showQuickActions: true,
         clearDateFiltersOnEnter: false
     },
+
     {
         key: "joinedHistory",
         label: "Joined History",
@@ -86,8 +89,10 @@ export const USER_EVENT_VIEWS = [
 ============================= */
 
 // Finds the active current user event view configuration
-export const getUserEventViewContent = (activeView) => {
+export const getMyEventViewContent = (activeView) => {
     return (
-        USER_EVENT_VIEWS.find((view) => view.key === activeView) || DEFAULT_USER_EVENT_VIEW_CONTENT
+        MY_EVENT_VIEWS.find(
+            (view) => view.key === activeView
+        ) || DEFAULT_MY_EVENT_VIEW_CONTENT
     );
 };

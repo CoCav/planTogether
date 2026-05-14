@@ -24,6 +24,7 @@ export default function useMembershipPermissions({
     isEventFull = false,
     isRegistrationClosed = false
 }) {
+
     const currentUserId = user?.userId;
 
     /* =============================
@@ -126,9 +127,9 @@ export default function useMembershipPermissions({
         return false;
     };
 
-    /* ==============================
+    /* =============================
        OWNERSHIP TRANSFER PERMISSIONS
-    ============================== */
+    ============================= */
 
     // Determines whether ownership can be transferred
     const canTransferOwnershipTo = (person) => {

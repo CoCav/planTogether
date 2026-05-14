@@ -11,7 +11,7 @@ export const PASSWORD_REQUIREMENTS = {
     minLength: PASSWORD_MIN_LENGTH,
     hasNumber: /\d/,
     hasUppercase: /[A-Z]/,
-    hasLowercase: /[a-z]/,
+    hasLowercase: /[a-z]/
 };
 
 export const PASSWORD_MESSAGES = {
@@ -37,5 +37,5 @@ export const PASSWORD_MESSAGES = {
         "New password must contain an uppercase letter",
 
     newPasswordLowercase:
-        "New password must contain a lowercase letter",
+        "New password must contain a lowercase letter"
 };

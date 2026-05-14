@@ -1,0 +1,62 @@
+import { EVENT_PAGE_QUERY_KEY } from "../../shared/eventListingQueryKeys";
+
+import { getDefaultPublicUserEventFilters, PUBLIC_USER_EVENT_FILTER_QUERY_KEYS } from "./publicUserEventFilters";
+
+/* ==================================================
+   PUBLIC USER EVENT QUERY PARAMS
+   Handles URL ↔ public user event filters synchronization
+
+   Handles:
+   - parsing public user event filters from URL
+   - parsing public user event pagination
+   - building URL params from public user event state
+
+   Notes:
+   - aligned with GET /users/:id/events
+   - current user event views belong to userEventQueryParams
+================================================== */
+
+// Gets the initial public user event page from URL params
+export const getInitialPublicUserEventPageFromUrl = (searchParams) => {
+    const page = Number(searchParams.get(EVENT_PAGE_QUERY_KEY));
+
+    return Number.isInteger(page) && page > 0 ? page : 1;
+};
+
+// Gets initial public user event filters from URL params
+export const getInitialPublicUserEventFiltersFromUrl = (searchParams) => {
+    const filters = getDefaultPublicUserEventFilters();
+
+    PUBLIC_USER_EVENT_FILTER_QUERY_KEYS.forEach((key) => {
+        const value = searchParams.get(key);
+
+        if (value !== null) {
+            filters[key] = value;
+        }
+    });
+
+    return filters;
+};
+
+// Builds URL params from public user event filters
+export const buildPublicUserEventSearchParams = ({
+    filters = {},
+    page = 1
+}) => {
+
+    const params = new URLSearchParams();
+
+    if (page > 1) {
+        params.set(EVENT_PAGE_QUERY_KEY, String(page));
+    }
+
+    PUBLIC_USER_EVENT_FILTER_QUERY_KEYS.forEach((key) => {
+        const value = filters[key];
+
+        if (String(value ?? "").trim() !== "") {
+            params.set(key, value);
+        }
+    });
+
+    return params;
+};

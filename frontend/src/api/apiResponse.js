@@ -35,9 +35,9 @@ export const getPaginatedPayload = (response = {}, key = "") => {
             page: payload?.page ?? 1,
             pageSize: payload?.pageSize ?? null,
             totalItems: payload?.totalItems ?? payload?.totalEvents ?? 0,
-            totalPages: payload?.totalPages ?? 1,
+            totalPages: payload?.totalPages ?? 1
         },
         success: payload?.success ?? false,
-        message: payload?.message ?? "",
+        message: payload?.message ?? ""
     };
 };

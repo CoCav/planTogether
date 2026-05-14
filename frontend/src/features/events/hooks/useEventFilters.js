@@ -32,6 +32,11 @@ export default function useEventFilters({
     resetPage,
     initialFilters = getDefaultEventFilters()
 }) {
+
+    /* =============================
+       STATE
+    ============================= */
+
     const [filters, setFilters] = useState(initialFilters);
     const [showFilters, setShowFilters] = useState(false);
 

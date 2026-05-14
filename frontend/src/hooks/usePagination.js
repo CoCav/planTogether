@@ -9,6 +9,11 @@
 ================================================== */
 
 export default function usePagination({ page, totalPages, onPageChange }) {
+
+    /* =============================
+       PAGE NAVIGATION
+    ============================= */
+
     // Loads previous page when available
     const goToPreviousPage = async () => {
         if (page <= 1) return;

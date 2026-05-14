@@ -66,6 +66,7 @@ export const validateEventForm = (
     },
     options = {}
 ) => {
+
     const { allowPartial = false } = options;
 
     const errors = {};

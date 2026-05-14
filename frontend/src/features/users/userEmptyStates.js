@@ -11,6 +11,10 @@
    - aligned with current user event views
 ================================================== */
 
+/* =============================
+   FILTER HELPERS
+============================= */
+
 const USER_EVENT_FILTER_KEYS = [
     "search",
     "creator",

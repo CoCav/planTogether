@@ -1,22 +1,29 @@
-/* ==================================================
-   EVENT QUERY PARAMS
-   Handles URL ↔ filters synchronization
-
-   Handles:
-   - parsing filters from URL
-   - parsing view and pagination
-   - building URL params from state
-================================================== */
+import { EVENT_PAGE_QUERY_KEY, EVENT_VIEW_QUERY_KEY } from "../shared/eventListingQueryKeys";
 
 import { getDefaultEventFilters } from "./eventFilters";
 
-export const FILTER_QUERY_KEYS = [
+/* ==================================================
+   EVENT QUERY PARAMS
+   Handles URL ↔ public event filters synchronization
+
+   Handles:
+   - parsing public event filters from URL
+   - parsing view and pagination
+   - building URL params from state
+
+   Notes:
+   - aligned with GET /events backend query validator
+================================================== */
+
+export const PUBLIC_EVENT_FILTER_QUERY_KEYS = [
     "search",
     "creator",
+    "creatorId",
     "type",
     "theme",
     "mode",
     "location",
+    "status",
     "date",
     "startDate",
     "endDate",
@@ -24,31 +31,25 @@ export const FILTER_QUERY_KEYS = [
     "order"
 ];
 
-/* =========================
-   View from URL
-========================= */
+// Gets the initial active view from URL params
 export const getInitialViewFromUrl = (searchParams, views, fallbackView = "all") => {
-    const view = searchParams.get("view");
+    const view = searchParams.get(EVENT_VIEW_QUERY_KEY);
 
     return views.some((item) => item.key === view) ? view : fallbackView;
 };
 
-/* =========================
-   Page from URL
-========================= */
+// Gets the initial page from URL params
 export const getInitialPageFromUrl = (searchParams) => {
-    const page = Number(searchParams.get("page"));
+    const page = Number(searchParams.get(EVENT_PAGE_QUERY_KEY));
 
     return Number.isInteger(page) && page > 0 ? page : 1;
 };
 
-/* =========================
-   Filters from URL
-========================= */
-export const getInitialFiltersFromUrl = (searchParams) => {
+// Gets initial public event filters from URL params
+export const getInitialEventFiltersFromUrl = (searchParams) => {
     const filters = getDefaultEventFilters();
 
-    FILTER_QUERY_KEYS.forEach((key) => {
+    PUBLIC_EVENT_FILTER_QUERY_KEYS.forEach((key) => {
         const value = searchParams.get(key);
 
         if (value !== null) {
@@ -59,22 +60,22 @@ export const getInitialFiltersFromUrl = (searchParams) => {
     return filters;
 };
 
-/* =========================
-   Build URL params from state
-========================= */
-export const buildSearchParams = (filters, page, view) => {
+// Builds URL params from public event filters
+export const buildEventSearchParams = ({ filters = {}, page = 1, view = "all", fallbackView = "all" }) => {
     const params = new URLSearchParams();
 
-    if (view !== "all") {
-        params.set("view", view);
+    if (view !== fallbackView) {
+        params.set(EVENT_VIEW_QUERY_KEY, view);
     }
 
     if (page > 1) {
-        params.set("page", String(page));
+        params.set(EVENT_PAGE_QUERY_KEY, String(page));
     }
 
-    Object.entries(filters).forEach(([key, value]) => {
-        if (String(value).trim() !== "") {
+    PUBLIC_EVENT_FILTER_QUERY_KEYS.forEach((key) => {
+        const value = filters[key];
+
+        if (String(value ?? "").trim() !== "") {
             params.set(key, value);
         }
     });

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getToken } from "../features/auth/token";
+import { getToken } from "../features/auth/authToken";
 
 /* ==================================================
    API CLIENT

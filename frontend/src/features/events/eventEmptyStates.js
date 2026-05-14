@@ -1,28 +1,39 @@
 /* ==================================================
    EVENT EMPTY STATES
-   Builds contextual empty states for event pages
+   Builds contextual empty states for public event pages
 
    Handles:
    - filter-based empty messages
    - date-specific empty messages
-   - view-based empty messages
+   - public view-based empty messages
+
+   Notes:
+   - current user event empty states belong to features/users
 ================================================== */
 
-const FILTER_KEYS = [
+const EVENT_FILTER_KEYS = [
     "search",
     "creator",
+    "creatorId",
     "type",
     "theme",
     "mode",
     "location",
+    "status",
     "date",
     "startDate",
     "endDate"
 ];
 
-const hasActiveFilters = (filters = {}) => FILTER_KEYS.some((key) => String(filters[key] || "").trim() !== "");
+// Checks if public event filters are active
+const hasActiveEventFilters = (filters = {}) => {
+    return EVENT_FILTER_KEYS.some((key) => {
+        return String(filters[key] || "").trim() !== "";
+    });
+};
 
-export const getEventsEmptyState = ({ filters = {}, activeView = "all" }) => {
+// Builds the empty state for public event pages
+export const getEventEmptyState = ({ filters = {}, activeView = "all" }) => {
     if (filters.date) {
         return {
             title: "No events are scheduled for this date.",
@@ -37,7 +48,7 @@ export const getEventsEmptyState = ({ filters = {}, activeView = "all" }) => {
         };
     }
 
-    if (hasActiveFilters(filters)) {
+    if (hasActiveEventFilters(filters)) {
         return {
             title: "No events match your filters.",
             description: "Try adjusting or resetting your filters."
@@ -55,34 +66,6 @@ export const getEventsEmptyState = ({ filters = {}, activeView = "all" }) => {
         return {
             title: "No archived events.",
             description: "Past events will appear here once they are finished."
-        };
-    }
-
-    if (activeView === "created") {
-        return {
-            title: "No created events.",
-            description: "Events you create will appear here."
-        };
-    }
-
-    if (activeView === "createdHistory") {
-        return {
-            title: "No created history.",
-            description: "Past events you created will appear here."
-        };
-    }
-
-    if (activeView === "joined") {
-        return {
-            title: "No joined events.",
-            description: "Events you join will appear here."
-        };
-    }
-
-    if (activeView === "joinedHistory") {
-        return {
-            title: "No joined history.",
-            description: "Past events you joined will appear here."
         };
     }
 

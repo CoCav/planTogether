@@ -1,18 +1,21 @@
 /* ==================================================
    EVENT VIEW CONFIG
-   Centralizes tab configuration for event pages
+   Centralizes public event tab configuration
 
    Handles:
    - tab labels and icons
    - section titles and subtitles
-   - empty state messages
    - backend status filters
    - default sorting per view
    - quick filter visibility
    - date filter reset behavior
+
+   Notes:
+   - aligned with GET /events
+   - current user event views belong to features/users
 ================================================== */
 
-export const DEFAULT_VIEW_CONTENT = {
+export const DEFAULT_EVENT_VIEW_CONTENT = {
     key: "default",
     label: "Events",
     icon: "📋",
@@ -26,11 +29,9 @@ export const DEFAULT_VIEW_CONTENT = {
     clearDateFiltersOnEnter: false
 };
 
-
-/* =========================
-   Public event views
-   Used by EventsPage
-========================= */
+/* =============================
+   PUBLIC EVENT VIEWS
+============================= */
 
 export const PUBLIC_EVENT_VIEWS = [
     {
@@ -46,6 +47,7 @@ export const PUBLIC_EVENT_VIEWS = [
         showQuickActions: true,
         clearDateFiltersOnEnter: false
     },
+
     {
         key: "upcoming",
         label: "Upcoming",
@@ -59,6 +61,7 @@ export const PUBLIC_EVENT_VIEWS = [
         showQuickActions: true,
         clearDateFiltersOnEnter: false
     },
+
     {
         key: "archives",
         label: "Archives",
@@ -74,67 +77,15 @@ export const PUBLIC_EVENT_VIEWS = [
     }
 ];
 
+/* =============================
+   VIEW CONTENT RESOLVER
+============================= */
 
-/* =========================
-   User event views
-   Used by MyEventsPage
-========================= */
-
-export const MY_EVENT_VIEWS = [
-    {
-        key: "created",
-        label: "Created",
-        icon: "🛠️",
-        title: "Created Events",
-        subtitle: "Events you created as organizer.",
-        empty: "You haven’t created any events yet.",
-        defaultSortBy: "startDateTime",
-        defaultOrder: "asc",
-        showQuickActions: true,
-        clearDateFiltersOnEnter: false
-    },
-    {
-        key: "createdHistory",
-        label: "Created History",
-        icon: "📜",
-        title: "Created History",
-        subtitle: "Explore past events you created.",
-        empty: "No past created events.",
-        defaultSortBy: "startDateTime",
-        defaultOrder: "desc",
-        showQuickActions: false,
-        clearDateFiltersOnEnter: true
-    },
-    {
-        key: "joined",
-        label: "Joined",
-        icon: "🤝",
-        title: "Joined Events",
-        subtitle: "Events you joined.",
-        empty: "You haven’t joined any events yet.",
-        defaultSortBy: "startDateTime",
-        defaultOrder: "asc",
-        showQuickActions: true,
-        clearDateFiltersOnEnter: false
-    },
-    {
-        key: "joinedHistory",
-        label: "Joined History",
-        icon: "🗂️",
-        title: "Joined History",
-        subtitle: "Explore past events you joined.",
-        empty: "No past joined events.",
-        defaultSortBy: "startDateTime",
-        defaultOrder: "desc",
-        showQuickActions: false,
-        clearDateFiltersOnEnter: true
-    }
-];
-
-
-/* =========================
-   View content resolver
-   Finds the active view configuration
-========================= */
-
-export const getViewContent = (views, activeView) => views.find((view) => view.key === activeView) || DEFAULT_VIEW_CONTENT;
+// Finds the active public event view configuration
+export const getEventViewContent = (activeView) => {
+    return (
+        PUBLIC_EVENT_VIEWS.find(
+            (view) => view.key === activeView
+        ) || DEFAULT_EVENT_VIEW_CONTENT
+    );
+};

@@ -5,29 +5,26 @@
    Handles:
    - previous page navigation
    - next page navigation
-   - first / last page boundaries
+   - page boundary protection
 ================================================== */
 
 export default function usePagination({ page, totalPages, onPageChange }) {
-    /* =========================
-       Previous page
-       Loads previous page when available
-    ========================= */
-
-    const handlePreviousPage = async () => {
+    // Loads previous page when available
+    const goToPreviousPage = async () => {
         if (page <= 1) return;
+
         await onPageChange(page - 1);
     };
 
-    /* =========================
-       Next page
-       Loads next page when available
-    ========================= */
-
-    const handleNextPage = async () => {
+    // Loads next page when available
+    const goToNextPage = async () => {
         if (page >= totalPages) return;
+
         await onPageChange(page + 1);
     };
 
-    return { handlePreviousPage, handleNextPage };
+    return {
+        goToPreviousPage,
+        goToNextPage
+    };
 }

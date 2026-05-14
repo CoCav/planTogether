@@ -1,33 +1,38 @@
 import { useEffect, useState } from "react";
-import { AuthContext } from "./authContext";
-import { getProfile, logOutUser } from "../api/authApi";
-import { getToken, removeToken, setToken } from "../features/auth/token";
+
+import { AuthContext } from "./AuthContext";
+
+import { logOutUser } from "../../api/auth/authApi";
+import { getCurrentUserProfile } from "../../api/users/userApi";
+
+import { getToken, removeToken, setToken } from "../../features/auth/authToken";
 
 /* ==================================================
    AUTH PROVIDER
-   Provides global authentication state to the app
+   Provides global authentication state and actions
 
    Handles:
    - user session initialization
    - login / logout actions
-   - profile refresh
+   - current user refresh
 ================================================== */
 
 export default function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    /* =========================
-       Profile fetching
-       Loads the authenticated user's profile
-    ========================= */
+    /* =============================
+       CURRENT USER FETCHING
+    ============================= */
 
-    const fetchProfile = async () => {
+    // Fetches the currently authenticated user
+    const fetchCurrentUser = async () => {
         try {
-            const response = await getProfile();
-            setUser(response.data.user);
+            const data = await getCurrentUserProfile();
 
-            return response.data.user;
+            setUser(data.user);
+
+            return data.user;
         } catch {
             removeToken();
             setUser(null);
@@ -36,16 +41,18 @@ export default function AuthProvider({ children }) {
         }
     };
 
-    /* =========================
-       Auth actions
-       Login, logout and user refresh helpers
-    ========================= */
+    /* =============================
+       AUTH ACTIONS
+    ============================= */
 
+    // Logs in a user and initializes the session
     const login = async (token, remember = false) => {
         setToken(token, remember);
-        await fetchProfile();
+
+        await fetchCurrentUser();
     };
 
+    // Logs out the current user
     const logout = async () => {
         try {
             await logOutUser();
@@ -57,22 +64,23 @@ export default function AuthProvider({ children }) {
         }
     };
 
+    // Refreshes the current authenticated user
     const refreshUser = async () => {
-        await fetchProfile();
+        await fetchCurrentUser();
     };
 
-    /* =========================
-       Auth initialization
-       Restores user session from stored token
-    ========================= */
+    /* =============================
+       AUTH INITIALIZATION
+    ============================= */
 
+    // Restores the authenticated session from the stored token
     useEffect(() => {
         const initAuth = async () => {
             try {
                 const token = getToken();
 
                 if (token) {
-                    await fetchProfile();
+                    await fetchCurrentUser();
                 }
             } catch (error) {
                 console.error("Auth initialization error:", error);
@@ -85,7 +93,15 @@ export default function AuthProvider({ children }) {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
+        <AuthContext.Provider
+            value={{
+                user,
+                loading,
+                login,
+                logout,
+                refreshUser,
+            }}
+        >
             {children}
         </AuthContext.Provider>
     );

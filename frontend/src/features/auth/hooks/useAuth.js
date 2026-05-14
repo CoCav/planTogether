@@ -1,14 +1,15 @@
 import { useContext } from "react";
-import { AuthContext } from "./authContext.jsx";
+
+import { AuthContext } from "../../../context/auth/AuthContext";
 
 /* ==================================================
    USE AUTH HOOK
    Provides access to the authentication context
 
    Returns:
-   - user data
+   - authenticated user
    - auth loading state
-   - auth actions (login, logout, refresh)
+   - auth actions
 ================================================== */
 
 export function useAuth() {

@@ -72,9 +72,9 @@ export const removeEventMember = async (eventId, userId) => {
 };
 
 // Transfers event ownership to another member
-export const transferEventOwnership = async (eventId, newOwnerId) => {
+export const transferEventOwnership = async (eventId, targetUserId) => {
     const response = await apiClient.put(`/events/${eventId}/ownership`, {
-        newOwnerId,
+        targetUserId,
     });
 
     return unwrapApiResponse(response);

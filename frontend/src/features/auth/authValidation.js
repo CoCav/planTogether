@@ -1,3 +1,5 @@
+import { PASSWORD_REQUIREMENTS, PASSWORD_MESSAGES } from "./passwordPolicy";
+
 /* ==================================================
    AUTH VALIDATION
    Provides frontend validation helpers for auth forms
@@ -5,16 +7,20 @@
    Covers:
    - register form
    - login form
-   - profile update
-   - password change
+
+   Notes:
+   - profile and password validation belong to userValidation
+   - rules are aligned with backend authValidator
 ================================================== */
 
-/* =========================
-   Shared helpers
-========================= */
+/* =============================
+   SHARED HELPERS
+============================= */
 
+// Checks if an email has a valid format
 const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
 
+// Validates password strength rules
 const validatePasswordRules = (password) => {
     const errors = [];
 
@@ -37,6 +43,7 @@ const validatePasswordRules = (password) => {
     return errors;
 };
 
+// Validates avatar file constraints
 const validateAvatarFile = (avatar) => {
     if (!avatar) return null;
 
@@ -54,10 +61,11 @@ const validateAvatarFile = (avatar) => {
     return null;
 };
 
-/* =========================
-   Register validation
-========================= */
+/* =============================
+   REGISTER / LOGIN
+============================= */
 
+// Validates register form data
 export const validateRegisterForm = ({ name, email, password, avatar }) => {
     const errors = {};
 
@@ -86,13 +94,11 @@ export const validateRegisterForm = ({ name, email, password, avatar }) => {
     if (avatarError) {
         errors.avatar = avatarError;
     }
+
     return errors;
 };
 
-/* =========================
-   Login validation
-========================= */
-
+// Validates login form data
 export const validateLoginForm = ({ email, password }) => {
     const errors = {};
 
@@ -104,71 +110,6 @@ export const validateLoginForm = ({ email, password }) => {
 
     if (!password) {
         errors.password = "Password is required";
-    }
-
-    return errors;
-};
-
-/* =========================
-   Profile validation
-========================= */
-
-export const validateProfileForm = ({ name, email, avatar }) => {
-    const errors = {};
-
-    if (!name.trim()) {
-        errors.name = "Name is required";
-    } else if (name.trim().length < 2) {
-        errors.name = "Name must be at least 2 characters long";
-    }
-
-    if (!email.trim()) {
-        errors.email = "Email is required";
-    } else if (!isValidEmail(email)) {
-        errors.email = "Invalid email";
-    }
-
-    const avatarError = validateAvatarFile(avatar);
-
-    if (avatarError) {
-        errors.avatar = avatarError;
-    }
-
-    return errors;
-};
-
-/* =========================
-   Change password validation
-========================= */
-
-export const validateChangePasswordForm = ({ currentPassword, newPassword, confirmPassword }) => {
-    const errors = {};
-
-    if (!currentPassword) {
-        errors.currentPassword = "Current password is required";
-    }
-
-    if (!newPassword) {
-        errors.newPassword = "New password is required";
-    } else {
-        const passwordErrors = validatePasswordRules(newPassword);
-
-        if (currentPassword && currentPassword === newPassword) {
-            passwordErrors.push(
-                "New password must be different from current password"
-            );
-        }
-
-        if (passwordErrors.length > 0) {
-            errors.newPassword = passwordErrors;
-        }
-    }
-
-    if (!confirmPassword) {
-        errors.confirmPassword = "Confirm password is required";
-    } else if (newPassword && confirmPassword !== newPassword) {
-        errors.confirmPassword =
-            "Passwords do not match. Please check again.";
     }
 
     return errors;

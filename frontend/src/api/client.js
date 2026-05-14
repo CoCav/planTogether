@@ -2,32 +2,32 @@ import axios from "axios";
 import { getToken } from "../features/auth/token";
 
 /* ==================================================
-   AXIOS INSTANCE
-   Shared Axios client used by all frontend API calls
+   API CLIENT
+   Centralized Axios instance used by all API modules.
 
-   Handles:
-   - base API URL
-   - JWT authorization header
+   Responsibilities:
+   - define the backend base URL
+   - attach the JWT token when available
+   - keep request configuration in one place
 ================================================== */
 
 // Creates a reusable Axios instance for all API requests
-const api = axios.create({
+const apiClient = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
 });
 
 // Automatically attaches the JWT token to authenticated requests
-api.interceptors.request.use(
+apiClient.interceptors.request.use(
     (config) => {
         const token = getToken();
 
         if (token) {
-            config.headers = config.headers || {};
             config.headers.Authorization = `Bearer ${token}`;
         }
 
         return config;
-
-    }, (error) => Promise.reject(error)
+    },
+    (error) => Promise.reject(error)
 );
 
-export default api;
+export default apiClient;

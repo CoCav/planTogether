@@ -1,5 +1,5 @@
 /* ==================================================
-   FORMAT UTILS
+   FORMATTERS
    Provides reusable UI formatting helpers
 
    Handles:
@@ -9,21 +9,24 @@
    - verb agreement
 ================================================== */
 
+// Formats a date string
 export const formatDate = (date, locale = "en-GB") => {
     if (!date) return "No date";
 
     return new Date(date).toLocaleDateString(locale);
 };
 
+// Formats a time string
 export const formatTime = (date, locale = "en-GB") => {
     if (!date) return "";
 
     return new Date(date).toLocaleTimeString(locale, {
         hour: "2-digit",
-        minute: "2-digit"
+        minute: "2-digit",
     });
 };
 
+// Formats an event date range
 export const formatEventDateRange = (start, end) => {
     if (!start) return "No date";
 
@@ -37,10 +40,12 @@ export const formatEventDateRange = (start, end) => {
     return `${startDate} → ${endDate}`;
 };
 
+// Formats singular/plural labels
 export const formatCount = (count, singular, plural = `${singular}s`) => {
     return `${count} ${count > 1 ? plural : singular}`;
 };
 
+// Formats the verb "to be"
 export const formatBe = (count) => {
     return count > 1 ? "are" : "is";
 };

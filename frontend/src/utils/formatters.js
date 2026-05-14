@@ -22,7 +22,7 @@ export const formatTime = (date, locale = "en-GB") => {
 
     return new Date(date).toLocaleTimeString(locale, {
         hour: "2-digit",
-        minute: "2-digit",
+        minute: "2-digit"
     });
 };
 

@@ -1,16 +1,18 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "../context/useAuth.js";
+
+import { useAuth } from "../features/auth/hooks/useAuth";
 
 import HomePage from "../pages/HomePage";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
-import ProfilePage from "../pages/ProfilePage.jsx";
-import MyEventsPage from "../pages/MyEventsPage.jsx";
+import ProfilePage from "../pages/ProfilePage";
+import MyEventsPage from "../pages/MyEventsPage";
 import EventsPage from "../pages/EventsPage";
-import CreateEventPage from "../pages/CreateEventPage.jsx";
+import CreateEventPage from "../pages/CreateEventPage";
 import EventDetailsPage from "../pages/EventDetailsPage";
-import EditEventPage from "../pages/EditEventPage.jsx";
-import PageLoading from "../components/ui/PageLoader.jsx";
+import EditEventPage from "../pages/EditEventPage";
+
+import PageLoading from "../components/ui/PageLoader";
 
 /* ==================================================
    APP ROUTER
@@ -43,6 +45,8 @@ export default function AppRouter() {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/events" element={<EventsPage />} />
+            <Route path="/events/:eventId" element={<EventDetailsPage />} />
 
             <Route
                 path="/profile"
@@ -62,8 +66,6 @@ export default function AppRouter() {
                 }
             />
 
-            <Route path="/events" element={<EventsPage />} />
-
             <Route
                 path="/events/create"
                 element={
@@ -72,8 +74,6 @@ export default function AppRouter() {
                     </ProtectedRoute>
                 }
             />
-
-            <Route path="/events/:eventId" element={<EventDetailsPage />} />
 
             <Route
                 path="/events/:eventId/edit"

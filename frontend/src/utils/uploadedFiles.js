@@ -39,4 +39,7 @@ export const getEventImage = (image) => {
     return getUploadedFile(image, defaultEventImage);
 };
 
-export { defaultAvatar, defaultEventImage };
+export {
+    defaultAvatar,
+    defaultEventImage
+};

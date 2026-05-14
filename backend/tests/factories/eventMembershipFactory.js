@@ -1,3 +1,5 @@
+const { EVENT_ROLES } = require("../../src/constants/eventRoles");
+
 /* ==================================================
    EVENT MEMBERSHIP TEST FACTORY
 
@@ -25,7 +27,7 @@ const createMockMembershipEvent = (overrides = {}) => ({
 const createMockMembership = (overrides = {}) => ({
     eventId: 1,
     userId: 1,
-    role: "participant",
+    role: EVENT_ROLES.PARTICIPANT,
     deletedAt: null,
     ...overrides
 });

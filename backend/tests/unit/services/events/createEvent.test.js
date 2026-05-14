@@ -41,6 +41,7 @@ const EventUserRole = require("../../../../src/models/relations/eventUserRoleMod
 const eventService = require("../../../../src/services/eventService");
 
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
+const { EVENT_MODES } = require("../../../../src/constants/eventModes");
 
 const { buildEventCreateData } = require("../../../../src/utils/events/eventDataBuilder");
 
@@ -145,7 +146,7 @@ describe("eventService - createEvent", () => {
 
     it("should forward database errors and rollback transaction", async () => {
         const eventInput = createEventPayload({
-            mode: "online",
+            mode: EVENT_MODES.ONLINE,
             description: "Description",
             theme: "Tech",
             startDateTime: "2026-12-20T10:00:00.000Z",

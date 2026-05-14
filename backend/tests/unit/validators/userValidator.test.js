@@ -24,6 +24,9 @@ const {
 
 const { PASSWORD_MIN_LENGTH } = require("../../../src/config/security/passwordPolicy");
 
+const { EVENT_STATUS } = require("../../../src/constants/eventStatus");
+const { EVENT_MODES } = require("../../../src/constants/eventModes");
+
 const { runValidation } = require("../../helpers/validation/validationHelper");
 
 describe("userValidator", () => {
@@ -37,8 +40,8 @@ describe("userValidator", () => {
             const result = await runValidation(getCurrentUserEventsValidator, {
                 query: {
                     view: "created",
-                    status: "upcoming",
-                    mode: "online",
+                    status: EVENT_STATUS.UPCOMING,
+                    mode: EVENT_MODES.ONLINE,
                     page: "1",
                     pageSize: "10",
                     sortBy: "startDateTime",

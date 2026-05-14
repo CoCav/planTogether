@@ -31,6 +31,7 @@ const request = require("supertest");
 const app = require("../../../src/app");
 
 const { EVENT_STATUS } = require("../../../src/constants/eventStatus");
+const { EVENT_MODES } = require("../../../src/constants/eventModes");
 
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
@@ -277,17 +278,17 @@ describe("Get All Events API", () => {
             },
             event: {
                 title: "Online Event",
-                mode: "online"
+                mode: EVENT_MODES.ONLINE
             }
         });
 
         const res = await request(app)
             .get("/api/events")
-            .query({ mode: "online" });
+            .query({ mode: EVENT_MODES.ONLINE });
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body.events.every((event) => event.mode === "online")).toBe(true);
+        expect(res.body.events.every((event) => event.mode === EVENT_MODES.ONLINE)).toBe(true);
     });
 
     it("should filter events by location", async () => {

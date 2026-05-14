@@ -43,6 +43,7 @@ const User = require("../../../../src/models/userModel");
 
 const eventService = require("../../../../src/services/eventService");
 
+const { EVENT_MODES } = require("../../../../src/constants/eventModes");
 const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
 const { getEventStatus } = require("../../../../src/utils/events/eventStatus");
 
@@ -141,13 +142,13 @@ describe("eventService - getAllEvents", () => {
         });
 
         await eventService.getAllEvents({
-            mode: "online",
+            mode: EVENT_MODES.ONLINE,
             theme: "Tech"
         });
 
         expect(buildEventWhereConditions).toHaveBeenCalledWith({},
             {
-                mode: "online",
+                mode: EVENT_MODES.ONLINE,
                 theme: "Tech"
             }
         );

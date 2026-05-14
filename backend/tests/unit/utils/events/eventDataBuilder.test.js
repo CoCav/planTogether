@@ -19,6 +19,8 @@
 
 const { buildEventCreateData, buildEventUpdateData } = require("../../../../src/utils/events/eventDataBuilder");
 
+const { EVENT_MODES } = require("../../../../src/constants/eventModes");
+
 describe("eventDataBuilder utils", () => {
 
     /* =============================
@@ -31,7 +33,7 @@ describe("eventDataBuilder utils", () => {
             description: "Description",
             type: "Meetup",
             theme: "Technology",
-            mode: "in_person",
+            mode: EVENT_MODES.IN_PERSON,
             location: "Montreal",
             startDateTime: "2026-12-31T10:00:00.000Z",
             endDateTime: "2026-12-31T12:00:00.000Z",
@@ -46,7 +48,7 @@ describe("eventDataBuilder utils", () => {
             description: "Description",
             type: "Meetup",
             theme: "Technology",
-            mode: "in_person",
+            mode: EVENT_MODES.IN_PERSON,
             location: "Montreal",
             startDateTime: "2026-12-31T10:00:00.000Z",
             endDateTime: "2026-12-31T12:00:00.000Z",
@@ -62,7 +64,7 @@ describe("eventDataBuilder utils", () => {
             description: "Description",
             type: "Workshop",
             theme: "Technology",
-            mode: "online",
+            mode: EVENT_MODES.ONLINE,
             location: "Montreal",
             startDateTime: "2026-12-31T10:00:00.000Z",
             endDateTime: "2026-12-31T12:00:00.000Z"
@@ -77,7 +79,7 @@ describe("eventDataBuilder utils", () => {
             description: "Description",
             type: "Meetup",
             theme: "Technology",
-            mode: "in_person",
+            mode: EVENT_MODES.IN_PERSON,
             location: "Montreal",
             startDateTime: "2026-12-31T10:00:00.000Z",
             endDateTime: "2026-12-31T12:00:00.000Z"
@@ -115,12 +117,12 @@ describe("eventDataBuilder utils", () => {
         };
 
         const result = buildEventUpdateData(event, {
-            mode: "online",
+            mode: EVENT_MODES.ONLINE,
             location: "Montreal"
         });
 
         expect(result).toMatchObject({
-            mode: "online",
+            mode: EVENT_MODES.ONLINE,
             location: null
         });
     });
@@ -131,12 +133,12 @@ describe("eventDataBuilder utils", () => {
         };
 
         const result = buildEventUpdateData(event, {
-            mode: "in_person",
+            mode: EVENT_MODES.IN_PERSON,
             location: "Quebec City"
         });
 
         expect(result).toMatchObject({
-            mode: "in_person",
+            mode: EVENT_MODES.IN_PERSON,
             location: "Quebec City"
         });
     });

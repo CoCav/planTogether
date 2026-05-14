@@ -17,6 +17,9 @@
 
 const { createEventValidator, updateEventValidator, eventIdParamValidator, getAllEventsValidator } = require("../../../src/validators/eventValidator");
 
+const { EVENT_STATUS } = require("../../../src/constants/eventStatus");
+const { EVENT_MODES } = require("../../../src/constants/eventModes");
+
 const { runValidation } = require("../../helpers/validation/validationHelper");
 
 const { createValidEventBody } = require("../../factories/eventValidationFactory");
@@ -104,7 +107,7 @@ describe("eventValidator", () => {
             const result = await runValidation(createEventValidator, {
                 body: {
                     ...createValidEventBody(),
-                    mode: "in_person",
+                    mode: EVENT_MODES.IN_PERSON,
                     location: ""
                 }
             });
@@ -120,7 +123,7 @@ describe("eventValidator", () => {
             const result = await runValidation(createEventValidator, {
                 body: {
                     ...createValidEventBody(),
-                    mode: "online",
+                    mode: EVENT_MODES.ONLINE,
                     location: ""
                 }
             });
@@ -169,8 +172,8 @@ describe("eventValidator", () => {
         it("should pass with valid query params", async () => {
             const result = await runValidation(getAllEventsValidator, {
                 query: {
-                    status: "upcoming",
-                    mode: "online",
+                    status: EVENT_STATUS.UPCOMING,
+                    mode: EVENT_MODES.ONLINE,
                     page: "1",
                     pageSize: "10",
                     sortBy: "creatorId",

@@ -1,3 +1,5 @@
+const { EVENT_MODES } = require("../../src/constants/eventModes");
+
 /* ==================================================
    EVENT VALIDATION FACTORY
 
@@ -17,7 +19,7 @@ const createValidEventBody = (overrides = {}) => ({
     type: "Meetup",
     theme: "Technology",
 
-    mode: "in_person",
+    mode: EVENT_MODES.IN_PERSON,
     location: "Montreal",
 
     startDateTime: "2026-12-31T10:00:00.000Z",

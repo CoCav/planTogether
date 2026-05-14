@@ -1,3 +1,5 @@
+const { EVENT_MODES } = require("../../src/constants/eventModes");
+
 /* ==================================================
    EVENT TEST FACTORY
 
@@ -20,7 +22,8 @@ const createEventPayload = (overrides = {}) => ({
     description: "This is a test event",
     type: "Meetup",
     theme: "Technology",
-    mode: "in_person",
+
+    mode: EVENT_MODES.IN_PERSON,
     location: "Montreal",
 
     startDateTime: "2026-12-31T10:00:00.000Z",
@@ -36,7 +39,8 @@ const createEventResponse = (overrides = {}) => ({
     description: "This is a test event",
     type: "Meetup",
     theme: "Technology",
-    mode: "in_person",
+
+    mode: EVENT_MODES.IN_PERSON,
     location: "Montreal",
 
     startDateTime: "2026-12-31T10:00:00.000Z",

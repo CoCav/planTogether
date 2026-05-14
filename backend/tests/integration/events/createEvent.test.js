@@ -29,6 +29,7 @@ const app = require("../../../src/app");
 const { EventUserRole } = require("../../../src/models");
 
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
+const { EVENT_MODES } = require("../../../src/constants/eventModes");
 
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
@@ -66,7 +67,7 @@ describe("Create Event API", () => {
 
         expect(res.body.event).toMatchObject({
             title: "Tech Meetup",
-            mode: "in_person",
+            mode: EVENT_MODES.IN_PERSON,
             location: "Montreal"
         });
     });
@@ -84,7 +85,7 @@ describe("Create Event API", () => {
             .field("description", "Event with image")
             .field("type", "Meetup")
             .field("theme", "Technology")
-            .field("mode", "in_person")
+            .field("mode", EVENT_MODES.IN_PERSON)
             .field("location", "Montreal")
             .field("startDateTime", "2026-12-31T10:00:00.000Z")
             .field("endDateTime", "2026-12-31T12:00:00.000Z")
@@ -112,7 +113,7 @@ describe("Create Event API", () => {
                 title: "Online Event",
                 description: "Remote event",
                 type: "Workshop",
-                mode: "online",
+                mode: EVENT_MODES.ONLINE,
                 location: undefined
             }));
 
@@ -256,7 +257,7 @@ describe("Create Event API", () => {
             .field("description", "Invalid image")
             .field("type", "Meetup")
             .field("theme", "Technology")
-            .field("mode", "in_person")
+            .field("mode", EVENT_MODES.IN_PERSON)
             .field("location", "Montreal")
             .field("startDateTime", "2026-12-31T10:00:00.000Z")
             .field("endDateTime", "2026-12-31T12:00:00.000Z")
@@ -281,7 +282,7 @@ describe("Create Event API", () => {
             .field("description", "Invalid extension")
             .field("type", "Meetup")
             .field("theme", "Technology")
-            .field("mode", "in_person")
+            .field("mode", EVENT_MODES.IN_PERSON)
             .field("location", "Montreal")
             .field("startDateTime", "2026-12-31T10:00:00.000Z")
             .field("endDateTime", "2026-12-31T12:00:00.000Z")
@@ -308,7 +309,7 @@ describe("Create Event API", () => {
             .field("description", "Oversized upload")
             .field("type", "Meetup")
             .field("theme", "Technology")
-            .field("mode", "in_person")
+            .field("mode", EVENT_MODES.IN_PERSON)
             .field("location", "Montreal")
             .field("startDateTime", "2026-12-31T10:00:00.000Z")
             .field("endDateTime", "2026-12-31T12:00:00.000Z")

@@ -1,3 +1,5 @@
+const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
+
 /* ==================================================
    MOCK EXPRESS HELPERS
 
@@ -77,7 +79,7 @@ const createEventMemberAuthorizationMocks = ({
     eventId = "1",
     targetUserId = "2",
     requesterUserId = 10,
-    newRole = "co_organizer"
+    newRole = EVENT_ROLES.CO_ORGANIZER
 } = {}) => {
 
     return createMockReqResNext({

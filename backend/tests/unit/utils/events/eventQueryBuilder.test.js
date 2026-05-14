@@ -25,6 +25,7 @@ const sequelize = require("../../../../src/config/database");
 
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
+const { EVENT_MODES } = require("../../../../src/constants/eventModes");
 
 const {
     applyEventStatusFilter,
@@ -107,10 +108,10 @@ describe("eventQueryBuilder utils", () => {
             const whereConditions = {};
 
             applyEventBasicFilters(whereConditions, {
-                mode: " online "
+                mode: EVENT_MODES.ONLINE
             });
 
-            expect(whereConditions.mode).toBe("online");
+            expect(whereConditions.mode).toBe(EVENT_MODES.ONLINE);
         });
 
         it("should apply search filter", () => {
@@ -171,13 +172,13 @@ describe("eventQueryBuilder utils", () => {
             buildEventWhereConditions(whereConditions, {
                 status: EVENT_STATUS.UPCOMING,
                 search: "music",
-                mode: "online",
+                mode: EVENT_MODES.ONLINE,
                 creatorId: "5"
             });
 
             expect(whereConditions[Op.and]).toBeDefined();
             expect(whereConditions[Op.or]).toBeDefined();
-            expect(whereConditions.mode).toBe("online");
+            expect(whereConditions.mode).toBe(EVENT_MODES.ONLINE);
             expect(whereConditions.creatorId).toBe(5);
         });
 

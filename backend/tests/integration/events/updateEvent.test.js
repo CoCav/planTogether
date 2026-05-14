@@ -29,6 +29,7 @@ const fs = require("fs");
 const path = require("path");
 
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
+const { EVENT_MODES } = require("../../../src/constants/eventModes");
 
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
 
@@ -134,7 +135,7 @@ describe("Update Event API", () => {
             .field("description", "Image cleanup test")
             .field("type", "Meetup")
             .field("theme", "Technology")
-            .field("mode", "in_person")
+            .field("mode", EVENT_MODES.IN_PERSON)
             .field("location", "Montreal")
             .field("startDateTime", "2026-12-31T10:00:00.000Z")
             .field("endDateTime", "2026-12-31T12:00:00.000Z")

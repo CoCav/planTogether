@@ -13,9 +13,9 @@ PlanTogether is a collaborative event management platform where users can create
 
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
 ![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
-![Test Suites](https://img.shields.io/badge/test%20suites-68%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-539%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-98.44%25%20statements%20%7C%2091.01%25%20branches-brightgreen)
+![Test Suites](https://img.shields.io/badge/test%20suites-75%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-568%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-98.52%25%20statements%20%7C%2092.85%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -23,7 +23,7 @@ PlanTogether is a collaborative event management platform where users can create
 
 This is the **backend REST API** of PlanTogether, built with **Node.js, Express, PostgreSQL, and Sequelize**.
 
-The API handles authentication, event management, memberships, uploads, permissions, validation, and business rules through a modular and scalable architecture.
+The API manages authentication, events, memberships, uploads, permissions, validation, and business rules through a modular and scalable architecture designed for maintainability and long-term growth.
 
 Users can create, join, leave, update, and manage events depending on their role:
 
@@ -31,23 +31,18 @@ Users can create, join, leave, update, and manage events depending on their role
 - `co_organizer`
 - `participant`
 
-The backend focuses on:
+The backend architecture focuses on:
 
-- scalability and maintainability
-- modular service-oriented architecture
-- centralized validation and error handling
-- API consistency and predictable responses
-- security and role-based access control
-- high automated test coverage
-
-The backend architecture also emphasizes:
-
-- layered role-based authorization
+- scalable and maintainable service-oriented architecture
+- layered role-based authorization and permissions
 - centralized validation, security, and error handling
+- consistent and predictable API responses
 - reusable filtering, formatting, and pagination utilities
 - secure upload and authentication flows
 - transaction-safe critical operations
 - optimized and scalable database query patterns
+- centralized structured logging with Pino
+- automated CI testing with GitHub Actions
 - extensive unit and integration test coverage
 
 ---
@@ -56,52 +51,54 @@ The backend architecture also emphasizes:
 
 PlanTogether provides a **RESTful API** designed for collaborative event management with **role-based access control**.
 
-The API is intended to be consumed by frontend applications or external clients and focuses on security, consistency, scalability, and maintainability.
+The API is built to be consumed by frontend applications or external clients and emphasizes security, consistency, scalability, and maintainability.
 
-The API allows clients to:
+Clients can:
 
-- authenticate users securely using JWT
+- authenticate users securely with JWT
 - create, update, and manage collaborative events
 - join and leave events
-- manage membership roles within events
+- manage membership roles and permissions
 - retrieve authenticated and public user data
-- upload and manage user avatars and event images
+- upload and manage avatars and event images
 - filter, search, sort, and paginate events efficiently
 - retrieve creator-specific and participation-based event listings
 
-The backend enforces centralized validation, authorization, and business rules to ensure:
+The backend centralizes validation, authorization, and business logic to ensure:
 
-- data integrity
-- predictable API behavior
-- secure role-based access control
-- consistent JSON API responses
+- secure and predictable API behavior
+- consistent JSON responses
+- strong role-based access control
+- reliable data integrity across operations
 
-It also includes:
+Additional backend architecture features include:
 
-- reusable filtering and pagination utilities
+- reusable filtering, formatting, and pagination utilities
 - centralized validation and error-handling middleware
-- Sequelize transactions for critical database operations
+- Sequelize transactions for critical operations
 - centralized security policies for passwords, uploads, and CORS
-- reusable user formatting utilities
-- optimized database queries through indexing
+- reusable public and authenticated user formatting utilities
+- optimized database queries and indexing strategies
+- structured logging with Pino
+- automated GitHub Actions CI testing
 - extensive unit and integration test coverage
 
 ---
 
 ## 🛠️ Tech Stack
 
-The backend is built using scalable and modular technologies focused on performance, security, maintainability, and reliable API behavior.
+The backend is built with scalable and modular technologies focused on performance, security, maintainability, and reliable API behavior.
 
 ### Core Technologies
 
 - **Node.js** – JavaScript runtime environment
-- **Express** – web framework for building REST APIs
+- **Express** – web framework for REST APIs
 - **PostgreSQL** – relational database system
-- **Sequelize** – ORM for database modeling, relationships, querying, and transactions
+- **Sequelize** – ORM for modeling, relationships, querying, and transactions
 
 ### Authentication & Security
 
-- **JSON Web Tokens (JWT)** – secure stateless authentication
+- **JSON Web Tokens (JWT)** – stateless authentication
 - **bcrypt** – password hashing
 - **Helmet** – secure HTTP headers protection
 - **express-rate-limit** – authentication rate limiting
@@ -110,25 +107,26 @@ The backend is built using scalable and modular technologies focused on performa
 
 ### File Handling
 
-- **Multer** – file upload handling for avatars and event images
+- **Multer** – avatar and event image uploads
 - **Custom upload utilities** – upload security, file cleanup, and path normalization
 
-### Architecture & Patterns
+### Architecture & Backend Patterns
 
 - **Middleware architecture** – authentication, validation, authorization, upload, and error handling layers
-- **MVC architecture** – modular and maintainable application structure
-- **Service layer** – centralized business logic abstraction
-- **Centralized constants and utilities** – reusable business rules, query helpers, and API consistency
+- **MVC architecture** – modular application structure
+- **Service layer architecture** – centralized business logic abstraction
 - **Soft-delete architecture** – membership and account lifecycle preservation
-- **Query optimization utilities** – grouped participant counts and reusable filtering helpers
-- **Reusable formatting and pagination utilities**
+- **Centralized constants and utilities** – reusable business rules, formatting, filtering, and pagination helpers
+- **Query optimization utilities** – grouped participant counts and scalable filtering strategies
 - **Sequelize transactions** – critical operation safety and data consistency
+- **Pino** – structured centralized logging
 
-### Testing
+### Testing & Quality Assurance
 
 - **Jest** – unit testing framework
-- **Supertest** – integration testing for API endpoints
-- **Comprehensive testing strategy** – validators, services, middlewares, controllers, query utilities, security flows, and full API integrations
+- **Supertest** – API integration testing
+- **GitHub Actions** – automated continuous integration testing
+- **Comprehensive testing strategy** – validators, services, middlewares, controllers, query utilities, security flows, uploads, and full API integrations
 
 ---
 
@@ -137,7 +135,7 @@ The backend is built using scalable and modular technologies focused on performa
 The backend follows a modular **MVC architecture** with a clear separation of concerns between controllers, services, models, middlewares, validators, configuration, and reusable utilities.
 
 ```txt
-project-root
+backend/
 │
 ├── docs/
 │   └── testing.md
@@ -146,6 +144,7 @@ project-root
 │   ├── config/
 │   │   ├── database.js
 │   │   ├── cors.js
+│   │   ├── logger.js
 │   │   └── security/
 │   │       ├── passwordPolicy.js
 │   │       └── uploadPolicy.js
@@ -195,8 +194,11 @@ project-root
 │   │   └── users/
 │   │
 │   └── unit/
+│       ├── config/
+│       ├── constants/
 │       ├── controllers/
 │       ├── middlewares/
+│       ├── security/
 │       ├── services/
 │       ├── utils/
 │       └── validators/
@@ -207,11 +209,12 @@ project-root
 │
 ├── .env
 ├── .env.example
+├── .env.test
 ├── package.json
 └── README.md
 ```
 
-The `config` layer centralizes environment-based configuration such as database connection, CORS, and reusable security policies.
+The `config` layer centralizes environment-based configuration such as database connections, CORS, and reusable security policies.
 
 The `constants` layer stores shared business values such as event roles and event statuses.
 
@@ -227,17 +230,17 @@ The `utils` layer centralizes reusable logic such as:
 - normalization utilities
 - reusable HTTP errors
 
-The `middlewares` layer contains reusable authentication, authorization, validation error handling, upload handling, rate limiting, and centralized error-handling components.
+The `middlewares` layer contains reusable authentication, authorization, validation handling, upload handling, rate limiting, and centralized error-handling components.
 
 The testing architecture mirrors the backend structure and separates reusable helpers, factories, unit tests, and full API integration flows to improve maintainability, readability, and coverage consistency.
 
-This structure promotes scalability, testability, reusable business logic, secure API design, soft-delete lifecycle management, and safer database operations through transactions and centralized validation patterns.
+This structure promotes scalability, testability, reusable business logic, secure API design, soft-delete lifecycle management, transaction-safe database operations, and long-term maintainability.
 
 ---
 
 ## ✨ Features
 
-The API provides a complete set of endpoints to manage users, events, memberships, and permissions with fine-grained access control and consistent API behavior.
+The API provides a complete set of endpoints for managing users, events, memberships, and permissions through a secure and scalable role-based architecture.
 
 ### 👤 User Management
 
@@ -251,7 +254,7 @@ The API provides a complete set of endpoints to manage users, events, membership
 - Automatic old avatar cleanup when replaced
 - Secure password update flow with current password verification
 - Email normalization and password hashing using **bcrypt**
-- Centralized validation and error handling middleware
+- Centralized validation and error-handling middleware
 - Secure authenticated account deletion with anonymization
 - Soft-delete account lifecycle preservation
 - Consistent JSON API responses
@@ -281,7 +284,7 @@ Additional capabilities:
 - Strong validation and business rule enforcement
 - Upload validation for supported image types, extensions, and file sizes
 - Sequelize transactions for critical operations
-- Optimized database queries through indexing
+- Optimized database queries and indexing strategies
 
 Each event automatically assigns the creator as **organizer**.
 
@@ -316,7 +319,7 @@ The API enforces a strict role hierarchy:
 
 #### Organizer capabilities
 
-- Full control over the event
+- Full event management permissions
 - Edit and delete events
 - Promote participants to co_organizers
 - Demote co_organizers
@@ -349,6 +352,7 @@ The API prevents invalid or unsafe operations:
 - Ownership transfer is restricted to active event members
 - Inactive memberships cannot manage or receive protected roles
 - Active organizers cannot delete their account before transferring ownership
+- Protected actions are enforced consistently through centralized authorization and business-rule layers
 
 ### 🧠 Authorization System
 
@@ -370,7 +374,7 @@ The backend uses a layered middleware architecture:
   - soft-delete membership protection
   - inactive membership handling
 
-This ensures a clear separation between:
+This architecture ensures a clear separation between:
 
 - authentication
 - authorization
@@ -392,7 +396,7 @@ Organizers and co_organizers can:
 
 The API supports advanced filtering using query parameters.
 
-Filtering is powered by a centralized and reusable system, ensuring consistent results across public and authenticated event listings.
+Filtering is powered by a reusable query system, ensuring consistent results across public and authenticated event listings.
 
 Supported filters:
 
@@ -410,12 +414,13 @@ Supported filters:
 
 Additional features:
 
-- Sorting and ordering
 - Pagination support
+- Flexible sorting and ordering
 - Creator filtering across public and authenticated event listings
-- Consistent filtering behavior across endpoints
+- Consistent filtering behavior across public and authenticated endpoints
 - Optimized participant count queries without N+1 database queries
 - Active participant counting excluding soft-deleted memberships
+- Reusable query-builder utilities for scalable filtering logic
 
 #### Examples
 
@@ -465,17 +470,28 @@ npm run test:coverage
 
 ### 📊 Results
 
-- 68 test suites
-- 539 tests
+- ✅ 75 passing test suites
+- ✅ 568 passing tests
 - ✅ All passing
 
 **Coverage:**
-- 98.44% statements coverage
-- 91.01% branch coverage
-- 99.31% functions coverage
-- 98.59% lines coverage
+- 98.52% statements coverage
+- 92.85% branch coverage
+- 99.25% functions coverage
+- 98.67% lines coverage
 
 ✅ High coverage across authentication, authorization, filtering, uploads, soft-delete flows, ownership transfer, transactions, query optimization, and full API flows.
+
+### 🔁 Continuous Integration
+
+The backend test suite runs automatically through GitHub Actions using:
+
+- automated PostgreSQL test services
+- isolated backend test configuration
+- automated test execution on push and pull requests
+- full integration and unit test validation in CI
+
+This helps detect regressions early and ensures consistent backend reliability across development workflows.
 
 ### 📦 Test Coverage
 
@@ -489,11 +505,7 @@ These tests validate the complete request lifecycle:
 Request → Middleware → Controller → Service → Database → Response
 ```
 
-Integration tests run against the real Express application using Supertest and a dedicated PostgreSQL test database
-
-📌 Covered areas:
-
-📌 Covered areas:
+Integration tests run against the real Express application using Supertest and a dedicated PostgreSQL test database.
 
 📌 Covered areas:
 
@@ -541,7 +553,7 @@ Integration tests run against the real Express application using Supertest and a
 
 #### 🧩 Unit Tests (Internal Modules)
 
-These tests validate isolated internal application logic independently from HTTP requests.
+These tests validate isolated internal application logic independently of HTTP requests.
 
 📌 Covered modules:
 
@@ -557,6 +569,7 @@ These tests validate isolated internal application logic independently from HTTP
   - Transaction-based flows
   - Soft-delete lifecycle handling
   - Query optimization helpers
+  - Scalable query-builder utilities
 
 - **Middlewares**
   - Authentication (`authenticateToken`)
@@ -573,7 +586,7 @@ These tests validate isolated internal application logic independently from HTTP
 
 - **Utils**
   - Authentication token utilities
-  - Event filtering, query optimization, and status utilities
+  - Event filtering, query-builder, query optimization, and status utilities
   - Grouped participant count helpers
   - Pagination utilities
   - User formatting utilities
@@ -586,7 +599,7 @@ These tests validate isolated internal application logic independently from HTTP
 - API flows are tested with minimal mocking
 - A dedicated PostgreSQL test database ensures isolation
 - Tests clean up their own data between runs
-- Internal modules are tested independently for maintainability and robustness
+- Internal modules are tested independently to improve maintainability and robustness
 - Reusable factories and helpers reduce duplication
 - Validation, permissions, uploads, filtering, and business rules are extensively tested
 - High coverage helps ensure strong reliability across critical backend features
@@ -603,9 +616,9 @@ The API implements multiple security layers to protect sensitive data, enforce s
 ### 🔑 Authentication
 
 - JWT-based authentication using Bearer tokens
-- Protected routes require a valid authentication token
+- Protected routes require a valid JWT authentication token
 - Password updates require current password verification
-- Authentication rate limiting helps protect against brute-force attacks
+- `authRateLimiter` middleware helps protect authentication endpoints against brute-force attacks
 
 ### 🛡️ Authorization
 
@@ -617,7 +630,7 @@ Supported roles:
 - `co_organizer`
 - `participant`
 
-Authorization is enforced through reusable middleware and business rule layers:
+Authorization is enforced through reusable middleware and centralized business-rule layers:
 
 - `authenticateToken`
 - `authorizeEvent`
@@ -639,18 +652,19 @@ Unauthenticated users only have read-only access to public resources.
 ### 🧾 Input Validation
 
 - Request validation using **express-validator**
-- Centralized validation error handling
+- Centralized validation and error handling
 - Sanitization and normalization of incoming data
 - Centralized password policy enforcement
 - Validation of query parameters, route params, and request bodies
 - Validation of filtering, sorting, and pagination inputs
 
-Upload validation includes:
+### 📁 Upload Security
 
 - MIME type validation
 - File extension validation
 - File size limits
-- Controlled upload destinations
+- Restricted and normalized upload destinations
+- Secure upload cleanup and path normalization protection
 
 ### 🔒 Data Protection
 
@@ -666,13 +680,14 @@ Upload validation includes:
 - Helmet security headers protection
 - Centralized CORS configuration
 - SQL injection protection through Sequelize parameterized queries
-- Query optimization strategies to avoid unsafe N+1 database access patterns
-- Centralized HTTP error utilities and global error handling
-- Secure upload handling with path normalization and cleanup protection
+- Query optimization strategies to avoid inefficient N+1 database access patterns
 - Sequelize transactions for critical operations
 - Database indexes for optimized query performance
+- Centralized HTTP error utilities and reusable API error patterns
+- Centralized global error handling through `errorHandler`
+- Environment-based configuration for database, CORS, uploads, logging, and test behavior
 
-These mechanisms help ensure secure data handling, reusable security patterns, predictable API behavior, soft-delete lifecycle protection, and strong protection against unauthorized access and unsafe operations across the application.
+These mechanisms help ensure secure data handling, reusable security patterns, predictable API behavior, soft-delete lifecycle protection, and strong protection against unauthorized access across the application.
 
 ---
 
@@ -714,12 +729,12 @@ Possible success payloads may include:
 
 ### 📌 Response Structure Notes
 
-- `success` → indicates whether the request succeeded
+- `success` → indicates whether the request completed successfully
 - `message` → short human-readable description
 - `data` → response payload (object or array depending on the endpoint)
 - `errors` → optional detailed validation or request errors
 
-Validation and application errors are normalized through centralized middleware and reusable HTTP error utilities to ensure consistent API responses across all endpoints.
+Validation and application errors are normalized through centralized middleware, reusable HTTP error utilities, and the global `errorHandler` middleware to ensure consistent API responses across all endpoints.
 
 ---
 
@@ -748,8 +763,10 @@ JWT_SECRET=your_secret_key
 
 DB_NAME=plantogether_db
 DB_NAME_TEST=plantogether_test_db
+
 DB_USER=postgres
 DB_PASSWORD=your_password
+
 DB_HOST=localhost
 DB_PORT=5432
 
@@ -757,6 +774,8 @@ UPLOAD_DIR=uploads
 
 DB_LOGGING=false
 DB_SSL=false
+
+LOG_LEVEL=info
 
 NODE_ENV=development
 
@@ -766,14 +785,15 @@ CORS_ORIGIN=http://localhost:5173
 ### 🔍 Notes
 
 - `JWT_SECRET` → used to sign and verify JWT authentication tokens
-- `NODE_ENV` → defines the environment (`development`, `production`, `test`)
+- `NODE_ENV` → defines the current environment (`development`, `production`, `test`)
 - `DB_NAME_TEST` → dedicated database used for automated tests
-- `DB_LOGGING` → enables Sequelize query logging (`true` or `false`)
-- `DB_SSL` → enables SSL for production/cloud-hosted databases
+- `DB_LOGGING` → enables Sequelize SQL query logging (`true` or `false`)
+- `DB_SSL` → enables SSL for production or cloud-hosted databases
+- `LOG_LEVEL` → configures the Pino logger level (`info`, `debug`, `error`, etc.)
 - `CORS_ORIGIN` → allowed frontend origins (comma-separated values supported)
 - `UPLOAD_DIR` → configurable upload root directory for avatars and event images
 
-👉 A `.env.example` file is provided as a reference configuration.
+👉 `.env.example` and `.env.test` files are provided as reference configurations.
 
 ---
 
@@ -803,7 +823,7 @@ To run tests with coverage:
 npm run test:coverage
 ```
 
-The server starts only if the database connection succeeds.
+The server starts only if the database connection and model synchronization succeed.
 
 The API will be available at:
 
@@ -821,7 +841,7 @@ GET /api/health
 
 ## 🔗 API Endpoints
 
-The API exposes the following main endpoints grouped by feature.
+The API exposes the following main endpoints grouped by functional area.
 
 All endpoints return standardized JSON responses as described in the API Response Format section.
 
@@ -849,9 +869,8 @@ PUT    /api/users/me                   (supports avatar upload via multipart/for
 PUT    /api/users/me/password
 DELETE /api/users/me
 
-GET    /api/users/:id
-GET    /api/users/:id/events
-GET    /api/users/me/events
+GET    /api/users/me/events            (authenticated user events)
+GET    /api/users/:id/events           (public user events)
 ```
 
 ### 📅 Events
@@ -860,7 +879,7 @@ Endpoints for event management and public event access.
 
 ```http
 GET    /api/events
-GET    /api/events/filtered
+GET    /api/events/filtered            (advanced filtering, sorting, and pagination)
 GET    /api/events/:eventId
 
 POST   /api/events                     (supports image upload via multipart/form-data)
@@ -879,12 +898,12 @@ DELETE /api/events/:eventId/members/leave
 GET    /api/events/:eventId/members
 GET    /api/events/:eventId/organizers
 
-PUT    /api/events/:eventId/members/:userId/role
-PUT    /api/events/:eventId/transfer-ownership
+PUT    /api/events/:eventId/members/:userId/role (role hierarchy enforced)
+PUT    /api/events/:eventId/transfer-ownership   (organizer only)
 DELETE /api/events/:eventId/members/:userId
 ```
 
-### ❤️ Health Check
+### ❤️ Application Health
 ```http
 GET    /api/health
 GET    /
@@ -897,8 +916,9 @@ GET    /
 
 - Reorganized the backend into dedicated layers for authentication, authorization, error handling, configuration, constants, and reusable utilities
 - Centralized shared business constants (`EVENT_ROLES`, `EVENT_STATUS`)
-- Introduced reusable formatting, normalization, pagination, query-building, and HTTP error utilities
+- Introduced reusable formatting, normalization, pagination, query-builder, and HTTP error utilities
 - Standardized JSON API response structures across endpoints
+- Added centralized structured logging with Pino
 
 ### 🔐 Security & Validation
 
@@ -906,6 +926,7 @@ GET    /
 - Centralized password, upload, and CORS security policies
 - Strengthened upload security with MIME type, extension, file size validation, cleanup, and path normalization protections
 - Improved centralized validation and error-handling middleware
+- Added centralized global error handling through `errorHandler`
 
 ### 📅 Events & Membership System
 
@@ -919,15 +940,17 @@ GET    /
 
 - Added database indexes for optimized query performance
 - Standardized Sequelize association aliases and relationship consistency
-- Optimized participant count queries to avoid N+1 database queries
+- Optimized participant count queries to avoid inefficient N+1 database queries
 - Improved filtering, pagination, and sorting consistency
+- Expanded reusable query-builder utilities for scalable filtering logic
 
 ### 🧪 Testing
 
 - Refactored the testing architecture for improved maintainability
 - Expanded unit and integration test coverage across all backend layers
-- Added coverage for security policies, soft-delete flows, ownership transfer, account deletion, and query optimization
-- Reached 68 passing test suites and 539 passing tests
+- Added coverage for configuration, constants, security policies, soft-delete flows, ownership transfer, account deletion, and query optimization
+- Added automated GitHub Actions continuous integration testing
+- Reached 75 passing test suites and 568 passing tests
 - Achieved high coverage across authentication, authorization, filtering, uploads, validation, business rules, and API flows
 
 ---
@@ -938,15 +961,17 @@ GET    /
 |---|---|
 | Backend API | ✅ Fully functional |
 | Architecture | ✅ Modular, scalable, and layered |
-| Authentication & Users | ✅ JWT authentication, profile management, password updates, secure account deletion |
+| Authentication & Users | ✅ JWT authentication, profile management, password updates, and secure account deletion |
 | Authorization | ✅ Advanced role-based access control and ownership transfer |
 | Membership System | ✅ Role management, restoration flows, and soft-delete lifecycle handling |
-| Security | ✅ Helmet, rate limiting, validation, upload protection |
+| Security | ✅ Helmet, rate limiting, validation, upload protection, and centralized security policies |
 | File Uploads | ✅ Avatar and event image uploads supported |
+| Logging | ✅ Centralized structured logging with Pino |
 | Database | ✅ PostgreSQL + Sequelize with transactions, indexes, and optimized queries |
 | API Consistency | ✅ Standardized JSON responses and centralized error handling |
-| Testing | ✅ 539 tests across 68 test suites |
-| Coverage | ✅ 98.44% statements / 91.01% branches / 99.31% functions |
+| Testing | ✅ 568 tests across 75 test suites |
+| Coverage | ✅ 98.52% statements / 92.85% branches / 99.25% functions |
+| Continuous Integration | ✅ Automated GitHub Actions backend testing |
 | Frontend Integration | 🔗 Connected and functional |
 
 ---
@@ -967,11 +992,10 @@ GET    /
 
 - Advanced query aggregation and analytics optimization
 - Advanced database performance tuning
-- Improved logging system using Pino or Winston
 - API versioning strategy (`/api/v1`)
-- Extended business rule centralization
+- Further business-rule centralization and abstraction
 - Swagger / OpenAPI documentation support
-- Additional reusable filtering and formatting utilities
+- Additional reusable filtering, formatting, and query-builder utilities
 
 ### 🧪 Testing & Developer Experience
 
@@ -985,7 +1009,7 @@ GET    /
 - Docker containerization
 - Cloud deployment (AWS, Render, Fly.io, etc.)
 - Production-ready environment configuration improvements
-- CI/CD pipeline integration
+- Extended CI/CD pipeline workflows
 - Secure cloud-based production file storage strategy
 
 ---

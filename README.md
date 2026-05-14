@@ -11,8 +11,8 @@
 
 ![Auth](https://img.shields.io/badge/Auth-JWT-yellow)
 
-![Backend Tests](https://img.shields.io/badge/backend-478%20passing-brightgreen)
-![Backend Coverage](https://img.shields.io/badge/backend%20coverage-98%25%20statements%20%7C%2091%25%20branches-brightgreen)
+![Backend Tests](https://img.shields.io/badge/backend-568%20passing-brightgreen)
+![Backend Coverage](https://img.shields.io/badge/backend%20coverage-98.52%25%20statements%20%7C%2092.85%25%20branches-brightgreen)
 
 ![Frontend Tests](https://img.shields.io/badge/frontend-425%20passing-brightgreen)
 ![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-91.39%25%20statements%20%7C%2087.96%25%20branches-brightgreen)
@@ -25,12 +25,12 @@ PlanTogether is a **fullstack event management platform** that enables users to 
 
 The project is composed of:
 
-- a **Node.js / Express backend API** responsible for authentication, business logic, permissions, filtering, uploads, transactions, and data persistence
+- a **Node.js / Express backend API** responsible for authentication, business logic, permissions, filtering, uploads, transactions, logging, and data persistence
 - a **React frontend application** providing a responsive and interactive user experience with protected routes, advanced filtering, and dynamic UI behavior
 
 Together, they provide a complete end-to-end experience, from secure API workflows and database operations to modern frontend interactions and user-focused features.
 
-The application focuses on **clean architecture, scalability, security, API consistency, and comprehensive automated testing**, helping ensure reliability, maintainability, and predictable behavior across both backend and frontend layers.
+The application focuses on **clean architecture, scalability, security, API consistency, continuous integration, and comprehensive automated testing**, helping ensure reliability, maintainability, and predictable behavior across both backend and frontend layers.
 
 ---
 
@@ -38,14 +38,17 @@ The application focuses on **clean architecture, scalability, security, API cons
 
 - 🧪 **900+ automated tests across backend and frontend** (Jest + Supertest + Vitest + React Testing Library)
 - 📊 **High automated test coverage** (~98% backend / ~91% frontend)
+- 🔁 **Automated backend CI testing with GitHub Actions and PostgreSQL services**
 - 🔐 **Secure authentication and role-based access control (RBAC)**
 - 🧱 **Clean fullstack architecture** (modular MVC backend + scalable React frontend)
 - 🔄 **Transaction-based backend workflows** for critical operations
+- 🗄️ **Optimized backend query architecture** (filtering, pagination, indexes, participant counts)
 - 🔍 **Advanced event filtering** (search, creator, date range, sorting, pagination)
 - 🔗 **URL-synchronized filters, pagination, and views**
 - 🖼️ **Secure image upload system** with validation, preview, drag-and-drop, replacement cleanup, and upload protection
 - ⚛️ **Modern React frontend** with protected routes and dynamic UI behavior
 - 🛡️ **Centralized validation, security, error handling, and API consistency** across backend and frontend layers
+- ♻️ **Soft-delete lifecycle handling** for memberships and secure account deletion flows
 
 ---
 
@@ -62,7 +65,7 @@ Users can:
 - Interact with events through a role-based system (`organizer`, `co_organizer`, `participant`)
 - Manage their profile and authentication securely
 
-The platform is designed to provide a smooth and intuitive user experience through dynamic UI behavior, protected frontend flows, centralized backend permission management, and consistent API-driven interactions.
+The platform is designed to provide a smooth and intuitive user experience through dynamic UI behavior, protected frontend flows, centralized backend permission management, transaction-safe backend workflows, and consistent API-driven interactions.
 
 Additional frontend capabilities include:
 
@@ -71,8 +74,9 @@ Additional frontend capabilities include:
 - protected routes
 - responsive interactive UI behavior
 - reusable frontend form and filtering components
+- upload previews and drag-and-drop interactions
 
-Together, the frontend and backend layers provide reliable data handling, secure workflows, scalable architecture, and consistent fullstack behavior across the application.
+Together, the frontend and backend layers provide reliable data handling, secure workflows, scalable architecture, centralized permission management, and consistent fullstack behavior across the application.
 
 ---
 
@@ -114,12 +118,14 @@ UPLOAD_DIR=uploads
 DB_LOGGING=false
 DB_SSL=false
 
+LOG_LEVEL=info
+
 NODE_ENV=development
 
 CORS_ORIGIN=http://localhost:5173
 ```
 
-📌 A `.env.example` file is provided as a reference configuration.
+📌 `.env.example` and `.env.test` files are provided as reference configurations.
 
 Start the backend server:
 
@@ -127,7 +133,7 @@ Start the backend server:
 npm start
 ```
 
-📌 The backend server starts only if the database connection succeeds.
+📌 The backend server starts only if the database connection and model synchronization succeed.
 
 ### 3️⃣ Setup the Frontend
 
@@ -167,10 +173,10 @@ It includes:
 - backend architecture and project structure
 - API endpoints and response formats
 - authentication and authorization
-- security, validation, and upload handling
-- filtering, pagination, and permissions
-- transactions and database consistency
-- testing overview
+- security, validation, upload handling, and logging
+- filtering, pagination, query optimization, and permissions
+- transactions, soft-delete lifecycle handling, and database consistency
+- testing overview and CI integration
 
 Dedicated backend testing documentation is also available:
 
@@ -182,7 +188,7 @@ It includes:
 - integration vs unit testing
 - reusable helpers and factories
 - transaction and upload testing
-- database isolation
+- database isolation and CI workflows
 - validator and middleware testing
 - mocking strategies
 
@@ -216,6 +222,7 @@ The project uses a modern fullstack architecture combining a secure backend API,
 - Multer (file uploads)
 - Helmet (HTTP security)
 - express-rate-limit (authentication protection)
+- Pino (structured logging)
 - centralized CORS configuration
 - Sequelize transactions
 
@@ -234,6 +241,7 @@ The project uses a modern fullstack architecture combining a secure backend API,
 
 - Jest
 - Supertest
+- PostgreSQL isolated test services
 
 #### Frontend
 
@@ -242,6 +250,10 @@ The project uses a modern fullstack architecture combining a secure backend API,
 - @testing-library/jest-dom
 - @testing-library/user-event
 - jsdom
+
+### 🔁 Continuous Integration
+
+- GitHub Actions CI
 
 ---
 
@@ -255,11 +267,9 @@ This separation provides clear responsibility boundaries between business logic,
 planTogether/
 ├── backend/
 │   ├── docs/
-│   │   └── testing.md
 │   │
 │   ├── src/
 │   │   ├── config/
-│   │   │   └── security/
 │   │   ├── constants/
 │   │   ├── controllers/
 │   │   ├── middlewares/
@@ -267,11 +277,6 @@ planTogether/
 │   │   ├── routes/
 │   │   ├── services/
 │   │   ├── utils/
-│   │   │   ├── auth/
-│   │   │   ├── errors/
-│   │   │   ├── events/
-│   │   │   ├── files/
-│   │   │   └── formatting/
 │   │   └── validators/
 │   │
 │   ├── tests/
@@ -281,6 +286,8 @@ planTogether/
 │   │   └── unit/
 │   │
 │   ├── uploads/
+│   ├── .env.example
+│   ├── .env.test
 │   └── README.md
 │
 ├── frontend/
@@ -334,6 +341,7 @@ Testing strategies are intentionally separated:
 
 - User registration and login (JWT-based authentication)
 - Secure password hashing with bcrypt
+- Authentication rate limiting protection
 - Profile management (name, email)
 - Avatar upload and update with preview support
 - Password update with current password verification
@@ -349,6 +357,7 @@ Testing strategies are intentionally separated:
 - Date consistency rules and protected event restrictions
 - Transaction-based backend operations for critical workflows
 - Centralized filtering, pagination, and sorting behavior
+- Optimized participant count and query behavior
 
 ### 👥 Event Participation
 
@@ -356,6 +365,8 @@ Testing strategies are intentionally separated:
 - Prevent duplicate participation
 - Retrieve event members and organizers
 - Manage personal event dashboards (created and joined events)
+- Membership restoration and soft-delete lifecycle handling
+- Organizer ownership transfer workflows
 
 ### 🔍 Event Search & Filtering
 
@@ -374,6 +385,7 @@ Testing strategies are intentionally separated:
 - Remove uploaded files before submission
 - Default image fallback for missing or broken images
 - Automatic cleanup of replaced uploaded files
+- Upload rollback protection during failed operations
 - Secure upload validation and protected file handling
 
 ### 🎭 Roles & Permissions
@@ -422,7 +434,7 @@ The backend is built using a modular layered architecture:
 - Validators → request validation and input rules
 - Middlewares → authentication, authorization, uploads, rate limiting, and error handling
 - Utils → shared logic (filtering, pagination, formatting, file management)
-- Config → centralized environment and security configuration
+- Config → centralized environment, logging, and security configuration
 - Constants → shared business values and role definitions
 
 This architecture supports:
@@ -430,11 +442,13 @@ This architecture supports:
 - scalable business logic
 - centralized security and validation
 - secure role-based access control (RBAC)
-- transaction-based critical operations
+- transaction-safe critical operations
 - centralized event filtering and query handling
+- optimized query and participant count behavior
 - uploaded file management and cleanup
 - reusable and consistent API responses
 - strong testability and maintainability
+- soft-delete lifecycle protection
 
 ### ⚛️ Frontend
 
@@ -483,7 +497,7 @@ npm run test:run
 
 ### 📊 Results
 
-- Backend: 478 tests (64 test suites)
+- Backend: 568 tests (75 test suites)
 - Frontend: 425 tests (53 test suites)
 - ✅ 900+ automated tests in total — all passing
 - 📊 High automated test coverage (~98% backend / ~91% frontend)
@@ -493,17 +507,19 @@ npm run test:run
 #### 🔧 Backend
 
 - Authentication and profile management
+- Authentication rate limiting
 - Event CRUD operations
-- Filtering, sorting, and pagination
+- Filtering, sorting, pagination, and query optimization
 - Creator-based filtering
 - Event memberships and permissions
 - Role hierarchy and protected actions (RBAC)
 - Validation, edge cases, and security rules
-- File upload handling and cleanup
-- Transaction-based workflows
+- File upload handling, cleanup, and rollback protection
+- Transaction-safe workflows
+- Soft-delete lifecycle handling and ownership transfer flows
 - API response consistency and centralized error handling
 - Database isolation and rollback behavior
-- Internal utilities (filtering, pagination, formatting, uploads)
+- Internal utilities (filtering, pagination, formatting, uploads, query builders)
 
 #### ⚛️ Frontend
 
@@ -524,6 +540,7 @@ npm run test:run
 - Frontend tests simulate user interactions using React Testing Library and Vitest
 - Backend integration tests use the real Express application with a dedicated PostgreSQL test database
 - Frontend API calls are mocked to isolate UI behavior
+- Backend CI workflows run automatically through GitHub Actions and isolated PostgreSQL test services
 - Tests cover success cases, edge cases, validation, permissions, uploads, transactions, and error handling
 - Critical backend logic is tested in isolation for maintainability and predictable behavior
 - Reusable helpers and factories reduce duplication across the testing architecture
@@ -563,19 +580,20 @@ The application implements multiple security mechanisms to protect data, enforce
 - Password policy enforcement
 - Centralized validation error formatting
 
-Upload validation includes:
+### 📁 Upload Security
 
 - MIME type validation
 - File extension validation
 - File size limits
-- Controlled upload destinations
+- Controlled and normalized upload destinations
 - Secure uploaded file replacement and cleanup
+- Upload rollback protection during failed operations
+- Protected file handling and path normalization
 
 ### 🔒 Data Protection
 
 - Password hashing using bcrypt
 - Sensitive data protection via Sequelize scopes
-- Secure uploaded file handling with cleanup and path normalization
 - Consistent API response formatting and centralized error handling
 - Email normalization before persistence and authentication
 
@@ -584,11 +602,11 @@ Upload validation includes:
 - Helmet security headers protection
 - Centralized CORS configuration
 - SQL injection protection through Sequelize ORM parameterized queries
-- Secure file upload flow with validation and cleanup
-- Transaction-based critical operations for safer database consistency
+- Transaction-safe critical operations for safer database consistency
 - Database indexes for optimized and safer query behavior
+- Centralized logging and environment-based security configuration
 
-These mechanisms help ensure secure data handling, predictable application behavior, and strong protection against unauthorized access and unsafe operations across the entire fullstack application.
+These mechanisms help ensure secure data handling, predictable application behavior, transaction-safe workflows, and strong protection against unauthorized access and unsafe operations across the entire fullstack application.
 
 ---
 
@@ -605,20 +623,22 @@ These mechanisms help ensure secure data handling, predictable application behav
 ### 🔧 Backend
 
 - Refactored the backend into a more modular and scalable architecture
-- Centralized event filtering, pagination, and query handling using reusable utilities
+- Centralized event filtering, pagination, query builders, and reusable query utilities
 - Added creator-based filtering across public and authenticated event listings
 - Introduced centralized formatting utilities and reusable API response structures
-- Added transaction-based workflows for critical operations
+- Added transaction-safe workflows for critical operations
 - Implemented centralized security policies (uploads, password rules, CORS)
 - Improved authorization architecture and protected action handling
+- Added organizer ownership transfer and soft-delete membership lifecycle handling
 - Added automatic uploaded file cleanup with path normalization protection
-- Strengthened upload validation, centralized error handling, and API consistency
+- Strengthened upload validation, centralized logging, error handling, and API consistency
 - Added database indexes and improved Sequelize query consistency
 - Added dedicated backend testing documentation (`backend/docs/testing.md`)
 
 ### 🧪 Testing
 
-- Expanded backend testing architecture to 478 tests across 64 test suites
+- Expanded backend testing architecture to 568 tests across 75 test suites
+- Added automated backend CI workflows using GitHub Actions and PostgreSQL test services
 - Added dedicated backend testing documentation and testing strategy structure
 - Improved database isolation, transaction testing, and rollback validation
 - Expanded coverage across permissions, uploads, filtering, validation, and business rules
@@ -630,13 +650,14 @@ These mechanisms help ensure secure data handling, predictable application behav
 
 | Area | Status |
 |---|---|
-| Backend Architecture | ✅ Modular, scalable & well-tested |
+| Backend Architecture | ✅ Modular, scalable & production-oriented |
 | Frontend Application | ✅ Functional & feature-rich |
 | Authentication & RBAC | ✅ Complete |
 | Security | ✅ Centralized & robust |
-| Testing | ✅ 900+ automated tests |
+| Database & Transactions | ✅ Optimized and transaction-safe |
+| Testing & CI | ✅ 900+ automated tests with GitHub Actions CI |
 | Documentation | ✅ Backend and testing documentation available |
-| Backend API | ✅ Stable and production-oriented |
+| Backend API | ✅ Stable and well-tested |
 | UX & Frontend Refactor | 🚧 Ongoing improvements |
 
 ---
@@ -649,12 +670,14 @@ These mechanisms help ensure secure data handling, predictable application behav
 - Add event notifications and reminders
 - Support public and private events with fine-grained access control
 - Add event capacity management and registration deadlines
+- Introduce event activity feeds and moderation audit logs
 
 ### 📅 Event Management
 
-- Improve handling of past events (archiving, visibility, and UI states)
-- Add organizer ownership transfer and advanced membership management
-- Introduce soft-delete support for memberships and archived events
+- Improve archived and past-event lifecycle management
+- Expand advanced membership moderation workflows
+- Add membership role history and audit tracking
+- Improve event participation analytics and reporting
 
 ### ⚛️ Frontend & UX
 
@@ -669,8 +692,9 @@ These mechanisms help ensure secure data handling, predictable application behav
 - Containerize the application using Docker
 - Deploy the application (Vercel, Railway, Render, or Fly.io)
 - Improve environment-based configuration for production
-- Add CI automation for testing and deployment workflows
+- Expand CI/CD automation for testing and deployment workflows
 - Improve production-ready file storage and upload strategies
+- Add Swagger / OpenAPI API documentation support
 
 ---
 
@@ -687,9 +711,11 @@ Through this project, I strengthened my fullstack development skills and gained 
 - Handling complex business logic (roles, permissions, event workflows)
 - Designing reusable utilities for filtering, pagination, formatting, and data processing
 - Implementing secure file upload systems with validation and lifecycle management
-- Working with transaction-based workflows and protected database operations
-- Centralizing validation, security policies, and API response handling
-- Improving query consistency, maintainability, and backend organization through refactoring
+- Working with transaction-safe workflows and protected database operations
+- Improving query consistency and optimization for scalable backend behavior
+- Managing soft-delete lifecycle handling and ownership transfer workflows
+- Centralizing validation, security policies, logging, and API response handling
+- Improving maintainability and backend organization through large-scale refactoring
 
 ### ⚛️ Frontend
 
@@ -708,7 +734,7 @@ Through this project, I strengthened my fullstack development skills and gained 
 - Testing full API workflows and complex UI interactions
 - Designing reusable testing helpers, factories, and isolated test environments
 - Validating business rules, permissions, uploads, filtering, transactions, and security behavior
-- Improving reliability through automated testing, edge cases, database isolation, and rollback validation
+- Improving reliability through automated testing, CI workflows, edge cases, database isolation, and rollback validation
 
 ### 🧱 Architecture & Practices
 
@@ -717,6 +743,7 @@ Through this project, I strengthened my fullstack development skills and gained 
 - Aligning frontend and backend validation logic
 - Structuring applications around reusable and domain-driven features
 - Building consistent API-driven frontend/backend interactions
+- Designing reusable and centralized backend architecture patterns
 - Writing clean, testable, and production-oriented code
 
 ---

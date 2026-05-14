@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 
 import { AuthContext } from "./AuthContext";
 
+import { getApiErrorMessage } from "../../api/apiError";
+
 import { logoutUser } from "../../api/auth/authApi";
 import { getCurrentUserProfile } from "../../api/users/userApi";
 
@@ -33,7 +35,9 @@ export default function AuthProvider({ children }) {
             setUser(data.user);
 
             return data.user;
-        } catch {
+        } catch (error) {
+            console.error("Current user fetch error:", getApiErrorMessage(error, "Unable to fetch current user"));
+
             removeToken();
             setUser(null);
 
@@ -57,7 +61,7 @@ export default function AuthProvider({ children }) {
         try {
             await logoutUser();
         } catch (error) {
-            console.error("Logout API error:", error);
+            console.error("Logout API error:", getApiErrorMessage(error, "Unable to logout"));
         } finally {
             removeToken();
             setUser(null);
@@ -83,7 +87,7 @@ export default function AuthProvider({ children }) {
                     await fetchCurrentUser();
                 }
             } catch (error) {
-                console.error("Auth initialization error:", error);
+                console.error("Auth initialization error:", getApiErrorMessage(error, "Unable to initialize auth"));
             } finally {
                 setLoading(false);
             }
@@ -99,7 +103,7 @@ export default function AuthProvider({ children }) {
                 loading,
                 login,
                 logout,
-                refreshUser,
+                refreshUser
             }}
         >
             {children}

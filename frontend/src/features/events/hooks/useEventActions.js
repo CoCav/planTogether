@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
+import { getApiErrorMessage } from "../../../api/apiError";
 import { deleteEvent } from "../../../api/events/eventApi";
 
 /* ==================================================
@@ -13,12 +14,12 @@ import { deleteEvent } from "../../../api/events/eventApi";
    - membership actions belong to eventMemberships
 ================================================== */
 
-export default function useEventActions({
-    eventId,
-    setMessage,
-    setError
-}) {
+export default function useEventActions({ eventId, setMessage, setError }) {
     const navigate = useNavigate();
+
+    /* =============================
+       DELETE EVENT
+    ============================= */
 
     // Deletes an event after confirmation
     const handleDeleteEvent = async () => {
@@ -34,8 +35,7 @@ export default function useEventActions({
 
             navigate("/events");
         } catch (error) {
-            console.error("Error deleting event:", error);
-            setError("❌ Unable to delete event");
+            setError(getApiErrorMessage(error, "❌ Unable to delete event"));
         }
     };
 

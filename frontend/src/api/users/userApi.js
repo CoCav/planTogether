@@ -1,4 +1,4 @@
-import apiClient from "../client";
+import apiClient from "../apiClient";
 import { unwrapApiResponse } from "../apiResponse";
 
 /* ==================================================

@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "../../../api/apiError";
+
 import { removeEventMember, transferEventOwnership, updateEventMemberRole } from "../../../api/events/eventMembershipApi";
 
 import { EVENT_ROLES } from "../../shared/eventRoles";
@@ -14,12 +16,12 @@ import { EVENT_ROLES } from "../../shared/eventRoles";
    - refresh data after mutations
 ================================================== */
 
-export default function useMembershipManagement({
-    eventId,
-    loadData,
-    setMessage,
-    setError
-}) {
+export default function useMembershipManagement({ eventId, loadData, setMessage, setError }) {
+
+    /* =============================
+       ROLE MANAGEMENT
+    ============================= */
+
     // Promotes a participant to co-organizer
     const handlePromoteMember = async (userId) => {
         try {
@@ -32,8 +34,7 @@ export default function useMembershipManagement({
 
             await loadData();
         } catch (error) {
-            console.error("Error promoting user:", error);
-            setError("❌ Unable to promote user");
+            setError(getApiErrorMessage(error, "❌ Unable to promote user"));
         }
     };
 
@@ -49,10 +50,13 @@ export default function useMembershipManagement({
 
             await loadData();
         } catch (error) {
-            console.error("Error demoting user:", error);
-            setError("❌ Unable to demote user");
+            setError(getApiErrorMessage(error, "❌ Unable to demote user"));
         }
     };
+
+    /* =============================
+       MEMBER REMOVAL
+    ============================= */
 
     // Removes a member from the event
     const handleRemoveMember = async (userId) => {
@@ -70,10 +74,13 @@ export default function useMembershipManagement({
 
             await loadData();
         } catch (error) {
-            console.error("Error removing member:", error);
-            setError("❌ Unable to remove member");
+            setError(getApiErrorMessage(error, "❌ Unable to remove member"));
         }
     };
+
+    /* =============================
+       OWNERSHIP TRANSFER
+    ============================= */
 
     // Transfers event ownership to another member
     const handleTransferOwnership = async (targetUserId) => {
@@ -91,8 +98,7 @@ export default function useMembershipManagement({
 
             await loadData();
         } catch (error) {
-            console.error("Error transferring ownership:", error);
-            setError("❌ Unable to transfer ownership");
+            setError(getApiErrorMessage(error, "❌ Unable to transfer ownership"));
         }
     };
 

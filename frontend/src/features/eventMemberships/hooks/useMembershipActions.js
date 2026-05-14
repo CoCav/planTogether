@@ -1,3 +1,4 @@
+import { getApiErrorMessage } from "../../../api/apiError";
 import { joinEvent, leaveEvent } from "../../../api/events/eventMembershipApi";
 
 import { EVENT_ROLES } from "../../shared/eventRoles";
@@ -12,12 +13,12 @@ import { EVENT_ROLES } from "../../shared/eventRoles";
    - refresh data after success
 ================================================== */
 
-export default function useMembershipActions({
-    loadData,
-    setMessage,
-    setError,
-    getRoleByEventId
-}) {
+export default function useMembershipActions({ loadData, setMessage, setError, getRoleByEventId }) {
+
+    /* =============================
+       JOIN EVENT
+    ============================= */
+
     // Joins an event as participant
     const handleJoinEvent = async (eventId) => {
         try {
@@ -30,10 +31,13 @@ export default function useMembershipActions({
 
             await loadData();
         } catch (error) {
-            console.error("Error joining event:", error);
-            setError("❌ Unable to join event");
+            setError(getApiErrorMessage(error, "❌ Unable to join event"));
         }
     };
+
+    /* =============================
+       LEAVE EVENT
+    ============================= */
 
     // Leaves an event after confirmation
     const handleLeaveEvent = async (eventId) => {
@@ -63,8 +67,7 @@ export default function useMembershipActions({
 
             await loadData();
         } catch (error) {
-            console.error("Error leaving event:", error);
-            setError("❌ Unable to leave event");
+            setError(getApiErrorMessage(error, "❌ Unable to leave event"));
         }
     };
 

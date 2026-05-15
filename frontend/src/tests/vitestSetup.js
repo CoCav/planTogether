@@ -3,13 +3,13 @@ import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
 
 /* ==================================================
-   TEST SETUP
-   Applies global test configuration
+   VITEST SETUP
+   Applies global frontend test configuration
 
    Handles:
    - jest-dom matchers
-   - DOM cleanup
-   - console noise suppression
+   - automatic DOM cleanup
+   - console warning/error suppression
 ================================================== */
 
 beforeEach(() => {

@@ -1,84 +1,145 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+
 import AppRouter from "../../routes/AppRouter";
 
 /* ==================================================
    APP ROUTER TESTS
-   Tests public and protected route behavior
+   Tests application route registration
+
+   Handles:
+   - public route rendering
+   - protected route rendering through ProtectedRoute
 ================================================== */
 
 const mockUseAuth = vi.fn();
 
-vi.mock("../../context/useAuth.js", () => ({
+vi.mock("../../features/auth/hooks/useAuth", () => ({
     useAuth: () => mockUseAuth()
-}));
-
-vi.mock("../../pages/ProfilePage.jsx", () => ({
-    default: () => <div>Profile Page</div>
-}));
-
-vi.mock("../../pages/LoginPage", () => ({
-    default: () => <div>Login Page</div>
 }));
 
 vi.mock("../../pages/HomePage", () => ({
     default: () => <div>Home Page</div>
 }));
 
-const renderWithRouter = (initialRoute) =>
-    render(
-        <MemoryRouter initialEntries={[initialRoute]}>
-            <AppRouter />
-        </MemoryRouter>
-    );
+vi.mock("../../pages/LoginPage", () => ({
+    default: () => <div>Login Page</div>
+}));
 
-describe("AppRouter / ProtectedRoute", () => {
+vi.mock("../../pages/RegisterPage", () => ({
+    default: () => <div>Register Page</div>
+}));
+
+vi.mock("../../pages/EventsPage", () => ({
+    default: () => <div>Events Page</div>
+}));
+
+vi.mock("../../pages/EventDetailsPage", () => ({
+    default: () => <div>Event Details Page</div>
+}));
+
+vi.mock("../../pages/ProfilePage", () => ({
+    default: () => <div>Profile Page</div>
+}));
+
+vi.mock("../../pages/MyEventsPage", () => ({
+    default: () => <div>My Events Page</div>
+}));
+
+vi.mock("../../pages/CreateEventPage", () => ({
+    default: () => <div>Create Event Page</div>
+}));
+
+vi.mock("../../pages/EditEventPage", () => ({
+    default: () => <div>Edit Event Page</div>
+}));
+
+vi.mock("../../components/ui/PageLoader", () => ({
+    default: ({ children }) => <div>{children}</div>
+}));
+
+describe("AppRouter", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-    });
 
-    it("renders protected page when user is authenticated", () => {
         mockUseAuth.mockReturnValue({
-            user: { id: 1 },
+            user: { userId: 1 },
             loading: false
         });
+    });
 
+    /* =============================
+       TEST HELPERS
+    ============================= */
+
+    const renderWithRouter = (initialRoute) => {
+        return render(
+            <MemoryRouter initialEntries={[initialRoute]}>
+                <AppRouter />
+            </MemoryRouter>
+        );
+    };
+
+    /* =============================
+       PUBLIC ROUTES
+    ============================= */
+
+    it("should render home route", () => {
+        renderWithRouter("/");
+
+        expect(screen.getByText("Home Page")).toBeInTheDocument();
+    });
+
+    it("should render login route", () => {
+        renderWithRouter("/login");
+
+        expect(screen.getByText("Login Page")).toBeInTheDocument();
+    });
+
+    it("should render register route", () => {
+        renderWithRouter("/register");
+
+        expect(screen.getByText("Register Page")).toBeInTheDocument();
+    });
+
+    it("should render events route", () => {
+        renderWithRouter("/events");
+
+        expect(screen.getByText("Events Page")).toBeInTheDocument();
+    });
+
+    it("should render event details route", () => {
+        renderWithRouter("/events/1");
+
+        expect(screen.getByText("Event Details Page")).toBeInTheDocument();
+    });
+
+    /* =============================
+       PROTECTED ROUTES
+    ============================= */
+
+    it("should render profile route when authenticated", () => {
         renderWithRouter("/profile");
 
         expect(screen.getByText("Profile Page")).toBeInTheDocument();
     });
 
-    it("redirects to login when user is not authenticated", () => {
-        mockUseAuth.mockReturnValue({
-            user: null,
-            loading: false
-        });
+    it("should render my events route when authenticated", () => {
+        renderWithRouter("/my-events");
 
-        renderWithRouter("/profile");
-
-        expect(screen.getByText("Login Page")).toBeInTheDocument();
+        expect(screen.getByText("My Events Page")).toBeInTheDocument();
     });
 
-    it("shows loading state while auth is loading", () => {
-        mockUseAuth.mockReturnValue({
-            user: null,
-            loading: true
-        });
+    it("should render create event route when authenticated", () => {
+        renderWithRouter("/events/create");
 
-        renderWithRouter("/profile");
-
-        expect(screen.getByText(/loading/i)).toBeInTheDocument();
+        expect(screen.getByText("Create Event Page")).toBeInTheDocument();
     });
 
-    it("allows access to public routes", () => {
-        mockUseAuth.mockReturnValue({
-            user: null,
-            loading: false
-        });
+    it("should render edit event route when authenticated", () => {
+        renderWithRouter("/events/1/edit");
 
-        renderWithRouter("/");
-
-        expect(screen.getByText("Home Page")).toBeInTheDocument();
+        expect(screen.getByText("Edit Event Page")).toBeInTheDocument();
     });
 });

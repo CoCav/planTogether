@@ -13,9 +13,9 @@ PlanTogether is a collaborative event management platform where users can create
 
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
 ![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
-![Test Suites](https://img.shields.io/badge/test%20suites-75%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-568%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-98.52%25%20statements%20%7C%2092.85%25%20branches-brightgreen)
+![Test Suites](https://img.shields.io/badge/test%20suites-76%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-570%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-98.54%25%20statements%20%7C%2092.85%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -150,6 +150,7 @@ backend/
 │   │       └── uploadPolicy.js
 │   │
 │   ├── constants/
+│   │   ├── eventModes.js
 │   │   ├── eventRoles.js
 │   │   └── eventStatus.js
 │   │
@@ -190,7 +191,7 @@ backend/
 │   │   ├── app/
 │   │   ├── auth/
 │   │   ├── events/
-│   │   ├── eventMembership/
+│   │   ├── eventMemberships/
 │   │   └── users/
 │   │
 │   └── unit/
@@ -216,7 +217,7 @@ backend/
 
 The `config` layer centralizes environment-based configuration such as database connections, CORS, and reusable security policies.
 
-The `constants` layer stores shared business values such as event roles and event statuses.
+The `constants` layer stores shared business values such as event roles, event modes and event statuses.
 
 The `relations` folder contains linking models used to represent many-to-many relationships between users and events.
 
@@ -362,7 +363,7 @@ The backend uses a layered middleware architecture:
   - `authenticateToken` verifies JWT access tokens
 
 - **Authorization**
-  - `authorizeEvent`
+  - `authorizeEventRole`
   - `eventMemberAuthorization`
 
 - **Business rules**
@@ -427,19 +428,19 @@ Additional features:
 Filter events using keyword and date range:
 
 ```http
-GET /api/events/filtered?search=party&type=music&startDate=2026-04-01&endDate=2026-04-30
+GET /api/events?search=party&type=music&startDate=2026-04-01&endDate=2026-04-30
 ```
 
 Filter events for an exact date:
 
 ```http
-GET /api/events/filtered?date=2026-04-16
+GET /api/events?date=2026-04-16
 ```
 
 Filter events by creator:
 
 ```http
-GET /api/events/filtered?creator=Luffy
+GET /api/events?creator=Luffy
 ```
 
 Filter authenticated user events by view and creator:
@@ -470,15 +471,15 @@ npm run test:coverage
 
 ### 📊 Results
 
-- ✅ 75 passing test suites
-- ✅ 568 passing tests
+- ✅ 76 passing test suites
+- ✅ 570 passing tests
 - ✅ All passing
 
 **Coverage:**
-- 98.52% statements coverage
+- 98.54% statements coverage
 - 92.85% branch coverage
 - 99.25% functions coverage
-- 98.67% lines coverage
+- 98.69% lines coverage
 
 ✅ High coverage across authentication, authorization, filtering, uploads, soft-delete flows, ownership transfer, transactions, query optimization, and full API flows.
 
@@ -573,7 +574,7 @@ These tests validate isolated internal application logic independently of HTTP r
 
 - **Middlewares**
   - Authentication (`authenticateToken`)
-  - Authorization (`authorizeEvent`, `eventMemberAuthorization`)
+  - Authorization (`authorizeEventRole`, `eventMemberAuthorization`)
   - Validation error handling (`handleValidationErrors`)
   - Upload handling (`uploadFiles`)
   - Rate limiting (`authRateLimiter`)
@@ -633,7 +634,7 @@ Supported roles:
 Authorization is enforced through reusable middleware and centralized business-rule layers:
 
 - `authenticateToken`
-- `authorizeEvent`
+- `authorizeEventRole`
 - `eventMemberAuthorization`
 
 Additional protections include:
@@ -854,9 +855,9 @@ Path parameters use the `:paramName` syntax (e.g. `:eventId`).
 Endpoints related to authentication and account access.
 
 ```http
-POST   /api/auth/register
+POST   /api/auth/register              (supports avatar upload via multipart/form-data)
 POST   /api/auth/login
-POST   /api/auth/logout
+POST   /api/auth/logout                (authenticated)
 ```
 
 ### 👤 Users
@@ -865,12 +866,14 @@ Endpoints related to authenticated and public user data.
 
 ```http
 GET    /api/users/me
-PUT    /api/users/me                   (supports avatar upload via multipart/form-data)
-PUT    /api/users/me/password
-DELETE /api/users/me
+PUT    /api/users/me                   (authenticated, supports avatar upload via multipart/form-data)
+PUT    /api/users/me/password          (authenticated)
+DELETE /api/users/me                   (authenticated)
 
 GET    /api/users/me/events            (authenticated user events)
-GET    /api/users/:id/events           (public user events)
+
+GET    /api/users/:id                  (authenticated, public user profile)
+GET    /api/users/:id/events           (authenticated, public user events)
 ```
 
 ### 📅 Events
@@ -878,13 +881,12 @@ GET    /api/users/:id/events           (public user events)
 Endpoints for event management and public event access.
 
 ```http
-GET    /api/events
-GET    /api/events/filtered            (advanced filtering, sorting, and pagination)
+GET    /api/events                     (filtering, sorting, and pagination)
 GET    /api/events/:eventId
 
-POST   /api/events                     (supports image upload via multipart/form-data)
-PUT    /api/events/:eventId            (supports image upload via multipart/form-data)
-DELETE /api/events/:eventId
+POST   /api/events                     (authenticated, supports image upload via multipart/form-data)
+PUT    /api/events/:eventId            (organizer or co_organizer, supports image upload via multipart/form-data)
+DELETE /api/events/:eventId            (organizer only)
 ```
 
 ### 👥 Event Membership
@@ -892,15 +894,15 @@ DELETE /api/events/:eventId
 Endpoints for event participation and role management.
 
 ```http
-POST   /api/events/:eventId/members/join
-DELETE /api/events/:eventId/members/leave
+POST   /api/events/:eventId/members/join       (authenticated)
+DELETE /api/events/:eventId/members/leave      (authenticated)
 
 GET    /api/events/:eventId/members
-GET    /api/events/:eventId/organizers
+GET    /api/events/:eventId/staff
 
-PUT    /api/events/:eventId/members/:userId/role (role hierarchy enforced)
-PUT    /api/events/:eventId/transfer-ownership   (organizer only)
-DELETE /api/events/:eventId/members/:userId
+PUT    /api/events/:eventId/members/:userId/role   (organizer only)
+PUT    /api/events/:eventId/ownership              (organizer only)
+DELETE /api/events/:eventId/members/:userId        (organizer or co_organizer, with role restrictions)
 ```
 
 ### ❤️ Application Health
@@ -915,7 +917,7 @@ GET    /
 ### 🏗️ Architecture & Organization
 
 - Reorganized the backend into dedicated layers for authentication, authorization, error handling, configuration, constants, and reusable utilities
-- Centralized shared business constants (`EVENT_ROLES`, `EVENT_STATUS`)
+- Centralized shared business constants (`EVENT_ROLES`, `EVENT_MODES`, `EVENT_STATUS`)
 - Introduced reusable formatting, normalization, pagination, query-builder, and HTTP error utilities
 - Standardized JSON API response structures across endpoints
 - Added centralized structured logging with Pino
@@ -950,7 +952,7 @@ GET    /
 - Expanded unit and integration test coverage across all backend layers
 - Added coverage for configuration, constants, security policies, soft-delete flows, ownership transfer, account deletion, and query optimization
 - Added automated GitHub Actions continuous integration testing
-- Reached 75 passing test suites and 568 passing tests
+- Reached 76 passing test suites and 570 passing tests
 - Achieved high coverage across authentication, authorization, filtering, uploads, validation, business rules, and API flows
 
 ---
@@ -969,8 +971,8 @@ GET    /
 | Logging | ✅ Centralized structured logging with Pino |
 | Database | ✅ PostgreSQL + Sequelize with transactions, indexes, and optimized queries |
 | API Consistency | ✅ Standardized JSON responses and centralized error handling |
-| Testing | ✅ 568 tests across 75 test suites |
-| Coverage | ✅ 98.52% statements / 92.85% branches / 99.25% functions |
+| Testing | ✅ 570 tests across 76 test suites |
+| Coverage | ✅ 98.54% statements / 92.85% branches / 99.25% functions |
 | Continuous Integration | ✅ Automated GitHub Actions backend testing |
 | Frontend Integration | 🔗 Connected and functional |
 

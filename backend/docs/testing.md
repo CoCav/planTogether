@@ -2,9 +2,9 @@
 
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
 ![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
-![Test Suites](https://img.shields.io/badge/test%20suites-75%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-568%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-98.52%25%20statements%20%7C%2092.85%25%20branches-brightgreen)
+![Test Suites](https://img.shields.io/badge/test%20suites-76%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-570%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-98.54%25%20statements%20%7C%2092.85%25%20branches-brightgreen)
 
 This document describes the testing architecture and overall testing strategy used in the PlanTogether backend.
 
@@ -40,12 +40,12 @@ The testing architecture is designed to validate:
 
 The current backend test suite includes:
 
-- **75 passing test suites**
-- **568 passing tests**
-- **98.52% statement coverage**
+- **76 passing test suites**
+- **570 passing tests**
+- **98.54% statement coverage**
 - **92.85% branch coverage**
 - **99.25% function coverage**
-- **98.67% line coverage**
+- **98.69% line coverage**
 
 The combination of integration and unit testing helps ensure backend reliability, maintainability, security, query consistency, transaction safety, and safer long-term refactoring across the application.
 
@@ -63,7 +63,7 @@ The backend testing architecture relies on the following tools and libraries:
 ### Database & Environment
 
 - **PostgreSQL** — dedicated isolated test database
-- **Sequelize** — ORM testing, association validation, and transaction testing
+- **Sequelize** — ORM testing, association validation, and transaction behavior validation
 
 ### Continuous Integration
 
@@ -100,7 +100,7 @@ tests
 │   ├── app/
 │   ├── auth/
 │   ├── events/
-│   ├── eventMembership/
+│   ├── eventMemberships/
 │   └── users/
 │
 └── unit/
@@ -143,7 +143,7 @@ Covered areas include:
 - soft-delete membership restoration flows
 - inactive membership protection rules
 - role-based authorization
-- upload workflows and upload protection
+- upload workflows and upload security protections
 - validation errors
 - health check and application routes
 - global error handling
@@ -151,7 +151,7 @@ Covered areas include:
 Integration tests intentionally avoid heavy mocking in order to validate:
 
 - real application behavior
-- database interactions, transactions, indexes, and optimized query behavior
+- database interactions, transactions, filtering, pagination, and optimized query behavior
 - middleware chaining
 - authorization flows
 - end-to-end business rules and membership lifecycle protections
@@ -174,9 +174,9 @@ Covered modules include:
 - utilities
 - formatters
 - configuration modules (`database`, `logger`, `cors`)
-- shared constants and business values
+- shared constants and business values (`EVENT_ROLES`, `EVENT_STATUS`, `EVENT_MODES`)
 - security-related helpers and policies
-- query builders and optimization utilities
+- query builders and query utility helpers
 
 Unit tests are used to verify:
 
@@ -389,7 +389,7 @@ Covered validation areas include:
 
 - authentication payloads
 - password policy enforcement
-- event creation and update payloads
+- event creation and update payloads, including shared event mode validation
 - event membership parameters and role validation
 - ownership transfer validation
 - account deletion protection flows
@@ -457,7 +457,7 @@ The testing architecture aims to provide:
 - predictable database isolation
 - confidence during refactors
 - maintainable and readable test files
-- reusable query and filtering consistency
+- filtering and query behavior consistency
 - query optimization validation
 - transaction-safe and soft-delete lifecycle validation
 - strong coverage across critical backend layers
@@ -476,6 +476,6 @@ Potential future testing improvements include:
 - expanded edge-case coverage for membership and authorization rules
 - deeper integration coverage for complex transaction rollback scenarios
 - performance-oriented testing for complex query behavior
-- dedicated testing documentation for frontend integration
+- frontend/backend integration testing documentation
 
 ---

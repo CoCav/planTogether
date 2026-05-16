@@ -6,13 +6,13 @@ import {
     getTodayEventFilters,
     getWeekendEventFilters,
     isCurrentWeekendFilterActive
-} from "../../shared/eventListingHelpers";
+} from "../../../shared/eventListingHelpers";
 
-import { getDefaultMyEventFilters } from "../authenticated/myEventFilters";
+import { getDefaultPublicUserEventFilters } from "../publicUserEventFilters";
 
 /* ==================================================
-   MY EVENT FILTERS HOOK
-   Manages current user event filter state and handlers
+   PUBLIC EVENT FILTERS HOOK
+   Manages public event filter state and handlers
 
    Handles:
    - filter form state
@@ -22,15 +22,15 @@ import { getDefaultMyEventFilters } from "../authenticated/myEventFilters";
    - pagination reset on filter changes
 
    Notes:
-   - aligned with GET /users/me/events
-   - public event filters belong to features/events
+   - aligned with public event listings
+   - current user event filters belong to features/users
 ================================================== */
 
-export default function useMyEventFilters({
+export default function usePublicEventFilters({
     activeView,
     loadData,
     resetPage,
-    initialFilters = getDefaultMyEventFilters()
+    initialFilters = getDefaultPublicUserEventFilters()
 }) {
     const [filters, setFilters] = useState(initialFilters);
     const [showFilters, setShowFilters] = useState(false);
@@ -69,7 +69,7 @@ export default function useMyEventFilters({
 
     // Resets filters and reloads first page
     const handleResetFilters = async () => {
-        const resetFilters = getDefaultMyEventFilters();
+        const resetFilters = getDefaultPublicUserEventFilters();
 
         setFilters(resetFilters);
         resetPage?.();

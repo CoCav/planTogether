@@ -1,20 +1,21 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import usePublicEventFilters from "../../../../features/users/hooks/usePublicUserEventFilters";
+import useMyEventFilters from "../../../../../features/users/authenticated/hooks/useMyEventFilters";
 
 /* ==================================================
-   USE PUBLIC EVENT FILTERS TESTS
-   Tests public user event filter state and handlers
+   USE MY EVENT FILTERS TESTS
+   Tests current user event filter state and handlers
 
    Handles:
-   - filter form state
+   - default filter state
+   - filter updates
+   - filter submission and reset
    - sorting
    - quick filters
-   - filter submission/reset
 ================================================== */
 
-describe("usePublicEventFilters", () => {
+describe("useMyEventFilters", () => {
     let loadData;
     let resetPage;
 
@@ -33,17 +34,13 @@ describe("usePublicEventFilters", () => {
 
     const setupHook = (activeView = "created") => {
         return renderHook(() =>
-            usePublicEventFilters({
+            useMyEventFilters({
                 activeView,
                 loadData,
                 resetPage
             })
         );
     };
-
-    /* =============================
-       INITIAL STATE
-    ============================= */
 
     it("should initialize with default filters and hidden filter panel", () => {
         const { result } = setupHook();
@@ -53,15 +50,12 @@ describe("usePublicEventFilters", () => {
             creator: "",
             status: "",
             sortBy: "",
-            order: "asc"
+            order: "asc",
+            view: ""
         });
 
         expect(result.current.showFilters).toBe(false);
     });
-
-    /* =============================
-       FILTER CHANGES
-    ============================= */
 
     it("should update filter value on input change", () => {
         const { result } = setupHook();
@@ -99,30 +93,6 @@ describe("usePublicEventFilters", () => {
         );
     });
 
-    it("should reset filters and reload first page", async () => {
-        const { result } = setupHook();
-
-        await act(async () => {
-            await result.current.handleResetFilters();
-        });
-
-        expect(result.current.filters.search).toBe("");
-
-        expect(resetPage).toHaveBeenCalled();
-
-        expect(loadData).toHaveBeenCalledWith(
-            expect.objectContaining({
-                order: "asc"
-            }),
-            1,
-            "created"
-        );
-    });
-
-    /* =============================
-       SORTING
-    ============================= */
-
     it("should update sort values", () => {
         const { result } = setupHook();
 
@@ -138,9 +108,24 @@ describe("usePublicEventFilters", () => {
         expect(result.current.filters.order).toBe("desc");
     });
 
-    /* =============================
-       QUICK FILTERS
-    ============================= */
+    it("should reset filters and reload first page", async () => {
+        const { result } = setupHook();
+
+        await act(async () => {
+            await result.current.handleResetFilters();
+        });
+
+        expect(result.current.filters.search).toBe("");
+        expect(resetPage).toHaveBeenCalled();
+        expect(loadData).toHaveBeenCalledWith(
+            expect.objectContaining({
+                order: "asc",
+                view: ""
+            }),
+            1,
+            "created"
+        );
+    });
 
     it("should toggle today quick filter", async () => {
         const { result } = setupHook();
@@ -150,7 +135,6 @@ describe("usePublicEventFilters", () => {
         });
 
         expect(result.current.filters.date).toBe("2026-04-24");
-
         expect(result.current.filters.startDate).toBe("");
         expect(result.current.filters.endDate).toBe("");
     });
@@ -163,9 +147,7 @@ describe("usePublicEventFilters", () => {
         });
 
         expect(result.current.filters.date).toBe("");
-
         expect(result.current.filters.startDate).toBe("2026-04-25");
         expect(result.current.filters.endDate).toBe("2026-04-26");
     });
-
 });

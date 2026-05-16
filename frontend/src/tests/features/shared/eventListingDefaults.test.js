@@ -1,28 +1,27 @@
 import { describe, expect, it } from "vitest";
 
-import { getDefaultEventFilters } from "../../../features/events/eventFilters";
+import { DEFAULT_EVENT_LISTING_FILTERS } from "../../../features/shared/eventListingDefaults";
 
 /* ==================================================
-   EVENT FILTERS TESTS
-   Tests public event listing filter defaults
+   EVENT LISTING DEFAULTS TESTS
+   Tests shared event listing default filters
 
    Handles:
-   - default public event filters
-   - public creatorId filter
-   - shared listing filter defaults
+   - shared search filters
+   - shared date filters
+   - shared sorting defaults
 ================================================== */
 
-describe("eventFilters", () => {
+describe("eventListingDefaults", () => {
 
     /* =============================
        DEFAULT FILTERS
     ============================= */
 
-    it("should return default public event filters", () => {
-        expect(getDefaultEventFilters()).toEqual({
+    it("should expose shared default event listing filters", () => {
+        expect(DEFAULT_EVENT_LISTING_FILTERS).toEqual({
             search: "",
             creator: "",
-            creatorId: "",
             type: "",
             theme: "",
             mode: "",

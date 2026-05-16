@@ -8,7 +8,7 @@ import {
     isCurrentWeekendFilterActive
 } from "../../shared/eventListingHelpers";
 
-import { getDefaultMyEventFilters } from "../authenticated/MyEventFilters";
+import { getDefaultMyEventFilters } from "../authenticated/myEventFilters";
 
 /* ==================================================
    MY EVENT FILTERS HOOK

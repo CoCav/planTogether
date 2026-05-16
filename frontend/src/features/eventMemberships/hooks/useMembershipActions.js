@@ -1,5 +1,5 @@
 import { getApiErrorMessage } from "../../../api/apiError";
-import { joinEvent, leaveEvent } from "../../../api/events/eventMembershipApi";
+import { joinEvent, leaveEvent } from "../../../api/eventMemberships/eventMembershipApi";
 
 import { EVENT_ROLES } from "../../shared/eventRoles";
 

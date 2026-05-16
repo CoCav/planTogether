@@ -1,29 +1,75 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_VIEW_CONTENT, PUBLIC_EVENT_VIEWS, MY_EVENT_VIEWS, getViewContent } from "../../../features/events/eventViewConfig";
+
+import {
+    DEFAULT_EVENT_VIEW_CONTENT,
+    PUBLIC_EVENT_VIEWS,
+    getEventViewContent
+} from "../../../features/events/eventViewConfig";
+
+import { EVENT_STATUS } from "../../../features/shared/eventStatus";
 
 /* ==================================================
    EVENT VIEW CONFIG TESTS
-   Tests event view configuration and resolution
+   Tests public event view configuration
+
+   Handles:
+   - public event view definitions
+   - view content resolution
+   - default view fallback
+   - public view sorting defaults
 ================================================== */
 
 describe("eventViewConfig", () => {
 
-    it("returns public view content by key", () => {
-        const view = getViewContent(PUBLIC_EVENT_VIEWS, "archives");
+    /* =============================
+       PUBLIC EVENT VIEWS
+    ============================= */
+
+    it("should expose public event views", () => {
+        expect(PUBLIC_EVENT_VIEWS).toHaveLength(3);
+
+        expect(PUBLIC_EVENT_VIEWS.map((view) => view.key)).toEqual([
+            "all",
+            EVENT_STATUS.UPCOMING,
+            EVENT_STATUS.PAST
+        ]);
+    });
+
+    it("should return all events view content", () => {
+        const view = getEventViewContent("all");
 
         expect(view).toMatchObject({
-            key: "archives",
-            status: "past",
+            key: "all",
+            label: "All",
+            status: "",
+            defaultSortBy: "createdAt",
             defaultOrder: "desc",
-            showQuickActions: false
+            showQuickActions: true,
+            clearDateFiltersOnEnter: false
         });
     });
 
-    it("returns my events view content by key", () => {
-        const view = getViewContent(MY_EVENT_VIEWS, "createdHistory");
+    it("should return upcoming events view content", () => {
+        const view = getEventViewContent(EVENT_STATUS.UPCOMING);
 
         expect(view).toMatchObject({
-            key: "createdHistory",
+            key: EVENT_STATUS.UPCOMING,
+            label: "Upcoming",
+            status: EVENT_STATUS.UPCOMING,
+            defaultSortBy: "startDateTime",
+            defaultOrder: "asc",
+            showQuickActions: true,
+            clearDateFiltersOnEnter: false
+        });
+    });
+
+    it("should return past events view content as archives", () => {
+        const view = getEventViewContent(EVENT_STATUS.PAST);
+
+        expect(view).toMatchObject({
+            key: EVENT_STATUS.PAST,
+            label: "Archives",
+            status: EVENT_STATUS.PAST,
             defaultSortBy: "startDateTime",
             defaultOrder: "desc",
             showQuickActions: false,
@@ -31,26 +77,13 @@ describe("eventViewConfig", () => {
         });
     });
 
-    it("returns default view when active view is unknown", () => {
-        const view = getViewContent(MY_EVENT_VIEWS, "unknown");
+    /* =============================
+       DEFAULT VIEW
+    ============================= */
 
-        expect(view).toEqual(DEFAULT_VIEW_CONTENT);
+    it("should return default view when active view is unknown", () => {
+        const view = getEventViewContent("unknown");
+
+        expect(view).toEqual(DEFAULT_EVENT_VIEW_CONTENT);
     });
-
-    it("returns default view when views array is empty", () => {
-        const view = getViewContent([], "any");
-
-        expect(view).toEqual(DEFAULT_VIEW_CONTENT);
-    });
-
-    it("returns correct default sorting for upcoming public events", () => {
-        const view = getViewContent(PUBLIC_EVENT_VIEWS, "upcoming");
-
-        expect(view).toMatchObject({
-            key: "upcoming",
-            defaultSortBy: "startDateTime",
-            defaultOrder: "asc"
-        });
-    });
-
 });

@@ -1,80 +1,152 @@
 import { describe, expect, it } from "vitest";
-import { FILTER_QUERY_KEYS, buildSearchParams, getInitialFiltersFromUrl, getInitialPageFromUrl, getInitialViewFromUrl } from "../../../features/events/eventQueryParams";
+
+import {
+    PUBLIC_EVENT_FILTER_QUERY_KEYS,
+    buildEventSearchParams,
+    getInitialEventFiltersFromUrl,
+    getInitialPageFromUrl,
+    getInitialViewFromUrl
+} from "../../../features/events/eventQueryParams";
+
+import { EVENT_PAGE_QUERY_KEY, EVENT_VIEW_QUERY_KEY } from "../../../features/shared/eventListingQueryKeys";
+
+import { EVENT_STATUS } from "../../../features/shared/eventStatus";
 
 /* ==================================================
    EVENT QUERY PARAMS TESTS
-   Tests URL query params parsing and synchronization
+   Tests public event URL query params synchronization
+
+   Handles:
+   - public event query keys
+   - view parsing
+   - page parsing
+   - filter parsing
+   - URLSearchParams building
 ================================================== */
 
 const views = [
     { key: "all" },
-    { key: "upcoming" },
-    { key: "archives" }
+    { key: EVENT_STATUS.UPCOMING },
+    { key: EVENT_STATUS.PAST }
 ];
 
 describe("eventQueryParams", () => {
-    it("contains supported filter query keys", () => {
-        expect(FILTER_QUERY_KEYS).toContain("search");
-        expect(FILTER_QUERY_KEYS).toContain("creator");
-        expect(FILTER_QUERY_KEYS).toContain("sortBy");
-        expect(FILTER_QUERY_KEYS).toContain("order");
+
+    /* =============================
+       QUERY KEYS
+    ============================= */
+
+    it("should expose supported public event filter query keys", () => {
+        expect(PUBLIC_EVENT_FILTER_QUERY_KEYS).toEqual([
+            "search",
+            "creator",
+            "creatorId",
+            "type",
+            "theme",
+            "mode",
+            "location",
+            "status",
+            "date",
+            "startDate",
+            "endDate",
+            "sortBy",
+            "order"
+        ]);
     });
 
-    it("returns view from URL when valid", () => {
-        const searchParams = new URLSearchParams("view=upcoming");
+    /* =============================
+       VIEW PARSING
+    ============================= */
 
-        expect(getInitialViewFromUrl(searchParams, views)).toBe("upcoming");
+    it("should return view from URL when valid", () => {
+        const searchParams = new URLSearchParams(
+            `${EVENT_VIEW_QUERY_KEY}=${EVENT_STATUS.UPCOMING}`
+        );
+
+        expect(getInitialViewFromUrl(searchParams, views)).toBe(
+            EVENT_STATUS.UPCOMING
+        );
     });
 
-    it("returns all view when URL view is invalid", () => {
-        const searchParams = new URLSearchParams("view=invalid");
+    it("should return fallback view when URL view is invalid", () => {
+        const searchParams = new URLSearchParams(
+            `${EVENT_VIEW_QUERY_KEY}=invalid`
+        );
 
         expect(getInitialViewFromUrl(searchParams, views)).toBe("all");
     });
 
-    it("returns all view when URL view is missing", () => {
+    it("should return fallback view when URL view is missing", () => {
         const searchParams = new URLSearchParams();
 
         expect(getInitialViewFromUrl(searchParams, views)).toBe("all");
     });
 
-    it("returns page from URL when valid", () => {
-        const searchParams = new URLSearchParams("page=3");
+    /* =============================
+       PAGE PARSING
+    ============================= */
+
+    it("should return page from URL when valid", () => {
+        const searchParams = new URLSearchParams(
+            `${EVENT_PAGE_QUERY_KEY}=3`
+        );
 
         expect(getInitialPageFromUrl(searchParams)).toBe(3);
     });
 
-    it("returns page 1 when URL page is invalid", () => {
-        expect(getInitialPageFromUrl(new URLSearchParams("page=abc"))).toBe(1);
-        expect(getInitialPageFromUrl(new URLSearchParams("page=0"))).toBe(1);
-        expect(getInitialPageFromUrl(new URLSearchParams("page=-2"))).toBe(1);
+    it("should return page 1 when URL page is invalid", () => {
+        expect(
+            getInitialPageFromUrl(
+                new URLSearchParams(`${EVENT_PAGE_QUERY_KEY}=abc`)
+            )
+        ).toBe(1);
+
+        expect(
+            getInitialPageFromUrl(
+                new URLSearchParams(`${EVENT_PAGE_QUERY_KEY}=0`)
+            )
+        ).toBe(1);
+
+        expect(
+            getInitialPageFromUrl(
+                new URLSearchParams(`${EVENT_PAGE_QUERY_KEY}=-2`)
+            )
+        ).toBe(1);
     });
 
-    it("returns filters from URL", () => {
+    /* =============================
+       FILTER PARSING
+    ============================= */
+
+    it("should return filters from URL", () => {
         const searchParams = new URLSearchParams(
-            "search=music&creator=Luffy&type=Meetup&mode=online&sortBy=title&order=desc"
+            "search=music&creator=John%20Doe&creatorId=2&type=Meetup&mode=online&status=upcoming&sortBy=title&order=desc"
         );
 
-        expect(getInitialFiltersFromUrl(searchParams)).toMatchObject({
+        expect(getInitialEventFiltersFromUrl(searchParams)).toMatchObject({
             search: "music",
-            creator: "Luffy",
+            creator: "John Doe",
+            creatorId: "2",
             type: "Meetup",
             mode: "online",
+            status: EVENT_STATUS.UPCOMING,
             sortBy: "title",
             order: "desc"
         });
     });
 
-    it("keeps default values for missing filters", () => {
-        const searchParams = new URLSearchParams("creator=Luffy");
+    it("should keep default values for missing filters", () => {
+        const searchParams = new URLSearchParams("creator=John%20Doe");
 
-        expect(getInitialFiltersFromUrl(searchParams)).toMatchObject({
+        expect(getInitialEventFiltersFromUrl(searchParams)).toMatchObject({
             search: "",
-            creator: "Luffy",
+            creator: "John Doe",
+            creatorId: "",
             type: "",
             theme: "",
             mode: "",
             location: "",
+            status: "",
             date: "",
             startDate: "",
             endDate: "",
@@ -83,55 +155,65 @@ describe("eventQueryParams", () => {
         });
     });
 
-    it("builds search params from filters, page and view", () => {
-        const params = buildSearchParams(
-            {
+    /* =============================
+       PARAMS BUILDING
+    ============================= */
+
+    it("should build search params from filters, page and view", () => {
+        const params = buildEventSearchParams({
+            filters: {
                 search: "music",
-                creator: "Luffy",
+                creator: "John Doe",
+                creatorId: "2",
                 type: "",
                 theme: "",
                 mode: "online",
                 location: "",
+                status: EVENT_STATUS.UPCOMING,
                 date: "",
                 startDate: "",
                 endDate: "",
                 sortBy: "title",
                 order: "desc"
             },
-            2,
-            "upcoming"
-        );
+            page: 2,
+            view: EVENT_STATUS.UPCOMING
+        });
 
-        expect(params.get("view")).toBe("upcoming");
-        expect(params.get("page")).toBe("2");
+        expect(params.get(EVENT_VIEW_QUERY_KEY)).toBe(EVENT_STATUS.UPCOMING);
+        expect(params.get(EVENT_PAGE_QUERY_KEY)).toBe("2");
         expect(params.get("search")).toBe("music");
-        expect(params.get("creator")).toBe("Luffy");
+        expect(params.get("creator")).toBe("John Doe");
+        expect(params.get("creatorId")).toBe("2");
         expect(params.get("mode")).toBe("online");
+        expect(params.get("status")).toBe(EVENT_STATUS.UPCOMING);
         expect(params.get("sortBy")).toBe("title");
         expect(params.get("order")).toBe("desc");
         expect(params.has("type")).toBe(false);
     });
 
-    it("does not include default view or first page in URL params", () => {
-        const params = buildSearchParams(
-            {
+    it("should not include fallback view or first page in URL params", () => {
+        const params = buildEventSearchParams({
+            filters: {
                 search: "",
                 creator: "",
+                creatorId: "",
                 type: "",
                 theme: "",
                 mode: "",
                 location: "",
+                status: "",
                 date: "",
                 startDate: "",
                 endDate: "",
                 sortBy: "",
                 order: "asc"
             },
-            1,
-            "all"
-        );
+            page: 1,
+            view: "all"
+        });
 
-        expect(params.has("view")).toBe(false);
-        expect(params.has("page")).toBe(false);
+        expect(params.has(EVENT_VIEW_QUERY_KEY)).toBe(false);
+        expect(params.has(EVENT_PAGE_QUERY_KEY)).toBe(false);
     });
 });

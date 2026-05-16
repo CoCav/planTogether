@@ -1,4 +1,4 @@
-import { EVENT_PAGE_QUERY_KEY, EVENT_VIEW_QUERY_KEY } from "../shared/eventListingQueryKeys";
+import { EVENT_PAGE_QUERY_KEY, EVENT_VIEW_QUERY_KEY } from "../../shared/eventListingQueryKeys";
 
 import { getDefaultMyEventFilters, MY_EVENT_FILTER_QUERY_KEYS } from "./myEventFilters";
 

@@ -2,15 +2,20 @@ import { describe, expect, it } from "vitest";
 
 import { getNormalizedAuthPayload, normalizeAuthPayload } from "../../../features/auth/authNormalizer";
 
+import { createAuthPayload } from "../../factories/auth/authFactory";
+
 /* ==================================================
    AUTH NORMALIZER TESTS
    Tests auth payload normalization
 
    Handles:
-   - register/login payload normalization
+    - register/login payload normalization
    - authenticated user normalization
    - token extraction
    - fallback values
+
+   Notes:
+   - uses reusable auth payload factories
 ================================================== */
 
 describe("authNormalizer", () => {
@@ -20,15 +25,14 @@ describe("authNormalizer", () => {
     ============================= */
 
     it("should normalize auth payload", () => {
-        const payload = {
-            success: true,
+        const payload = createAuthPayload({
             message: "Login successful",
             user: {
                 id: 1,
                 name: "John Doe"
             },
             token: "jwt-token"
-        };
+        });
 
         const result = normalizeAuthPayload(payload);
 
@@ -66,14 +70,14 @@ describe("authNormalizer", () => {
     ============================= */
 
     it("should normalize auth payload through helper", () => {
-        const payload = {
-            success: true,
+        const payload = createAuthPayload({
+            message: "",
             user: {
                 id: 2,
                 name: "John Doe"
             },
             token: "token"
-        };
+        });
 
         const result = getNormalizedAuthPayload(payload);
 

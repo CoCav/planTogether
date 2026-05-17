@@ -4,6 +4,16 @@ import useMembershipPermissions from "../../../../features/eventMemberships/hook
 
 import { EVENT_ROLES } from "../../../../features/shared/eventRoles";
 
+import {
+    createCoOrganizerMember,
+    createCoOrganizerStaff,
+    createMembershipPermissionProps,
+    createOrganizerMember,
+    createOrganizerStaff,
+    createParticipantMember,
+    createPermissionUser
+} from "../../../factories/eventMemberships/membershipPermissionsFactory";
+
 /* ==================================================
    USE MEMBERSHIP PERMISSIONS TESTS
    Tests membership role and permission logic
@@ -14,24 +24,40 @@ import { EVENT_ROLES } from "../../../../features/shared/eventRoles";
    - member management permissions
    - ownership transfer permissions
    - past event restrictions
+
+   Notes:
+   - uses reusable membership permission factories
 ================================================== */
 
 describe("useMembershipPermissions", () => {
-    const user = { userId: 1 };
+
+    const user = createPermissionUser();
+
+    /* =============================
+       TEST HELPERS
+    ============================= */
+
+    /* =============================
+       TEST HELPERS
+    ============================= */
+
+    // Resolve membership permissions hook
+    const usePermissions = (overrides = {}) => {
+        return useMembershipPermissions(
+            createMembershipPermissionProps({
+                user,
+                ...overrides
+            })
+        );
+    };
 
     /* =============================
        ROLE RESOLUTION
     ============================= */
 
     it("should resolve organizer role from staff list", () => {
-        const result = useMembershipPermissions({
-            user,
-            staff: [
-                {
-                    id: 1,
-                    role: EVENT_ROLES.ORGANIZER
-                }
-            ]
+        const result = usePermissions({
+            staff: createOrganizerStaff()
         });
 
         expect(result.myRole).toBe(EVENT_ROLES.ORGANIZER);
@@ -40,13 +66,9 @@ describe("useMembershipPermissions", () => {
     });
 
     it("should resolve participant role from members list", () => {
-        const result = useMembershipPermissions({
-            user,
+        const result = usePermissions({
             members: [
-                {
-                    id: 1,
-                    role: EVENT_ROLES.PARTICIPANT
-                }
+                createParticipantMember()
             ]
         });
 
@@ -56,8 +78,7 @@ describe("useMembershipPermissions", () => {
     });
 
     it("should return null role when user is not a member", () => {
-        const result = useMembershipPermissions({
-            user,
+        const result = usePermissions({
             members: [],
             staff: []
         });
@@ -71,16 +92,14 @@ describe("useMembershipPermissions", () => {
     ============================= */
 
     it("should allow authenticated non-member to join", () => {
-        const result = useMembershipPermissions({
-            user
-        });
+        const result = usePermissions();
 
         expect(result.canJoin).toBe(true);
         expect(result.showJoinButton).toBe(true);
     });
 
     it("should prevent guest user from joining", () => {
-        const result = useMembershipPermissions({
+        const result = usePermissions({
             user: null
         });
 
@@ -89,8 +108,7 @@ describe("useMembershipPermissions", () => {
     });
 
     it("should prevent joining when event is full", () => {
-        const result = useMembershipPermissions({
-            user,
+        const result = usePermissions({
             isEventFull: true
         });
 
@@ -98,8 +116,7 @@ describe("useMembershipPermissions", () => {
     });
 
     it("should prevent joining when registration is closed", () => {
-        const result = useMembershipPermissions({
-            user,
+        const result = usePermissions({
             isRegistrationClosed: true
         });
 
@@ -107,13 +124,9 @@ describe("useMembershipPermissions", () => {
     });
 
     it("should allow participant to leave but not edit or delete", () => {
-        const result = useMembershipPermissions({
-            user,
+        const result = usePermissions({
             members: [
-                {
-                    id: 1,
-                    role: EVENT_ROLES.PARTICIPANT
-                }
+                createParticipantMember()
             ]
         });
 
@@ -123,14 +136,8 @@ describe("useMembershipPermissions", () => {
     });
 
     it("should allow organizer to edit and delete but not leave", () => {
-        const result = useMembershipPermissions({
-            user,
-            staff: [
-                {
-                    id: 1,
-                    role: EVENT_ROLES.ORGANIZER
-                }
-            ]
+        const result = usePermissions({
+            staff: createOrganizerStaff()
         });
 
         expect(result.canLeave).toBe(false);
@@ -139,14 +146,8 @@ describe("useMembershipPermissions", () => {
     });
 
     it("should allow co-organizer to edit but not delete", () => {
-        const result = useMembershipPermissions({
-            user,
-            staff: [
-                {
-                    id: 1,
-                    role: EVENT_ROLES.CO_ORGANIZER
-                }
-            ]
+        const result = usePermissions({
+            staff: createCoOrganizerStaff()
         });
 
         expect(result.canLeave).toBe(true);
@@ -155,13 +156,9 @@ describe("useMembershipPermissions", () => {
     });
 
     it("should prevent all event actions on past events", () => {
-        const result = useMembershipPermissions({
-            user,
+        const result = usePermissions({
             members: [
-                {
-                    id: 1,
-                    role: EVENT_ROLES.PARTICIPANT
-                }
+                createParticipantMember()
             ],
             isPast: true
         });
@@ -177,125 +174,99 @@ describe("useMembershipPermissions", () => {
     ============================= */
 
     it("should allow organizer to promote participants and demote co-organizers", () => {
-        const result = useMembershipPermissions({
-            user,
-            staff: [
-                {
-                    id: 1,
-                    role: EVENT_ROLES.ORGANIZER
-                }
-            ]
+        const result = usePermissions({
+            staff: createOrganizerStaff()
         });
 
-        expect(result.canPromote({
-            id: 2,
-            role: EVENT_ROLES.PARTICIPANT
-        })).toBe(true);
+        expect(result.canPromote(
+            createParticipantMember({
+                id: 2
+            })
+        )).toBe(true);
 
-        expect(result.canDemote({
-            id: 2,
-            role: EVENT_ROLES.CO_ORGANIZER
-        })).toBe(true);
+        expect(result.canDemote(
+            createCoOrganizerMember({
+                id: 2
+            })
+        )).toBe(true);
     });
 
     it("should prevent self promotion and self demotion", () => {
-        const result = useMembershipPermissions({
-            user,
-            staff: [
-                {
-                    id: 1,
-                    role: EVENT_ROLES.ORGANIZER
-                }
-            ]
+        const result = usePermissions({
+            staff: createOrganizerStaff()
         });
 
-        expect(result.canPromote({
-            id: 1,
-            role: EVENT_ROLES.PARTICIPANT
-        })).toBe(false);
+        expect(result.canPromote(
+            createParticipantMember({
+                id: 1
+            })
+        )).toBe(false);
 
-        expect(result.canDemote({
-            id: 1,
-            role: EVENT_ROLES.CO_ORGANIZER
-        })).toBe(false);
+        expect(result.canDemote(
+            createCoOrganizerMember({
+                id: 1
+            })
+        )).toBe(false);
     });
 
     it("should allow organizer to remove participants and co-organizers", () => {
-        const result = useMembershipPermissions({
-            user,
-            staff: [
-                {
-                    id: 1,
-                    role: EVENT_ROLES.ORGANIZER
-                }
-            ]
+        const result = usePermissions({
+            staff: createOrganizerStaff()
         });
 
-        expect(result.canRemove({
-            id: 2,
-            role: EVENT_ROLES.PARTICIPANT
-        })).toBe(true);
+        expect(result.canRemove(
+            createParticipantMember({
+                id: 2
+            })
+        )).toBe(true);
 
-        expect(result.canRemove({
-            id: 3,
-            role: EVENT_ROLES.CO_ORGANIZER
-        })).toBe(true);
+        expect(result.canRemove(
+            createCoOrganizerMember({
+                id: 3
+            })
+        )).toBe(true);
     });
 
     it("should allow co-organizer to remove participants only", () => {
-        const result = useMembershipPermissions({
-            user,
-            staff: [
-                {
-                    id: 1,
-                    role: EVENT_ROLES.CO_ORGANIZER
-                }
-            ]
+        const result = usePermissions({
+            staff: createCoOrganizerStaff()
         });
 
-        expect(result.canRemove({
-            id: 2,
-            role: EVENT_ROLES.PARTICIPANT
-        })).toBe(true);
+        expect(result.canRemove(
+            createParticipantMember({
+                id: 2
+            })
+        )).toBe(true);
 
-        expect(result.canRemove({
-            id: 3,
-            role: EVENT_ROLES.CO_ORGANIZER
-        })).toBe(false);
+        expect(result.canRemove(
+            createCoOrganizerMember({
+                id: 3
+            })
+        )).toBe(false);
     });
 
     it("should prevent removing yourself", () => {
-        const result = useMembershipPermissions({
-            user,
-            staff: [
-                {
-                    id: 1,
-                    role: EVENT_ROLES.ORGANIZER
-                }
-            ]
+        const result = usePermissions({
+            staff: createOrganizerStaff()
         });
 
-        expect(result.canRemove({
-            id: 1,
-            role: EVENT_ROLES.PARTICIPANT
-        })).toBe(false);
+        expect(result.canRemove(
+            createParticipantMember({
+                id: 1
+            })
+        )).toBe(false);
     });
 
     it("should prevent removing organizer", () => {
-        const result = useMembershipPermissions({
-            user,
-            staff: [
-                {
-                    id: 1,
-                    role: EVENT_ROLES.ORGANIZER
-                }
-            ]
+        const result = usePermissions({
+            staff: createOrganizerStaff()
         });
 
-        expect(result.canRemove({
-            id: 2,
-            role: EVENT_ROLES.ORGANIZER
-        })).toBe(false);
+        expect(result.canRemove(
+            createOrganizerMember({
+                id: 2
+            })
+        )).toBe(false);
     });
 
     /* =============================
@@ -303,70 +274,50 @@ describe("useMembershipPermissions", () => {
     ============================= */
 
     it("should allow organizer to transfer ownership to participant or co-organizer", () => {
-        const result = useMembershipPermissions({
-            user,
-            staff: [
-                {
-                    id: 1,
-                    role: EVENT_ROLES.ORGANIZER
-                }
-            ]
+        const result = usePermissions({
+            staff: createOrganizerStaff()
         });
 
-        expect(result.canTransferOwnershipTo({
-            id: 2,
-            role: EVENT_ROLES.PARTICIPANT
-        })).toBe(true);
+        expect(result.canTransferOwnershipTo(
+            createParticipantMember({
+                id: 2
+            })
+        )).toBe(true);
 
-        expect(result.canTransferOwnershipTo({
-            id: 3,
-            role: EVENT_ROLES.CO_ORGANIZER
-        })).toBe(true);
+        expect(result.canTransferOwnershipTo(
+            createCoOrganizerMember({
+                id: 3
+            })
+        )).toBe(true);
     });
 
     it("should prevent ownership transfer to self", () => {
-        const result = useMembershipPermissions({
-            user,
-            staff: [
-                {
-                    id: 1,
-                    role: EVENT_ROLES.ORGANIZER
-                }
-            ]
+        const result = usePermissions({
+            staff: createOrganizerStaff()
         });
 
-        expect(result.canTransferOwnershipTo({
-            id: 1,
-            role: EVENT_ROLES.PARTICIPANT
-        })).toBe(false);
+        expect(result.canTransferOwnershipTo(
+            createParticipantMember({
+                id: 1
+            })
+        )).toBe(false);
     });
 
     it("should prevent non-organizer ownership transfer", () => {
-        const result = useMembershipPermissions({
-            user,
-            staff: [
-                {
-                    id: 1,
-                    role: EVENT_ROLES.CO_ORGANIZER
-                }
-            ]
+        const result = usePermissions({
+            staff: createCoOrganizerStaff()
         });
 
-        expect(result.canTransferOwnershipTo({
-            id: 2,
-            role: EVENT_ROLES.PARTICIPANT
-        })).toBe(false);
+        expect(result.canTransferOwnershipTo(
+            createParticipantMember({
+                id: 2
+            })
+        )).toBe(false);
     });
 
     it("should prevent ownership transfer to non-members", () => {
-        const result = useMembershipPermissions({
-            user,
-            staff: [
-                {
-                    id: 1,
-                    role: EVENT_ROLES.ORGANIZER
-                }
-            ]
+        const result = usePermissions({
+            staff: createOrganizerStaff()
         });
 
         expect(result.canTransferOwnershipTo({

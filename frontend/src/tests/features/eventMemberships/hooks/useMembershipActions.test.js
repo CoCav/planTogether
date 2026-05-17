@@ -7,6 +7,8 @@ import { joinEvent, leaveEvent } from "../../../../api/eventMemberships/eventMem
 
 import { EVENT_ROLES } from "../../../../features/shared/eventRoles";
 
+import { createMembershipActionHookProps } from "../../../helpers/hooks/createHookProps";
+
 /* ==================================================
    USE MEMBERSHIP ACTIONS TESTS
    Tests current user membership actions
@@ -18,6 +20,9 @@ import { EVENT_ROLES } from "../../../../features/shared/eventRoles";
    - leave confirmation
    - co-organizer leave warning
    - API error handling
+
+   Notes:
+   - uses reusable membership hook prop helpers
 ================================================== */
 
 vi.mock("../../../../api/eventMemberships/eventMembershipApi", () => ({
@@ -26,18 +31,13 @@ vi.mock("../../../../api/eventMemberships/eventMembershipApi", () => ({
 }));
 
 describe("useMembershipActions", () => {
-    let loadData;
-    let setMessage;
-    let setError;
-    let getRoleByEventId;
+
+    let hookProps;
 
     beforeEach(() => {
         vi.clearAllMocks();
 
-        loadData = vi.fn();
-        setMessage = vi.fn();
-        setError = vi.fn();
-        getRoleByEventId = vi.fn();
+        hookProps = createMembershipActionHookProps();
 
         vi.spyOn(window, "confirm").mockReturnValue(true);
     });
@@ -46,14 +46,10 @@ describe("useMembershipActions", () => {
        TEST HELPERS
     ============================= */
 
+    // Render membership actions hook
     const setupHook = () => {
         return renderHook(() =>
-            useMembershipActions({
-                loadData,
-                setMessage,
-                setError,
-                getRoleByEventId
-            })
+            useMembershipActions(hookProps)
         );
     };
 
@@ -70,16 +66,20 @@ describe("useMembershipActions", () => {
             await result.current.handleJoinEvent(1);
         });
 
-        expect(setError).toHaveBeenCalledWith("");
-        expect(setMessage).toHaveBeenCalledWith("");
+        expect(hookProps.setError).toHaveBeenCalledWith("");
+        expect(hookProps.setMessage).toHaveBeenCalledWith("");
 
         expect(joinEvent).toHaveBeenCalledWith(1);
-        expect(setMessage).toHaveBeenCalledWith("✅ Successfully joined event!");
-        expect(loadData).toHaveBeenCalled();
+
+        expect(hookProps.setMessage).toHaveBeenCalledWith("✅ Successfully joined event!");
+
+        expect(hookProps.loadData).toHaveBeenCalled();
     });
 
     it("should handle join event errors", async () => {
-        joinEvent.mockRejectedValue(new Error("Request failed"));
+        joinEvent.mockRejectedValue(
+            new Error("Request failed")
+        );
 
         const { result } = setupHook();
 
@@ -87,7 +87,7 @@ describe("useMembershipActions", () => {
             await result.current.handleJoinEvent(1);
         });
 
-        expect(setError).toHaveBeenCalledWith("Request failed");
+        expect(hookProps.setError).toHaveBeenCalledWith("Request failed");
     });
 
     /* =============================
@@ -95,7 +95,9 @@ describe("useMembershipActions", () => {
     ============================= */
 
     it("should prevent organizer from leaving event", async () => {
-        getRoleByEventId.mockReturnValue(EVENT_ROLES.ORGANIZER);
+        hookProps.getRoleByEventId.mockReturnValue(
+            EVENT_ROLES.ORGANIZER
+        );
 
         const { result } = setupHook();
 
@@ -104,15 +106,17 @@ describe("useMembershipActions", () => {
         });
 
         expect(leaveEvent).not.toHaveBeenCalled();
+
         expect(window.confirm).not.toHaveBeenCalled();
 
-        expect(setError).toHaveBeenCalledWith(
-            "❌ Organizer cannot leave their own event"
-        );
+        expect(hookProps.setError).toHaveBeenCalledWith("❌ Organizer cannot leave their own event");
     });
 
     it("should leave event successfully for participant when confirmed", async () => {
-        getRoleByEventId.mockReturnValue(EVENT_ROLES.PARTICIPANT);
+        hookProps.getRoleByEventId.mockReturnValue(
+            EVENT_ROLES.PARTICIPANT
+        );
+
         leaveEvent.mockResolvedValue();
 
         const { result } = setupHook();
@@ -121,20 +125,24 @@ describe("useMembershipActions", () => {
             await result.current.handleLeaveEvent(1);
         });
 
-        expect(window.confirm).toHaveBeenCalledWith(
-            "Are you sure you want to leave this event?"
-        );
+        expect(window.confirm).toHaveBeenCalledWith("Are you sure you want to leave this event?");
 
-        expect(setError).toHaveBeenCalledWith("");
-        expect(setMessage).toHaveBeenCalledWith("");
+        expect(hookProps.setError).toHaveBeenCalledWith("");
+
+        expect(hookProps.setMessage).toHaveBeenCalledWith("");
 
         expect(leaveEvent).toHaveBeenCalledWith(1);
-        expect(setMessage).toHaveBeenCalledWith("👋 Successfully left event");
-        expect(loadData).toHaveBeenCalled();
+
+        expect(hookProps.setMessage).toHaveBeenCalledWith("👋 Successfully left event");
+
+        expect(hookProps.loadData).toHaveBeenCalled();
     });
 
     it("should show co-organizer warning before leaving", async () => {
-        getRoleByEventId.mockReturnValue(EVENT_ROLES.CO_ORGANIZER);
+        hookProps.getRoleByEventId.mockReturnValue(
+            EVENT_ROLES.CO_ORGANIZER
+        );
+
         leaveEvent.mockResolvedValue();
 
         const { result } = setupHook();
@@ -153,7 +161,9 @@ describe("useMembershipActions", () => {
     it("should not leave event when user cancels confirmation", async () => {
         window.confirm.mockReturnValue(false);
 
-        getRoleByEventId.mockReturnValue(EVENT_ROLES.PARTICIPANT);
+        hookProps.getRoleByEventId.mockReturnValue(
+            EVENT_ROLES.PARTICIPANT
+        );
 
         const { result } = setupHook();
 
@@ -162,12 +172,18 @@ describe("useMembershipActions", () => {
         });
 
         expect(leaveEvent).not.toHaveBeenCalled();
-        expect(loadData).not.toHaveBeenCalled();
+
+        expect(hookProps.loadData).not.toHaveBeenCalled();
     });
 
     it("should handle leave event errors", async () => {
-        getRoleByEventId.mockReturnValue(EVENT_ROLES.PARTICIPANT);
-        leaveEvent.mockRejectedValue(new Error("Request failed"));
+        hookProps.getRoleByEventId.mockReturnValue(
+            EVENT_ROLES.PARTICIPANT
+        );
+
+        leaveEvent.mockRejectedValue(
+            new Error("Request failed")
+        );
 
         const { result } = setupHook();
 
@@ -175,6 +191,6 @@ describe("useMembershipActions", () => {
             await result.current.handleLeaveEvent(1);
         });
 
-        expect(setError).toHaveBeenCalledWith("Request failed");
+        expect(hookProps.setError).toHaveBeenCalledWith("Request failed");
     });
 });

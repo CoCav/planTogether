@@ -5,6 +5,10 @@ import useEventFilters from "../../../../features/events/hooks/useEventFilters";
 
 import { EVENT_STATUS } from "../../../../features/shared/eventStatus";
 
+import { createEventFilters } from "../../../factories/events/eventFiltersFactory";
+
+import { createHookCallbacks } from "../../../helpers/hooks/createHookProps";
+
 /* ==================================================
    USE EVENT FILTERS TESTS
    Tests public event filter state and handlers
@@ -17,22 +21,26 @@ import { EVENT_STATUS } from "../../../../features/shared/eventStatus";
    - sort changes
    - today and weekend quick filters
    - active view forwarding
+
+   Notes:
+   - uses reusable event filter factories
+   - uses reusable hook callback helpers
 ================================================== */
 
 describe("useEventFilters", () => {
-    let loadData;
-    let resetPage;
+    let hookProps;
 
     beforeEach(() => {
         vi.useFakeTimers();
-        vi.setSystemTime(new Date("2026-04-24T12:00:00")); // Friday
 
-        loadData = vi.fn();
-        resetPage = vi.fn();
+        vi.setSystemTime(new Date("2026-04-24T12:00:00"));
+
+        hookProps = createHookCallbacks();
     });
 
     afterEach(() => {
         vi.useRealTimers();
+
         vi.clearAllMocks();
     });
 
@@ -40,17 +48,18 @@ describe("useEventFilters", () => {
        TEST HELPERS
     ============================= */
 
-    const setupHook = (
+    // Render public event filters hook
+    const setupHook = ({
         activeView = "all",
-        customInitialFilters = null
-    ) => {
+        initialFilters
+    } = {}) => {
         return renderHook(() =>
             useEventFilters({
                 activeView,
-                loadData,
-                resetPage,
-                ...(customInitialFilters && {
-                    initialFilters: customInitialFilters
+                loadData: hookProps.loadData,
+                resetPage: hookProps.resetPage,
+                ...(initialFilters && {
+                    initialFilters
                 })
             })
         );
@@ -63,40 +72,22 @@ describe("useEventFilters", () => {
     it("should initialize with default filters and hidden filter panel", () => {
         const { result } = setupHook();
 
-        expect(result.current.filters).toEqual({
-            search: "",
-            creator: "",
-            creatorId: "",
-            type: "",
-            theme: "",
-            mode: "",
-            location: "",
-            status: "",
-            date: "",
-            startDate: "",
-            endDate: "",
-            sortBy: "",
-            order: "asc"
-        });
+        expect(result.current.filters).toEqual(createEventFilters());
 
         expect(result.current.showFilters).toBe(false);
     });
 
     it("should initialize with provided initial filters", () => {
-        const { result } = setupHook(EVENT_STATUS.UPCOMING, {
+        const initialFilters = createEventFilters({
             search: "music",
             creator: "John Doe",
-            creatorId: "",
-            type: "",
-            theme: "",
-            mode: "",
-            location: "",
-            status: "",
-            date: "",
-            startDate: "",
-            endDate: "",
             sortBy: "title",
             order: "desc"
+        });
+
+        const { result } = setupHook({
+            activeView: EVENT_STATUS.UPCOMING,
+            initialFilters
         });
 
         expect(result.current.filters).toMatchObject({
@@ -154,9 +145,9 @@ describe("useEventFilters", () => {
             });
         });
 
-        expect(resetPage).toHaveBeenCalled();
+        expect(hookProps.resetPage).toHaveBeenCalled();
 
-        expect(loadData).toHaveBeenCalledWith(
+        expect(hookProps.loadData).toHaveBeenCalledWith(
             expect.objectContaining({
                 search: "tech",
                 sortBy: "startDateTime",
@@ -184,9 +175,10 @@ describe("useEventFilters", () => {
         });
 
         expect(result.current.filters.search).toBe("");
-        expect(resetPage).toHaveBeenCalled();
 
-        expect(loadData).toHaveBeenCalledWith(
+        expect(hookProps.resetPage).toHaveBeenCalled();
+
+        expect(hookProps.loadData).toHaveBeenCalledWith(
             expect.objectContaining({
                 search: "",
                 sortBy: "",
@@ -217,7 +209,9 @@ describe("useEventFilters", () => {
     });
 
     it("should return past-view specific sort labels", () => {
-        const { result } = setupHook(EVENT_STATUS.PAST);
+        const { result } = setupHook({
+            activeView: EVENT_STATUS.PAST
+        });
 
         expect(result.current.sortLabels["startDateTime-asc"]).toBe(
             "Oldest first"
@@ -242,9 +236,10 @@ describe("useEventFilters", () => {
         expect(result.current.filters.date).toBe("2026-04-24");
         expect(result.current.filters.startDate).toBe("");
         expect(result.current.filters.endDate).toBe("");
-        expect(resetPage).toHaveBeenCalled();
 
-        expect(loadData).toHaveBeenCalledWith(
+        expect(hookProps.resetPage).toHaveBeenCalled();
+
+        expect(hookProps.loadData).toHaveBeenCalledWith(
             expect.objectContaining({
                 date: "2026-04-24"
             }),
@@ -269,9 +264,10 @@ describe("useEventFilters", () => {
         expect(result.current.filters.date).toBe("");
         expect(result.current.filters.startDate).toBe("2026-04-25");
         expect(result.current.filters.endDate).toBe("2026-04-26");
-        expect(resetPage).toHaveBeenCalled();
 
-        expect(loadData).toHaveBeenCalledWith(
+        expect(hookProps.resetPage).toHaveBeenCalled();
+
+        expect(hookProps.loadData).toHaveBeenCalledWith(
             expect.objectContaining({
                 startDate: "2026-04-25",
                 endDate: "2026-04-26"
@@ -293,7 +289,9 @@ describe("useEventFilters", () => {
     ============================= */
 
     it("should pass activeView to loadData", async () => {
-        const { result } = setupHook(EVENT_STATUS.UPCOMING);
+        const { result } = setupHook({
+            activeView: EVENT_STATUS.UPCOMING
+        });
 
         await act(async () => {
             await result.current.handleFilterSubmit({
@@ -301,10 +299,6 @@ describe("useEventFilters", () => {
             });
         });
 
-        expect(loadData).toHaveBeenCalledWith(
-            expect.any(Object),
-            1,
-            EVENT_STATUS.UPCOMING
-        );
+        expect(hookProps.loadData).toHaveBeenCalledWith(expect.any(Object), 1, EVENT_STATUS.UPCOMING);
     });
 });

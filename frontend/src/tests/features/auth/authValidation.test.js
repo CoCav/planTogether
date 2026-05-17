@@ -4,6 +4,8 @@ import { validateLoginForm, validateRegisterForm } from "../../../features/auth/
 
 import { PASSWORD_MESSAGES } from "../../../features/shared/passwordPolicy";
 
+import { createMockImageFile, createMockInvalidFile, createMockOversizedFile } from "../../helpers/mocks/mockFile";
+
 /* ==================================================
    AUTH VALIDATION TESTS
    Tests frontend auth form validation helpers
@@ -13,6 +15,9 @@ import { PASSWORD_MESSAGES } from "../../../features/shared/passwordPolicy";
    - login form validation
    - password policy validation
    - avatar upload validation
+
+   Notes:
+   - uses reusable upload file mock helpers
 ================================================== */
 
 describe("authValidation", () => {
@@ -21,23 +26,18 @@ describe("authValidation", () => {
        TEST HELPERS
     ============================= */
 
-    const validAvatar = new File(
-        ["avatar"],
-        "avatar.png",
-        { type: "image/png" }
-    );
+    const validAvatar = createMockImageFile({
+        name: "avatar.png"
+    });
 
-    const invalidAvatar = new File(
-        ["avatar"],
-        "avatar.txt",
-        { type: "text/plain" }
-    );
+    const invalidAvatar = createMockInvalidFile({
+        name: "avatar.txt"
+    });
 
-    const largeAvatar = new File(
-        [new Uint8Array(2 * 1024 * 1024 + 1)],
-        "large.png",
-        { type: "image/png" }
-    );
+    const largeAvatar = createMockOversizedFile({
+        name: "large.png",
+        sizeInMb: 3
+    });
 
     /* =============================
        REGISTER

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { PUBLIC_USER_EVENT_FILTER_QUERY_KEYS, getDefaultPublicUserEventFilters } from "../../../../features/users/public/publicUserEventFilters";
+import {
+    PUBLIC_USER_EVENT_FILTER_QUERY_KEYS,
+    getDefaultPublicUserEventFilters
+} from "../../../../features/users/public/publicUserEventFilters";
+
+import { createPublicUserEventFilters } from "../../../factories/users/public/publicUserEventFiltersFactory";
 
 /* ==================================================
    PUBLIC USER EVENT FILTERS TESTS
@@ -9,6 +14,9 @@ import { PUBLIC_USER_EVENT_FILTER_QUERY_KEYS, getDefaultPublicUserEventFilters }
    Handles:
    - public user event default filters
    - public user event query keys
+
+   Notes:
+   - uses reusable public user event filter factories
 ================================================== */
 
 describe("publicUserEventFilters", () => {
@@ -18,20 +26,9 @@ describe("publicUserEventFilters", () => {
     ============================= */
 
     it("should return default public user event filters", () => {
-        expect(getDefaultPublicUserEventFilters()).toEqual({
-            search: "",
-            creator: "",
-            type: "",
-            theme: "",
-            mode: "",
-            location: "",
-            status: "",
-            date: "",
-            startDate: "",
-            endDate: "",
-            sortBy: "",
-            order: "asc"
-        });
+        expect(getDefaultPublicUserEventFilters()).toEqual(
+            createPublicUserEventFilters()
+        );
     });
 
     /* =============================

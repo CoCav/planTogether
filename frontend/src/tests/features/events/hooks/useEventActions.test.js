@@ -5,6 +5,8 @@ import useEventActions from "../../../../features/events/hooks/useEventActions";
 
 import { deleteEvent } from "../../../../api/events/eventApi";
 
+import { createMutationHookProps } from "../../../helpers/hooks/createHookProps";
+
 /* ==================================================
    USE EVENT ACTIONS TESTS
    Tests organizer event actions
@@ -14,6 +16,9 @@ import { deleteEvent } from "../../../../api/events/eventApi";
    - event deletion redirect
    - delete cancellation
    - delete API error handling
+
+   Notes:
+   - uses reusable mutation hook prop helpers
 ================================================== */
 
 const mockNavigate = vi.fn();
@@ -27,14 +32,14 @@ vi.mock("../../../../api/events/eventApi", () => ({
 }));
 
 describe("useEventActions", () => {
-    let setMessage;
-    let setError;
+    let hookProps;
 
     beforeEach(() => {
         vi.clearAllMocks();
 
-        setMessage = vi.fn();
-        setError = vi.fn();
+        hookProps = createMutationHookProps({
+            eventId: 1
+        });
 
         vi.spyOn(window, "confirm").mockReturnValue(true);
     });
@@ -43,13 +48,10 @@ describe("useEventActions", () => {
        TEST HELPERS
     ============================= */
 
+    // Render event actions hook
     const setupHook = () => {
         return renderHook(() =>
-            useEventActions({
-                eventId: 1,
-                setMessage,
-                setError
-            })
+            useEventActions(hookProps)
         );
     };
 
@@ -70,10 +72,12 @@ describe("useEventActions", () => {
             "Are you sure you want to delete this event?"
         );
 
-        expect(setError).toHaveBeenCalledWith("");
-        expect(setMessage).toHaveBeenCalledWith("");
+        expect(hookProps.setError).toHaveBeenCalledWith("");
+
+        expect(hookProps.setMessage).toHaveBeenCalledWith("");
 
         expect(deleteEvent).toHaveBeenCalledWith(1);
+
         expect(mockNavigate).toHaveBeenCalledWith("/events");
     });
 
@@ -87,11 +91,14 @@ describe("useEventActions", () => {
         });
 
         expect(deleteEvent).not.toHaveBeenCalled();
+
         expect(mockNavigate).not.toHaveBeenCalled();
     });
 
     it("should handle delete event errors", async () => {
-        deleteEvent.mockRejectedValue(new Error("Request failed"));
+        deleteEvent.mockRejectedValue(
+            new Error("Request failed")
+        );
 
         const { result } = setupHook();
 
@@ -99,7 +106,8 @@ describe("useEventActions", () => {
             await result.current.handleDeleteEvent();
         });
 
-        expect(setError).toHaveBeenCalledWith("Request failed");
+        expect(hookProps.setError).toHaveBeenCalledWith("Request failed");
+
         expect(mockNavigate).not.toHaveBeenCalled();
     });
 });

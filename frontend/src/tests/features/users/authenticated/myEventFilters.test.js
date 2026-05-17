@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { MY_EVENT_FILTER_QUERY_KEYS, getDefaultMyEventFilters } from "../../../../features/users/authenticated/myEventFilters";
 
+import { createMyEventFilters } from "../../../factories/users/authenticated/myEventFiltersFactory";
+
 /* ==================================================
    MY EVENT FILTERS TESTS
    Tests current user event listing filters
@@ -9,6 +11,9 @@ import { MY_EVENT_FILTER_QUERY_KEYS, getDefaultMyEventFilters } from "../../../.
    Handles:
    - current user default filters
    - current user query keys
+
+   Notes:
+   - uses reusable current user event filter factories
 ================================================== */
 
 describe("myEventFilters", () => {
@@ -18,21 +23,9 @@ describe("myEventFilters", () => {
     ============================= */
 
     it("should return default current user event filters", () => {
-        expect(getDefaultMyEventFilters()).toEqual({
-            search: "",
-            creator: "",
-            type: "",
-            theme: "",
-            mode: "",
-            location: "",
-            status: "",
-            date: "",
-            startDate: "",
-            endDate: "",
-            sortBy: "",
-            order: "asc",
-            view: ""
-        });
+        expect(getDefaultMyEventFilters()).toEqual(
+            createMyEventFilters()
+        );
     });
 
     /* =============================

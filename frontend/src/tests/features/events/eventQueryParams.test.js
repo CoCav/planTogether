@@ -12,6 +12,14 @@ import { EVENT_PAGE_QUERY_KEY, EVENT_VIEW_QUERY_KEY } from "../../../features/sh
 
 import { EVENT_STATUS } from "../../../features/shared/eventStatus";
 
+import { createEventFilters } from "../../factories/events/eventFiltersFactory";
+
+import {
+    createAllEventsView,
+    createPastEventsView,
+    createUpcomingEventsView
+} from "../../factories/events/eventViewFactory";
+
 /* ==================================================
    EVENT QUERY PARAMS TESTS
    Tests public event URL query params synchronization
@@ -22,12 +30,16 @@ import { EVENT_STATUS } from "../../../features/shared/eventStatus";
    - page parsing
    - filter parsing
    - URLSearchParams building
+
+   Notes:
+   - uses reusable event filter factories
+   - uses reusable event view factories
 ================================================== */
 
 const views = [
-    { key: "all" },
-    { key: EVENT_STATUS.UPCOMING },
-    { key: EVENT_STATUS.PAST }
+    createAllEventsView(),
+    createUpcomingEventsView(),
+    createPastEventsView()
 ];
 
 describe("eventQueryParams", () => {
@@ -63,9 +75,7 @@ describe("eventQueryParams", () => {
             `${EVENT_VIEW_QUERY_KEY}=${EVENT_STATUS.UPCOMING}`
         );
 
-        expect(getInitialViewFromUrl(searchParams, views)).toBe(
-            EVENT_STATUS.UPCOMING
-        );
+        expect(getInitialViewFromUrl(searchParams, views)).toBe(EVENT_STATUS.UPCOMING);
     });
 
     it("should return fallback view when URL view is invalid", () => {
@@ -95,23 +105,23 @@ describe("eventQueryParams", () => {
     });
 
     it("should return page 1 when URL page is invalid", () => {
-        expect(
-            getInitialPageFromUrl(
-                new URLSearchParams(`${EVENT_PAGE_QUERY_KEY}=abc`)
+        expect(getInitialPageFromUrl(
+            new URLSearchParams(
+                `${EVENT_PAGE_QUERY_KEY}=abc`
             )
-        ).toBe(1);
+        )).toBe(1);
 
-        expect(
-            getInitialPageFromUrl(
-                new URLSearchParams(`${EVENT_PAGE_QUERY_KEY}=0`)
+        expect(getInitialPageFromUrl(
+            new URLSearchParams(
+                `${EVENT_PAGE_QUERY_KEY}=0`
             )
-        ).toBe(1);
+        )).toBe(1);
 
-        expect(
-            getInitialPageFromUrl(
-                new URLSearchParams(`${EVENT_PAGE_QUERY_KEY}=-2`)
+        expect(getInitialPageFromUrl(
+            new URLSearchParams(
+                `${EVENT_PAGE_QUERY_KEY}=-2`
             )
-        ).toBe(1);
+        )).toBe(1);
     });
 
     /* =============================
@@ -123,36 +133,34 @@ describe("eventQueryParams", () => {
             "search=music&creator=John%20Doe&creatorId=2&type=Meetup&mode=online&status=upcoming&sortBy=title&order=desc"
         );
 
-        expect(getInitialEventFiltersFromUrl(searchParams)).toMatchObject({
-            search: "music",
-            creator: "John Doe",
-            creatorId: "2",
-            type: "Meetup",
-            mode: "online",
-            status: EVENT_STATUS.UPCOMING,
-            sortBy: "title",
-            order: "desc"
-        });
+        expect(
+            getInitialEventFiltersFromUrl(searchParams)
+        ).toMatchObject(
+            createEventFilters({
+                search: "music",
+                creator: "John Doe",
+                creatorId: "2",
+                type: "Meetup",
+                mode: "online",
+                status: EVENT_STATUS.UPCOMING,
+                sortBy: "title",
+                order: "desc"
+            })
+        );
     });
 
     it("should keep default values for missing filters", () => {
-        const searchParams = new URLSearchParams("creator=John%20Doe");
+        const searchParams = new URLSearchParams(
+            "creator=John%20Doe"
+        );
 
-        expect(getInitialEventFiltersFromUrl(searchParams)).toMatchObject({
-            search: "",
-            creator: "John Doe",
-            creatorId: "",
-            type: "",
-            theme: "",
-            mode: "",
-            location: "",
-            status: "",
-            date: "",
-            startDate: "",
-            endDate: "",
-            sortBy: "",
-            order: "asc"
-        });
+        expect(
+            getInitialEventFiltersFromUrl(searchParams)
+        ).toMatchObject(
+            createEventFilters({
+                creator: "John Doe"
+            })
+        );
     });
 
     /* =============================
@@ -161,32 +169,30 @@ describe("eventQueryParams", () => {
 
     it("should build search params from filters, page and view", () => {
         const params = buildEventSearchParams({
-            filters: {
+            filters: createEventFilters({
                 search: "music",
                 creator: "John Doe",
                 creatorId: "2",
-                type: "",
-                theme: "",
                 mode: "online",
-                location: "",
                 status: EVENT_STATUS.UPCOMING,
-                date: "",
-                startDate: "",
-                endDate: "",
                 sortBy: "title",
                 order: "desc"
-            },
+            }),
             page: 2,
             view: EVENT_STATUS.UPCOMING
         });
 
         expect(params.get(EVENT_VIEW_QUERY_KEY)).toBe(EVENT_STATUS.UPCOMING);
+
         expect(params.get(EVENT_PAGE_QUERY_KEY)).toBe("2");
+
         expect(params.get("search")).toBe("music");
         expect(params.get("creator")).toBe("John Doe");
         expect(params.get("creatorId")).toBe("2");
+
         expect(params.get("mode")).toBe("online");
         expect(params.get("status")).toBe(EVENT_STATUS.UPCOMING);
+
         expect(params.get("sortBy")).toBe("title");
         expect(params.get("order")).toBe("desc");
         expect(params.has("type")).toBe(false);
@@ -194,21 +200,7 @@ describe("eventQueryParams", () => {
 
     it("should not include fallback view or first page in URL params", () => {
         const params = buildEventSearchParams({
-            filters: {
-                search: "",
-                creator: "",
-                creatorId: "",
-                type: "",
-                theme: "",
-                mode: "",
-                location: "",
-                status: "",
-                date: "",
-                startDate: "",
-                endDate: "",
-                sortBy: "",
-                order: "asc"
-            },
+            filters: createEventFilters(),
             page: 1,
             view: "all"
         });

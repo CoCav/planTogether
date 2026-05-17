@@ -4,6 +4,10 @@ import { validateEventForm } from "../../../features/events/eventValidation";
 
 import { EVENT_MODES } from "../../../features/shared/eventModes";
 
+import { createEventPayload, createOnlineEventPayload } from "../../factories/events/eventPayloadFactory";
+
+import { createMockImageFile, createMockInvalidFile, createMockOversizedFile } from "../../helpers/mocks/mockFile";
+
 /* ==================================================
    EVENT VALIDATION TESTS
    Tests create/edit event form validation
@@ -16,6 +20,10 @@ import { EVENT_MODES } from "../../../features/shared/eventModes";
    - registration deadline validation
    - event image validation
    - partial update validation
+
+   Notes:
+   - uses reusable event payload factories
+   - uses reusable upload file mock helpers
 ================================================== */
 
 describe("eventValidation", () => {
@@ -24,37 +32,24 @@ describe("eventValidation", () => {
        TEST HELPERS
     ============================= */
 
-    const validImage = new File(
-        ["event image"],
-        "event.png",
-        { type: "image/png" }
-    );
+    const validImage = createMockImageFile({
+        name: "event.png"
+    });
 
-    const invalidImage = new File(
-        ["event image"],
-        "event.txt",
-        { type: "text/plain" }
-    );
+    const invalidImage = createMockInvalidFile({
+        name: "event.txt"
+    });
 
-    const largeImage = new File(
-        [new Uint8Array(3 * 1024 * 1024 + 1)],
-        "large.png",
-        { type: "image/png" }
-    );
+    const largeImage = createMockOversizedFile({
+        name: "large.png",
+        sizeInMb: 4
+    });
 
-    const validForm = {
-        title: "Test Event",
-        description: "A test event",
-        type: "Meetup",
-        theme: "Tech",
+    const validForm = createEventPayload({
         mode: EVENT_MODES.IN_PERSON,
         location: "Montreal",
-        startDateTime: "2026-12-20T10:00:00.000Z",
-        endDateTime: "2026-12-20T12:00:00.000Z",
-        maxParticipants: "",
-        registrationDeadline: "",
         image: null
-    };
+    });
 
     /* =============================
        VALID FORM
@@ -65,11 +60,11 @@ describe("eventValidation", () => {
     });
 
     it("should return no errors for a valid online event without location", () => {
-        const errors = validateEventForm({
-            ...validForm,
-            mode: EVENT_MODES.ONLINE,
-            location: ""
-        });
+        const errors = validateEventForm(
+            createOnlineEventPayload({
+                location: ""
+            })
+        );
 
         expect(errors).toEqual({});
     });
@@ -146,17 +141,15 @@ describe("eventValidation", () => {
             location: ""
         });
 
-        expect(errors.location).toBe(
-            "Location is required for in-person events"
-        );
+        expect(errors.location).toBe("Location is required for in-person events");
     });
 
     it("should not require location for online events", () => {
-        const errors = validateEventForm({
-            ...validForm,
-            mode: EVENT_MODES.ONLINE,
-            location: ""
-        });
+        const errors = validateEventForm(
+            createOnlineEventPayload({
+                location: ""
+            })
+        );
 
         expect(errors.location).toBeUndefined();
     });
@@ -171,9 +164,7 @@ describe("eventValidation", () => {
             startDateTime: "invalid-date"
         });
 
-        expect(errors.startDateTime).toBe(
-            "Start date and time must be a valid date"
-        );
+        expect(errors.startDateTime).toBe("Start date and time must be a valid date");
     });
 
     it("should reject invalid end datetime", () => {
@@ -182,9 +173,7 @@ describe("eventValidation", () => {
             endDateTime: "invalid-date"
         });
 
-        expect(errors.endDateTime).toBe(
-            "End date and time must be a valid date"
-        );
+        expect(errors.endDateTime).toBe("End date and time must be a valid date");
     });
 
     it("should reject end datetime before start datetime", () => {

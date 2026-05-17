@@ -8,6 +8,13 @@ import {
 
 import { EVENT_STATUS } from "../../../features/shared/eventStatus";
 
+import {
+    createAllEventsView,
+    createDefaultEventView,
+    createPastEventsView,
+    createUpcomingEventsView
+} from "../../factories/events/eventViewFactory";
+
 /* ==================================================
    EVENT VIEW CONFIG TESTS
    Tests public event view configuration
@@ -17,6 +24,9 @@ import { EVENT_STATUS } from "../../../features/shared/eventStatus";
    - view content resolution
    - default view fallback
    - public view sorting defaults
+
+   Notes:
+   - uses reusable event view factories
 ================================================== */
 
 describe("eventViewConfig", () => {
@@ -38,43 +48,19 @@ describe("eventViewConfig", () => {
     it("should return all events view content", () => {
         const view = getEventViewContent("all");
 
-        expect(view).toMatchObject({
-            key: "all",
-            label: "All",
-            status: "",
-            defaultSortBy: "createdAt",
-            defaultOrder: "desc",
-            showQuickActions: true,
-            clearDateFiltersOnEnter: false
-        });
+        expect(view).toMatchObject(createAllEventsView());
     });
 
     it("should return upcoming events view content", () => {
         const view = getEventViewContent(EVENT_STATUS.UPCOMING);
 
-        expect(view).toMatchObject({
-            key: EVENT_STATUS.UPCOMING,
-            label: "Upcoming",
-            status: EVENT_STATUS.UPCOMING,
-            defaultSortBy: "startDateTime",
-            defaultOrder: "asc",
-            showQuickActions: true,
-            clearDateFiltersOnEnter: false
-        });
+        expect(view).toMatchObject(createUpcomingEventsView());
     });
 
     it("should return past events view content as archives", () => {
         const view = getEventViewContent(EVENT_STATUS.PAST);
 
-        expect(view).toMatchObject({
-            key: EVENT_STATUS.PAST,
-            label: "Archives",
-            status: EVENT_STATUS.PAST,
-            defaultSortBy: "startDateTime",
-            defaultOrder: "desc",
-            showQuickActions: false,
-            clearDateFiltersOnEnter: true
-        });
+        expect(view).toMatchObject(createPastEventsView());
     });
 
     /* =============================
@@ -85,5 +71,6 @@ describe("eventViewConfig", () => {
         const view = getEventViewContent("unknown");
 
         expect(view).toEqual(DEFAULT_EVENT_VIEW_CONTENT);
+        expect(view).toEqual(createDefaultEventView());
     });
 });

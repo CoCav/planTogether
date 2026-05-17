@@ -4,6 +4,8 @@ import { renderHook } from "@testing-library/react";
 import { AuthContext } from "../../../../context/auth/AuthContext";
 import { useAuth } from "../../../../features/auth/hooks/useAuth";
 
+import { createAuthContextValue } from "../../../factories/auth/authFactory";
+
 /* ==================================================
    USE AUTH TESTS
    Tests authentication context hook
@@ -12,22 +14,19 @@ import { useAuth } from "../../../../features/auth/hooks/useAuth";
    - auth context value access
    - authenticated user state
    - auth actions exposure
+
+   Notes:
+   - uses reusable auth context factory
 ================================================== */
 
 describe("useAuth", () => {
 
+    /* =============================
+       AUTH CONTEXT
+    ============================= */
+
     it("should return the current auth context value", () => {
-        const authValue = {
-            user: {
-                userId: 1,
-                name: "John Doe",
-                email: "john@test.com"
-            },
-            loading: false,
-            login: () => { },
-            logout: () => { },
-            refreshUser: () => { }
-        };
+        const authValue = createAuthContextValue();
 
         const wrapper = ({ children }) => (
             <AuthContext.Provider value={authValue}>

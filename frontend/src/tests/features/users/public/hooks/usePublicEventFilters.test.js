@@ -3,8 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import usePublicEventFilters from "../../../../../features/users/public/hooks/usePublicUserEventFilters";
 
+import { createPublicUserEventFilters } from "../../../../factories/users/public/publicUserEventFiltersFactory";
+
+import { createHookCallbacks } from "../../../../helpers/hooks/createHookProps";
+
 /* ==================================================
-   USE PUBLIC EVENT FILTERS TESTS
+   USE PUBLIC USER EVENT FILTERS TESTS
    Tests public user event filter state and handlers
 
    Handles:
@@ -12,31 +16,42 @@ import usePublicEventFilters from "../../../../../features/users/public/hooks/us
    - sorting
    - quick filters
    - filter submission/reset
+
+   Notes:
+   - uses reusable public user event filter factories
+   - uses reusable hook callback helpers
 ================================================== */
 
 describe("usePublicEventFilters", () => {
-    let loadData;
-    let resetPage;
+    let hookProps;
 
     beforeEach(() => {
         vi.useFakeTimers();
-        vi.setSystemTime(new Date("2026-04-24T12:00:00"));
 
-        loadData = vi.fn();
-        resetPage = vi.fn();
+        vi.setSystemTime(
+            new Date("2026-04-24T12:00:00")
+        );
+
+        hookProps = createHookCallbacks();
     });
 
     afterEach(() => {
         vi.useRealTimers();
+
         vi.clearAllMocks();
     });
 
+    /* =============================
+       TEST HELPERS
+    ============================= */
+
+    // Render public user event filters hook
     const setupHook = (activeView = "created") => {
         return renderHook(() =>
             usePublicEventFilters({
                 activeView,
-                loadData,
-                resetPage
+                loadData: hookProps.loadData,
+                resetPage: hookProps.resetPage
             })
         );
     };
@@ -48,13 +63,7 @@ describe("usePublicEventFilters", () => {
     it("should initialize with default filters and hidden filter panel", () => {
         const { result } = setupHook();
 
-        expect(result.current.filters).toMatchObject({
-            search: "",
-            creator: "",
-            status: "",
-            sortBy: "",
-            order: "asc"
-        });
+        expect(result.current.filters).toEqual(createPublicUserEventFilters());
 
         expect(result.current.showFilters).toBe(false);
     });
@@ -87,9 +96,9 @@ describe("usePublicEventFilters", () => {
             });
         });
 
-        expect(resetPage).toHaveBeenCalled();
+        expect(hookProps.resetPage).toHaveBeenCalled();
 
-        expect(loadData).toHaveBeenCalledWith(
+        expect(hookProps.loadData).toHaveBeenCalledWith(
             expect.objectContaining({
                 sortBy: "startDateTime",
                 order: "asc"
@@ -106,11 +115,11 @@ describe("usePublicEventFilters", () => {
             await result.current.handleResetFilters();
         });
 
-        expect(result.current.filters.search).toBe("");
+        expect(result.current.filters).toEqual(createPublicUserEventFilters());
 
-        expect(resetPage).toHaveBeenCalled();
+        expect(hookProps.resetPage).toHaveBeenCalled();
 
-        expect(loadData).toHaveBeenCalledWith(
+        expect(hookProps.loadData).toHaveBeenCalledWith(
             expect.objectContaining({
                 order: "asc"
             }),
@@ -150,9 +159,18 @@ describe("usePublicEventFilters", () => {
         });
 
         expect(result.current.filters.date).toBe("2026-04-24");
-
         expect(result.current.filters.startDate).toBe("");
         expect(result.current.filters.endDate).toBe("");
+
+        expect(hookProps.resetPage).toHaveBeenCalled();
+
+        expect(hookProps.loadData).toHaveBeenCalledWith(
+            expect.objectContaining({
+                date: "2026-04-24"
+            }),
+            1,
+            "created"
+        );
     });
 
     it("should toggle weekend quick filter", async () => {
@@ -163,9 +181,18 @@ describe("usePublicEventFilters", () => {
         });
 
         expect(result.current.filters.date).toBe("");
-
         expect(result.current.filters.startDate).toBe("2026-04-25");
         expect(result.current.filters.endDate).toBe("2026-04-26");
-    });
 
+        expect(hookProps.resetPage).toHaveBeenCalled();
+
+        expect(hookProps.loadData).toHaveBeenCalledWith(
+            expect.objectContaining({
+                startDate: "2026-04-25",
+                endDate: "2026-04-26"
+            }),
+            1,
+            "created"
+        );
+    });
 });

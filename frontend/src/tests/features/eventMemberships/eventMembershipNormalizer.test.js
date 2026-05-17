@@ -12,6 +12,16 @@ import {
 
 import { EVENT_ROLES } from "../../../features/shared/eventRoles";
 
+import {
+    createApiMembership,
+    createEventStaffPayload,
+    createMembersPayload,
+    createMembership,
+    createMembershipPayload,
+    createMembershipUser,
+    createOwnershipTransferApiPayload
+} from "../../factories/eventMemberships/membershipFactory";
+
 /* ==================================================
    EVENT MEMBERSHIP NORMALIZER TESTS
    Tests event membership payload normalization
@@ -22,6 +32,9 @@ import { EVENT_ROLES } from "../../../features/shared/eventRoles";
    - member and staff list normalization
    - API payload extraction
    - ownership transfer normalization
+
+   Notes:
+   - uses reusable membership test factories
 ================================================== */
 
 describe("eventMembershipNormalizer", () => {
@@ -31,50 +44,49 @@ describe("eventMembershipNormalizer", () => {
     ============================= */
 
     it("should normalize one membership item with nested User", () => {
-        const membership = normalizeMembership({
-            id: 10,
-            eventId: 1,
-            userId: 2,
-            role: EVENT_ROLES.PARTICIPANT,
-            joinedAt: "2026-01-01T10:00:00.000Z",
-            createdAt: "2026-01-01T10:00:00.000Z",
-            updatedAt: "2026-01-02T10:00:00.000Z",
-            deletedAt: null,
-            User: {
-                id: 2,
-                name: "John Doe",
-                email: "john@test.com"
-            }
-        });
+        const membership = normalizeMembership(
+            createApiMembership({
+                id: 10,
+                eventId: 1,
+                userId: 2,
+                role: EVENT_ROLES.PARTICIPANT,
+                User: createMembershipUser({
+                    id: 2,
+                    name: "John Doe",
+                    email: "john@test.com"
+                })
+            })
+        );
 
-        expect(membership).toEqual({
-            id: 10,
-            eventId: 1,
-            userId: 2,
-            role: EVENT_ROLES.PARTICIPANT,
-            joinedAt: "2026-01-01T10:00:00.000Z",
-            createdAt: "2026-01-01T10:00:00.000Z",
-            updatedAt: "2026-01-02T10:00:00.000Z",
-            deletedAt: null,
-            user: {
-                id: 2,
-                name: "John Doe",
-                email: "john@test.com"
-            }
-        });
+        expect(membership).toEqual(
+            createMembership({
+                id: 10,
+                eventId: 1,
+                userId: 2,
+                role: EVENT_ROLES.PARTICIPANT,
+                user: createMembershipUser({
+                    id: 2,
+                    name: "John Doe",
+                    email: "john@test.com"
+                })
+            })
+        );
     });
 
     it("should normalize one membership item with lowercase user", () => {
-        const membership = normalizeMembership({
-            id: 11,
-            eventId: 1,
-            role: EVENT_ROLES.CO_ORGANIZER,
-            user: {
-                id: 3,
-                name: "Jane Doe",
-                email: "jane@test.com"
-            }
-        });
+        const membership = normalizeMembership(
+            createMembership({
+                id: 11,
+                eventId: 1,
+                role: EVENT_ROLES.CO_ORGANIZER,
+                userId: undefined,
+                user: createMembershipUser({
+                    id: 3,
+                    name: "Jane Doe",
+                    email: "jane@test.com"
+                })
+            })
+        );
 
         expect(membership).toMatchObject({
             id: 11,
@@ -109,14 +121,14 @@ describe("eventMembershipNormalizer", () => {
 
     it("should normalize an array of memberships", () => {
         const memberships = normalizeMemberships([
-            {
+            createMembership({
                 id: 1,
                 role: EVENT_ROLES.PARTICIPANT
-            },
-            {
+            }),
+            createMembership({
                 id: 2,
                 role: EVENT_ROLES.CO_ORGANIZER
-            }
+            })
         ]);
 
         expect(memberships).toHaveLength(2);
@@ -135,20 +147,16 @@ describe("eventMembershipNormalizer", () => {
 
     it("should normalize membership data for member and staff UI lists", () => {
         const members = normalizeMemberList([
-            {
+            createApiMembership({
                 id: 10,
                 eventId: 1,
                 role: EVENT_ROLES.PARTICIPANT,
-                joinedAt: "2026-01-01T10:00:00.000Z",
-                createdAt: "2026-01-01T10:00:00.000Z",
-                updatedAt: "2026-01-02T10:00:00.000Z",
-                deletedAt: null,
-                User: {
+                User: createMembershipUser({
                     id: 2,
                     name: "John Doe",
                     email: "john@test.com"
-                }
-            }
+                })
+            })
         ]);
 
         expect(members).toEqual([
@@ -173,20 +181,20 @@ describe("eventMembershipNormalizer", () => {
 
     it("should extract and normalize members from API payload", () => {
         const payload = {
-            data: {
+            data: createMembersPayload({
                 members: [
-                    {
+                    createApiMembership({
                         id: 10,
                         eventId: 1,
                         role: EVENT_ROLES.PARTICIPANT,
-                        User: {
+                        User: createMembershipUser({
                             id: 2,
                             name: "John Doe",
                             email: "john@test.com"
-                        }
-                    }
+                        })
+                    })
                 ]
-            }
+            })
         };
 
         const members = getNormalizedMembers(payload);
@@ -205,20 +213,20 @@ describe("eventMembershipNormalizer", () => {
 
     it("should extract and normalize event staff from API payload", () => {
         const payload = {
-            data: {
+            data: createEventStaffPayload({
                 eventStaff: [
-                    {
+                    createApiMembership({
                         id: 11,
                         eventId: 1,
                         role: EVENT_ROLES.ORGANIZER,
-                        User: {
+                        User: createMembershipUser({
                             id: 3,
                             name: "Jane Doe",
                             email: "jane@test.com"
-                        }
-                    }
+                        })
+                    })
                 ]
-            }
+            })
         };
 
         const staff = getNormalizedEventStaff(payload);
@@ -237,14 +245,14 @@ describe("eventMembershipNormalizer", () => {
 
     it("should extract and normalize one membership from API payload", () => {
         const payload = {
-            data: {
-                membership: {
+            data: createMembershipPayload({
+                membership: createMembership({
                     id: 12,
                     eventId: 1,
                     userId: 4,
                     role: EVENT_ROLES.PARTICIPANT
-                }
-            }
+                })
+            })
         };
 
         const membership = getNormalizedMembership(payload);
@@ -259,20 +267,20 @@ describe("eventMembershipNormalizer", () => {
 
     it("should extract and normalize ownership transfer result", () => {
         const payload = {
-            data: {
+            data: createOwnershipTransferApiPayload({
                 data: {
-                    previousOrganizer: {
+                    previousOrganizer: createMembership({
                         id: 20,
                         userId: 1,
                         role: EVENT_ROLES.CO_ORGANIZER
-                    },
-                    newOrganizer: {
+                    }),
+                    newOrganizer: createMembership({
                         id: 21,
                         userId: 2,
                         role: EVENT_ROLES.ORGANIZER
-                    }
+                    })
                 }
-            }
+            })
         };
 
         const result = getNormalizedOwnershipTransfer(payload);

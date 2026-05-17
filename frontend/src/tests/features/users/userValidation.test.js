@@ -4,6 +4,8 @@ import { validateChangePasswordForm, validateProfileForm } from "../../../featur
 
 import { PASSWORD_MESSAGES } from "../../../features/shared/passwordPolicy";
 
+import { createMockImageFile, createMockInvalidFile, createMockOversizedFile } from "../../helpers/mocks/mockFile";
+
 /* ==================================================
    USER VALIDATION TESTS
    Tests frontend current user form validation helpers
@@ -13,6 +15,9 @@ import { PASSWORD_MESSAGES } from "../../../features/shared/passwordPolicy";
    - avatar validation
    - password change validation
    - shared password policy messages
+
+   Notes:
+   - uses reusable upload file mock helpers
 ================================================== */
 
 describe("userValidation", () => {
@@ -21,23 +26,18 @@ describe("userValidation", () => {
        TEST HELPERS
     ============================= */
 
-    const validAvatar = new File(
-        ["avatar"],
-        "avatar.png",
-        { type: "image/png" }
-    );
+    const validAvatar = createMockImageFile({
+        name: "avatar.png"
+    });
 
-    const invalidAvatar = new File(
-        ["avatar"],
-        "avatar.txt",
-        { type: "text/plain" }
-    );
+    const invalidAvatar = createMockInvalidFile({
+        name: "avatar.txt"
+    });
 
-    const largeAvatar = new File(
-        [new Uint8Array(2 * 1024 * 1024 + 1)],
-        "large.png",
-        { type: "image/png" }
-    );
+    const largeAvatar = createMockOversizedFile({
+        name: "large.png",
+        sizeInMb: 3
+    });
 
     /* =============================
        PROFILE
@@ -149,9 +149,7 @@ describe("userValidation", () => {
             confirmPassword: "Password123"
         });
 
-        expect(errors.newPassword).toContain(
-            "New password must be different from current password"
-        );
+        expect(errors.newPassword).toContain("New password must be different from current password");
     });
 
     it("should validate password confirmation mismatch", () => {
@@ -161,9 +159,7 @@ describe("userValidation", () => {
             confirmPassword: "DifferentPassword123"
         });
 
-        expect(errors.confirmPassword).toBe(
-            "Passwords do not match. Please check again."
-        );
+        expect(errors.confirmPassword).toBe("Passwords do not match. Please check again.");
     });
 
     it("should return no password errors for valid data", () => {

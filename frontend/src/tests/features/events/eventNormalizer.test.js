@@ -11,6 +11,11 @@ import {
 import { EVENT_MODES } from "../../../features/shared/eventModes";
 import { EVENT_STATUS } from "../../../features/shared/eventStatus";
 
+import {
+    createEvent,
+    createPaginatedEventsPayload
+} from "../../factories/events/eventFactory";
+
 /* ==================================================
    EVENT NORMALIZER TESTS
    Tests public event payload normalization
@@ -21,6 +26,9 @@ import { EVENT_STATUS } from "../../../features/shared/eventStatus";
    - paginated event payload normalization
    - API payload extraction
    - fallback values
+
+   Notes:
+   - uses reusable event test factories
 ================================================== */
 
 describe("eventNormalizer", () => {
@@ -74,26 +82,33 @@ describe("eventNormalizer", () => {
     });
 
     it("should normalize numeric event values", () => {
-        const event = normalizeEvent({
-            participantCount: "3",
-            maxParticipants: "10"
-        });
+        const event = normalizeEvent(
+            createEvent({
+                participantCount: "3",
+                maxParticipants: "10"
+            })
+        );
 
         expect(event.participantCount).toBe(3);
+
         expect(event.maxParticipants).toBe(10);
     });
 
     it("should keep maxParticipants as null when missing", () => {
-        expect(normalizeEvent({}).maxParticipants).toBeNull();
+        expect(
+            normalizeEvent({}).maxParticipants
+        ).toBeNull();
     });
 
     it("should preserve optional event metadata", () => {
-        const event = normalizeEvent({
-            image: "/uploads/events/event.png",
-            registrationDeadline: "2026-12-19T12:00:00.000Z",
-            createdAt: "2026-01-01T10:00:00.000Z",
-            updatedAt: "2026-01-02T10:00:00.000Z"
-        });
+        const event = normalizeEvent(
+            createEvent({
+                image: "/uploads/events/event.png",
+                registrationDeadline: "2026-12-19T12:00:00.000Z",
+                createdAt: "2026-01-01T10:00:00.000Z",
+                updatedAt: "2026-01-02T10:00:00.000Z"
+            })
+        );
 
         expect(event).toMatchObject({
             image: "/uploads/events/event.png",
@@ -109,23 +124,25 @@ describe("eventNormalizer", () => {
 
     it("should normalize an array of events", () => {
         const events = normalizeEvents([
-            {
+            createEvent({
                 id: 1,
                 title: "Event 1"
-            },
-            {
+            }),
+            createEvent({
                 id: 2,
                 title: "Event 2"
-            }
+            })
         ]);
 
         expect(events).toHaveLength(2);
+
         expect(events[0].title).toBe("Event 1");
         expect(events[1].title).toBe("Event 2");
     });
 
     it("should return empty array when normalizeEvents receives invalid data", () => {
         expect(normalizeEvents(null)).toEqual([]);
+
         expect(normalizeEvents({})).toEqual([]);
     });
 
@@ -134,20 +151,22 @@ describe("eventNormalizer", () => {
     ============================= */
 
     it("should normalize paginated event payload", () => {
-        const result = normalizePaginatedEvents({
-            events: [
-                {
-                    id: 1,
-                    title: "Event 1"
-                }
-            ],
-            page: 2,
-            pageSize: 5,
-            totalEvents: 12,
-            totalPages: 3,
-            message: "Events retrieved",
-            success: true
-        });
+        const result = normalizePaginatedEvents(
+            createPaginatedEventsPayload({
+                events: [
+                    createEvent({
+                        id: 1,
+                        title: "Event 1"
+                    })
+                ],
+                page: 2,
+                pageSize: 5,
+                totalEvents: 12,
+                totalPages: 3,
+                message: "Events retrieved",
+                success: true
+            })
+        );
 
         expect(result).toEqual({
             events: [
@@ -185,11 +204,11 @@ describe("eventNormalizer", () => {
         const payload = {
             data: {
                 events: [
-                    {
+                    createEvent({
                         id: 1,
                         title: "Event 1",
                         image: "/uploads/events/event.png"
-                    }
+                    })
                 ]
             }
         };
@@ -197,6 +216,7 @@ describe("eventNormalizer", () => {
         const events = getNormalizedEvents(payload);
 
         expect(events).toHaveLength(1);
+
         expect(events[0]).toMatchObject({
             id: 1,
             title: "Event 1",
@@ -207,10 +227,10 @@ describe("eventNormalizer", () => {
     it("should extract and normalize one event from API payload", () => {
         const payload = {
             data: {
-                event: {
+                event: createEvent({
                     id: 1,
                     title: "Single Event"
-                }
+                })
             }
         };
 

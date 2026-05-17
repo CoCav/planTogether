@@ -2,9 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import {
     DEFAULT_PUBLIC_USER_EVENT_VIEW_CONTENT,
-    getPublicUserEventViewContent,
-    PUBLIC_USER_EVENT_VIEWS
+    PUBLIC_USER_EVENT_VIEWS,
+    getPublicUserEventViewContent
 } from "../../../../features/users/public/publicUserEventViewConfig";
+
+import {
+    createDefaultPublicUserEventView,
+    createPublicUserCreatedEventsView,
+    createPublicUserJoinedEventsView
+} from "../../../factories/users/public/publicUserEventViewFactory";
 
 /* ==================================================
    PUBLIC USER EVENT VIEW CONFIG TESTS
@@ -14,6 +20,9 @@ import {
    - public user event views
    - view content resolution
    - fallback behavior
+
+   Notes:
+   - uses reusable public user event view factories
 ================================================== */
 
 describe("publicUserEventViewConfig", () => {
@@ -25,31 +34,20 @@ describe("publicUserEventViewConfig", () => {
     it("should return created public user event view", () => {
         const view = getPublicUserEventViewContent("created");
 
-        expect(view).toMatchObject({
-            key: "created",
-            title: "Created Events",
-            defaultSortBy: "startDateTime",
-            defaultOrder: "asc"
-        });
+        expect(view).toMatchObject(createPublicUserCreatedEventsView());
     });
 
     it("should return joined public user event view", () => {
         const view = getPublicUserEventViewContent("joined");
 
-        expect(view).toMatchObject({
-            key: "joined",
-            title: "Joined Events",
-            defaultSortBy: "startDateTime",
-            defaultOrder: "asc"
-        });
+        expect(view).toMatchObject(createPublicUserJoinedEventsView());
     });
 
     it("should return default view when active view is unknown", () => {
         const view = getPublicUserEventViewContent("unknown");
 
-        expect(view).toEqual(
-            DEFAULT_PUBLIC_USER_EVENT_VIEW_CONTENT
-        );
+        expect(view).toEqual(DEFAULT_PUBLIC_USER_EVENT_VIEW_CONTENT);
+        expect(view).toEqual(createDefaultPublicUserEventView());
     });
 
     /* =============================

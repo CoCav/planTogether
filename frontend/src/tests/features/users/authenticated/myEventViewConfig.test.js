@@ -6,6 +6,14 @@ import {
     getMyEventViewContent
 } from "../../../../features/users/authenticated/myEventViewConfig";
 
+import {
+    createCreatedEventsView,
+    createCreatedHistoryView,
+    createDefaultMyEventView,
+    createJoinedEventsView,
+    createJoinedHistoryView
+} from "../../../factories/users/authenticated/myEventViewFactory";
+
 /* ==================================================
    MY EVENT VIEW CONFIG TESTS
    Tests current user event view configuration
@@ -15,6 +23,9 @@ import {
    - view content resolution
    - default view fallback
    - sorting and quick filter defaults
+
+   Notes:
+   - uses reusable current user event view factories
 ================================================== */
 
 describe("myEventViewConfig", () => {
@@ -37,53 +48,25 @@ describe("myEventViewConfig", () => {
     it("should return created events view content", () => {
         const view = getMyEventViewContent("created");
 
-        expect(view).toMatchObject({
-            key: "created",
-            label: "Created",
-            defaultSortBy: "startDateTime",
-            defaultOrder: "asc",
-            showQuickActions: true,
-            clearDateFiltersOnEnter: false
-        });
+        expect(view).toMatchObject(createCreatedEventsView());
     });
 
     it("should return created history view content", () => {
         const view = getMyEventViewContent("createdHistory");
 
-        expect(view).toMatchObject({
-            key: "createdHistory",
-            label: "Created History",
-            defaultSortBy: "startDateTime",
-            defaultOrder: "desc",
-            showQuickActions: false,
-            clearDateFiltersOnEnter: true
-        });
+        expect(view).toMatchObject(createCreatedHistoryView());
     });
 
     it("should return joined events view content", () => {
         const view = getMyEventViewContent("joined");
 
-        expect(view).toMatchObject({
-            key: "joined",
-            label: "Joined",
-            defaultSortBy: "startDateTime",
-            defaultOrder: "asc",
-            showQuickActions: true,
-            clearDateFiltersOnEnter: false
-        });
+        expect(view).toMatchObject(createJoinedEventsView());
     });
 
     it("should return joined history view content", () => {
         const view = getMyEventViewContent("joinedHistory");
 
-        expect(view).toMatchObject({
-            key: "joinedHistory",
-            label: "Joined History",
-            defaultSortBy: "startDateTime",
-            defaultOrder: "desc",
-            showQuickActions: false,
-            clearDateFiltersOnEnter: true
-        });
+        expect(view).toMatchObject(createJoinedHistoryView());
     });
 
     /* =============================
@@ -94,5 +77,6 @@ describe("myEventViewConfig", () => {
         const view = getMyEventViewContent("unknown");
 
         expect(view).toEqual(DEFAULT_MY_EVENT_VIEW_CONTENT);
+        expect(view).toEqual(createDefaultMyEventView());
     });
 });

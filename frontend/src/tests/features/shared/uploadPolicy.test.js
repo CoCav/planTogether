@@ -9,6 +9,8 @@ import {
     validateImageFile
 } from "../../../features/shared/uploadPolicy";
 
+import { createMockImageFile, createMockInvalidFile, createMockOversizedFile } from "../../helpers/mocks/mockFile";
+
 /* ==================================================
    UPLOAD POLICY TESTS
    Tests shared upload validation helpers
@@ -18,6 +20,9 @@ import {
    - avatar upload validation
    - event image upload validation
    - file size validation
+
+   Notes:
+   - uses reusable upload file mock helpers
 ================================================== */
 
 describe("uploadPolicy", () => {
@@ -26,37 +31,23 @@ describe("uploadPolicy", () => {
        TEST HELPERS
     ============================= */
 
-    const validImage = new File(
-        ["image"],
-        "image.png",
-        {
-            type: "image/png"
-        }
-    );
+    const validImage = createMockImageFile({
+        name: "image.png"
+    });
 
-    const invalidImage = new File(
-        ["file"],
-        "file.txt",
-        {
-            type: "text/plain"
-        }
-    );
+    const invalidImage = createMockInvalidFile({
+        name: "file.txt"
+    });
 
-    const largeAvatar = new File(
-        [new Uint8Array(MAX_AVATAR_SIZE + 1)],
-        "large-avatar.png",
-        {
-            type: "image/png"
-        }
-    );
+    const largeAvatar = createMockOversizedFile({
+        name: "large-avatar.png",
+        sizeInMb: 3
+    });
 
-    const largeEventImage = new File(
-        [new Uint8Array(MAX_EVENT_IMAGE_SIZE + 1)],
-        "large-event.png",
-        {
-            type: "image/png"
-        }
-    );
+    const largeEventImage = createMockOversizedFile({
+        name: "large-event.png",
+        sizeInMb: 4
+    });
 
     /* =============================
        MIME TYPES

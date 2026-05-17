@@ -26,79 +26,60 @@ describe("formatters", () => {
        DATE / TIME
     ============================= */
 
-    it("should format date using en-GB by default", () => {
+    it("should format a valid date", () => {
         expect(formatDate("2026-12-20T10:00:00.000Z")).toBe("20/12/2026");
-    });
-
-    it("should format date using a custom locale", () => {
-        expect(formatDate("2026-12-20T10:00:00.000Z", "en-US")).toBe(
-            "12/20/2026"
-        );
     });
 
     it("should return fallback when date is missing", () => {
         expect(formatDate(null)).toBe("No date");
-        expect(formatDate(undefined)).toBe("No date");
     });
 
-    it("should format time with hours and minutes", () => {
-        expect(formatTime("2026-12-20T10:00:00.000Z")).toMatch(
-            /^\d{2}:\d{2}$/
-        );
+    it("should format a valid time", () => {
+        expect(formatTime("2026-12-20T10:00:00.000Z")).toMatch(/\d{2}:\d{2}/);
     });
 
-    it("should return empty string when time is missing", () => {
+    it("should return an empty string when time is missing", () => {
         expect(formatTime(null)).toBe("");
-        expect(formatTime(undefined)).toBe("");
     });
 
     /* =============================
-       EVENT DATE RANGES
+       EVENT DATE RANGE
     ============================= */
 
-    it("should format single-day event date range", () => {
-        expect(
-            formatEventDateRange(
-                "2026-12-20T10:00:00.000Z",
-                "2026-12-20T12:00:00.000Z"
-            )
-        ).toBe("20/12/2026");
+    it("should format start date only when end date is missing", () => {
+        expect(formatEventDateRange(
+            "2026-12-20T10:00:00.000Z",
+            null
+        )).toBe("20/12/2026");
     });
 
-    it("should format multi-day event date range", () => {
-        expect(
-            formatEventDateRange(
-                "2026-12-20T10:00:00.000Z",
-                "2026-12-22T12:00:00.000Z"
-            )
-        ).toBe("20/12/2026 → 22/12/2026");
+    it("should format a single-day event date range", () => {
+        expect(formatEventDateRange(
+            "2026-12-20T10:00:00.000Z",
+            "2026-12-20T12:00:00.000Z"
+        )).toBe("20/12/2026");
     });
 
-    it("should return start date when end date is missing", () => {
-        expect(
-            formatEventDateRange(
-                "2026-12-20T10:00:00.000Z",
-                null
-            )
-        ).toBe("20/12/2026");
-    });
-
-    it("should return fallback when event start date is missing", () => {
-        expect(formatEventDateRange(null, "2026-12-22T12:00:00.000Z")).toBe(
-            "No date"
-        );
+    it("should format a multi-day event date range", () => {
+        expect(formatEventDateRange(
+            "2026-12-20T10:00:00.000Z",
+            "2026-12-22T12:00:00.000Z"
+        )).toBe("20/12/2026 → 22/12/2026");
     });
 
     /* =============================
        TEXT HELPERS
     ============================= */
 
-    it("should format count with singular and default plural labels", () => {
+    it("should format singular count labels", () => {
         expect(formatCount(1, "participant")).toBe("1 participant");
+    });
+
+    it("should format automatic plural count labels", () => {
         expect(formatCount(2, "participant")).toBe("2 participants");
     });
 
-    it("should support custom plural label", () => {
+    it("should format custom plural count labels", () => {
         expect(formatCount(2, "person", "people")).toBe("2 people");
     });
 

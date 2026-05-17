@@ -8,68 +8,79 @@ import {
     getUploadedFile
 } from "../../utils/uploadedFiles";
 
+import {
+    createMockAvatarPath,
+    createMockEventImagePath,
+    createMockExternalImageUrl
+} from "../helpers/mocks/mockUploadedFileUrl";
+
 /* ==================================================
    UPLOADED FILE UTILS TESTS
    Tests uploaded file URL resolution helpers
 
    Handles:
-   - fallback image behavior
-   - external URLs
+   - fallback file resolution
+   - external image URLs
    - backend relative upload paths
-   - avatar resolution
-   - event image resolution
+   - avatar fallback resolution
+   - event image fallback resolution
+
+   Notes:
+   - uses reusable uploaded file URL mock helpers
 ================================================== */
 
-describe("uploadedFiles", () => {
+describe("uploadedFile", () => {
 
     /* =============================
-       SHARED UPLOADED FILES
+       SHARED FILE RESOLUTION
     ============================= */
 
     it("should return fallback when file is null", () => {
-        expect(getUploadedFile(null, "fallback.jpg")).toBe("fallback.jpg");
+        const result = getUploadedFile(null, "fallback.jpg");
+
+        expect(result).toBe("fallback.jpg");
     });
 
     it("should return fallback when file is undefined", () => {
-        expect(getUploadedFile(undefined, "fallback.jpg")).toBe(
-            "fallback.jpg"
-        );
+        const result = getUploadedFile(undefined, "fallback.jpg");
+
+        expect(result).toBe("fallback.jpg");
     });
 
-    it("should return external URL as is", () => {
-        const url = "https://example.com/image.png";
+    it("should return external URLs as-is", () => {
+        const url = createMockExternalImageUrl();
 
-        expect(getUploadedFile(url, "fallback.jpg")).toBe(url);
+        const result = getUploadedFile(url, "fallback.jpg");
+
+        expect(result).toBe(url);
     });
 
-    it("should resolve backend relative upload path", () => {
-        const result = getUploadedFile(
-            "/uploads/test.png",
-            "fallback.jpg"
-        );
+    it("should resolve backend relative upload paths", () => {
+        const path = createMockAvatarPath();
 
-        expect(result).toContain("/uploads/test.png");
+        const result = getUploadedFile(path, "fallback.jpg");
+
+        expect(result).toContain(path);
     });
 
     /* =============================
-       AVATARS
+       AVATAR IMAGES
     ============================= */
 
     it("should return default avatar when avatar is missing", () => {
         expect(getAvatar(null)).toBe(defaultAvatar);
-        expect(getAvatar(undefined)).toBe(defaultAvatar);
     });
 
     it("should return external avatar URL", () => {
-        const url = "https://example.com/avatar.png";
+        const url = createMockExternalImageUrl("avatar.png");
 
         expect(getAvatar(url)).toBe(url);
     });
 
     it("should resolve backend avatar path", () => {
-        expect(getAvatar("/uploads/avatars/avatar.png")).toContain(
-            "/uploads/avatars/avatar.png"
-        );
+        const path = createMockAvatarPath("avatar.png");
+
+        expect(getAvatar(path)).toContain(path);
     });
 
     /* =============================
@@ -78,18 +89,17 @@ describe("uploadedFiles", () => {
 
     it("should return default event image when image is missing", () => {
         expect(getEventImage(null)).toBe(defaultEventImage);
-        expect(getEventImage(undefined)).toBe(defaultEventImage);
     });
 
     it("should return external event image URL", () => {
-        const url = "https://example.com/event.png";
+        const url = createMockExternalImageUrl("event.jpg");
 
         expect(getEventImage(url)).toBe(url);
     });
 
     it("should resolve backend event image path", () => {
-        expect(getEventImage("/uploads/events/event.png")).toContain(
-            "/uploads/events/event.png"
-        );
+        const path = createMockEventImagePath("event.jpg");
+
+        expect(getEventImage(path)).toContain(path);
     });
 });

@@ -1,9 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useContext } from "react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import AuthProvider from "../../../context/auth/AuthProvider";
+
 import { AuthContext } from "../../../context/auth/AuthContext";
+
+import { createAuthenticatedUser } from "../../factories/users/userFactory";
 
 /* ==================================================
    AUTH PROVIDER TESTS
@@ -16,30 +19,43 @@ import { AuthContext } from "../../../context/auth/AuthContext";
    - logout flow
    - user refresh
    - failed profile fetch cleanup
+
+   Notes:
+   - uses reusable authenticated user factories
 ================================================== */
 
 const mockGetCurrentUserProfile = vi.fn();
+
 const mockLogoutUser = vi.fn();
 
 const mockGetToken = vi.fn();
+
 const mockSetToken = vi.fn();
+
 const mockRemoveToken = vi.fn();
 
 vi.mock("../../../api/users/userApi", () => ({
-    getCurrentUserProfile: () => mockGetCurrentUserProfile()
+    getCurrentUserProfile: () => (
+        mockGetCurrentUserProfile()
+    )
 }));
 
 vi.mock("../../../api/auth/authApi", () => ({
-    logoutUser: () => mockLogoutUser()
+    logoutUser: () => (
+        mockLogoutUser()
+    )
 }));
 
 vi.mock("../../../features/auth/authToken", () => ({
-    getToken: () => mockGetToken(),
-    setToken: (...args) => mockSetToken(...args),
-    removeToken: () => mockRemoveToken()
+    getToken: () => (mockGetToken()),
+
+    setToken: (...args) => (mockSetToken(...args)),
+
+    removeToken: () => (mockRemoveToken())
 }));
 
 function TestComponent() {
+
     const {
         user,
         loading,
@@ -83,7 +99,9 @@ describe("AuthProvider", () => {
        TEST HELPERS
     ============================= */
 
+    // Render auth provider test tree
     const renderAuthProvider = () => {
+
         return render(
             <AuthProvider>
                 <TestComponent />
@@ -105,6 +123,7 @@ describe("AuthProvider", () => {
         });
 
         expect(screen.getByTestId("user")).toHaveTextContent("no-user");
+
         expect(mockGetCurrentUserProfile).not.toHaveBeenCalled();
     });
 
@@ -112,9 +131,9 @@ describe("AuthProvider", () => {
         mockGetToken.mockReturnValue("token");
 
         mockGetCurrentUserProfile.mockResolvedValue({
-            user: {
+            user: createAuthenticatedUser({
                 name: "John Doe"
-            }
+            })
         });
 
         renderAuthProvider();
@@ -126,7 +145,10 @@ describe("AuthProvider", () => {
 
     it("should clear auth state when initial profile fetch fails", async () => {
         mockGetToken.mockReturnValue("token");
-        mockGetCurrentUserProfile.mockRejectedValue(new Error("Request failed"));
+
+        mockGetCurrentUserProfile.mockRejectedValue(
+            new Error("Request failed")
+        );
 
         renderAuthProvider();
 
@@ -145,9 +167,9 @@ describe("AuthProvider", () => {
         mockGetToken.mockReturnValue(null);
 
         mockGetCurrentUserProfile.mockResolvedValue({
-            user: {
+            user: createAuthenticatedUser({
                 name: "John Doe"
-            }
+            })
         });
 
         renderAuthProvider();
@@ -163,6 +185,7 @@ describe("AuthProvider", () => {
 
     it("should logout and clear current user", async () => {
         mockGetToken.mockReturnValue(null);
+
         mockLogoutUser.mockResolvedValue({
             success: true
         });
@@ -173,6 +196,7 @@ describe("AuthProvider", () => {
 
         await waitFor(() => {
             expect(mockLogoutUser).toHaveBeenCalled();
+
             expect(mockRemoveToken).toHaveBeenCalled();
         });
 
@@ -181,7 +205,10 @@ describe("AuthProvider", () => {
 
     it("should clear current user even when logout request fails", async () => {
         mockGetToken.mockReturnValue(null);
-        mockLogoutUser.mockRejectedValue(new Error("Logout failed"));
+
+        mockLogoutUser.mockRejectedValue(
+            new Error("Logout failed")
+        );
 
         renderAuthProvider();
 
@@ -198,9 +225,9 @@ describe("AuthProvider", () => {
         mockGetToken.mockReturnValue(null);
 
         mockGetCurrentUserProfile.mockResolvedValue({
-            user: {
+            user: createAuthenticatedUser({
                 name: "Jane Doe"
-            }
+            })
         });
 
         renderAuthProvider();

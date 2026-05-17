@@ -17,6 +17,9 @@
 ![Frontend Tests](https://img.shields.io/badge/frontend-357%20safe--scope%20passing-brightgreen)
 ![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-in%20progress-lightgrey)
 
+![Backend CI](https://github.com/CoCav/planTogether/actions/workflows/backend-ci.yml/badge.svg)
+![Frontend CI](https://github.com/CoCav/planTogether/actions/workflows/frontend-ci.yml/badge.svg)
+
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 ---
@@ -38,7 +41,7 @@ The application focuses on **clean architecture, scalability, security, API cons
 
 - 🧪 Comprehensive backend testing + progressive frontend safe-scope testing (Jest + Supertest + Vitest + React Testing Library)
 - 📊 **High automated test coverage** (~98% backend / ~91% frontend)
-- 🔁 **Automated backend CI testing with GitHub Actions and PostgreSQL services**
+- 🔁 **Separate backend and frontend CI workflows using GitHub Actions**
 - 🔐 **Secure authentication and role-based access control (RBAC)**
 - 🧱 **Clean fullstack architecture** (modular MVC backend + scalable React frontend)
 - 🔄 **Transaction-based backend workflows** for critical operations
@@ -263,7 +266,7 @@ The project uses a modern fullstack architecture combining a secure backend API,
 
 ### 🔁 Continuous Integration
 
-- GitHub Actions CI
+- Separate backend and frontend GitHub Actions workflows
 
 ## 📁 Fullstack Structure
 
@@ -556,7 +559,8 @@ Legacy page and component tests are progressively being updated during the front
 - Frontend tests validate reusable frontend logic and user-facing behavior
 - Backend integration tests use the real Express application with a dedicated PostgreSQL test database
 - Frontend API calls are mocked to isolate frontend behavior
-- Backend CI workflows run automatically through GitHub Actions and isolated PostgreSQL test services
+- Separate backend and frontend CI workflows run automatically through GitHub Actions
+- Backend CI uses isolated PostgreSQL test services for integration testing
 - Tests cover validation, permissions, uploads, filtering, transactions, synchronization, and error handling
 - Reusable helpers, mocks, and factories reduce duplication across the testing architecture
 - Tests are isolated to ensure deterministic and consistent behavior across the stack
@@ -661,7 +665,8 @@ These mechanisms help ensure secure data handling, predictable application behav
 ### 🧪 Testing
 
 - Expanded backend testing architecture to 570 tests across 76 test suites
-- Added automated backend CI workflows using GitHub Actions and PostgreSQL test services
+- Added separate backend and frontend CI workflows using GitHub Actions
+- Added isolated PostgreSQL test services for backend integration testing
 - Added dedicated backend and frontend testing documentation
 - Improved reusable frontend and backend factories, mocks, and helpers
 - Expanded testing coverage across permissions, uploads, filtering, validation, synchronization, and business rules

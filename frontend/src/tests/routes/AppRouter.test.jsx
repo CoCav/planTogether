@@ -1,8 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import AppRouter from "../../routes/AppRouter";
+
+import { createAuthenticatedUser } from "../factories/users/userFactory";
 
 /* ==================================================
    APP ROUTER TESTS
@@ -11,6 +13,9 @@ import AppRouter from "../../routes/AppRouter";
    Handles:
    - public route rendering
    - protected route rendering through ProtectedRoute
+
+   Notes:
+   - uses reusable authenticated user factories
 ================================================== */
 
 const mockUseAuth = vi.fn();
@@ -60,11 +65,12 @@ vi.mock("../../components/ui/PageLoader", () => ({
 }));
 
 describe("AppRouter", () => {
+
     beforeEach(() => {
         vi.clearAllMocks();
 
         mockUseAuth.mockReturnValue({
-            user: { userId: 1 },
+            user: createAuthenticatedUser(),
             loading: false
         });
     });
@@ -73,6 +79,7 @@ describe("AppRouter", () => {
        TEST HELPERS
     ============================= */
 
+    // Render app router with initial route
     const renderWithRouter = (initialRoute) => {
         return render(
             <MemoryRouter initialEntries={[initialRoute]}>

@@ -1,8 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import ProtectedRoute from "../../routes/ProtectedRoute";
+
+import { createAuthenticatedUser } from "../factories/users/userFactory";
 
 /* ==================================================
    PROTECTED ROUTE TESTS
@@ -12,6 +14,9 @@ import ProtectedRoute from "../../routes/ProtectedRoute";
    - authenticated access
    - unauthenticated redirects
    - auth loading state
+
+   Notes:
+   - uses reusable authenticated user factories
 ================================================== */
 
 const mockUseAuth = vi.fn();
@@ -34,6 +39,7 @@ describe("ProtectedRoute", () => {
        TEST HELPERS
     ============================= */
 
+    // Render protected route with login fallback route
     const renderProtectedRoute = () => {
         return render(
             <MemoryRouter initialEntries={["/profile"]}>
@@ -62,7 +68,7 @@ describe("ProtectedRoute", () => {
 
     it("should render children when user is authenticated", () => {
         mockUseAuth.mockReturnValue({
-            user: { userId: 1 },
+            user: createAuthenticatedUser(),
             loading: false
         });
 

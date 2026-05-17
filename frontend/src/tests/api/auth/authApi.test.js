@@ -4,6 +4,8 @@ import { loginUser, logoutUser, registerUser } from "../../../api/auth/authApi";
 
 import apiClient from "../../../api/apiClient";
 
+import { createAuthenticatedUser } from "../../factories/users/userFactory";
+
 /* ==================================================
    AUTH API TESTS
    Tests authentication API requests
@@ -13,6 +15,9 @@ import apiClient from "../../../api/apiClient";
    - login requests
    - logout requests
    - unwrapped API responses
+
+   Notes:
+   - uses reusable authenticated user factories
 ================================================== */
 
 vi.mock("../../../api/apiClient", () => ({
@@ -34,10 +39,10 @@ describe("authApi", () => {
     it("should register a user", async () => {
         const mockPayload = {
             success: true,
-            user: {
-                id: 1,
+            user: createAuthenticatedUser({
+                userId: 1,
                 name: "John Doe"
-            }
+            })
         };
 
         apiClient.post.mockResolvedValue({

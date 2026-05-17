@@ -12,6 +12,10 @@ import {
     updateCurrentUserProfile
 } from "../../../api/users/userApi";
 
+import { createEvent } from "../../factories/events/eventFactory";
+
+import { createAuthenticatedUser, createPublicUser } from "../../factories/users/userFactory";
+
 /* ==================================================
    USER API TESTS
    Tests authenticated and public user API requests
@@ -23,6 +27,9 @@ import {
    - current user event retrieval
    - public user profile retrieval
    - public user event retrieval
+
+   Notes:
+   - uses reusable user and event test factories
 ================================================== */
 
 vi.mock("../../../api/apiClient", () => ({
@@ -46,10 +53,10 @@ describe("userApi", () => {
     it("should fetch current user profile", async () => {
         const mockPayload = {
             success: true,
-            user: {
-                id: 1,
+            user: createAuthenticatedUser({
+                userId: 1,
                 name: "John Doe"
-            }
+            })
         };
 
         apiClient.get.mockResolvedValue({
@@ -123,7 +130,9 @@ describe("userApi", () => {
     it("should fetch current user events with query params", async () => {
         const mockPayload = {
             success: true,
-            events: []
+            events: [
+                createEvent()
+            ]
         };
 
         apiClient.get.mockResolvedValue({
@@ -137,10 +146,7 @@ describe("userApi", () => {
 
         const result = await getCurrentUserEvents(params);
 
-        expect(apiClient.get).toHaveBeenCalledWith(
-            "/users/me/events",
-            { params }
-        );
+        expect(apiClient.get).toHaveBeenCalledWith("/users/me/events", { params });
 
         expect(result).toEqual(mockPayload);
     });
@@ -152,9 +158,9 @@ describe("userApi", () => {
     it("should fetch a public user profile", async () => {
         const mockPayload = {
             success: true,
-            user: {
+            user: createPublicUser({
                 name: "Jane Doe"
-            }
+            })
         };
 
         apiClient.get.mockResolvedValue({
@@ -171,8 +177,15 @@ describe("userApi", () => {
     it("should fetch public user events", async () => {
         const mockPayload = {
             success: true,
-            createdEvents: [],
-            joinedEvents: []
+            createdEvents: [
+                createEvent()
+            ],
+            joinedEvents: [
+                createEvent({
+                    id: 2,
+                    title: "Joined Event"
+                })
+            ]
         };
 
         apiClient.get.mockResolvedValue({
@@ -185,10 +198,7 @@ describe("userApi", () => {
 
         const result = await getPublicUserEvents(2, params);
 
-        expect(apiClient.get).toHaveBeenCalledWith(
-            "/users/2/events",
-            { params }
-        );
+        expect(apiClient.get).toHaveBeenCalledWith("/users/2/events", { params });
 
         expect(result).toEqual(mockPayload);
     });

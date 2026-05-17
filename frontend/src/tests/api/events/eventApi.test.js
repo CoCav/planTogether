@@ -10,6 +10,8 @@ import {
 
 import apiClient from "../../../api/apiClient";
 
+import { createEvent as createEventData } from "../../factories/events/eventFactory";
+
 /* ==================================================
    EVENT API TESTS
    Tests event API requests
@@ -20,6 +22,9 @@ import apiClient from "../../../api/apiClient";
    - event creation
    - event updates
    - event deletion
+
+   Notes:
+   - uses reusable event test factories
 ================================================== */
 
 vi.mock("../../../api/apiClient", () => ({
@@ -58,10 +63,7 @@ describe("eventApi", () => {
 
         const result = await getAllEvents(params);
 
-        expect(apiClient.get).toHaveBeenCalledWith(
-            "/events",
-            { params }
-        );
+        expect(apiClient.get).toHaveBeenCalledWith("/events", { params });
 
         expect(result).toEqual(mockPayload);
     });
@@ -69,10 +71,10 @@ describe("eventApi", () => {
     it("should fetch one event by ID", async () => {
         const mockPayload = {
             success: true,
-            event: {
+            event: createEventData({
                 id: 1,
                 title: "React Meetup"
-            }
+            })
         };
 
         apiClient.get.mockResolvedValue({
@@ -93,9 +95,9 @@ describe("eventApi", () => {
     it("should create an event", async () => {
         const mockPayload = {
             success: true,
-            event: {
+            event: createEventData({
                 id: 1
-            }
+            })
         };
 
         apiClient.post.mockResolvedValue({

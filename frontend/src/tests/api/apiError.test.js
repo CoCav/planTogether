@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { ApiError, getApiErrorMessage, normalizeApiError } from "../../api/apiError";
 
+import { createMockApiError, createMockNetworkError } from "../helpers/mocks/mockApiError";
+
 /* ==================================================
    API ERROR TESTS
    Tests normalized API error helpers
@@ -11,6 +13,9 @@ import { ApiError, getApiErrorMessage, normalizeApiError } from "../../api/apiEr
    - Axios error normalization
    - validation errors extraction
    - fallback message handling
+
+   Notes:
+   - uses reusable API error mock helpers
 ================================================== */
 
 describe("apiError", () => {
@@ -35,14 +40,24 @@ describe("apiError", () => {
 
         const error = new ApiError("Validation failed", {
             status: 400,
-            errors: [{ field: "email", message: "Invalid email" }],
+            errors: [
+                {
+                    field: "email",
+                    message: "Invalid email"
+                }
+            ],
             cause
         });
 
         expect(error.status).toBe(400);
+
         expect(error.errors).toEqual([
-            { field: "email", message: "Invalid email" }
+            {
+                field: "email",
+                message: "Invalid email"
+            }
         ]);
+
         expect(error.cause).toBe(cause);
     });
 
@@ -51,34 +66,35 @@ describe("apiError", () => {
     ============================= */
 
     it("should normalize an Axios error with backend message and errors", () => {
-        const axiosError = {
-            response: {
-                status: 400,
-                data: {
-                    message: "Validation failed",
-                    errors: [{ field: "name", message: "Name is required" }]
+        const axiosError = createMockApiError({
+            status: 400,
+            message: "Validation failed",
+            errors: [
+                {
+                    field: "name",
+                    message: "Name is required"
                 }
-            }
-        };
+            ]
+        });
 
         const normalizedError = normalizeApiError(axiosError);
 
         expect(normalizedError).toBeInstanceOf(ApiError);
         expect(normalizedError.message).toBe("Validation failed");
         expect(normalizedError.status).toBe(400);
+
         expect(normalizedError.errors).toEqual([
             {
                 field: "name",
                 message: "Name is required"
             }
         ]);
+
         expect(normalizedError.cause).toBe(axiosError);
     });
 
     it("should fallback to Axios error message when backend message is missing", () => {
-        const axiosError = {
-            message: "Network Error"
-        };
+        const axiosError = createMockNetworkError("Network Error");
 
         expect(normalizeApiError(axiosError).message).toBe("Network Error");
     });
@@ -106,28 +122,18 @@ describe("apiError", () => {
     ============================= */
 
     it("should return a readable API error message", () => {
-        const axiosError = {
-            response: {
-                data: {
-                    message: "Email already in use"
-                }
-            }
-        };
+        const axiosError = createMockApiError({
+            message: "Email already in use"
+        });
 
         expect(getApiErrorMessage(axiosError)).toBe("Email already in use");
     });
 
     it("should return default message when backend message is empty", () => {
-        const axiosError = {
-            response: {
-                data: {
-                    message: ""
-                }
-            }
-        };
+        const axiosError = createMockApiError({
+            message: ""
+        });
 
-        expect(getApiErrorMessage(axiosError, "Fallback error")).toBe(
-            "Something went wrong."
-        );
+        expect(getApiErrorMessage(axiosError, "Fallback error")).toBe("Something went wrong.");
     });
 });

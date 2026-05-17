@@ -8,6 +8,7 @@ import { removeEventMember, transferEventOwnership, updateEventMemberRole } from
 import { EVENT_ROLES } from "../../../../features/shared/eventRoles";
 
 import { createMutationHookProps } from "../../../helpers/hooks/createHookProps";
+import { mockConfirmAccepted } from "../../../helpers/mocks/mockWindowConfirm";
 
 /* ==================================================
    USE MEMBERSHIP MANAGEMENT TESTS
@@ -23,6 +24,7 @@ import { createMutationHookProps } from "../../../helpers/hooks/createHookProps"
 
    Notes:
    - uses reusable mutation hook prop helpers
+   - uses reusable confirmation dialog mock helpers
 ================================================== */
 
 vi.mock("../../../../api/eventMemberships/eventMembershipApi", () => ({
@@ -42,7 +44,7 @@ describe("useMembershipManagement", () => {
             eventId: 1
         });
 
-        vi.spyOn(window, "confirm").mockReturnValue(true);
+        mockConfirmAccepted();
     });
 
     /* =============================

@@ -8,6 +8,7 @@ import { joinEvent, leaveEvent } from "../../../../api/eventMemberships/eventMem
 import { EVENT_ROLES } from "../../../../features/shared/eventRoles";
 
 import { createMembershipActionHookProps } from "../../../helpers/hooks/createHookProps";
+import { mockConfirmAccepted } from "../../../helpers/mocks/mockWindowConfirm";
 
 /* ==================================================
    USE MEMBERSHIP ACTIONS TESTS
@@ -23,6 +24,7 @@ import { createMembershipActionHookProps } from "../../../helpers/hooks/createHo
 
    Notes:
    - uses reusable membership hook prop helpers
+   - uses reusable confirmation dialog mock helpers
 ================================================== */
 
 vi.mock("../../../../api/eventMemberships/eventMembershipApi", () => ({
@@ -39,7 +41,7 @@ describe("useMembershipActions", () => {
 
         hookProps = createMembershipActionHookProps();
 
-        vi.spyOn(window, "confirm").mockReturnValue(true);
+        mockConfirmAccepted();
     });
 
     /* =============================

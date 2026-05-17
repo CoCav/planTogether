@@ -6,6 +6,7 @@ import useEventActions from "../../../../features/events/hooks/useEventActions";
 import { deleteEvent } from "../../../../api/events/eventApi";
 
 import { createMutationHookProps } from "../../../helpers/hooks/createHookProps";
+import { mockConfirmAccepted } from "../../../helpers/mocks/mockWindowConfirm";
 
 /* ==================================================
    USE EVENT ACTIONS TESTS
@@ -19,6 +20,7 @@ import { createMutationHookProps } from "../../../helpers/hooks/createHookProps"
 
    Notes:
    - uses reusable mutation hook prop helpers
+   - uses reusable confirmation dialog mock helpers
 ================================================== */
 
 const mockNavigate = vi.fn();
@@ -41,7 +43,7 @@ describe("useEventActions", () => {
             eventId: 1
         });
 
-        vi.spyOn(window, "confirm").mockReturnValue(true);
+        mockConfirmAccepted();
     });
 
     /* =============================

@@ -9,8 +9,8 @@ PlanTogether is a collaborative event management platform where users can create
 
 ![Vitest](https://img.shields.io/badge/Test-Vitest-6E9F18)
 ![RTL](https://img.shields.io/badge/Test-React%20Testing%20Library-E33332)
-![Tests](https://img.shields.io/badge/tests-425%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-91.39%25%20statements%20%7C%2087.96%25%20branches-brightgreen)
+![Tests](https://img.shields.io/badge/tests-357%20passing%20%28safe--scope%29-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-in%20progress-lightgrey)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -18,24 +18,11 @@ PlanTogether is a collaborative event management platform where users can create
 
 This is the **frontend application** of PlanTogether, built with **React, Vite, and Axios**.
 
-It provides a modern, responsive, and user-friendly interface that integrates with the PlanTogether backend API.
+It provides a modern, responsive, and user-focused interface for interacting with the PlanTogether platform and backend API.
 
-Users can:
+> **Frontend refactor in progress:** the feature, API, hook, route, context, and utility layers have been refactored and stabilized with reusable test helpers and factories. Legacy page and component tests are progressively being updated during the UI refactor.
 
-- Browse, search, and filter events
-- Authenticate securely (login, register, profile management)
-- Create, update, and manage events
-- Join and leave events
-- Interact with features based on their role
-
-The application focuses on **usability, role-based interactions, and reliability**, ensuring a smooth and consistent user experience across all core features.
-
-It also includes advanced frontend features such as:
-
-- image upload with preview and drag-and-drop support
-- URL-synchronized filters, pagination, and views
-- creator-based search and advanced filtering
-- contextual empty states and improved loading UX
+The frontend focuses on usability, role-based interactions, scalability, and long-term maintainability across all core features.
 
 ---
 
@@ -52,19 +39,15 @@ It allows users to:
 - Update their profile and password
 - Upload and manage avatars and event images
 - Manage session behavior with a "Remember me" feature
-- Access a personal dashboard (events created and joined)
+- Access a personal dashboard for created and joined events
 
-The application is designed to deliver a smooth and intuitive user experience, with clear navigation and role-based interactions across all features.
-
-It also includes advanced UI features such as URL-synchronized filters, contextual empty states, and responsive form interactions.
-
-It communicates with the backend API using **Axios**, ensuring reliable data fetching and consistent behavior throughout the application.
+The application is designed to provide a smooth and intuitive user experience, with clear navigation, responsive interactions, and role-based UI behavior across all core features.
 
 ---
 
 ## 🔧 Tech Stack
 
-The frontend is built using modern and efficient tools to ensure performance, scalability, and maintainability.
+The frontend is built using modern and efficient tools to ensure performance, scalability, maintainability, and long-term reliability.
 
 ### Core Technologies
 
@@ -73,244 +56,124 @@ The frontend is built using modern and efficient tools to ensure performance, sc
 - **React Router** – client-side routing and navigation
 - **Axios** – HTTP client for API communication
 
-### State & Logic
+### State & Business Logic
 
-- **Context API** – global state management (authentication)
-- **Custom hooks** – reusable business logic (e.g., filtering, pagination, membership actions)
+- **Context API** – global authentication state management
+- **Custom hooks** – reusable frontend state and business behavior
 - **Session / Local Storage** – token persistence and session handling
 
 ### UI & User Experience
 
-- **Drag and drop interactions** – for file uploads (avatars and event images)
-- **FormData handling** – for image uploads and API integration
+- **Drag and drop interactions** – avatar and event image uploads
+- **FormData handling** – image upload and API integration
 - **Responsive UI components** – reusable and consistent design patterns
+- **Role-based UI rendering** – contextual actions and permissions
 
 ### Testing
 
-- **Vitest** – unit and component testing
-- **React Testing Library** – testing user interactions and UI behavior
-
-### Additional Testing Utilities
-
-- **@testing-library/jest-dom**
-- **@testing-library/user-event**
-- **jsdom**
+- **Vitest** – unit and integration testing
+- **React Testing Library** – user interaction and UI behavior testing
 
 ---
 
 ## 📁 Frontend Structure
 
-The frontend follows a modular, feature-oriented architecture designed to ensure scalability, maintainability, and ease of navigation.
+The frontend follows a modular, feature-oriented architecture focused on scalability, maintainability, testability, and long-term reliability.
 
-It separates responsibilities across API communication, UI components, business logic, and routing, providing a clear and organized codebase.
+The codebase separates API communication, frontend business logic, routing, UI layers, and reusable testing utilities into dedicated domains.
 
-```
-src
+```txt
+frontend
 │
-├── api
-│   ├── axios.js
-│   ├── authApi.js
-│   ├── eventApi.js
-│   └── eventMembershipApi.js
+├── docs/
+│   └── testing.md
 │
-├── assets
-│   ├── avatar_user_per_default.png
-│   └── event_image_per_default.jpg
+├── src/
+│   │
+│   ├── api/
+│   │   ├── auth/
+│   │   ├── events/
+│   │   ├── eventMemberships/
+│   │   ├── users/
+│   │   ├── apiClient.js
+│   │   ├── apiError.js
+│   │   └── apiResponse.js
+│   │
+│   ├── assets/
+│   │
+│   ├── components/
+│   │
+│   ├── context/
+│   │   └── auth/
+│   │       ├── AuthContext.jsx
+│   │       └── AuthProvider.jsx
+│   │
+│   ├── features/
+│   │   ├── auth/
+│   │   ├── events/
+│   │   ├── eventMemberships/
+│   │   ├── users/
+│   │   │   ├── authenticated/
+│   │   │   └── public/
+│   │   └── shared/
+│   │
+│   ├── hooks/
+│   │   └── usePagination.js
+│   │
+│   ├── pages/
+│   │
+│   ├── routes/
+│   │   ├── AppRouter.jsx
+│   │   └── ProtectedRoute.jsx
+│   │
+│   ├── styles/
+│   │
+│   ├── tests/
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── factories/
+│   │   │   ├── auth/
+│   │   │   ├── events/
+│   │   │   ├── eventMemberships/
+│   │   │   ├── shared/
+│   │   │   └── users/
+│   │   │       ├── authenticated/
+│   │   │       └── public/
+│   │   ├── features/
+│   │   ├── helpers/
+│   │   │   ├── hooks/
+│   │   │   ├── mocks/
+│   │   │   └── render/
+│   │   ├── hooks/
+│   │   ├── pages/
+│   │   ├── routes/
+│   │   ├── utils/
+│   │   └── setup/
+│   │
+│   ├── utils/
+│   │   ├── formatters.js
+│   │   ├── pagination.js
+│   │   └── uploadedFile.js
+│   │
+│   ├── App.jsx
+│   └── main.jsx
 │
-├── components
-│   ├── auth
-│   │   ├── AuthFormFields.jsx
-│   │   ├── AuthPasswordField.jsx
-│   │   ├── ChangePasswordForm.jsx
-│   │   └── PasswordRequirements.jsx
-│   │
-│   ├── events
-│   │   ├── EventCard.jsx
-│   │   ├── EventForm.jsx
-│   │   ├── EventMemberList.jsx
-│   │   ├── EventsFiltersCard.jsx
-│   │   └── EventsViewTabs.jsx
-│   │
-│   ├── layout
-│   │   ├── Navbar.jsx
-│   │   └── Footer.jsx
-│   │
-│   │
-│   ├── layout
-│   │   ├── Navbar.jsx
-│   │   └── Footer.jsx
-│   │
-│   └── ui
-│       ├── Alert.jsx
-│       ├── Badge.jsx
-│       ├── Button.jsx
-│       ├── Card.jsx
-│       ├── EmptyState.jsx
-│       ├── FormField.jsx
-│       ├── Input.jsx
-│       ├── LoadingState.jsx
-│       ├── PageLoader.jsx
-│       ├── Pagination.jsx
-│       ├── Select.jsx
-│       └── TextArea.jsx
-│
-├── context
-│   ├── authContext.jsx
-│   ├── authProvider.jsx
-│   └── useAuth.js
-│
-├── features
-│   ├── auth
-│   │   ├── authValidation.js
-│   │   └── token.js
-│   │
-│   └── events
-│       ├── eventEmptyState.js
-│       ├── eventFilters.js
-│       ├── eventQueryParams.js
-│       ├── eventValidation.js
-│       ├── eventViewConfig.js
-│       └── normalizeData.js
-│
-├── hooks
-│   ├── events
-│   │   ├── useEventActions.js
-│   │   ├── useEventActionsWithConfirm.js
-│   │   ├── useEventFilters.js
-│   │   ├── useEventManagementWithActions.js
-│   │   └── useEventPermissions.js
-│   │
-│   └── pagination
-│       └── usePagination.js
-│
-├── pages
-│   ├── CreateEventPage.jsx
-│   ├── EditEventPage.jsx
-│   ├── EventDetailsPage.jsx
-│   ├── EventsPage.jsx
-│   ├── HomePage.jsx
-│   ├── LoginPage.jsx
-│   ├── MyEventsPage.jsx
-│   ├── ProfilePage.jsx
-│   └── RegisterPage.jsx
-│
-├── routes
-│   └── AppRouter.jsx
-│
-├── styles
-│   ├── base.css
-│   ├── components.css
-│   ├── helpers.css
-│   ├── layout.css
-│   ├── navigation.css
-│   ├── pages.css
-│   └── theme.css
-│
-├── tests
-│   ├── api
-│   │   └── axios.test.js
-│   ├── components
-│   │   ├── auth
-│   │   │   ├── AuthFormFields.test.jsx
-│   │   │   ├── AuthPasswordField.test.jsx
-│   │   │   ├── ChangePasswordForm.test.jsx
-│   │   │   └── PasswordRequirements.test.jsx
-│   │   │
-│   │   ├── events
-│   │   │   ├── EventCard.test.jsx
-│   │   │   ├── EventForm.test.jsx
-│   │   │   ├── EventMemberList.test.jsx
-│   │   │   ├── EventsFiltersCard.test.jsx
-│   │   │   └── EventsViewTabs.test.jsx
-│   │   │
-│   │   ├── layout
-│   │   │   ├── Navbar.test.jsx
-│   │   │   └── Footer.test.jsx
-│   │   │
-│   │   └── ui
-│   │       ├── Alert.test.jsx
-│   │       ├── Badge.test.jsx
-│   │       ├── Button.test.jsx
-│   │       ├── Card.test.jsx
-│   │       ├── EmptyState.test.jsx
-│   │       ├── FormField.test.jsx
-│   │       ├── Input.test.jsx
-│   │       ├── LoadingState.test.jsx
-│   │       ├── PageLoader.test.jsx
-│   │       ├── Pagination.test.jsx
-│   │       ├── Select.test.jsx
-│   │       └── TextArea.test.jsx
-│   │
-│   ├── context
-│   │   └── authProvider.test.jsx
-│   │
-│   ├── features
-│   │   ├── auth
-│   │   │   ├── authValidation.test.js
-│   │   │   └── token.test.js
-│   │   │
-│   │   └── events
-│   │       ├── emptyState.test.js
-│   │       ├── eventFilters.test.js
-│   │       ├── eventQueryParams.test.js
-│   │       ├── eventValidation.test.js
-│   │       ├── eventViewConfig.test.js
-│   │       └── normalizeData.test.js
-│   │
-│   ├── hooks
-│   │   ├── events
-│   │   │   ├── useEventsActions.test.js
-│   │   │   ├── useEventsActionsWithConfirm.test.js
-│   │   │   ├── useEventFilters.test.js
-│   │   │   ├── useEventManagementActions.test.js
-│   │   │   └── useEventPermissions.test.js
-│   │   │
-│   │   └── pagination
-│   │       └── usePagination.test.js
-│   │
-│   ├── pages
-│   │   ├── CreateEventPage.test.jsx
-│   │   ├── EditEventPage.test.jsx
-│   │   ├── EventDetailsPage.test.jsx
-│   │   ├── EventsPage.test.jsx
-│   │   ├── HomePage.test.jsx
-│   │   ├── LoginPage.test.jsx
-│   │   ├── MyEventsPage.test.jsx
-│   │   ├── ProfilePage.test.jsx
-│   │   └── RegisterPage.test.jsx
-│   │
-│   ├── routes
-│   │   └── AppRouter.test.jsx
-│   │
-│   ├── utils
-│   │   ├── extractApiData.test.js
-│   │   ├── fetchAllPaginated.test.js
-│   │   ├── format.test.js
-│   │   └── getUploadedFile.test.js
-│   │
-│   └── setupTests.js
-│
-├── utils
-│   ├── extractApiData.js
-│   ├── fetchAllPaginated.js
-│   ├── format.js
-│   └── getUploadedFile.js
-│
-├── App.jsx
-├── main.jsx
+├── .env
+├── index.html
 └── README.md
 ```
 
-The structure separates concerns between UI, business logic, and data fetching, making the application easier to maintain and extend.
+### 🧩 Architecture Notes
 
-- **Components** are reusable and focused on UI
-- **Pages** handle routing and high-level logic
-- **Hooks** encapsulate reusable stateful logic
-- **Features** centralize domain-specific logic (e.g., event filtering and query params)
-- **Services** manage API communication
-- **Utils** provide shared helpers (e.g., image handling)
+- **Features** centralize domain-specific business logic, validation, filtering, query synchronization, permissions, and payload normalization
+- **Hooks** encapsulate reusable frontend state and business behavior
+- **API modules** isolate HTTP communication, request handling, and response normalization
+- **Tests** use reusable factories, mocks, helpers, and render utilities to reduce duplication and improve maintainability
+- **Shared utilities** centralize formatting, pagination, uploaded file handling, and reusable frontend helpers
+- **Frontend testing architecture** is progressively being standardized during the frontend refactor
 
-This architecture ensures scalability, reusability, and a clean separation of responsibilities across the frontend.
+This architecture improves maintainability, scalability, consistency, and long-term frontend reliability.
 
 ---
 
@@ -318,49 +181,56 @@ This architecture ensures scalability, reusability, and a clean separation of re
 
 ### 🔐 Authentication
 
-- Login and register
-- Authenticate using JWT
-- Access protected routes
-- Redirect to the originally requested page after login
+- Login and registration
+- JWT-based authentication
+- Protected route access
+- Redirect users to the originally requested page after login
 - Persist sessions with a "Remember me" feature
 
 ### 👤 User Profile
 
 - View profile information
 - Update name and email
-- Change password with validation
-- Upload and update user avatar
-- Preview avatar before upload
-- Automatically refresh the UI after updates
-- Display clear and contextual error messages
+- Change password with frontend validation
+- Upload and update user avatars
+- Preview avatars before upload
+- Automatically refresh the UI after profile updates
+- Display clear and contextual error feedback
 
 ### 📅 Event Management
 
-- View all events
+- Browse all public events
 - Create events
 - Edit events
 - Delete events
 - Upload and update event images
 - Preview images before upload
 
-Additional features:
+Additional capabilities:
 
-- Strong frontend validation aligned with backend rules
-- Date and time validation (no past start date, end date after start date)
-- Dynamic UI behavior based on event state and user role
+- Validation aligned with backend business rules
+- Date and time validation
+- Dynamic UI behavior based on event state and permissions
+- Role-aware event actions and permission handling
+
+Frontend validation includes:
+
+- Preventing past start dates
+- Ensuring end dates occur after start dates
+- Validating uploaded image types and sizes
 
 ### 👥 My Events
 
 - View created events
 - View joined events
 - Leave events directly from the interface
-- Filter events based on active view (created, joined, history)
+- Filter events by active views (`created`, `joined`, history)
 
 ### 🔍 Event Filtering
 
 Users can filter events using:
 
-- Keyword search (title and description)
+- Keyword search
 - Creator search
 - Type
 - Theme
@@ -368,70 +238,244 @@ Users can filter events using:
 - Exact date
 - Date range
 
-UI behavior:
+#### Filtering Behavior
 
-- Selecting an exact date disables the date range inputs
+- Selecting an exact date disables date range inputs
 - Multiple filters can be combined
 - Resetting filters reloads all events
-- Filters, pagination, and active view are synchronized with the URL
-
+- Filters, pagination, and active views are synchronized with the URL
 
 ### 🧭 Navigation & State Management
 
-- URL-synchronized filters, pagination, and views
-- Persistent state across page refresh and navigation
-- Config-driven event tabs (All, Upcoming, Archives, etc.)
+- URL-synchronized filters, pagination, and active views
+- Persistent UI state across refresh and navigation
+- Config-driven event views (`All`, `Upcoming`, `Archives`, etc.)
 
 ### 🎭 Role System
 
-Each user can have a role in an event:
+Authenticated users can have different permissions within events:
 
 ```txt
 organizer
 co_organizer
 participant
-guest
 ```
 
 #### Organizer
 
-- Edit event
-- Delete event
+- Edit events
+- Delete events
 - Promote participants
-- Demote co_organizers
-- Remove participants and co_organizers
+- Demote co-organizers
+- Remove participants and co-organizers
+- Transfer event ownership
 
 #### Co-organizer
 
-- Edit event
+- Edit events
 - Remove participants
 
 #### Participant
 
-- Join event
-- Leave event
+- Join events
+- Leave events
 
-#### Guest
+### 🌐 Public Access
+
+Unauthenticated visitors can:
 
 - Browse public event information
-- Login prompt for interactive actions
+- Access public user profiles
+- Receive login prompts for protected actions
 
-The UI dynamically adapts based on the user's role and permissions.
+The UI dynamically adapts based on the user's permissions and authentication state.
 
 ### 📄 User Experience
 
-- Contextual empty states depending on filters and views
-- Loading states for async operations
-- Responsive layout and reusable UI components
-- Consistent design across pages and components
+- Contextual empty states based on filters and active views
+- Loading states for asynchronous operations
+- Responsive layouts and reusable UI components
+- Consistent UI behavior across pages and features
+
+---
+
+## 🔌 Frontend API Layer
+
+The frontend uses a centralized API architecture built on top of **Axios** to ensure consistency, scalability, and maintainable API communication across the application.
+
+The API base URL is configured through environment variables:
+
+```env
+VITE_API_URL=http://localhost:3000/api
+```
+
+### 📦 API Structure
+
+```txt
+api/
+├── auth/
+├── events/
+├── eventMemberships/
+├── users/
+├── apiClient.js
+├── apiError.js
+└── apiResponse.js
+```
+
+### 🧩 API Responsibilities
+
+The frontend API layer centralizes:
+
+- authenticated API requests
+- JWT token injection
+- multipart uploads for avatars and event images
+- API response normalization
+- frontend-friendly error handling
+- reusable paginated payload extraction
+
+### ⚙️ Core API Utilities
+
+#### `apiClient.js`
+
+Centralized Axios configuration used across the application.
+
+Handles:
+
+- base API URL configuration
+- authorization header injection
+- authenticated request behavior
+- shared request configuration
+
+#### `apiError.js`
+
+Reusable API error normalization helpers.
+
+Handles:
+
+- Axios error normalization
+- validation error extraction
+- fallback error handling
+- consistent frontend error objects
+
+#### `apiResponse.js`
+
+Reusable API response extraction helpers.
+
+Handles:
+
+- response unwrapping
+- payload extraction
+- paginated payload normalization
+- reusable frontend response formatting
+
+### 📌 API Architecture Notes
+
+- JWT tokens are automatically attached to authenticated requests
+- API responses are normalized before being consumed by the UI
+- Errors are standardized through reusable helpers
+- Upload requests support `FormData`
+- Feature-based API modules improve scalability and maintainability
+
+This architecture improves consistency, maintainability, scalability, and long-term frontend reliability.
+
+---
+
+## 🧠 Frontend Logic Layer
+
+The frontend business logic is organized using a modular, feature-oriented architecture designed for scalability, reuse, and maintainability.
+
+### 📦 Feature Structure
+
+```txt
+features/
+├── auth/
+├── events/
+├── eventMemberships/
+├── users/
+│   ├── authenticated/
+│   └── public/
+└── shared/
+```
+
+### 🧩 Logic Responsibilities
+
+The feature layer centralizes reusable frontend logic such as:
+
+- frontend validation
+- event filtering and query synchronization
+- payload normalization
+- role-based permissions
+- event view configuration
+- empty state management
+- pagination synchronization
+- membership interaction behavior
+
+### 🔐 Authentication Logic
+
+The authentication layer handles:
+
+- login and registration flows
+- token persistence
+- protected frontend access
+- authentication state management
+- redirect behavior after login
+
+### 📅 Event Logic
+
+The event layer handles:
+
+- event filtering
+- sorting and pagination
+- query parameter synchronization
+- event validation
+- event payload normalization
+- dynamic event state behavior
+
+### 👥 Membership Logic
+
+The membership layer handles:
+
+- joining and leaving events
+- role-based permissions
+- protected membership actions
+- organizer/co_organizer restrictions
+- confirmation flows for sensitive actions
+
+### 👤 User Logic
+
+The user layer separates:
+
+- authenticated user behavior
+- public user behavior
+- profile normalization
+- event dashboard logic
+- contextual empty states
+
+### 🔁 Shared Frontend Utilities
+
+Shared frontend logic includes:
+
+- reusable hooks
+- formatting utilities
+- uploaded file helpers
+- pagination helpers
+- reusable constants and configs
+
+### 📌 Frontend Logic Notes
+
+- Business logic is separated from UI rendering whenever possible
+- Query synchronization is centralized through reusable helpers
+- Payload normalization improves frontend consistency
+- Shared utilities reduce duplicated logic
+- Feature isolation improves long-term maintainability
 
 ---
 
 ## 🧪 Testing
 
-The frontend includes a **comprehensive automated test suite** built with **Vitest** and **React Testing Library**, covering pages, components, routing, hooks, utilities, and user interactions.
+The frontend includes a progressively standardized automated test suite built with **Vitest** and **React Testing Library**.
 
-These tests ensure UI reliability, reduce regressions, and validate the most important frontend user flows, including filtering, uploads, and role-based interactions.
+The current refactored test scope focuses on frontend business logic, routing, hooks, API layers, utilities, and reusable feature behavior.
 
 ### ▶️ Run Tests
 
@@ -439,81 +483,50 @@ These tests ensure UI reliability, reduce regressions, and validate the most imp
 npm run test:run
 ```
 
-### ▶️ Run Tests with coverage
+### ▶️ Run Tests with Coverage
 
 ```bash
 npx vitest run --coverage
 ```
 
-### 📊 Results
+### ▶️ Run Current Safe Test Scope
 
-- 53 test suites
-- 425 tests
-- ✅ All passing
+```bash
+npm test -- src/tests/features src/tests/hooks src/tests/context src/tests/routes src/tests/api src/tests/utils
+```
 
-**Coverage:**
-- 91.39% statements coverage
-- 87.96% branch coverage
-- 83.33% functions coverage
-- 93.94% lines coverage
-- ✅ High coverage across core features such as filtering, uploads, and UI interactions
+This command is currently used while legacy page and component tests are being progressively refactored during the frontend UI rewrite.
 
----
+### 📊 Current Safe-Scope Results
 
-### 📦 Test Coverage
+- 55 safe test suites
+- 357 safe-scope tests
+- ✅ Passing for refactored layers
 
-The frontend test suite covers multiple layers of the application:
+> The current safe test scope intentionally excludes legacy page and component tests until the frontend UI refactor is complete.
 
-#### 🧭 Pages & User Flows
+### 📦 Current Refactored Test Scope
 
-- Home page
-- Login and register flows
-- Events listing, filtering, and pagination
-- Event details
-- My Events dashboard (created and joined events)
-- Event creation and editing
-- Profile and password update
-- Avatar and event image upload flows
+The current refactored scope includes:
 
-#### 🧱 Components
+- API modules and normalization helpers
+- frontend business logic and feature utilities
+- authentication and protected routing
+- reusable hooks and query synchronization
+- pagination and formatting utilities
+- uploaded file helpers
+- reusable factories, mocks, and render helpers
 
-- UI components
-- Layout components
-- Event cards (with image handling and fallback)
-- Form inputs and select fields
-- Loading, empty, and error states
-- Role-based UI elements
-- Upload components (preview, remove actions, drag & drop behavior)
+### 🔁 Testing Strategy
 
-#### 🛣️ Routing
-
-- App routing
-- Protected routes
-- Redirect behavior after login
-- Access control based on authentication state
-- URL-synchronized filters, pagination, and active views
-
-#### 🧠 Logic & Utilities
-
-- Authentication context
-- Token persistence
-- Event filtering helpers (including creator-based filtering)
-- Event validation helpers
-- API data extraction and formatting utilities
-- Image handling utilities (`getUploadedFile`)
-- Custom hooks (event filtering, pagination, membership actions)
-- Paginated data fetching utility (`fetchAllPaginated`)
-
----
-
-### 🔁 Test Strategy
-
-- Tests simulate real user interactions with `React Testing Library`
-- API calls are mocked to isolate frontend behavior
-- Routing behavior is tested through the app router
+- Tests simulate realistic frontend behavior using `React Testing Library`
+- API calls are mocked to isolate frontend logic
+- Routing behavior is tested through the application router
 - Authentication and protected access flows are validated
-- Tests cover success, loading, empty, and error states
-- Critical logic (filtering, pagination, uploads) is tested in isolation
+- Critical frontend logic is tested in isolation
+- Reusable factories and helpers reduce duplicated test setup
+
+For more details about the frontend testing architecture, reusable factories, mocks, helpers, and safe-scope testing strategy, see [`docs/testing.md`](./docs/testing.md).
 
 ---
 
@@ -528,9 +541,10 @@ VITE_API_URL=http://localhost:3000/api
 ```
 
 ### 🔍 Notes
+
 - `VITE_API_URL` → base URL of the backend API
 - This value must match the backend server URL
-- Used by Axios for all API requests
+- Used by the centralized Axios client for all API requests
 
 👉 A `.env.example` file can be used as a reference configuration.
 
@@ -538,7 +552,7 @@ VITE_API_URL=http://localhost:3000/api
 
 ## ▶️ Running the App
 
-To install dependencies and start the development server:
+Install dependencies and start the development server:
 
 ```bash
 npm install
@@ -551,72 +565,86 @@ The application will be available at:
 
 ---
 
-## 🔗 API Integration
-
-The frontend communicates with the backend API using **Axios**, ensuring consistent and reliable data fetching across the application.
-
-The API base URL is configured via environment variables:
-
-```env
-VITE_API_URL=http://localhost:3000/api
-```
-
-Axios is configured to:
-
-- Automatically attach the JWT token to authenticated requests
-- Handle API requests and responses consistently
-- Support `FormData` requests for file uploads (avatars and event images)
-- Centralize API configuration and error handling
-
-This setup ensures seamless communication between the frontend and backend, while keeping the codebase clean, scalable, and maintainable.
-
----
-
 ## 🚀 Recent Improvements
 
-### 🔧 Features & UI
+### 🔧 Frontend Features & UX
 
-- Added avatar and event image upload UI with preview and drag-and-drop support
-- Introduced URL-synchronized filters, pagination, and active views
-- Added creator-based search and advanced event filtering
-- Improved contextual empty states and loading experience
-- Implemented config-driven event tabs for better scalability
+Recent frontend improvements include:
 
-### 🧪 Testing
+- Avatar and event image upload UI with preview and drag-and-drop support
+- URL-synchronized filters, pagination, and active views
+- Creator-based search and advanced event filtering
+- Config-driven event views for improved scalability
+- Improved loading states and contextual empty states
 
-- Added comprehensive frontend test coverage using **Vitest** and **React Testing Library**
-- Expanded tests to cover filtering logic, uploads, and user interactions
-- Improved test structure for better maintainability
-- Added global test setup for cleanup and mock handling
+### 🔌 Frontend Architecture
+
+Recent frontend architecture improvements include:
+
+- Refactored centralized API layer and normalization helpers
+- Standardized feature-oriented frontend architecture
+- Better separation between UI rendering and frontend business logic
+- Shared reusable frontend utilities and helpers
+- Improved authentication and protected route handling
+
+### 🧪 Frontend Testing
+
+Recent testing improvements include:
+
+- Expanded frontend test coverage using **Vitest** and **React Testing Library**
+- Refactored feature, hook, context, route, API, and utility tests
+- Added reusable factories, mocks, and render helpers
+- Introduced reusable upload, pagination, and query parameter test helpers
+- Added a progressive safe-scope testing strategy during the frontend refactor
+- Added dedicated frontend testing documentation under `docs/testing.md`
 
 ---
 
 ## 📌 Project Status
 
-| Area              | Status |
-|-------------------|--------|
-| UI / Pages        | ✅ Complete |
-| Features          | ✅ Complete |
-| Routing           | ✅ Complete |
-| API Integration   | ✅ Complete |
-| File Uploads      | ✅ Avatars & event images supported |
-| Testing           | ✅ 425 tests (53 test files) |
-| UX Improvements   | 🚧 Ongoing |
+| Area | Status |
+|---|---|
+| Frontend UI / Pages | 🚧 Refactor in progress |
+| Reusable Components | 🚧 Refactor in progress |
+| Frontend Business Logic | ✅ Refactored and tested |
+| Routing & Protected Access | ✅ Refactored and tested |
+| API Communication Layer | ✅ Refactored and tested |
+| File Upload System | ✅ Avatars & event images supported |
+| Frontend Testing | 🚧 357 safe-scope tests passing |
+| UX Improvements | 🚧 Ongoing |
+
+### 📍 Current Frontend Refactor Focus
+
+The frontend refactor currently focuses on:
+
+- modernizing pages and reusable UI components
+- improving frontend consistency and maintainability
+- stabilizing feature-oriented frontend architecture
+- expanding reusable frontend testing utilities
+- progressively restoring full frontend test coverage
 
 ---
 
 ## 🔮 Future Improvements
 
-### 🚀 Features & UX
+### 🚀 Frontend Features & UX
 
-- Add notifications and reminder features
-- Enhance mobile responsiveness across devices
-- Improve accessibility (labels, semantic structure, ARIA support)
-- Add advanced UI feedback (toasts, real-time updates)
+Planned frontend improvements include:
 
-### 🧪 Testing
+- Notifications and reminder features
+- Improved mobile responsiveness across devices
+- Accessibility improvements (`ARIA`, labels, semantic structure)
+- Enhanced UI feedback (toasts, async feedback, contextual states)
+- Expanded role-aware event management interactions
+- Improved dashboard and event management flows
 
-- Extend test coverage to lower-level reusable UI components
-- Add end-to-end (E2E) testing for complete user journeys
+### 🧪 Frontend Testing
+
+Planned testing improvements include:
+
+- Restoring full page and component test coverage
+- Extending tests to lower-level reusable UI components
+- Adding end-to-end (E2E) testing for complete user journeys
+- Expanding frontend testing documentation and conventions
 
 ---

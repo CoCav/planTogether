@@ -11,11 +11,11 @@
 
 ![Auth](https://img.shields.io/badge/Auth-JWT-yellow)
 
-![Backend Tests](https://img.shields.io/badge/backend-568%20passing-brightgreen)
-![Backend Coverage](https://img.shields.io/badge/backend%20coverage-98.52%25%20statements%20%7C%2092.85%25%20branches-brightgreen)
+![Backend Tests](https://img.shields.io/badge/backend-570%20passing-brightgreen)
+![Backend Coverage](https://img.shields.io/badge/backend%20coverage-98.54%25%20statements%20%7C%2092.85%25%20branches-brightgreen)
 
-![Frontend Tests](https://img.shields.io/badge/frontend-425%20passing-brightgreen)
-![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-91.39%25%20statements%20%7C%2087.96%25%20branches-brightgreen)
+![Frontend Tests](https://img.shields.io/badge/frontend-357%20safe--scope%20passing-brightgreen)
+![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-in%20progress-lightgrey)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -36,7 +36,7 @@ The application focuses on **clean architecture, scalability, security, API cons
 
 ## 🎯 Key Highlights
 
-- 🧪 **900+ automated tests across backend and frontend** (Jest + Supertest + Vitest + React Testing Library)
+- 🧪 Comprehensive backend testing + progressive frontend safe-scope testing (Jest + Supertest + Vitest + React Testing Library)
 - 📊 **High automated test coverage** (~98% backend / ~91% frontend)
 - 🔁 **Automated backend CI testing with GitHub Actions and PostgreSQL services**
 - 🔐 **Secure authentication and role-based access control (RBAC)**
@@ -70,10 +70,7 @@ The platform is designed to provide a smooth and intuitive user experience throu
 Additional frontend capabilities include:
 
 - URL-synchronized filters and pagination
-- contextual empty states
-- protected routes
-- responsive interactive UI behavior
-- reusable frontend form and filtering components
+- protected frontend routes and role-aware UI behavior
 - upload previews and drag-and-drop interactions
 
 Together, the frontend and backend layers provide reliable data handling, secure workflows, scalable architecture, centralized permission management, and consistent fullstack behavior across the application.
@@ -204,6 +201,19 @@ It includes:
 - API integration details
 - frontend testing structure
 
+Dedicated frontend testing documentation is also available:
+
+👉 [`/frontend/docs/testing.md`](./frontend/docs/testing.md)
+
+It includes:
+
+- frontend testing architecture and strategy
+- frontend testing layers
+- reusable factories, mocks, and render helpers
+- mocking strategies
+- safe-scope testing strategy
+- frontend refactor testing workflow
+
 ---
 
 ## 🛠️ Tech Stack
@@ -255,8 +265,6 @@ The project uses a modern fullstack architecture combining a secure backend API,
 
 - GitHub Actions CI
 
----
-
 ## 📁 Fullstack Structure
 
 The project is organized into two main applications: a backend API and a frontend client, each following a modular and scalable architecture.
@@ -291,32 +299,34 @@ planTogether/
 │   └── README.md
 │
 ├── frontend/
+│   ├── docs/
+│   │
 │   ├── src/
 │   │   ├── api/
 │   │   ├── assets/
 │   │   ├── components/
-│   │   │   ├── auth/
-│   │   │   ├── events/
-│   │   │   ├── layout/
-│   │   │   └── ui/
 │   │   ├── context/
 │   │   ├── features/
 │   │   │   ├── auth/
-│   │   │   └── events/
-│   │   ├── hooks/
 │   │   │   ├── events/
-│   │   │   └── pagination/
+│   │   │   ├── eventMemberships/
+│   │   │   ├── users/
+│   │   │   │   ├── authenticated/
+│   │   │   │   └── public/
+│   │   │   └── shared/
+│   │   ├── hooks/
 │   │   ├── pages/
 │   │   ├── routes/
 │   │   ├── styles/
 │   │   ├── tests/
 │   │   │   ├── api/
-│   │   │   ├── components/
 │   │   │   ├── context/
+│   │   │   ├── factories/
 │   │   │   ├── features/
+│   │   │   ├── helpers/
 │   │   │   ├── hooks/
-│   │   │   ├── pages/
 │   │   │   ├── routes/
+│   │   │   ├── setup/
 │   │   │   └── utils/
 │   │   └── utils/
 │   │
@@ -331,7 +341,7 @@ This structure supports clear separation of concerns across backend and frontend
 Testing strategies are intentionally separated:
 
 - backend tests are organized with dedicated integration and unit testing layers
-- frontend tests are colocated with application features and UI components
+- frontend tests are organized around features, hooks, routes, APIs, and reusable frontend utilities
 
 ---
 
@@ -452,26 +462,30 @@ This architecture supports:
 
 ### ⚛️ Frontend
 
-The frontend uses a component-based and feature-driven architecture:
+The frontend uses a component-based and feature-oriented architecture designed for scalability, maintainability, and reusable frontend business logic.
+
+The frontend architecture is organized around:
 
 - Pages → main application views
 - Components → reusable UI elements
-- Services → centralized Axios API layer
+- API layer → centralized API communication and normalization
 - Context → global authentication state
-- Hooks → reusable logic (filtering, pagination, event actions)
-- Features → domain-specific logic (filters, query params, empty states)
-- Utils → shared helpers (image handling, data formatting)
+- Hooks → reusable frontend state and interaction logic
+- Features → domain-specific frontend logic and query synchronization
+- Utils → shared formatting, pagination, and uploaded file helpers
+- Tests → reusable factories, helpers, mocks, and isolated frontend test layers
 
-This structure enables:
+This architecture supports:
 
 - dynamic and responsive UI behavior
-- role-based rendering
-- URL-synchronized state (filters, pagination, views)
-- advanced user experience (uploads, previews, empty states)
-- scalable and maintainable frontend organization
-- reusable UI and feature logic
+- role-aware frontend rendering and interactions
+- URL-synchronized filters, pagination, and active views
+- reusable frontend validation and normalization logic
+- scalable feature-oriented frontend organization
+- reusable frontend testing utilities and factories
+- safer frontend refactoring and progressive testing workflows
 
-Together, this architecture ensures a clean separation of concerns and allows both backend and frontend layers to evolve independently while maintaining reliable API-driven interactions, predictable data flow, and scalable fullstack development.
+Together, this structure helps maintain consistent frontend behavior, predictable state management, reusable business logic, and scalable long-term frontend development.
 
 ---
 
@@ -497,10 +511,10 @@ npm run test:run
 
 ### 📊 Results
 
-- Backend: 568 tests (75 test suites)
-- Frontend: 425 tests (53 test suites)
-- ✅ 900+ automated tests in total — all passing
-- 📊 High automated test coverage (~98% backend / ~91% frontend)
+- Backend: 570 tests (76 test suites)
+- Frontend: 357 safe-scope tests (55 safe-scope test suites)
+- ✅ Backend fully tested and stable
+- 🚧 Frontend UI/page refactor in progress with stabilized safe-scope testing
 
 ### 📦 Test Coverage
 
@@ -523,34 +537,39 @@ npm run test:run
 
 #### ⚛️ Frontend
 
-- Pages and user flows (auth, events, profile)
-- UI components and layout elements
-- Routing and protected routes
-- Role-based UI behavior
-- Form validation and user input handling
-- API interactions (mocked)
-- Image upload flows (preview, remove, drag & drop)
-- URL-synchronized filters, pagination, and views
-- Loading, empty, and error states
-- Custom hooks and utilities (event filtering, pagination, data fetching)
+Current frontend safe-scope coverage includes:
+
+- feature logic
+- hooks
+- context
+- routes and protected access
+- API layers and normalization helpers
+- reusable utilities
+- reusable factories, mocks, and render helpers
+- filtering, pagination, uploads, and role-aware interactions
+
+Legacy page and component tests are progressively being updated during the frontend UI refactor.
 
 ### 🔁 Test Strategy
 
 - Backend tests validate both integration flows and isolated internal modules
-- Frontend tests simulate user interactions using React Testing Library and Vitest
+- Frontend tests validate reusable frontend logic and user-facing behavior
 - Backend integration tests use the real Express application with a dedicated PostgreSQL test database
-- Frontend API calls are mocked to isolate UI behavior
+- Frontend API calls are mocked to isolate frontend behavior
 - Backend CI workflows run automatically through GitHub Actions and isolated PostgreSQL test services
-- Tests cover success cases, edge cases, validation, permissions, uploads, transactions, and error handling
-- Critical backend logic is tested in isolation for maintainability and predictable behavior
-- Reusable helpers and factories reduce duplication across the testing architecture
+- Tests cover validation, permissions, uploads, filtering, transactions, synchronization, and error handling
+- Reusable helpers, mocks, and factories reduce duplication across the testing architecture
 - Tests are isolated to ensure deterministic and consistent behavior across the stack
 
-Dedicated backend testing documentation is also available:
+Dedicated backend testing documentation is available:
 
 👉 [`/backend/docs/testing.md`](./backend/docs/testing.md)
 
-These tests provide strong confidence in backend and frontend reliability, maintainability, scalability, and safer long-term refactoring.
+Dedicated frontend testing documentation is also available:
+
+👉 [`/frontend/docs/testing.md`](./frontend/docs/testing.md)
+
+These testing strategies help ensure reliable backend workflows, predictable frontend behavior, safer refactoring, and maintainable long-term fullstack development.
 
 ---
 
@@ -618,7 +637,11 @@ These mechanisms help ensure secure data handling, predictable application behav
 - Added creator-based search and advanced event filtering
 - Implemented image upload UI (avatars and event images) with preview and drag-and-drop
 - Improved contextual empty states and loading experience
-- Introduced config-driven event tabs for better scalability
+- Refactored the frontend API layer and normalization helpers
+- Improved feature-oriented frontend architecture and reusable logic organization
+- Added reusable frontend factories, mocks, and testing helpers
+- Introduced a safe-scope frontend testing strategy during the UI refactor
+- Added dedicated frontend testing documentation (`frontend/docs/testing.md`)
 
 ### 🔧 Backend
 
@@ -637,12 +660,12 @@ These mechanisms help ensure secure data handling, predictable application behav
 
 ### 🧪 Testing
 
-- Expanded backend testing architecture to 568 tests across 75 test suites
+- Expanded backend testing architecture to 570 tests across 76 test suites
 - Added automated backend CI workflows using GitHub Actions and PostgreSQL test services
-- Added dedicated backend testing documentation and testing strategy structure
-- Improved database isolation, transaction testing, and rollback validation
-- Expanded coverage across permissions, uploads, filtering, validation, and business rules
-- Improved reusable helpers, factories, and testing maintainability across the fullstack architecture
+- Added dedicated backend and frontend testing documentation
+- Improved reusable frontend and backend factories, mocks, and helpers
+- Expanded testing coverage across permissions, uploads, filtering, validation, synchronization, and business rules
+- Improved testing maintainability and long-term refactor safety across the fullstack architecture
 
 ---
 
@@ -651,12 +674,13 @@ These mechanisms help ensure secure data handling, predictable application behav
 | Area | Status |
 |---|---|
 | Backend Architecture | ✅ Modular, scalable & production-oriented |
-| Frontend Application | ✅ Functional & feature-rich |
+| Frontend Application | 🚧 Functional, with UI/pages refactor in progress |
 | Authentication & RBAC | ✅ Complete |
 | Security | ✅ Centralized & robust |
 | Database & Transactions | ✅ Optimized and transaction-safe |
-| Testing & CI | ✅ 900+ automated tests with GitHub Actions CI |
-| Documentation | ✅ Backend and testing documentation available |
+| Backend Testing & CI | ✅ Stable with GitHub Actions CI |
+| Frontend Testing | 🚧 357 safe-scope tests passing |
+| Documentation | ✅ Backend and frontend testing documentation available |
 | Backend API | ✅ Stable and well-tested |
 | UX & Frontend Refactor | 🚧 Ongoing improvements |
 
@@ -681,7 +705,7 @@ These mechanisms help ensure secure data handling, predictable application behav
 
 ### ⚛️ Frontend & UX
 
-- Refactor parts of the frontend architecture following backend improvements
+- Continue the frontend UI and page refactor
 - Improve mobile responsiveness and accessibility
 - Enhance UI consistency, animations, and loading transitions
 - Improve frontend state management and API synchronization

@@ -8,11 +8,7 @@
 ================================================== */
 
 // Fetches and merges all pages from a paginated endpoint
-export const fetchAllPaginated = async ({
-    fetchPage,
-    getItems,
-    pageSize = 10
-}) => {
+export const fetchAllPaginated = async ({ fetchPage, getItems, pageSize = 10 }) => {
 
     let currentPage = 1;
     let totalPages = 1;

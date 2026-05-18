@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
-import { useAuth } from "../../context/useAuth";
+import { useAuth } from "../../features/auth/hooks/useAuth";
 
 /* ==================================================
    FOOTER
-   Displays main navigation links and app information
+   Displays app footer navigation and metadata
 
-   Includes:
-   - public links (home, events)
-   - user links (profile, my events)
+   Handles:
+   - public navigation links
+   - authenticated user navigation links
+   - application branding and copyright
 ================================================== */
 
 export default function Footer() {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getEventEmptyState } from "../../../features/events/eventEmptyStates";
+import { getEventEmptyStates } from "../../../features/events/eventEmptyStates";
 
 import { EVENT_STATUS } from "../../../features/shared/eventStatus";
 
@@ -22,7 +22,7 @@ describe("eventEmptyState", () => {
     ============================= */
 
     it("should return filter-based empty state when filters are active", () => {
-        const state = getEventEmptyState({
+        const state = getEventEmptyStates({
             filters: {
                 search: "music"
             }
@@ -32,7 +32,7 @@ describe("eventEmptyState", () => {
     });
 
     it("should return date empty state when date filter is active", () => {
-        const state = getEventEmptyState({
+        const state = getEventEmptyStates({
             filters: {
                 date: "2026-04-25"
             }
@@ -42,7 +42,7 @@ describe("eventEmptyState", () => {
     });
 
     it("should return date range empty state when range filter is active", () => {
-        const state = getEventEmptyState({
+        const state = getEventEmptyStates({
             filters: {
                 startDate: "2026-04-25",
                 endDate: "2026-04-26"
@@ -57,7 +57,7 @@ describe("eventEmptyState", () => {
     ============================= */
 
     it("should return upcoming empty state", () => {
-        const state = getEventEmptyState({
+        const state = getEventEmptyStates({
             activeView: EVENT_STATUS.UPCOMING
         });
 
@@ -65,7 +65,7 @@ describe("eventEmptyState", () => {
     });
 
     it("should return past empty state", () => {
-        const state = getEventEmptyState({
+        const state = getEventEmptyStates({
             activeView: EVENT_STATUS.PAST
         });
 
@@ -73,7 +73,7 @@ describe("eventEmptyState", () => {
     });
 
     it("should return default empty state", () => {
-        const state = getEventEmptyState({});
+        const state = getEventEmptyStates({});
 
         expect(state.title).toBe("No events found.");
     });

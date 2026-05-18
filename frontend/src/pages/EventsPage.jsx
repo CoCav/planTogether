@@ -3,9 +3,9 @@ import { Link, useSearchParams } from "react-router-dom";
 
 import { useAuth } from "../features/auth/hooks/useAuth";
 
-import { getEventsEmptyState } from "../features/events/eventEmptyStates";
-import { getInitialFiltersFromUrl } from "../features/events/eventQueryParams";
-import { PUBLIC_EVENT_VIEWS, getViewContent } from "../features/events/eventViewConfig";
+import { getEventEmptyStates } from "../features/events/eventEmptyStates";
+import { getInitialEventFiltersFromUrl } from "../features/events/eventQueryParams";
+import { PUBLIC_EVENT_VIEWS, getEventViewContent } from "../features/events/eventViewConfig";
 
 import useEventFilters from "../features/events/hooks/useEventFilters";
 import useEventListingData from "../features/events/hooks/useEventListingData";
@@ -42,10 +42,12 @@ export default function EventsPage() {
     const { user } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
 
+
     /* =========================
         URL state
     ========================= */
-    const initialFilters = useMemo(() => getInitialFiltersFromUrl(searchParams), [searchParams]);
+    const initialFilters = useMemo(() => getInitialEventFiltersFromUrl(searchParams), [searchParams]);
+
 
     /* =========================
         Page controllers
@@ -123,6 +125,7 @@ export default function EventsPage() {
         handleWeekendFilter
     } = filterActions;
 
+
     /* =========================
         Filter helpers
     ========================= */
@@ -135,7 +138,7 @@ export default function EventsPage() {
     ========================= */
     // Join / leave event actions for authenticated users
     const { handleJoinEvent, handleLeaveEvent } = useMembershipActions({
-        loadData,
+        loadData: () => loadDataAndSyncUrl(filters, pagination.page, activeView),
         setMessage,
         setError,
         getRoleByEventId
@@ -145,7 +148,7 @@ export default function EventsPage() {
     /* =========================
         Pagination controls
     ========================= */
-    const { handlePreviousPage, handleNextPage } = usePagination({
+    const { goToPreviousPage, goToNextPage } = usePagination({
         page: pagination.page,
         totalPages: pagination.totalPages,
         onPageChange: (nextPage) => loadDataAndSyncUrl(filters, nextPage, activeView)
@@ -201,15 +204,15 @@ export default function EventsPage() {
     /* =========================
         Derived display state
     ========================= */
-    const emptyState = getEventsEmptyState({ filters, activeView });
+    const emptyState = getEventEmptyStates({ filters, activeView });
 
-    const viewContent = getViewContent(PUBLIC_EVENT_VIEWS, activeView);
+    const viewContent = getEventViewContent(activeView);
 
     const showPaginationInfo = pagination.totalPages > 1;
 
 
     /* =========================
-        Loading page loading
+        Initial loading state
     ========================= */
     if (initialLoading) {
         return (
@@ -334,8 +337,8 @@ export default function EventsPage() {
             <Pagination
                 page={pagination.page}
                 totalPages={pagination.totalPages}
-                onPrevious={handlePreviousPage}
-                onNext={handleNextPage}
+                onPrevious={goToPreviousPage}
+                onNext={goToNextPage}
                 label="Events pagination"
             />
         </main>

@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-import { getAllEvents, getFilteredEvents } from "../../../api/events/eventApi";
+import { getAllEvents } from "../../../api/events/eventApi";
 
 import { getCurrentUserEvents } from "../../../api/users/userApi";
 
@@ -19,8 +19,7 @@ import { getEventViewContent } from "../eventViewConfig";
    Handles event listing data loading and role mapping
 
    Handles:
-   - public event loading
-   - filtered event loading
+   - public event loading with query params
    - current user membership role mapping
    - event role resolution
 ================================================== */
@@ -33,6 +32,18 @@ export default function useEventListingData({
     setInitialLoading,
     setPagination
 }) {
+
+    /* =============================
+       HELPERS
+    ============================= */
+
+    const removeEmptyParams = (params = {}) => {
+        return Object.fromEntries(
+            Object.entries(params).filter(([, value]) => {
+                return String(value ?? "").trim() !== "";
+            })
+        );
+    };
 
     /* =============================
        STATE
@@ -86,14 +97,6 @@ export default function useEventListingData({
             const resolvedOrder = order || view.defaultOrder;
 
             /* =============================
-               FILTER DETECTION
-            ============================= */
-
-            const hasFilters = Object.values(filters).some(
-                (value) => String(value).trim() !== ""
-            );
-
-            /* =============================
                API PARAMS
             ============================= */
 
@@ -112,9 +115,7 @@ export default function useEventListingData({
                EVENT FETCHING
             ============================= */
 
-            const response = hasFilters
-                ? await getFilteredEvents(params)
-                : await getAllEvents(params);
+            const response = await getAllEvents(removeEmptyParams(params));
 
             setEvents(getNormalizedEvents(response));
 
@@ -122,12 +123,12 @@ export default function useEventListingData({
                PAGINATION UPDATE
             ============================= */
 
-            setPagination((prev) => ({
+            setPagination((prev = {}) => ({
                 ...prev,
-                page: response.data.page || 1,
-                pageSize: response.data.pageSize || prev.pageSize,
-                totalPages: response.data.totalPages || 1,
-                totalEvents: response.data.totalEvents || 0
+                page: response.page || 1,
+                pageSize: response.pageSize || prev.pageSize || pageSize,
+                totalPages: response.totalPages || 1,
+                totalEvents: response.totalEvents || 0
             }));
 
             /* =============================
@@ -146,9 +147,7 @@ export default function useEventListingData({
                     pageSize: 10
                 });
 
-            setMyEvents(
-                buildMembershipMap(membershipEvents)
-            );
+            setMyEvents(buildMembershipMap(membershipEvents));
 
         } catch (error) {
             console.error(

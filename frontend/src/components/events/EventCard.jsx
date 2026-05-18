@@ -142,20 +142,20 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                                 ? "event-meta-item text-danger"
                                 : "event-meta-item"
                         }>
-                            <span aria-hidden="true">👥</span>
+                            <span aria-hidden="true">👥</span>{" "}
 
                             <span>{participantLabel}</span>
                         </li>
 
                         <li className="event-meta-item">
-                            <span aria-hidden="true">📅</span>
+                            <span aria-hidden="true">📅</span>{" "}
                             <span>
                                 {formatEventDateRange(event.startDateTime, event.endDateTime)}
                             </span>
                         </li>
 
                         <li className="event-meta-item">
-                            <span aria-hidden="true">🕒</span>
+                            <span aria-hidden="true">🕒</span>{" "}
                             <span>
                                 {formatTime(event.startDateTime)}
                                 {" - "}
@@ -165,7 +165,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
 
                         {event.registrationDeadline && (
                             <li className="event-meta-item">
-                                <span aria-hidden="true">⏳</span>
+                                <span aria-hidden="true">⏳</span>{" "}
                                 <span>
                                     {new Date(event.registrationDeadline).toLocaleDateString()}
                                 </span>
@@ -173,7 +173,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                         )}
 
                         <li className="event-meta-item">
-                            <span aria-hidden="true">📍</span>
+                            <span aria-hidden="true">📍</span>{" "}
                             <span>
                                 {event.mode === "online" ? "Online" : event.location || "No location"}
                             </span>

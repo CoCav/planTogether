@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import useEventListingData from "../../../../features/events/hooks/useEventListingData";
 
-import { getAllEvents, getFilteredEvents } from "../../../../api/events/eventApi";
+import { getAllEvents } from "../../../../api/events/eventApi";
 
 import { getCurrentUserEvents } from "../../../../api/users/userApi";
 
@@ -18,7 +18,6 @@ import { fetchAllPaginated } from "../../../../utils/pagination";
 
    Handles:
    - public event loading
-   - filtered event loading
    - view-based status params
    - pagination updates
    - authenticated user membership role mapping
@@ -34,8 +33,7 @@ import { fetchAllPaginated } from "../../../../utils/pagination";
 ================================================== */
 
 vi.mock("../../../../api/events/eventApi", () => ({
-    getAllEvents: vi.fn(),
-    getFilteredEvents: vi.fn()
+    getAllEvents: vi.fn()
 }));
 
 vi.mock("../../../../api/users/userApi", () => ({
@@ -47,7 +45,7 @@ vi.mock("../../../../utils/pagination", () => ({
 }));
 
 vi.mock("../../../../features/events/eventNormalizer", () => ({
-    getNormalizedEvents: vi.fn((response) => response.data.events)
+    getNormalizedEvents: vi.fn((response) => response.events)
 }));
 
 vi.mock("../../../../features/users/authenticated/myEventNormalizer", () => ({
@@ -77,16 +75,14 @@ describe("useEventListingData", () => {
     });
 
     const createPaginatedEventResponse = ({ events = [], overrides = {} } = {}) => ({
-        data: {
-            events,
-            page: 1,
-            pageSize: 4,
-            totalPages: 1,
-            totalEvents: events.length,
-            success: true,
-            message: "Events retrieved",
-            ...overrides
-        }
+        events,
+        page: 1,
+        pageSize: 4,
+        totalPages: 1,
+        totalEvents: events.length,
+        success: true,
+        message: "Events retrieved",
+        ...overrides
     });
 
     /* =============================
@@ -146,7 +142,6 @@ describe("useEventListingData", () => {
         });
 
         expect(getAllEvents).toHaveBeenCalledTimes(1);
-        expect(getFilteredEvents).not.toHaveBeenCalled();
 
         expect(result.current.events).toEqual([{
             id: 1,
@@ -161,8 +156,8 @@ describe("useEventListingData", () => {
         expect(setPagination).toHaveBeenCalledWith(expect.any(Function));
     });
 
-    it("loads filtered events when filters are active", async () => {
-        getFilteredEvents.mockResolvedValue(
+    it("loads events with filters when filters are active", async () => {
+        getAllEvents.mockResolvedValue(
             createPaginatedEventResponse({
                 events: [
                     {
@@ -191,10 +186,9 @@ describe("useEventListingData", () => {
             );
         });
 
-        expect(getFilteredEvents).toHaveBeenCalledTimes(1);
-        expect(getAllEvents).not.toHaveBeenCalled();
+        expect(getAllEvents).toHaveBeenCalledTimes(1);
 
-        expect(getFilteredEvents).toHaveBeenCalledWith(
+        expect(getAllEvents).toHaveBeenCalledWith(
             expect.objectContaining({
                 search: "workshop",
                 page: 2,

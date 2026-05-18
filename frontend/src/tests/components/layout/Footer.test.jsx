@@ -1,18 +1,20 @@
-import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { render, screen } from "@testing-library/react";
+
 import { describe, expect, it, vi } from "vitest";
 
 import Footer from "../../../components/layout/Footer";
 
 /* ==================================================
    FOOTER TESTS
-   Tests footer navigation rendering
+   Tests footer navigation, branding, and metadata
 
    Handles:
-   - public footer links
-   - authenticated user footer links
+   - public footer navigation
+   - authenticated user footer navigation
    - guest footer visibility
-   - app metadata rendering
+   - footer semantic navigation
+   - application branding and copyright
 
    Notes:
    - mocks authenticated user state
@@ -42,10 +44,10 @@ describe("Footer", () => {
 
 
     /* =============================
-       PUBLIC LINKS
+       PUBLIC NAVIGATION
     ============================= */
 
-    it("renders public links", () => {
+    it("renders public footer links", () => {
         mockUser = null;
 
         renderFooter();
@@ -56,10 +58,10 @@ describe("Footer", () => {
 
 
     /* =============================
-       AUTHENTICATED LINKS
+       AUTHENTICATED NAVIGATION
     ============================= */
 
-    it("does not render private links when user is not authenticated", () => {
+    it("does not render authenticated links for guests", () => {
         mockUser = null;
 
         renderFooter();
@@ -68,7 +70,7 @@ describe("Footer", () => {
         expect(screen.queryByRole("link", { name: "Profile" })).not.toBeInTheDocument();
     });
 
-    it("renders private links when user is authenticated", () => {
+    it("renders authenticated links for logged-in users", () => {
         mockUser = { name: "John" };
 
         renderFooter();
@@ -79,7 +81,20 @@ describe("Footer", () => {
 
 
     /* =============================
-       APP METADATA
+       SEMANTIC NAVIGATION
+    ============================= */
+
+    it("renders footer navigation landmark", () => {
+        mockUser = null;
+
+        renderFooter();
+
+        expect(screen.getByRole("navigation", { name: "Footer navigation" })).toBeInTheDocument();
+    });
+
+
+    /* =============================
+       BRANDING / METADATA
     ============================= */
 
     it("renders app brand and copyright", () => {

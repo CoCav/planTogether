@@ -3,11 +3,11 @@ import { useAuth } from "../../features/auth/hooks/useAuth";
 
 /* ==================================================
    FOOTER
-   Displays app footer navigation and metadata
+   Displays application footer navigation and metadata
 
    Handles:
-   - public navigation links
-   - authenticated user navigation links
+   - public footer navigation
+   - authenticated user footer navigation
    - application branding and copyright
 ================================================== */
 
@@ -18,13 +18,13 @@ export default function Footer() {
         <footer className="footer">
             <div className="container footer-inner">
 
-                {/* Logo */}
+                {/* Brand */}
                 <div className="footer-brand">
                     <p className="footer-logo">PlanTogether</p>
                 </div>
 
-                {/* Navigation */}
-                <div className="footer-links">
+                {/* Footer navigation */}
+                <nav className="footer-links" aria-label="Footer navigation">
                     <Link to="/" className="footer-link">Home</Link>
                     <Link to="/events" className="footer-link">Events</Link>
 
@@ -34,9 +34,9 @@ export default function Footer() {
                             <Link to="/profile" className="footer-link">Profile</Link>
                         </>
                     )}
-                </div>
+                </nav>
 
-                {/* Meta */}
+                {/* Metadata */}
                 <div className="footer-meta">
                     <p>© 2026 PlanTogether</p>
                 </div>

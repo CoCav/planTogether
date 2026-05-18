@@ -9,7 +9,6 @@ import "./styles/theme.css";
 import "./styles/base.css";
 import "./styles/layout.css";
 import "./styles/helpers.css";
-import "./styles/navigation.css";
 
 import "./styles/pages.css";
 import "./styles/components.css";
@@ -21,6 +20,10 @@ import "./styles/components/events/event.filters.css";
 import "./styles/components/events/event-view.tabs.css";
 
 import "./styles/components/pagination.css";
+
+import "./styles/components/layout/navbar.css";
+import "./styles/components/layout/navbar-user-menu.css";
+import "./styles/components/layout/footer.css";
 
 /* ==================================================
    MAIN ENTRY

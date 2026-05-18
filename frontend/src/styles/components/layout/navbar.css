@@ -1,0 +1,104 @@
+/* ==================================================
+   NAVBAR
+================================================== */
+
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.navbar-inner {
+    min-height: 72px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+}
+
+/* ==================================================
+   BRAND
+================================================== */
+
+.navbar-brand {
+    flex-shrink: 0;
+
+    color: var(--color-primary);
+    font-size: var(--font-size-lg);
+    font-weight: 800;
+    text-decoration: none;
+}
+
+/* ==================================================
+   NAVIGATION
+================================================== */
+
+.navbar-links {
+    flex: 1;
+
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+
+    margin-left: var(--space-5);
+    flex-wrap: wrap;
+}
+
+.navbar-link {
+    color: var(--color-text);
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.navbar-link.active {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.navbar-link:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* ==================================================
+   ACTIONS
+================================================== */
+
+.navbar-actions,
+.navbar-auth-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+/* ==================================================
+   RESPONSIVE
+================================================== */
+
+@media (max-width: 768px) {
+    .navbar-inner {
+        flex-wrap: wrap;
+        align-items: flex-start;
+        padding: var(--space-3) 0;
+    }
+
+    .navbar-links {
+        width: 100%;
+
+        margin-left: 0;
+        margin-top: var(--space-2);
+    }
+
+    .navbar-actions {
+        width: 100%;
+
+        justify-content: flex-start;
+        margin-top: var(--space-2);
+    }
+}

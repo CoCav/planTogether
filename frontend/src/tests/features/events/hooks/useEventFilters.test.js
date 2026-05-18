@@ -72,9 +72,9 @@ describe("useEventFilters", () => {
     it("should initialize with default filters and hidden filter panel", () => {
         const { result } = setupHook();
 
-        expect(result.current.filters).toEqual(createEventFilters());
+        expect(result.current.filterState.filters).toEqual(createEventFilters());
 
-        expect(result.current.showFilters).toBe(false);
+        expect(result.current.filterState.showFilters).toBe(false);
     });
 
     it("should initialize with provided initial filters", () => {
@@ -90,7 +90,7 @@ describe("useEventFilters", () => {
             initialFilters
         });
 
-        expect(result.current.filters).toMatchObject({
+        expect(result.current.filterState.filters).toMatchObject({
             search: "music",
             creator: "John Doe",
             sortBy: "title",
@@ -106,7 +106,7 @@ describe("useEventFilters", () => {
         const { result } = setupHook();
 
         act(() => {
-            result.current.handleFilterChange({
+            result.current.filterActions.handleFilterChange({
                 target: {
                     name: "search",
                     value: "music"
@@ -114,24 +114,24 @@ describe("useEventFilters", () => {
             });
         });
 
-        expect(result.current.filters.search).toBe("music");
+        expect(result.current.filterState.filters.search).toBe("music");
     });
 
     it("should toggle filter panel visibility", () => {
         const { result } = setupHook();
 
         act(() => {
-            result.current.setShowFilters(true);
+            result.current.filterState.setShowFilters(true);
         });
 
-        expect(result.current.showFilters).toBe(true);
+        expect(result.current.filterState.showFilters).toBe(true);
     });
 
     it("should apply filters and reload first page on submit", async () => {
         const { result } = setupHook();
 
         act(() => {
-            result.current.handleFilterChange({
+            result.current.filterActions.handleFilterChange({
                 target: {
                     name: "search",
                     value: "tech"
@@ -140,7 +140,7 @@ describe("useEventFilters", () => {
         });
 
         await act(async () => {
-            await result.current.handleFilterSubmit({
+            await result.current.filterActions.handleFilterSubmit({
                 preventDefault: vi.fn()
             });
         });
@@ -162,7 +162,7 @@ describe("useEventFilters", () => {
         const { result } = setupHook();
 
         act(() => {
-            result.current.handleFilterChange({
+            result.current.filterActions.handleFilterChange({
                 target: {
                     name: "search",
                     value: "music"
@@ -171,10 +171,10 @@ describe("useEventFilters", () => {
         });
 
         await act(async () => {
-            await result.current.handleResetFilters();
+            await result.current.filterActions.handleResetFilters();
         });
 
-        expect(result.current.filters.search).toBe("");
+        expect(result.current.filterState.filters.search).toBe("");
 
         expect(hookProps.resetPage).toHaveBeenCalled();
 
@@ -197,15 +197,15 @@ describe("useEventFilters", () => {
         const { result } = setupHook();
 
         act(() => {
-            result.current.handleSortChange({
+            result.current.filterActions.handleSortChange({
                 target: {
                     value: "title-desc"
                 }
             });
         });
 
-        expect(result.current.filters.sortBy).toBe("title");
-        expect(result.current.filters.order).toBe("desc");
+        expect(result.current.filterState.filters.sortBy).toBe("title");
+        expect(result.current.filterState.filters.order).toBe("desc");
     });
 
     it("should return past-view specific sort labels", () => {
@@ -213,11 +213,11 @@ describe("useEventFilters", () => {
             activeView: EVENT_STATUS.PAST
         });
 
-        expect(result.current.sortLabels["startDateTime-asc"]).toBe(
+        expect(result.current.filterHelpers.sortLabels["startDateTime-asc"]).toBe(
             "Oldest first"
         );
 
-        expect(result.current.sortLabels["startDateTime-desc"]).toBe(
+        expect(result.current.filterHelpers.sortLabels["startDateTime-desc"]).toBe(
             "Most recent"
         );
     });
@@ -230,12 +230,12 @@ describe("useEventFilters", () => {
         const { result } = setupHook();
 
         await act(async () => {
-            await result.current.handleTodayFilter();
+            await result.current.filterActions.handleTodayFilter();
         });
 
-        expect(result.current.filters.date).toBe("2026-04-24");
-        expect(result.current.filters.startDate).toBe("");
-        expect(result.current.filters.endDate).toBe("");
+        expect(result.current.filterState.filters.date).toBe("2026-04-24");
+        expect(result.current.filterState.filters.startDate).toBe("");
+        expect(result.current.filterState.filters.endDate).toBe("");
 
         expect(hookProps.resetPage).toHaveBeenCalled();
 
@@ -248,22 +248,22 @@ describe("useEventFilters", () => {
         );
 
         await act(async () => {
-            await result.current.handleTodayFilter();
+            await result.current.filterActions.handleTodayFilter();
         });
 
-        expect(result.current.filters.date).toBe("");
+        expect(result.current.filterState.filters.date).toBe("");
     });
 
     it("should toggle current weekend quick filter", async () => {
         const { result } = setupHook();
 
         await act(async () => {
-            await result.current.handleWeekendFilter();
+            await result.current.filterActions.handleWeekendFilter();
         });
 
-        expect(result.current.filters.date).toBe("");
-        expect(result.current.filters.startDate).toBe("2026-04-25");
-        expect(result.current.filters.endDate).toBe("2026-04-26");
+        expect(result.current.filterState.filters.date).toBe("");
+        expect(result.current.filterState.filters.startDate).toBe("2026-04-25");
+        expect(result.current.filterState.filters.endDate).toBe("2026-04-26");
 
         expect(hookProps.resetPage).toHaveBeenCalled();
 
@@ -277,11 +277,11 @@ describe("useEventFilters", () => {
         );
 
         await act(async () => {
-            await result.current.handleWeekendFilter();
+            await result.current.filterActions.handleWeekendFilter();
         });
 
-        expect(result.current.filters.startDate).toBe("");
-        expect(result.current.filters.endDate).toBe("");
+        expect(result.current.filterState.filters.startDate).toBe("");
+        expect(result.current.filterState.filters.endDate).toBe("");
     });
 
     /* =============================
@@ -294,7 +294,7 @@ describe("useEventFilters", () => {
         });
 
         await act(async () => {
-            await result.current.handleFilterSubmit({
+            await result.current.filterActions.handleFilterSubmit({
                 preventDefault: vi.fn()
             });
         });

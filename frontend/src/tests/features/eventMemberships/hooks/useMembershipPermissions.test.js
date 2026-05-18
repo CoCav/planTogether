@@ -37,10 +37,6 @@ describe("useMembershipPermissions", () => {
        TEST HELPERS
     ============================= */
 
-    /* =============================
-       TEST HELPERS
-    ============================= */
-
     // Resolve membership permissions hook
     const usePermissions = (overrides = {}) => {
         return useMembershipPermissions(
@@ -75,6 +71,35 @@ describe("useMembershipPermissions", () => {
         expect(result.myRole).toBe(EVENT_ROLES.PARTICIPANT);
         expect(result.isMember).toBe(true);
         expect(result.isParticipant).toBe(true);
+    });
+
+    it("should prioritize explicit currentUserRole over members and staff", () => {
+        const result = usePermissions({
+            currentUserRole: EVENT_ROLES.CO_ORGANIZER,
+
+            members: [
+                createParticipantMember()
+            ],
+
+            staff: createOrganizerStaff()
+        });
+
+        expect(result.myRole).toBe(EVENT_ROLES.CO_ORGANIZER);
+
+        expect(result.isCoOrganizer).toBe(true);
+        expect(result.isOrganizer).toBe(false);
+    });
+
+    it("should resolve role from staff before members", () => {
+        const result = usePermissions({
+            members: [
+                createParticipantMember()
+            ],
+
+            staff: createOrganizerStaff()
+        });
+
+        expect(result.myRole).toBe(EVENT_ROLES.ORGANIZER);
     });
 
     it("should return null role when user is not a member", () => {

@@ -7,16 +7,34 @@ import Button from "./Button";
    Handles:
    - previous / next navigation
    - current page display
+   - accessible pagination landmark
 ================================================== */
 
-export default function Pagination({page, totalPages, onPrevious, onNext}) {
+export default function Pagination({ page, totalPages, onPrevious, onNext, label = "Pagination" }) {
+
     if (totalPages <= 1) return null;
 
     return (
-        <div className="pagination">
-            <Button type="button" variant="outline" onClick={onPrevious} disabled={page === 1}>Previous</Button>
-            <span className="pagination-info">Page {page} of {totalPages}</span>
-            <Button type="button" variant="outline" onClick={onNext} disabled={page === totalPages}>Next</Button>
-        </div>
+        <nav className="pagination" aria-label={label}>
+            <Button
+                type="button"
+                variant="outline"
+                onClick={onPrevious}
+                disabled={page === 1}
+            >
+                Previous
+            </Button>
+
+            <span className="pagination-info" aria-live="polite">Page {page} of {totalPages} </span>
+
+            <Button
+                type="button"
+                variant="outline"
+                onClick={onNext}
+                disabled={page === totalPages}
+            >
+                Next
+            </Button>
+        </nav>
     );
 }

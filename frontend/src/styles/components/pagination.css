@@ -1,0 +1,17 @@
+/* ==================================================
+   PAGINATION
+================================================== */
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+    flex-wrap: wrap;
+}
+
+.pagination-info {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+}

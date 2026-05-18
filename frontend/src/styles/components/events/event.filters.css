@@ -1,0 +1,11 @@
+/* ==================================================
+   EVENT FILTERS
+================================================== */
+
+.filter-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}

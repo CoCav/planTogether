@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getDefaultEventFilters } from "../../../features/events/eventFilters";
+import { getDefaultEventFilters, getEventFilterFields } from "../../../features/events/eventFilters";
 
 import { createEventFilters } from "../../factories/events/eventFiltersFactory";
 
@@ -27,5 +27,42 @@ describe("eventFilters", () => {
         expect(getDefaultEventFilters()).toEqual(
             createEventFilters()
         );
+    });
+
+    /* =============================
+       FILTER FILTERS
+    ============================= */
+
+    it("should extract filter-only fields from listing params", () => {
+        const result = getEventFilterFields({
+            search: "react",
+            creator: "john",
+            type: "workshop",
+            theme: "tech",
+            mode: "online",
+            location: "montreal",
+            status: "upcoming",
+            date: "2026-05-18",
+            startDate: "2026-05-18",
+            endDate: "2026-05-19",
+
+            sortBy: "createdAt",
+            order: "desc",
+
+            random: "ignored"
+        });
+
+        expect(result).toEqual({
+            search: "react",
+            creator: "john",
+            type: "workshop",
+            theme: "tech",
+            mode: "online",
+            location: "montreal",
+            status: "upcoming",
+            date: "2026-05-18",
+            startDate: "2026-05-18",
+            endDate: "2026-05-19"
+        });
     });
 });

@@ -1,133 +1,187 @@
-import { Link, useNavigate } from "react-router-dom";
-import { formatEventDateRange, formatTime, formatCount } from "../../utils/format";
-import { getEventImage, defaultEventImage } from "../../utils/getUploadedFile";
+import { Link } from "react-router-dom";
 
-import useEventPermissions from "../../hooks/events/useEventPermissions";
+import { formatCount, formatEventDateRange, formatTime } from "../../utils/formatters";
+import { defaultEventImage, getEventImage } from "../../utils/uploadedFiles";
 
-import Button from "../ui/Button";
-import Card from "../ui/Card";
-import Alert from "../ui/Alert";
+import useMembershipPermissions from "../../features/eventMemberships/hooks/useMembershipPermissions";
+
 import Badge from "../ui/Badge";
+
+import EventCardActions from "./EventCardActions";
 
 /* ==================================================
    EVENT CARD
-   Reusable component to display an event preview
-   Used in both HomePage and EventsPage
+   Displays a reusable event preview card
+
+   Handles:
+   - event summary display
+   - role and type badges
+   - event metadata
+   - event availability state
 ================================================== */
 
 export default function EventCard({ event, user, role = null, onJoin, onLeave }) {
 
-    const navigate = useNavigate();
-
     /* =========================
-     Membership data adapter
-        Converts the current role into the members / organizers
-        shape expected by useEventPermissions
-    ========================= */
-    const isOrganizer = role === "organizer";
-    const isCoOrganizer = role === "co_organizer"
-    const isParticipant = role === "participant";
-
-    const organizers = isOrganizer || isCoOrganizer ? [{ id: user?.userId, role }] : [];
-    const members = isParticipant ? [{ id: user?.userId, role }] : [];
-
-    const shouldShowOrganizerInline = !isOrganizer;
-
-    /* =========================
-     Permissions
-        Computes available actions and event state
+        Event state
     ========================= */
 
-    const {
+    const isPast = event.status === "past";
+
+    const isEventFull =
+        event.maxParticipants !== null &&
+        event.participantCount >= event.maxParticipants;
+
+    const isRegistrationClosed =
+        event.registrationDeadline
+            ? new Date(event.registrationDeadline) < new Date()
+            : false;
+
+    /* =========================
+        Membership permissions
+    ========================= */
+
+    const { canLeave, showJoinButton } = useMembershipPermissions({
+        user,
+        currentUserRole: role,
         isPast,
         isEventFull,
-        canLeave,
-        showEventFullButton,
-        showJoinButton,
-        showLoginPrompt,
-        showRegistrationClosedButton
-    } = useEventPermissions({ user, event, members, organizers });
-
+        isRegistrationClosed
+    });
 
     /* =========================
-     Navigation
+        Derived display state
     ========================= */
 
-    const handleCardClick = (e) => {
-        const interactive = e.target.closest("button, a");
-        if (interactive) return;
+    const eventDetailsPath = `/events/${event.id}`;
 
-        navigate(`/events/${event.id}`);
-    };
+    const eventImage = getEventImage(event.image);
+
+    const imageAlt = `Event cover for ${event.title}`;
+
+    const shouldShowOrganizerInline = role !== "organizer";
+
+    const participantLabel = event.maxParticipants
+        ? `${event.participantCount} / ${event.maxParticipants}`
+        : formatCount(event.participantCount, "participant");
 
     return (
-        <Card className="event-card event-card-clickable" onClick={handleCardClick}>
-            <div className="event-card-header">
-                <div className="event-header-left">
-                    <Link to={`/events/${event.id}`} className="event-title-link">
-                        <h3 className="event-title">{event.title}</h3>
-                    </Link>
+        <article className="event-card">
+            <div className="card event-card-inner">
 
-                    <div className="event-header-meta">
-                        {event.type && <span className="event-type-badge">{event.type}</span>}
-                        {shouldShowOrganizerInline && event.creatorName && (<Badge variant="organizer" label={`👑 ${event.creatorName}`} />)}
-                        {user && role && <Badge role={role} />}
+                {/* =========================
+                    HEADER
+                ========================= */}
+
+                <header className="event-card-header">
+                    <div className="event-card-heading">
+                        <Link to={eventDetailsPath} className="event-title-link">
+                            <h3 className="event-title"> {event.title} </h3>
+                        </Link>
+
+                        <div className="event-card-badges" aria-label="Event labels" >
+
+                            {event.type && (
+                                <span className="event-type-badge">{event.type}</span>
+                            )}
+
+                            {shouldShowOrganizerInline && event.creatorName && (
+                                <Badge variant="organizer" label={`👑 ${event.creatorName}`} />
+                            )}
+
+                            {user && role && (
+                                <Badge role={role} />
+                            )}
+
+                        </div>
+
                     </div>
+
+                    <EventCardActions
+                        eventId={event.id}
+                        user={user}
+                        isPast={isPast}
+                        isEventFull={isEventFull}
+                        isRegistrationClosed={isRegistrationClosed}
+                        canLeave={canLeave}
+                        showJoinButton={showJoinButton}
+                        onJoin={onJoin}
+                        onLeave={onLeave}
+                    />
+
+                </header>
+
+                {/* =========================
+                    IMAGE
+                ========================= */}
+
+                <Link to={eventDetailsPath} className="event-card-image-link" aria-label={`View details for ${event.title}`}>
+                    <img
+                        src={eventImage}
+                        alt={imageAlt}
+                        className="event-card-image"
+                        onError={(event) => {
+                            event.currentTarget.src = defaultEventImage;
+                        }}
+                    />
+                </Link>
+
+                {/* =========================
+                    CONTENT
+                ========================= */}
+
+                <div className="event-card-content">
+                    <p className="event-description">
+                        {event.description || "No description provided."}
+                    </p>
+
+                    <ul className="event-meta-list" aria-label="Event details" >
+
+                        <li className={
+                            isEventFull
+                                ? "event-meta-item text-danger"
+                                : "event-meta-item"
+                        }>
+                            <span aria-hidden="true">👥</span>
+
+                            <span>{participantLabel}</span>
+                        </li>
+
+                        <li className="event-meta-item">
+                            <span aria-hidden="true">📅</span>
+                            <span>
+                                {formatEventDateRange(event.startDateTime, event.endDateTime)}
+                            </span>
+                        </li>
+
+                        <li className="event-meta-item">
+                            <span aria-hidden="true">🕒</span>
+                            <span>
+                                {formatTime(event.startDateTime)}
+                                {" - "}
+                                {formatTime(event.endDateTime)}
+                            </span>
+                        </li>
+
+                        {event.registrationDeadline && (
+                            <li className="event-meta-item">
+                                <span aria-hidden="true">⏳</span>
+                                <span>
+                                    {new Date(event.registrationDeadline).toLocaleDateString()}
+                                </span>
+                            </li>
+                        )}
+
+                        <li className="event-meta-item">
+                            <span aria-hidden="true">📍</span>
+                            <span>
+                                {event.mode === "online" ? "Online" : event.location || "No location"}
+                            </span>
+                        </li>
+
+                    </ul>
                 </div>
-
-                <div className="event-header-actions">
-                    {isPast ? (
-                        <span className="event-status-label">Ended</span>
-                    ) : (
-                        <>
-                            {showEventFullButton && (
-                                <Button type="button" disabled>Event full</Button>
-                            )}
-
-                            {canLeave && (
-                                <Button type="button" variant="outline-danger" onClick={() => onLeave?.(event.id)}>Leave the event</Button>
-                            )}
-
-                            {showJoinButton && (
-                                <Button type="button" onClick={() => onJoin?.(event.id)}>Join the event</Button>
-                            )}
-
-                            {showRegistrationClosedButton && (
-                                <Button type="button" disabled>Registration closed</Button>
-                            )}
-
-                            {showLoginPrompt && (
-                                <Alert type="info">🔐 Login to join</Alert>
-                            )}
-                        </>
-                    )}
-                </div>
             </div>
-
-            <div className="event-card-image-wrapper">
-                <img
-                    src={getEventImage(event.image)}
-                    onError={(e) => {
-                        e.currentTarget.src = defaultEventImage;
-                    }}
-                    alt={event.title}
-                    className="event-card-image"
-                />
-            </div>
-
-            <p className="event-description">{event.description || "No description provided."}</p>
-
-            <div className="event-meta">
-                {event.maxParticipants ? (
-                    <span className={`event-meta-item ${isEventFull ? "text-danger" : ""}`}>👥 {event.participantCount} / {event.maxParticipants}</span>
-                ) : (
-                    <span className="event-meta-item">👥 {formatCount(event.participantCount, "participant")}</span>
-                )}
-                <span className="event-meta-item">📅 {formatEventDateRange(event.startDateTime, event.endDateTime)}</span>
-                <span className="event-meta-item">🕒 {formatTime(event.startDateTime)} - {formatTime(event.endDateTime)}</span>
-                {event.registrationDeadline && (<span className="event-meta-item">⏳ {new Date(event.registrationDeadline).toLocaleDateString()}</span>)}
-                <span className="event-meta-item">📍 {event.mode === "online" ? "Online" : event.location || "No location"}</span>
-            </div>
-        </Card>
+        </article>
     );
 }

@@ -55,3 +55,23 @@ export const getNormalizedMyEvents = (payload = {}) => {
 
     return normalizeMyEvents(events);
 };
+
+/* =============================
+   CURRENT USER EVENT ROLES
+============================= */
+
+// Extracts event id + current user role from authenticated user event payloads
+export const getMyEventsWithRole = (payload = {}) => {
+    const items = getApiPayload(payload, "events");
+
+    if (!Array.isArray(items)) return [];
+
+    return items.map((item) => {
+        const event = item.event ?? item.Event ?? item;
+
+        return {
+            id: event.id ?? item.eventId ?? null,
+            role: item.role ?? event.role ?? null
+        };
+    });
+};

@@ -4,7 +4,8 @@ import {
     getNormalizedMyEvents,
     normalizeMyEventItem,
     normalizeMyEvents,
-    normalizePaginatedMyEvents
+    normalizePaginatedMyEvents,
+    getMyEventsWithRole
 } from "../../../../features/users/authenticated/myEventNormalizer";
 
 import { EVENT_ROLES } from "../../../../features/shared/eventRoles";
@@ -197,6 +198,56 @@ describe("myEventNormalizer", () => {
             message: "",
             success: false
         });
+    });
+
+    /* =============================
+       CURRENT USER EVENT ROLES
+    ============================= */
+
+    it("should extract current user event roles from API payload", () => {
+        const payload = {
+            data: {
+                events: [
+                    createMyEventItem({
+                        role: EVENT_ROLES.PARTICIPANT,
+                        event: createEvent({
+                            id: 1
+                        })
+                    }),
+
+                    createMyEventItem({
+                        role: EVENT_ROLES.CO_ORGANIZER,
+                        event: createEvent({
+                            id: 2
+                        })
+                    })
+                ]
+            }
+        };
+
+        const result = getMyEventsWithRole(payload);
+
+        expect(result).toEqual([
+            {
+                id: 1,
+                role: EVENT_ROLES.PARTICIPANT
+            },
+
+            {
+                id: 2,
+                role: EVENT_ROLES.CO_ORGANIZER
+            }
+        ]);
+    });
+
+    it("should return empty array when role payload is invalid", () => {
+        expect(getMyEventsWithRole()).toEqual([]);
+
+        expect(getMyEventsWithRole({
+            data: {
+                events: null
+            }
+        })).toEqual([]);
     });
 
     /* =============================

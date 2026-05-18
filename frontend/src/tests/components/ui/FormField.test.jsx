@@ -1,23 +1,58 @@
-import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+
 import FormField from "../../../components/ui/FormField";
 
 /* ==================================================
    FORM FIELD TESTS
-   Tests label, field content and validation error
+   Tests reusable form field wrapper rendering
+
+   Handles:
+   - label rendering
+   - accessible label association
+   - custom field content
+   - validation error rendering
+   - custom class merging
+
+   Notes:
+   - focuses on reusable form layout behavior
+   - verifies label-to-control accessibility
 ================================================== */
 
 describe("FormField", () => {
+
+    /* =============================
+       RENDERING
+    ============================= */
+
     it("renders label and children", () => {
         render(
-            <FormField label="Email">
-                <input placeholder="Your email" />
+            <FormField label="Email" htmlFor="email">
+                <input id="email" placeholder="Your email" />
             </FormField>
         );
 
         expect(screen.getByText("Email")).toBeInTheDocument();
         expect(screen.getByPlaceholderText("Your email")).toBeInTheDocument();
     });
+
+    /* =============================
+       ACCESSIBILITY
+    ============================= */
+
+    it("associates label with form control", () => {
+        render(
+            <FormField label="Email" htmlFor="email">
+                <input id="email" />
+            </FormField>
+        );
+
+        expect(screen.getByLabelText("Email")).toBeInTheDocument();
+    });
+
+    /* =============================
+       VALIDATION ERROR
+    ============================= */
 
     it("renders validation error when provided", () => {
         render(
@@ -29,6 +64,10 @@ describe("FormField", () => {
         expect(screen.getByText("Invalid email")).toHaveClass("field-error");
     });
 
+    /* =============================
+       CUSTOM CLASSES
+    ============================= */
+
     it("applies custom class", () => {
         render(
             <FormField label="Description" className="form-field-full">
@@ -36,6 +75,8 @@ describe("FormField", () => {
             </FormField>
         );
 
-        expect(screen.getByText("Description").closest(".form-field")).toHaveClass("form-field-full");
+        expect(
+            screen.getByText("Description").closest(".form-field")
+        ).toHaveClass("form-field-full");
     });
 });

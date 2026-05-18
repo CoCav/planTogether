@@ -128,17 +128,25 @@ export default function useEventFilters({
     };
 
     return {
-        filters,
-        setFilters,
-        showFilters,
-        setShowFilters,
-        sortLabels,
-        isCurrentWeekendFilterActive,
-        handleFilterChange,
-        handleFilterSubmit,
-        handleSortChange,
-        handleResetFilters,
-        handleTodayFilter,
-        handleWeekendFilter
-    };
-}
+        filterState: {
+            filters,
+            setFilters,
+            showFilters,
+            setShowFilters
+        },
+
+        filterActions: {
+            handleFilterChange,
+            handleFilterSubmit,
+            handleSortChange,
+            handleResetFilters,
+            handleTodayFilter,
+            handleWeekendFilter
+        },
+
+        filterHelpers: {
+            sortLabels,
+            isCurrentWeekendFilterActive
+        }
+    }
+};

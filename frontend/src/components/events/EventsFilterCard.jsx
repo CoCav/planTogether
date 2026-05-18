@@ -12,35 +12,47 @@ import FormField from "../ui/FormField";
    - search and category filters
    - date filters
    - sorting controls
+   - accessible filter visibility toggle
 ================================================== */
 
-export default function EventsFilterCard({ filters, showFilters, sortLabels, onToggleFilters, onFilterChange, onFilterSubmit, onSortChange, onResetFilters }) {
+export default function EventsFilterCard({
+    filters,
+    showFilters,
+    sortLabels,
+    onToggleFilters,
+    onFilterChange,
+    onFilterSubmit,
+    onSortChange,
+    onResetFilters
+}) {
+    const formId = "events-filters-form";
 
     return (
         <Card className="filter-card">
-
-            {/* =========================
-                Header
-            ========================= */}
-            <div className="filter-card-header">
+            <header className="filter-card-header">
                 <div>
-                    <h2 className="section-title">Filters</h2>
+                    <h2 id="events-filters-title" className="section-title"> Filters</h2>
+
                     <p className="section-subtitle">Refine events by search, creator, category, location, date, or sorting.</p>
                 </div>
 
-                <Button type="button" variant="outline" onClick={onToggleFilters}>{showFilters ? "Hide filters" : "Show filters"}</Button>
-            </div>
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onToggleFilters}
+                    aria-expanded={showFilters}
+                    aria-controls={formId}
+                >
+                    {showFilters ? "Hide filters" : "Show filters"}
+                </Button>
+            </header>
 
-            {/* =========================
-                Form
-            ========================= */}
             {showFilters && (
-                <form onSubmit={onFilterSubmit} className="filter-form">
-
+                <form id={formId} className="filter-form" onSubmit={onFilterSubmit} aria-labelledby="events-filters-title" >
                     <div className="form-grid">
-
-                        <FormField label="Search">
+                        <FormField label="Search" htmlFor="event-filter-search">
                             <Input
+                                id="event-filter-search"
                                 name="search"
                                 value={filters.search}
                                 onChange={onFilterChange}
@@ -48,8 +60,9 @@ export default function EventsFilterCard({ filters, showFilters, sortLabels, onT
                             />
                         </FormField>
 
-                        <FormField label="Creator">
+                        <FormField label="Creator" htmlFor="event-filter-creator">
                             <Input
+                                id="event-filter-creator"
                                 name="creator"
                                 value={filters.creator}
                                 onChange={onFilterChange}
@@ -57,8 +70,9 @@ export default function EventsFilterCard({ filters, showFilters, sortLabels, onT
                             />
                         </FormField>
 
-                        <FormField label="Type">
+                        <FormField label="Type" htmlFor="event-filter-type">
                             <Input
+                                id="event-filter-type"
                                 name="type"
                                 value={filters.type}
                                 onChange={onFilterChange}
@@ -66,8 +80,9 @@ export default function EventsFilterCard({ filters, showFilters, sortLabels, onT
                             />
                         </FormField>
 
-                        <FormField label="Theme">
+                        <FormField label="Theme" htmlFor="event-filter-theme">
                             <Input
+                                id="event-filter-theme"
                                 name="theme"
                                 value={filters.theme}
                                 onChange={onFilterChange}
@@ -75,16 +90,22 @@ export default function EventsFilterCard({ filters, showFilters, sortLabels, onT
                             />
                         </FormField>
 
-                        <FormField label="Mode">
-                            <Select name="mode" value={filters.mode} onChange={onFilterChange}>
+                        <FormField label="Mode" htmlFor="event-filter-mode">
+                            <Select
+                                id="event-filter-mode"
+                                name="mode"
+                                value={filters.mode}
+                                onChange={onFilterChange}
+                            >
                                 <option value="">All</option>
                                 <option value="online">Online</option>
                                 <option value="in_person">In person</option>
                             </Select>
                         </FormField>
 
-                        <FormField label="Location">
+                        <FormField label="Location" htmlFor="event-filter-location">
                             <Input
+                                id="event-filter-location"
                                 name="location"
                                 value={filters.location}
                                 onChange={onFilterChange}
@@ -92,8 +113,9 @@ export default function EventsFilterCard({ filters, showFilters, sortLabels, onT
                             />
                         </FormField>
 
-                        <FormField label="Date">
+                        <FormField label="Date" htmlFor="event-filter-date">
                             <Input
+                                id="event-filter-date"
                                 type="date"
                                 name="date"
                                 value={filters.date}
@@ -101,26 +123,35 @@ export default function EventsFilterCard({ filters, showFilters, sortLabels, onT
                             />
                         </FormField>
 
-                        <FormField label="Start date">
+                        <FormField label="Start date" htmlFor="event-filter-start-date">
                             <Input
+                                id="event-filter-start-date"
                                 type="date"
                                 name="startDate"
                                 value={filters.startDate}
                                 onChange={onFilterChange}
+                                disabled={Boolean(filters.date)}
                             />
                         </FormField>
 
-                        <FormField label="End date">
+                        <FormField label="End date" htmlFor="event-filter-end-date">
                             <Input
+                                id="event-filter-end-date"
                                 type="date"
                                 name="endDate"
                                 value={filters.endDate}
                                 onChange={onFilterChange}
+                                disabled={Boolean(filters.date)}
                             />
                         </FormField>
 
-                        <FormField label="Sort by">
-                            <Select name="sortBy" value={`${filters.sortBy || "startDateTime"}-${filters.order || "asc"}`} onChange={onSortChange}>
+                        <FormField label="Sort by" htmlFor="event-filter-sort-by">
+                            <Select
+                                id="event-filter-sort-by"
+                                name="sortBy"
+                                value={`${filters.sortBy || "startDateTime"}-${filters.order || "asc"}`}
+                                onChange={onSortChange}
+                            >
                                 {Object.entries(sortLabels).map(([value, label]) => (
                                     <option key={value} value={value}>
                                         {label}
@@ -128,14 +159,13 @@ export default function EventsFilterCard({ filters, showFilters, sortLabels, onT
                                 ))}
                             </Select>
                         </FormField>
-
                     </div>
 
                     <div className="form-actions">
                         <Button type="submit">Apply filters</Button>
+
                         <Button type="button" variant="outline" onClick={onResetFilters}>Reset</Button>
                     </div>
-
                 </form>
             )}
         </Card>

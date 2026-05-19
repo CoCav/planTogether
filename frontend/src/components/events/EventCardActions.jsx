@@ -15,38 +15,18 @@ import Button from "../ui/Button";
 
 export default function EventCardActions({
     eventId,
-    user,
     isPast,
-    isEventFull,
-    isRegistrationClosed,
     canLeave,
     showJoinButton,
+    showEventFullButton,
+    showRegistrationClosedButton,
+    showLoginPrompt,
     onJoin,
     onLeave
 }) {
 
     /* =========================
-        Derived action state
-    ========================= */
-
-    const showEventFullButton =
-        isEventFull &&
-        !showJoinButton &&
-        !canLeave &&
-        !isPast;
-
-    const showRegistrationClosedButton =
-        isRegistrationClosed &&
-        !showJoinButton &&
-        !canLeave &&
-        !isPast;
-
-    const showLoginPrompt =
-        !user &&
-        !isPast;
-
-    /* =========================
-        Past event state
+       PAST EVENT STATE
     ========================= */
 
     if (isPast) {
@@ -65,13 +45,20 @@ export default function EventCardActions({
             )}
 
             {canLeave && (
-                <Button type="button" variant="outline-danger" onClick={() => onLeave?.(eventId)}>
+                <Button
+                    type="button"
+                    variant="outline-danger"
+                    onClick={() => onLeave?.(eventId)}
+                >
                     Leave the event
                 </Button>
             )}
 
             {showJoinButton && (
-                <Button type="button" onClick={() => onJoin?.(eventId)}>
+                <Button
+                    type="button"
+                    onClick={() => onJoin?.(eventId)}
+                >
                     Join the event
                 </Button>
             )}

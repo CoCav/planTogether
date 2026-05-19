@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import Pagination from "../../../components/ui/Pagination";
 
@@ -14,26 +14,35 @@ import Pagination from "../../../components/ui/Pagination";
    - next button disabled state
    - navigation callbacks
    - accessible pagination landmark
-
-   Notes:
-   - focuses on reusable pagination UI behavior
 ================================================== */
 
 describe("Pagination", () => {
 
     /* =============================
+       TEST HELPERS
+    ============================= */
+
+    const renderPagination = (props = {}) => {
+        return render(
+            <Pagination
+                page={2}
+                totalPages={5}
+                onPrevious={vi.fn()}
+                onNext={vi.fn()}
+                {...props}
+            />
+        );
+    };
+
+    /* =============================
        HIDDEN STATE
     ============================= */
 
-    it("renders nothing when there is only one page", () => {
-        const { container } = render(
-            <Pagination
-                page={1}
-                totalPages={1}
-                onPrevious={vi.fn()}
-                onNext={vi.fn()}
-            />
-        );
+    it("should render nothing when there is only one page", () => {
+        const { container } = renderPagination({
+            page: 1,
+            totalPages: 1
+        });
 
         expect(container).toBeEmptyDOMElement();
     });
@@ -42,15 +51,8 @@ describe("Pagination", () => {
        PAGE INFORMATION
     ============================= */
 
-    it("renders current page information", () => {
-        render(
-            <Pagination
-                page={2}
-                totalPages={5}
-                onPrevious={vi.fn()}
-                onNext={vi.fn()}
-            />
-        );
+    it("should render current page information", () => {
+        renderPagination();
 
         expect(screen.getByText("Page 2 of 5")).toBeInTheDocument();
     });
@@ -59,29 +61,19 @@ describe("Pagination", () => {
        DISABLED STATES
     ============================= */
 
-    it("disables previous button on first page", () => {
-        render(
-            <Pagination
-                page={1}
-                totalPages={5}
-                onPrevious={vi.fn()}
-                onNext={vi.fn()}
-            />
-        );
+    it("should disable previous button on first page", () => {
+        renderPagination({
+            page: 1
+        });
 
         expect(screen.getByRole("button", { name: /previous/i })).toBeDisabled();
         expect(screen.getByRole("button", { name: /next/i })).not.toBeDisabled();
     });
 
-    it("disables next button on last page", () => {
-        render(
-            <Pagination
-                page={5}
-                totalPages={5}
-                onPrevious={vi.fn()}
-                onNext={vi.fn()}
-            />
-        );
+    it("should disable next button on last page", () => {
+        renderPagination({
+            page: 5
+        });
 
         expect(screen.getByRole("button", { name: /next/i })).toBeDisabled();
         expect(screen.getByRole("button", { name: /previous/i })).not.toBeDisabled();
@@ -91,46 +83,46 @@ describe("Pagination", () => {
        NAVIGATION CALLBACKS
     ============================= */
 
-    it("calls navigation handlers", () => {
+    it("should call navigation handlers", () => {
         const onPrevious = vi.fn();
         const onNext = vi.fn();
 
-        render(
-            <Pagination
-                page={2}
-                totalPages={5}
-                onPrevious={onPrevious}
-                onNext={onNext}
-            />
-        );
+        renderPagination({
+            onPrevious,
+            onNext
+        });
 
         fireEvent.click(screen.getByRole("button", { name: /previous/i }));
         fireEvent.click(screen.getByRole("button", { name: /next/i }));
 
-        expect(onPrevious).toHaveBeenCalled();
-        expect(onNext).toHaveBeenCalled();
+        expect(onPrevious).toHaveBeenCalledTimes(1);
+        expect(onNext).toHaveBeenCalledTimes(1);
     });
 
     /* =============================
        ACCESSIBILITY
     ============================= */
 
-    it("renders accessible pagination landmark with custom label", () => {
-        render(
-            <Pagination
-                page={2}
-                totalPages={5}
-                label="Events pagination"
-                onPrevious={vi.fn()}
-                onNext={vi.fn()}
-            />
-        );
+    it("should render accessible pagination landmark with default label", () => {
+        renderPagination();
 
-        expect(
-            screen.getByRole("navigation", {
-                name: /events pagination/i
-            })
-        ).toBeInTheDocument();
+        expect(screen.getByRole("navigation", {
+            name: /pagination/i
+        })).toBeInTheDocument();
+    });
+
+    it("should render accessible pagination landmark with custom label", () => {
+        renderPagination({
+            label: "Events pagination"
+        });
+
+        expect(screen.getByRole("navigation", {
+            name: /events pagination/i
+        })).toBeInTheDocument();
+    });
+
+    it("should announce page information politely", () => {
+        renderPagination();
 
         expect(screen.getByText("Page 2 of 5")).toHaveAttribute("aria-live", "polite");
     });

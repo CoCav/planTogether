@@ -2,11 +2,11 @@ import LoadingState from "./LoadingState";
 
 /* ==================================================
    PAGE LOADER
-   Displays a full-page loading layout
+   Wraps LoadingState in standard page layout spacing
 
-   Wraps:
-   - LoadingState
-   - container spacing
+   Used for:
+   - full-page loading states
+   - initial page data loading
 ================================================== */
 
 export default function PageLoader({ children = "Loading..." }) {

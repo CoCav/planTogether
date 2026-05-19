@@ -1,58 +1,169 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+
 import userEvent from "@testing-library/user-event";
+
 import Button from "../../../components/ui/Button";
 
 /* ==================================================
    BUTTON TESTS
-   Tests button variants, states and click behavior
+   Tests button rendering, variants and interactions
+
+   Handles:
+   - default rendering
+   - button variants
+   - loading state
+   - disabled state
+   - click interactions
+   - forwarded props
 ================================================== */
 
 describe("Button", () => {
-    it("renders children", () => {
-        render(<Button>Click me</Button>);
 
-        expect(screen.getByRole("button", { name: /click me/i })).toBeInTheDocument();
-    });
+    /* =============================
+       TEST HELPERS
+    ============================= */
 
-    it("applies variant class", () => {
-        render(<Button variant="danger">Delete</Button>);
-
-        expect(screen.getByRole("button", { name: /delete/i })).toHaveClass(
-            "btn-danger"
+    const renderButton = (props = {}) => {
+        return render(
+            <Button {...props}>
+                {props.children || "Button"}
+            </Button>
         );
+    };
+
+    /* =============================
+       RENDERING
+    ============================= */
+
+    it("should render button children", () => {
+        renderButton({
+            children: "Click me"
+        });
+
+        expect(screen.getByRole("button", {
+            name: /click me/i
+        })).toBeInTheDocument();
     });
 
-    it("is disabled when disabled is true", () => {
-        render(<Button disabled>Submit</Button>);
+    it("should use button type by default", () => {
+        renderButton();
 
-        expect(screen.getByRole("button", { name: /submit/i })).toBeDisabled();
+        expect(screen.getByRole("button")).toHaveAttribute("type", "button");
     });
 
-    it("shows loading text and disables button when loading", () => {
-        render(<Button loading>Submit</Button>);
+    it("should support custom button type", () => {
+        renderButton({
+            type: "submit"
+        });
 
-        expect(screen.getByRole("button", { name: /loading/i })).toBeDisabled();
+        expect(screen.getByRole("button")).toHaveAttribute("type", "submit");
     });
 
-    it("calls onClick when clicked", async () => {
+    /* =============================
+       VARIANTS
+    ============================= */
+
+    it("should apply primary variant by default", () => {
+        renderButton();
+
+        expect(screen.getByRole("button")).toHaveClass("btn-primary");
+    });
+
+    it("should apply custom variant class", () => {
+        renderButton({
+            variant: "danger",
+            children: "Delete"
+        });
+
+        expect(screen.getByRole("button", {
+            name: /delete/i
+        })).toHaveClass("btn-danger");
+    });
+
+    it("should support custom class name", () => {
+        renderButton({
+            className: "custom-button"
+        });
+
+        expect(screen.getByRole("button")).toHaveClass("custom-button");
+    });
+
+    /* =============================
+       DISABLED STATE
+    ============================= */
+
+    it("should disable button when disabled prop is true", () => {
+        renderButton({
+            disabled: true
+        });
+
+        expect(screen.getByRole("button")).toBeDisabled();
+    });
+
+    it("should show loading text and disable button when loading", () => {
+        renderButton({
+            loading: true,
+            children: "Submit"
+        });
+
+        expect(screen.getByRole("button", {
+            name: /loading/i
+        })).toBeDisabled();
+    });
+
+    /* =============================
+       INTERACTIONS
+    ============================= */
+
+    it("should call onClick when clicked", async () => {
         const user = userEvent.setup();
+
         const onClick = vi.fn();
 
-        render(<Button onClick={onClick}>Click</Button>);
+        renderButton({
+            onClick,
+            children: "Click"
+        });
 
-        await user.click(screen.getByRole("button", { name: /click/i }));
+        await user.click(screen.getByRole("button", {
+            name: /click/i
+        }));
 
         expect(onClick).toHaveBeenCalledTimes(1);
     });
 
-    it("does not call onClick when disabled", async () => {
+    it("should not call onClick when disabled", async () => {
         const user = userEvent.setup();
+
         const onClick = vi.fn();
 
-        render(<Button disabled onClick={onClick}>Click</Button>);
+        renderButton({
+            disabled: true,
+            onClick,
+            children: "Click"
+        });
 
-        await user.click(screen.getByRole("button", { name: /click/i }));
+        await user.click(screen.getByRole("button", {
+            name: /click/i
+        }));
+
+        expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it("should not call onClick when loading", async () => {
+        const user = userEvent.setup();
+
+        const onClick = vi.fn();
+
+        renderButton({
+            loading: true,
+            onClick
+        });
+
+        await user.click(screen.getByRole("button", {
+            name: /loading/i
+        }));
 
         expect(onClick).not.toHaveBeenCalled();
     });

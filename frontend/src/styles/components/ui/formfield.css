@@ -1,0 +1,35 @@
+/* ==================================================
+   FORM FIELD
+   Reusable field wrapper for form controls
+================================================== */
+
+/* ==================================================
+   FIELD
+================================================== */
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-width: 100%;
+}
+
+/* ==================================================
+   LABEL
+================================================== */
+
+.form-field-label {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+/* ==================================================
+   ERROR
+================================================== */
+
+.form-field-error {
+    margin-top: 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-danger);
+}

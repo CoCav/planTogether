@@ -1,8 +1,10 @@
+import { EVENT_MODES, getEventModeLabel } from "../../features/shared/eventModes";
+
 import Button from "../ui/Button";
 import Card from "../ui/Card";
-import Select from "../ui/Select";
-import Input from "../ui/Input";
 import FormField from "../ui/FormField";
+import Input from "../ui/Input";
+import Select from "../ui/Select";
 
 /* ==================================================
    EVENTS FILTER CARD
@@ -25,15 +27,31 @@ export default function EventsFilterCard({
     onSortChange,
     onResetFilters
 }) {
+
+    /* =============================
+       CONSTANTS
+    ============================= */
+
+    // Accessible form identifier
     const formId = "events-filters-form";
 
-    return (
-        <Card className="filter-card">
-            <header className="filter-card-header">
-                <div>
-                    <h2 id="events-filters-title" className="section-title"> Filters</h2>
+    // Select-ready sort options
+    const sortOptions = Object.entries(sortLabels);
 
-                    <p className="section-subtitle">Refine events by search, creator, category, location, date, or sorting.</p>
+    return (
+        <Card className="events-filter-card">
+            <header className="events-filter-card-header">
+                <div>
+                    <h2
+                        id="events-filters-title"
+                        className="section-title"
+                    >
+                        Filters
+                    </h2>
+
+                    <p className="section-subtitle">Refine events by search, creator, category,
+                        location, date, or sorting.
+                    </p>
                 </div>
 
                 <Button
@@ -48,8 +66,13 @@ export default function EventsFilterCard({
             </header>
 
             {showFilters && (
-                <form id={formId} className="filter-form" onSubmit={onFilterSubmit} aria-labelledby="events-filters-title" >
-                    <div className="form-grid">
+                <form
+                    id={formId}
+                    className="events-filter-form"
+                    onSubmit={onFilterSubmit}
+                    aria-labelledby="events-filters-title"
+                >
+                    <div className="events-filter-grid">
                         <FormField label="Search" htmlFor="event-filter-search">
                             <Input
                                 id="event-filter-search"
@@ -98,8 +121,13 @@ export default function EventsFilterCard({
                                 onChange={onFilterChange}
                             >
                                 <option value="">All</option>
-                                <option value="online">Online</option>
-                                <option value="in_person">In person</option>
+                                <option value={EVENT_MODES.ONLINE}>
+                                    {getEventModeLabel(EVENT_MODES.ONLINE)}
+                                </option>
+
+                                <option value={EVENT_MODES.IN_PERSON}>
+                                    {getEventModeLabel(EVENT_MODES.IN_PERSON)}
+                                </option>
                             </Select>
                         </FormField>
 
@@ -152,7 +180,7 @@ export default function EventsFilterCard({
                                 value={`${filters.sortBy || "startDateTime"}-${filters.order || "asc"}`}
                                 onChange={onSortChange}
                             >
-                                {Object.entries(sortLabels).map(([value, label]) => (
+                                {sortOptions.map(([value, label]) => (
                                     <option key={value} value={value}>
                                         {label}
                                     </option>
@@ -161,10 +189,16 @@ export default function EventsFilterCard({
                         </FormField>
                     </div>
 
-                    <div className="form-actions">
+                    <div className="events-filter-actions">
                         <Button type="submit">Apply filters</Button>
 
-                        <Button type="button" variant="outline" onClick={onResetFilters}>Reset</Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onResetFilters}
+                        >
+                            Reset
+                        </Button>
                     </div>
                 </form>
             )}

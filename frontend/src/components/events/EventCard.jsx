@@ -1,44 +1,52 @@
 import { Link } from "react-router-dom";
 
-import { formatCount, formatEventDateRange, formatTime } from "../../utils/formatters";
 import { defaultEventImage, getEventImage } from "../../utils/uploadedFiles";
 
 import useMembershipPermissions from "../../features/eventMemberships/hooks/useMembershipPermissions";
 
-import Badge from "../ui/Badge";
+import { getEventDisplayData } from "../../features/events/eventDisplayData";
+
+import useEventStatus from "../../features/events/hooks/useEventStatus";
+
+import { EVENT_ROLES } from "../../features/shared/eventRoles";
 
 import EventCardActions from "./EventCardActions";
+
+import Badge from "../ui/Badge";
 
 /* ==================================================
    EVENT CARD
    Displays a reusable event preview card
 
    Handles:
-   - event summary display
+   - event preview content
    - role and type badges
-   - event metadata
-   - event availability state
+   - event metadata display
+   - membership action visibility
+   - image fallback handling
 ================================================== */
 
 export default function EventCard({ event, user, role = null, onJoin, onLeave }) {
 
     /* =========================
-        Event state
+       EVENT STATE
     ========================= */
 
-    const isPast = event.status === "past";
-
-    const isEventFull =
-        event.maxParticipants !== null &&
-        event.participantCount >= event.maxParticipants;
-
-    const isRegistrationClosed =
-        event.registrationDeadline
-            ? new Date(event.registrationDeadline) < new Date()
-            : false;
+    const {
+        isPast,
+        isEventFull,
+        isRegistrationClosed,
+        showEventFullButton,
+        showLoginPrompt,
+        showRegistrationClosedButton
+    } = useEventStatus({
+        user,
+        event,
+        isMember: Boolean(role)
+    });
 
     /* =========================
-        Membership permissions
+       MEMBERSHIP PERMISSIONS
     ========================= */
 
     const { canLeave, showJoinButton } = useMembershipPermissions({
@@ -50,20 +58,22 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
     });
 
     /* =========================
-        Derived display state
+       DISPLAY DATA
     ========================= */
+
+    const eventDisplayData = getEventDisplayData(event);
 
     const eventDetailsPath = `/events/${event.id}`;
 
     const eventImage = getEventImage(event.image);
 
-    const imageAlt = `Event cover for ${event.title}`;
+    const imageAlt = `Event cover for ${eventDisplayData.title}`;
 
-    const shouldShowOrganizerInline = role !== "organizer";
+    const shouldShowOrganizerInline = role !== EVENT_ROLES.ORGANIZER;
 
-    const participantLabel = event.maxParticipants
-        ? `${event.participantCount} / ${event.maxParticipants}`
-        : formatCount(event.participantCount, "participant");
+    /* =========================
+       RENDER
+    ========================= */
 
     return (
         <article className="event-card">
@@ -75,14 +85,17 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
 
                 <header className="event-card-header">
                     <div className="event-card-heading">
+
                         <Link to={eventDetailsPath} className="event-title-link">
-                            <h3 className="event-title"> {event.title} </h3>
+                            <h3 className="event-title">
+                                {eventDisplayData.title}
+                            </h3>
                         </Link>
 
-                        <div className="event-card-badges" aria-label="Event labels" >
+                        <div className="event-card-badges" aria-label="Event labels">
 
-                            {event.type && (
-                                <span className="event-type-badge">{event.type}</span>
+                            {eventDisplayData.type && (
+                                <span className="event-type-badge">{eventDisplayData.type}</span>
                             )}
 
                             {shouldShowOrganizerInline && event.creatorName && (
@@ -94,34 +107,39 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                             )}
 
                         </div>
-
                     </div>
 
                     <EventCardActions
                         eventId={event.id}
-                        user={user}
                         isPast={isPast}
-                        isEventFull={isEventFull}
-                        isRegistrationClosed={isRegistrationClosed}
+
                         canLeave={canLeave}
                         showJoinButton={showJoinButton}
+
+                        showEventFullButton={showEventFullButton}
+                        showRegistrationClosedButton={showRegistrationClosedButton}
+
+                        showLoginPrompt={showLoginPrompt}
                         onJoin={onJoin}
                         onLeave={onLeave}
                     />
-
                 </header>
 
                 {/* =========================
                     IMAGE
                 ========================= */}
 
-                <Link to={eventDetailsPath} className="event-card-image-link" aria-label={`View details for ${event.title}`}>
+                <Link
+                    to={eventDetailsPath}
+                    className="event-card-image-link"
+                    aria-label={`View details for ${eventDisplayData.title}`}
+                >
                     <img
                         src={eventImage}
                         alt={imageAlt}
                         className="event-card-image"
-                        onError={(event) => {
-                            event.currentTarget.src = defaultEventImage;
+                        onError={(imageError) => {
+                            imageError.currentTarget.src = defaultEventImage;
                         }}
                     />
                 </Link>
@@ -131,51 +149,52 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                 ========================= */}
 
                 <div className="event-card-content">
+
                     <p className="event-description">
-                        {event.description || "No description provided."}
+                        {eventDisplayData.description}
                     </p>
 
-                    <ul className="event-meta-list" aria-label="Event details" >
+                    <ul className="event-meta-list" aria-label="Event details">
 
-                        <li className={
-                            isEventFull
-                                ? "event-meta-item text-danger"
-                                : "event-meta-item"
-                        }>
-                            <span aria-hidden="true">👥</span>{" "}
+                        <li className={isEventFull ? "event-meta-item text-danger" : "event-meta-item"}>
+                            <span aria-hidden="true">👥</span>
 
-                            <span>{participantLabel}</span>
-                        </li>
-
-                        <li className="event-meta-item">
-                            <span aria-hidden="true">📅</span>{" "}
                             <span>
-                                {formatEventDateRange(event.startDateTime, event.endDateTime)}
+                                {eventDisplayData.participantLabel}
                             </span>
                         </li>
 
                         <li className="event-meta-item">
-                            <span aria-hidden="true">🕒</span>{" "}
+                            <span aria-hidden="true">📅</span>
+
                             <span>
-                                {formatTime(event.startDateTime)}
-                                {" - "}
-                                {formatTime(event.endDateTime)}
+                                {eventDisplayData.date}
                             </span>
                         </li>
 
-                        {event.registrationDeadline && (
+                        <li className="event-meta-item">
+                            <span aria-hidden="true">🕒</span>
+
+                            <span>
+                                {eventDisplayData.time}
+                            </span>
+                        </li>
+
+                        {eventDisplayData.registrationDeadline && (
                             <li className="event-meta-item">
-                                <span aria-hidden="true">⏳</span>{" "}
+                                <span aria-hidden="true">⏳</span>
+
                                 <span>
-                                    {new Date(event.registrationDeadline).toLocaleDateString()}
+                                    {eventDisplayData.registrationDeadline}
                                 </span>
                             </li>
                         )}
 
                         <li className="event-meta-item">
-                            <span aria-hidden="true">📍</span>{" "}
+                            <span aria-hidden="true">📍</span>
+
                             <span>
-                                {event.mode === "online" ? "Online" : event.location || "No location"}
+                                {eventDisplayData.location}
                             </span>
                         </li>
 

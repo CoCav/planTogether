@@ -23,26 +23,19 @@ import EventCardActions from "../../../components/events/EventCardActions";
 describe("EventCardActions", () => {
 
     /* =============================
-       TEST DATA
+       TEST HELPERS
     ============================= */
-
     const baseProps = {
         eventId: 1,
-        user: {
-            userId: 42
-        },
         isPast: false,
-        isEventFull: false,
-        isRegistrationClosed: false,
         canLeave: false,
         showJoinButton: false,
+        showEventFullButton: false,
+        showRegistrationClosedButton: false,
+        showLoginPrompt: false,
         onJoin: vi.fn(),
         onLeave: vi.fn()
     };
-
-    /* =============================
-       TEST HELPERS
-    ============================= */
 
     const renderEventCardActions = (props = {}) => {
         return render(
@@ -58,9 +51,7 @@ describe("EventCardActions", () => {
     ============================= */
 
     it("should display ended status for past events", () => {
-        renderEventCardActions({
-            isPast: true
-        });
+        renderEventCardActions({ isPast: true });
 
         expect(screen.getByText("Ended")).toBeInTheDocument();
     });
@@ -71,14 +62,10 @@ describe("EventCardActions", () => {
 
     it("should display event full state", () => {
         renderEventCardActions({
-            isEventFull: true
+            showEventFullButton: true
         });
 
-        expect(
-            screen.getByRole("button", {
-                name: "Event full"
-            })
-        ).toBeDisabled();
+        expect(screen.getByRole("button", { name: "Event full" })).toBeDisabled();
     });
 
     /* =============================
@@ -87,14 +74,10 @@ describe("EventCardActions", () => {
 
     it("should display registration closed state", () => {
         renderEventCardActions({
-            isRegistrationClosed: true
+            showRegistrationClosedButton: true
         });
 
-        expect(
-            screen.getByRole("button", {
-                name: "Registration closed"
-            })
-        ).toBeDisabled();
+        expect(screen.getByRole("button", { name: "Registration closed" })).toBeDisabled();
     });
 
     /* =============================
@@ -103,14 +86,14 @@ describe("EventCardActions", () => {
 
     it("should display login prompt for guest users", () => {
         renderEventCardActions({
-            user: null
+            showLoginPrompt: true
         });
 
         expect(screen.getByText("🔐 Login to join")).toBeInTheDocument();
     });
 
     /* =============================
-       ACTION CALLBACKS
+       JOIN ACTION
     ============================= */
 
     it("should call onJoin with event id", () => {
@@ -127,6 +110,10 @@ describe("EventCardActions", () => {
 
         expect(onJoin).toHaveBeenCalledWith(1);
     });
+
+    /* =============================
+       LEAVE ACTION
+    ============================= */
 
     it("should call onLeave with event id", () => {
         const onLeave = vi.fn();

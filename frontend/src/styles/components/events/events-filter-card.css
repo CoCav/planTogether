@@ -1,0 +1,46 @@
+/* ==================================================
+   EVENTS FILTER CARD
+   Filter panel layout for event listing pages
+================================================== */
+
+/* ==================================================
+   CARD
+================================================== */
+
+.events-filter-card {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ==================================================
+   HEADER
+================================================== */
+
+.events-filter-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+/* ==================================================
+   FORM
+================================================== */
+
+.events-filter-form {
+    margin-top: var(--space-4);
+}
+
+.events-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-4);
+}
+
+.events-filter-actions {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    margin-top: var(--space-4);
+}

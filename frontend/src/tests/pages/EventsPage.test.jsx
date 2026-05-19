@@ -1,7 +1,7 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 import EventsPage from "../../pages/EventsPage";
 
@@ -9,6 +9,13 @@ import { EVENT_ROLES } from "../../features/shared/eventRoles";
 import { EVENT_STATUS } from "../../features/shared/eventStatus";
 
 import { createPaginatedEventsPayload } from "../factories/events/eventFactory";
+
+import {
+    createAuthenticatedTestUser,
+    createGuestTestUser,
+    expectListingApiCalledWith,
+    waitForEmptyListingState
+} from "../helpers/pages/eventListingTestHelpers";
 
 /* ==================================================
    EVENTS PAGE TESTS
@@ -35,16 +42,13 @@ import { createPaginatedEventsPayload } from "../factories/events/eventFactory";
 ================================================== */
 
 /* =============================
-   TEST DATA
+   MOCK DATA
 ============================= */
 
 const mockGetAllEvents = vi.fn();
-const mockGetCurrentUserEvents = vi.fn();
 const mockFetchAllPaginated = vi.fn();
 
-let mockAuthState = {
-    user: { userId: 1 }
-};
+let mockAuthState = createAuthenticatedTestUser();
 
 /* =============================
    MOCKS
@@ -52,10 +56,6 @@ let mockAuthState = {
 
 vi.mock("../../api/events/eventApi", () => ({
     getAllEvents: (...args) => mockGetAllEvents(...args)
-}));
-
-vi.mock("../../api/users/userApi", () => ({
-    getCurrentUserEvents: (...args) => mockGetCurrentUserEvents(...args)
 }));
 
 vi.mock("../../features/auth/hooks/useAuth", () => ({
@@ -99,22 +99,27 @@ const LocationDisplay = () => {
     return <span data-testid="location-search">{location.search}</span>;
 };
 
-const renderPage = (initialEntry = "/events") =>
-    render(
+const renderPage = (initialEntry = "/events") => {
+    return render(
         <MemoryRouter initialEntries={[initialEntry]}>
             <EventsPage />
             <LocationDisplay />
         </MemoryRouter>
     );
+};
+
+const renderLoadedEmptyEventsPage = async (initialEntry = "/events") => {
+    renderPage(initialEntry);
+
+    await waitForEmptyListingState(screen);
+};
 
 describe("EventsPage", () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
 
-        mockAuthState = {
-            user: { userId: 1 }
-        };
+        mockAuthState = createAuthenticatedTestUser();
 
         mockGetAllEvents.mockResolvedValue(createEventsPageResponse());
         mockFetchAllPaginated.mockResolvedValue([]);
@@ -153,21 +158,19 @@ describe("EventsPage", () => {
     });
 
     it("displays empty state when no events are returned", async () => {
-        renderPage();
+        await renderLoadedEmptyEventsPage();
 
-        expect(await screen.findByText(/no events found/i)).toBeInTheDocument();
+        expect(screen.getByText(/no events found/i)).toBeInTheDocument();
     });
 
     it("calls events API on load with default params", async () => {
         renderPage();
 
         await waitFor(() => {
-            expect(mockGetAllEvents).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    page: 1,
-                    pageSize: 4
-                })
-            );
+            expectListingApiCalledWith(mockGetAllEvents, {
+                page: 1,
+                pageSize: 4
+            });
         });
     });
 
@@ -178,63 +181,39 @@ describe("EventsPage", () => {
     it("switches to upcoming view", async () => {
         const user = userEvent.setup();
 
-        mockGetAllEvents.mockResolvedValue(
-            createEventsPageResponse({
-                events: [{ id: 3, title: "Upcoming Event", creatorId: 2 }],
-                totalEvents: 1
-            })
-        );
-
-        renderPage();
-
-        expect(await screen.findByText("Upcoming Event")).toBeInTheDocument();
+        await renderLoadedEmptyEventsPage();
 
         await user.click(screen.getByRole("button", { name: /upcoming/i }));
 
         await waitFor(() => {
-            expect(mockGetAllEvents).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    status: EVENT_STATUS.UPCOMING,
-                    page: 1,
-                    pageSize: 4
-                })
-            );
+            expectListingApiCalledWith(mockGetAllEvents, {
+                status: EVENT_STATUS.UPCOMING,
+                page: 1,
+                pageSize: 4
+            });
         });
     });
 
     it("switches to archives view", async () => {
         const user = userEvent.setup();
 
-        mockGetAllEvents.mockResolvedValue(
-            createEventsPageResponse({
-                events: [{ id: 4, title: "Past Event", creatorId: 2 }],
-                totalEvents: 1
-            })
-        );
-
-        renderPage();
-
-        expect(await screen.findByText("Past Event")).toBeInTheDocument();
+        await renderLoadedEmptyEventsPage();
 
         await user.click(screen.getByRole("button", { name: /archives/i }));
 
         await waitFor(() => {
-            expect(mockGetAllEvents).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    status: EVENT_STATUS.PAST,
-                    page: 1,
-                    pageSize: 4
-                })
-            );
+            expectListingApiCalledWith(mockGetAllEvents, {
+                status: EVENT_STATUS.PAST,
+                page: 1,
+                pageSize: 4
+            });
         });
     });
 
     it("updates URL when switching view", async () => {
         const user = userEvent.setup();
 
-        renderPage();
-
-        await screen.findByText(/no events found/i);
+        await renderLoadedEmptyEventsPage();
 
         await user.click(screen.getByRole("button", { name: /upcoming/i }));
 
@@ -253,13 +232,11 @@ describe("EventsPage", () => {
         await user.click(screen.getByRole("button", { name: /archives/i }));
 
         await waitFor(() => {
-            expect(mockGetAllEvents).toHaveBeenLastCalledWith(
-                expect.objectContaining({
-                    status: EVENT_STATUS.PAST,
-                    page: 1,
-                    pageSize: 4
-                })
-            );
+            expectListingApiCalledWith(mockGetAllEvents, {
+                status: EVENT_STATUS.PAST,
+                page: 1,
+                pageSize: 4
+            });
         });
 
         expect(mockGetAllEvents).toHaveBeenLastCalledWith(
@@ -272,9 +249,7 @@ describe("EventsPage", () => {
     it("hides quick filters when switching to archives view", async () => {
         const user = userEvent.setup();
 
-        renderPage();
-
-        await screen.findByText(/no events found/i);
+        await renderLoadedEmptyEventsPage();
 
         await user.click(screen.getByRole("button", { name: /archives/i }));
 
@@ -300,45 +275,95 @@ describe("EventsPage", () => {
                 })
             );
 
-        renderPage();
-
-        await screen.findByText(/no events found/i);
+        await renderLoadedEmptyEventsPage();
 
         await user.click(screen.getByRole("button", { name: /show filters/i }));
         await user.type(screen.getByLabelText(/^search$/i), "music");
         await user.click(screen.getByRole("button", { name: /apply filters/i }));
 
         await waitFor(() => {
-            expect(mockGetAllEvents).toHaveBeenLastCalledWith(
-                expect.objectContaining({
-                    search: "music",
-                    page: 1,
-                    pageSize: 4
-                })
-            );
+            expectListingApiCalledWith(mockGetAllEvents, {
+                search: "music",
+                page: 1,
+                pageSize: 4
+            });
         });
 
         expect(await screen.findByText("Filtered Event")).toBeInTheDocument();
     });
 
+    it("keeps active view when applying filters", async () => {
+        const user = userEvent.setup();
+
+        await renderLoadedEmptyEventsPage();
+
+        await user.click(screen.getByRole("button", { name: /upcoming/i }));
+
+        await waitFor(() => {
+            expectListingApiCalledWith(mockGetAllEvents, {
+                status: EVENT_STATUS.UPCOMING,
+                page: 1,
+                pageSize: 4
+            });
+        });
+
+        await user.click(screen.getByRole("button", { name: /show filters/i }));
+        await user.type(screen.getByLabelText(/^search$/i), "music");
+        await user.click(screen.getByRole("button", { name: /apply filters/i }));
+
+        await waitFor(() => {
+            expectListingApiCalledWith(mockGetAllEvents, {
+                search: "music",
+                status: EVENT_STATUS.UPCOMING,
+                page: 1,
+                pageSize: 4
+            });
+        });
+    });
+
+    it("resets page when applying filters", async () => {
+        const user = userEvent.setup();
+
+        mockGetAllEvents.mockResolvedValue(
+            createEventsPageResponse({
+                events: [{ id: 1, title: "Event Page 2", creatorId: 2 }],
+                page: 2,
+                totalPages: 3,
+                totalEvents: 10
+            })
+        );
+
+        renderPage("/events?page=2");
+
+        expect(await screen.findByText("Event Page 2")).toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", { name: /show filters/i }));
+        await user.type(screen.getByLabelText(/^search$/i), "music");
+        await user.click(screen.getByRole("button", { name: /apply filters/i }));
+
+        await waitFor(() => {
+            expectListingApiCalledWith(mockGetAllEvents, {
+                search: "music",
+                page: 1,
+                pageSize: 4
+            });
+        });
+    });
+
     it("resets filters", async () => {
         const user = userEvent.setup();
 
-        renderPage();
-
-        await screen.findByText(/no events found/i);
+        await renderLoadedEmptyEventsPage();
 
         await user.click(screen.getByRole("button", { name: /show filters/i }));
         await user.type(screen.getByLabelText(/^search$/i), "music");
         await user.click(screen.getByRole("button", { name: /reset/i }));
 
         await waitFor(() => {
-            expect(mockGetAllEvents).toHaveBeenLastCalledWith(
-                expect.objectContaining({
-                    page: 1,
-                    pageSize: 4
-                })
-            );
+            expectListingApiCalledWith(mockGetAllEvents, {
+                page: 1,
+                pageSize: 4
+            });
         });
     });
 
@@ -346,23 +371,19 @@ describe("EventsPage", () => {
         renderPage("/events?view=upcoming&creator=Luffy&page=2");
 
         await waitFor(() => {
-            expect(mockGetAllEvents).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    creator: "Luffy",
-                    status: EVENT_STATUS.UPCOMING,
-                    page: 2,
-                    pageSize: 4
-                })
-            );
+            expectListingApiCalledWith(mockGetAllEvents, {
+                creator: "Luffy",
+                status: EVENT_STATUS.UPCOMING,
+                page: 2,
+                pageSize: 4
+            });
         });
     });
 
     it("updates URL when applying filters", async () => {
         const user = userEvent.setup();
 
-        renderPage();
-
-        await screen.findByText(/no events found/i);
+        await renderLoadedEmptyEventsPage();
 
         await user.click(screen.getByRole("button", { name: /show filters/i }));
         await user.type(screen.getByLabelText(/^search$/i), "music");
@@ -380,41 +401,33 @@ describe("EventsPage", () => {
     it("applies Today quick filter", async () => {
         const user = userEvent.setup();
 
-        renderPage();
-
-        await screen.findByText(/no events found/i);
+        await renderLoadedEmptyEventsPage();
 
         await user.click(screen.getByRole("button", { name: /today/i }));
 
         await waitFor(() => {
-            expect(mockGetAllEvents).toHaveBeenLastCalledWith(
-                expect.objectContaining({
-                    date: expect.any(String),
-                    page: 1,
-                    pageSize: 4
-                })
-            );
+            expectListingApiCalledWith(mockGetAllEvents, {
+                date: expect.any(String),
+                page: 1,
+                pageSize: 4
+            });
         });
     });
 
     it("applies This Weekend quick filter", async () => {
         const user = userEvent.setup();
 
-        renderPage();
-
-        await screen.findByText(/no events found/i);
+        await renderLoadedEmptyEventsPage();
 
         await user.click(screen.getByRole("button", { name: /this weekend/i }));
 
         await waitFor(() => {
-            expect(mockGetAllEvents).toHaveBeenLastCalledWith(
-                expect.objectContaining({
-                    startDate: expect.any(String),
-                    endDate: expect.any(String),
-                    page: 1,
-                    pageSize: 4
-                })
-            );
+            expectListingApiCalledWith(mockGetAllEvents, {
+                startDate: expect.any(String),
+                endDate: expect.any(String),
+                page: 1,
+                pageSize: 4
+            });
         });
     });
 
@@ -441,12 +454,10 @@ describe("EventsPage", () => {
         await user.click(screen.getByRole("button", { name: /next/i }));
 
         await waitFor(() => {
-            expect(mockGetAllEvents).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    page: 2,
-                    pageSize: 4
-                })
-            );
+            expectListingApiCalledWith(mockGetAllEvents, {
+                page: 2,
+                pageSize: 4
+            });
         });
     });
 
@@ -472,9 +483,7 @@ describe("EventsPage", () => {
                 })
             );
 
-        renderPage();
-
-        await screen.findByText(/no events found/i);
+        await renderLoadedEmptyEventsPage();
 
         await user.click(screen.getByRole("button", { name: /show filters/i }));
         await user.type(screen.getByLabelText(/^search$/i), "music");
@@ -485,13 +494,11 @@ describe("EventsPage", () => {
         await user.click(screen.getByRole("button", { name: /next/i }));
 
         await waitFor(() => {
-            expect(mockGetAllEvents).toHaveBeenLastCalledWith(
-                expect.objectContaining({
-                    search: "music",
-                    page: 2,
-                    pageSize: 4
-                })
-            );
+            expectListingApiCalledWith(mockGetAllEvents, {
+                search: "music",
+                page: 2,
+                pageSize: 4
+            });
         });
 
         expect(await screen.findByText("Filtered Page 2")).toBeInTheDocument();
@@ -525,9 +532,7 @@ describe("EventsPage", () => {
     ============================= */
 
     it("shows login alert when user is not authenticated", async () => {
-        mockAuthState = {
-            user: null
-        };
+        mockAuthState = createGuestTestUser();
 
         renderPage();
 
@@ -535,9 +540,7 @@ describe("EventsPage", () => {
     });
 
     it("does not show login alert when user is authenticated", async () => {
-        renderPage();
-
-        await screen.findByText(/no events found/i);
+        await renderLoadedEmptyEventsPage();
 
         expect(screen.queryByText(/login to join events/i)).not.toBeInTheDocument();
     });

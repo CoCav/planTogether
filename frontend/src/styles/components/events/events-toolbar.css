@@ -1,0 +1,50 @@
+/* ==================================================
+   EVENTS TOOLBAR
+   Displays event results metadata and view controls
+================================================== */
+
+/* ==================================================
+   HEADER
+================================================== */
+
+.events-results-header {
+    margin-bottom: var(--space-4);
+}
+
+.events-results-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.events-results-count {
+    margin-left: var(--space-2);
+    color: var(--color-text-muted);
+    font-weight: 400;
+}
+
+.events-results-page-info {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+}
+
+/* ==================================================
+   VIEW CONTROLS
+================================================== */
+
+.events-view-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.events-quick-actions {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}

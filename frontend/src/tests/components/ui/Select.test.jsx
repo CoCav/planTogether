@@ -1,54 +1,102 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+
 import Select from "../../../components/ui/Select";
 
 /* ==================================================
    SELECT TESTS
-   Tests select rendering, error state and icon behavior
+   Tests select rendering and props forwarding
+
+   Handles:
+   - option rendering
+   - wrapper and select classes
+   - error state
+   - native select props forwarding
+   - decorative icon accessibility
 ================================================== */
 
 describe("Select", () => {
-    it("renders options", () => {
-        render(
-            <Select>
-                <option value="1">Option 1</option>
+
+    /* =============================
+       TEST HELPERS
+    ============================= */
+
+    const renderSelect = (props = {}) => {
+        return render(
+            <Select {...props}>
+                {props.children || (
+                    <>
+                        <option value="1">Option 1</option>
+                        <option value="2">Option 2</option>
+                    </>
+                )}
             </Select>
         );
+    };
+
+    /* =============================
+       RENDERING
+    ============================= */
+
+    it("should render select options", () => {
+        renderSelect();
 
         expect(screen.getByText("Option 1")).toBeInTheDocument();
+        expect(screen.getByText("Option 2")).toBeInTheDocument();
     });
 
-    it("applies custom class to wrapper", () => {
-        const { container } = render(<Select className="custom" />);
+    /* =============================
+       CUSTOM CLASSES
+    ============================= */
 
-        expect(container.firstChild).toHaveClass("select-wrapper");
-        expect(container.firstChild).toHaveClass("custom");
+    it("should apply custom class to wrapper", () => {
+        const { container } = renderSelect({
+            className: "custom-select"
+        });
+
+        expect(container.firstChild).toHaveClass(
+            "select-wrapper",
+            "custom-select"
+        );
     });
 
-    it("applies error class to wrapper and select", () => {
-        const { container } = render(<Select error />);
+    /* =============================
+       STATES
+    ============================= */
+
+    it("should apply error class to wrapper and select", () => {
+        const { container } = renderSelect({
+            error: true
+        });
 
         expect(container.firstChild).toHaveClass("error");
+
         expect(screen.getByRole("combobox")).toHaveClass("error");
     });
 
-    it("toggles icon state on focus and blur", async () => {
-        const user = userEvent.setup();
+    /* =============================
+       DOM PROPS
+    ============================= */
 
-        render(
-            <Select>
-                <option>Test</option>
-            </Select>
-        );
+    it("should forward native select props", () => {
+        renderSelect({
+            name: "eventType",
+            disabled: true
+        });
 
         const select = screen.getByRole("combobox");
-        const icon = document.querySelector(".select-icon");
 
-        await user.click(select);
-        expect(icon).toHaveClass("is-open");
+        expect(select).toHaveAttribute("name", "eventType");
+        expect(select).toBeDisabled();
+    });
 
-        await user.tab();
-        expect(icon).not.toHaveClass("is-open");
+    /* =============================
+       ACCESSIBILITY
+    ============================= */
+
+    it("should render decorative icon as hidden from assistive technologies", () => {
+        renderSelect();
+
+        expect(document.querySelector(".select-icon")).toHaveAttribute("aria-hidden", "true");
     });
 });

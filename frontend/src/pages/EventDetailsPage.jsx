@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { useAuth } from "../features/auth/hooks/useAuth";
 
-import { getEventDetailsDisplayData } from "../features/events/eventDetailsDisplayData";
+import { getEventDisplayData } from "../features/events/eventDisplayData";
 
 import useEventActions from "../features/events/hooks/useEventActions";
 import useEventDetailsData from "../features/events/hooks/useEventDetailsData";
@@ -227,7 +227,7 @@ export default function EventDetailsPage() {
        DISPLAY DATA
     ============================= */
 
-    const eventDisplayData = getEventDetailsDisplayData(event);
+    const eventDisplayData = getEventDisplayData(event);
 
 
     /* =============================
@@ -256,7 +256,7 @@ export default function EventDetailsPage() {
                 <Card className="event-details-card">
                     <div className="event-details-header">
                         <h2 id="event-details-title" className="event-details-title">
-                            {event.title}
+                            {eventDisplayData.title}
                         </h2>
 
                         <EventDetailsActions

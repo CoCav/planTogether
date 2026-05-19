@@ -1,6 +1,9 @@
-import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+
 import EventsFilterCard from "../../../components/events/EventsFilterCard";
+
+import { EVENT_MODES, getEventModeLabel } from "../../../features/shared/eventModes";
 
 import { createEventListingFilters } from "../../factories/shared/eventListingFiltersFactory";
 
@@ -13,6 +16,7 @@ import { createEventListingFilters } from "../../factories/shared/eventListingFi
    - filter visibility toggle
    - hidden and visible form states
    - text filter changes
+   - mode filter changes
    - date filter controls
    - disabled date range fields
    - sort changes
@@ -24,39 +28,40 @@ import { createEventListingFilters } from "../../factories/shared/eventListingFi
    - focuses on form visibility and callbacks
 ================================================== */
 
-/* =============================
-   TEST DATA
-============================= */
-
-const filters = createEventListingFilters();
-
-const sortLabels = {
-    "startDateTime-asc": "Soonest first",
-    "startDateTime-desc": "Farthest first",
-    "title-asc": "Title A-Z",
-    "title-desc": "Title Z-A"
-};
-
-/* =============================
-   TEST HELPERS
-============================= */
-
-const renderFilterCard = (props = {}) =>
-    render(
-        <EventsFilterCard
-            filters={filters}
-            showFilters={false}
-            sortLabels={sortLabels}
-            onToggleFilters={vi.fn()}
-            onFilterChange={vi.fn()}
-            onFilterSubmit={vi.fn((e) => e.preventDefault())}
-            onSortChange={vi.fn()}
-            onResetFilters={vi.fn()}
-            {...props}
-        />
-    );
-
 describe("EventsFilterCard", () => {
+
+    /* =============================
+       TEST DATA
+    ============================= */
+
+    const filters = createEventListingFilters();
+
+    const sortLabels = {
+        "startDateTime-asc": "Soonest first",
+        "startDateTime-desc": "Farthest first",
+        "title-asc": "Title A-Z",
+        "title-desc": "Title Z-A"
+    };
+
+    /* =============================
+       TEST HELPERS
+    ============================= */
+
+    const renderFilterCard = (props = {}) => {
+        return render(
+            <EventsFilterCard
+                filters={filters}
+                showFilters={false}
+                sortLabels={sortLabels}
+                onToggleFilters={vi.fn()}
+                onFilterChange={vi.fn()}
+                onFilterSubmit={vi.fn((e) => e.preventDefault())}
+                onSortChange={vi.fn()}
+                onResetFilters={vi.fn()}
+                {...props}
+            />
+        );
+    };
 
     /* =============================
        FILTER CARD HEADER
@@ -66,16 +71,20 @@ describe("EventsFilterCard", () => {
         renderFilterCard();
 
         expect(screen.getByText("Filters")).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /show filters/i })).toBeInTheDocument();
-    });
 
+        expect(screen.getByRole("button", {
+            name: /show filters/i
+        })).toBeInTheDocument();
+    });
 
     it("calls onToggleFilters when toggle button is clicked", () => {
         const onToggleFilters = vi.fn();
 
         renderFilterCard({ onToggleFilters });
 
-        fireEvent.click(screen.getByRole("button", { name: /show filters/i }));
+        fireEvent.click(screen.getByRole("button", {
+            name: /show filters/i
+        }));
 
         expect(onToggleFilters).toHaveBeenCalled();
     });
@@ -87,15 +96,20 @@ describe("EventsFilterCard", () => {
     it("does not render form when filters are hidden", () => {
         renderFilterCard();
 
-        expect(screen.queryByPlaceholderText(/search events/i)).not.toBeInTheDocument();
+        expect(
+            screen.queryByPlaceholderText(/search events/i)
+        ).not.toBeInTheDocument();
     });
 
     it("renders filter form when filters are visible", () => {
-        renderFilterCard({ showFilters: true });
+        renderFilterCard({
+            showFilters: true
+        });
 
         expect(screen.getByLabelText(/^search$/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/^creator$/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/^type$/i)).toBeInTheDocument();
+
         expect(screen.getByText("Soonest first")).toBeInTheDocument();
     });
 
@@ -103,7 +117,7 @@ describe("EventsFilterCard", () => {
        FILTER FIELD CHANGES
     ============================= */
 
-    it("calls onFilterChange when input changes", () => {
+    it("calls onFilterChange when search input changes", () => {
         const onFilterChange = vi.fn();
 
         renderFilterCard({
@@ -112,7 +126,9 @@ describe("EventsFilterCard", () => {
         });
 
         fireEvent.change(screen.getByLabelText(/^search$/i), {
-            target: { value: "music" }
+            target: {
+                value: "music"
+            }
         });
 
         expect(onFilterChange).toHaveBeenCalled();
@@ -127,23 +143,8 @@ describe("EventsFilterCard", () => {
         });
 
         fireEvent.change(screen.getByLabelText(/^creator$/i), {
-            target: { value: "john" }
-        });
-
-        expect(onFilterChange).toHaveBeenCalled();
-    });
-
-    it("calls onFilterChange when mode select changes", () => {
-        const onFilterChange = vi.fn();
-
-        renderFilterCard({
-            showFilters: true,
-            onFilterChange
-        });
-
-        fireEvent.change(screen.getByLabelText(/mode/i), {
             target: {
-                value: "online"
+                value: "john"
             }
         });
 
@@ -161,6 +162,45 @@ describe("EventsFilterCard", () => {
         fireEvent.change(screen.getByLabelText(/^date$/i), {
             target: {
                 value: "2026-05-18"
+            }
+        });
+
+        expect(onFilterChange).toHaveBeenCalled();
+    });
+
+    /* =============================
+       MODE FILTER
+    ============================= */
+
+    it("renders available event modes", () => {
+        renderFilterCard({
+            showFilters: true
+        });
+
+        expect(
+            screen.getByRole("option", {
+                name: getEventModeLabel(EVENT_MODES.ONLINE)
+            })
+        ).toHaveValue(EVENT_MODES.ONLINE);
+
+        expect(
+            screen.getByRole("option", {
+                name: getEventModeLabel(EVENT_MODES.IN_PERSON)
+            })
+        ).toHaveValue(EVENT_MODES.IN_PERSON);
+    });
+
+    it("calls onFilterChange when mode select changes", () => {
+        const onFilterChange = vi.fn();
+
+        renderFilterCard({
+            showFilters: true,
+            onFilterChange
+        });
+
+        fireEvent.change(screen.getByLabelText(/mode/i), {
+            target: {
+                value: EVENT_MODES.ONLINE
             }
         });
 
@@ -206,7 +246,9 @@ describe("EventsFilterCard", () => {
         });
 
         fireEvent.change(screen.getByLabelText(/sort by/i), {
-            target: { value: "title-desc" }
+            target: {
+                value: "title-desc"
+            }
         });
 
         expect(onSortChange).toHaveBeenCalled();
@@ -224,7 +266,9 @@ describe("EventsFilterCard", () => {
             onFilterSubmit
         });
 
-        fireEvent.click(screen.getByRole("button", { name: /apply filters/i }));
+        fireEvent.click(screen.getByRole("button", {
+            name: /apply filters/i
+        }));
 
         expect(onFilterSubmit).toHaveBeenCalled();
     });
@@ -237,7 +281,9 @@ describe("EventsFilterCard", () => {
             onResetFilters
         });
 
-        fireEvent.click(screen.getByRole("button", { name: /reset/i }));
+        fireEvent.click(screen.getByRole("button", {
+            name: /reset/i
+        }));
 
         expect(onResetFilters).toHaveBeenCalled();
     });

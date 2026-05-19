@@ -1,3 +1,5 @@
+import { EVENT_ROLE_UI } from "../../features/shared/eventRoles";
+
 /* ==================================================
    BADGE
    Displays a styled label for roles or custom variants
@@ -10,42 +12,33 @@
 export default function Badge({ role, variant, label, children, className = "" }) {
 
     /* =========================
-     Initialize values
-       - label: displayed text
-       - variant: visual style
+       ROLE CONFIGURATION
     ========================= */
-    let badgeLabel = label || children || "";
-    let badgeVariant = variant || "";
+
+    const roleConfig = role ? EVENT_ROLE_UI[role] : null;
+
+    const badgeLabel =
+        label ||
+        children ||
+        roleConfig?.label ||
+        "";
+
+    const badgeVariant =
+        variant ||
+        roleConfig?.badgeVariant ||
+        "";
 
     /* =========================
-     Role-based configuration
-       Defines default label and style
+       SAFETY CHECK
     ========================= */
-    if (role) {
-        switch (role) {
-            case "organizer":
-                badgeLabel = label || children || "👑 Organizer";
-                badgeVariant = variant || "organizer";
-                break;
 
-            case "co_organizer":
-                badgeLabel = label || children || "🛡️ Co-organizer";
-                badgeVariant = variant || "co";
-                break;
-
-            default:
-                badgeLabel = label || children || "👤 Participant";
-                badgeVariant = variant || "participant";
-        }
+    if (!badgeLabel || !badgeVariant) {
+        return null;
     }
 
-    /* =========================
-     Safety check
-       Prevent rendering if missing data
-    ========================= */
-    if (!badgeLabel || !badgeVariant) return null;
-
     return (
-        <span className={`badge badge-${badgeVariant} ${className}`.trim()}>{badgeLabel}</span>
+        <span className={`badge badge-${badgeVariant} ${className}`.trim()}>
+            {badgeLabel}
+        </span>
     );
 }

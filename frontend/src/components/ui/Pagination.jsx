@@ -10,9 +10,21 @@ import Button from "./Button";
    - accessible pagination landmark
 ================================================== */
 
-export default function Pagination({ page, totalPages, onPrevious, onNext, label = "Pagination" }) {
+export default function Pagination({
+    page,
+    totalPages,
+    onPrevious,
+    onNext,
+    label = "Pagination"
+}) {
 
-    if (totalPages <= 1) return null;
+    /* =========================
+       VISIBILITY
+    ========================= */
+
+    if (totalPages <= 1) {
+        return null;
+    }
 
     return (
         <nav className="pagination" aria-label={label}>
@@ -25,7 +37,9 @@ export default function Pagination({ page, totalPages, onPrevious, onNext, label
                 Previous
             </Button>
 
-            <span className="pagination-info" aria-live="polite">Page {page} of {totalPages} </span>
+            <span className="pagination-info" aria-live="polite">
+                Page {page} of {totalPages}
+            </span>
 
             <Button
                 type="button"

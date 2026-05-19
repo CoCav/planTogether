@@ -12,61 +12,85 @@ import Card from "../../../components/ui/Card";
    - default card class
    - custom class merging
    - forwarded DOM props
-   - event handler forwarding
-
-   Notes:
-   - focuses on reusable UI container behavior
+   - forwarded event handlers
 ================================================== */
 
 describe("Card", () => {
 
     /* =============================
+       TEST HELPERS
+    ============================= */
+
+    const renderCard = (props = {}) => {
+        return render(
+            <Card {...props}>
+                {props.children || "Card content"}
+            </Card>
+        );
+    };
+
+    /* =============================
        RENDERING
     ============================= */
 
-    it("renders children", () => {
-        render(<Card>Card content</Card>);
+    it("should render card children", () => {
+        renderCard();
 
         expect(screen.getByText("Card content")).toBeInTheDocument();
     });
 
-    it("applies default card class", () => {
-        render(<Card>Content</Card>);
+    it("should apply default card class", () => {
+        renderCard();
 
-        expect(screen.getByText("Content")).toHaveClass("card");
+        expect(screen.getByText("Card content")).toHaveClass("card");
     });
 
     /* =============================
        CUSTOM CLASSES
     ============================= */
 
-    it("merges custom class with default card class", () => {
-        render(<Card className="custom-card">Content</Card>);
+    it("should merge custom class with default card class", () => {
+        renderCard({
+            className: "custom-card"
+        });
 
-        expect(screen.getByText("Content")).toHaveClass("card", "custom-card");
+        expect(screen.getByText("Card content")).toHaveClass("card", "custom-card");
     });
 
     /* =============================
        DOM PROPS
     ============================= */
 
-    it("forwards DOM props", () => {
-        render(<Card data-testid="card">Content</Card>);
+    it("should forward DOM props", () => {
+        renderCard({
+            "data-testid": "card"
+        });
 
         expect(screen.getByTestId("card")).toBeInTheDocument();
     });
 
-    it("forwards event handlers", () => {
+    it("should forward DOM attributes", () => {
+        renderCard({
+            id: "custom-card"
+        });
+
+        expect(screen.getByText("Card content")).toHaveAttribute("id", "custom-card");
+    });
+
+    /* =============================
+       INTERACTIONS
+    ============================= */
+
+    it("should forward event handlers", () => {
         const onClick = vi.fn();
 
-        render(
-            <Card data-testid="card" onClick={onClick}>
-                Content
-            </Card>
-        );
+        renderCard({
+            "data-testid": "card",
+            onClick
+        });
 
         fireEvent.click(screen.getByTestId("card"));
 
-        expect(onClick).toHaveBeenCalled();
+        expect(onClick).toHaveBeenCalledTimes(1);
     });
 });

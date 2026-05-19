@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/react";
 
 import PageLoader from "../../../components/ui/PageLoader";
 
@@ -20,7 +20,19 @@ import PageLoader from "../../../components/ui/PageLoader";
 describe("PageLoader", () => {
 
     /* =============================
-       DEFAULT STATE
+       TEST HELPERS
+    ============================= */
+
+    const renderPageLoader = (children) => {
+        return render(
+            <PageLoader>
+                {children}
+            </PageLoader>
+        );
+    };
+
+    /* =============================
+       RENDERING
     ============================= */
 
     it("should render default loading message", () => {
@@ -29,16 +41,8 @@ describe("PageLoader", () => {
         expect(screen.getByText("Loading...")).toBeInTheDocument();
     });
 
-    /* =============================
-       CUSTOM CONTENT
-    ============================= */
-
     it("should render custom loading message", () => {
-        render(
-            <PageLoader>
-                Loading profile...
-            </PageLoader>
-        );
+        renderPageLoader("Loading profile...");
 
         expect(screen.getByText("Loading profile...")).toBeInTheDocument();
     });

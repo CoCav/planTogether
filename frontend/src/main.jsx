@@ -18,18 +18,30 @@ import "./styles/pages/events-page.css";
 import "./styles/pages/event-details-page.css";
 
 import "./styles/components/events/event-card.css";
-import "./styles/components/events/event-filters.css";
-import "./styles/components/events/event-view.tabs.css";
+import "./styles/components/events/event-card-actions.css";
+import "./styles/components/events/events-filter-card.css";
+import "./styles/components/events/events-toolbar.css";
+import "./styles/components/events/event-view-tabs.css";
 
 import "./styles/components/events/event-details-actions.css";
 import "./styles/components/events/event-details-summary.css";
 import "./styles/components/events/event-members-section.css";
 
-import "./styles/components/pagination.css";
-
 import "./styles/components/layout/navbar.css";
 import "./styles/components/layout/navbar-user-menu.css";
 import "./styles/components/layout/footer.css";
+
+import "./styles/components/ui/alert.css";
+import "./styles/components/ui/badge.css";
+import "./styles/components/ui/button.css";
+import "./styles/components/ui/card.css";
+import "./styles/components/ui/empty-state.css";
+import "./styles/components/ui/formfield.css";
+import "./styles/components/ui/input.css";
+import "./styles/components/ui/loading-state.css";
+import "./styles/components/ui/pagination.css";
+import "./styles/components/ui/select.css";
+
 
 /* ==================================================
    MAIN ENTRY

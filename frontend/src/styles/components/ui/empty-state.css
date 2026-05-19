@@ -1,0 +1,49 @@
+/* ==================================================
+   EMPTY STATE
+   Reusable empty state feedback layout
+================================================== */
+
+/* ==================================================
+   BASE
+================================================== */
+
+.empty-state {
+    padding: var(--space-5);
+    text-align: center;
+    color: var(--color-text-muted);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    background: #fcfcfd;
+}
+
+/* ==================================================
+   ICON
+================================================== */
+
+.empty-state-icon {
+    margin-bottom: var(--space-3);
+    font-size: 2rem;
+    line-height: 1;
+}
+
+/* ==================================================
+   TITLE
+================================================== */
+
+.empty-state-title {
+    margin-bottom: var(--space-2);
+    color: var(--color-text);
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+}
+
+/* ==================================================
+   DESCRIPTION
+================================================== */
+
+.empty-state-description {
+    max-width: 48ch;
+    margin: 0 auto;
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+}

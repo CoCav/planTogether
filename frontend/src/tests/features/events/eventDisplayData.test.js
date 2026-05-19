@@ -1,20 +1,20 @@
 import { describe, expect, it } from "vitest";
 
-import { getEventDetailsDisplayData } from "../../../features/events/eventDetailsDisplayData";
+import { getEventDisplayData } from "../../../features/events/eventDisplayData";
 
 import { EVENT_MODES } from "../../../features/shared/eventModes";
 
 import { createEvent } from "../../factories/events/eventFactory";
 
 /* ==================================================
-   EVENT DETAILS DISPLAY DATA TESTS
-   Tests event details display data generation
+   EVENT DISPLAY DATA TESTS
+   Tests event display data generation
 
    Handles:
    - fallback display values
    - formatted date and time
    - display mode labels
-   - online and in-person location handling
+   - display mode and location handling
    - capacity display
    - registration deadline display
    - nullable display fields
@@ -24,14 +24,14 @@ import { createEvent } from "../../factories/events/eventFactory";
    - uses shared event test factory
 ================================================== */
 
-describe("getEventDetailsDisplayData", () => {
+describe("getEventDisplayData", () => {
 
     /* =============================
        TEST HELPERS
     ============================= */
 
     const getDisplayData = (overrides = {}) => {
-        return getEventDetailsDisplayData(
+        return getEventDisplayData(
             createEvent(overrides)
         );
     };

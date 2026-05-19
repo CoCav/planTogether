@@ -1,0 +1,11 @@
+/* ==================================================
+   LOADING STATE
+   Reusable loading feedback layout
+================================================== */
+
+.loading-state {
+    padding: var(--space-6);
+    text-align: center;
+    color: var(--color-text-muted);
+    border-radius: var(--radius-md);
+}

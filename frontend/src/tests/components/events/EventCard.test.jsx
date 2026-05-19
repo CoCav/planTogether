@@ -1,11 +1,12 @@
-import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { describe, expect, it, vi } from "vitest";
+
 import EventCard from "../../../components/events/EventCard";
 
+import { EVENT_MODES } from "../../../features/shared/eventModes";
 import { EVENT_ROLES } from "../../../features/shared/eventRoles";
 import { EVENT_STATUS } from "../../../features/shared/eventStatus";
-import { EVENT_MODES } from "../../../features/shared/eventModes";
 
 import { createEvent } from "../../factories/events/eventFactory";
 
@@ -16,8 +17,8 @@ import { createEvent } from "../../factories/events/eventFactory";
    Handles:
    - event information rendering
    - event image rendering and fallback
-   - event type badge display
-   - fallback description display
+   - role and type badge display
+   - fallback display values
    - join and leave action visibility
    - guest login prompt
    - past event state
@@ -41,48 +42,59 @@ vi.mock("../../../utils/uploadedFiles", () => ({
     defaultEventImage: "event_image_per_default.jpg"
 }));
 
-const baseEvent = createEvent({
-    description: "Test description",
-    participantCount: 3,
-    mode: EVENT_MODES.ONLINE,
-    creatorName: "Alice",
-    image: "/uploads/events/event-test.png",
-    maxParticipants: null,
-    registrationDeadline: null
-});
-
-const renderCard = (props = {}) =>
-    render(
-        <MemoryRouter>
-            <EventCard
-                event={{
-                    ...baseEvent,
-                    ...(props.event || {})
-                }}
-                user={props.user === undefined ? { userId: 1 } : props.user}
-                role={props.role}
-                onJoin={props.onJoin}
-                onLeave={props.onLeave}
-            />
-        </MemoryRouter>
-    );
-
 describe("EventCard", () => {
+
+    /* =============================
+       TEST DATA
+    ============================= */
+
+    const baseEvent = createEvent({
+        description: "Test description",
+        participantCount: 3,
+        mode: EVENT_MODES.ONLINE,
+        creatorName: "Alice",
+        image: "/uploads/events/event-test.png",
+        maxParticipants: null,
+        registrationDeadline: null
+    });
+
+    /* =============================
+       TEST HELPERS
+    ============================= */
+
+    const renderCard = (props = {}) => {
+        return render(
+            <MemoryRouter>
+                <EventCard
+                    event={{
+                        ...baseEvent,
+                        ...(props.event || {})
+                    }}
+                    user={props.user === undefined ? { userId: 1 } : props.user}
+                    role={props.role}
+                    onJoin={props.onJoin}
+                    onLeave={props.onLeave}
+                />
+            </MemoryRouter>
+        );
+    };
 
     /* =============================
        EVENT INFORMATION
     ============================= */
 
-    it("displays event information", () => {
+    it("should display event information", () => {
         renderCard();
 
         expect(screen.getByText("Test Event")).toBeInTheDocument();
         expect(screen.getByText("Test description")).toBeInTheDocument();
-        expect(screen.getByText(/3 participants/i)).toBeInTheDocument();
-        expect(screen.getByText(/online/i)).toBeInTheDocument();
+        expect(screen.getByText("3 participants")).toBeInTheDocument();
+        expect(screen.getByText("Apr 24")).toBeInTheDocument();
+        expect(screen.getByText("10:00 → 10:00")).toBeInTheDocument();
+        expect(screen.getByText("Online")).toBeInTheDocument();
     });
 
-    it("displays event type badge when event has a type", () => {
+    it("should display event type badge when event has a type", () => {
         renderCard({
             event: {
                 type: "workshop"
@@ -92,7 +104,17 @@ describe("EventCard", () => {
         expect(screen.getByText("workshop")).toHaveClass("event-type-badge");
     });
 
-    it("displays fallback description when event has no description", () => {
+    it("should display fallback title when event has no title", () => {
+        renderCard({
+            event: {
+                title: ""
+            }
+        });
+
+        expect(screen.getByText("No title provided.")).toBeInTheDocument();
+    });
+
+    it("should display fallback description when event has no description", () => {
         renderCard({
             event: {
                 description: ""
@@ -106,7 +128,7 @@ describe("EventCard", () => {
        EVENT IMAGE
     ============================= */
 
-    it("displays event image", () => {
+    it("should display event image", () => {
         renderCard();
 
         const image = screen.getByAltText("Event cover for Test Event");
@@ -116,7 +138,7 @@ describe("EventCard", () => {
         expect(image).toHaveClass("event-card-image");
     });
 
-    it("displays default event image when event has no image", () => {
+    it("should display default event image when event has no image", () => {
         renderCard({
             event: {
                 image: null
@@ -129,10 +151,9 @@ describe("EventCard", () => {
         expect(image).toHaveAttribute("src", "event_image_per_default.jpg");
     });
 
-    it("falls back to default event image when image fails to load", () => {
+    it("should fall back to default event image when image fails to load", () => {
         renderCard({
             event: {
-                ...baseEvent,
                 image: "/uploads/events/missing.png"
             }
         });
@@ -145,58 +166,96 @@ describe("EventCard", () => {
     });
 
     /* =============================
-       JOIN EVENT
+       ROLE / BADGES
     ============================= */
 
-    it("shows join button for authenticated non-member", () => {
+    it("should display organizer badge when current user is not organizer", () => {
         renderCard({
             role: null
         });
 
-        expect(screen.getByRole("button", { name: /join the event/i })).toBeInTheDocument();
+        expect(screen.getByText("👑 Alice")).toBeInTheDocument();
     });
 
-    it("does not show join button for organizer", () => {
+    it("should hide inline organizer badge when current user is organizer", () => {
         renderCard({
             role: EVENT_ROLES.ORGANIZER
         });
 
-        expect(screen.queryByRole("button", { name: /join the event/i })).not.toBeInTheDocument();
+        expect(screen.queryByText("👑 Alice")).not.toBeInTheDocument();
     });
 
-    it("does not show join button for co-organizer", () => {
+    it("should display current user role badge", () => {
+        renderCard({
+            role: EVENT_ROLES.PARTICIPANT
+        });
+
+        expect(screen.getByText("👤 Participant")).toBeInTheDocument();
+    });
+
+    /* =============================
+       JOIN EVENT
+    ============================= */
+
+    it("should show join button for authenticated non-member", () => {
+        renderCard({
+            role: null
+        });
+
+        expect(screen.getByRole("button", {
+            name: /join the event/i
+        })).toBeInTheDocument();
+    });
+
+    it("should not show join button for organizer", () => {
+        renderCard({
+            role: EVENT_ROLES.ORGANIZER
+        });
+
+        expect(screen.queryByRole("button", {
+            name: /join the event/i
+        })).not.toBeInTheDocument();
+    });
+
+    it("should not show join button for co-organizer", () => {
         renderCard({
             role: EVENT_ROLES.CO_ORGANIZER
         });
 
-        expect(screen.queryByRole("button", { name: /join the event/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", {
+            name: /join the event/i
+        })).not.toBeInTheDocument();
     });
 
     /* =============================
        LEAVE EVENT
     ============================= */
 
-    it("shows leave button for participant", () => {
+    it("should show leave button for participant", () => {
         renderCard({
             role: EVENT_ROLES.PARTICIPANT
         });
 
-        expect(screen.getByRole("button", { name: /leave the event/i })).toBeInTheDocument();
+        expect(screen.getByRole("button", {
+            name: /leave the event/i
+        })).toBeInTheDocument();
     });
 
-    it("does not show leave button for organizer", () => {
+    it("should not show leave button for organizer", () => {
         renderCard({
             role: EVENT_ROLES.ORGANIZER
         });
 
-        expect(screen.queryByRole("button", { name: /leave the event/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", {
+            name: /leave the event/i
+        })).not.toBeInTheDocument();
     });
 
     /* =============================
        GUEST STATE
     ============================= */
 
-    it("shows login message when user is not authenticated", () => {
+    it("should show login message when user is not authenticated", () => {
         renderCard({
             user: null,
             role: null
@@ -209,7 +268,7 @@ describe("EventCard", () => {
        PAST EVENT STATE
     ============================= */
 
-    it("shows ended label when event is past", () => {
+    it("should show ended label when event is past", () => {
         renderCard({
             event: {
                 status: EVENT_STATUS.PAST
@@ -219,7 +278,7 @@ describe("EventCard", () => {
         expect(screen.getByText(/ended/i)).toBeInTheDocument();
     });
 
-    it("does not show join or leave buttons when event is past", () => {
+    it("should not show join or leave buttons when event is past", () => {
         renderCard({
             event: {
                 status: EVENT_STATUS.PAST
@@ -227,15 +286,57 @@ describe("EventCard", () => {
             role: EVENT_ROLES.PARTICIPANT
         });
 
-        expect(screen.queryByRole("button", { name: /join the event/i })).not.toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: /leave the event/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", {
+            name: /join the event/i
+        })).not.toBeInTheDocument();
+
+        expect(screen.queryByRole("button", {
+            name: /leave the event/i
+        })).not.toBeInTheDocument();
+    });
+
+    /* =============================
+       EVENT FULL STATE
+    ============================= */
+
+    it("should show full state when event has reached participant limit", () => {
+        renderCard({
+            event: {
+                maxParticipants: 3,
+                participantCount: 3
+            }
+        });
+
+        expect(screen.getByRole("button", {
+            name: /event full/i
+        })).toBeDisabled();
+
+        expect(screen.getByText("3 / 3").closest("li")).toHaveClass("text-danger");
+    });
+
+    it("should show leave action without full state for participants already in the event", () => {
+        renderCard({
+            role: EVENT_ROLES.PARTICIPANT,
+            event: {
+                maxParticipants: 3,
+                participantCount: 3
+            }
+        });
+
+        expect(screen.getByRole("button", {
+            name: /leave the event/i
+        })).toBeInTheDocument();
+
+        expect(screen.queryByRole("button", {
+            name: /event full/i
+        })).not.toBeInTheDocument();
     });
 
     /* =============================
        ACTION CALLBACKS
     ============================= */
 
-    it("calls onJoin when clicking join", () => {
+    it("should call onJoin when clicking join", () => {
         const onJoin = vi.fn();
 
         renderCard({
@@ -243,12 +344,14 @@ describe("EventCard", () => {
             onJoin
         });
 
-        fireEvent.click(screen.getByRole("button", { name: /join the event/i }));
+        fireEvent.click(screen.getByRole("button", {
+            name: /join the event/i
+        }));
 
         expect(onJoin).toHaveBeenCalledWith(1);
     });
 
-    it("calls onLeave when clicking leave", () => {
+    it("should call onLeave when clicking leave", () => {
         const onLeave = vi.fn();
 
         renderCard({
@@ -256,46 +359,10 @@ describe("EventCard", () => {
             onLeave
         });
 
-        fireEvent.click(screen.getByRole("button", { name: /leave the event/i }));
+        fireEvent.click(screen.getByRole("button", {
+            name: /leave the event/i
+        }));
 
         expect(onLeave).toHaveBeenCalledWith(1);
-    });
-
-    /* =============================
-       EVENT FULL STATE
-    ============================= */
-
-    it("shows full state when event has reached participant limit", () => {
-        renderCard({
-            event: {
-                maxParticipants: 3,
-                participantCount: 3
-            }
-        });
-
-        expect(screen.getByRole("button", { name: /event full/i })).toBeDisabled();
-        expect(screen.getByText("3 / 3").closest("li")).toHaveClass("text-danger");
-    });
-
-    it("shows leave action without full state for participants already in the event", () => {
-        renderCard({
-            role: EVENT_ROLES.PARTICIPANT,
-            event: {
-                maxParticipants: 3,
-                participantCount: 3
-            }
-        });
-
-        expect(
-            screen.getByRole("button", {
-                name: /leave the event/i
-            })
-        ).toBeInTheDocument();
-
-        expect(
-            screen.queryByRole("button", {
-                name: /event full/i
-            })
-        ).not.toBeInTheDocument();
     });
 });

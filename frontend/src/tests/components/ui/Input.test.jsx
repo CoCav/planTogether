@@ -1,46 +1,110 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+
 import Input from "../../../components/ui/Input";
 
 /* ==================================================
    INPUT TESTS
    Tests styled input rendering and props forwarding
+
+   Handles:
+   - base input rendering
+   - error class rendering
+   - custom class merging
+   - native input props forwarding
+   - input change handler forwarding
 ================================================== */
 
 describe("Input", () => {
-    it("renders input with base class", () => {
-        render(<Input placeholder="Your name" />);
+
+    /* =============================
+       TEST HELPERS
+    ============================= */
+
+    const renderInput = (props = {}) => {
+        return render(
+            <Input
+                placeholder="Your name"
+                {...props}
+            />
+        );
+    };
+
+    /* =============================
+       RENDERING
+    ============================= */
+
+    it("should render input with base class", () => {
+        renderInput();
 
         expect(screen.getByPlaceholderText("Your name")).toHaveClass("input");
     });
 
-    it("applies error class", () => {
-        render(<Input placeholder="Your email" error />);
+    /* =============================
+       STATES
+    ============================= */
+
+    it("should apply error class", () => {
+        renderInput({
+            error: true,
+            placeholder: "Your email"
+        });
 
         expect(screen.getByPlaceholderText("Your email")).toHaveClass("error");
     });
 
-    it("applies custom class", () => {
-        render(<Input placeholder="Search" className="custom-input" />);
+    /* =============================
+       CUSTOM CLASSES
+    ============================= */
+
+    it("should apply custom class", () => {
+        renderInput({
+            className: "custom-input",
+            placeholder: "Search"
+        });
 
         expect(screen.getByPlaceholderText("Search")).toHaveClass("custom-input");
     });
 
-    it("forwards native input props", () => {
+    /* =============================
+       DOM PROPS
+    ============================= */
+
+    it("should forward native input props", () => {
+        renderInput({
+            type: "email",
+            name: "email",
+            value: "",
+            readOnly: true,
+            placeholder: "Email"
+        });
+
+        const input = screen.getByPlaceholderText("Email");
+
+        expect(input).toHaveAttribute("type", "email");
+        expect(input).toHaveAttribute("name", "email");
+        expect(input).toHaveAttribute("readonly");
+    });
+
+    /* =============================
+       INTERACTIONS
+    ============================= */
+
+    it("should forward change handler", () => {
         const onChange = vi.fn();
 
-        render(
-            <Input
-                type="email"
-                name="email"
-                value=""
-                onChange={onChange}
-                placeholder="Email"
-            />
-        );
+        renderInput({
+            type: "email",
+            name: "email",
+            value: "",
+            onChange,
+            placeholder: "Email"
+        });
 
         fireEvent.change(screen.getByPlaceholderText("Email"), {
-            target: { value: "john@test.com" }
+            target: {
+                value: "john@test.com"
+            }
         });
 
         expect(onChange).toHaveBeenCalled();

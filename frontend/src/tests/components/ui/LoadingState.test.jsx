@@ -12,33 +12,34 @@ import LoadingState from "../../../components/ui/LoadingState";
    - custom loading message
    - accessible loading status role
    - polite live region behavior
-
-   Notes:
-   - focuses on reusable loading UI behavior
 ================================================== */
 
 describe("LoadingState", () => {
 
     /* =============================
-       DEFAULT STATE
+       TEST HELPERS
     ============================= */
 
-    it("renders default loading text", () => {
+    const renderLoadingState = (children) => {
+        return render(
+            <LoadingState>
+                {children}
+            </LoadingState>
+        );
+    };
+
+    /* =============================
+       RENDERING
+    ============================= */
+
+    it("should render default loading text", () => {
         render(<LoadingState />);
 
         expect(screen.getByText("Loading...")).toHaveClass("loading-state");
     });
 
-    /* =============================
-       CUSTOM CONTENT
-    ============================= */
-
-    it("renders custom loading text", () => {
-        render(
-            <LoadingState>
-                Loading events...
-            </LoadingState>
-        );
+    it("should render custom loading text", () => {
+        renderLoadingState("Loading events...");
 
         expect(screen.getByText("Loading events...")).toBeInTheDocument();
     });
@@ -47,7 +48,7 @@ describe("LoadingState", () => {
        ACCESSIBILITY
     ============================= */
 
-    it("renders an accessible status role", () => {
+    it("should render an accessible status role", () => {
         render(<LoadingState />);
 
         expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");

@@ -1,0 +1,46 @@
+/* ==================================================
+   ALERT
+   Contextual feedback and status messages
+================================================== */
+
+/* ==================================================
+   BASE
+================================================== */
+
+.alert {
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-4);
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+}
+
+/* ==================================================
+   INFO
+================================================== */
+
+.alert-info {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+}
+
+/* ==================================================
+   SUCCESS
+================================================== */
+
+.alert-success {
+    background: #ecfdf5;
+    color: #15803d;
+    border-color: #bbf7d0;
+}
+
+/* ==================================================
+   DANGER
+================================================== */
+
+.alert-danger {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+}

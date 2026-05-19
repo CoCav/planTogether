@@ -9,9 +9,16 @@
 ================================================== */
 
 export default function Input({ className = "", error = false, ...props }) {
+
+    /* =========================
+       CSS CLASSES
+    ========================= */
+
+    const inputClasses = `input ${error ? "error" : ""} ${className}`.trim();
+
     return (
         <input
-            className={`input ${error ? "error" : ""} ${className}`.trim()}
+            className={inputClasses}
             {...props}
         />
     );

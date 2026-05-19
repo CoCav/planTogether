@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/react";
 
 import FormField from "../../../components/ui/FormField";
 
@@ -22,15 +22,27 @@ import FormField from "../../../components/ui/FormField";
 describe("FormField", () => {
 
     /* =============================
+       TEST HELPERS
+    ============================= */
+
+    const renderFormField = (props = {}) => {
+        return render(
+            <FormField
+                label="Email"
+                htmlFor="email"
+                {...props}
+            >
+                {props.children || <input id="email" placeholder="Your email" />}
+            </FormField>
+        );
+    };
+
+    /* =============================
        RENDERING
     ============================= */
 
-    it("renders label and children", () => {
-        render(
-            <FormField label="Email" htmlFor="email">
-                <input id="email" placeholder="Your email" />
-            </FormField>
-        );
+    it("should render label and children", () => {
+        renderFormField();
 
         expect(screen.getByText("Email")).toBeInTheDocument();
         expect(screen.getByPlaceholderText("Your email")).toBeInTheDocument();
@@ -40,12 +52,8 @@ describe("FormField", () => {
        ACCESSIBILITY
     ============================= */
 
-    it("associates label with form control", () => {
-        render(
-            <FormField label="Email" htmlFor="email">
-                <input id="email" />
-            </FormField>
-        );
+    it("should associate label with form control", () => {
+        renderFormField();
 
         expect(screen.getByLabelText("Email")).toBeInTheDocument();
     });
@@ -54,29 +62,25 @@ describe("FormField", () => {
        VALIDATION ERROR
     ============================= */
 
-    it("renders validation error when provided", () => {
-        render(
-            <FormField label="Email" error="Invalid email">
-                <input />
-            </FormField>
-        );
+    it("should render validation error when provided", () => {
+        renderFormField({
+            error: "Invalid email"
+        });
 
-        expect(screen.getByText("Invalid email")).toHaveClass("field-error");
+        expect(screen.getByText("Invalid email")).toHaveClass("form-field-error");
     });
 
     /* =============================
        CUSTOM CLASSES
     ============================= */
 
-    it("applies custom class", () => {
-        render(
-            <FormField label="Description" className="form-field-full">
-                <textarea />
-            </FormField>
-        );
+    it("should apply custom class", () => {
+        renderFormField({
+            label: "Description",
+            className: "form-field-full",
+            children: <textarea id="description" />
+        });
 
-        expect(
-            screen.getByText("Description").closest(".form-field")
-        ).toHaveClass("form-field-full");
+        expect(screen.getByText("Description").closest(".form-field")).toHaveClass("form-field-full");
     });
 });

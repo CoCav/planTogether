@@ -9,17 +9,35 @@
 ================================================== */
 
 export default function EmptyState({ title, description, icon, children }) {
+
+    /* =========================
+       LAYOUT
+    ========================= */
+
+    const content =
+        title
+            ? (
+                <h3 className="empty-state-title">
+                    {title}
+                </h3>
+            )
+            : children;
+
     return (
         <div className="empty-state">
-            {icon && <div className="empty-state-icon">{icon}</div>}
-
-            {title ? (
-                <h3 className="empty-state-title">{title}</h3>
-            ) : (
-                children
+            {icon && (
+                <div className="empty-state-icon">
+                    {icon}
+                </div>
             )}
 
-            {description && (<p className="empty-state-description">{description}</p>)}
+            {content}
+
+            {description && (
+                <p className="empty-state-description">
+                    {description}
+                </p>
+            )}
         </div>
     );
 }

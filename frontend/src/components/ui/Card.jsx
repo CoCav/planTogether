@@ -7,15 +7,15 @@
    - forwarded DOM props
 ================================================== */
 
-export default function Card({
-    children,
-    className = "",
-    ...props
-}) {
+export default function Card({ children, className = "", ...props }) {
+
     const classes = `card ${className}`.trim();
 
     return (
-        <div className={classes} {...props}>
+        <div
+            className={classes}
+            {...props}
+        >
             {children}
         </div>
     );

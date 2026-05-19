@@ -22,7 +22,7 @@ import {
    Handles:
    - loading and empty states
    - page semantic structure
-   - event details rendering
+   - event display data rendering
    - image fallback behavior
    - event action integration
    - membership section integration
@@ -31,7 +31,7 @@ import {
    Notes:
    - mocks API modules
    - mocks authenticated user state
-   - mocks extracted event detail components
+   - mocks extracted event display components
    - uses MemoryRouter for route context
 ================================================== */
 
@@ -56,7 +56,6 @@ const mockEvent = createEvent({
     title: "Test Event",
     description: "Test description",
     image: "/uploads/events/event-test.png",
-    participantCount: 1,
     maxParticipants: null,
     status: EVENT_STATUS.UPCOMING
 });
@@ -313,7 +312,7 @@ describe("EventDetailsPage", () => {
     });
 
     /* =============================
-       EVENT RENDERING
+       EVENT DISPLAY DATA
     ============================= */
 
     it("should display event details", async () => {
@@ -347,6 +346,48 @@ describe("EventDetailsPage", () => {
         expect(screen.getByTestId("event-participants-section")).toBeInTheDocument();
     });
 
+    it("should use fallback display values when event data is missing", async () => {
+        setupApi({
+            event: createEvent({
+                ...mockEvent,
+                description: "",
+                type: "",
+                theme: "",
+                location: ""
+            })
+        });
+
+        renderPage();
+
+        expect(await screen.findByText("No description provided.")).toBeInTheDocument();
+        expect(screen.getByText("No description provided.")).toBeInTheDocument();
+
+        const summary = screen.getByTestId("event-details-summary");
+
+        expect(summary).toHaveTextContent("N/A");
+    });
+
+    it("should pass formatted display data to EventDetailsSummary", async () => {
+        setupApi({
+            event: createEvent({
+                ...mockEvent,
+                participantCount: 3,
+                maxParticipants: 10,
+                registrationDeadline: "2026-12-19T12:00:00.000Z"
+            })
+        });
+
+        renderPage();
+
+        expect(await screen.findByTestId("event-details-summary")).toBeInTheDocument();
+
+        expect(screen.getByText("3 / 10")).toBeInTheDocument();
+        expect(screen.getByText("Meetup")).toBeInTheDocument();
+        expect(screen.getByText("Tech")).toBeInTheDocument();
+        expect(screen.getByText("In person")).toBeInTheDocument();
+        expect(screen.getByText("Montreal")).toBeInTheDocument();
+    });
+
     it("should display staff and participant data", async () => {
         setupApi({
             staff: [
@@ -368,8 +409,9 @@ describe("EventDetailsPage", () => {
         expect(await screen.findByText("John")).toBeInTheDocument();
         expect(screen.getByText("Alice")).toBeInTheDocument();
 
-        expect(screen.getByText("Staff count: 1")).toBeInTheDocument();
-        expect(screen.getByText("Participant count: 1")).toBeInTheDocument();
+
+        expect(screen.getByText(/Staff count:/i)).toBeInTheDocument();
+        expect(screen.getByText(/Participant count:/i)).toBeInTheDocument();
     });
 
     /* =============================

@@ -1,74 +1,56 @@
 /* ==================================================
    EVENTS PAGE
-   Page-level layout for event listing screens
+   Page-level layout for public event listing screens
+================================================== */
+
+/* ==================================================
+   PAGE HEADER
+================================================== */
+
+.page-header-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-width: 720px;
+}
+
+/* ==================================================
+   FILTERS
 ================================================== */
 
 .events-filters-section {
     margin-bottom: var(--space-5);
 }
 
-.events-controls-section {
+/* ==================================================
+   RESULTS
+================================================== */
+
+.events-results-controls {
     margin-top: var(--space-5);
 }
 
-.events-header {
-    margin-bottom: var(--space-4);
-}
-
-.events-header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: var(--space-4);
-    flex-wrap: wrap;
-}
-
-.events-view-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--space-3);
-    margin-top: var(--space-4);
-    flex-wrap: wrap;
-}
-
-.events-quick-actions {
-    display: flex;
-    gap: var(--space-2);
-    flex-wrap: wrap;
-}
-
-.events-section {
+.events-results-section {
     min-height: 420px;
     margin-top: var(--space-5);
 }
 
-.events-grid {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-}
+/* ==================================================
+   EVENT LIST
+================================================== */
 
-.results-count {
-    margin-left: var(--space-2);
-    color: var(--color-text-muted);
-    font-weight: 400;
-}
-
-.results-page-info {
-    font-size: var(--font-size-sm);
-    color: var(--color-text-muted);
-}
-
-
-/* Refactor in progress */
-.event-form {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-}
-
+.events-grid,
 .event-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+/* ==================================================
+   EVENT FORM
+================================================== */
+
+.event-form {
     display: flex;
     flex-direction: column;
     gap: var(--space-4);

@@ -42,6 +42,7 @@ export default function useEventStatus({ user, event, isMember = false }) {
 
     const showEventFullButton =
         !isPast &&
+        !isMember &&
         isEventFull;
 
     const showLoginPrompt =

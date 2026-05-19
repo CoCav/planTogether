@@ -1,19 +1,20 @@
 import LoadingState from "./LoadingState";
 
 /* ==================================================
-   PAGE LOADING
-   Displays a full-page loading state
+   PAGE LOADER
+   Displays a full-page loading layout
 
    Wraps:
    - LoadingState
-   - page layout spacing
+   - container spacing
 ================================================== */
 
-export default function PageLoading({ children = "Loading..." }) {
-
+export default function PageLoader({ children = "Loading..." }) {
     return (
         <div className="container page-section">
-            <LoadingState>{children}</LoadingState>
+            <LoadingState>
+                {children}
+            </LoadingState>
         </div>
     );
 }

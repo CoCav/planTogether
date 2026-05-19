@@ -1,28 +1,41 @@
-import Badge from "../ui/Badge.jsx";
-import EmptyState from "../ui/EmptyState.jsx";
-import Alert from "../ui/Alert.jsx";
+import Alert from "../ui/Alert";
+import Badge from "../ui/Badge";
+import EmptyState from "../ui/EmptyState";
 
 /* ==================================================
-   EVENT MEMBER LIST
-   Displays event members with optional actions
+   EVENT MEMBERS SECTION
+   Displays an event members section with optional actions
 
-   Used for:
-   - event organizers / team
-   - event participants / attendees
+   Handles:
+   - section heading
+   - optional contextual message
+   - empty member state
+   - member rows
+   - optional member actions
 ================================================== */
 
-export default function EventMemberList({ title, subtitle, members = [], emptyMessage = "No members found.", showActions = true, headerMessage = null, renderActions }) {
+export default function EventMembersSection({
+    title,
+    subtitle,
+    members = [],
+    emptyMessage = "No members found.",
+    showActions = true,
+    headerMessage = null,
+    renderActions
+}) {
+
     return (
         <>
             <div className="section-header">
                 <h2 className="section-title">{title}</h2>
-                {subtitle && <p className="section-subtitle">{subtitle}</p>}
+
+                {subtitle && (
+                    <p className="section-subtitle">{subtitle}</p>
+                )}
             </div>
 
             {headerMessage && (
-                <Alert type="info">
-                    {headerMessage}
-                </Alert>
+                <Alert type="info">{headerMessage}</Alert>
             )}
 
             {members.length === 0 ? (
@@ -33,6 +46,7 @@ export default function EventMemberList({ title, subtitle, members = [], emptyMe
                         <div key={person.id} className="member-row">
                             <div className="member-info">
                                 <span className="member-name">{person.name}</span>
+
                                 <Badge role={person.role} />
                             </div>
 

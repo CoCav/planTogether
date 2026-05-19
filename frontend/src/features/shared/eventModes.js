@@ -13,3 +13,22 @@ export const EVENT_MODES = {
 };
 
 export const VALID_EVENT_MODES = Object.values(EVENT_MODES);
+
+/* ==================================================
+   EVENT MODE LABELS
+   Human-readable labels for event modes
+================================================== */
+
+export const EVENT_MODE_LABELS = {
+    [EVENT_MODES.ONLINE]: "Online",
+    [EVENT_MODES.IN_PERSON]: "In person"
+};
+
+/* =============================
+   DISPLAY HELPERS
+============================= */
+
+// Resolves a display-friendly event mode label
+export const getEventModeLabel = (mode) => {
+    return EVENT_MODE_LABELS[mode] || mode;
+};

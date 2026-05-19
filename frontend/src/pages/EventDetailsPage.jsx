@@ -1,159 +1,216 @@
-import { useCallback, useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/useAuth";
-import { getEventById } from "../api/eventApi";
-import { getEventMembers, getEventOrganizers } from "../api/eventMembershipApi.js";
-import { getNormalizedEvent, getNormalizedMembers, getNormalizedOrganizers } from "../features/events/normalizeData.js";
-import { formatEventDateRange, formatCount, formatBe, formatTime } from "../utils/format.js";
-import { getEventImage, defaultEventImage } from "../utils/getUploadedFile.js";
+import { useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
-import useEventManagementActions from "../hooks/events/useEventManagementActions";
-import useEventActionsWithConfirm from "../hooks/events/useEventActionsWithConfirm";
-import useEventPermissions from "../hooks/events/useEventPermissions";
+import { useAuth } from "../features/auth/hooks/useAuth";
 
-import EventMemberList from "../components/events/EventMemberList.jsx";
+import { getEventDetailsDisplayData } from "../features/events/eventDetailsDisplayData";
 
-import Button from "../components/ui/Button.jsx";
-import Card from "../components/ui/Card.jsx";
-import Alert from "../components/ui/Alert.jsx";
-import EmptyState from "../components/ui/EmptyState.jsx";
-import PageLoader from "../components/ui/PageLoader.jsx";
+import useEventActions from "../features/events/hooks/useEventActions";
+import useEventDetailsData from "../features/events/hooks/useEventDetailsData";
+import useEventDetailsState from "../features/events/hooks/useEventDetailsState";
+import useEventStatus from "../features/events/hooks/useEventStatus";
+
+import { getEventMembershipState } from "../features/eventMemberships/eventMembershipState";
+
+import useMembershipActions from "../features/eventMemberships/hooks/useMembershipActions";
+import useMembershipManagement from "../features/eventMemberships/hooks/useMembershipManagement";
+import useMembershipPermissions from "../features/eventMemberships/hooks/useMembershipPermissions";
+
+import { defaultEventImage, getEventImage } from "../utils/uploadedFiles";
+
+import EventDetailsActions from "../components/events/EventDetailsActions";
+import EventDetailsSummary from "../components/events/EventDetailsSummary";
+import EventParticipantsSection from "../components/events/EventParticipantsSection";
+import EventStaffSection from "../components/events/EventStaffSection";
+
+import Alert from "../components/ui/Alert";
+import Card from "../components/ui/Card";
+import EmptyState from "../components/ui/EmptyState";
+import PageLoader from "../components/ui/PageLoader";
 
 /* ==================================================
    EVENT DETAILS PAGE
-   Displays detailed information about a single event.
+   Displays and manages a single event details view
 
-   Supports:
-   - join / leave actions
-   - edit / delete actions
-   - organizer and participant management
-   - role-based UI permissions
+   Handles:
+   - event details, members, and staff loading
+   - event availability state
+   - membership permissions
+   - join / leave event actions
+   - event deletion
+   - staff and participant management
+   - display-ready event data
 ================================================== */
 
 export default function EventDetailsPage() {
     const { eventId } = useParams();
-    const { user, loading: authLoading } = useAuth();
     const navigate = useNavigate();
 
-    const [message, setMessage] = useState("");
-    const [error, setError] = useState("");
-
-    // Stores event details returned by the backend
-    const [event, setEvent] = useState(null);
-
-    // Stores event membership collections
-    const [members, setMembers] = useState([]);
-    const [organizers, setOrganizers] = useState([]);
-
-    // Controls full-page loading state
-    const [loading, setLoading] = useState(true);
+    const { user, loading: authLoading } = useAuth();
 
 
-    /* =========================
-       Derived member data
-       Computes participants and section counts
-    ========================= */
+    /* =============================
+       PAGE STATE
+    ============================= */
 
-    const participants = members.filter((person) => person.role === "participant");
-    const participantCount = event?.participantCount ?? participants.length;
-    const organizersCount = organizers.length;
+    const {
+        feedback: {
+            message,
+            setMessage,
+            error,
+            setError
+        },
+        loadingState: {
+            loading,
+            setLoading
+        }
+    } = useEventDetailsState();
 
 
-    /* =========================
-       Event permissions
-       Centralizes role-based UI visibility
-    ========================= */
+    /* =============================
+       PAGE DATA
+    ============================= */
+
+    const { event, members, staff, loadData } = useEventDetailsData({
+        eventId,
+        setError,
+        setLoading
+    });
+
+
+    /* =============================
+       MEMBERSHIP STATE
+    ============================= */
+
+    const {
+        participants,
+        participantCount,
+        staffCount,
+        currentUserRole,
+        isMember
+    } = getEventMembershipState({
+        user,
+        event,
+        members,
+        staff
+    });
+
+
+    /* =============================
+       EVENT STATUS
+    ============================= */
+
+    const {
+        isPast,
+        isEventFull,
+        isRegistrationClosed,
+        showEventFullButton,
+        showLoginPrompt,
+        showRegistrationClosedButton
+    } = useEventStatus({
+        user,
+        event,
+        isMember
+    });
+
+
+    /* =============================
+       MEMBERSHIP PERMISSIONS
+    ============================= */
 
     const {
         myRole,
-        isPast,
+        canJoin,
         canLeave,
         canEdit,
         canDelete,
         canPromote,
         canDemote,
-        canRemove,
-        showEventFullButton,
-        showJoinButton,
-        showLoginPrompt,
-        showRegistrationClosedButton
-    } = useEventPermissions({ user, event, members, organizers });
+        canRemove
+    } = useMembershipPermissions({
+        user,
+        currentUserRole,
+        members,
+        staff,
+        isPast,
+        isEventFull,
+        isRegistrationClosed
+    });
 
-    // In this page there is only one event, so the current role is enough
+    // Adapts current role lookup for membership action hooks
     const getRoleByEventId = () => myRole;
 
 
-    /* =========================
-       Event data loading
-       Fetches event details, organizers and members
-    ========================= */
+    /* =============================
+       EVENT ACTIONS
+    ============================= */
 
-    const loadData = useCallback(async () => {
-        try {
-            setError("");
-            setLoading(true);
-
-            const [eventRes, organizersRes] = await Promise.all([
-                getEventById(eventId),
-                getEventOrganizers(eventId)
-            ]);
-
-            setEvent(getNormalizedEvent(eventRes));
-            setOrganizers(getNormalizedOrganizers(organizersRes));
-
-            const membersRes = await getEventMembers(eventId);
-            setMembers(getNormalizedMembers(membersRes));
-        } catch (error) {
-            console.error("Error loading event details:", error);
-            setError("❌ Failed to load event details");
-        } finally {
-            setLoading(false);
-        }
-    }, [eventId]);
+    const { handleDeleteEvent } = useEventActions({
+        eventId,
+        setMessage,
+        setError
+    });
 
 
-    /* =========================
-       Initial data loading
-       Waits for authentication state before loading
-    ========================= */
+    /* =============================
+       MEMBERSHIP ACTIONS
+    ============================= */
 
+    const { handleJoinEvent, handleLeaveEvent } = useMembershipActions({
+        loadData,
+        setMessage,
+        setError,
+        getRoleByEventId
+    });
+
+    const { handlePromoteMember, handleDemoteMember, handleRemoveMember } = useMembershipManagement({
+        eventId,
+        loadData,
+        setMessage,
+        setError
+    });
+
+
+    /* =============================
+       INITIAL DATA LOADING
+    ============================= */
+
+    // Waits for auth initialization before loading page data
     useEffect(() => {
         if (authLoading) return;
+
         loadData();
     }, [authLoading, loadData]);
 
 
-    /* =========================
-       Feedback cleanup
-       Clears success/error messages automatically
-    ========================= */
+    /* =============================
+       FEEDBACK CLEANUP
+    ============================= */
 
+    // Auto-clears feedback messages after delay
     useEffect(() => {
-        if (message || error) {
-            const timer = setTimeout(() => {
-                setMessage("");
-                setError("");
-            }, 3000);
+        if (!message && !error) return;
 
-            return () => clearTimeout(timer);
-        }
-    }, [message, error]);
+        const timer = setTimeout(() => {
+            setMessage("");
+            setError("");
+        }, 3000);
 
-
-    /* =========================
-       Event actions
-       Membership and management operations
-    ========================= */
-
-    const { handleJoinEvent, handleLeaveEvent } = useEventActionsWithConfirm({ loadData, setMessage, setError, getRoleByEventId });
-
-    const { handlePromote, handleDemote, handleDeleteEvent, handleRemoveMember } = useEventManagementActions({ eventId, loadData, setMessage, setError });
+        return () => clearTimeout(timer);
+    }, [message, error, setMessage, setError]);
 
 
-    /* =========================
-        Empty state
-        Handles missing or deleted event
-    ========================= */
+    /* =============================
+       LOADING / EMPTY STATES
+    ============================= */
+
+    if (loading) {
+        return (
+            <PageLoader>
+                Loading event details...
+            </PageLoader>
+        );
+    }
 
     if (!event) {
         return (
@@ -166,207 +223,107 @@ export default function EventDetailsPage() {
     }
 
 
-    /* =========================
-       Display-ready event data
-       Formats raw event values once before rendering
-    ========================= */
+    /* =============================
+       DISPLAY DATA
+    ============================= */
 
-    /* ---------- Text content ---------- */
-    const eventDescription = event.description || "No description provided.";
-    const eventType = event.type || "N/A";
-    const eventTheme = event.theme || "N/A";
-
-    /* ---------- Date & time ---------- */
-    const eventDate = formatEventDateRange(event.startDateTime, event.endDateTime);
-    const eventTime = `${formatTime(event.startDateTime)} → ${formatTime(event.endDateTime)}`;
-
-    /* ---------- Location ---------- */
-    const eventMode = event.mode === "online" ? "Online" : "In person";
-    const eventLocation = event.mode === "online" ? "Online" : event.location || "N/A";
-
-    /* ---------- Capacity ---------- */
-    const capacityDisplay = event.maxParticipants ? `${event.participantCount} / ${event.maxParticipants}` : null;
-
-    /* ---------- Registration ---------- */
-    const eventDeadline = event.registrationDeadline ? formatEventDateRange(event.registrationDeadline, event.registrationDeadline) : null;
+    const eventDisplayData = getEventDetailsDisplayData(event);
 
 
-    /* =========================
-        Loading state
-    ========================= */
-
-    if (loading) {
-        return <PageLoader>Loading event details...</PageLoader>;
-    }
-
-
-    /* =========================
-       Main render
-    ========================= */
+    /* =============================
+       MAIN RENDER
+    ============================= */
 
     return (
         <div className="container page-section">
-            <div className="page-header">
+            <header className="page-header">
                 <div>
-                    <p className="page-subtitle"> View event details, manage attendance, and organize members.</p>
+                    <h1 className="page-title">
+                        Event details
+                    </h1>
+
+                    <p className="page-subtitle">
+                        View event details, manage attendance,
+                        and organize members.
+                    </p>
                 </div>
-            </div>
+            </header>
 
             {message && <Alert type="success">{message}</Alert>}
             {error && <Alert type="danger">{error}</Alert>}
 
-            <Card className="event-details-card">
-                <div className="event-details-header">
-                    <div className="event-details-header-main">
-                        <h1 className="page-title">{event.title}</h1>
+            <section className="event-details-overview" aria-labelledby="event-details-title">
+                <Card className="event-details-card">
+                    <div className="event-details-header">
+                        <h2 id="event-details-title" className="event-details-title">
+                            {event.title}
+                        </h2>
+
+                        <EventDetailsActions
+                            eventId={event.id}
+                            isPast={isPast}
+                            canJoin={canJoin}
+                            canLeave={canLeave}
+                            canEdit={canEdit}
+                            canDelete={canDelete}
+                            showEventFullButton={showEventFullButton}
+                            showRegistrationClosedButton={showRegistrationClosedButton}
+                            showLoginPrompt={showLoginPrompt}
+                            onJoin={handleJoinEvent}
+                            onLeave={handleLeaveEvent}
+                            onEdit={() => navigate(`/events/${event.id}/edit`)}
+                            onDelete={handleDeleteEvent}
+                        />
                     </div>
 
-                    <div className="event-details-header-actions">
-                        {isPast ? (
-                            <span className="event-status-label">Ended</span>
-                        ) : (
-                            <>
-                                {showEventFullButton && (
-                                    <Button type="button" disabled>Event full</Button>
-                                )}
-
-                                {showJoinButton && (
-                                    <Button type="button" onClick={() => handleJoinEvent(event.id)}>Join the event</Button>
-                                )}
-
-                                {showRegistrationClosedButton && (
-                                    <Button type="button" disabled>Registration closed</Button>
-                                )}
-
-                                {canLeave && (
-                                    <Button type="button" variant="outline-danger" onClick={() => handleLeaveEvent(event.id)}>Leave the event</Button>
-                                )}
-
-                                {canEdit && (
-                                    <Button type="button" variant="outline" onClick={() => navigate(`/events/${event.id}/edit`)}>Edit Event</Button>
-                                )}
-
-                                {canDelete && (
-                                    <Button type="button" variant="danger" onClick={handleDeleteEvent}>Delete Event</Button>
-                                )}
-
-                                {showLoginPrompt && (
-                                    <Alert type="info">🔐 Login to join this event.</Alert>
-                                )}
-                            </>
-                        )}
-                    </div>
-                </div>
-
-                <div className="event-details-image-wrapper">
-                    <img
-                        src={getEventImage(event.image)}
-                        onError={(e) => {
-                            e.currentTarget.src = defaultEventImage;
-                        }}
-                        alt={event.title}
-                        className="event-details-image"
-                    />
-                </div>
-
-                <p className="event-details-description ">{eventDescription}</p>
-
-                <div className="event-info-grid">
-                    <div className="event-info-card">
-                        <span className="event-info-label">🏷️ Type</span>
-                        <span className="event-info-value">{eventType}</span>
+                    <div className="event-details-image-wrapper">
+                        <img
+                            src={getEventImage(event.image)}
+                            alt={event.title}
+                            className="event-details-image"
+                            onError={(imageError) => {
+                                imageError.currentTarget.src = defaultEventImage;
+                            }}
+                        />
                     </div>
 
-                    <div className="event-info-card">
-                        <span className="event-info-label">🎯 Theme</span>
-                        <span className="event-info-value">{eventTheme}</span>
-                    </div>
+                    <p className="event-details-description">{eventDisplayData.description}</p>
 
-                    <div className="event-info-card">
-                        <span className="event-info-label">📍 Mode</span>
-                        <span className="event-info-value">{eventMode}</span>
-                    </div>
-
-                    <div className="event-info-card">
-                        <span className="event-info-label">📍 Location</span>
-                        <span className="event-info-value">{eventLocation}</span>
-                    </div>
-
-                    {capacityDisplay && (
-                        <div className="event-info-card">
-                            <span className="event-info-label">👥 Capacity</span>
-                            <span className="event-info-value">{capacityDisplay}</span>
-                        </div>
-                    )}
-
-                    <div className="event-info-card">
-                        <span className="event-info-label">📅 Date</span>
-                        <span className="event-info-value">{eventDate}</span>
-                    </div>
-
-                    <div className="event-info-card">
-                        <span className="event-info-label">🕒 Time</span>
-                        <span className="event-info-value">{eventTime}</span>
-                    </div>
-
-                    {event.registrationDeadline && (
-                        <div className="event-info-card">
-                            <span className="event-info-label">⏳ Registration deadline</span>
-                            <span className="event-info-value">{eventDeadline}</span>
-                        </div>
-                    )}
-                </div>
-            </Card>
-
-            <div className="details-sections">
-                <Card>
-                    <EventMemberList
-                        title="👑 Event Team"
-                        subtitle={`${formatCount(organizersCount, "member")} ${formatBe(organizersCount)} managing this event.`}
-                        members={organizers}
-                        emptyMessage="No team members."
-                        showActions={Boolean(user)}
-                        renderActions={(person) => (
-                            <>
-                                {canDemote(person) && (
-                                    <Button type="button" variant="outline" onClick={() => handleDemote(person.id)}>Demote</Button>
-                                )}
-                                {canRemove(person) && (
-                                    <Button type="button" variant="danger" onClick={() => handleRemoveMember(person.id)}>Remove</Button>
-                                )}
-                            </>
-                        )}
+                    <EventDetailsSummary
+                        type={eventDisplayData.type}
+                        theme={eventDisplayData.theme}
+                        mode={eventDisplayData.mode}
+                        location={eventDisplayData.location}
+                        capacity={eventDisplayData.capacity}
+                        date={eventDisplayData.date}
+                        time={eventDisplayData.time}
+                        registrationDeadline={eventDisplayData.registrationDeadline}
                     />
                 </Card>
+            </section>
 
-                <Card>
-                    <EventMemberList
-                        title={`👥 ${participantCount} Attendee${participantCount > 1 ? "s" : ""}`}
-                        subtitle={`${formatCount(participantCount, "attendee")} ${formatBe(participantCount)} attending this event.`}
-                        members={participants}
-                        emptyMessage={isPast ? "No one attended this event." : "No participants yet."}
-                        showActions={Boolean(user)}
-                        headerMessage={
-                            !user
-                                ? isPast
-                                    ? "This event has ended."
-                                    : "🔐 Login to join this event and interact with participants."
-                                : null
-                        }
-                        renderActions={(person) => (
-                            <>
-                                {canPromote(person) && (
-                                    <Button type="button" variant="outline" onClick={() => handlePromote(person.id)}>Promote</Button>
-                                )}
+            <section className="event-details-members">
+                <EventStaffSection
+                    user={user}
+                    staff={staff}
+                    staffCount={staffCount}
+                    canDemote={canDemote}
+                    canRemove={canRemove}
+                    onDemote={handleDemoteMember}
+                    onRemove={handleRemoveMember}
+                />
 
-                                {canRemove(person) && (
-                                    <Button type="button" variant="danger" onClick={() => handleRemoveMember(person.id)}>Remove</Button>
-                                )}
-                            </>
-                        )}
-                    />
-                </Card>
-            </div>
+                <EventParticipantsSection
+                    user={user}
+                    isPast={isPast}
+                    participants={participants}
+                    participantCount={participantCount}
+                    canPromote={canPromote}
+                    canRemove={canRemove}
+                    onPromote={handlePromoteMember}
+                    onRemove={handleRemoveMember}
+                />
+            </section>
         </div>
     );
 }

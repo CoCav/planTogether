@@ -1,0 +1,76 @@
+/* ==================================================
+   EVENT DETAILS PAGE
+   Page-level layout for single event details screen
+================================================== */
+
+/* ==================================================
+   OVERVIEW
+================================================== */
+
+.event-details-overview {
+    margin-bottom: var(--space-5);
+}
+
+/* ==================================================
+   CARD
+================================================== */
+
+.event-details-card {
+    margin-bottom: var(--space-5);
+}
+
+/* ==================================================
+   HEADER
+================================================== */
+
+.event-details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.event-details-title {
+    margin: 0;
+    line-height: 1.2;
+}
+
+/* ==================================================
+   IMAGE
+================================================== */
+
+.event-details-image-wrapper {
+    width: 100%;
+    height: 260px;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    margin: var(--space-4) 0;
+    background: var(--color-surface);
+}
+
+.event-details-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* ==================================================
+   CONTENT
+================================================== */
+
+.event-details-description {
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-5);
+}
+
+/* ==================================================
+   MEMBERS
+================================================== */
+
+.event-details-members {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}

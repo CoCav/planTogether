@@ -59,25 +59,32 @@ export default function EventCardActions({
         <div className="event-card-actions">
 
             {showEventFullButton && (
-                <Button type="button" disabled>Event full</Button>
+                <Button type="button" disabled>
+                    Event full
+                </Button>
             )}
 
             {canLeave && (
-                <Button type="button" variant="outline-danger" onClick={() => onLeave?.(eventId)}>Leave the event</Button>
+                <Button type="button" variant="outline-danger" onClick={() => onLeave?.(eventId)}>
+                    Leave the event
+                </Button>
             )}
 
             {showJoinButton && (
-                <Button type="button" onClick={() => onJoin?.(eventId)}>Join the event</Button>
+                <Button type="button" onClick={() => onJoin?.(eventId)}>
+                    Join the event
+                </Button>
             )}
 
             {showRegistrationClosedButton && (
-                <Button type="button" disabled>Registration closed</Button>
+                <Button type="button" disabled>
+                    Registration closed
+                </Button>
             )}
 
             {showLoginPrompt && (
                 <p className="event-login-prompt">🔐 Login to join</p>
             )}
-
         </div>
     );
 }

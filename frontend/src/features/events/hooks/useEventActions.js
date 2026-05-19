@@ -14,16 +14,13 @@ import { deleteEvent } from "../../../api/events/eventApi";
    - membership actions belong to eventMemberships
 ================================================== */
 
-export default function useEventActions({
-    eventId,
-    setMessage,
-    setError
-}) {
+export default function useEventActions({ eventId, setMessage, setError }) {
 
+    // Redirects user after successful deletion
     const navigate = useNavigate();
 
     /* =============================
-       DELETE EVENT
+       EVENT DELETION
     ============================= */
 
     // Deletes an event after confirmation

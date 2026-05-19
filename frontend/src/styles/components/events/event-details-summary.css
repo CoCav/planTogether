@@ -1,0 +1,39 @@
+/* ==================================================
+   EVENT DETAILS SUMMARY
+================================================== */
+
+.event-details-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+}
+
+.event-details-summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.2s ease;
+}
+
+.event-details-summary-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.event-details-summary-label {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+.event-details-summary-value {
+    margin: 0;
+    font-weight: 600;
+    color: var(--color-text);
+}

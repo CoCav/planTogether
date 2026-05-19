@@ -1,0 +1,186 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+
+import EventMembersSection from "../../../components/events/EventMembersSection";
+
+import { createOrganizerMember, createParticipantMember } from "../../factories/eventMemberships/membershipPermissionsFactory";
+
+/* ==================================================
+   EVENT MEMBERS SECTION TESTS
+   Tests reusable event members section rendering
+
+   Handles:
+   - section heading
+   - optional subtitle
+   - contextual header message
+   - empty member state
+   - member rows
+   - optional member actions
+
+   Notes:
+   - focuses on EventMembersSection behavior only
+   - uses renderActions to test optional actions
+================================================== */
+
+describe("EventMembersSection", () => {
+
+    /* =============================
+       TEST DATA
+    ============================= */
+    const members = [
+        createOrganizerMember({
+            id: 1,
+            name: "Alice"
+        }),
+        createParticipantMember({
+            id: 2,
+            name: "Bob"
+        })
+    ];
+
+    const renderActions = vi.fn((person) => (
+        <button type="button">
+            Remove {person.name}
+        </button>
+    ));
+
+    const baseProps = {
+        title: "Participants",
+        subtitle: "People attending this event",
+        members,
+        emptyMessage: "No participants yet.",
+        showActions: true,
+        headerMessage: null,
+        renderActions
+    };
+
+    /* =============================
+       TEST HELPERS
+    ============================= */
+
+    const renderEventMembersSection = (props = {}) => {
+        return render(
+            <EventMembersSection
+                {...baseProps}
+                {...props}
+            />
+        );
+    };
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    /* =============================
+       SECTION HEADER
+    ============================= */
+
+    it("should render title and subtitle", () => {
+        renderEventMembersSection();
+
+        expect(
+            screen.getByRole("heading", {
+                name: "Participants"
+            })
+        ).toBeInTheDocument();
+
+        expect(screen.getByText("People attending this event")).toBeInTheDocument();
+    });
+
+    it("should not render subtitle when it is not provided", () => {
+        renderEventMembersSection({
+            subtitle: null
+        });
+
+        expect(screen.queryByText("People attending this event")).not.toBeInTheDocument();
+    });
+
+    /* =============================
+       HEADER MESSAGE
+    ============================= */
+
+    it("should render contextual header message", () => {
+        renderEventMembersSection({
+            headerMessage:
+                "🔐 Login to join this event and interact with participants."
+        });
+
+        expect(screen.getByText(
+            "🔐 Login to join this event and interact with participants."
+        )).toBeInTheDocument();
+    });
+
+    /* =============================
+       EMPTY STATE
+    ============================= */
+
+    it("should render empty state when there are no members", () => {
+        renderEventMembersSection({
+            members: []
+        });
+
+        expect(screen.getByText("No participants yet.")).toBeInTheDocument();
+    });
+
+    it("should use default empty message when none is provided", () => {
+        renderEventMembersSection({
+            members: [],
+            emptyMessage: undefined
+        });
+
+        expect(screen.getByText("No members found.")).toBeInTheDocument();
+    });
+
+    /* =============================
+       MEMBER ROWS
+    ============================= */
+
+    it("should render member rows", () => {
+        renderEventMembersSection();
+
+        expect(screen.getByText("Alice")).toBeInTheDocument();
+        expect(screen.getByText("Bob")).toBeInTheDocument();
+
+        expect(screen.getByText(/organizer/i)).toBeInTheDocument();
+        expect(screen.getByText(/👤 participant/i)).toBeInTheDocument();
+    });
+
+    /* =============================
+       MEMBER ACTIONS
+    ============================= */
+
+    it("should render actions when actions are enabled", () => {
+        renderEventMembersSection();
+
+        expect(screen.getByText("Remove Alice")).toBeInTheDocument();
+        expect(screen.getByText("Remove Bob")).toBeInTheDocument();
+    });
+
+    it("should call renderActions for each member when actions are enabled", () => {
+        renderEventMembersSection();
+
+        expect(renderActions).toHaveBeenCalledTimes(2);
+        expect(renderActions).toHaveBeenCalledWith(members[0]);
+        expect(renderActions).toHaveBeenCalledWith(members[1]);
+    });
+
+    it("should not render actions when actions are disabled", () => {
+        renderEventMembersSection({
+            showActions: false
+        });
+
+        expect(screen.queryByText(/remove alice/i)).not.toBeInTheDocument();
+
+        expect(screen.queryByText(/remove bob/i)).not.toBeInTheDocument();
+
+        expect(renderActions).not.toHaveBeenCalled();
+    });
+
+    it("should not render actions when renderActions is not provided", () => {
+        renderEventMembersSection({
+            renderActions: null
+        });
+
+        expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    });
+});

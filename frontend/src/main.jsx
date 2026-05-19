@@ -14,10 +14,16 @@ import "./styles/pages.css";
 import "./styles/components.css";
 
 /* Refactor in progress */
-import "./styles/pages/events.css";
+import "./styles/pages/events-page.css";
+import "./styles/pages/event-details-page.css";
+
 import "./styles/components/events/event-card.css";
-import "./styles/components/events/event.filters.css";
+import "./styles/components/events/event-filters.css";
 import "./styles/components/events/event-view.tabs.css";
+
+import "./styles/components/events/event-details-actions.css";
+import "./styles/components/events/event-details-summary.css";
+import "./styles/components/events/event-members-section.css";
 
 import "./styles/components/pagination.css";
 

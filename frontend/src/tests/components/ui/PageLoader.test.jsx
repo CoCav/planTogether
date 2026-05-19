@@ -1,26 +1,53 @@
-import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+
 import PageLoader from "../../../components/ui/PageLoader";
 
 /* ==================================================
    PAGE LOADER TESTS
    Tests full-page loading wrapper rendering
+
+   Handles:
+   - default loading message
+   - custom loading message
+   - page layout wrapper
+
+   Notes:
+   - focuses on layout wrapper behavior
+   - wraps LoadingState component
 ================================================== */
 
 describe("PageLoader", () => {
-    it("renders default loading text", () => {
+
+    /* =============================
+       DEFAULT STATE
+    ============================= */
+
+    it("should render default loading message", () => {
         render(<PageLoader />);
 
         expect(screen.getByText("Loading...")).toBeInTheDocument();
     });
 
-    it("renders custom loading text", () => {
-        render(<PageLoader>Loading profile...</PageLoader>);
+    /* =============================
+       CUSTOM CONTENT
+    ============================= */
+
+    it("should render custom loading message", () => {
+        render(
+            <PageLoader>
+                Loading profile...
+            </PageLoader>
+        );
 
         expect(screen.getByText("Loading profile...")).toBeInTheDocument();
     });
 
-    it("renders page layout wrapper", () => {
+    /* =============================
+       LAYOUT WRAPPER
+    ============================= */
+
+    it("should render page layout wrapper", () => {
         render(<PageLoader />);
 
         const loader = screen.getByText("Loading...");

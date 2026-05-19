@@ -1,5 +1,10 @@
 /* ==================================================
    EVENT MEMBERS SECTION
+   Member list layout for event staff and participants
+================================================== */
+
+/* ==================================================
+   LIST
 ================================================== */
 
 .member-list {
@@ -8,17 +13,25 @@
     gap: var(--space-3);
 }
 
+/* ==================================================
+   ROW
+================================================== */
+
 .member-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: var(--space-3);
+    flex-wrap: wrap;
     padding: var(--space-3);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     background: var(--color-background);
-    flex-wrap: wrap;
 }
+
+/* ==================================================
+   INFO
+================================================== */
 
 .member-info {
     display: flex;
@@ -28,9 +41,13 @@
 }
 
 .member-name {
-    font-weight: 600;
     color: var(--color-text);
+    font-weight: 600;
 }
+
+/* ==================================================
+   ACTIONS
+================================================== */
 
 .member-actions {
     display: flex;
@@ -40,13 +57,13 @@
 }
 
 /* ==================================================
-   RESPONSIVE EVENT MEMBERS SECTION
+   RESPONSIVE
 ================================================== */
 
 @media (max-width: 768px) {
     .member-row {
-        align-items: flex-start;
         flex-direction: column;
+        align-items: flex-start;
     }
 
     .member-actions {

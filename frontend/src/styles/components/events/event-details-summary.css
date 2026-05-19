@@ -1,5 +1,10 @@
 /* ==================================================
    EVENT DETAILS SUMMARY
+   Summary grid for event display metadata
+================================================== */
+
+/* ==================================================
+   GRID
 ================================================== */
 
 .event-details-summary {
@@ -9,14 +14,18 @@
     margin-bottom: var(--space-5);
 }
 
+/* ==================================================
+   ITEM
+================================================== */
+
 .event-details-summary-item {
     display: flex;
     flex-direction: column;
     gap: 4px;
     padding: 12px;
-    background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
+    background: var(--color-surface);
     transition:
         transform 0.15s ease,
         box-shadow 0.2s ease;
@@ -27,13 +36,17 @@
     box-shadow: var(--shadow-sm);
 }
 
+/* ==================================================
+   TEXT
+================================================== */
+
 .event-details-summary-label {
-    font-size: 0.75rem;
     color: var(--color-text-muted);
+    font-size: 0.75rem;
 }
 
 .event-details-summary-value {
     margin: 0;
-    font-weight: 600;
     color: var(--color-text);
+    font-weight: 600;
 }

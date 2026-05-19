@@ -16,27 +16,35 @@ import { useClickOutside } from "../../hooks/useClickOutside";
 ================================================== */
 
 export default function NavbarUserMenu({ user, avatar, onLogout }) {
-    // Controls dropdown visibility
+
+    /* =========================
+       DROPDOWN STATE
+    ========================= */
+
     const [isOpen, setIsOpen] = useState(false);
 
-    // Reference used for outside click detection
     const menuRef = useRef(null);
 
-    // Close dropdown menu
+    /* =========================
+       HANDLERS
+    ========================= */
+
     const closeMenu = () => {
         setIsOpen(false);
     };
 
-    // Toggle dropdown visibility
     const toggleMenu = () => {
         setIsOpen((current) => !current);
     };
 
-    // Handle user logout flow
-    const handleLogout = async () => {
+    const handleMenuLogout = async () => {
         closeMenu();
         await onLogout();
     };
+
+    /* =========================
+       OUTSIDE CLICK
+    ========================= */
 
     useClickOutside(menuRef, closeMenu, isOpen);
 
@@ -63,7 +71,7 @@ export default function NavbarUserMenu({ user, avatar, onLogout }) {
             </button>
 
             {isOpen && (
-                <div id="navbar-user-dropdown" className="navbar-dropdown" role="menu" >
+                <div id="navbar-user-dropdown" className="navbar-dropdown" role="menu">
                     <Link
                         to="/profile"
                         role="menuitem"
@@ -86,7 +94,7 @@ export default function NavbarUserMenu({ user, avatar, onLogout }) {
                         type="button"
                         role="menuitem"
                         className="navbar-dropdown-item navbar-dropdown-danger"
-                        onClick={handleLogout}
+                        onClick={handleMenuLogout}
                     >
                         Logout
                     </button>

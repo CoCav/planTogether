@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+
 import { useAuth } from "../../features/auth/hooks/useAuth";
 
 /* ==================================================
@@ -18,12 +19,18 @@ export default function Footer() {
         <footer className="footer">
             <div className="container footer-inner">
 
-                {/* Brand */}
+                {/* =========================
+                    BRAND
+                ========================= */}
+
                 <div className="footer-brand">
                     <p className="footer-logo">PlanTogether</p>
                 </div>
 
-                {/* Footer navigation */}
+                {/* =========================
+                    NAVIGATION
+                ========================= */}
+
                 <nav className="footer-links" aria-label="Footer navigation">
                     <Link to="/" className="footer-link">Home</Link>
                     <Link to="/events" className="footer-link">Events</Link>
@@ -36,11 +43,13 @@ export default function Footer() {
                     )}
                 </nav>
 
-                {/* Metadata */}
+                {/* =========================
+                    METADATA
+                ========================= */}
+
                 <div className="footer-meta">
                     <p>© 2026 PlanTogether</p>
                 </div>
-
             </div>
         </footer>
     );

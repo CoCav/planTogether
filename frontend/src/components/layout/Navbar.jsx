@@ -22,11 +22,24 @@ export default function Navbar() {
 
     const navigate = useNavigate();
 
-    // Resolve avatar with fallback support
+    /* =========================
+       DISPLAY DATA
+    ========================= */
+
     const avatar = getAvatar(user?.avatar);
 
-    // Redirect user after logout
-    const handleLogout = async () => {
+    /* =========================
+       NAVIGATION STYLES
+    ========================= */
+
+    const navLinkClassName = ({ isActive }) =>
+        `navbar-link link-underline link-color-hover ${isActive ? "active" : ""}`.trim();
+
+    /* =========================
+       HANDLERS
+    ========================= */
+
+    const handleUserLogout = async () => {
         await logout();
         navigate("/");
     };
@@ -35,49 +48,42 @@ export default function Navbar() {
         <header className="navbar">
             <div className="container navbar-inner">
 
-                {/* Brand */}
+                {/* =========================
+                    BRAND
+                ========================= */}
+
                 <Link to="/" className="navbar-brand">PlanTogether</Link>
 
-                {/* Main navigation */}
+                {/* =========================
+                    MAIN NAVIGATION
+                ========================= */}
+
                 <nav className="navbar-links" aria-label="Main navigation">
-                    <NavLink
-                        to="/events"
-                        end
-                        className={({ isActive }) =>
-                            `navbar-link link-underline link-color-hover ${isActive ? "active" : ""}`.trim()
-                        }
-                    >
+                    <NavLink to="/events" end className={navLinkClassName}>
                         Events
                     </NavLink>
 
                     {user && (
-                        <NavLink
-                            to="/events/create"
-                            className={({ isActive }) =>
-                                `navbar-link link-underline link-color-hover ${isActive ? "active" : ""}`.trim()
-                            }
-                        >
+                        <NavLink to="/events/create" className={navLinkClassName}>
                             Create event
                         </NavLink>
                     )}
                 </nav>
 
-                {/* Authentication actions */}
+                {/* =========================
+                    AUTHENTICATION ACTIONS
+                ========================= */}
+
                 <div className="navbar-actions">
                     {user ? (
                         <NavbarUserMenu
                             user={user}
                             avatar={avatar}
-                            onLogout={handleLogout}
+                            onLogout={handleUserLogout}
                         />
                     ) : (
                         <div className="navbar-auth-group">
-                            <NavLink
-                                to="/login"
-                                className={({ isActive }) =>
-                                    `navbar-link link-underline link-color-hover ${isActive ? "active" : ""}`.trim()
-                                }
-                            >
+                            <NavLink to="/login" className={navLinkClassName}>
                                 Login
                             </NavLink>
 

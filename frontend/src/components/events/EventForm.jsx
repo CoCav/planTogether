@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import { getEventImage } from "../../utils/getUploadedFile.js";
+import useFileUploadPreview from "../../hooks/useFileUploadPreview";
+
+import { getEventImage } from "../../utils/uploadedFiles";
 
 import Button from "../ui/Button";
 import FormField from "../ui/FormField";
@@ -9,142 +10,148 @@ import TextArea from "../ui/TextArea";
 
 /* ==================================================
    EVENT FORM
-   Shared form for creating and editing events
+   Shared event form for create and edit flows
 
    Handles:
-   - event input fields
-   - optional event image upload
+   - event field rendering
+   - event image upload and preview
+   - drag and drop interactions
    - validation error display
-   - conditional UI
+   - conditional field rendering
 ================================================== */
 
-export default function EventForm({ form, errors, onChange, onFileChange, onRemoveFile, onSubmit, submitting, isEdit = false, isOnlineEvent, showCustomDeadline, onCancel }) {
+export default function EventForm({
+    values,
+    fieldErrors,
 
-    /* =========================
-       Drag & drop state
-       Tracks when user is dragging a file over the upload zone
-    ========================= */
-    const [isDragging, setIsDragging] = useState(false);
+    submitLabel,
+    isSubmitting,
 
+    isOnlineEvent,
+    showCustomDeadline,
 
-    /* =========================
-        UI state helpers
-        Indicates if a custom image exists (new or existing)
-    ========================= */
-    const hasCustomImage = Boolean(form.image || form.currentImage);
+    onFieldChange,
+    onImageChange,
+    onRemoveImage,
 
+    onSubmit,
+    onCancel
+}) {
 
-    /* =========================
-       Selected image preview
-       Creates a temporary URL for the uploaded image file
-    ========================= */
-    const selectedPreview = useMemo(() => {
-        if (!form.image) return null;
-        return URL.createObjectURL(form.image);
-    }, [form.image]);
+    /* =============================
+       FILE UPLOAD STATE
+    ============================= */
 
-
-    /* =========================
-       Preview resolution
-       Determines which image to display:
-       - selected file preview (priority)
-       - existing event image (edit mode)
-       - no preview if none
-    ========================= */
-    const preview = selectedPreview || (form.currentImage ? getEventImage(form.currentImage) : null);
-
-
-    /* =========================
-       Preview cleanup
-       Revokes object URL to avoid memory leaks
-    ========================= */
-    useEffect(() => {
-        return () => {
-            if (selectedPreview) {
-                URL.revokeObjectURL(selectedPreview);
-            }
-        };
-    }, [selectedPreview]);
-
-
-    /* =========================
-       File drop handling
-       Converts dropped file into a standard input change event
-    ========================= */
-    const handleDrop = (e) => {
-        e.preventDefault();
-        setIsDragging(false);
-
-        const file = e.dataTransfer.files?.[0];
-        if (!file) return;
-
-        onFileChange({
-            target: { name: "image", files: [file] }
-        });
-    };
+    const {
+        isDragging,
+        setIsDragging,
+        preview,
+        hasFile: hasImage,
+        handleDrop
+    } = useFileUploadPreview({
+        file: values.image,
+        currentFile: values.currentImage,
+        fieldName: "image",
+        allowedPreviewTypes: [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/gif"
+        ],
+        getCurrentFileUrl: getEventImage,
+        onFileChange: onImageChange
+    });
 
     return (
         <form onSubmit={onSubmit} className="event-form">
 
-            <div className="event-image-section">
-                <FormField label="Event image (optional)" error={errors.image}>
-                    <div className={`event-image-upload-panel ${isDragging ? "drag-active" : ""}`}
-                        onDragEnter={(e) => {
-                            e.preventDefault();
+            {/* =============================
+               IMAGE
+            ============================= */}
+
+            <div className="event-form-image">
+                <FormField label="Event image (optional)" htmlFor="event-image" error={fieldErrors.image}>
+                    <div
+                        className={`event-form-upload ${isDragging ? "drag-active" : ""}`}
+                        onDragEnter={(event) => {
+                            event.preventDefault();
                             setIsDragging(true);
                         }}
-                        onDragOver={(e) => {
-                            e.preventDefault();
+                        onDragOver={(event) => {
+                            event.preventDefault();
                             setIsDragging(true);
                         }}
-                        onDragLeave={(e) => {
-                            e.preventDefault();
+                        onDragLeave={(event) => {
+                            event.preventDefault();
                             setIsDragging(false);
                         }}
-                        onDrop={handleDrop}>
+                        onDrop={handleDrop}
+                    >
+                        <div className="event-form-upload-header">
+                            <div className="event-form-upload-text">
+                                <span className="event-form-upload-title">
+                                    Drag & drop an image here
+                                </span>
 
-                        <div className="event-image-upload">
-                            <div className="event-image-upload-copy">
-                                <span className="event-image-upload-title">Drag & drop an image here</span>
-                                <span className="event-image-input-hint">Max 3MB • JPG, PNG, WEBP or GIF</span>
+                                <span className="event-form-upload-hint">
+                                    Max 3MB • JPG, PNG, WEBP or GIF
+                                </span>
                             </div>
 
-                            <label className="btn btn-outline event-image-upload-btn">
+                            <label className="btn btn-outline event-form-upload-button">
                                 Choose file
+
                                 <input
+                                    id="event-image"
                                     type="file"
                                     name="image"
-                                    accept="image/*"
-                                    onChange={onFileChange}
-                                    className="event-image-input-hidden"
+                                    accept="image/jpeg,image/png,image/webp,image/gif"
+                                    onChange={onImageChange}
+                                    className="event-form-upload-input"
                                 />
                             </label>
                         </div>
 
                         {preview && (
-                            <div className="event-image-preview-card">
+                            <div className="event-form-preview">
                                 <img
                                     src={preview}
                                     alt="Event preview"
-                                    className="event-image-preview"
+                                    className="event-form-preview-image"
                                 />
 
-                                <div className="event-image-preview-info">
-                                    {form.image ? (
+                                <div className="event-form-preview-info">
+                                    {values.image ? (
                                         <>
-                                            <span className="event-image-preview-name">{form.image.name}</span>
-                                            <span className="event-image-preview-size">{(form.image.size / 1024).toFixed(1)}{" "}KB</span>
+                                            <span className="event-form-preview-name">
+                                                {values.image.name}
+                                            </span>
+
+                                            <span className="event-form-preview-size">
+                                                {(values.image.size / 1024).toFixed(1)} KB
+                                            </span>
                                         </>
                                     ) : (
                                         <>
-                                            <span className="event-image-preview-name">Existing image</span>
-                                            <span className="event-image-preview-size">Uploaded previously</span>
+                                            <span className="event-form-preview-name">
+                                                Existing image
+                                            </span>
+
+                                            <span className="event-form-preview-size">
+                                                Uploaded previously
+                                            </span>
                                         </>
                                     )}
                                 </div>
 
-                                {hasCustomImage && (
-                                    <button type="button" className="btn btn-outline-danger event-image-remove-btn" onClick={onRemoveFile}>Remove</button>
+                                {hasImage && (
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-danger event-form-preview-remove"
+                                        onClick={onRemoveImage}
+                                    >
+                                        Remove
+                                    </button>
                                 )}
                             </div>
                         )}
@@ -152,134 +159,159 @@ export default function EventForm({ form, errors, onChange, onFileChange, onRemo
                 </FormField>
             </div>
 
+            {/* =============================
+               FIELDS
+            ============================= */}
+
             <div className="form-grid">
-                <FormField label="Title" error={errors.title}>
+                <FormField label="Title" htmlFor="title" error={fieldErrors.title}>
                     <Input
+                        id="title"
                         name="title"
-                        value={form.title}
-                        onChange={onChange}
-                        error={errors.title}
+                        value={values.title}
+                        onChange={onFieldChange}
+                        error={fieldErrors.title}
                     />
                 </FormField>
 
-                <FormField label="Type" error={errors.type}>
+                <FormField label="Type" htmlFor="type" error={fieldErrors.type}>
                     <Input
+                        id="type"
                         name="type"
-                        value={form.type}
-                        onChange={onChange}
-                        error={errors.type}
+                        value={values.type}
+                        onChange={onFieldChange}
+                        error={fieldErrors.type}
                     />
                 </FormField>
 
-                <FormField label="Theme" error={errors.theme}>
+                <FormField label="Theme" htmlFor="theme" error={fieldErrors.theme}>
                     <Input
+                        id="theme"
                         name="theme"
-                        value={form.theme}
-                        onChange={onChange}
-                        error={errors.theme}
+                        value={values.theme}
+                        onChange={onFieldChange}
+                        error={fieldErrors.theme}
                     />
                 </FormField>
 
-                <FormField label="Mode">
-                    <Select name="mode" value={form.mode} onChange={onChange} error={errors.mode}>
+                <FormField label="Mode" htmlFor="mode" error={fieldErrors.mode}>
+                    <Select
+                        id="mode"
+                        name="mode"
+                        value={values.mode}
+                        onChange={onFieldChange}
+                        error={fieldErrors.mode}
+                    >
                         <option value="in_person">In person</option>
                         <option value="online">Online</option>
                     </Select>
                 </FormField>
 
                 {!isOnlineEvent && (
-                    <FormField label="Location" error={errors.location}>
+                    <FormField label="Location" htmlFor="location" error={fieldErrors.location}>
                         <Input
+                            id="location"
                             name="location"
-                            value={form.location}
-                            onChange={onChange}
-                            error={errors.location}
+                            value={values.location}
+                            onChange={onFieldChange}
+                            error={fieldErrors.location}
                         />
                     </FormField>
                 )}
 
-                <FormField label="Participant limit (optional)">
+                <FormField label="Participant limit (optional)" htmlFor="maxParticipants">
                     <Input
+                        id="maxParticipants"
                         type="number"
                         name="maxParticipants"
-                        value={form.maxParticipants}
-                        onChange={onChange}
+                        value={values.maxParticipants}
+                        onChange={onFieldChange}
                     />
                 </FormField>
 
-                <FormField label="Description" className="form-field-full" error={errors.description}>
+                <FormField
+                    label="Description"
+                    htmlFor="description"
+                    className="form-grid-column-full"
+                    error={fieldErrors.description}
+                >
                     <TextArea
+                        id="description"
                         name="description"
-                        value={form.description}
-                        onChange={onChange}
-                        error={errors.description}
+                        value={values.description}
+                        onChange={onFieldChange}
+                        error={fieldErrors.description}
                     />
                 </FormField>
 
-                <FormField label="Start date" error={errors.startDate}>
+                <FormField label="Start date time" htmlFor="startDateTime" error={fieldErrors.startDateTime}>
                     <Input
-                        type="date"
-                        name="startDate"
-                        value={form.startDate}
-                        onChange={onChange}
-                        error={errors.startDate}
+                        id="startDateTime"
+                        type="datetime-local"
+                        name="startDateTime"
+                        value={values.startDateTime}
+                        onChange={onFieldChange}
+                        error={fieldErrors.startDateTime}
                     />
                 </FormField>
 
-                <FormField label="Start time" error={errors.startTime}>
+                <FormField label="End date time" htmlFor="endDateTime" error={fieldErrors.endDateTime}>
                     <Input
-                        type="time"
-                        name="startTime"
-                        value={form.startTime}
-                        onChange={onChange}
-                        error={errors.startTime}
+                        id="endDateTime"
+                        type="datetime-local"
+                        name="endDateTime"
+                        value={values.endDateTime}
+                        onChange={onFieldChange}
+                        error={fieldErrors.endDateTime}
                     />
                 </FormField>
 
-                <FormField label="End date" error={errors.endDate}>
-                    <Input
-                        type="date"
-                        name="endDate"
-                        value={form.endDate}
-                        onChange={onChange}
-                        error={errors.endDate}
-                    />
-                </FormField>
-
-                <FormField label="End time" error={errors.endTime}>
-                    <Input
-                        type="time"
-                        name="endTime"
-                        value={form.endTime}
-                        onChange={onChange}
-                        error={errors.endTime}
-                    />
-                </FormField>
-
-                <FormField label="Registration deadline">
-                    <Select name="registrationDeadlineOption" value={form.registrationDeadlineOption} onChange={onChange}>
+                <FormField label="Registration deadline" htmlFor="registrationDeadlineOption">
+                    <Select
+                        id="registrationDeadlineOption"
+                        name="registrationDeadlineOption"
+                        value={values.registrationDeadlineOption}
+                        onChange={onFieldChange}
+                    >
                         <option value="none">No deadline</option>
                         <option value="day_before">1 day before event</option>
-                        <option value="two_days_before">2 days before event</option>
+                        <option value="two_days_before">
+                            2 days before event
+                        </option>
                         <option value="custom">Custom date</option>
                     </Select>
                 </FormField>
 
                 {showCustomDeadline && (
-                    <FormField label="Custom deadline">
+                    <FormField label="Custom deadline" htmlFor="registrationDeadlineCustom">
                         <Input
+                            id="registrationDeadlineCustom"
                             type="datetime-local"
                             name="registrationDeadlineCustom"
-                            value={form.registrationDeadlineCustom}
-                            onChange={onChange}
+                            value={values.registrationDeadlineCustom}
+                            onChange={onFieldChange}
                         />
                     </FormField>
                 )}
             </div>
 
+            {/* =============================
+               ACTIONS
+            ============================= */}
+
             <div className="form-actions">
-                <Button type="submit" loading={submitting}>{isEdit ? "Update Event" : "Create Event"}</Button>
-                <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>Cancel</Button>
+                <Button type="submit" loading={isSubmitting}>
+                    {submitLabel}
+                </Button>
+
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onCancel}
+                    disabled={isSubmitting}
+                >
+                    Cancel
+                </Button>
             </div>
         </form>
     );

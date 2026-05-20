@@ -1,0 +1,18 @@
+/* ==================================================
+   EVENT FORM PAGE
+   Shared page-level layout for event form screens
+
+   Used by:
+   - CreateEventPage
+   - EditEventPage
+================================================== */
+
+/* ==================================================
+   FORM CARD
+================================================== */
+
+.event-form-card {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: var(--space-4);
+}

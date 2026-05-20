@@ -1,48 +1,49 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+
 import EventForm from "../../../components/events/EventForm";
+
+import { createDefaultEventFormValues } from "../../../features/events/eventFormConfig";
+import { EVENT_MODES } from "../../../features/shared/eventModes";
+import { EVENT_REGISTRATION_DEADLINES } from "../../../features/shared/eventRegistrationDeadlines";
 
 /* ==================================================
    EVENT FORM TESTS
    Tests shared create/edit event form rendering
+
+   Handles:
+   - event field rendering
+   - image upload interactions
+   - image preview rendering
+   - conditional fields
+   - submit and cancel actions
+   - validation error display
 ================================================== */
 
 const validImage = new File(["event image"], "event.png", {
     type: "image/png"
 });
 
-const baseForm = {
-    title: "",
-    description: "",
-    type: "",
-    theme: "",
-    mode: "in_person",
-    location: "",
-    startDate: "",
-    startTime: "",
-    endDate: "",
-    endTime: "",
-    maxParticipants: "",
-    registrationDeadlineOption: "none",
-    registrationDeadlineCustom: "",
-    image: null,
-    currentImage: null
-};
-
 const defaultProps = {
-    form: baseForm,
-    errors: {},
-    onChange: vi.fn(),
-    onFileChange: vi.fn(),
-    onRemoveFile: vi.fn(),
-    onSubmit: vi.fn(),
-    submitting: false,
+    values: createDefaultEventFormValues(),
+    fieldErrors: {},
+
+    submitLabel: "Create Event",
+    isSubmitting: false,
+
     isOnlineEvent: false,
     showCustomDeadline: false,
+
+    onFieldChange: vi.fn(),
+    onImageChange: vi.fn(),
+    onRemoveImage: vi.fn(),
+
+    onSubmit: vi.fn((event) => event.preventDefault()),
     onCancel: vi.fn()
 };
 
 describe("EventForm", () => {
+
     beforeEach(() => {
         vi.clearAllMocks();
 
@@ -55,13 +56,13 @@ describe("EventForm", () => {
             <EventForm
                 {...defaultProps}
                 {...props}
-                form={{
-                    ...defaultProps.form,
-                    ...(props.form || {})
+                values={{
+                    ...defaultProps.values,
+                    ...(props.values || {})
                 }}
-                errors={{
-                    ...defaultProps.errors,
-                    ...(props.errors || {})
+                fieldErrors={{
+                    ...defaultProps.fieldErrors,
+                    ...(props.fieldErrors || {})
                 }}
             />
         );
@@ -70,56 +71,100 @@ describe("EventForm", () => {
     it("renders main event fields", () => {
         renderComponent();
 
-        expect(screen.getByText("Create Event")).toBeInTheDocument();
-        expect(screen.getByText("Title")).toBeInTheDocument();
-        expect(screen.getByText("Mode")).toBeInTheDocument();
-        expect(screen.getByText("In person")).toBeInTheDocument();
+        expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/type/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/theme/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/mode/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/location/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/participant limit/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/start date time/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/end date time/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/registration deadline/i)).toBeInTheDocument();
+
+        expect(screen.getByLabelText(/start date time/i)).toHaveAttribute("type", "datetime-local");
+        expect(screen.getByLabelText(/end date time/i)).toHaveAttribute("type", "datetime-local");
     });
 
-    it("renders event image upload", () => {
+    it("renders event image upload controls", () => {
         renderComponent();
 
         expect(screen.getByText(/drag & drop an image here/i)).toBeInTheDocument();
         expect(screen.getByText(/max 3mb.*jpg.*png.*webp.*gif/i)).toBeInTheDocument();
         expect(screen.getByText(/choose file/i)).toBeInTheDocument();
+
+        expect(screen.getByLabelText(/choose file/i)).toHaveAttribute(
+            "accept",
+            "image/jpeg,image/png,image/webp,image/gif"
+        );
     });
 
-    it("calls onFileChange when selecting an event image", () => {
+    it("calls onFieldChange when editing a field", () => {
         renderComponent();
 
-        const fileInput = screen.getByLabelText(/choose file/i);
-
-        fireEvent.change(fileInput, {
-            target: { files: [validImage] }
+        fireEvent.change(screen.getByLabelText(/title/i), {
+            target: {
+                name: "title",
+                value: "Updated Event"
+            }
         });
 
-        expect(defaultProps.onFileChange).toHaveBeenCalledTimes(1);
+        expect(defaultProps.onFieldChange).toHaveBeenCalledTimes(1);
     });
 
-    it("calls onFileChange when dropping an event image", () => {
+    it("calls onImageChange when selecting an event image", () => {
         renderComponent();
-        fireEvent.drop(screen.getByText(/drag & drop an image here/i).closest(".event-image-upload-panel"), {
-            dataTransfer: {
+
+        fireEvent.change(screen.getByLabelText(/choose file/i), {
+            target: {
                 files: [validImage]
             }
         });
 
-        expect(defaultProps.onFileChange).toHaveBeenCalledTimes(1);
+        expect(defaultProps.onImageChange).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls onImageChange when dropping an event image", () => {
+        renderComponent();
+
+        fireEvent.drop(
+            screen.getByText(/drag & drop an image here/i).closest(".event-form-upload"),
+            {
+                dataTransfer: {
+                    files: [validImage]
+                }
+            }
+        );
+
+        expect(defaultProps.onImageChange).toHaveBeenCalledTimes(1);
+    });
+
+    it("applies drag active class while dragging over upload area", () => {
+        renderComponent();
+
+        const uploadPanel = screen
+            .getByText(/drag & drop an image here/i)
+            .closest(".event-form-upload");
+
+        fireEvent.dragEnter(uploadPanel);
+
+        expect(uploadPanel).toHaveClass("drag-active");
+
+        fireEvent.dragLeave(uploadPanel);
+
+        expect(uploadPanel).not.toHaveClass("drag-active");
     });
 
     it("shows selected event image preview card", () => {
         renderComponent({
-            form: {
+            values: {
                 image: validImage
             }
         });
 
         expect(URL.createObjectURL).toHaveBeenCalledWith(validImage);
 
-        expect(screen.getByAltText("Event preview")).toHaveAttribute(
-            "src",
-            "blob:event-preview"
-        );
+        expect(screen.getByAltText("Event preview")).toHaveAttribute("src", "blob:event-preview");
 
         expect(screen.getByText("event.png")).toBeInTheDocument();
         expect(screen.getByText(/kb/i)).toBeInTheDocument();
@@ -128,7 +173,7 @@ describe("EventForm", () => {
 
     it("shows current event image preview when editing existing image", () => {
         renderComponent({
-            form: {
+            values: {
                 currentImage: "/uploads/events/event-current.png"
             }
         });
@@ -136,85 +181,88 @@ describe("EventForm", () => {
         expect(screen.getByAltText("Event preview")).toBeInTheDocument();
         expect(screen.getByText(/existing image/i)).toBeInTheDocument();
         expect(screen.getByText(/uploaded previously/i)).toBeInTheDocument();
-
         expect(screen.getByRole("button", { name: /remove/i })).toBeInTheDocument();
     });
 
-    it("calls onRemoveFile when clicking remove", () => {
+    it("calls onRemoveImage when clicking remove", () => {
         renderComponent({
-            form: {
+            values: {
                 image: validImage
             }
         });
 
         fireEvent.click(screen.getByRole("button", { name: /remove/i }));
 
-        expect(defaultProps.onRemoveFile).toHaveBeenCalledTimes(1);
+        expect(defaultProps.onRemoveImage).toHaveBeenCalledTimes(1);
     });
 
     it("hides location field for online events", () => {
         renderComponent({
-            form: {
-                mode: "online"
+            values: {
+                mode: EVENT_MODES.ONLINE
             },
             isOnlineEvent: true
         });
 
-        expect(screen.queryByText("Location")).not.toBeInTheDocument();
+        expect(screen.queryByLabelText(/location/i)).not.toBeInTheDocument();
     });
 
     it("shows custom deadline field when enabled", () => {
         renderComponent({
-            form: {
-                registrationDeadlineOption: "custom"
+            values: {
+                registrationDeadlineOption: EVENT_REGISTRATION_DEADLINES.CUSTOM
             },
             showCustomDeadline: true
         });
 
-        expect(screen.getByText("Custom deadline")).toBeInTheDocument();
+        expect(screen.getByLabelText(/custom deadline/i)).toBeInTheDocument();
+
+        expect(screen.getByLabelText(/custom deadline/i)).toHaveAttribute("type", "datetime-local");
     });
 
-    it("renders edit submit label when isEdit is true", () => {
+    it("renders custom submit label", () => {
         renderComponent({
-            isEdit: true
+            submitLabel: "Update Event"
         });
 
         expect(screen.getByRole("button", { name: /update event/i })).toBeInTheDocument();
     });
 
-    it("calls onSubmit when form is submitted", () => {
-        const onSubmit = vi.fn((e) => e.preventDefault());
-
+    it("disables cancel button while submitting", () => {
         renderComponent({
-            onSubmit
+            isSubmitting: true
         });
+
+        expect(screen.getByRole("button", { name: /cancel/i })).toBeDisabled();
+    });
+
+    it("calls onSubmit when form is submitted", () => {
+        renderComponent();
 
         fireEvent.submit(screen.getByRole("button", { name: /create event/i }).closest("form"));
 
-        expect(onSubmit).toHaveBeenCalled();
+        expect(defaultProps.onSubmit).toHaveBeenCalledTimes(1);
     });
 
     it("calls onCancel when cancel button is clicked", () => {
-        const onCancel = vi.fn();
-
-        renderComponent({
-            onCancel
-        });
+        renderComponent();
 
         fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
 
-        expect(onCancel).toHaveBeenCalled();
+        expect(defaultProps.onCancel).toHaveBeenCalledTimes(1);
     });
 
     it("displays validation errors", () => {
         renderComponent({
-            errors: {
+            fieldErrors: {
                 title: "Title is required",
-                image: "Event image must be an image file"
+                image: "Event image must be an image file",
+                startDateTime: "Start date and time is required"
             }
         });
 
         expect(screen.getByText("Title is required")).toBeInTheDocument();
         expect(screen.getByText("Event image must be an image file")).toBeInTheDocument();
+        expect(screen.getByText("Start date and time is required")).toBeInTheDocument();
     });
 });

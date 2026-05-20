@@ -16,7 +16,7 @@ import { EVENT_MODES } from "../shared/eventModes";
 
    Notes:
    - aligned with backend eventValidator and eventDataBuilder
-   - frontend event forms should use startDateTime / endDateTime
+   - event forms use datetime-local values
    - online events do not require location
 ================================================== */
 
@@ -43,6 +43,11 @@ const isValidDate = (value) => {
 // Checks if a mode value is valid
 const isValidEventMode = (mode) => {
     return [EVENT_MODES.ONLINE, EVENT_MODES.IN_PERSON].includes(mode);
+};
+
+// Checks if a date is in the past
+const isPastDate = (date) => {
+    return date.getTime() < Date.now();
 };
 
 /* =============================
@@ -139,10 +144,23 @@ export const validateEventForm = (
         }
     }
 
+    // Parsed start datetime used for comparisons
     const start = isValidDate(startDateTime) ? new Date(startDateTime) : null;
 
+    // Parsed end datetime used for comparisons
     const end = isValidDate(endDateTime) ? new Date(endDateTime) : null;
 
+    // Prevent events from starting in the past
+    if (start && isPastDate(start)) {
+        errors.startDateTime = "Start date and time cannot be in the past";
+    }
+
+    // Prevent events from ending in the past
+    if (end && isPastDate(end)) {
+        errors.endDateTime = "End date and time cannot be in the past";
+    }
+
+    // End datetime must happen after start datetime
     if (start && end && end <= start) {
         errors.endDateTime =
             "End date and time must be after start date and time";
@@ -156,10 +174,12 @@ export const validateEventForm = (
         errors.maxParticipants = "Max participants must be a positive integer";
     }
 
+    // Registration deadline must happen before event start
     if (registrationDeadline) {
         if (!isValidDate(registrationDeadline)) {
             errors.registrationDeadline =
                 "Registration deadline must be a valid date";
+
         } else if (start && new Date(registrationDeadline) >= start) {
             errors.registrationDeadline =
                 "Registration deadline must be before event start date";

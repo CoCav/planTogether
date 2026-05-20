@@ -1,52 +1,68 @@
 /* ==================================================
-   INPUT
-   Reusable styled input field
+   FORM CONTROLS
+   Shared base styles for input, select and textarea
 ================================================== */
 
 /* ==================================================
-   FIELD
+   BASE
 ================================================== */
 
-.input {
+.input,
+.select,
+.textarea {
     width: 100%;
     padding: var(--space-3);
+
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
+
     background: var(--color-surface);
     color: var(--color-text);
+
     font: inherit;
     font-size: var(--font-size-sm);
     line-height: 1.5;
+
     transition:
         border-color 0.2s ease,
         box-shadow 0.2s ease,
-        background 0.2s ease;
+        background-color 0.2s ease;
 }
 
 /* ==================================================
    STATES
 ================================================== */
 
-.input:focus {
+.input:focus,
+.select:focus,
+.textarea:focus {
     outline: none;
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
 }
 
-.input:disabled {
+.input:disabled,
+.select:disabled,
+.textarea:disabled {
     background: #f3f4f6;
     cursor: not-allowed;
 }
 
-.input.valid {
+.input.valid,
+.select.valid,
+.textarea.valid {
     border-color: var(--color-success);
 }
 
-.input.error {
+.input.error,
+.select.error,
+.textarea.error {
     border-color: var(--color-danger);
 }
 
-.input.error:focus {
+.input.error:focus,
+.select.error:focus,
+.textarea.error:focus {
     border-color: var(--color-danger);
     box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
 }

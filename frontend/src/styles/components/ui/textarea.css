@@ -1,0 +1,24 @@
+/* ==================================================
+   TEXTAREA
+   Reusable styled textarea component
+================================================== */
+
+/* ==================================================
+   RESIZE
+================================================== */
+
+.textarea-resize-none {
+    resize: none;
+}
+
+.textarea-resize-vertical {
+    resize: vertical;
+}
+
+.textarea-resize-horizontal {
+    resize: horizontal;
+}
+
+.textarea-resize-both {
+    resize: both;
+}

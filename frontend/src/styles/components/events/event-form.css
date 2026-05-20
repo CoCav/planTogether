@@ -1,0 +1,160 @@
+/* ==================================================
+   EVENT FORM
+   Shared form layout for create and edit event flows
+================================================== */
+
+/* ==================================================
+   FORM
+================================================== */
+
+.event-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+/* ==================================================
+   IMAGE
+================================================== */
+
+.event-form-image {
+    max-width: 100%;
+    margin-bottom: var(--space-5);
+}
+
+/* ==================================================
+   UPLOAD
+================================================== */
+
+.event-form-upload {
+    padding: var(--space-4);
+    background: var(--color-surface);
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+    transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease;
+}
+
+.event-form-upload:hover {
+    border-color: var(--color-primary);
+}
+
+.event-form-upload.drag-active {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
+}
+
+.event-form-upload-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+}
+
+.event-form-upload-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.event-form-upload-title {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.event-form-upload-hint,
+.event-form-preview-size {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+}
+
+.event-form-upload-button {
+    cursor: pointer;
+}
+
+.event-form-upload-input {
+    display: none;
+}
+
+/* ==================================================
+   PREVIEW
+================================================== */
+
+.event-form-preview {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+}
+
+.event-form-preview-image {
+    width: 120px;
+    height: 80px;
+    border-radius: var(--radius-md);
+    object-fit: cover;
+}
+
+.event-form-preview-info {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.event-form-preview-name {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.event-form-preview-remove {
+    flex-shrink: 0;
+}
+
+/* ==================================================
+   LAYOUT
+================================================== */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+}
+
+.form-grid-column-full {
+    grid-column: 1 / -1;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+
+/* ==================================================
+   RESPONSIVE
+================================================== */
+
+@media (min-width: 768px) {
+    .form-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+
+    .event-form-upload-header,
+    .event-form-preview {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .event-form-preview-image {
+        width: 100%;
+        height: auto;
+        max-height: 220px;
+    }
+}

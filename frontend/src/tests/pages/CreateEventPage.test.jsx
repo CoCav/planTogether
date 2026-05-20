@@ -2,133 +2,334 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
+
 import CreateEventPage from "../../pages/CreateEventPage";
 
 /* ==================================================
    CREATE EVENT PAGE TESTS
-   Tests event creation flow and form behavior
+   Tests event creation page behavior
+
+   Handles:
+   - page rendering
+   - required validation errors
+   - event creation FormData payload
+   - online event location normalization
+   - image upload payload
+   - API error feedback
+   - cancel navigation
+
+   Notes:
+   - uses real EventForm and useEventForm behavior
+   - mocks event creation API and navigation
 ================================================== */
 
 const mockNavigate = vi.fn();
 const mockCreateEvent = vi.fn();
 
+/* =============================
+   MOCKS
+============================= */
+
 vi.mock("react-router-dom", async () => {
     const actual = await vi.importActual("react-router-dom");
-    return { ...actual, useNavigate: () => mockNavigate };
+
+    return {
+        ...actual,
+        useNavigate: () => mockNavigate
+    };
 });
 
-vi.mock("../../api/eventApi", () => ({
-    createEvent: (...args) => mockCreateEvent(...args),
+vi.mock("../../api/events/eventApi", () => ({
+    createEvent: (...args) => mockCreateEvent(...args)
 }));
 
-vi.mock("../../features/events/eventValidation", () => ({
-    validateEventForm: vi.fn((form) => {
-        const errors = {};
-        if (!form.title) errors.title = "Title is required";
-        if (!form.description) errors.description = "Description is required";
-        if (!form.type) errors.type = "Type is required";
-        if (!form.theme) errors.theme = "Theme is required";
-        if (!form.startDate) errors.startDate = "Start date is required";
-        if (!form.startTime) errors.startTime = "Start time is required";
-        if (!form.endDate) errors.endDate = "End date is required";
-        if (!form.endTime) errors.endTime = "End time is required";
-        if (form.mode === "in_person" && !form.location) {
-            errors.location = "Location is required";
-        }
-        return errors;
-    }),
-}));
+/* =============================
+   TEST HELPERS
+============================= */
 
-const renderPage = () =>
-    render(
+const renderPage = () => {
+    return render(
         <MemoryRouter>
             <CreateEventPage />
         </MemoryRouter>
     );
-
-const getField = (container, name) =>
-    container.querySelector(`[name="${name}"]`);
-
-const fillRequiredForm = async (user, container) => {
-    await user.type(getField(container, "title"), "Tech Meetup");
-    await user.type(getField(container, "type"), "Meetup");
-    await user.type(getField(container, "theme"), "Technology");
-    await user.type(getField(container, "description"), "A great event");
-    await user.type(getField(container, "location"), "Montreal");
-
-    await user.type(getField(container, "startDate"), "2026-12-20");
-    await user.type(getField(container, "startTime"), "10:00");
-    await user.type(getField(container, "endDate"), "2026-12-20");
-    await user.type(getField(container, "endTime"), "12:00");
 };
 
-const selectImage = async (user, file = new File(["img"], "event.png", { type: "image/png" })) => {
-    await user.upload(screen.getByLabelText(/choose file/i), file);
-    return file;
+const fillRequiredForm = async (user) => {
+    await user.type(screen.getByLabelText(/^title$/i), "Tech Meetup");
+    await user.type(screen.getByLabelText(/^type$/i), "Meetup");
+    await user.type(screen.getByLabelText(/^theme$/i), "Technology");
+    await user.type(screen.getByLabelText(/^location$/i), "Montreal");
+    await user.type(screen.getByLabelText(/^description$/i), "A great event");
+
+    await user.type(
+        screen.getByLabelText(/^start date time$/i),
+        "2026-12-20T10:00"
+    );
+
+    await user.type(
+        screen.getByLabelText(/^end date time$/i),
+        "2026-12-20T12:00"
+    );
+};
+
+const getSubmittedFormData = () => {
+    return mockCreateEvent.mock.calls.at(-1)?.[0];
 };
 
 describe("CreateEventPage", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+
+        mockCreateEvent.mockResolvedValue({
+            data: {
+                id: 1
+            }
+        });
+
+        globalThis.URL.createObjectURL = vi.fn(() => "blob:event-preview");
+        globalThis.URL.revokeObjectURL = vi.fn();
     });
 
-    it("creates event (FormData)", async () => {
+    /* =============================
+       RENDERING
+    ============================= */
+
+    it("renders create event page", () => {
+        renderPage();
+
+        expect(
+            screen.getByRole("heading", {
+                level: 1,
+                name: /create event/i
+            })
+        ).toBeInTheDocument();
+
+        expect(screen.getByText(/fill in the details below/i)).toBeInTheDocument();
+
+        expect(screen.getByRole("button", {
+            name: /create event/i
+        })).toBeInTheDocument();
+    });
+
+    /* =============================
+       VALIDATION
+    ============================= */
+
+    it("displays validation errors when submitting empty form", async () => {
         const user = userEvent.setup();
-        mockCreateEvent.mockResolvedValue({ data: { id: 1 } });
 
-        const { container } = renderPage();
+        renderPage();
 
-        await fillRequiredForm(user, container);
-        await user.click(screen.getByRole("button", { name: /create event/i }));
+        await user.click(screen.getByRole("button", {
+            name: /create event/i
+        }));
 
-        await waitFor(() => expect(mockCreateEvent).toHaveBeenCalled());
+        expect(await screen.findByText(/title is required/i)).toBeInTheDocument();
+        expect(screen.getByText(/description is required/i)).toBeInTheDocument();
+        expect(screen.getByText(/type is required/i)).toBeInTheDocument();
+        expect(screen.getByText(/theme is required/i)).toBeInTheDocument();
+        expect(screen.getByText(/location is required/i)).toBeInTheDocument();
+        expect(screen.getByText(/start date and time is required/i)).toBeInTheDocument();
+        expect(screen.getByText(/end date and time is required/i)).toBeInTheDocument();
 
-        const formData = mockCreateEvent.mock.calls[0][0];
+        expect(mockCreateEvent).not.toHaveBeenCalled();
+    });
+
+    /* =============================
+       CREATE FLOW
+    ============================= */
+
+    it("creates an event with FormData payload", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await fillRequiredForm(user);
+
+        await user.click(screen.getByRole("button", {
+            name: /create event/i
+        }));
+
+        await waitFor(() => {
+            expect(mockCreateEvent).toHaveBeenCalledTimes(1);
+        });
+
+        const formData = getSubmittedFormData();
 
         expect(formData).toBeInstanceOf(FormData);
         expect(formData.get("title")).toBe("Tech Meetup");
+        expect(formData.get("description")).toBe("A great event");
+        expect(formData.get("type")).toBe("Meetup");
+        expect(formData.get("theme")).toBe("Technology");
+        expect(formData.get("mode")).toBe("in_person");
         expect(formData.get("location")).toBe("Montreal");
-        expect(formData.get("image")).toBeNull();
+        expect(formData.get("startDateTime")).toBe("2026-12-20T10:00");
+        expect(formData.get("endDateTime")).toBe("2026-12-20T12:00");
+        expect(formData.get("registrationDeadline")).toBe("");
+        expect(formData.has("image")).toBe(false);
 
         expect(mockNavigate).toHaveBeenCalledWith("/events");
     });
 
-    it("creates event with image", async () => {
+    it("creates an event with selected image", async () => {
         const user = userEvent.setup();
-        const image = new File(["img"], "event.png", { type: "image/png" });
 
-        mockCreateEvent.mockResolvedValue({ data: { id: 2 } });
+        const image = new File(["img"], "event.png", {
+            type: "image/png"
+        });
 
-        const { container } = renderPage();
+        renderPage();
 
-        await fillRequiredForm(user, container);
-        await selectImage(user, image);
+        await fillRequiredForm(user);
 
-        await user.click(screen.getByRole("button", { name: /create event/i }));
+        await user.upload(
+            screen.getByLabelText(/choose file/i),
+            image
+        );
 
-        await waitFor(() => expect(mockCreateEvent).toHaveBeenCalled());
+        await user.click(screen.getByRole("button", {
+            name: /create event/i
+        }));
 
-        const formData = mockCreateEvent.mock.calls[0][0];
+        await waitFor(() => {
+            expect(mockCreateEvent).toHaveBeenCalledTimes(1);
+        });
 
-        expect(formData.get("image")).toBe(image);
+        expect(getSubmittedFormData().get("image")).toBe(image);
     });
 
-    it("creates online event", async () => {
+    it("creates an online event with empty location", async () => {
         const user = userEvent.setup();
-        mockCreateEvent.mockResolvedValue({ data: { id: 3 } });
 
-        const { container } = renderPage();
+        renderPage();
 
-        await fillRequiredForm(user, container);
-        await user.selectOptions(getField(container, "mode"), "online");
+        await user.selectOptions(
+            screen.getByLabelText(/^mode$/i),
+            "online"
+        );
 
-        await user.click(screen.getByRole("button", { name: /create event/i }));
+        expect(screen.queryByLabelText(/^location$/i)).not.toBeInTheDocument();
 
-        await waitFor(() => expect(mockCreateEvent).toHaveBeenCalled());
+        await user.type(screen.getByLabelText(/^title$/i), "Online Meetup");
+        await user.type(screen.getByLabelText(/^type$/i), "Meetup");
+        await user.type(screen.getByLabelText(/^theme$/i), "Technology");
+        await user.type(screen.getByLabelText(/^description$/i), "A great online event");
 
-        const formData = mockCreateEvent.mock.calls[0][0];
+        await user.type(
+            screen.getByLabelText(/^start date time$/i),
+            "2026-12-20T10:00"
+        );
+
+        await user.type(
+            screen.getByLabelText(/^end date time$/i),
+            "2026-12-20T12:00"
+        );
+
+        await user.click(screen.getByRole("button", {
+            name: /create event/i
+        }));
+
+        await waitFor(() => {
+            expect(mockCreateEvent).toHaveBeenCalledTimes(1);
+        });
+
+        const formData = getSubmittedFormData();
 
         expect(formData.get("mode")).toBe("online");
         expect(formData.get("location")).toBe("");
+    });
+
+    it("creates an event with custom registration deadline", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await fillRequiredForm(user);
+
+        await user.selectOptions(
+            screen.getByLabelText(/^registration deadline$/i),
+            "custom"
+        );
+
+        await user.type(
+            screen.getByLabelText(/^custom deadline$/i),
+            "2026-12-19T12:00"
+        );
+
+        await user.click(screen.getByRole("button", {
+            name: /create event/i
+        }));
+
+        await waitFor(() => {
+            expect(mockCreateEvent).toHaveBeenCalledTimes(1);
+        });
+
+        expect(getSubmittedFormData().get("registrationDeadline")).toBe(
+            new Date("2026-12-19T12:00").toISOString()
+        );
+    });
+
+    it("creates an event with automatic registration deadline", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await fillRequiredForm(user);
+
+        await user.selectOptions(
+            screen.getByLabelText(/^registration deadline$/i),
+            "day_before"
+        );
+
+        await user.click(screen.getByRole("button", {
+            name: /create event/i
+        }));
+
+        await waitFor(() => {
+            expect(mockCreateEvent).toHaveBeenCalledTimes(1);
+        });
+
+        expect(getSubmittedFormData().get("registrationDeadline")).toBe(
+            new Date("2026-12-19T10:00").toISOString()
+        );
+    });
+
+    /* =============================
+       ERROR FEEDBACK
+    ============================= */
+
+    it("displays page error when event creation fails", async () => {
+        const user = userEvent.setup();
+
+        mockCreateEvent.mockRejectedValue(new Error("API error"));
+
+        renderPage();
+
+        await fillRequiredForm(user);
+
+        await user.click(screen.getByRole("button", {
+            name: /create event/i
+        }));
+
+        expect(await screen.findByText(/failed to create event/i)).toBeInTheDocument();
+
+        expect(mockNavigate).not.toHaveBeenCalled();
+    });
+
+    /* =============================
+       NAVIGATION
+    ============================= */
+
+    it("navigates back to events when cancelling", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await user.click(screen.getByRole("button", {
+            name: /cancel/i
+        }));
+
+        expect(mockNavigate).toHaveBeenCalledWith("/events");
     });
 });

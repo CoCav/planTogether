@@ -14,14 +14,18 @@ import "./styles/pages.css";
 import "./styles/components.css";
 
 /* Refactor in progress */
-import "./styles/pages/event-listing-page.css";
 import "./styles/pages/event-details-page.css";
+import "./styles/pages/event-form-page.css";
+import "./styles/pages/event-listing-page.css";
+
 
 import "./styles/components/events/event-card.css";
 import "./styles/components/events/event-card-actions.css";
 import "./styles/components/events/events-filter-card.css";
 import "./styles/components/events/events-toolbar.css";
 import "./styles/components/events/event-view-tabs.css";
+
+import "./styles/components/events/event-form.css";
 
 import "./styles/components/events/event-details-actions.css";
 import "./styles/components/events/event-details-summary.css";
@@ -36,12 +40,12 @@ import "./styles/components/ui/badge.css";
 import "./styles/components/ui/button.css";
 import "./styles/components/ui/card.css";
 import "./styles/components/ui/empty-state.css";
+import "./styles/components/ui//form-controls.css";
 import "./styles/components/ui/formfield.css";
-import "./styles/components/ui/input.css";
 import "./styles/components/ui/loading-state.css";
 import "./styles/components/ui/pagination.css";
 import "./styles/components/ui/select.css";
-
+import "./styles/components/ui/textarea.css";
 
 /* ==================================================
    MAIN ENTRY

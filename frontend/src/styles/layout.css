@@ -38,6 +38,13 @@
     flex-wrap: wrap;
 }
 
+.event-form-page-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-width: 720px;
+}
+
 .page-subtitle {
     color: var(--color-text-muted);
     margin-top: var(--space-2);

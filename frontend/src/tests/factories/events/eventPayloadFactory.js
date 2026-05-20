@@ -12,6 +12,7 @@ import { createEventImageFile } from "../shared/fileFactory";
 
    Notes:
    - aligned with eventPayload builders
+   - uses datetime-local compatible values
    - accepts overrides for flexible scenarios
 ================================================== */
 
@@ -30,11 +31,11 @@ export const createEventPayload = (overrides = {}) => ({
     mode: EVENT_MODES.IN_PERSON,
     location: "Montreal",
 
-    startDateTime: "2026-12-20T10:00:00.000Z",
-    endDateTime: "2026-12-20T12:00:00.000Z",
+    startDateTime: "2026-12-20T10:00",
+    endDateTime: "2026-12-20T12:00",
 
     maxParticipants: "10",
-    registrationDeadline: "2026-12-19T12:00:00.000Z",
+    registrationDeadline: "2026-12-19T12:00",
 
     image: undefined,
 

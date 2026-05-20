@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { validateEventForm } from "../../../features/events/eventValidation";
 
@@ -16,6 +16,7 @@ import { createMockImageFile, createMockInvalidFile, createMockOversizedFile } f
    - required event fields
    - event mode and location rules
    - start/end datetime validation
+   - past datetime validation
    - participant limit validation
    - registration deadline validation
    - event image validation
@@ -49,6 +50,20 @@ describe("eventValidation", () => {
         mode: EVENT_MODES.IN_PERSON,
         location: "Montreal",
         image: null
+    });
+
+    /* =============================
+       TEST SETUP
+    ============================= */
+
+    beforeEach(() => {
+        vi.useFakeTimers();
+
+        vi.setSystemTime(new Date("2026-05-20T12:00:00"));
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
     /* =============================
@@ -176,28 +191,42 @@ describe("eventValidation", () => {
         expect(errors.endDateTime).toBe("End date and time must be a valid date");
     });
 
+    it("should reject start datetime in the past", () => {
+        const errors = validateEventForm({
+            ...validForm,
+            startDateTime: "2026-05-19T10:00"
+        });
+
+        expect(errors.startDateTime).toBe("Start date and time cannot be in the past");
+    });
+
+    it("should reject end datetime in the past", () => {
+        const errors = validateEventForm({
+            ...validForm,
+            endDateTime: "2026-05-19T10:00"
+        });
+
+        expect(errors.endDateTime).toBe("End date and time must be after start date and time");
+    });
+
     it("should reject end datetime before start datetime", () => {
         const errors = validateEventForm({
             ...validForm,
-            startDateTime: "2026-12-20T12:00:00.000Z",
-            endDateTime: "2026-12-20T10:00:00.000Z"
+            startDateTime: "2026-12-20T12:00",
+            endDateTime: "2026-12-20T10:00"
         });
 
-        expect(errors.endDateTime).toBe(
-            "End date and time must be after start date and time"
-        );
+        expect(errors.endDateTime).toBe("End date and time must be after start date and time");
     });
 
     it("should reject end datetime equal to start datetime", () => {
         const errors = validateEventForm({
             ...validForm,
-            startDateTime: "2026-12-20T10:00:00.000Z",
-            endDateTime: "2026-12-20T10:00:00.000Z"
+            startDateTime: "2026-12-20T10:00",
+            endDateTime: "2026-12-20T10:00"
         });
 
-        expect(errors.endDateTime).toBe(
-            "End date and time must be after start date and time"
-        );
+        expect(errors.endDateTime).toBe("End date and time must be after start date and time");
     });
 
     /* =============================
@@ -210,9 +239,7 @@ describe("eventValidation", () => {
             maxParticipants: "abc"
         });
 
-        expect(errors.maxParticipants).toBe(
-            "Max participants must be a positive integer"
-        );
+        expect(errors.maxParticipants).toBe("Max participants must be a positive integer");
     });
 
     it("should reject max participants below 1", () => {
@@ -221,9 +248,7 @@ describe("eventValidation", () => {
             maxParticipants: "0"
         });
 
-        expect(errors.maxParticipants).toBe(
-            "Max participants must be a positive integer"
-        );
+        expect(errors.maxParticipants).toBe("Max participants must be a positive integer");
     });
 
     it("should reject invalid registration deadline", () => {
@@ -232,21 +257,27 @@ describe("eventValidation", () => {
             registrationDeadline: "invalid-date"
         });
 
-        expect(errors.registrationDeadline).toBe(
-            "Registration deadline must be a valid date"
-        );
+        expect(errors.registrationDeadline).toBe("Registration deadline must be a valid date");
     });
 
     it("should reject registration deadline after event start", () => {
         const errors = validateEventForm({
             ...validForm,
-            startDateTime: "2026-12-20T10:00:00.000Z",
-            registrationDeadline: "2026-12-20T11:00:00.000Z"
+            startDateTime: "2026-12-20T10:00",
+            registrationDeadline: "2026-12-20T11:00"
         });
 
-        expect(errors.registrationDeadline).toBe(
-            "Registration deadline must be before event start date"
-        );
+        expect(errors.registrationDeadline).toBe("Registration deadline must be before event start date");
+    });
+
+    it("should reject registration deadline equal to event start", () => {
+        const errors = validateEventForm({
+            ...validForm,
+            startDateTime: "2026-12-20T10:00",
+            registrationDeadline: "2026-12-20T10:00"
+        });
+
+        expect(errors.registrationDeadline).toBe("Registration deadline must be before event start date");
     });
 
     /* =============================

@@ -24,6 +24,7 @@ import Card from "../components/ui/Card";
 export default function CreateEventPage() {
     const navigate = useNavigate();
 
+
     /* =============================
        SUBMIT HANDLER
     ============================= */
@@ -35,6 +36,7 @@ export default function CreateEventPage() {
 
         navigate("/events");
     };
+
 
     /* =============================
        FORM STATE
@@ -53,7 +55,7 @@ export default function CreateEventPage() {
     });
 
     const { values, fieldErrors } = formState;
-    const { pageError } = feedback;
+    const { error } = feedback;
     const { isSubmitting } = submitState;
     const { isOnlineEvent, showCustomDeadline } = formHelpers;
 
@@ -64,6 +66,7 @@ export default function CreateEventPage() {
         handleSubmit
     } = formActions;
 
+
     /* =============================
        NAVIGATION HANDLERS
     ============================= */
@@ -71,6 +74,7 @@ export default function CreateEventPage() {
     const handleCancel = () => {
         navigate("/events");
     };
+
 
     /* =============================
        MAIN RENDER
@@ -88,7 +92,7 @@ export default function CreateEventPage() {
                 </div>
             </header>
 
-            {pageError && <Alert type="danger">{pageError}</Alert>}
+            {error && <Alert type="danger">{error}</Alert>}
 
             <Card className="event-form-card">
                 <EventForm

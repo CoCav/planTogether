@@ -1,10 +1,11 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
 
 import useEventForm from "../../../../features/events/hooks/useEventForm";
 
 import { createDefaultEventFormValues } from "../../../../features/events/eventFormConfig";
 import { EVENT_MODES } from "../../../../features/shared/eventModes";
+import { EVENT_REGISTRATION_DEADLINES } from "../../../../features/shared/eventRegistrationDeadlines";
 
 /* ==================================================
    USE EVENT FORM TESTS
@@ -17,6 +18,7 @@ import { EVENT_MODES } from "../../../../features/shared/eventModes";
    - image changes
    - image removal
    - form helpers
+   - validation options
    - validation errors
    - successful submit
    - submit error feedback
@@ -59,13 +61,15 @@ describe("useEventForm", () => {
     const setupHook = ({
         initialValues = createValidValues(),
         onSubmitValid = vi.fn(),
-        submitErrorMessage
+        submitErrorMessage,
+        validationOptions
     } = {}) => {
         const hook = renderHook(() =>
             useEventForm({
                 initialValues,
                 onSubmitValid,
-                submitErrorMessage
+                submitErrorMessage,
+                validationOptions
             })
         );
 
@@ -74,6 +78,20 @@ describe("useEventForm", () => {
             onSubmitValid
         };
     };
+
+    /* =============================
+       TEST SETUP
+    ============================= */
+
+    beforeEach(() => {
+        vi.useFakeTimers();
+
+        vi.setSystemTime(new Date("2026-05-20T12:00:00"));
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
 
     /* =============================
        INITIAL STATE
@@ -88,7 +106,7 @@ describe("useEventForm", () => {
 
         expect(result.current.formState.values).toEqual(initialValues);
         expect(result.current.formState.fieldErrors).toEqual({});
-        expect(result.current.feedback.pageError).toBe("");
+        expect(result.current.feedback.error).toBe("");
         expect(result.current.submitState.isSubmitting).toBe(false);
     });
 
@@ -96,7 +114,7 @@ describe("useEventForm", () => {
         const { result } = setupHook({
             initialValues: createValidValues({
                 mode: EVENT_MODES.ONLINE,
-                registrationDeadlineOption: "custom"
+                registrationDeadlineOption: EVENT_REGISTRATION_DEADLINES.CUSTOM
             })
         });
 
@@ -247,7 +265,7 @@ describe("useEventForm", () => {
        SUBMIT
     ============================= */
 
-    it("should clear page error before submitting again", async () => {
+    it("should clear error before submitting again", async () => {
         const onSubmitValid = vi.fn();
 
         const { result } = setupHook({
@@ -256,14 +274,14 @@ describe("useEventForm", () => {
         });
 
         act(() => {
-            result.current.feedback.setPageError("Previous error");
+            result.current.feedback.setError("Previous error");
         });
 
         await act(async () => {
             await result.current.formActions.handleSubmit(createSubmitEvent());
         });
 
-        expect(result.current.feedback.pageError).toBe("");
+        expect(result.current.feedback.error).toBe("");
     });
 
     it("should submit valid values", async () => {
@@ -281,14 +299,37 @@ describe("useEventForm", () => {
         });
 
         expect(submitEvent.preventDefault).toHaveBeenCalledTimes(1);
+
         expect(onSubmitValid).toHaveBeenCalledWith(
             expect.objectContaining({
                 title: "React Meetup"
             })
         );
+
         expect(result.current.formState.fieldErrors).toEqual({});
-        expect(result.current.feedback.pageError).toBe("");
+        expect(result.current.feedback.error).toBe("");
         expect(result.current.submitState.isSubmitting).toBe(false);
+    });
+
+    it("should pass validation options to event validation", async () => {
+        const onSubmitValid = vi.fn();
+
+        const { result } = setupHook({
+            initialValues: createValidValues({
+                startDateTime: "2026-05-19T10:00",
+                endDateTime: "2026-05-19T12:00"
+            }),
+            onSubmitValid,
+            validationOptions: {
+                allowPastDates: true
+            }
+        });
+
+        await act(async () => {
+            await result.current.formActions.handleSubmit(createSubmitEvent());
+        });
+
+        expect(onSubmitValid).toHaveBeenCalledTimes(1);
     });
 
     it("should set field errors when validation fails", async () => {
@@ -312,10 +353,8 @@ describe("useEventForm", () => {
         });
     });
 
-    it("should set page error when submit fails", async () => {
-        const onSubmitValid = vi.fn().mockRejectedValue(
-            new Error("API error")
-        );
+    it("should set error when submit fails", async () => {
+        const onSubmitValid = vi.fn().mockRejectedValue(new Error("API error"));
 
         const { result } = setupHook({
             initialValues: createValidValues(),
@@ -327,7 +366,7 @@ describe("useEventForm", () => {
             await result.current.formActions.handleSubmit(createSubmitEvent());
         });
 
-        expect(result.current.feedback.pageError).toBe("Failed to create event");
+        expect(result.current.feedback.error).toBe("Failed to create event");
         expect(result.current.submitState.isSubmitting).toBe(false);
     });
 });

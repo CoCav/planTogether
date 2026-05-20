@@ -72,7 +72,11 @@ export const validateEventForm = (
     options = {}
 ) => {
 
-    const { allowPartial = false } = options;
+    // Validation behavior overrides used by edit/update flows
+    const {
+        allowPartial = false,
+        allowPastDates = false
+    } = options;
 
     const errors = {};
 
@@ -80,6 +84,7 @@ export const validateEventForm = (
        REQUIRED TEXT FIELDS
     ============================= */
 
+    // Partial updates validate only provided fields
     if (!allowPartial || title !== undefined) {
         if (!title?.trim()) {
             errors.title = allowPartial
@@ -150,14 +155,15 @@ export const validateEventForm = (
     // Parsed end datetime used for comparisons
     const end = isValidDate(endDateTime) ? new Date(endDateTime) : null;
 
-    // Prevent events from starting in the past
-    if (start && isPastDate(start)) {
-        errors.startDateTime = "Start date and time cannot be in the past";
+    // Edit event forms may contain already-started events
+    if (!allowPastDates && start && isPastDate(start)) {
+        errors.startDateTime =
+            "Start date and time cannot be in the past";
     }
 
-    // Prevent events from ending in the past
-    if (end && isPastDate(end)) {
-        errors.endDateTime = "End date and time cannot be in the past";
+    if (!allowPastDates && end && isPastDate(end)) {
+        errors.endDateTime =
+            "End date and time cannot be in the past";
     }
 
     // End datetime must happen after start datetime
@@ -171,10 +177,11 @@ export const validateEventForm = (
     ============================= */
 
     if (!isPositiveInteger(maxParticipants)) {
-        errors.maxParticipants = "Max participants must be a positive integer";
+        errors.maxParticipants =
+            "Max participants must be a positive integer";
     }
 
-    // Registration deadline must happen before event start
+    // Registration deadline may be auto-generated or custom
     if (registrationDeadline) {
         if (!isValidDate(registrationDeadline)) {
             errors.registrationDeadline =

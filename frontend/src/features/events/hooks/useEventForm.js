@@ -18,16 +18,19 @@ import { validateEventForm } from "../eventValidation";
    - field changes
    - image changes
    - shared submit validation flow
+   - configurable validation options
 
    Notes:
    - submit behavior is provided by caller
    - reusable by CreateEventPage and EditEventPage
+   - validation options support create/edit differences
 ================================================== */
 
 export default function useEventForm({
     initialValues,
     onSubmitValid,
-    submitErrorMessage = "Failed to save event"
+    submitErrorMessage = "Failed to save event",
+    validationOptions = {}
 }) {
 
     /* =============================
@@ -41,7 +44,7 @@ export default function useEventForm({
        FEEDBACK STATE
     ============================= */
 
-    const [pageError, setPageError] = useState("");
+    const [error, setError] = useState("");
 
     /* =============================
        SUBMIT STATE
@@ -125,9 +128,12 @@ export default function useEventForm({
     const handleSubmit = async (event) => {
         event.preventDefault();
 
-        setPageError("");
+        setError("");
 
-        const validationErrors = validateEventForm(values);
+        const validationErrors = validateEventForm(
+            values,
+            validationOptions
+        );
 
         if (Object.keys(validationErrors).length > 0) {
             setFieldErrors(validationErrors);
@@ -142,7 +148,7 @@ export default function useEventForm({
         } catch (error) {
             console.error("Error submitting event form:", error);
 
-            setPageError(submitErrorMessage);
+            setError(submitErrorMessage);
         } finally {
             setIsSubmitting(false);
         }
@@ -157,8 +163,8 @@ export default function useEventForm({
         },
 
         feedback: {
-            pageError,
-            setPageError
+            error,
+            setError
         },
 
         submitState: {

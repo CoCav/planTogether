@@ -1,7 +1,7 @@
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
 
 import CreateEventPage from "../../pages/CreateEventPage";
 
@@ -299,7 +299,7 @@ describe("CreateEventPage", () => {
        ERROR FEEDBACK
     ============================= */
 
-    it("displays page error when event creation fails", async () => {
+    it("displays error when event creation fails", async () => {
         const user = userEvent.setup();
 
         mockCreateEvent.mockRejectedValue(new Error("API error"));

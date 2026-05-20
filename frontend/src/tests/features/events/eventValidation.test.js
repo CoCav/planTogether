@@ -173,6 +173,33 @@ describe("eventValidation", () => {
        DATE / TIME
     ============================= */
 
+    it("should allow past start and end datetime when past dates are allowed", () => {
+        const errors = validateEventForm({
+            ...validForm,
+            startDateTime: "2026-05-19T08:00",
+            endDateTime: "2026-05-19T10:00"
+        }, {
+            allowPastDates: true
+        });
+
+        expect(errors.startDateTime).toBeUndefined();
+        expect(errors.endDateTime).toBeUndefined();
+    });
+
+    it("should still reject end datetime before start datetime when past dates are allowed", () => {
+        const errors = validateEventForm({
+            ...validForm,
+            startDateTime: "2026-05-19T10:00",
+            endDateTime: "2026-05-19T08:00"
+        }, {
+            allowPastDates: true
+        });
+
+        expect(errors.endDateTime).toBe(
+            "End date and time must be after start date and time"
+        );
+    });
+
     it("should reject invalid start datetime", () => {
         const errors = validateEventForm({
             ...validForm,
@@ -203,10 +230,11 @@ describe("eventValidation", () => {
     it("should reject end datetime in the past", () => {
         const errors = validateEventForm({
             ...validForm,
+            startDateTime: "2026-05-19T08:00",
             endDateTime: "2026-05-19T10:00"
         });
 
-        expect(errors.endDateTime).toBe("End date and time must be after start date and time");
+        expect(errors.endDateTime).toBe("End date and time cannot be in the past");
     });
 
     it("should reject end datetime before start datetime", () => {

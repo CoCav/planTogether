@@ -188,6 +188,45 @@ describe("myEventNormalizer", () => {
         });
     });
 
+    it("should normalize paginated current user event payload from nested API data", () => {
+        const result = normalizePaginatedMyEvents({
+            data: {
+                events: [
+                    createMyEventItem({
+                        id: 10,
+                        role: EVENT_ROLES.PARTICIPANT,
+                        event: createEvent({
+                            id: 1,
+                            title: "Nested Joined Event"
+                        })
+                    })
+                ]
+            },
+            page: 2,
+            pageSize: 5,
+            totalEvents: 12,
+            totalPages: 3,
+            message: "Events retrieved",
+            success: true
+        });
+
+        expect(result).toEqual({
+            events: [
+                expect.objectContaining({
+                    id: 1,
+                    title: "Nested Joined Event",
+                    role: EVENT_ROLES.PARTICIPANT
+                })
+            ],
+            page: 2,
+            pageSize: 5,
+            totalEvents: 12,
+            totalPages: 3,
+            message: "Events retrieved",
+            success: true
+        });
+    });
+
     it("should return fallback pagination values", () => {
         expect(normalizePaginatedMyEvents()).toMatchObject({
             events: [],

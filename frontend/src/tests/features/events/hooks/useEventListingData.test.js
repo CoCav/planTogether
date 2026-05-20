@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import useEventListingData from "../../../../features/events/hooks/useEventListingData";
 
 import { getAllEvents } from "../../../../api/events/eventApi";
-
 import { getCurrentUserEvents } from "../../../../api/users/userApi";
 
 import { DEFAULT_EVENT_LISTING_FILTERS } from "../../../../features/shared/eventListingDefaults";
@@ -18,7 +17,9 @@ import { fetchAllPaginated } from "../../../../utils/pagination";
 
    Handles:
    - public event loading
+   - filter-only param extraction
    - view-based status params
+   - default sort resolution
    - pagination updates
    - authenticated user membership role mapping
    - organizer role resolution
@@ -29,7 +30,6 @@ import { fetchAllPaginated } from "../../../../utils/pagination";
    - mocks API modules
    - mocks paginated membership fetching
    - uses shared default event listing filters
-   - uses reusable pagination payload factory
 ================================================== */
 
 vi.mock("../../../../api/events/eventApi", () => ({
@@ -49,14 +49,7 @@ vi.mock("../../../../features/events/eventNormalizer", () => ({
 }));
 
 vi.mock("../../../../features/users/authenticated/myEventNormalizer", () => ({
-    getMyEventsWithRole: vi.fn((payload) => {
-        const events = payload?.data?.events ?? [];
-
-        return events.map((event) => ({
-            id: event.id,
-            role: event.role
-        }));
-    })
+    getMyEventsWithRole: vi.fn()
 }));
 
 describe("useEventListingData", () => {
@@ -89,8 +82,8 @@ describe("useEventListingData", () => {
        TEST HELPERS
     ============================= */
 
-    const renderUseEventListingData = (options = {}) =>
-        renderHook(() =>
+    const renderUseEventListingData = (options = {}) => {
+        return renderHook(() =>
             useEventListingData({
                 user: options.user ?? null,
                 pageSize: options.pageSize ?? 4,
@@ -100,6 +93,7 @@ describe("useEventListingData", () => {
                 setPagination
             })
         );
+    };
 
     /* =============================
        TEST SETUP
@@ -113,7 +107,6 @@ describe("useEventListingData", () => {
         setInitialLoading = vi.fn();
         setPagination = vi.fn();
     });
-
 
     /* =============================
        PUBLIC EVENT LOADING
@@ -203,6 +196,39 @@ describe("useEventListingData", () => {
         }]);
     });
 
+    it("does not send non-filter fields as API filters", async () => {
+        getAllEvents.mockResolvedValue(createPaginatedEventResponse());
+
+        const { result } = renderUseEventListingData();
+
+        await act(async () => {
+            await result.current.loadData(
+                createFilters({
+                    search: "music",
+                    view: "should-not-be-sent",
+                    unknownField: "should-not-be-sent"
+                }),
+                1,
+                "all"
+            );
+        });
+
+        expect(getAllEvents).toHaveBeenCalledWith(
+            expect.objectContaining({
+                search: "music",
+                page: 1,
+                pageSize: 4
+            })
+        );
+
+        expect(getAllEvents).toHaveBeenCalledWith(
+            expect.not.objectContaining({
+                view: "should-not-be-sent",
+                unknownField: "should-not-be-sent"
+            })
+        );
+    });
+
     it("adds view status to API params when the selected view has a status", async () => {
         getAllEvents.mockResolvedValue(createPaginatedEventResponse());
 
@@ -244,7 +270,6 @@ describe("useEventListingData", () => {
             })
         );
     });
-
 
     /* =============================
        ROLE RESOLUTION
@@ -344,7 +369,7 @@ describe("useEventListingData", () => {
         });
 
         expect(fetchAllPaginated).not.toHaveBeenCalled();
-        expect(result.current.getRoleByEventId(1)).toBe(null);
+        expect(result.current.getRoleByEventId(1)).toBeNull();
     });
 
     it("returns null when event id is unknown", async () => {
@@ -372,9 +397,8 @@ describe("useEventListingData", () => {
             await result.current.loadData(createFilters(), 1, "all");
         });
 
-        expect(result.current.getRoleByEventId(999)).toBe(null);
+        expect(result.current.getRoleByEventId(999)).toBeNull();
     });
-
 
     /* =============================
        ERROR HANDLING

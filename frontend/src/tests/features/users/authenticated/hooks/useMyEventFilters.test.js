@@ -13,10 +13,12 @@ import { createHookCallbacks } from "../../../../helpers/hooks/createHookProps";
 
    Handles:
    - default filter state
+   - filter panel visibility
    - filter updates
    - filter submission and reset
    - sorting
    - quick filters
+   - filter helper exposure
 
    Notes:
    - uses reusable current user event filter factories
@@ -28,7 +30,6 @@ describe("useMyEventFilters", () => {
 
     beforeEach(() => {
         vi.useFakeTimers();
-
         vi.setSystemTime(new Date("2026-04-24T12:00:00"));
 
         hookProps = createHookCallbacks();
@@ -36,7 +37,6 @@ describe("useMyEventFilters", () => {
 
     afterEach(() => {
         vi.useRealTimers();
-
         vi.clearAllMocks();
     });
 
@@ -44,7 +44,6 @@ describe("useMyEventFilters", () => {
        TEST HELPERS
     ============================= */
 
-    // Render current user event filters hook
     const setupHook = (activeView = "created") => {
         return renderHook(() =>
             useMyEventFilters({
@@ -62,9 +61,15 @@ describe("useMyEventFilters", () => {
     it("should initialize with default filters and hidden filter panel", () => {
         const { result } = setupHook();
 
-        expect(result.current.filters).toEqual(createMyEventFilters());
+        expect(result.current.filterState.filters).toEqual(createMyEventFilters());
+        expect(result.current.filterState.showFilters).toBe(false);
+    });
 
-        expect(result.current.showFilters).toBe(false);
+    it("should expose filter helpers", () => {
+        const { result } = setupHook();
+
+        expect(result.current.filterHelpers.sortLabels).toBeDefined();
+        expect(result.current.filterHelpers.isCurrentWeekendFilterActive).toEqual(expect.any(Function));
     });
 
     /* =============================
@@ -75,7 +80,7 @@ describe("useMyEventFilters", () => {
         const { result } = setupHook();
 
         act(() => {
-            result.current.handleFilterChange({
+            result.current.filterActions.handleFilterChange({
                 target: {
                     name: "search",
                     value: "music"
@@ -83,14 +88,14 @@ describe("useMyEventFilters", () => {
             });
         });
 
-        expect(result.current.filters.search).toBe("music");
+        expect(result.current.filterState.filters.search).toBe("music");
     });
 
     it("should apply filters and reload first page", async () => {
         const { result } = setupHook("joined");
 
         await act(async () => {
-            await result.current.handleFilterSubmit({
+            await result.current.filterActions.handleFilterSubmit({
                 preventDefault: vi.fn()
             });
         });
@@ -111,11 +116,10 @@ describe("useMyEventFilters", () => {
         const { result } = setupHook();
 
         await act(async () => {
-            await result.current.handleResetFilters();
+            await result.current.filterActions.handleResetFilters();
         });
 
-        expect(result.current.filters).toEqual(createMyEventFilters());
-
+        expect(result.current.filterState.filters).toEqual(createMyEventFilters());
         expect(hookProps.resetPage).toHaveBeenCalled();
 
         expect(hookProps.loadData).toHaveBeenCalledWith(
@@ -136,15 +140,15 @@ describe("useMyEventFilters", () => {
         const { result } = setupHook();
 
         act(() => {
-            result.current.handleSortChange({
+            result.current.filterActions.handleSortChange({
                 target: {
                     value: "title-desc"
                 }
             });
         });
 
-        expect(result.current.filters.sortBy).toBe("title");
-        expect(result.current.filters.order).toBe("desc");
+        expect(result.current.filterState.filters.sortBy).toBe("title");
+        expect(result.current.filterState.filters.order).toBe("desc");
     });
 
     /* =============================
@@ -155,12 +159,12 @@ describe("useMyEventFilters", () => {
         const { result } = setupHook();
 
         await act(async () => {
-            await result.current.handleTodayFilter();
+            await result.current.filterActions.handleTodayFilter();
         });
 
-        expect(result.current.filters.date).toBe("2026-04-24");
-        expect(result.current.filters.startDate).toBe("");
-        expect(result.current.filters.endDate).toBe("");
+        expect(result.current.filterState.filters.date).toBe("2026-04-24");
+        expect(result.current.filterState.filters.startDate).toBe("");
+        expect(result.current.filterState.filters.endDate).toBe("");
 
         expect(hookProps.resetPage).toHaveBeenCalled();
 
@@ -177,12 +181,12 @@ describe("useMyEventFilters", () => {
         const { result } = setupHook();
 
         await act(async () => {
-            await result.current.handleWeekendFilter();
+            await result.current.filterActions.handleWeekendFilter();
         });
 
-        expect(result.current.filters.date).toBe("");
-        expect(result.current.filters.startDate).toBe("2026-04-25");
-        expect(result.current.filters.endDate).toBe("2026-04-26");
+        expect(result.current.filterState.filters.date).toBe("");
+        expect(result.current.filterState.filters.startDate).toBe("2026-04-25");
+        expect(result.current.filterState.filters.endDate).toBe("2026-04-26");
 
         expect(hookProps.resetPage).toHaveBeenCalled();
 

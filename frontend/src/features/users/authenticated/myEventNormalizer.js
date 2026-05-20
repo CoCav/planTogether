@@ -39,15 +39,19 @@ export const normalizeMyEvents = (items = []) => {
 };
 
 // Normalizes a paginated current user event payload
-export const normalizePaginatedMyEvents = (payload = {}) => ({
-    events: normalizeMyEvents(payload.events),
-    page: payload.page ?? 1,
-    pageSize: payload.pageSize ?? 10,
-    totalEvents: payload.totalEvents ?? 0,
-    totalPages: payload.totalPages ?? 1,
-    message: payload.message ?? "",
-    success: payload.success ?? false
-});
+export const normalizePaginatedMyEvents = (payload = {}) => {
+    const events = getApiPayload(payload, "events");
+
+    return {
+        events: normalizeMyEvents(events),
+        page: payload.page ?? 1,
+        pageSize: payload.pageSize ?? 10,
+        totalEvents: payload.totalEvents ?? 0,
+        totalPages: payload.totalPages ?? 1,
+        message: payload.message ?? "",
+        success: payload.success ?? false
+    };
+};
 
 // Extracts and normalizes current user events from GET /users/me/events
 export const getNormalizedMyEvents = (payload = {}) => {

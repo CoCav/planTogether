@@ -14,7 +14,7 @@ import "./styles/pages.css";
 import "./styles/components.css";
 
 /* Refactor in progress */
-import "./styles/pages/events-page.css";
+import "./styles/pages/event-listing-page.css";
 import "./styles/pages/event-details-page.css";
 
 import "./styles/components/events/event-card.css";

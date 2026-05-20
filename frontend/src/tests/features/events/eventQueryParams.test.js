@@ -4,9 +4,10 @@ import {
     PUBLIC_EVENT_FILTER_QUERY_KEYS,
     buildEventSearchParams,
     getInitialEventFiltersFromUrl,
-    getInitialPageFromUrl,
     getInitialViewFromUrl
 } from "../../../features/events/eventQueryParams";
+
+import { getInitialPageFromUrl } from "../../../features/shared/eventListingQueryParams";
 
 import { EVENT_PAGE_QUERY_KEY, EVENT_VIEW_QUERY_KEY } from "../../../features/shared/eventListingQueryKeys";
 
@@ -27,13 +28,14 @@ import {
    Handles:
    - public event query keys
    - view parsing
-   - page parsing
+   - shared page parsing
    - filter parsing
    - URLSearchParams building
 
    Notes:
    - uses reusable event filter factories
    - uses reusable event view factories
+   - uses shared page query param helpers
 ================================================== */
 
 const views = [
@@ -195,6 +197,7 @@ describe("eventQueryParams", () => {
 
         expect(params.get("sortBy")).toBe("title");
         expect(params.get("order")).toBe("desc");
+
         expect(params.has("type")).toBe(false);
     });
 

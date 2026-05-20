@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { MY_EVENT_FILTER_QUERY_KEYS, getDefaultMyEventFilters } from "../../../../features/users/authenticated/myEventFilters";
+import {
+    MY_EVENT_FILTER_QUERY_KEYS,
+    getDefaultMyEventFilters,
+    getMyEventFilterFields
+} from "../../../../features/users/authenticated/myEventFilters";
 
 import { createMyEventFilters } from "../../../factories/users/authenticated/myEventFiltersFactory";
 
@@ -11,6 +15,7 @@ import { createMyEventFilters } from "../../../factories/users/authenticated/myE
    Handles:
    - current user default filters
    - current user query keys
+   - filter-only field extraction
 
    Notes:
    - uses reusable current user event filter factories
@@ -47,5 +52,42 @@ describe("myEventFilters", () => {
             "sortBy",
             "order"
         ]);
+    });
+
+    /* =============================
+       FILTER HELPERS
+    ============================= */
+
+    it("should extract filter-only fields from listing params", () => {
+        expect(
+            getMyEventFilterFields({
+                search: "music",
+                creator: "John",
+                type: "Meetup",
+                theme: "Tech",
+                mode: "online",
+                location: "Montreal",
+                status: "upcoming",
+                date: "2026-05-20",
+                startDate: "2026-05-20",
+                endDate: "2026-05-21",
+                sortBy: "title",
+                order: "asc",
+                view: "created",
+                page: 2,
+                unknownField: "ignored"
+            })
+        ).toEqual({
+            search: "music",
+            creator: "John",
+            type: "Meetup",
+            theme: "Tech",
+            mode: "online",
+            location: "Montreal",
+            status: "upcoming",
+            date: "2026-05-20",
+            startDate: "2026-05-20",
+            endDate: "2026-05-21"
+        });
     });
 });

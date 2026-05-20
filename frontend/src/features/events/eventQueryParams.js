@@ -32,22 +32,11 @@ export const PUBLIC_EVENT_FILTER_QUERY_KEYS = [
 ];
 
 // Gets the initial active view from URL params
-export const getInitialViewFromUrl = (
-    searchParams,
-    views,
-    fallbackView = "all"
-) => {
+export const getInitialViewFromUrl = (searchParams, views, fallbackView = "all") => {
 
     const view = searchParams.get(EVENT_VIEW_QUERY_KEY);
 
     return views.some((item) => item.key === view) ? view : fallbackView;
-};
-
-// Gets the initial page from URL params
-export const getInitialPageFromUrl = (searchParams) => {
-    const page = Number(searchParams.get(EVENT_PAGE_QUERY_KEY));
-
-    return Number.isInteger(page) && page > 0 ? page : 1;
 };
 
 // Gets initial public event filters from URL params

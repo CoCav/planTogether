@@ -83,18 +83,18 @@ export default function useEventListingData({
                VIEW CONFIGURATION
             ============================= */
 
-            const view = getEventViewContent(customView);
-
-            const { sortBy, order } = customFilters;
-
-            const filters = getEventFilterFields(customFilters);
+            const viewContent = getEventViewContent(customView);
 
             /* =============================
                SORT RESOLUTION
             ============================= */
 
-            const resolvedSortBy = sortBy || view.defaultSortBy;
-            const resolvedOrder = order || view.defaultOrder;
+            const { sortBy, order } = customFilters;
+
+            const filters = getEventFilterFields(customFilters);
+
+            const resolvedSortBy = sortBy || viewContent.defaultSortBy;
+            const resolvedOrder = order || viewContent.defaultOrder;
 
             /* =============================
                API PARAMS
@@ -102,8 +102,8 @@ export default function useEventListingData({
 
             const params = {
                 ...filters,
-                ...(view.status && {
-                    status: view.status
+                ...(viewContent.status && {
+                    status: viewContent.status
                 }),
                 sortBy: resolvedSortBy,
                 order: resolvedOrder,
@@ -150,10 +150,7 @@ export default function useEventListingData({
             setMyEvents(buildMembershipMap(membershipEvents));
 
         } catch (error) {
-            console.error(
-                "Error loading events:",
-                error
-            );
+            console.error("Error loading events:", error);
 
             setError("❌ Failed to load events");
 

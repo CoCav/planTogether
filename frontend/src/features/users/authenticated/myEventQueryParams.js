@@ -17,11 +17,7 @@ import { getDefaultMyEventFilters, MY_EVENT_FILTER_QUERY_KEYS } from "./myEventF
 ================================================== */
 
 // Gets the initial active current user event view from URL params
-export const getInitialMyEventViewFromUrl = (
-    searchParams,
-    views,
-    fallbackView = "created"
-) => {
+export const getInitialMyEventViewFromUrl = (searchParams, views, fallbackView = "created") => {
 
     const view = searchParams.get(EVENT_VIEW_QUERY_KEY);
 

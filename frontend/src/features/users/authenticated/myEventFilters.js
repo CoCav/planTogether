@@ -41,3 +41,36 @@ export const MY_EVENT_FILTER_QUERY_KEYS = [
     "sortBy",
     "order"
 ];
+
+/* =============================
+   FILTER HELPERS
+============================= */
+
+// Extracts filter-only fields from current user event listing params
+export const getMyEventFilterFields = (filters = {}) => {
+    const {
+        search,
+        creator,
+        type,
+        theme,
+        mode,
+        location,
+        status,
+        date,
+        startDate,
+        endDate
+    } = filters;
+
+    return {
+        search,
+        creator,
+        type,
+        theme,
+        mode,
+        location,
+        status,
+        date,
+        startDate,
+        endDate
+    };
+};

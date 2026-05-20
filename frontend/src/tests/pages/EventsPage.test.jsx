@@ -189,7 +189,9 @@ describe("EventsPage", () => {
             expectListingApiCalledWith(mockGetAllEvents, {
                 status: EVENT_STATUS.UPCOMING,
                 page: 1,
-                pageSize: 4
+                pageSize: 4,
+                sortBy: "startDateTime",
+                order: "asc"
             });
         });
     });
@@ -205,7 +207,9 @@ describe("EventsPage", () => {
             expectListingApiCalledWith(mockGetAllEvents, {
                 status: EVENT_STATUS.PAST,
                 page: 1,
-                pageSize: 4
+                pageSize: 4,
+                sortBy: "startDateTime",
+                order: "desc"
             });
         });
     });
@@ -244,6 +248,26 @@ describe("EventsPage", () => {
                 date: "2026-05-18"
             })
         );
+    });
+
+    it("resets sort values when switching views", async () => {
+        const user = userEvent.setup();
+
+        renderPage("/events?sortBy=title&order=asc");
+
+        await screen.findByText(/no events found/i);
+
+        await user.click(screen.getByRole("button", { name: /archives/i }));
+
+        await waitFor(() => {
+            expectListingApiCalledWith(mockGetAllEvents, {
+                status: EVENT_STATUS.PAST,
+                sortBy: "startDateTime",
+                order: "desc",
+                page: 1,
+                pageSize: 4
+            });
+        });
     });
 
     it("hides quick filters when switching to archives view", async () => {

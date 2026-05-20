@@ -1,14 +1,14 @@
 import { useCallback, useMemo, useState } from "react";
 
-import { getInitialPageFromUrl } from "../../shared/eventListingQueryParams";
+import { getInitialPageFromUrl } from "../../../shared/eventListingQueryParams";
 
-import { buildEventSearchParams, getInitialViewFromUrl } from "../eventQueryParams";
+import { buildMyEventSearchParams, getInitialMyEventViewFromUrl } from "../myEventQueryParams";
 
-import { getEventViewContent, PUBLIC_EVENT_VIEWS } from "../eventViewConfig";
+import { getMyEventViewContent, MY_EVENT_VIEWS } from "../myEventViewConfig";
 
 /* ==================================================
-   USE EVENT LISTING STATE
-   Handles public event listing UI and URL-related state
+   USE MY EVENT LISTING STATE
+   Handles current user event listing UI and URL-related state
 
    Handles:
    - initial URL-derived view and pagination
@@ -20,14 +20,14 @@ import { getEventViewContent, PUBLIC_EVENT_VIEWS } from "../eventViewConfig";
    - view-based filter cleanup
 ================================================== */
 
-export default function useEventListingState({ searchParams, setSearchParams, fallbackView = "all" }) {
+export default function useMyEventListingState({ searchParams, setSearchParams, fallbackView = "created" }) {
 
     /* =============================
        INITIAL URL STATE
     ============================= */
 
     const initialView = useMemo(
-        () => getInitialViewFromUrl(searchParams, PUBLIC_EVENT_VIEWS, fallbackView),
+        () => getInitialMyEventViewFromUrl(searchParams, MY_EVENT_VIEWS, fallbackView),
         [
             searchParams,
             fallbackView
@@ -57,7 +57,6 @@ export default function useEventListingState({ searchParams, setSearchParams, fa
     ============================= */
 
     const [initialLoading, setInitialLoading] = useState(true);
-
     const [isLoading, setIsLoading] = useState(false);
 
     /* =============================
@@ -77,16 +76,18 @@ export default function useEventListingState({ searchParams, setSearchParams, fa
 
     // Syncs filters, page and view with URL search params
     const syncUrl = useCallback((nextFilters, nextPage, nextView) => {
-
         setSearchParams(
-            buildEventSearchParams({
+            buildMyEventSearchParams({
                 filters: nextFilters,
                 page: nextPage,
-                view: nextView
+                view: nextView,
+                fallbackView
             })
         );
-
-    }, [setSearchParams]);
+    }, [
+        fallbackView,
+        setSearchParams
+    ]);
 
     /* =============================
        PAGINATION HELPERS
@@ -94,22 +95,19 @@ export default function useEventListingState({ searchParams, setSearchParams, fa
 
     // Resets pagination to the first page
     const resetPage = useCallback(() => {
-
         setPagination((prev) => ({
             ...prev,
             page: 1
         }));
-
     }, []);
 
     /* =============================
        VIEW HELPERS
     ============================= */
 
-    // Clears date filters when entering specific views
+    // Clears incompatible date filters when switching views
     const getFiltersForView = useCallback((filters, nextView) => {
-
-        const nextViewContent = getEventViewContent(nextView);
+        const nextViewContent = getMyEventViewContent(nextView);
 
         if (!nextViewContent.clearDateFiltersOnEnter) {
             return filters;
@@ -121,11 +119,9 @@ export default function useEventListingState({ searchParams, setSearchParams, fa
             startDate: "",
             endDate: ""
         };
-
     }, []);
 
     return {
-
         feedback: {
             message,
             setMessage,

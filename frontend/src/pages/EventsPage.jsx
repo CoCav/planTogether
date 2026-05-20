@@ -43,6 +43,7 @@ export default function EventsPage() {
     const { user } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
 
+
     /* =============================
        URL STATE
     ============================= */
@@ -51,6 +52,7 @@ export default function EventsPage() {
         () => getInitialEventFiltersFromUrl(searchParams),
         [searchParams]
     );
+
 
     /* =============================
        PAGE STATE
@@ -69,45 +71,23 @@ export default function EventsPage() {
     });
 
     // Feedback messages and error handling
-    const {
-        message,
-        setMessage,
-        error,
-        setError
-    } = feedback;
+    const { message, setMessage, error, setError } = feedback;
 
     // Active listing view and view helpers
-    const {
-        activeView,
-        setActiveView,
-        initialView,
-        getFiltersForView
-    } = view;
+    const { activeView, setActiveView, initialView, getFiltersForView } = view;
 
     // Initial and refresh loading states
-    const {
-        initialLoading,
-        setInitialLoading,
-        isLoading,
-        setIsLoading
-    } = loadingState;
+    const { initialLoading, setInitialLoading, isLoading, setIsLoading } = loadingState;
 
     // Pagination data and setters
-    const {
-        pagination,
-        setPagination,
-        initialPage
-    } = paginationState;
+    const { pagination, setPagination, initialPage } = paginationState;
+
 
     /* =============================
        EVENT DATA
     ============================= */
 
-    const {
-        events,
-        loadData,
-        getRoleByEventId
-    } = useEventListingData({
+    const { events, loadData, getRoleByEventId } = useEventListingData({
         user,
         pageSize: pagination.pageSize,
         setError,
@@ -116,16 +96,13 @@ export default function EventsPage() {
         setPagination
     });
 
+
     /* =============================
        DATA LOADING / URL SYNC
     ============================= */
 
     // Syncs URL then refreshes event data
-    const loadDataAndSyncUrl = useCallback(async (
-        nextFilters,
-        nextPage = 1,
-        nextView = activeView
-    ) => {
+    const loadDataAndSyncUrl = useCallback(async (nextFilters, nextPage = 1, nextView = activeView) => {
         syncUrl(nextFilters, nextPage, nextView);
 
         await loadData(nextFilters, nextPage, nextView);
@@ -135,15 +112,12 @@ export default function EventsPage() {
         syncUrl
     ]);
 
+
     /* =============================
        FILTER STATE / ACTIONS
     ============================= */
 
-    const {
-        filterState,
-        filterActions,
-        filterHelpers
-    } = useEventFilters({
+    const { filterState, filterActions, filterHelpers } = useEventFilters({
         activeView,
         loadData: loadDataAndSyncUrl,
         initialFilters,
@@ -151,12 +125,7 @@ export default function EventsPage() {
     });
 
     // Current filter values and filter panel visibility
-    const {
-        filters,
-        setFilters,
-        showFilters,
-        setShowFilters
-    } = filterState;
+    const { filters, setFilters, showFilters, setShowFilters } = filterState;
 
     // Filter handlers and quick filter actions
     const {
@@ -169,19 +138,14 @@ export default function EventsPage() {
     } = filterActions;
 
     // Filter UI helpers
-    const {
-        sortLabels,
-        isCurrentWeekendFilterActive
-    } = filterHelpers;
+    const { sortLabels, isCurrentWeekendFilterActive } = filterHelpers;
+
 
     /* =============================
        MEMBERSHIP ACTIONS
     ============================= */
 
-    const {
-        handleJoinEvent,
-        handleLeaveEvent
-    } = useMembershipActions({
+    const { handleJoinEvent, handleLeaveEvent } = useMembershipActions({
         loadData: () => loadDataAndSyncUrl(
             filters,
             pagination.page,
@@ -192,19 +156,17 @@ export default function EventsPage() {
         getRoleByEventId
     });
 
+
     /* =============================
        PAGINATION CONTROLS
     ============================= */
 
-    const {
-        goToPreviousPage,
-        goToNextPage
-    } = usePagination({
+    const { goToPreviousPage, goToNextPage } = usePagination({
         page: pagination.page,
         totalPages: pagination.totalPages,
-        onPageChange: (nextPage) =>
-            loadDataAndSyncUrl(filters, nextPage, activeView)
+        onPageChange: (nextPage) => loadDataAndSyncUrl(filters, nextPage, activeView)
     });
+
 
     /* =============================
        VIEW SWITCHING
@@ -212,7 +174,13 @@ export default function EventsPage() {
 
     // Updates active view and resets incompatible filters
     const handleViewChange = async (nextView) => {
-        const nextFilters = getFiltersForView(filters, nextView);
+        const nextViewContent = getEventViewContent(nextView);
+
+        const nextFilters = {
+            ...getFiltersForView(filters, nextView),
+            sortBy: nextViewContent.defaultSortBy,
+            order: nextViewContent.defaultOrder
+        };
 
         setActiveView(nextView);
         setFilters(nextFilters);
@@ -241,6 +209,7 @@ export default function EventsPage() {
         initialView
     ]);
 
+
     /* =============================
        FEEDBACK CLEANUP
     ============================= */
@@ -262,6 +231,7 @@ export default function EventsPage() {
         setError
     ]);
 
+
     /* =============================
        DISPLAY STATE
     ============================= */
@@ -275,6 +245,7 @@ export default function EventsPage() {
 
     const showPaginationInfo = pagination.totalPages > 1;
 
+
     /* =============================
        INITIAL LOADING STATE
     ============================= */
@@ -286,6 +257,7 @@ export default function EventsPage() {
             </PageLoader>
         );
     }
+
 
     /* =============================
        MAIN RENDER

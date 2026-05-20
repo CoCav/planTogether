@@ -25,8 +25,10 @@ import {
 
    Handles:
    - current user view parsing
+   - custom fallback view
    - current user filter parsing
    - URLSearchParams building
+   - empty filter exclusion
 
    Notes:
    - uses reusable current user event filter factories
@@ -51,7 +53,9 @@ describe("myEventQueryParams", () => {
             `${EVENT_VIEW_QUERY_KEY}=joined`
         );
 
-        expect(getInitialMyEventViewFromUrl(searchParams, views)).toBe("joined");
+        expect(
+            getInitialMyEventViewFromUrl(searchParams, views)
+        ).toBe("joined");
     });
 
     it("should return fallback view when URL view is invalid", () => {
@@ -59,13 +63,31 @@ describe("myEventQueryParams", () => {
             `${EVENT_VIEW_QUERY_KEY}=invalid`
         );
 
-        expect(getInitialMyEventViewFromUrl(searchParams, views)).toBe("created");
+        expect(
+            getInitialMyEventViewFromUrl(searchParams, views)
+        ).toBe("created");
     });
 
     it("should return fallback view when URL view is missing", () => {
         const searchParams = new URLSearchParams();
 
-        expect(getInitialMyEventViewFromUrl(searchParams, views)).toBe("created");
+        expect(
+            getInitialMyEventViewFromUrl(searchParams, views)
+        ).toBe("created");
+    });
+
+    it("should support a custom fallback view", () => {
+        const searchParams = new URLSearchParams(
+            `${EVENT_VIEW_QUERY_KEY}=invalid`
+        );
+
+        expect(
+            getInitialMyEventViewFromUrl(
+                searchParams,
+                views,
+                "joined"
+            )
+        ).toBe("joined");
     });
 
     /* =============================
@@ -125,13 +147,18 @@ describe("myEventQueryParams", () => {
         });
 
         expect(params.get(EVENT_VIEW_QUERY_KEY)).toBe("joined");
+
         expect(params.get(EVENT_PAGE_QUERY_KEY)).toBe("2");
+
         expect(params.get("search")).toBe("music");
         expect(params.get("creator")).toBe("John Doe");
+
         expect(params.get("mode")).toBe("online");
         expect(params.get("status")).toBe(EVENT_STATUS.UPCOMING);
+
         expect(params.get("sortBy")).toBe("title");
         expect(params.get("order")).toBe("desc");
+
         expect(params.has("type")).toBe(false);
     });
 
@@ -144,5 +171,24 @@ describe("myEventQueryParams", () => {
 
         expect(params.has(EVENT_VIEW_QUERY_KEY)).toBe(false);
         expect(params.has(EVENT_PAGE_QUERY_KEY)).toBe(false);
+    });
+
+    it("should not include empty filter values in URL params", () => {
+        const params = buildMyEventSearchParams({
+            filters: createMyEventFilters({
+                search: "",
+                creator: "John Doe",
+                type: "",
+                mode: ""
+            }),
+            page: 1,
+            view: "created"
+        });
+
+        expect(params.get("creator")).toBe("John Doe");
+
+        expect(params.has("search")).toBe(false);
+        expect(params.has("type")).toBe(false);
+        expect(params.has("mode")).toBe(false);
     });
 });

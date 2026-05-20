@@ -1,13 +1,11 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import useEventListingState from "../../../../features/events/hooks/useEventListingState";
-
-import { EVENT_STATUS } from "../../../../features/shared/eventStatus";
+import useMyEventListingState from "../../../../../features/users/authenticated/hooks/useMyEventListingState";
 
 /* ==================================================
-   USE EVENT LISTING STATE TESTS
-   Tests public event listing UI and URL-related state
+   USE MY EVENT LISTING STATE TESTS
+   Tests current user event listing UI and URL-related state
 
    Handles:
    - initial URL-derived view and pagination
@@ -23,18 +21,18 @@ import { EVENT_STATUS } from "../../../../features/shared/eventStatus";
    - focuses on local listing state, not API fetching
 ================================================== */
 
-describe("useEventListingState", () => {
+describe("useMyEventListingState", () => {
 
     /* =============================
        TEST HELPERS
     ============================= */
 
-    const renderUseEventListingState = (query = "", options = {}) => {
+    const renderUseMyEventListingState = (query = "", options = {}) => {
         const searchParams = new URLSearchParams(query);
         const setSearchParams = vi.fn();
 
         const hook = renderHook(() =>
-            useEventListingState({
+            useMyEventListingState({
                 searchParams,
                 setSearchParams,
                 ...options
@@ -52,7 +50,7 @@ describe("useEventListingState", () => {
     ============================= */
 
     it("initializes feedback and loading state", () => {
-        const { result } = renderUseEventListingState();
+        const { result } = renderUseMyEventListingState();
 
         expect(result.current.feedback.message).toBe("");
         expect(result.current.feedback.error).toBe("");
@@ -62,36 +60,36 @@ describe("useEventListingState", () => {
     });
 
     it("initializes view and pagination from URL params", () => {
-        const { result } = renderUseEventListingState("view=past&page=3");
+        const { result } = renderUseMyEventListingState("view=joined&page=3");
 
-        expect(result.current.view.initialView).toBe(EVENT_STATUS.PAST);
-        expect(result.current.view.activeView).toBe(EVENT_STATUS.PAST);
+        expect(result.current.view.initialView).toBe("joined");
+        expect(result.current.view.activeView).toBe("joined");
 
         expect(result.current.paginationState.initialPage).toBe(3);
         expect(result.current.paginationState.pagination.page).toBe(3);
     });
 
     it("uses fallback view when URL view is invalid", () => {
-        const { result } = renderUseEventListingState("view=unknown&page=2");
+        const { result } = renderUseMyEventListingState("view=unknown&page=2");
 
-        expect(result.current.view.initialView).toBe("all");
-        expect(result.current.view.activeView).toBe("all");
+        expect(result.current.view.initialView).toBe("created");
+        expect(result.current.view.activeView).toBe("created");
 
         expect(result.current.paginationState.initialPage).toBe(2);
         expect(result.current.paginationState.pagination.page).toBe(2);
     });
 
     it("supports a custom fallback view", () => {
-        const { result } = renderUseEventListingState("view=unknown", {
-            fallbackView: EVENT_STATUS.UPCOMING
+        const { result } = renderUseMyEventListingState("view=unknown", {
+            fallbackView: "joined"
         });
 
-        expect(result.current.view.initialView).toBe(EVENT_STATUS.UPCOMING);
-        expect(result.current.view.activeView).toBe(EVENT_STATUS.UPCOMING);
+        expect(result.current.view.initialView).toBe("joined");
+        expect(result.current.view.activeView).toBe("joined");
     });
 
     it("falls back to page 1 when URL page is invalid", () => {
-        const { result } = renderUseEventListingState("page=invalid");
+        const { result } = renderUseMyEventListingState("page=invalid");
 
         expect(result.current.paginationState.initialPage).toBe(1);
         expect(result.current.paginationState.pagination.page).toBe(1);
@@ -102,7 +100,7 @@ describe("useEventListingState", () => {
     ============================= */
 
     it("syncs filters, page and view to URL search params", () => {
-        const { result, setSearchParams } = renderUseEventListingState();
+        const { result, setSearchParams } = renderUseMyEventListingState();
 
         act(() => {
             result.current.syncUrl(
@@ -111,7 +109,7 @@ describe("useEventListingState", () => {
                     type: "workshop"
                 },
                 2,
-                EVENT_STATUS.UPCOMING
+                "joined"
             );
         });
 
@@ -122,7 +120,27 @@ describe("useEventListingState", () => {
         expect(nextParams.get("search")).toBe("react");
         expect(nextParams.get("type")).toBe("workshop");
         expect(nextParams.get("page")).toBe("2");
-        expect(nextParams.get("view")).toBe(EVENT_STATUS.UPCOMING);
+        expect(nextParams.get("view")).toBe("joined");
+    });
+
+    it("does not include fallback view in URL search params", () => {
+        const { result, setSearchParams } = renderUseMyEventListingState();
+
+        act(() => {
+            result.current.syncUrl(
+                {
+                    search: "react"
+                },
+                1,
+                "created"
+            );
+        });
+
+        const nextParams = setSearchParams.mock.calls[0][0];
+
+        expect(nextParams.has("view")).toBe(false);
+        expect(nextParams.has("page")).toBe(false);
+        expect(nextParams.get("search")).toBe("react");
     });
 
     /* =============================
@@ -130,7 +148,7 @@ describe("useEventListingState", () => {
     ============================= */
 
     it("resets pagination to the first page", () => {
-        const { result } = renderUseEventListingState("page=4");
+        const { result } = renderUseMyEventListingState("page=4");
 
         expect(result.current.paginationState.pagination.page).toBe(4);
 
@@ -146,7 +164,7 @@ describe("useEventListingState", () => {
     ============================= */
 
     it("keeps filters unchanged when the target view does not clear date filters", () => {
-        const { result } = renderUseEventListingState();
+        const { result } = renderUseMyEventListingState();
 
         const filters = {
             search: "react",
@@ -155,13 +173,13 @@ describe("useEventListingState", () => {
             endDate: "2026-05-19"
         };
 
-        const nextFilters = result.current.view.getFiltersForView(filters, "all");
+        const nextFilters = result.current.view.getFiltersForView(filters, "created");
 
         expect(nextFilters).toEqual(filters);
     });
 
     it("clears date filters when the target view requires date reset", () => {
-        const { result } = renderUseEventListingState();
+        const { result } = renderUseMyEventListingState();
 
         const filters = {
             search: "react",
@@ -170,7 +188,7 @@ describe("useEventListingState", () => {
             endDate: "2026-05-19"
         };
 
-        const nextFilters = result.current.view.getFiltersForView(filters, EVENT_STATUS.PAST);
+        const nextFilters = result.current.view.getFiltersForView(filters, "createdHistory");
 
         expect(nextFilters).toEqual({
             search: "react",

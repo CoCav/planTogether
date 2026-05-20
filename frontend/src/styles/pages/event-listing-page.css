@@ -1,6 +1,10 @@
 /* ==================================================
-   EVENTS PAGE
-   Page-level layout for public event listing screens
+   EVENT LISTING PAGE
+   Shared page-level layout for event listing screens
+
+   Used by:
+   - EventsPage
+   - MyEventsPage
 ================================================== */
 
 /* ==================================================

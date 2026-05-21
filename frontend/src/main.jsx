@@ -18,6 +18,8 @@ import "./styles/pages/event-details-page.css";
 import "./styles/pages/event-form-page.css";
 import "./styles/pages/event-listing-page.css";
 
+import "./styles/components/auth/login-form.css";
+
 import "./styles/components/events/event-card-actions.css";
 import "./styles/components/events/event-card.css";
 import "./styles/components/events/event-details-actions.css";

@@ -28,7 +28,7 @@ export default function UserForm({
     submitLabel,
     isSubmitting,
 
-    showAvatar = true,
+    showAvatar,
 
     onFieldChange,
     onAvatarChange = () => { },
@@ -70,7 +70,7 @@ export default function UserForm({
     ============================= */
 
     return (
-        <form onSubmit={onSubmit} className="user-form">
+        <form onSubmit={onSubmit} className="account-form">
 
             {/* =============================
                AVATAR

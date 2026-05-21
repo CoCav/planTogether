@@ -1,13 +1,33 @@
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+
 import LoginPage from "../../pages/LoginPage";
 
 /* ==================================================
    LOGIN PAGE TESTS
-   Tests login form validation, auth flow and redirect
+   Tests account login page behavior
+
+   Handles:
+   - login page rendering
+   - login form validation
+   - field and password interactions
+   - remember me preference
+   - successful login flow
+   - redirect after successful login
+   - login error feedback
+
+   Notes:
+   - mocks auth context login action
+   - mocks login API request
+   - mocks login redirect location state
+   - uses MemoryRouter for account navigation link
 ================================================== */
+
+/* =============================
+   MOCK DATA
+============================= */
 
 const mockNavigate = vi.fn();
 const mockLogin = vi.fn();
@@ -18,6 +38,10 @@ let mockLocationState = {
         pathname: "/events/42/edit"
     }
 };
+
+/* =============================
+   MOCKS
+============================= */
 
 vi.mock("react-router-dom", async () => {
     const actual = await vi.importActual("react-router-dom");
@@ -31,26 +55,19 @@ vi.mock("react-router-dom", async () => {
     };
 });
 
-vi.mock("../../context/useAuth.js", () => ({
+vi.mock("../../features/auth/hooks/useAuth", () => ({
     useAuth: () => ({
         login: mockLogin
     })
 }));
 
-vi.mock("../../api/authApi", () => ({
+vi.mock("../../api/auth/authApi", () => ({
     loginUser: (...args) => mockLoginUser(...args)
 }));
 
-vi.mock("../../features/auth/authValidation.js", () => ({
-    validateLoginForm: vi.fn((form) => {
-        const errors = {};
-
-        if (!form.email) errors.email = "Email is required";
-        if (!form.password) errors.password = "Password is required";
-
-        return errors;
-    })
-}));
+/* =============================
+   TEST HELPERS
+============================= */
 
 const renderPage = () =>
     render(
@@ -59,12 +76,21 @@ const renderPage = () =>
         </MemoryRouter>
     );
 
-const fillLoginForm = async (user) => {
-    await user.type(screen.getByPlaceholderText(/your email/i), "test@test.com");
-    await user.type(screen.getByPlaceholderText(/your password/i), "Password123");
+const fillLoginForm = async (user, {
+    email = "test@test.com",
+    password = "Password123"
+} = {}
+) => {
+    await user.type(screen.getByLabelText("Email"), email);
+    await user.type(screen.getByLabelText(/^password$/i), password);
 };
 
 describe("LoginPage", () => {
+
+    /* =============================
+       TEST SETUP
+    ============================= */
+
     beforeEach(() => {
         vi.clearAllMocks();
 
@@ -75,26 +101,56 @@ describe("LoginPage", () => {
         };
     });
 
-    it("renders the login form", () => {
+    /* =============================
+       PAGE RENDERING
+    ============================= */
+
+    it("renders the login page", () => {
         renderPage();
 
-        expect(screen.getByRole("heading", { name: /login/i })).toBeInTheDocument();
-        expect(screen.getByPlaceholderText(/your email/i)).toBeInTheDocument();
-        expect(screen.getByPlaceholderText(/your password/i)).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /^login$/i })).toBeInTheDocument();
-        expect(screen.getByRole("checkbox")).toBeInTheDocument();
-        expect(screen.getByRole("link", { name: /register/i })).toBeInTheDocument();
+        expect(screen.getByRole("heading", {
+            name: "Login"
+        })).toBeInTheDocument();
+
+        expect(screen.getByText(
+            "Sign in to manage your events and participation."
+        )).toBeInTheDocument();
+
+        expect(screen.getByLabelText("Email")).toBeInTheDocument();
+        expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
+        expect(screen.getByLabelText("Remember me")).toBeInTheDocument();
+
+        expect(screen.getByRole("button", {
+            name: "Login"
+        })).toBeInTheDocument();
+
+        expect(screen.getByRole("link", {
+            name: "Register"
+        })).toHaveAttribute("href", "/register");
     });
+
+    it("renders the login section with accessible label", () => {
+        renderPage();
+
+        expect(screen.getByLabelText("Login")).toHaveClass("account-section");
+    });
+
+    /* =============================
+       FORM VALIDATION
+    ============================= */
 
     it("shows validation errors when submitting empty form", async () => {
         const user = userEvent.setup();
 
         renderPage();
 
-        await user.click(screen.getByRole("button", { name: /^login$/i }));
+        await user.click(screen.getByRole("button", {
+            name: "Login"
+        }));
 
-        expect(screen.getByText(/email is required/i)).toBeInTheDocument();
-        expect(screen.getByText(/password is required/i)).toBeInTheDocument();
+        expect(screen.getByText("Email is required")).toBeInTheDocument();
+        expect(screen.getByText("Password is required")).toBeInTheDocument();
+
         expect(mockLoginUser).not.toHaveBeenCalled();
     });
 
@@ -103,37 +159,68 @@ describe("LoginPage", () => {
 
         renderPage();
 
-        await user.click(screen.getByRole("button", { name: /^login$/i }));
+        await user.click(screen.getByRole("button", {
+            name: "Login"
+        }));
 
-        expect(screen.getByText(/email is required/i)).toBeInTheDocument();
+        expect(screen.getByText("Email is required")).toBeInTheDocument();
 
-        await user.type(screen.getByPlaceholderText(/your email/i), "test@test.com");
+        await user.type(screen.getByLabelText("Email"), "test@test.com");
 
-        expect(screen.queryByText(/email is required/i)).not.toBeInTheDocument();
+        expect(screen.queryByText("Email is required")).not.toBeInTheDocument();
     });
+
+    /* =============================
+       FORM INTERACTIONS
+    ============================= */
+
+    it("updates input values when typing", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await fillLoginForm(user);
+
+        expect(screen.getByLabelText("Email")).toHaveValue("test@test.com");
+        expect(screen.getByLabelText(/^password$/i)).toHaveValue("Password123");
+    });
+
+    /* =============================
+       PASSWORD INTERACTIONS
+    ============================= */
 
     it("toggles password visibility", async () => {
         const user = userEvent.setup();
 
         renderPage();
 
-        const passwordInput = screen.getByPlaceholderText(/your password/i);
+        const passwordInput = screen.getByLabelText(/^password$/i);
 
         expect(passwordInput).toHaveAttribute("type", "password");
 
-        await user.click(screen.getByRole("button", { name: /show/i }));
+        await user.click(screen.getByRole("button", {
+            name: "Show password"
+        }));
+
         expect(passwordInput).toHaveAttribute("type", "text");
 
-        await user.click(screen.getByRole("button", { name: /hide/i }));
+        await user.click(screen.getByRole("button", {
+            name: "Hide password"
+        }));
+
         expect(passwordInput).toHaveAttribute("type", "password");
     });
+
+    /* =============================
+       REMEMBER ME
+    ============================= */
 
     it("allows remember me to be checked", async () => {
         const user = userEvent.setup();
 
         renderPage();
 
-        const checkbox = screen.getByRole("checkbox");
+        const checkbox = screen.getByLabelText("Remember me");
 
         expect(checkbox).not.toBeChecked();
 
@@ -142,17 +229,29 @@ describe("LoginPage", () => {
         expect(checkbox).toBeChecked();
     });
 
+    /* =============================
+       SUBMISSION
+    ============================= */
+
     it("logs in successfully and redirects to previous page", async () => {
         const user = userEvent.setup();
 
-        mockLoginUser.mockResolvedValue({ data: { token: "fake-token" } });
+        mockLoginUser.mockResolvedValue({
+            data: {
+                token: "fake-token"
+            }
+        });
+
         mockLogin.mockResolvedValue();
 
         renderPage();
 
         await fillLoginForm(user);
-        await user.click(screen.getByRole("checkbox"));
-        await user.click(screen.getByRole("button", { name: /^login$/i }));
+        await user.click(screen.getByLabelText("Remember me"));
+
+        await user.click(screen.getByRole("button", {
+            name: "Login"
+        }));
 
         await waitFor(() => {
             expect(mockLoginUser).toHaveBeenCalledWith({
@@ -162,6 +261,7 @@ describe("LoginPage", () => {
         });
 
         expect(mockLogin).toHaveBeenCalledWith("fake-token", true);
+
         expect(mockNavigate).toHaveBeenCalledWith("/events/42/edit", {
             replace: true
         });
@@ -171,13 +271,22 @@ describe("LoginPage", () => {
         const user = userEvent.setup();
 
         mockLocationState = null;
-        mockLoginUser.mockResolvedValue({ data: { token: "fake-token" } });
+
+        mockLoginUser.mockResolvedValue({
+            data: {
+                token: "fake-token"
+            }
+        });
+
         mockLogin.mockResolvedValue();
 
         renderPage();
 
         await fillLoginForm(user);
-        await user.click(screen.getByRole("button", { name: /^login$/i }));
+
+        await user.click(screen.getByRole("button", {
+            name: "Login"
+        }));
 
         await waitFor(() => {
             expect(mockNavigate).toHaveBeenCalledWith("/events", {
@@ -190,34 +299,54 @@ describe("LoginPage", () => {
         const user = userEvent.setup();
 
         let resolveRequest;
-        mockLoginUser.mockImplementation(
-            () =>
-                new Promise((resolve) => {
-                    resolveRequest = resolve;
-                })
+
+        mockLoginUser.mockImplementation(() =>
+            new Promise((resolve) => {
+                resolveRequest = resolve;
+            })
         );
 
         renderPage();
 
         await fillLoginForm(user);
-        await user.click(screen.getByRole("button", { name: /^login$/i }));
 
-        expect(screen.getByRole("button", { name: /loading/i })).toBeDisabled();
+        await user.click(screen.getByRole("button", {
+            name: "Login"
+        }));
 
-        resolveRequest({ data: { token: "fake-token" } });
+        expect(screen.getByRole("button", {
+            name: "Loading..."
+        })).toBeDisabled();
+
+        resolveRequest({
+            data: {
+                token: "fake-token"
+            }
+        });
     });
+
+    /* =============================
+       ERROR HANDLING
+    ============================= */
 
     it("shows error message when login fails", async () => {
         const user = userEvent.setup();
 
-        mockLoginUser.mockRejectedValue(new Error("Login failed"));
+        mockLoginUser.mockRejectedValue(
+            new Error("Login failed")
+        );
 
         renderPage();
 
         await fillLoginForm(user);
-        await user.click(screen.getByRole("button", { name: /^login$/i }));
 
-        expect(await screen.findByText(/unable to login\. please check your credentials\./i)).toBeInTheDocument();
+        await user.click(screen.getByRole("button", {
+            name: "Login"
+        }));
+
+        expect(await screen.findByText(
+            "Unable to login. Please check your credentials."
+        )).toBeInTheDocument();
 
         expect(mockLogin).not.toHaveBeenCalled();
         expect(mockNavigate).not.toHaveBeenCalled();

@@ -111,6 +111,8 @@ export default function RegisterPage() {
                         submitLabel="Register"
                         isSubmitting={isSubmitting}
 
+                        showAvatar
+
                         onFieldChange={handleFieldChange}
                         onAvatarChange={handleAvatarChange}
                         onRemoveAvatar={handleRemoveAvatar}

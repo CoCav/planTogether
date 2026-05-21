@@ -29,7 +29,7 @@ export default function EventStaffSection({
     return (
         <Card>
             <EventMembersSection
-                title="👑 Event Team"
+                title="Event Team"
                 subtitle={`${formatCount(staffCount, "member")} ${formatBe(staffCount)} managing this event.`}
                 members={staff}
                 emptyMessage="No team members."

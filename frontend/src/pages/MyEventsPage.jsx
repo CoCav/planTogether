@@ -36,6 +36,8 @@ import Pagination from "../components/ui/Pagination";
    - pagination
    - URL synchronization
    - leave event action
+   - accessible filter and results sections
+   - accessible listing metadata
 ================================================== */
 
 export default function MyEventsPage() {
@@ -275,30 +277,40 @@ export default function MyEventsPage() {
                 <EventsFilterCard
                     filters={filters}
                     showFilters={showFilters}
+
                     sortLabels={sortLabels}
+
+                    resultsCount={pagination.totalEvents}
+
                     onToggleFilters={() => setShowFilters((prev) => !prev)}
+
                     onFilterChange={handleFilterChange}
                     onFilterSubmit={handleFilterSubmit}
+
                     onSortChange={handleSortChange}
                     onResetFilters={handleResetFilters}
                 />
             </section>
 
-            <section className="events-results-controls" aria-labelledby="my-events-results-title">
+            <section className="events-results-controls">
                 <EventsToolbar
                     titleId="my-events-results-title"
                     title={viewContent.title}
                     subtitle={viewContent.subtitle}
+
                     totalEvents={pagination.totalEvents}
                     page={pagination.page}
                     totalPages={pagination.totalPages}
                     showPaginationInfo={showPaginationInfo}
+
                     views={MY_EVENT_VIEWS}
                     activeView={activeView}
+                    onViewChange={handleViewChange}
+
                     showQuickActions={viewContent.showQuickActions}
                     filters={filters}
+
                     isCurrentWeekendFilterActive={isCurrentWeekendFilterActive}
-                    onViewChange={handleViewChange}
                     onTodayFilter={handleTodayFilter}
                     onWeekendFilter={handleWeekendFilter}
                 />

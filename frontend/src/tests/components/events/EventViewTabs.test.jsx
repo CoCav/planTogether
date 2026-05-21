@@ -1,7 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import EventViewTabs from "../../../components/events/EventViewTabs";
+
+import { EVENT_STATUS } from "../../../features/shared/eventStatus";
 
 import {
     createAllEventsView,
@@ -16,8 +18,9 @@ import {
    Handles:
    - view tab rendering
    - active tab state
+   - decorative tab icons
+   - accessible tab navigation
    - view change callback
-   - accessible navigation label
 ================================================== */
 
 describe("EventViewTabs", () => {
@@ -26,12 +29,12 @@ describe("EventViewTabs", () => {
        TEST DATA
     ============================= */
 
-
     const views = [
         createAllEventsView(),
         createUpcomingEventsView(),
         createPastEventsView()
     ];
+
     /* =============================
        TEST HELPERS
     ============================= */
@@ -51,10 +54,10 @@ describe("EventViewTabs", () => {
        RENDERING
     ============================= */
 
-    it("should render event view navigation", () => {
+    it("should render event view tablist", () => {
         renderEventViewTabs();
 
-        expect(screen.getByRole("navigation", {
+        expect(screen.getByRole("tablist", {
             name: "Event views"
         })).toBeInTheDocument();
     });
@@ -62,9 +65,9 @@ describe("EventViewTabs", () => {
     it("should render all view tabs", () => {
         renderEventViewTabs();
 
-        expect(screen.getByRole("button", { name: /all/i })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /upcoming/i })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /archives/i })).toBeInTheDocument();
+        expect(screen.getByRole("tab", { name: /all/i })).toBeInTheDocument();
+        expect(screen.getByRole("tab", { name: /upcoming/i })).toBeInTheDocument();
+        expect(screen.getByRole("tab", { name: /archives/i })).toBeInTheDocument();
     });
 
     it("should render tab icons", () => {
@@ -75,34 +78,46 @@ describe("EventViewTabs", () => {
         expect(screen.getByText("🗂️")).toBeInTheDocument();
     });
 
+    it("should hide decorative tab icons from assistive technologies", () => {
+        renderEventViewTabs();
+
+        const icons = document.querySelectorAll(
+            ".event-view-tab-icon[aria-hidden='true']"
+        );
+
+        expect(icons).toHaveLength(3);
+    });
+
     /* =============================
        ACTIVE STATE
     ============================= */
 
     it("should mark active view tab", () => {
         renderEventViewTabs({
-            activeView: "upcoming"
+            activeView: EVENT_STATUS.UPCOMING
         });
 
-        const activeButton = screen.getByRole("button", {
+        const activeTab = screen.getByRole("tab", {
             name: /upcoming/i
         });
 
-        expect(activeButton).toHaveClass("is-active");
-        expect(activeButton).toHaveAttribute("aria-pressed", "true");
+        expect(activeTab).toHaveClass("is-active");
+        expect(activeTab).toHaveAttribute("aria-selected", "true");
+        expect(activeTab).toHaveAttribute("tabindex", "0");
     });
 
-    it("should mark inactive view tabs as not pressed", () => {
+    it("should mark inactive view tabs as not selected", () => {
         renderEventViewTabs({
-            activeView: "upcoming"
+            activeView: EVENT_STATUS.UPCOMING
         });
 
-        const inactiveButton = screen.getByRole("button", {
+        const inactiveTab = screen.getByRole("tab", {
             name: /all/i
         });
 
-        expect(inactiveButton).not.toHaveClass("is-active");
-        expect(inactiveButton).toHaveAttribute("aria-pressed", "false");
+        expect(inactiveTab).not.toHaveClass("is-active");
+        expect(inactiveTab).toHaveAttribute("aria-selected", "false");
+        expect(inactiveTab).toHaveAttribute("tabindex", "-1");
     });
 
     /* =============================
@@ -116,10 +131,10 @@ describe("EventViewTabs", () => {
             onChange
         });
 
-        fireEvent.click(screen.getByRole("button", {
+        fireEvent.click(screen.getByRole("tab", {
             name: /upcoming/i
         }));
 
-        expect(onChange).toHaveBeenCalledWith("upcoming");
+        expect(onChange).toHaveBeenCalledWith(EVENT_STATUS.UPCOMING);
     });
 });

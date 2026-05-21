@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import EventParticipantsSection from "../../../components/events/EventParticipantsSection";
 
@@ -13,8 +13,10 @@ import { createAuthenticatedUser } from "../../factories/users/userFactory";
 
    Handles:
    - participant section copy
+   - accessible participant section copy
    - active and past empty messages
    - guest header messages
+   - accessible guest messaging
    - promote action callback
    - remove action callback
    - authenticated action visibility
@@ -102,7 +104,7 @@ describe("EventParticipantsSection", () => {
         renderEventParticipantsSection();
 
         expect(screen.getByRole("heading", {
-            name: "👥 1 Attendee"
+            name: "1 Attendee"
         })).toBeInTheDocument();
 
         expect(screen.getByText("1 attendee is attending this event.")).toBeInTheDocument();

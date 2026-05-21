@@ -4,12 +4,25 @@
 
    Supports:
    - accessible label association via htmlFor
+   - accessible error association via aria-describedby
    - custom field content
    - optional error message
    - custom classes
 ================================================== */
 
-export default function FormField({ label, htmlFor, error, children, className = "" }) {
+export default function FormField({
+    label,
+    htmlFor,
+    error,
+    children,
+    className = ""
+}) {
+
+    /* =========================
+       ACCESSIBILITY
+    ========================= */
+
+    const errorId = error ? `${htmlFor}-error` : undefined;
 
     /* =========================
        CSS CLASSES
@@ -23,9 +36,13 @@ export default function FormField({ label, htmlFor, error, children, className =
                 {label}
             </label>
 
-            {children}
+            {children(errorId)}
 
-            {error && <p className="form-field-error">{error}</p>}
+            {error && (
+                <p id={errorId} className="form-field-error">
+                    {error}
+                </p>
+            )}
         </div>
     );
 }

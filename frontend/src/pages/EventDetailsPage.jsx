@@ -40,6 +40,7 @@ import PageLoader from "../components/ui/PageLoader";
    - event deletion
    - staff and participant management
    - display-ready event data
+   - accessible event image description
 ================================================== */
 
 export default function EventDetailsPage() {
@@ -235,7 +236,7 @@ export default function EventDetailsPage() {
     ============================= */
 
     return (
-        <div className="container page-section">
+        <main className="container page-section">
             <header className="page-header">
                 <div>
                     <h1 className="page-title">
@@ -279,7 +280,7 @@ export default function EventDetailsPage() {
                     <div className="event-details-image-wrapper">
                         <img
                             src={getEventImage(event.image)}
-                            alt={event.title}
+                            alt={`Event cover for ${eventDisplayData.title}`}
                             className="event-details-image"
                             onError={(imageError) => {
                                 imageError.currentTarget.src = defaultEventImage;
@@ -324,6 +325,6 @@ export default function EventDetailsPage() {
                     onRemove={handleRemoveMember}
                 />
             </section>
-        </div>
+        </main>
     );
 }

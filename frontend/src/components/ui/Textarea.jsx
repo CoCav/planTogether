@@ -5,6 +5,7 @@
    Handles:
    - shared textarea styling
    - validation error state
+   - accessible invalid state
    - configurable rows
    - resize behavior
    - custom class names

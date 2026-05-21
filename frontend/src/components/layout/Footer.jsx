@@ -9,6 +9,7 @@ import { useAuth } from "../../features/auth/hooks/useAuth";
    Handles:
    - public footer navigation
    - authenticated user footer navigation
+   - accessible footer navigation
    - application branding and copyright
 ================================================== */
 

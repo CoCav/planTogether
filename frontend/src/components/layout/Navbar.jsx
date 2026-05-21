@@ -15,6 +15,8 @@ import NavbarUserMenu from "./NavbarUserMenu";
    - primary navigation links
    - authentication navigation
    - authenticated user menu
+   - accessible main navigation
+   - accessible authenticated navigation
 ================================================== */
 
 export default function Navbar() {

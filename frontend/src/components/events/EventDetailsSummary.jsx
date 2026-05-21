@@ -8,6 +8,7 @@
    - capacity
    - date and time
    - registration deadline
+   - decorative summary icons
 ================================================== */
 
 export default function EventDetailsSummary({
@@ -24,46 +25,60 @@ export default function EventDetailsSummary({
     return (
         <dl className="event-details-summary">
             <div className="event-details-summary-item">
-                <dt className="event-details-summary-label">🏷️ Type</dt>
+                <dt className="event-details-summary-label">
+                    <span aria-hidden="true">🏷️</span> Type
+                </dt>
                 <dd className="event-details-summary-value">{type}</dd>
             </div>
 
             <div className="event-details-summary-item">
-                <dt className="event-details-summary-label">🎯 Theme</dt>
+                <dt className="event-details-summary-label">
+                    <span aria-hidden="true">🎯</span> Theme
+                </dt>
                 <dd className="event-details-summary-value">{theme}</dd>
             </div>
 
             <div className="event-details-summary-item">
-                <dt className="event-details-summary-label">📍 Mode</dt>
+                <dt className="event-details-summary-label">
+                    <span aria-hidden="true">📍</span> Mode
+                </dt>
                 <dd className="event-details-summary-value">{mode}</dd>
             </div>
 
             <div className="event-details-summary-item">
-                <dt className="event-details-summary-label">📍 Location</dt>
+                <dt className="event-details-summary-label">
+                    <span aria-hidden="true">📍</span> Location
+                </dt>
                 <dd className="event-details-summary-value">{location}</dd>
             </div>
 
             {capacity && (
                 <div className="event-details-summary-item">
-                    <dt className="event-details-summary-label">👥 Capacity</dt>
+                    <dt className="event-details-summary-label">
+                        <span aria-hidden="true">👥</span> Capacity
+                    </dt>
                     <dd className="event-details-summary-value">{capacity}</dd>
                 </div>
             )}
 
             <div className="event-details-summary-item">
-                <dt className="event-details-summary-label">📅 Date</dt>
+                <dt className="event-details-summary-label">
+                    <span aria-hidden="true">📅</span> Date
+                </dt>
                 <dd className="event-details-summary-value">{date}</dd>
             </div>
 
             <div className="event-details-summary-item">
-                <dt className="event-details-summary-label">🕒 Time</dt>
+                <dt className="event-details-summary-label">
+                    <span aria-hidden="true">🕒</span> Time
+                </dt>
                 <dd className="event-details-summary-value">{time}</dd>
             </div>
 
             {registrationDeadline && (
                 <div className="event-details-summary-item">
                     <dt className="event-details-summary-label">
-                        ⏳ Registration deadline
+                        <span aria-hidden="true">⏳</span> Registration deadline
                     </dt>
                     <dd className="event-details-summary-value">
                         {registrationDeadline}

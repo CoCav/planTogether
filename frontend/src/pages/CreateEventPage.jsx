@@ -19,6 +19,7 @@ import Card from "../components/ui/Card";
    - create event form orchestration
    - create event submission
    - redirect after successful creation
+   - accessible form section
 ================================================== */
 
 export default function CreateEventPage() {
@@ -84,7 +85,9 @@ export default function CreateEventPage() {
         <main className="container page-section">
             <header className="page-header">
                 <div className="event-form-page-header">
-                    <h1 className="page-title">Create Event</h1>
+                    <h1 id="event-form-title" className="page-title">
+                        Create Event
+                    </h1>
 
                     <p className="page-subtitle">
                         Fill in the details below to create a new event.
@@ -94,25 +97,27 @@ export default function CreateEventPage() {
 
             {error && <Alert type="danger">{error}</Alert>}
 
-            <Card className="event-form-card">
-                <EventForm
-                    values={values}
-                    fieldErrors={fieldErrors}
+            <section className="event-form-section" aria-labelledby="event-form-title">
+                <Card className="event-form-card">
+                    <EventForm
+                        values={values}
+                        fieldErrors={fieldErrors}
 
-                    submitLabel="Create Event"
-                    isSubmitting={isSubmitting}
+                        submitLabel="Create Event"
+                        isSubmitting={isSubmitting}
 
-                    isOnlineEvent={isOnlineEvent}
-                    showCustomDeadline={showCustomDeadline}
+                        isOnlineEvent={isOnlineEvent}
+                        showCustomDeadline={showCustomDeadline}
 
-                    onFieldChange={handleFieldChange}
-                    onImageChange={handleImageChange}
-                    onRemoveImage={handleRemoveImage}
+                        onFieldChange={handleFieldChange}
+                        onImageChange={handleImageChange}
+                        onRemoveImage={handleRemoveImage}
 
-                    onSubmit={handleSubmit}
-                    onCancel={handleCancel}
-                />
-            </Card>
+                        onSubmit={handleSubmit}
+                        onCancel={handleCancel}
+                    />
+                </Card>
+            </section>
         </main>
     );
 }

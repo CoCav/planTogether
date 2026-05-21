@@ -1,6 +1,5 @@
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
 import { render, screen, waitFor } from "@testing-library/react";
 
 import userEvent from "@testing-library/user-event";
@@ -14,7 +13,9 @@ import Navbar from "../../../components/layout/Navbar";
    Handles:
    - public navigation links
    - authenticated navigation links
+   - accessible authenticated navigation
    - main navigation landmark
+   - accessible main navigation
    - user menu integration
    - logout redirect flow
 
@@ -112,6 +113,16 @@ describe("Navbar", () => {
         expect(screen.queryByRole("link", { name: "Register" })).not.toBeInTheDocument();
     });
 
+    it("renders accessible user avatar image", () => {
+        mockUser = {
+            name: "John",
+            avatar: null
+        };
+
+        renderNavbar();
+
+        expect(screen.getByAltText("John avatar")).toBeInTheDocument();
+    });
 
     /* =============================
        SEMANTIC NAVIGATION
@@ -123,6 +134,18 @@ describe("Navbar", () => {
         expect(screen.getByRole("navigation", { name: "Main navigation" })).toBeInTheDocument();
     });
 
+    it("renders accessible authenticated navigation links", () => {
+        mockUser = {
+            name: "John",
+            avatar: null
+        };
+
+        renderNavbar();
+
+        expect(screen.getByRole("link", {
+            name: "Create event"
+        })).toBeInTheDocument();
+    });
 
     /* =============================
        LOGOUT FLOW

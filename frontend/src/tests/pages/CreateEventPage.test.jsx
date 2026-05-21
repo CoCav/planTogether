@@ -11,6 +11,7 @@ import CreateEventPage from "../../pages/CreateEventPage";
 
    Handles:
    - page rendering
+   - accessible form section
    - required validation errors
    - event creation FormData payload
    - online event location normalization
@@ -110,6 +111,19 @@ describe("CreateEventPage", () => {
         expect(screen.getByRole("button", {
             name: /create event/i
         })).toBeInTheDocument();
+    });
+
+    it("renders accessible create event form section", () => {
+        renderPage();
+
+        expect(screen.getByRole("heading", {
+            level: 1,
+            name: /create event/i
+        })).toHaveAttribute("id", "event-form-title");
+
+        expect(screen.getByRole("region", {
+            name: /create event/i
+        })).toHaveClass("event-form-section");
     });
 
     /* =============================

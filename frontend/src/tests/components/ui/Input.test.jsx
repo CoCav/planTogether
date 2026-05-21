@@ -10,6 +10,7 @@ import Input from "../../../components/ui/Input";
    Handles:
    - base input rendering
    - error class rendering
+   - accessible invalid state
    - custom class merging
    - native input props forwarding
    - input change handler forwarding
@@ -51,6 +52,15 @@ describe("Input", () => {
         });
 
         expect(screen.getByPlaceholderText("Your email")).toHaveClass("error");
+    });
+
+    it("should expose accessible invalid state when error exists", () => {
+        renderInput({
+            error: true,
+            placeholder: "Your email"
+        });
+
+        expect(screen.getByPlaceholderText("Your email")).toHaveAttribute("aria-invalid", "true");
     });
 
     /* =============================

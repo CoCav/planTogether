@@ -33,6 +33,8 @@ import {
    - URL synchronization
    - guest login messaging
    - current user role forwarding
+   - accessible listing sections
+   - accessible listing metadata
 
    Notes:
    - mocks API modules
@@ -157,6 +159,20 @@ describe("EventsPage", () => {
         expect(screen.getByText("(2)")).toBeInTheDocument();
     });
 
+    it("displays total events count from pagination metadata", async () => {
+        mockGetAllEvents.mockResolvedValue(
+            createEventsPageResponse({
+                events: [{ id: 1, title: "Event 1", creatorId: 2 }],
+                totalEvents: 12
+            })
+        );
+
+        renderPage();
+
+        expect(await screen.findByText("(12)")).toBeInTheDocument();
+        expect(screen.getByText(/12 events found/i)).toBeInTheDocument();
+    });
+
     it("displays empty state when no events are returned", async () => {
         await renderLoadedEmptyEventsPage();
 
@@ -183,7 +199,7 @@ describe("EventsPage", () => {
 
         await renderLoadedEmptyEventsPage();
 
-        await user.click(screen.getByRole("button", { name: /upcoming/i }));
+        await user.click(screen.getByRole("tab", { name: /upcoming/i }));
 
         await waitFor(() => {
             expectListingApiCalledWith(mockGetAllEvents, {
@@ -201,7 +217,7 @@ describe("EventsPage", () => {
 
         await renderLoadedEmptyEventsPage();
 
-        await user.click(screen.getByRole("button", { name: /archives/i }));
+        await user.click(screen.getByRole("tab", { name: /archives/i }));
 
         await waitFor(() => {
             expectListingApiCalledWith(mockGetAllEvents, {
@@ -219,7 +235,7 @@ describe("EventsPage", () => {
 
         await renderLoadedEmptyEventsPage();
 
-        await user.click(screen.getByRole("button", { name: /upcoming/i }));
+        await user.click(screen.getByRole("tab", { name: /upcoming/i }));
 
         await waitFor(() => {
             expect(screen.getByTestId("location-search")).toHaveTextContent("view=upcoming");
@@ -233,7 +249,7 @@ describe("EventsPage", () => {
 
         await screen.findByText(/no events are scheduled for this date/i);
 
-        await user.click(screen.getByRole("button", { name: /archives/i }));
+        await user.click(screen.getByRole("tab", { name: /archives/i }));
 
         await waitFor(() => {
             expectListingApiCalledWith(mockGetAllEvents, {
@@ -257,7 +273,7 @@ describe("EventsPage", () => {
 
         await screen.findByText(/no events found/i);
 
-        await user.click(screen.getByRole("button", { name: /archives/i }));
+        await user.click(screen.getByRole("tab", { name: /archives/i }));
 
         await waitFor(() => {
             expectListingApiCalledWith(mockGetAllEvents, {
@@ -275,7 +291,7 @@ describe("EventsPage", () => {
 
         await renderLoadedEmptyEventsPage();
 
-        await user.click(screen.getByRole("button", { name: /archives/i }));
+        await user.click(screen.getByRole("tab", { name: /archives/i }));
 
         await waitFor(() => {
             expect(screen.queryByRole("button", { name: /today/i })).not.toBeInTheDocument();
@@ -321,7 +337,7 @@ describe("EventsPage", () => {
 
         await renderLoadedEmptyEventsPage();
 
-        await user.click(screen.getByRole("button", { name: /upcoming/i }));
+        await user.click(screen.getByRole("tab", { name: /upcoming/i }));
 
         await waitFor(() => {
             expectListingApiCalledWith(mockGetAllEvents, {
@@ -549,6 +565,23 @@ describe("EventsPage", () => {
         await waitFor(() => {
             expect(screen.getByTestId("location-search")).toHaveTextContent("page=2");
         });
+    });
+
+    /* =============================
+       ACCESSIBILITY
+    ============================= */
+
+    it("renders accessible filter and results sections", async () => {
+        await renderLoadedEmptyEventsPage();
+
+        expect(screen.getByRole("region", {
+            name: "Event filters"
+        })).toBeInTheDocument();
+
+        expect(screen.getByRole("heading", {
+            level: 1,
+            name: "Events"
+        })).toBeInTheDocument();
     });
 
     /* =============================

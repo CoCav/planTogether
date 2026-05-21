@@ -11,6 +11,8 @@ import Button from "../ui/Button";
    - edit / delete actions
    - availability disabled states
    - guest login prompt
+   - accessible ended status
+   - accessible guest prompt
 ================================================== */
 
 export default function EventDetailsActions({
@@ -36,7 +38,9 @@ export default function EventDetailsActions({
     if (isPast) {
         return (
             <div className="event-details-actions">
-                <span className="event-status-label">Ended</span>
+                <span className="event-status-label" aria-label="Event ended">
+                    Ended
+                </span>
             </div>
         );
     }

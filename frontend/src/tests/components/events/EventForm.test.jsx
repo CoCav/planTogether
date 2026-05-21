@@ -15,41 +15,46 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../features/shared/eventRegi
    - event field rendering
    - image upload interactions
    - image preview rendering
+   - accessible image upload controls
    - conditional fields
    - submit and cancel actions
    - validation error display
+   - accessible form field descriptions
+   - accessible invalid field states
 ================================================== */
 
-const validImage = new File(["event image"], "event.png", {
-    type: "image/png"
-});
-
-const defaultProps = {
-    values: createDefaultEventFormValues(),
-    fieldErrors: {},
-
-    submitLabel: "Create Event",
-    isSubmitting: false,
-
-    isOnlineEvent: false,
-    showCustomDeadline: false,
-
-    onFieldChange: vi.fn(),
-    onImageChange: vi.fn(),
-    onRemoveImage: vi.fn(),
-
-    onSubmit: vi.fn((event) => event.preventDefault()),
-    onCancel: vi.fn()
-};
 
 describe("EventForm", () => {
 
-    beforeEach(() => {
-        vi.clearAllMocks();
+    /* =============================
+       TEST DATA
+    ============================= */
 
-        globalThis.URL.createObjectURL = vi.fn(() => "blob:event-preview");
-        globalThis.URL.revokeObjectURL = vi.fn();
+    const validImage = new File(["event image"], "event.png", {
+        type: "image/png"
     });
+
+    const defaultProps = {
+        values: createDefaultEventFormValues(),
+        fieldErrors: {},
+
+        submitLabel: "Create Event",
+        isSubmitting: false,
+
+        isOnlineEvent: false,
+        showCustomDeadline: false,
+
+        onFieldChange: vi.fn(),
+        onImageChange: vi.fn(),
+        onRemoveImage: vi.fn(),
+
+        onSubmit: vi.fn((event) => event.preventDefault()),
+        onCancel: vi.fn()
+    };
+
+    /* =============================
+       TEST HELPERS
+    ============================= */
 
     const renderComponent = (props = {}) => {
         return render(
@@ -67,6 +72,17 @@ describe("EventForm", () => {
             />
         );
     };
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+
+        globalThis.URL.createObjectURL = vi.fn(() => "blob:event-preview");
+        globalThis.URL.revokeObjectURL = vi.fn();
+    });
+
+    /* =============================
+       FORM FIELDS
+    ============================= */
 
     it("renders main event fields", () => {
         renderComponent();
@@ -86,19 +102,6 @@ describe("EventForm", () => {
         expect(screen.getByLabelText(/end date time/i)).toHaveAttribute("type", "datetime-local");
     });
 
-    it("renders event image upload controls", () => {
-        renderComponent();
-
-        expect(screen.getByText(/drag & drop an image here/i)).toBeInTheDocument();
-        expect(screen.getByText(/max 3mb.*jpg.*png.*webp.*gif/i)).toBeInTheDocument();
-        expect(screen.getByText(/choose file/i)).toBeInTheDocument();
-
-        expect(screen.getByLabelText(/choose file/i)).toHaveAttribute(
-            "accept",
-            "image/jpeg,image/png,image/webp,image/gif"
-        );
-    });
-
     it("calls onFieldChange when editing a field", () => {
         renderComponent();
 
@@ -110,6 +113,23 @@ describe("EventForm", () => {
         });
 
         expect(defaultProps.onFieldChange).toHaveBeenCalledTimes(1);
+    });
+
+    /* =============================
+       IMAGE UPLOAD
+    ============================= */
+
+    it("renders event image upload controls", () => {
+        renderComponent();
+
+        expect(screen.getByText(/drag & drop an image here/i)).toBeInTheDocument();
+        expect(screen.getByText(/max 3mb.*jpg.*png.*webp.*gif/i)).toBeInTheDocument();
+        expect(screen.getByText(/choose file/i)).toBeInTheDocument();
+
+        expect(screen.getByLabelText(/choose file/i)).toHaveAttribute(
+            "accept",
+            "image/jpeg,image/png,image/webp,image/gif"
+        );
     });
 
     it("calls onImageChange when selecting an event image", () => {
@@ -155,6 +175,10 @@ describe("EventForm", () => {
         expect(uploadPanel).not.toHaveClass("drag-active");
     });
 
+    /* =============================
+       IMAGE PREVIEW
+    ============================= */
+
     it("shows selected event image preview card", () => {
         renderComponent({
             values: {
@@ -196,6 +220,10 @@ describe("EventForm", () => {
         expect(defaultProps.onRemoveImage).toHaveBeenCalledTimes(1);
     });
 
+    /* =============================
+       CONDITIONAL FIELDS
+    ============================= */
+
     it("hides location field for online events", () => {
         renderComponent({
             values: {
@@ -219,6 +247,10 @@ describe("EventForm", () => {
 
         expect(screen.getByLabelText(/custom deadline/i)).toHaveAttribute("type", "datetime-local");
     });
+
+    /* =============================
+       FORM ACTIONS
+    ============================= */
 
     it("renders custom submit label", () => {
         renderComponent({
@@ -252,6 +284,10 @@ describe("EventForm", () => {
         expect(defaultProps.onCancel).toHaveBeenCalledTimes(1);
     });
 
+    /* =============================
+       VALIDATION ERRORS
+    ============================= */
+
     it("displays validation errors", () => {
         renderComponent({
             fieldErrors: {
@@ -264,5 +300,29 @@ describe("EventForm", () => {
         expect(screen.getByText("Title is required")).toBeInTheDocument();
         expect(screen.getByText("Event image must be an image file")).toBeInTheDocument();
         expect(screen.getByText("Start date and time is required")).toBeInTheDocument();
+    });
+
+    /* =============================
+       ACCESSIBILITY
+    ============================= */
+
+    it("associates form fields with validation descriptions", () => {
+        renderComponent({
+            fieldErrors: {
+                title: "Title is required"
+            }
+        });
+
+        expect(screen.getByLabelText(/title/i)).toHaveAttribute("aria-describedby", "title-error");
+    });
+
+    it("marks invalid fields as accessible invalid inputs", () => {
+        renderComponent({
+            fieldErrors: {
+                title: "Title is required"
+            }
+        });
+
+        expect(screen.getByLabelText(/title/i)).toHaveAttribute("aria-invalid", "true");
     });
 });

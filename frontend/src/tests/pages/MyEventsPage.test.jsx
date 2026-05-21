@@ -14,6 +14,8 @@ import { getCurrentUserEvents } from "../../api/users/userApi";
    Handles:
    - initial loading state
    - current user event loading
+   - accessible listing sections
+   - accessible listing metadata
    - created / joined / history views
    - filters and URL synchronization
    - pagination
@@ -111,9 +113,9 @@ const expectLastCurrentUserEventsCall = async (expectedParams) => {
     });
 };
 
-const getViewButton = (label) => {
-    return screen.getAllByRole("button").find((button) =>
-        button.textContent.includes(label)
+const getViewTab = (label) => {
+    return screen.getAllByRole("tab").find((tab) =>
+        tab.textContent.includes(label)
     );
 };
 
@@ -188,6 +190,27 @@ describe("MyEventsPage", () => {
         expect(screen.getByText("(1)")).toBeInTheDocument();
     });
 
+    it("displays total events count from pagination metadata", async () => {
+        getCurrentUserEvents.mockResolvedValue(
+            createResponse({
+                events: [
+                    {
+                        id: 1,
+                        title: "Created Event",
+                        role: "organizer",
+                        status: "upcoming"
+                    }
+                ],
+                totalEvents: 12
+            })
+        );
+
+        renderPage();
+
+        expect(await screen.findByText("(12)")).toBeInTheDocument();
+        expect(screen.getByText(/12 events found/i)).toBeInTheDocument();
+    });
+
     it("displays empty state when current view has no events", async () => {
         renderPage();
 
@@ -205,7 +228,7 @@ describe("MyEventsPage", () => {
 
         await screen.findByText(/no created events/i);
 
-        await user.click(getViewButton("Joined"));
+        await user.click(getViewTab("Joined"));
 
         expect(
             await screen.findByRole("heading", {
@@ -229,7 +252,7 @@ describe("MyEventsPage", () => {
 
         await screen.findByText(/no created events/i);
 
-        await user.click(getViewButton("Created History"));
+        await user.click(getViewTab("Created History"));
 
         expect(
             await screen.findByRole("heading", {
@@ -238,7 +261,7 @@ describe("MyEventsPage", () => {
             })
         ).toBeInTheDocument();
 
-        expect(getViewButton("Created History")).toHaveAttribute("aria-pressed", "true");
+        expect(getViewTab("Created History")).toHaveAttribute("aria-selected", "true");
 
         await expectLastCurrentUserEventsCall({
             view: "createdHistory",
@@ -255,7 +278,7 @@ describe("MyEventsPage", () => {
 
         await screen.findByText(/no created events/i);
 
-        await user.click(getViewButton("Joined History"));
+        await user.click(getViewTab("Joined History"));
 
         expect(
             await screen.findByRole("heading", {
@@ -264,7 +287,7 @@ describe("MyEventsPage", () => {
             })
         ).toBeInTheDocument();
 
-        expect(getViewButton("Joined History")).toHaveAttribute("aria-pressed", "true");
+        expect(getViewTab("Joined History")).toHaveAttribute("aria-selected", "true");
 
         await expectLastCurrentUserEventsCall({
             view: "joinedHistory",
@@ -324,7 +347,7 @@ describe("MyEventsPage", () => {
 
         await screen.findByText(/no created events/i);
 
-        await user.click(getViewButton("Joined"));
+        await user.click(getViewTab("Joined"));
 
         await waitFor(() => {
             expect(screen.getByTestId("location-search")).toHaveTextContent("view=joined");
@@ -464,6 +487,25 @@ describe("MyEventsPage", () => {
         });
 
         expect(await screen.findByText("Event Page 2")).toBeInTheDocument();
+    });
+
+    /* =============================
+       ACCESSIBILITY
+    ============================= */
+
+    it("renders accessible page landmarks and headings", async () => {
+        renderPage();
+
+        await screen.findByText(/no created events/i);
+
+        expect(screen.getByRole("region", {
+            name: "My event filters"
+        })).toBeInTheDocument();
+
+        expect(screen.getByRole("heading", {
+            level: 1,
+            name: "My Events"
+        })).toBeInTheDocument();
     });
 
     /* =============================

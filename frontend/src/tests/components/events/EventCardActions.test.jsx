@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import EventCardActions from "../../../components/events/EventCardActions";
 
@@ -14,6 +14,8 @@ import EventCardActions from "../../../components/events/EventCardActions";
    - guest login prompt
    - join callback
    - leave callback
+   - accessible ended status
+   - accessible guest prompt
 
    Notes:
    - focuses on action visibility and callbacks
@@ -25,6 +27,7 @@ describe("EventCardActions", () => {
     /* =============================
        TEST HELPERS
     ============================= */
+
     const baseProps = {
         eventId: 1,
         isPast: false,
@@ -54,6 +57,14 @@ describe("EventCardActions", () => {
         renderEventCardActions({ isPast: true });
 
         expect(screen.getByText("Ended")).toBeInTheDocument();
+    });
+
+    it("should expose accessible ended status label", () => {
+        renderEventCardActions({
+            isPast: true
+        });
+
+        expect(screen.getByLabelText(/event ended/i)).toBeInTheDocument();
     });
 
     /* =============================
@@ -90,6 +101,14 @@ describe("EventCardActions", () => {
         });
 
         expect(screen.getByText("🔐 Login to join")).toBeInTheDocument();
+    });
+
+    it("should display accessible guest login prompt", () => {
+        renderEventCardActions({
+            showLoginPrompt: true
+        });
+
+        expect(screen.getByText(/login to join/i)).toBeInTheDocument();
     });
 
     /* =============================

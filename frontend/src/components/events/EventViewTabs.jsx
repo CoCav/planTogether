@@ -5,30 +5,34 @@
    Supports:
    - active tab state
    - icon-based tabs
-   - accessible view navigation
+   - accessible tab navigation
+   - decorative tab icons
 ================================================== */
 
 export default function EventViewTabs({ views, activeView, onChange }) {
     return (
-        <nav className="event-view-tabs" aria-label="Event views">
+        <div className="event-view-tabs" role="tablist" aria-label="Event views">
             {views.map((view) => {
-                const isActive =
-                    activeView === view.key;
+                const isActive = activeView === view.key;
 
                 return (
                     <button
                         key={view.key}
                         type="button"
+                        role="tab"
                         className={`event-view-tab ${isActive ? "is-active" : ""}`.trim()}
                         onClick={() => onChange(view.key)}
-                        aria-pressed={isActive}
+                        aria-selected={isActive}
+                        tabIndex={isActive ? 0 : -1}
                     >
-                        <span className="event-view-tab-icon">{view.icon}</span>
+                        <span className="event-view-tab-icon" aria-hidden="true">
+                            {view.icon}
+                        </span>
 
                         <span>{view.label}</span>
                     </button>
                 );
             })}
-        </nav>
+        </div>
     );
 }

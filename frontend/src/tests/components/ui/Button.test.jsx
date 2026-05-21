@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-
 import userEvent from "@testing-library/user-event";
 
 import Button from "../../../components/ui/Button";
@@ -13,6 +12,7 @@ import Button from "../../../components/ui/Button";
    - default rendering
    - button variants
    - loading state
+   - accessible busy state
    - disabled state
    - click interactions
    - forwarded props
@@ -110,6 +110,18 @@ describe("Button", () => {
         expect(screen.getByRole("button", {
             name: /loading/i
         })).toBeDisabled();
+    });
+
+    it("should expose accessible busy state when loading", () => {
+        renderButton({
+            loading: true
+        });
+
+        expect(
+            screen.getByRole("button", {
+                name: /loading/i
+            })
+        ).toHaveAttribute("aria-busy", "true");
     });
 
     /* =============================

@@ -1,7 +1,6 @@
 import { MemoryRouter } from "react-router-dom";
-import { render, screen } from "@testing-library/react";
-
 import { describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
 
 import Footer from "../../../components/layout/Footer";
 
@@ -14,6 +13,7 @@ import Footer from "../../../components/layout/Footer";
    - authenticated user footer navigation
    - guest footer visibility
    - footer semantic navigation
+   - accessible footer navigation
    - application branding and copyright
 
    Notes:

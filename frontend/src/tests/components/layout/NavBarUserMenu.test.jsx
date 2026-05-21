@@ -1,8 +1,6 @@
 import { MemoryRouter } from "react-router-dom";
-import { render, screen, waitFor } from "@testing-library/react";
-
 import { describe, expect, it, vi } from "vitest";
-
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import NavbarUserMenu from "../../../components/layout/NavbarUserMenu";
@@ -13,7 +11,9 @@ import NavbarUserMenu from "../../../components/layout/NavbarUserMenu";
 
    Handles:
    - user avatar trigger rendering
+   - accessible menu trigger state
    - dropdown open and close behavior
+   - accessible dropdown menu items
    - profile and events menu links
    - logout action
    - outside click closing
@@ -47,7 +47,6 @@ describe("NavbarUserMenu", () => {
             </MemoryRouter>
         );
 
-
     /* =============================
        TRIGGER
     ============================= */
@@ -59,6 +58,17 @@ describe("NavbarUserMenu", () => {
         expect(screen.getByAltText("John avatar")).toHaveAttribute("src", mockAvatar);
     });
 
+    it("renders accessible menu trigger attributes", () => {
+        renderNavbarUserMenu();
+
+        const trigger = screen.getByRole("button", {
+            name: /open john menu/i
+        });
+
+        expect(trigger).toHaveAttribute("aria-haspopup", "menu");
+        expect(trigger).toHaveAttribute("aria-controls", "navbar-user-dropdown");
+        expect(trigger).toHaveAttribute("aria-expanded", "false");
+    });
 
     /* =============================
        DROPDOWN VISIBILITY
@@ -82,6 +92,20 @@ describe("NavbarUserMenu", () => {
 
         expect(trigger).toHaveAttribute("aria-expanded", "false");
         expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    });
+
+    it("updates trigger accessible label when menu opens", async () => {
+        const user = userEvent.setup();
+
+        renderNavbarUserMenu();
+
+        await user.click(screen.getByRole("button", {
+            name: /open john menu/i
+        }));
+
+        expect(screen.getByRole("button", {
+            name: /close john menu/i
+        })).toBeInTheDocument();
     });
 
     it("closes the dropdown when clicking outside", async () => {
@@ -114,6 +138,20 @@ describe("NavbarUserMenu", () => {
 
         expect(screen.getByRole("menuitem", { name: "My Profile" })).toHaveAttribute("href", "/profile");
         expect(screen.getByRole("menuitem", { name: "My Events" })).toHaveAttribute("href", "/my-events");
+    });
+
+    it("renders dropdown as accessible menu", async () => {
+        const user = userEvent.setup();
+
+        renderNavbarUserMenu();
+
+        await user.click(screen.getByRole("button", {
+            name: /open john menu/i
+        }));
+
+        expect(screen.getByRole("menu")).toHaveAttribute("id", "navbar-user-dropdown");
+
+        expect(screen.getAllByRole("menuitem")).toHaveLength(3);
     });
 
     it("closes the dropdown after clicking a navigation link", async () => {

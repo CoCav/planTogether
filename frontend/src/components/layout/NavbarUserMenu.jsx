@@ -9,10 +9,12 @@ import { useClickOutside } from "../../hooks/useClickOutside";
 
    Handles:
    - user dropdown visibility
+   - accessible menu trigger state
    - profile navigation
    - events navigation
    - logout action
    - outside click detection
+   - decorative dropdown icon
 ================================================== */
 
 export default function NavbarUserMenu({ user, avatar, onLogout }) {
@@ -57,7 +59,7 @@ export default function NavbarUserMenu({ user, avatar, onLogout }) {
                 aria-expanded={isOpen}
                 aria-haspopup="menu"
                 aria-controls="navbar-user-dropdown"
-                aria-label={`Open ${user.name} menu`}
+                aria-label={`${isOpen ? "Close" : "Open"} ${user.name} menu`}
             >
                 <img
                     src={avatar}

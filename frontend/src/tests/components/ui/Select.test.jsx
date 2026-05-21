@@ -11,6 +11,7 @@ import Select from "../../../components/ui/Select";
    - option rendering
    - wrapper and select classes
    - error state
+   - accessible invalid state
    - native select props forwarding
    - decorative icon accessibility
 ================================================== */
@@ -72,6 +73,14 @@ describe("Select", () => {
         expect(container.firstChild).toHaveClass("error");
 
         expect(screen.getByRole("combobox")).toHaveClass("error");
+    });
+
+    it("should expose accessible invalid state when error exists", () => {
+        renderSelect({
+            error: true
+        });
+
+        expect(screen.getByRole("combobox")).toHaveAttribute("aria-invalid", "true");
     });
 
     /* =============================

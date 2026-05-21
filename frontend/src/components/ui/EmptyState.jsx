@@ -5,6 +5,7 @@
    Supports:
    - title and description
    - optional icon
+   - decorative icon support
    - fallback children content
 ================================================== */
 
@@ -26,7 +27,7 @@ export default function EmptyState({ title, description, icon, children }) {
     return (
         <div className="empty-state">
             {icon && (
-                <div className="empty-state-icon">
+                <div className="empty-state-icon" aria-hidden="true">
                     {icon}
                 </div>
             )}

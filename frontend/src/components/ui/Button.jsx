@@ -6,6 +6,7 @@
    - visual variants
    - disabled state
    - loading state
+   - accessible busy state
    - forwarded button props
 ================================================== */
 
@@ -28,6 +29,7 @@ export default function Button({
             type={type}
             className={classes}
             disabled={isDisabled}
+            aria-busy={loading}
             {...props}
         >
             {loading ? "Loading..." : children}

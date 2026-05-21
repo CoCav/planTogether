@@ -10,6 +10,7 @@ import FormField from "../../../components/ui/FormField";
    Handles:
    - label rendering
    - accessible label association
+   - accessible error association
    - custom field content
    - validation error rendering
    - custom class merging
@@ -32,7 +33,13 @@ describe("FormField", () => {
                 htmlFor="email"
                 {...props}
             >
-                {props.children || <input id="email" placeholder="Your email" />}
+                {props.children || ((errorId) => (
+                    <input
+                        id="email"
+                        placeholder="Your email"
+                        aria-describedby={errorId}
+                    />
+                ))}
             </FormField>
         );
     };
@@ -58,6 +65,15 @@ describe("FormField", () => {
         expect(screen.getByLabelText("Email")).toBeInTheDocument();
     });
 
+    it("should associate validation error with form control", () => {
+        renderFormField({
+            error: "Invalid email"
+        });
+
+        expect(screen.getByLabelText("Email")).toHaveAttribute("aria-describedby", "email-error");
+        expect(screen.getByText("Invalid email")).toHaveAttribute("id", "email-error");
+    });
+
     /* =============================
        VALIDATION ERROR
     ============================= */
@@ -78,7 +94,7 @@ describe("FormField", () => {
         renderFormField({
             label: "Description",
             className: "form-field-full",
-            children: <textarea id="description" />
+            children: () => <textarea id="description" />
         });
 
         expect(screen.getByText("Description").closest(".form-field")).toHaveClass("form-field-full");

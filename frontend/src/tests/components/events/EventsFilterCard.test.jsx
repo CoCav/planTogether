@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import EventsFilterCard from "../../../components/events/EventsFilterCard";
 
@@ -15,6 +15,8 @@ import { createEventListingFilters } from "../../factories/shared/eventListingFi
    - filter card header rendering
    - filter visibility toggle
    - hidden and visible form states
+   - accessible form labels and descriptions
+   - accessible live results count
    - text filter changes
    - mode filter changes
    - date filter controls
@@ -57,6 +59,7 @@ describe("EventsFilterCard", () => {
                 onFilterChange={vi.fn()}
                 onFilterSubmit={vi.fn((e) => e.preventDefault())}
                 onSortChange={vi.fn()}
+                resultsCount={42}
                 onResetFilters={vi.fn()}
                 {...props}
             />
@@ -75,6 +78,25 @@ describe("EventsFilterCard", () => {
         expect(screen.getByRole("button", {
             name: /show filters/i
         })).toBeInTheDocument();
+    });
+
+    it("renders results count", () => {
+        renderFilterCard({
+            resultsCount: 42
+        });
+
+        expect(screen.getByText(/42 events found/i)).toBeInTheDocument();
+    });
+
+    it("announces results count politely", () => {
+        renderFilterCard({
+            resultsCount: 42
+        });
+
+        expect(screen.getByText(/42 events found/i)).toHaveAttribute(
+            "aria-live",
+            "polite"
+        );
     });
 
     it("calls onToggleFilters when toggle button is clicked", () => {
@@ -96,9 +118,7 @@ describe("EventsFilterCard", () => {
     it("does not render form when filters are hidden", () => {
         renderFilterCard();
 
-        expect(
-            screen.queryByPlaceholderText(/search events/i)
-        ).not.toBeInTheDocument();
+        expect(screen.queryByPlaceholderText(/search events/i)).not.toBeInTheDocument();
     });
 
     it("renders filter form when filters are visible", () => {
@@ -111,6 +131,23 @@ describe("EventsFilterCard", () => {
         expect(screen.getByLabelText(/^type$/i)).toBeInTheDocument();
 
         expect(screen.getByText("Soonest first")).toBeInTheDocument();
+    });
+
+    it("associates visible filter controls with their labels", () => {
+        renderFilterCard({
+            showFilters: true
+        });
+
+        expect(screen.getByLabelText(/^search$/i)).toHaveAttribute("id", "event-filter-search");
+        expect(screen.getByLabelText(/^sort by$/i)).toHaveAttribute("id", "event-filter-sort-by");
+    });
+
+    it("keeps filter form labelled by its title", () => {
+        renderFilterCard({
+            showFilters: true
+        });
+
+        expect(screen.getByRole("form")).toHaveAttribute("aria-labelledby", "events-filters-title");
     });
 
     /* =============================

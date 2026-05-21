@@ -24,6 +24,9 @@ import Badge from "../ui/Badge";
    - event metadata display
    - membership action visibility
    - image fallback handling
+   - accessible image links
+   - accessible event labels
+   - accessible ended status
 ================================================== */
 
 export default function EventCard({ event, user, role = null, onJoin, onLeave }) {
@@ -70,10 +73,6 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
     const imageAlt = `Event cover for ${eventDisplayData.title}`;
 
     const shouldShowOrganizerInline = role !== EVENT_ROLES.ORGANIZER;
-
-    /* =========================
-       RENDER
-    ========================= */
 
     return (
         <article className="event-card">

@@ -1,6 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import EventCard from "../../../components/events/EventCard";
 
@@ -24,6 +24,10 @@ import { createEvent } from "../../factories/events/eventFactory";
    - past event state
    - participant limit state
    - join and leave callbacks
+   - accessible image links
+   - accessible event labels
+   - accessible ended status
+   - decorative icon accessibility
 
    Notes:
    - uses reusable event render helper
@@ -138,6 +142,14 @@ describe("EventCard", () => {
         expect(image).toHaveClass("event-card-image");
     });
 
+    it("should expose accessible image link label", () => {
+        renderCard();
+
+        expect(screen.getByRole("link", {
+            name: /view details for test event/i
+        })).toBeInTheDocument();
+    });
+
     it("should display default event image when event has no image", () => {
         renderCard({
             event: {
@@ -175,6 +187,12 @@ describe("EventCard", () => {
         });
 
         expect(screen.getByText("👑 Alice")).toBeInTheDocument();
+    });
+
+    it("should expose event labels group", () => {
+        renderCard();
+
+        expect(screen.getByLabelText(/event labels/i)).toBeInTheDocument();
     });
 
     it("should hide inline organizer badge when current user is organizer", () => {
@@ -276,6 +294,16 @@ describe("EventCard", () => {
         });
 
         expect(screen.getByText(/ended/i)).toBeInTheDocument();
+    });
+
+    it("should expose accessible ended status label", () => {
+        renderCard({
+            event: {
+                status: EVENT_STATUS.PAST
+            }
+        });
+
+        expect(screen.getByLabelText(/event ended/i)).toBeInTheDocument();
     });
 
     it("should not show join or leave buttons when event is past", () => {

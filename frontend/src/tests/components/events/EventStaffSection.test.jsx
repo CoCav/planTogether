@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import EventStaffSection from "../../../components/events/EventStaffSection";
 
@@ -13,6 +13,7 @@ import { createAuthenticatedUser } from "../../factories/users/userFactory";
 
    Handles:
    - staff section copy
+   - accessible staff section copy
    - staff empty message
    - demote action callback
    - remove action callback
@@ -97,7 +98,7 @@ describe("EventStaffSection", () => {
         renderEventStaffSection();
 
         expect(screen.getByRole("heading", {
-            name: "👑 Event Team"
+            name: "Event Team"
         })).toBeInTheDocument();
 
         expect(screen.getByText("1 member is managing this event.")).toBeInTheDocument();

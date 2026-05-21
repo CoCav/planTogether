@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/react";
 
 import EventDetailsSummary from "../../../components/events/EventDetailsSummary";
 
@@ -18,6 +18,7 @@ import { createEvent } from "../../factories/events/eventFactory";
    - date and time display
    - registration deadline display
    - optional field visibility
+   - decorative icon accessibility
 
    Notes:
    - focuses on metadata rendering
@@ -73,6 +74,16 @@ describe("EventDetailsSummary", () => {
         expect(screen.getByText("19/12/2026")).toBeInTheDocument();
     });
 
+    it("should hide decorative icons from assistive technologies", () => {
+        renderEventDetailsSummary();
+
+        const icons = document.querySelectorAll(
+            ".event-details-summary-label span[aria-hidden='true']"
+        );
+
+        expect(icons).toHaveLength(8);
+    });
+
     /* =============================
        OPTIONAL FIELDS
     ============================= */
@@ -82,7 +93,7 @@ describe("EventDetailsSummary", () => {
             capacity: null
         });
 
-        expect(screen.queryByText("👥 Capacity")).not.toBeInTheDocument();
+        expect(screen.queryByText(/^Capacity$/i)).not.toBeInTheDocument();
     });
 
     it("should hide registration deadline when not provided", () => {
@@ -90,6 +101,6 @@ describe("EventDetailsSummary", () => {
             registrationDeadline: null
         });
 
-        expect(screen.queryByText("⏳ Registration deadline")).not.toBeInTheDocument();
+        expect(screen.queryByText(/^Registration deadline$/i)).not.toBeInTheDocument();
     });
 });

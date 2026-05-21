@@ -11,6 +11,7 @@ import EmptyState from "../../../components/ui/EmptyState";
    - title rendering
    - description rendering
    - icon rendering
+   - decorative icon accessibility
    - children fallback rendering
 ================================================== */
 
@@ -65,6 +66,15 @@ describe("EmptyState", () => {
         });
 
         expect(screen.getByText("📭")).toHaveClass("empty-state-icon");
+    });
+
+    it("should hide decorative icon from assistive technologies", () => {
+        renderEmptyState({
+            icon: "📭",
+            title: "Nothing here"
+        });
+
+        expect(screen.getByText("📭")).toHaveAttribute("aria-hidden", "true");
     });
 
     /* =============================

@@ -12,6 +12,7 @@ import EditEventPage from "../../pages/EditEventPage";
    Handles:
    - loading state
    - event form hydration
+   - accessible form section
    - existing image preview
    - event update FormData payload
    - image update payload
@@ -126,6 +127,19 @@ describe("EditEventPage", () => {
         expect(screen.getByDisplayValue("2026-12-19T12:00")).toBeInTheDocument();
 
         expect(mockGetEventById).toHaveBeenCalledWith("42");
+    });
+
+    it("renders accessible edit event form section", async () => {
+        renderPage();
+
+        expect(await screen.findByRole("heading", {
+            level: 1,
+            name: /edit event/i
+        })).toHaveAttribute("id", "event-form-title");
+
+        expect(screen.getByRole("region", {
+            name: /edit event/i
+        })).toHaveClass("event-form-section");
     });
 
     it("shows current event image preview", async () => {

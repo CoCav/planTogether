@@ -23,6 +23,7 @@ import PageLoader from "../components/ui/PageLoader";
    - edit event form orchestration
    - update event submission
    - redirect after successful update
+   - accessible form section
 ================================================== */
 
 export default function EditEventPage() {
@@ -154,7 +155,9 @@ export default function EditEventPage() {
         <main className="container page-section">
             <header className="page-header">
                 <div className="event-form-page-header">
-                    <h1 className="page-title">Edit Event</h1>
+                    <h1 id="event-form-title" className="page-title">
+                        Edit Event
+                    </h1>
 
                     <p className="page-subtitle">
                         Update the event information below.
@@ -164,25 +167,27 @@ export default function EditEventPage() {
 
             {error && <Alert type="danger">{error}</Alert>}
 
-            <Card className="event-form-card">
-                <EventForm
-                    values={values}
-                    fieldErrors={fieldErrors}
+            <section className="event-form-section" aria-labelledby="event-form-title">
+                <Card className="event-form-card">
+                    <EventForm
+                        values={values}
+                        fieldErrors={fieldErrors}
 
-                    submitLabel="Update Event"
-                    isSubmitting={isSubmitting}
+                        submitLabel="Update Event"
+                        isSubmitting={isSubmitting}
 
-                    isOnlineEvent={isOnlineEvent}
-                    showCustomDeadline={showCustomDeadline}
+                        isOnlineEvent={isOnlineEvent}
+                        showCustomDeadline={showCustomDeadline}
 
-                    onFieldChange={handleFieldChange}
-                    onImageChange={handleImageChange}
-                    onRemoveImage={handleRemoveImage}
+                        onFieldChange={handleFieldChange}
+                        onImageChange={handleImageChange}
+                        onRemoveImage={handleRemoveImage}
 
-                    onSubmit={handleSubmit}
-                    onCancel={handleCancel}
-                />
-            </Card>
+                        onSubmit={handleSubmit}
+                        onCancel={handleCancel}
+                    />
+                </Card>
+            </section>
         </main>
     );
 }

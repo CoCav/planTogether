@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import EventDetailsActions from "../../../components/events/EventDetailsActions";
 
@@ -16,12 +16,13 @@ import EventDetailsActions from "../../../components/events/EventDetailsActions"
    - leave callback
    - edit callback
    - delete callback
+   - accessible ended status
+   - accessible guest prompt
 
    Notes:
    - focuses on action visibility and callbacks
    - uses reusable render helper
 ================================================== */
-
 describe("EventDetailsActions", () => {
 
     /* =============================
@@ -75,6 +76,14 @@ describe("EventDetailsActions", () => {
         });
 
         expect(screen.getByText("Ended")).toBeInTheDocument();
+    });
+
+    it("should expose accessible ended status label", () => {
+        renderEventDetailsActions({
+            isPast: true
+        });
+
+        expect(screen.getByLabelText(/event ended/i)).toBeInTheDocument();
     });
 
     it("should hide interactive actions for past events", () => {
@@ -138,6 +147,14 @@ describe("EventDetailsActions", () => {
         });
 
         expect(screen.getByText("🔐 Login to join this event.")).toBeInTheDocument();
+    });
+
+    it("should display accessible guest login prompt", () => {
+        renderEventDetailsActions({
+            showLoginPrompt: true
+        });
+
+        expect(screen.getByText(/login to join this event/i)).toBeInTheDocument();
     });
 
     /* =============================

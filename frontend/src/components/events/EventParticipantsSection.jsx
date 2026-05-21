@@ -27,10 +27,11 @@ export default function EventParticipantsSection({
     onPromote,
     onRemove
 }) {
+
     return (
         <Card>
             <EventMembersSection
-                title={`👥 ${formatCount(participantCount, "Attendee")}`}
+                title={formatCount(participantCount, "Attendee")}
                 subtitle={`${formatCount(participantCount, "attendee")} ${formatBe(participantCount)} attending this event.`}
                 members={participants}
                 emptyMessage={

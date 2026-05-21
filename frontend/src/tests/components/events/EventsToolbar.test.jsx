@@ -1,7 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import EventsToolbar from "../../../components/events/EventsToolbar";
+
+import { EVENT_STATUS } from "../../../features/shared/eventStatus";
 
 import {
     createAllEventsView,
@@ -16,9 +18,12 @@ import {
    Handles:
    - results title and subtitle rendering
    - total event count display
+   - accessible live results metadata
    - pagination info display
    - view tab integration
+   - accessible view tabs
    - quick date filter visibility
+   - quick filter button group
    - quick date filter callbacks
    - active quick filter state
 ================================================== */
@@ -113,6 +118,14 @@ describe("EventsToolbar", () => {
         expect(screen.getByText(/page 2 of 4/i)).toBeInTheDocument();
     });
 
+    it("should announce results count and pagination info politely", () => {
+        renderEventsToolbar();
+
+        expect(screen.getByText("(12)")).toHaveAttribute("aria-live", "polite");
+
+        expect(screen.getByText(/page 2 of 4/i)).toHaveAttribute("aria-live", "polite");
+    });
+
     it("should hide pagination info when disabled", () => {
         renderEventsToolbar({
             showPaginationInfo: false
@@ -128,13 +141,13 @@ describe("EventsToolbar", () => {
     it("should render event view tabs", () => {
         renderEventsToolbar();
 
-        expect(screen.getByRole("navigation", {
+        expect(screen.getByRole("tablist", {
             name: "Event views"
         })).toBeInTheDocument();
 
-        expect(screen.getByRole("button", { name: /all/i })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /upcoming/i })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /archives/i })).toBeInTheDocument();
+        expect(screen.getByRole("tab", { name: /all/i })).toBeInTheDocument();
+        expect(screen.getByRole("tab", { name: /upcoming/i })).toBeInTheDocument();
+        expect(screen.getByRole("tab", { name: /archives/i })).toBeInTheDocument();
     });
 
     it("should call onViewChange when view tab is clicked", () => {
@@ -144,11 +157,11 @@ describe("EventsToolbar", () => {
             onViewChange
         });
 
-        fireEvent.click(screen.getByRole("button", {
+        fireEvent.click(screen.getByRole("tab", {
             name: /upcoming/i
         }));
 
-        expect(onViewChange).toHaveBeenCalledWith("upcoming");
+        expect(onViewChange).toHaveBeenCalledWith(EVENT_STATUS.UPCOMING);
     });
 
     /* =============================
@@ -164,6 +177,14 @@ describe("EventsToolbar", () => {
 
         expect(screen.getByRole("button", {
             name: "This Weekend"
+        })).toBeInTheDocument();
+    });
+
+    it("should group quick date filters accessibly", () => {
+        renderEventsToolbar();
+
+        expect(screen.getByRole("group", {
+            name: /quick event filters/i
         })).toBeInTheDocument();
     });
 

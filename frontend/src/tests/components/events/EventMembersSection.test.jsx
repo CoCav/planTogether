@@ -16,6 +16,8 @@ import { createOrganizerMember, createParticipantMember } from "../../factories/
    - empty member state
    - member rows
    - optional member actions
+   - accessible section semantics
+   - accessible list semantics
 
    Notes:
    - focuses on EventMembersSection behavior only
@@ -95,6 +97,20 @@ describe("EventMembersSection", () => {
         expect(screen.queryByText("People attending this event")).not.toBeInTheDocument();
     });
 
+    it("should associate section with its heading", () => {
+        renderEventMembersSection();
+
+        const heading = screen.getByRole("heading", {
+            name: "Participants"
+        });
+
+        expect(heading).toHaveAttribute("id", "participants-title");
+
+        expect(screen.getByRole("region", {
+            name: "Participants"
+        })).toBeInTheDocument();
+    });
+
     /* =============================
        HEADER MESSAGE
     ============================= */
@@ -143,6 +159,14 @@ describe("EventMembersSection", () => {
 
         expect(screen.getByText(/organizer/i)).toBeInTheDocument();
         expect(screen.getByText(/👤 participant/i)).toBeInTheDocument();
+    });
+
+    it("should render members as an accessible list", () => {
+        renderEventMembersSection();
+
+        expect(screen.getByRole("list")).toBeInTheDocument();
+
+        expect(screen.getAllByRole("listitem")).toHaveLength(2);
     });
 
     /* =============================

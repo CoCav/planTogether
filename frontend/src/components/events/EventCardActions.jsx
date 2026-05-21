@@ -31,7 +31,11 @@ export default function EventCardActions({
 
     if (isPast) {
         return (
-            <span className="event-status-label">Ended</span>
+            <div className="event-card-actions">
+                <span className="event-status-label" aria-label="Event ended">
+                    Ended
+                </span>
+            </div>
         );
     }
 

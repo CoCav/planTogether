@@ -24,6 +24,7 @@ import {
    - page semantic structure
    - event display data rendering
    - image fallback behavior
+   - accessible event image description
    - event action integration
    - membership section integration
    - authenticated and guest states
@@ -421,11 +422,19 @@ describe("EventDetailsPage", () => {
     it("should display event image", async () => {
         renderPage();
 
-        const image = await screen.findByAltText("Test Event");
+        const image = await screen.findByAltText("Event cover for Test Event");
 
         expect(image).toBeInTheDocument();
         expect(image).toHaveAttribute("src", "/uploads/events/event-test.png");
         expect(image).toHaveClass("event-details-image");
+    });
+
+    it("should expose accessible event image description", async () => {
+        renderPage();
+
+        expect(await screen.findByAltText(
+            "Event cover for Test Event"
+        )).toBeInTheDocument();
     });
 
     it("should display default event image when event has no image", async () => {
@@ -438,7 +447,7 @@ describe("EventDetailsPage", () => {
 
         renderPage();
 
-        const image = await screen.findByAltText("Test Event");
+        const image = await screen.findByAltText("Event cover for Test Event");
 
         expect(image).toHaveAttribute("src", "default-event-image.jpg");
     });
@@ -446,7 +455,7 @@ describe("EventDetailsPage", () => {
     it("should fall back to default event image when image fails to load", async () => {
         renderPage();
 
-        const image = await screen.findByAltText("Test Event");
+        const image = await screen.findByAltText("Event cover for Test Event");
 
         fireEvent.error(image);
 

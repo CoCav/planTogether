@@ -11,6 +11,8 @@ import EventViewTabs from "./EventViewTabs";
    - pagination info
    - view tabs
    - quick date filters
+   - accessible live results metadata
+   - quick filter button group
 ================================================== */
 
 export default function EventsResultsToolbar({
@@ -34,6 +36,7 @@ export default function EventsResultsToolbar({
     onTodayFilter,
     onWeekendFilter
 }) {
+
     return (
         <div className="events-results-header">
             <div className="events-results-meta">
@@ -41,7 +44,7 @@ export default function EventsResultsToolbar({
                     <h2 id={titleId} className="section-title">
                         {title}
 
-                        <span className="events-results-count">
+                        <span className="events-results-count" aria-live="polite">
                             ({totalEvents})
                         </span>
                     </h2>
@@ -49,7 +52,14 @@ export default function EventsResultsToolbar({
                     <p className="section-subtitle">{subtitle} </p>
                 </div>
 
-                {showPaginationInfo && <p className="events-results-page-info"> Page {page} of {totalPages} </p>}
+                {showPaginationInfo && (
+                    <p
+                        className="events-results-page-info"
+                        aria-live="polite"
+                    >
+                        Page {page} of {totalPages}
+                    </p>
+                )}
             </div>
 
             <div className="events-view-controls">
@@ -60,7 +70,7 @@ export default function EventsResultsToolbar({
                 />
 
                 {showQuickActions && (
-                    <div className="events-quick-actions" aria-label="Quick event filters">
+                    <div className="events-quick-actions" role="group" aria-label="Quick event filters">
                         <Button
                             type="button"
                             variant={filters.date ? "filter-active" : "outline-primary"}

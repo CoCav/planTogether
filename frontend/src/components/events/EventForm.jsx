@@ -16,6 +16,9 @@ import TextArea from "../ui/TextArea";
    - event field rendering
    - event image upload and preview
    - drag and drop interactions
+   - accessible image upload interactions
+   - accessible form field descriptions
+   - accessible invalid field states
    - validation error display
    - conditional field rendering
 ================================================== */
@@ -71,91 +74,97 @@ export default function EventForm({
 
             <div className="event-form-image">
                 <FormField label="Event image (optional)" htmlFor="event-image" error={fieldErrors.image}>
-                    <div
-                        className={`event-form-upload ${isDragging ? "drag-active" : ""}`}
-                        onDragEnter={(event) => {
-                            event.preventDefault();
-                            setIsDragging(true);
-                        }}
-                        onDragOver={(event) => {
-                            event.preventDefault();
-                            setIsDragging(true);
-                        }}
-                        onDragLeave={(event) => {
-                            event.preventDefault();
-                            setIsDragging(false);
-                        }}
-                        onDrop={handleDrop}
-                    >
-                        <div className="event-form-upload-header">
-                            <div className="event-form-upload-text">
-                                <span className="event-form-upload-title">
-                                    Drag & drop an image here
-                                </span>
+                    {(errorId) => (
+                        <div
+                            className={`event-form-upload ${isDragging ? "drag-active" : ""}`}
+                            aria-label="Event image upload area"
 
-                                <span className="event-form-upload-hint">
-                                    Max 3MB • JPG, PNG, WEBP or GIF
-                                </span>
-                            </div>
+                            onDragEnter={(event) => {
+                                event.preventDefault();
+                                setIsDragging(true);
+                            }}
+                            onDragOver={(event) => {
+                                event.preventDefault();
+                                setIsDragging(true);
+                            }}
+                            onDragLeave={(event) => {
+                                event.preventDefault();
+                                setIsDragging(false);
+                            }}
+                            onDrop={handleDrop}
+                        >
+                            <div className="event-form-upload-header">
+                                <div className="event-form-upload-text">
+                                    <span className="event-form-upload-title">
+                                        Drag & drop an image here
+                                    </span>
 
-                            <label className="btn btn-outline event-form-upload-button">
-                                Choose file
-
-                                <input
-                                    id="event-image"
-                                    type="file"
-                                    name="image"
-                                    accept="image/jpeg,image/png,image/webp,image/gif"
-                                    onChange={onImageChange}
-                                    className="event-form-upload-input"
-                                />
-                            </label>
-                        </div>
-
-                        {preview && (
-                            <div className="event-form-preview">
-                                <img
-                                    src={preview}
-                                    alt="Event preview"
-                                    className="event-form-preview-image"
-                                />
-
-                                <div className="event-form-preview-info">
-                                    {values.image ? (
-                                        <>
-                                            <span className="event-form-preview-name">
-                                                {values.image.name}
-                                            </span>
-
-                                            <span className="event-form-preview-size">
-                                                {(values.image.size / 1024).toFixed(1)} KB
-                                            </span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span className="event-form-preview-name">
-                                                Existing image
-                                            </span>
-
-                                            <span className="event-form-preview-size">
-                                                Uploaded previously
-                                            </span>
-                                        </>
-                                    )}
+                                    <span className="event-form-upload-hint">
+                                        Max 3MB • JPG, PNG, WEBP or GIF
+                                    </span>
                                 </div>
 
-                                {hasImage && (
-                                    <button
-                                        type="button"
-                                        className="btn btn-outline-danger event-form-preview-remove"
-                                        onClick={onRemoveImage}
-                                    >
-                                        Remove
-                                    </button>
-                                )}
+                                <label className="btn btn-outline event-form-upload-button">
+                                    Choose file
+
+                                    <input
+                                        id="event-image"
+                                        type="file"
+                                        name="image"
+                                        accept="image/jpeg,image/png,image/webp,image/gif"
+                                        onChange={onImageChange}
+                                        className="event-form-upload-input"
+                                        aria-describedby={errorId}
+                                    />
+                                </label>
                             </div>
-                        )}
-                    </div>
+
+                            {preview && (
+                                <div className="event-form-preview">
+                                    <img
+                                        src={preview}
+                                        alt="Event preview"
+                                        className="event-form-preview-image"
+                                    />
+
+                                    <div className="event-form-preview-info">
+                                        {values.image ? (
+                                            <>
+                                                <span className="event-form-preview-name">
+                                                    {values.image.name}
+                                                </span>
+
+                                                <span className="event-form-preview-size">
+                                                    {(values.image.size / 1024).toFixed(1)} KB
+                                                </span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="event-form-preview-name">
+                                                    Existing image
+                                                </span>
+
+                                                <span className="event-form-preview-size">
+                                                    Uploaded previously
+                                                </span>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {hasImage && (
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-danger event-form-preview-remove"
+                                            onClick={onRemoveImage}
+                                            aria-label="Remove event image"
+                                        >
+                                            Remove
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </FormField>
             </div>
 
@@ -165,68 +174,86 @@ export default function EventForm({
 
             <div className="form-grid">
                 <FormField label="Title" htmlFor="title" error={fieldErrors.title}>
-                    <Input
-                        id="title"
-                        name="title"
-                        value={values.title}
-                        onChange={onFieldChange}
-                        error={fieldErrors.title}
-                    />
+                    {(errorId) => (
+                        <Input
+                            id="title"
+                            name="title"
+                            value={values.title}
+                            onChange={onFieldChange}
+                            error={fieldErrors.title}
+                            aria-describedby={errorId}
+                        />
+                    )}
                 </FormField>
 
                 <FormField label="Type" htmlFor="type" error={fieldErrors.type}>
-                    <Input
-                        id="type"
-                        name="type"
-                        value={values.type}
-                        onChange={onFieldChange}
-                        error={fieldErrors.type}
-                    />
+                    {(errorId) => (
+                        <Input
+                            id="type"
+                            name="type"
+                            value={values.type}
+                            onChange={onFieldChange}
+                            error={fieldErrors.type}
+                            aria-describedby={errorId}
+                        />
+                    )}
                 </FormField>
 
                 <FormField label="Theme" htmlFor="theme" error={fieldErrors.theme}>
-                    <Input
-                        id="theme"
-                        name="theme"
-                        value={values.theme}
-                        onChange={onFieldChange}
-                        error={fieldErrors.theme}
-                    />
+                    {(errorId) => (
+                        <Input
+                            id="theme"
+                            name="theme"
+                            value={values.theme}
+                            onChange={onFieldChange}
+                            error={fieldErrors.theme}
+                            aria-describedby={errorId}
+                        />
+                    )}
                 </FormField>
 
                 <FormField label="Mode" htmlFor="mode" error={fieldErrors.mode}>
-                    <Select
-                        id="mode"
-                        name="mode"
-                        value={values.mode}
-                        onChange={onFieldChange}
-                        error={fieldErrors.mode}
-                    >
-                        <option value="in_person">In person</option>
-                        <option value="online">Online</option>
-                    </Select>
+                    {(errorId) => (
+                        <Select
+                            id="mode"
+                            name="mode"
+                            value={values.mode}
+                            onChange={onFieldChange}
+                            error={fieldErrors.mode}
+                            aria-describedby={errorId}
+                        >
+                            <option value="in_person">In person</option>
+                            <option value="online">Online</option>
+                        </Select>
+                    )}
                 </FormField>
 
                 {!isOnlineEvent && (
                     <FormField label="Location" htmlFor="location" error={fieldErrors.location}>
-                        <Input
-                            id="location"
-                            name="location"
-                            value={values.location}
-                            onChange={onFieldChange}
-                            error={fieldErrors.location}
-                        />
+                        {(errorId) => (
+                            <Input
+                                id="location"
+                                name="location"
+                                value={values.location}
+                                onChange={onFieldChange}
+                                error={fieldErrors.location}
+                                aria-describedby={errorId}
+                            />
+                        )}
                     </FormField>
                 )}
 
                 <FormField label="Participant limit (optional)" htmlFor="maxParticipants">
-                    <Input
-                        id="maxParticipants"
-                        type="number"
-                        name="maxParticipants"
-                        value={values.maxParticipants}
-                        onChange={onFieldChange}
-                    />
+                    {(errorId) => (
+                        <Input
+                            id="maxParticipants"
+                            type="number"
+                            name="maxParticipants"
+                            value={values.maxParticipants}
+                            onChange={onFieldChange}
+                            aria-describedby={errorId}
+                        />
+                    )}
                 </FormField>
 
                 <FormField
@@ -235,62 +262,77 @@ export default function EventForm({
                     className="form-grid-column-full"
                     error={fieldErrors.description}
                 >
-                    <TextArea
-                        id="description"
-                        name="description"
-                        value={values.description}
-                        onChange={onFieldChange}
-                        error={fieldErrors.description}
-                    />
+                    {(errorId) => (
+                        <TextArea
+                            id="description"
+                            name="description"
+                            value={values.description}
+                            onChange={onFieldChange}
+                            error={fieldErrors.description}
+                            aria-describedby={errorId}
+                        />
+                    )}
                 </FormField>
 
                 <FormField label="Start date time" htmlFor="startDateTime" error={fieldErrors.startDateTime}>
-                    <Input
-                        id="startDateTime"
-                        type="datetime-local"
-                        name="startDateTime"
-                        value={values.startDateTime}
-                        onChange={onFieldChange}
-                        error={fieldErrors.startDateTime}
-                    />
+                    {(errorId) => (
+                        <Input
+                            id="startDateTime"
+                            type="datetime-local"
+                            name="startDateTime"
+                            value={values.startDateTime}
+                            onChange={onFieldChange}
+                            error={fieldErrors.startDateTime}
+                            aria-describedby={errorId}
+                        />
+                    )}
                 </FormField>
 
                 <FormField label="End date time" htmlFor="endDateTime" error={fieldErrors.endDateTime}>
-                    <Input
-                        id="endDateTime"
-                        type="datetime-local"
-                        name="endDateTime"
-                        value={values.endDateTime}
-                        onChange={onFieldChange}
-                        error={fieldErrors.endDateTime}
-                    />
+                    {(errorId) => (
+                        <Input
+                            id="endDateTime"
+                            type="datetime-local"
+                            name="endDateTime"
+                            value={values.endDateTime}
+                            onChange={onFieldChange}
+                            error={fieldErrors.endDateTime}
+                            aria-describedby={errorId}
+                        />
+                    )}
                 </FormField>
 
                 <FormField label="Registration deadline" htmlFor="registrationDeadlineOption">
-                    <Select
-                        id="registrationDeadlineOption"
-                        name="registrationDeadlineOption"
-                        value={values.registrationDeadlineOption}
-                        onChange={onFieldChange}
-                    >
-                        <option value="none">No deadline</option>
-                        <option value="day_before">1 day before event</option>
-                        <option value="two_days_before">
-                            2 days before event
-                        </option>
-                        <option value="custom">Custom date</option>
-                    </Select>
+                    {(errorId) => (
+                        <Select
+                            id="registrationDeadlineOption"
+                            name="registrationDeadlineOption"
+                            value={values.registrationDeadlineOption}
+                            onChange={onFieldChange}
+                            aria-describedby={errorId}
+                        >
+                            <option value="none">No deadline</option>
+                            <option value="day_before">1 day before event</option>
+                            <option value="two_days_before">
+                                2 days before event
+                            </option>
+                            <option value="custom">Custom date</option>
+                        </Select>
+                    )}
                 </FormField>
 
                 {showCustomDeadline && (
                     <FormField label="Custom deadline" htmlFor="registrationDeadlineCustom">
-                        <Input
-                            id="registrationDeadlineCustom"
-                            type="datetime-local"
-                            name="registrationDeadlineCustom"
-                            value={values.registrationDeadlineCustom}
-                            onChange={onFieldChange}
-                        />
+                        {(errorId) => (
+                            <Input
+                                id="registrationDeadlineCustom"
+                                type="datetime-local"
+                                name="registrationDeadlineCustom"
+                                value={values.registrationDeadlineCustom}
+                                onChange={onFieldChange}
+                                aria-describedby={errorId}
+                            />
+                        )}
                     </FormField>
                 )}
             </div>

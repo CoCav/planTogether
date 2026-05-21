@@ -12,6 +12,7 @@ import EmptyState from "../ui/EmptyState";
    - empty member state
    - member rows
    - optional member actions
+   - accessible section and list semantics
 ================================================== */
 
 export default function EventMembersSection({
@@ -24,10 +25,18 @@ export default function EventMembersSection({
     renderActions
 }) {
 
+    /* =========================
+       ACCESSIBILITY
+    ========================= */
+
+    const sectionTitleId = `${title.toLowerCase().replace(/\s+/g, "-")}-title`;
+
     return (
-        <>
+        <section aria-labelledby={sectionTitleId}>
             <div className="section-header">
-                <h2 className="section-title">{title}</h2>
+                <h2 id={sectionTitleId} className="section-title">
+                    {title}
+                </h2>
 
                 {subtitle && (
                     <p className="section-subtitle">{subtitle}</p>
@@ -41,11 +50,13 @@ export default function EventMembersSection({
             {members.length === 0 ? (
                 <EmptyState>{emptyMessage}</EmptyState>
             ) : (
-                <div className="member-list">
+                <div className="member-list" role="list">
                     {members.map((person) => (
-                        <div key={person.id} className="member-row">
+                        <div key={person.id} className="member-row" role="listitem">
                             <div className="member-info">
-                                <span className="member-name">{person.name}</span>
+                                <span className="member-name">
+                                    {person.name}
+                                </span>
 
                                 <Badge role={person.role} />
                             </div>
@@ -59,6 +70,6 @@ export default function EventMembersSection({
                     ))}
                 </div>
             )}
-        </>
+        </section>
     );
 }

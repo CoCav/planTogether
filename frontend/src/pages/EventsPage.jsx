@@ -37,6 +37,8 @@ import Pagination from "../components/ui/Pagination";
    - URL synchronization
    - view switching
    - membership actions
+   - accessible filters and results sections
+   - accessible results metadata
 ================================================== */
 
 export default function EventsPage() {
@@ -286,16 +288,22 @@ export default function EventsPage() {
                 <EventsFilterCard
                     filters={filters}
                     showFilters={showFilters}
+
                     sortLabels={sortLabels}
+
+                    resultsCount={pagination.totalEvents}
+
                     onToggleFilters={() => setShowFilters((prev) => !prev)}
+
                     onFilterChange={handleFilterChange}
                     onFilterSubmit={handleFilterSubmit}
+
                     onSortChange={handleSortChange}
                     onResetFilters={handleResetFilters}
                 />
             </section>
 
-            <section className="events-results-controls" aria-labelledby="events-results-title">
+            <section className="events-results-controls">
                 <EventsToolbar
                     titleId="events-results-title"
                     title={viewContent.title}
@@ -312,8 +320,8 @@ export default function EventsPage() {
 
                     showQuickActions={viewContent.showQuickActions}
                     filters={filters}
-                    isCurrentWeekendFilterActive={isCurrentWeekendFilterActive}
 
+                    isCurrentWeekendFilterActive={isCurrentWeekendFilterActive}
                     onTodayFilter={handleTodayFilter}
                     onWeekendFilter={handleWeekendFilter}
                 />

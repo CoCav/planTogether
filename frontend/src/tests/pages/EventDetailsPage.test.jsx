@@ -37,7 +37,7 @@ import {
 ================================================== */
 
 /* =============================
-   TEST DATA
+   MOCK DATA
 ============================= */
 
 const mockNavigate = vi.fn();
@@ -235,6 +235,10 @@ const renderPage = () =>
     );
 
 describe("EventDetailsPage", () => {
+
+    /* =============================
+       TEST SETUP
+    ============================= */
 
     beforeEach(() => {
         vi.clearAllMocks();

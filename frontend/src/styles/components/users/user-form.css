@@ -1,32 +1,31 @@
 /* ==================================================
-   EVENT FORM
-   Shared form layout for create and edit event flows
+   USER FORM
+   Shared form layout for register and profile flows
 ================================================== */
 
 /* ==================================================
    FORM
 ================================================== */
 
-.event-form {
+.user-form {
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
 }
 
 /* ==================================================
-   IMAGE
+   AVATAR
 ================================================== */
 
-.event-form-image {
+.user-form-avatar {
     max-width: 100%;
-    margin-bottom: var(--space-5);
 }
 
 /* ==================================================
    UPLOAD
 ================================================== */
 
-.event-form-upload {
+.user-form-upload {
     padding: var(--space-4);
     background: var(--color-surface);
     border: 2px dashed var(--color-border);
@@ -36,16 +35,16 @@
         background-color 0.2s ease;
 }
 
-.event-form-upload:hover {
+.user-form-upload:hover {
     border-color: var(--color-primary);
 }
 
-.event-form-upload.drag-active {
+.user-form-upload.drag-active {
     border-color: var(--color-primary);
     background: var(--color-primary-soft);
 }
 
-.event-form-upload-header {
+.user-form-upload-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -53,23 +52,23 @@
     margin-bottom: var(--space-3);
 }
 
-.event-form-upload-text {
+.user-form-upload-text {
     display: flex;
     flex-direction: column;
 }
 
-.event-form-upload-title {
+.user-form-upload-title {
     font-size: var(--font-size-sm);
     font-weight: 600;
 }
 
-.event-form-upload-hint,
-.event-form-preview-size {
+.user-form-upload-hint,
+.user-form-preview-size {
     font-size: var(--font-size-xs);
     color: var(--color-text-muted);
 }
 
-.event-form-upload-input {
+.user-form-upload-input {
     display: none;
 }
 
@@ -77,22 +76,22 @@
    PREVIEW
 ================================================== */
 
-.event-form-preview {
+.user-form-preview {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: var(--space-3);
     padding-top: var(--space-3);
     border-top: 1px solid var(--color-border);
 }
 
-.event-form-preview-image {
-    width: 120px;
-    height: 80px;
-    border-radius: var(--radius-md);
+.user-form-preview-image {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
     object-fit: cover;
 }
 
-.event-form-preview-info {
+.user-form-preview-info {
     display: flex;
     flex: 1;
     flex-direction: column;
@@ -100,12 +99,12 @@
     min-width: 0;
 }
 
-.event-form-preview-name {
+.user-form-preview-name {
     font-size: var(--font-size-sm);
     font-weight: 600;
 }
 
-.event-form-preview-remove {
+.user-form-preview-remove {
     flex-shrink: 0;
 }
 
@@ -115,15 +114,9 @@
 
 @media (max-width: 768px) {
 
-    .event-form-upload-header,
-    .event-form-preview {
+    .user-form-upload-header,
+    .user-form-preview {
         flex-direction: column;
         align-items: flex-start;
-    }
-
-    .event-form-preview-image {
-        width: 100%;
-        height: auto;
-        max-height: 220px;
     }
 }

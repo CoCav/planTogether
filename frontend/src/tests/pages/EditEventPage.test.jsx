@@ -25,6 +25,10 @@ import EditEventPage from "../../pages/EditEventPage";
    - mocks event loading, event update API and navigation
 ================================================== */
 
+/* =============================
+   MOCK DATA
+============================= */
+
 const mockNavigate = vi.fn();
 const mockGetEventById = vi.fn();
 const mockUpdateEvent = vi.fn();
@@ -86,6 +90,11 @@ const getSubmittedFormData = () => {
 };
 
 describe("EditEventPage", () => {
+
+    /* =============================
+       TEST SETUP
+    ============================= */
+
     beforeEach(() => {
         vi.clearAllMocks();
 

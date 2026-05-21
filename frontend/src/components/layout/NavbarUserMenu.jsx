@@ -3,11 +3,14 @@ import { Link } from "react-router-dom";
 
 import { useClickOutside } from "../../hooks/useClickOutside";
 
+import UserAvatar from "../users/UserAvatar";
+
 /* ==================================================
    NAVBAR USER MENU
    Displays authenticated user dropdown actions
 
    Handles:
+   - user avatar menu trigger
    - user dropdown visibility
    - accessible menu trigger state
    - profile navigation
@@ -61,9 +64,9 @@ export default function NavbarUserMenu({ user, avatar, onLogout }) {
                 aria-controls="navbar-user-dropdown"
                 aria-label={`${isOpen ? "Close" : "Open"} ${user.name} menu`}
             >
-                <img
+                <UserAvatar
                     src={avatar}
-                    alt={`${user.name} avatar`}
+                    name={user.name}
                     className="navbar-avatar"
                 />
 

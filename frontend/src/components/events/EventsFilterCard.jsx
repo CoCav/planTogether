@@ -88,7 +88,7 @@ export default function EventsFilterCard({
                                     name="search"
                                     value={filters.search}
                                     onChange={onFilterChange}
-                                    placeholder="Search events..."
+                                    placeholder="Search events"
                                     aria-describedby={errorId}
                                 />
                             )}
@@ -101,7 +101,7 @@ export default function EventsFilterCard({
                                     name="creator"
                                     value={filters.creator}
                                     onChange={onFilterChange}
-                                    placeholder="Search by creator..."
+                                    placeholder="Search by creator"
                                     aria-describedby={errorId}
                                 />
                             )}
@@ -114,7 +114,7 @@ export default function EventsFilterCard({
                                     name="type"
                                     value={filters.type}
                                     onChange={onFilterChange}
-                                    placeholder="Workshop, Meetup..."
+                                    placeholder="e.g. Workshop, Meetup..."
                                     aria-describedby={errorId}
                                 />
                             )}
@@ -127,7 +127,7 @@ export default function EventsFilterCard({
                                     name="theme"
                                     value={filters.theme}
                                     onChange={onFilterChange}
-                                    placeholder="Tech, Music..."
+                                    placeholder="e.g. Technology, Music..."
                                     aria-describedby={errorId}
                                 />
                             )}
@@ -162,7 +162,7 @@ export default function EventsFilterCard({
                                     name="location"
                                     value={filters.location}
                                     onChange={onFilterChange}
-                                    placeholder="City or place..."
+                                    placeholder="e.g. Montreal"
                                     aria-describedby={errorId}
                                 />
                             )}

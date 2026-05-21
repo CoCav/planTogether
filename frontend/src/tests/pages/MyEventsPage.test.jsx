@@ -28,6 +28,10 @@ import { getCurrentUserEvents } from "../../api/users/userApi";
    - mocks EventCard for page-level behavior focus
 ================================================== */
 
+/* =============================
+   MOCK DATA
+============================= */
+
 const mockHandleLeaveEvent = vi.fn();
 
 let mockAuthState = {
@@ -35,6 +39,10 @@ let mockAuthState = {
         userId: 1
     }
 };
+
+/* =============================
+   MOCKS
+============================= */
 
 vi.mock("../../features/auth/hooks/useAuth", () => ({
     useAuth: () => mockAuthState

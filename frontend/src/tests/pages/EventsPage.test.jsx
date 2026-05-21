@@ -118,6 +118,10 @@ const renderLoadedEmptyEventsPage = async (initialEntry = "/events") => {
 
 describe("EventsPage", () => {
 
+    /* =============================
+       TEST SETUP
+    ============================= */
+
     beforeEach(() => {
         vi.clearAllMocks();
 

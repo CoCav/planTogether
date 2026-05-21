@@ -99,16 +99,7 @@
 /* ==================================================
    AUTH PAGE
 ================================================== */
-.auth-card {
-    max-width: 520px;
-    margin: 0 auto;
-}
 
-.auth-form-grid {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-}
 
 .checkbox-row {
     display: inline-flex;
@@ -120,11 +111,6 @@
 
 .checkbox-row input {
     accent-color: var(--color-primary);
-}
-
-.auth-footer {
-    margin-top: var(--space-2);
-    font-size: var(--font-size-sm);
 }
 
 
@@ -144,15 +130,6 @@
     gap: var(--space-4);
 }
 
-.password-row {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-}
-
-.password-row .input {
-    flex: 1;
-}
 
 .profile-events-grid {
     display: grid;

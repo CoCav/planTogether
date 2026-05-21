@@ -97,7 +97,6 @@ export default function AppRouter() {
                     </ProtectedRoute>
                 }
             />
-
         </Routes>
     );
 }

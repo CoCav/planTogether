@@ -35,7 +35,7 @@ export default function Navbar() {
     ========================= */
 
     const navLinkClassName = ({ isActive }) =>
-        `navbar-link link-underline link-color-hover ${isActive ? "active" : ""}`.trim();
+        `navbar-link link-animated-underline link-hover-primary ${isActive ? "active" : ""}`.trim();
 
     /* =========================
        HANDLERS

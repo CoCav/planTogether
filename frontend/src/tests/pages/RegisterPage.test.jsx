@@ -1,18 +1,41 @@
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+
 import RegisterPage from "../../pages/RegisterPage";
 
 /* ==================================================
    REGISTER PAGE TESTS
-   Tests register form validation, avatar upload,
-   account creation and redirect
+   Tests account registration page behavior
+
+   Handles:
+   - register page rendering
+   - user form validation
+   - field and password interactions
+   - avatar upload and removal
+   - successful registration flow
+   - automatic login after registration
+   - redirect after successful registration
+   - register error feedback
+
+   Notes:
+   - mocks auth context login action
+   - mocks register API request
+   - uses MemoryRouter for account navigation link
 ================================================== */
+
+/* =============================
+   MOCK DATA
+============================= */
 
 const mockNavigate = vi.fn();
 const mockLogin = vi.fn();
 const mockRegisterUser = vi.fn();
+
+/* =============================
+   MOCKS
+============================= */
 
 vi.mock("react-router-dom", async () => {
     const actual = await vi.importActual("react-router-dom");
@@ -23,40 +46,19 @@ vi.mock("react-router-dom", async () => {
     };
 });
 
-vi.mock("../../context/useAuth", () => ({
+vi.mock("../../features/auth/hooks/useAuth", () => ({
     useAuth: () => ({
         login: mockLogin
     })
 }));
 
-vi.mock("../../api/authApi", () => ({
+vi.mock("../../api/auth/authApi", () => ({
     registerUser: (...args) => mockRegisterUser(...args)
 }));
 
-vi.mock("../../features/auth/authValidation", () => ({
-    validateRegisterForm: vi.fn((form) => {
-        const errors = {};
-
-        if (!form.name) errors.name = "Name is required";
-        if (!form.email) errors.email = "Email is required";
-
-        if (!form.password) {
-            errors.password = "Password is required";
-        } else if (form.password === "weak") {
-            errors.password = [
-                "Password must contain at least 6 characters",
-                "Password must contain at least 1 uppercase",
-                "Password must contain at least 1 number"
-            ];
-        }
-
-        if (form.avatar?.type === "text/plain") {
-            errors.avatar = "Avatar must be an image file";
-        }
-
-        return errors;
-    })
-}));
+/* =============================
+   TEST HELPERS
+============================= */
 
 const renderPage = () =>
     render(
@@ -65,52 +67,141 @@ const renderPage = () =>
         </MemoryRouter>
     );
 
-const fillRegisterForm = async (user, { name = "John Doe", email = "john@test.com", password = "Password123" } = {}) => {
-    await user.type(screen.getByPlaceholderText(/your name/i), name);
-    await user.type(screen.getByPlaceholderText(/your email/i), email);
-    await user.type(screen.getByPlaceholderText(/choose a password/i), password);
+const fillRegisterForm = async (user, {
+    name = "John Doe",
+    email = "john@test.com",
+    password = "Password123"
+} = {}
+) => {
+    await user.type(screen.getByLabelText("Name"), name);
+    await user.type(screen.getByLabelText("Email"), email);
+    await user.type(screen.getByLabelText("Password"), password);
 };
 
-const selectAvatar = async (user, file = new File(["avatar"], "avatar.png", { type: "image/png" })) => {
-    await user.upload(screen.getByLabelText(/choose file/i), file);
+const selectAvatar = async (
+    user,
+    file = new File(
+        ["avatar"],
+        "avatar.png",
+        {
+            type: "image/png"
+        }
+    )
+) => {
+    await user.upload(screen.getByLabelText("Avatar (optional)"), file);
 
     return file;
 };
 
 describe("RegisterPage", () => {
+
+    /* =============================
+       TEST SETUP
+    ============================= */
+
     beforeEach(() => {
         vi.clearAllMocks();
 
-        globalThis.URL.createObjectURL = vi.fn(() => "blob:avatar-preview");
+        globalThis.URL.createObjectURL = vi.fn(
+            () => "blob:avatar-preview"
+        );
+
         globalThis.URL.revokeObjectURL = vi.fn();
     });
 
-    it("renders the register form", () => {
+    /* =============================
+       PAGE RENDERING
+    ============================= */
+
+    it("renders the register page", () => {
         renderPage();
 
-        expect(screen.getByRole("heading", { name: /register/i })).toBeInTheDocument();
-        expect(screen.getByText(/choose file/i)).toBeInTheDocument();
-        expect(screen.getByText(/drag & drop an avatar here/i)).toBeInTheDocument();
-        expect(screen.getByText(/max 2mb.*jpg.*png.*webp.*gif/i)).toBeInTheDocument();
-        expect(screen.getByPlaceholderText(/your name/i)).toBeInTheDocument();
-        expect(screen.getByPlaceholderText(/your email/i)).toBeInTheDocument();
-        expect(screen.getByPlaceholderText(/choose a password/i)).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /^register$/i })).toBeInTheDocument();
-        expect(screen.getByRole("link", { name: /login/i })).toBeInTheDocument();
+        expect(screen.getByRole("heading", {
+            name: "Register"
+        })).toBeInTheDocument();
+
+        expect(screen.getByText("Create your account and start organizing events.")).toBeInTheDocument();
+
+        expect(screen.getByLabelText("Avatar (optional)")).toBeInTheDocument();
+
+        expect(screen.getByLabelText("Name")).toBeInTheDocument();
+        expect(screen.getByLabelText("Email")).toBeInTheDocument();
+        expect(screen.getByLabelText("Password")).toBeInTheDocument();
+
+        expect(screen.getByText(
+            "Your password must contain at least:"
+        )).toBeInTheDocument();
+
+        expect(screen.getByRole("button", {
+            name: "Register"
+        })).toBeInTheDocument();
+
+        expect(screen.getByRole("link", {
+            name: "Login"
+        })).toHaveAttribute("href", "/login");
     });
+
+    it("renders the register section with accessible label", () => {
+        renderPage();
+
+        expect(screen.getByLabelText("Register")).toHaveClass("account-section");
+    });
+
+    /* =============================
+       FORM VALIDATION
+    ============================= */
 
     it("shows validation errors when submitting empty form", async () => {
         const user = userEvent.setup();
 
         renderPage();
 
-        await user.click(screen.getByRole("button", { name: /^register$/i }));
+        await user.click(screen.getByRole("button", {
+            name: "Register"
+        }));
 
-        expect(screen.getByText(/name is required/i)).toBeInTheDocument();
-        expect(screen.getByText(/email is required/i)).toBeInTheDocument();
-        expect(screen.getByText(/password is required/i)).toBeInTheDocument();
+        expect(screen.getByText("Name is required")).toBeInTheDocument();
+        expect(screen.getByText("Email is required")).toBeInTheDocument();
+        expect(screen.getByText("Password is required")).toBeInTheDocument();
+
         expect(mockRegisterUser).not.toHaveBeenCalled();
     });
+
+    it("clears field error when user edits input", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await user.click(screen.getByRole("button", {
+            name: "Register"
+        }));
+
+        expect(screen.getByText("Name is required")).toBeInTheDocument();
+
+        await user.type(screen.getByLabelText("Name"), "John");
+
+        expect(screen.queryByText("Name is required")).not.toBeInTheDocument();
+    });
+
+    /* =============================
+       FORM INTERACTIONS
+    ============================= */
+
+    it("updates input values when typing", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await fillRegisterForm(user);
+
+        expect(screen.getByLabelText("Name")).toHaveValue("John Doe");
+        expect(screen.getByLabelText("Email")).toHaveValue("john@test.com");
+        expect(screen.getByLabelText("Password")).toHaveValue("Password123");
+    });
+
+    /* =============================
+       AVATAR INTERACTIONS
+    ============================= */
 
     it("shows avatar preview when selecting a valid file", async () => {
         const user = userEvent.setup();
@@ -119,12 +210,18 @@ describe("RegisterPage", () => {
 
         await selectAvatar(user);
 
-        expect(screen.getByAltText(/avatar preview/i)).toHaveAttribute(
+        expect(
+            screen.getByAltText("Avatar preview")
+        ).toHaveAttribute(
             "src",
             "blob:avatar-preview"
         );
+
         expect(screen.getByText("avatar.png")).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /remove/i })).toBeInTheDocument();
+
+        expect(screen.getByRole("button", {
+            name: "Remove avatar"
+        })).toBeInTheDocument();
     });
 
     it("removes selected avatar when clicking remove", async () => {
@@ -133,97 +230,73 @@ describe("RegisterPage", () => {
         renderPage();
 
         await selectAvatar(user);
-        await user.click(screen.getByRole("button", { name: /remove/i }));
 
-        expect(screen.queryByAltText(/avatar preview/i)).not.toBeInTheDocument();
+        await user.click(screen.getByRole("button", {
+            name: "Remove avatar"
+        }));
+
+        expect(screen.queryByAltText("Avatar preview")).not.toBeInTheDocument();
+
         expect(screen.queryByText("avatar.png")).not.toBeInTheDocument();
     });
 
-    it("clears field error when user edits input", async () => {
-        const user = userEvent.setup();
-
-        renderPage();
-
-        await user.click(screen.getByRole("button", { name: /^register$/i }));
-
-        expect(screen.getByText(/name is required/i)).toBeInTheDocument();
-
-        await user.type(screen.getByPlaceholderText(/your name/i), "John Doe");
-
-        expect(screen.queryByText(/name is required/i)).not.toBeInTheDocument();
-    });
-
-    it("updates input values when typing", async () => {
-        const user = userEvent.setup();
-
-        renderPage();
-
-        const nameInput = screen.getByPlaceholderText(/your name/i);
-        const emailInput = screen.getByPlaceholderText(/your email/i);
-        const passwordInput = screen.getByPlaceholderText(/choose a password/i);
-
-        await user.type(nameInput, "John Doe");
-        await user.type(emailInput, "john@test.com");
-        await user.type(passwordInput, "Password123");
-
-        expect(nameInput).toHaveValue("John Doe");
-        expect(emailInput).toHaveValue("john@test.com");
-        expect(passwordInput).toHaveValue("Password123");
-    });
+    /* =============================
+       PASSWORD INTERACTIONS
+    ============================= */
 
     it("toggles password visibility", async () => {
         const user = userEvent.setup();
 
         renderPage();
 
-        const passwordInput = screen.getByPlaceholderText(/choose a password/i);
+        const passwordInput = screen.getByLabelText("Password");
 
         expect(passwordInput).toHaveAttribute("type", "password");
 
-        await user.click(screen.getByRole("button", { name: /show/i }));
+        await user.click(screen.getByRole("button", {
+            name: "Show password"
+        }));
+
         expect(passwordInput).toHaveAttribute("type", "text");
 
-        await user.click(screen.getByRole("button", { name: /hide/i }));
+        await user.click(screen.getByRole("button", {
+            name: "Hide password"
+        }));
+
         expect(passwordInput).toHaveAttribute("type", "password");
     });
 
     it("displays password requirements", () => {
         renderPage();
 
-        expect(screen.getByText(/your password must contain at least/i)).toBeInTheDocument();
-        expect(screen.getByText(/6 characters/i)).toBeInTheDocument();
-        expect(screen.getByText(/1 uppercase/i)).toBeInTheDocument();
-        expect(screen.getByText(/1 number/i)).toBeInTheDocument();
+        expect(screen.getByText("8 characters")).toBeInTheDocument();
+        expect(screen.getByText("1 uppercase")).toBeInTheDocument();
+        expect(screen.getByText("1 lowercase")).toBeInTheDocument();
+        expect(screen.getByText("1 number")).toBeInTheDocument();
     });
 
-    it("displays multiple password validation errors", async () => {
-        const user = userEvent.setup();
-
-        renderPage();
-
-        await fillRegisterForm(user, {
-            password: "weak"
-        });
-
-        await user.click(screen.getByRole("button", { name: /^register$/i }));
-
-        expect(screen.getByText(/password must contain at least 6 characters/i)).toBeInTheDocument();
-        expect(screen.getByText(/password must contain at least 1 uppercase/i)).toBeInTheDocument();
-        expect(screen.getByText(/password must contain at least 1 number/i)).toBeInTheDocument();
-
-        expect(mockRegisterUser).not.toHaveBeenCalled();
-    });
+    /* =============================
+       SUBMISSION
+    ============================= */
 
     it("registers successfully and redirects", async () => {
         const user = userEvent.setup();
 
-        mockRegisterUser.mockResolvedValue({ data: { token: "fake-token" } });
+        mockRegisterUser.mockResolvedValue({
+            data: {
+                token: "fake-token"
+            }
+        });
+
         mockLogin.mockResolvedValue();
 
         renderPage();
 
         await fillRegisterForm(user);
-        await user.click(screen.getByRole("button", { name: /^register$/i }));
+
+        await user.click(screen.getByRole("button", {
+            name: "Register"
+        }));
 
         await waitFor(() => {
             expect(mockRegisterUser).toHaveBeenCalledWith(expect.any(FormData));
@@ -242,16 +315,28 @@ describe("RegisterPage", () => {
 
     it("registers successfully with avatar", async () => {
         const user = userEvent.setup();
-        const avatar = new File(["avatar"], "avatar.png", { type: "image/png" });
 
-        mockRegisterUser.mockResolvedValue({ data: { token: "fake-token" } });
+        const avatar = new File(["avatar"], "avatar.png", {
+            type: "image/png"
+        });
+
+        mockRegisterUser.mockResolvedValue({
+            data: {
+                token: "fake-token"
+            }
+        });
+
         mockLogin.mockResolvedValue();
 
         renderPage();
 
         await selectAvatar(user, avatar);
+
         await fillRegisterForm(user);
-        await user.click(screen.getByRole("button", { name: /^register$/i }));
+
+        await user.click(screen.getByRole("button", {
+            name: "Register"
+        }));
 
         await waitFor(() => {
             expect(mockRegisterUser).toHaveBeenCalledWith(expect.any(FormData));
@@ -260,6 +345,7 @@ describe("RegisterPage", () => {
         const formData = mockRegisterUser.mock.calls[0][0];
 
         expect(formData.get("avatar")).toBe(avatar);
+
         expect(mockLogin).toHaveBeenCalledWith("fake-token");
         expect(mockNavigate).toHaveBeenCalledWith("/events");
     });
@@ -268,34 +354,54 @@ describe("RegisterPage", () => {
         const user = userEvent.setup();
 
         let resolveRequest;
-        mockRegisterUser.mockImplementation(
-            () =>
-                new Promise((resolve) => {
-                    resolveRequest = resolve;
-                })
+
+        mockRegisterUser.mockImplementation(() =>
+            new Promise((resolve) => {
+                resolveRequest = resolve;
+            })
         );
 
         renderPage();
 
         await fillRegisterForm(user);
-        await user.click(screen.getByRole("button", { name: /^register$/i }));
 
-        expect(screen.getByRole("button", { name: /loading/i })).toBeDisabled();
+        await user.click(screen.getByRole("button", {
+            name: "Register"
+        }));
 
-        resolveRequest({ data: { token: "fake-token" } });
+        expect(screen.getByRole("button", {
+            name: "Loading..."
+        })).toBeDisabled();
+
+        resolveRequest({
+            data: {
+                token: "fake-token"
+            }
+        });
     });
+
+    /* =============================
+       ERROR HANDLING
+    ============================= */
 
     it("shows error message when register fails", async () => {
         const user = userEvent.setup();
 
-        mockRegisterUser.mockRejectedValue(new Error("Register failed"));
+        mockRegisterUser.mockRejectedValue(
+            new Error("Register failed")
+        );
 
         renderPage();
 
         await fillRegisterForm(user);
-        await user.click(screen.getByRole("button", { name: /^register$/i }));
 
-        expect(await screen.findByText(/unable to register\. please check your information\./i)).toBeInTheDocument();
+        await user.click(screen.getByRole("button", {
+            name: "Register"
+        }));
+
+        expect(await screen.findByText(
+            "Unable to register. Please check your information."
+        )).toBeInTheDocument();
 
         expect(mockLogin).not.toHaveBeenCalled();
         expect(mockNavigate).not.toHaveBeenCalled();

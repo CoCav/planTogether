@@ -180,6 +180,7 @@ export default function EventForm({
                             name="title"
                             value={values.title}
                             onChange={onFieldChange}
+                            placeholder="e.g. Board game night"
                             error={fieldErrors.title}
                             aria-describedby={errorId}
                         />
@@ -193,6 +194,7 @@ export default function EventForm({
                             name="type"
                             value={values.type}
                             onChange={onFieldChange}
+                            placeholder="e.g. Workshop, Meetup..."
                             error={fieldErrors.type}
                             aria-describedby={errorId}
                         />
@@ -206,6 +208,7 @@ export default function EventForm({
                             name="theme"
                             value={values.theme}
                             onChange={onFieldChange}
+                            placeholder="e.g. Technology, Music..."
                             error={fieldErrors.theme}
                             aria-describedby={errorId}
                         />
@@ -236,6 +239,7 @@ export default function EventForm({
                                 name="location"
                                 value={values.location}
                                 onChange={onFieldChange}
+                                placeholder="e.g. Montreal"
                                 error={fieldErrors.location}
                                 aria-describedby={errorId}
                             />
@@ -268,6 +272,7 @@ export default function EventForm({
                             name="description"
                             value={values.description}
                             onChange={onFieldChange}
+                            placeholder="Describe your event"
                             error={fieldErrors.description}
                             aria-describedby={errorId}
                         />

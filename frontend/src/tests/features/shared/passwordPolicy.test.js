@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { PASSWORD_MESSAGES, PASSWORD_MIN_LENGTH, PASSWORD_REQUIREMENTS } from "../../../features/shared/passwordPolicy";
+import {
+    PASSWORD_MESSAGES,
+    PASSWORD_MIN_LENGTH,
+    PASSWORD_REQUIREMENTS,
+    PASSWORD_REQUIREMENT_LABELS
+} from "../../../features/shared/passwordPolicy";
 
 /* ==================================================
    PASSWORD POLICY TESTS
@@ -10,6 +15,7 @@ import { PASSWORD_MESSAGES, PASSWORD_MIN_LENGTH, PASSWORD_REQUIREMENTS } from ".
    - minimum password length
    - password regex rules
    - validation messages
+   - password requirement labels
 ================================================== */
 
 describe("passwordPolicy", () => {
@@ -18,34 +24,43 @@ describe("passwordPolicy", () => {
        PASSWORD LENGTH
     ============================= */
 
-    it("should expose the minimum password length", () => {
+    it("exposes the minimum password length", () => {
         expect(PASSWORD_MIN_LENGTH).toBe(8);
     });
+
 
     /* =============================
        PASSWORD REQUIREMENTS
     ============================= */
 
-    it("should validate numeric password requirement", () => {
+    it("exposes password minimum length requirement", () => {
+        expect(PASSWORD_REQUIREMENTS.minLength).toBe(8);
+    });
+
+    it("validates numeric password requirement", () => {
         expect(PASSWORD_REQUIREMENTS.hasNumber.test("Password1")).toBe(true);
+
         expect(PASSWORD_REQUIREMENTS.hasNumber.test("Password")).toBe(false);
     });
 
-    it("should validate uppercase password requirement", () => {
+    it("validates uppercase password requirement", () => {
         expect(PASSWORD_REQUIREMENTS.hasUppercase.test("Password")).toBe(true);
+
         expect(PASSWORD_REQUIREMENTS.hasUppercase.test("password")).toBe(false);
     });
 
-    it("should validate lowercase password requirement", () => {
+    it("validates lowercase password requirement", () => {
         expect(PASSWORD_REQUIREMENTS.hasLowercase.test("password")).toBe(true);
+
         expect(PASSWORD_REQUIREMENTS.hasLowercase.test("PASSWORD")).toBe(false);
     });
+
 
     /* =============================
        PASSWORD MESSAGES
     ============================= */
 
-    it("should expose frontend password validation messages", () => {
+    it("exposes shared password validation messages", () => {
         expect(PASSWORD_MESSAGES).toEqual({
             minLength:
                 "Password must be at least 8 characters long",
@@ -70,6 +85,20 @@ describe("passwordPolicy", () => {
 
             newPasswordLowercase:
                 "New password must contain a lowercase letter"
+        });
+    });
+
+
+    /* =============================
+       PASSWORD REQUIREMENT LABELS
+    ============================= */
+
+    it("exposes password requirement display labels", () => {
+        expect(PASSWORD_REQUIREMENT_LABELS).toEqual({
+            minLength: "8 characters",
+            uppercase: "1 uppercase",
+            lowercase: "1 lowercase",
+            number: "1 number"
         });
     });
 });

@@ -1,195 +1,153 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/useAuth";
-import { registerUser } from "../api/authApi";
-import { validateRegisterForm } from "../features/auth/authValidation";
+import { Link, useNavigate } from "react-router-dom";
 
-import AuthFormFields from "../components/auth/AuthFormFields";
-import AuthPasswordField from "../components/auth/AuthPasswordField";
-import PasswordRequirements from "../components/auth/PasswordRequirements";
+import { useAuth } from "../features/auth/hooks/useAuth";
+import { registerUser } from "../api/auth/authApi";
 
-import Button from "../components/ui/Button";
-import Card from "../components/ui/Card";
+import { buildRegisterPayloadData } from "../features/auth/registerPayloadBuilder";
+import useRegisterForm from "../features/auth/hooks/useRegisterForm";
+
+import UserForm from "../components/users/UserForm";
+import PasswordField from "../components/users/PasswordField";
+import PasswordRequirements from "../components/users/PasswordRequirements";
+
 import Alert from "../components/ui/Alert";
+import Card from "../components/ui/Card";
 
 /* ==================================================
    REGISTER PAGE
    Allows a new user to create an account
 
    Handles:
-   - registration form validation
-   - optional avatar upload
-   - password requirements display
-   - password visibility toggle
+   - register form orchestration
+   - register submission
    - automatic login after registration
+   - redirect after successful registration
+   - accessible registration form section
 ================================================== */
 
 export default function RegisterPage() {
     const { login } = useAuth();
     const navigate = useNavigate();
 
-    const [error, setError] = useState("");
-    const [errors, setErrors] = useState({});
 
-    // Controls password visibility
-    const [showPassword, setShowPassword] = useState(false);
+    /* =============================
+       SUBMIT HANDLER
+    ============================= */
 
-    // Controls submit loading state
-    const [submitting, setSubmitting] = useState(false);
+    const handleRegister = async (values) => {
+        const response = await registerUser(buildRegisterPayloadData(values));
 
-    // Registration form state
-    const [form, setForm] = useState({
-        name: "",
-        email: "",
-        password: "",
-        avatar: null
+        // Register endpoint returns an auth token
+        const token = response.data.token;
+
+        // Logs the user in immediately after account creation
+        await login(token);
+
+        // Redirects authenticated user to event listings
+        navigate("/events");
+    };
+
+
+    /* =============================
+       FORM STATE
+    ============================= */
+
+    const {
+        formState,
+        feedback,
+        submitState,
+        passwordState,
+        formActions
+    } = useRegisterForm({
+        initialValues: {
+            name: "",
+            email: "",
+            password: "",
+            avatar: null
+        },
+        onSubmitValid: handleRegister
     });
 
-    /* =========================
-       Text input handling
-       Updates form values and clears field errors
-    ========================= */
+    const { values, fieldErrors } = formState;
+    const { error } = feedback;
+    const { isSubmitting } = submitState;
+    const { showPassword } = passwordState;
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
+    const {
+        handleFieldChange,
+        handleAvatarChange,
+        handleRemoveAvatar,
+        handleTogglePassword,
+        handleSubmit
+    } = formActions;
 
-        setForm((prev) => ({
-            ...prev,
-            [name]: value
-        }));
 
-        setErrors((prev) => ({
-            ...prev,
-            [name]: undefined
-        }));
-    };
-
-    /* =========================
-       Avatar input handling
-       Stores selected file and clears avatar error
-    ========================= */
-
-    const handleFileChange = (e) => {
-        const file = e.target.files?.[0] || null;
-
-        setForm((prev) => ({
-            ...prev,
-            avatar: file
-        }));
-
-        setErrors((prev) => ({
-            ...prev,
-            avatar: undefined
-        }));
-    };
-
-    const handleRemoveAvatar = () => {
-        setForm((prev) => ({
-            ...prev,
-            avatar: null
-        }));
-
-        setErrors((prev) => ({
-            ...prev,
-            avatar: undefined
-        }));
-    };
-
-    /* =========================
-       Form submission
-       Validates form, sends multipart data,
-       creates account and logs user in
-    ========================= */
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError("");
-
-        const validationErrors = validateRegisterForm(form);
-
-        if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
-            return;
-        }
-
-        setErrors({});
-        setSubmitting(true);
-
-        try {
-            const formData = new FormData();
-
-            formData.append("name", form.name);
-            formData.append("email", form.email);
-            formData.append("password", form.password);
-
-            if (form.avatar) {
-                formData.append("avatar", form.avatar);
-            }
-
-            const response = await registerUser(formData);
-            const token = response.data.token;
-
-            await login(token);
-            navigate("/events");
-
-        } catch (err) {
-            console.error("Register error:", err);
-            setError("Unable to register. Please check your information.");
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    /* =========================
-       Main render
-    ========================= */
+    /* =============================
+       MAIN RENDER
+    ============================= */
 
     return (
-        <div className="container page-section">
-            <div className="page-header">
-                <div>
-                    <h1 className="page-title">Register</h1>
-                    <p className="page-subtitle">Create your account and start organizing events.</p>
+        <main className="container page-section">
+            <header className="page-header">
+                <div className="page-header-content">
+                    <h1 id="register-page-title" className="page-title">
+                        Register
+                    </h1>
+
+                    <p className="page-subtitle">
+                        Create your account and start organizing events.
+                    </p>
                 </div>
-            </div>
+            </header>
 
             {error && <Alert type="danger">{error}</Alert>}
 
-            <Card className="auth-card">
-                <form onSubmit={handleSubmit} className="event-form">
-                    <div className="auth-form-grid">
-                        <AuthFormFields
-                            form={form}
-                            errors={errors}
-                            onChange={handleChange}
-                            onFileChange={handleFileChange}
-                            onRemoveFile={handleRemoveAvatar}
-                        />
+            <section className="account-section" aria-labelledby="register-page-title">
+                <Card className="account-card">
+                    <UserForm
+                        values={values}
+                        fieldErrors={fieldErrors}
 
-                        <AuthPasswordField
-                            label="Password"
-                            name="password"
-                            value={form.password}
-                            placeholder="Choose a password"
-                            error={errors.password}
-                            visible={showPassword}
-                            onChange={handleChange}
-                            onToggle={() => setShowPassword((prev) => !prev)}
-                        >
-                            <PasswordRequirements password={form.password} />
-                        </AuthPasswordField>
-                    </div>
+                        submitLabel="Register"
+                        isSubmitting={isSubmitting}
 
-                    <div className="form-actions">
-                        <Button type="submit" loading={submitting}>Register</Button>
-                    </div>
+                        onFieldChange={handleFieldChange}
+                        onAvatarChange={handleAvatarChange}
+                        onRemoveAvatar={handleRemoveAvatar}
 
-                    <p className="auth-footer text-muted">
-                        Already have an account?{" "}
-                        <Link to="/login" className="link-inline">Login</Link>
-                    </p>
-                </form>
-            </Card>
-        </div>
+                        onSubmit={handleSubmit}
+
+                        formFooter={
+                            <p className="account-footer text-muted">
+                                Already have an account?{" "}
+                                <Link to="/login" className="link-inline">
+                                    Login
+                                </Link>
+                            </p>
+                        }
+                    >
+                        <div className="form-grid-column-full">
+                            <PasswordField
+                                id="password"
+                                label="Password"
+                                name="password"
+                                value={values.password}
+                                placeholder="Create a password"
+
+                                error={fieldErrors.password}
+
+                                visible={showPassword}
+                                autoComplete="new-password"
+
+                                onChange={handleFieldChange}
+                                onToggle={handleTogglePassword}
+                            >
+                                <PasswordRequirements password={values.password} />
+                            </PasswordField>
+                        </div>
+                    </UserForm>
+                </Card>
+            </section>
+        </main>
     );
 }

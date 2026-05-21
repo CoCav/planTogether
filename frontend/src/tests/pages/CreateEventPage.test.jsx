@@ -24,6 +24,10 @@ import CreateEventPage from "../../pages/CreateEventPage";
    - mocks event creation API and navigation
 ================================================== */
 
+/* =============================
+   MOCK DATA
+============================= */
+
 const mockNavigate = vi.fn();
 const mockCreateEvent = vi.fn();
 
@@ -79,6 +83,11 @@ const getSubmittedFormData = () => {
 };
 
 describe("CreateEventPage", () => {
+
+    /* =============================
+       TEST SETUP
+    ============================= */
+
     beforeEach(() => {
         vi.clearAllMocks();
 

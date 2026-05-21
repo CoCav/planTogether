@@ -264,9 +264,13 @@ export default function MyEventsPage() {
         <main className="container page-section">
             <header className="page-header">
                 <div className="page-header-content">
-                    <h1 className="page-title">My Events</h1>
+                    <h1 className="page-title">
+                        My Events
+                    </h1>
 
-                    <p className="page-subtitle">View the events you created and joined.</p>
+                    <p className="page-subtitle">
+                        View the events you created and joined.
+                    </p>
                 </div>
             </header>
 

@@ -11,14 +11,32 @@ import { EVENT_ROLES } from "../../shared/eventRoles";
    - join event
    - leave event
    - refresh data after success
+
+   Notes:
+   - accepts direct current user role for single event pages
+   - accepts event role lookup for event listing pages
 ================================================== */
 
 export default function useMembershipActions({
     loadData,
     setMessage,
     setError,
-    getRoleByEventId
+    currentUserRole = null,
+    getCurrentUserRoleByEvent = () => null
 }) {
+
+    /* =============================
+       ROLE RESOLUTION
+    ============================= */
+
+    // Gets current user's role from direct role or listing lookup
+    const getCurrentUserRole = (eventId) => {
+        if (currentUserRole) {
+            return currentUserRole;
+        }
+
+        return getCurrentUserRoleByEvent(eventId);
+    };
 
     /* =============================
        JOIN EVENT
@@ -35,6 +53,7 @@ export default function useMembershipActions({
             setMessage("✅ Successfully joined event!");
 
             await loadData();
+
         } catch (error) {
             setError(getApiErrorMessage(error, "❌ Unable to join event"));
         }
@@ -46,13 +65,15 @@ export default function useMembershipActions({
 
     // Leaves an event after confirmation
     const handleLeaveEvent = async (eventId) => {
-        const currentRole = getRoleByEventId(eventId);
+        const currentRole = getCurrentUserRole(eventId);
 
+        // Prevents organizers from leaving their own event
         if (currentRole === EVENT_ROLES.ORGANIZER) {
             setError("❌ Organizer cannot leave their own event");
             return;
         }
 
+        // Warns co-organizers about losing elevated permissions
         const confirmLeaveMessage =
             currentRole === EVENT_ROLES.CO_ORGANIZER
                 ? "Are you sure you want to leave this event? You will lose your co-organizer role and will rejoin later as a participant."
@@ -71,6 +92,7 @@ export default function useMembershipActions({
             setMessage("👋 Successfully left event");
 
             await loadData();
+
         } catch (error) {
             setError(getApiErrorMessage(error, "❌ Unable to leave event"));
         }

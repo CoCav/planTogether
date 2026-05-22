@@ -138,9 +138,6 @@ export default function EventDetailsPage() {
         isRegistrationClosed
     });
 
-    // Adapts current role lookup for membership action hooks
-    const getCurrentUserRoleByEvent = () => myRole;
-
 
     /* =============================
        EVENT ACTIONS
@@ -161,7 +158,7 @@ export default function EventDetailsPage() {
         loadData,
         setMessage,
         setError,
-        getCurrentUserRoleByEvent
+        currentUserRole: myRole
     });
 
     const { handlePromoteMember, handleDemoteMember, handleRemoveMember } = useMembershipManagement({

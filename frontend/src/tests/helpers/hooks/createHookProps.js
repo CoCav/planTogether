@@ -49,7 +49,7 @@ export const createMutationHookProps = (overrides = {}) => ({
 export const createMembershipActionHookProps = (overrides = {}) => ({
     ...createHookCallbacks(),
 
-    getRoleByEventId: vi.fn(),
+    getCurrentUserRoleByEvent: vi.fn(),
 
     ...overrides
 });

@@ -40,12 +40,7 @@ export default function HomePage() {
        HOME EVENTS
     ============================= */
 
-    const {
-        events,
-        isLoading,
-        loadData,
-        getCurrentUserRoleByEvent
-    } = useHomeEvents({
+    const { events, isLoading, loadData, getCurrentUserRoleByEvent } = useHomeEvents({
         user,
         setError
     });

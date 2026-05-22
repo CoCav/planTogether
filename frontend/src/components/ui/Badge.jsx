@@ -1,4 +1,4 @@
-import { EVENT_ROLE_UI } from "../../features/shared/eventRoles";
+import { EVENT_ROLE_UI } from "../../features/shared/constants/eventRoles";
 
 /* ==================================================
    BADGE

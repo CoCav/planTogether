@@ -8,7 +8,7 @@ import { getEventDisplayData } from "../../features/events/eventDisplayData";
 
 import useEventStatus from "../../features/events/hooks/useEventStatus";
 
-import { EVENT_ROLES } from "../../features/shared/eventRoles";
+import { EVENT_ROLES } from "../../features/shared/constants/eventRoles";
 
 import EventCardActions from "./EventCardActions";
 

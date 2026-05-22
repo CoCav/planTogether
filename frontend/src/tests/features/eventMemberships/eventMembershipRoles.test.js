@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { buildMembershipMap, getCurrentUserEventRole } from "../../../features/eventMemberships/eventMembershipRoles";
 
-import { EVENT_ROLES } from "../../../features/shared/eventRoles";
+import { EVENT_ROLES } from "../../../features/shared/constants/eventRoles";
 
 /* ==================================================
    EVENT MEMBERSHIP ROLES TESTS

@@ -1,4 +1,4 @@
-import { PASSWORD_REQUIREMENTS, PASSWORD_REQUIREMENT_LABELS } from "../../features/shared/passwordPolicy";
+import { PASSWORD_REQUIREMENTS, PASSWORD_REQUIREMENT_LABELS } from "../../features/shared/security/passwordPolicy";
 
 /* ==================================================
    PASSWORD REQUIREMENTS

@@ -10,7 +10,7 @@ import {
     normalizeMemberships
 } from "../../../features/eventMemberships/eventMembershipNormalizer";
 
-import { EVENT_ROLES } from "../../../features/shared/eventRoles";
+import { EVENT_ROLES } from "../../../features/shared/constants/eventRoles";
 
 import {
     createApiMembership,

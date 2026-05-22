@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import EventsFilterCard from "../../../components/events/EventsFilterCard";
 
-import { EVENT_MODES, getEventModeLabel } from "../../../features/shared/eventModes";
+import { EVENT_MODES, getEventModeLabel } from "../../../features/shared/constants/eventModes";
 
 import { createEventListingFilters } from "../../factories/shared/eventListingFiltersFactory";
 

@@ -5,7 +5,7 @@ import {
     normalizePublicUserEvents
 } from "../../../../features/users/public/publicUserEventNormalizer";
 
-import { EVENT_STATUS } from "../../../../features/shared/eventStatus";
+import { EVENT_STATUS } from "../../../../features/shared/constants/eventStatus";
 
 import { createEvent } from "../../../factories/events/eventFactory";
 

@@ -1,6 +1,6 @@
-import { PASSWORD_REQUIREMENTS, PASSWORD_MESSAGES } from "../shared/passwordPolicy";
+import { PASSWORD_REQUIREMENTS, PASSWORD_MESSAGES } from "../shared/security/passwordPolicy";
 
-import { validateAvatarFile } from "../shared/uploadPolicy";
+import { validateAvatarFile } from "../shared/security/uploadPolicy";
 
 /* ==================================================
    USER VALIDATION

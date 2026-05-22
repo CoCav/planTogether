@@ -4,8 +4,8 @@ import { act, renderHook } from "@testing-library/react";
 import useEventForm from "../../../../features/events/hooks/useEventForm";
 
 import { createDefaultEventFormValues } from "../../../../features/events/eventFormConfig";
-import { EVENT_MODES } from "../../../../features/shared/eventModes";
-import { EVENT_REGISTRATION_DEADLINES } from "../../../../features/shared/eventRegistrationDeadlines";
+import { EVENT_MODES } from "../../../../features/shared/constants/eventModes";
+import { EVENT_REGISTRATION_DEADLINES } from "../../../../features/shared/constants/eventRegistrationDeadlines";
 
 /* ==================================================
    USE EVENT FORM TESTS

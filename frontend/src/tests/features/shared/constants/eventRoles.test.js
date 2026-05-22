@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { EVENT_ROLES, VALID_EVENT_ROLES, EVENT_ROLE_UI } from "../../../features/shared/eventRoles";
+import { EVENT_ROLES, VALID_EVENT_ROLES, EVENT_ROLE_UI } from "../../../../features/shared/constants/eventRoles";
 
 /* ==================================================
    EVENT ROLE CONSTANTS TESTS

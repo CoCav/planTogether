@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { EVENT_STATUS } from "../../../features/shared/eventStatus";
+import { EVENT_STATUS } from "../../../../features/shared/constants/eventStatus";
 
 /* ==================================================
    EVENT STATUS CONSTANTS TESTS

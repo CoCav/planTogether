@@ -8,8 +8,8 @@ import {
     getMyEventsWithRole
 } from "../../../../features/users/authenticated/myEventNormalizer";
 
-import { EVENT_ROLES } from "../../../../features/shared/eventRoles";
-import { EVENT_STATUS } from "../../../../features/shared/eventStatus";
+import { EVENT_ROLES } from "../../../../features/shared/constants/eventRoles";
+import { EVENT_STATUS } from "../../../../features/shared/constants/eventStatus";
 
 import { createEvent } from "../../../factories/events/eventFactory";
 

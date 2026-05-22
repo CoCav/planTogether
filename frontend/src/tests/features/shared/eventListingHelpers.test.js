@@ -9,7 +9,7 @@ import {
     isCurrentWeekendFilterActive
 } from "../../../features/shared/eventListingHelpers";
 
-import { EVENT_STATUS } from "../../../features/shared/eventStatus";
+import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
 
 /* ==================================================
    EVENT LISTING HELPERS TESTS

@@ -5,8 +5,8 @@ import userEvent from "@testing-library/user-event";
 
 import EventsPage from "../../pages/EventsPage";
 
-import { EVENT_ROLES } from "../../features/shared/eventRoles";
-import { EVENT_STATUS } from "../../features/shared/eventStatus";
+import { EVENT_ROLES } from "../../features/shared/constants/eventRoles";
+import { EVENT_STATUS } from "../../features/shared/constants/eventStatus";
 
 import { createPaginatedEventsPayload } from "../factories/events/eventFactory";
 

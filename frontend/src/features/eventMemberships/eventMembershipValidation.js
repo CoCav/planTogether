@@ -1,4 +1,4 @@
-import { VALID_EVENT_ROLES } from "../shared/eventRoles";
+import { VALID_EVENT_ROLES } from "../shared/constants/eventRoles";
 
 /* ==================================================
    EVENT MEMBERSHIP VALIDATION

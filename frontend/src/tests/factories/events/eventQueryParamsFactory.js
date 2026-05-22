@@ -1,4 +1,4 @@
-import { EVENT_STATUS } from "../../../features/shared/eventStatus";
+import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
 
 import { createQueryParams } from "../shared/queryParamsFactory";
 

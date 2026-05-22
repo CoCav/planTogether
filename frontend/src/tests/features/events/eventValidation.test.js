@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { validateEventForm } from "../../../features/events/eventValidation";
 
-import { EVENT_MODES } from "../../../features/shared/eventModes";
+import { EVENT_MODES } from "../../../features/shared/constants/eventModes";
 
 import { createEventPayload, createOnlineEventPayload } from "../../factories/events/eventPayloadFactory";
 

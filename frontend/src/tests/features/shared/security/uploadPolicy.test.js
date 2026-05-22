@@ -7,9 +7,9 @@ import {
     validateAvatarFile,
     validateEventImageFile,
     validateImageFile
-} from "../../../features/shared/uploadPolicy";
+} from "../../../../features/shared/security/uploadPolicy";
 
-import { createMockImageFile, createMockInvalidFile, createMockOversizedFile } from "../../helpers/mocks/mockFile";
+import { createMockImageFile, createMockInvalidFile, createMockOversizedFile } from "../../../helpers/mocks/mockFile";
 
 /* ==================================================
    UPLOAD POLICY TESTS

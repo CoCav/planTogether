@@ -1,7 +1,7 @@
 import { getApiErrorMessage } from "../../../api/apiError";
 import { joinEvent, leaveEvent } from "../../../api/eventMemberships/eventMembershipApi";
 
-import { EVENT_ROLES } from "../../shared/eventRoles";
+import { EVENT_ROLES } from "../../shared/constants/eventRoles";
 
 /* ==================================================
    MEMBERSHIP ACTIONS HOOK

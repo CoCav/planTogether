@@ -5,7 +5,7 @@ import {
     PASSWORD_MIN_LENGTH,
     PASSWORD_REQUIREMENTS,
     PASSWORD_REQUIREMENT_LABELS
-} from "../../../features/shared/passwordPolicy";
+} from "../../../../features/shared/security/passwordPolicy";
 
 /* ==================================================
    PASSWORD POLICY TESTS

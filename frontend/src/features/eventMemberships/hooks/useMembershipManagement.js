@@ -1,8 +1,12 @@
 import { getApiErrorMessage } from "../../../api/apiError";
 
-import { removeEventMember, transferEventOwnership, updateEventMemberRole } from "../../../api/eventMemberships/eventMembershipApi";
+import {
+    removeEventMember,
+    transferEventOwnership,
+    updateEventMemberRole
+} from "../../../api/eventMemberships/eventMembershipApi";
 
-import { EVENT_ROLES } from "../../shared/eventRoles";
+import { EVENT_ROLES } from "../../shared/constants/eventRoles";
 
 /* ==================================================
    MEMBERSHIP MANAGEMENT HOOK

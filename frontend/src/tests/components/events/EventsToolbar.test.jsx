@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import EventsToolbar from "../../../components/events/EventsToolbar";
 
-import { EVENT_STATUS } from "../../../features/shared/eventStatus";
+import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
 
 import {
     createAllEventsView,

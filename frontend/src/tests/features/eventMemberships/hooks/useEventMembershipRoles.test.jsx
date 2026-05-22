@@ -6,7 +6,7 @@ import useEventMembershipRoles from "../../../../features/eventMemberships/hooks
 import { getCurrentUserEvents } from "../../../../api/users/userApi";
 import { fetchAllPaginated } from "../../../../utils/pagination";
 
-import { EVENT_ROLES } from "../../../../features/shared/eventRoles";
+import { EVENT_ROLES } from "../../../../features/shared/constants/eventRoles";
 
 /* ==================================================
    USE EVENT MEMBERSHIP ROLES TESTS

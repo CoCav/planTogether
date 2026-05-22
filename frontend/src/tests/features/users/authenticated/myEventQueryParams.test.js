@@ -8,7 +8,7 @@ import {
 
 import { EVENT_PAGE_QUERY_KEY, EVENT_VIEW_QUERY_KEY } from "../../../../features/shared/eventListingQueryKeys";
 
-import { EVENT_STATUS } from "../../../../features/shared/eventStatus";
+import { EVENT_STATUS } from "../../../../features/shared/constants/eventStatus";
 
 import { createMyEventFilters } from "../../../factories/users/authenticated/myEventFiltersFactory";
 

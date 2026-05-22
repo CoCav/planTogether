@@ -1,4 +1,4 @@
-import { EVENT_MODES, getEventModeLabel } from "../../features/shared/eventModes";
+import { EVENT_MODES, getEventModeLabel } from "../../features/shared/constants/eventModes";
 
 import Button from "../ui/Button";
 import Card from "../ui/Card";

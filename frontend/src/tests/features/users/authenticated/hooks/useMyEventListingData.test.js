@@ -5,7 +5,7 @@ import useMyEventListingData from "../../../../../features/users/authenticated/h
 
 import { getCurrentUserEvents } from "../../../../../api/users/userApi";
 
-import { EVENT_ROLES } from "../../../../../features/shared/eventRoles";
+import { EVENT_ROLES } from "../../../../../features/shared/constants/eventRoles";
 
 import { createMyEventFilters } from "../../../../factories/users/authenticated/myEventFiltersFactory";
 

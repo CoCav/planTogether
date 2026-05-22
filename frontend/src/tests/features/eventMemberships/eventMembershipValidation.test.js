@@ -7,7 +7,7 @@ import {
     validateTargetUserId
 } from "../../../features/eventMemberships/eventMembershipValidation";
 
-import { EVENT_ROLES, VALID_EVENT_ROLES } from "../../../features/shared/eventRoles";
+import { EVENT_ROLES, VALID_EVENT_ROLES } from "../../../features/shared/constants/eventRoles";
 
 /* ==================================================
    EVENT MEMBERSHIP VALIDATION TESTS

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { getEventDisplayData } from "../../../features/events/eventDisplayData";
 
-import { EVENT_MODES } from "../../../features/shared/eventModes";
+import { EVENT_MODES } from "../../../features/shared/constants/eventModes";
 
 import { createEvent } from "../../factories/events/eventFactory";
 

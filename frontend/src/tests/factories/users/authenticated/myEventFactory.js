@@ -1,4 +1,4 @@
-import { EVENT_ROLES } from "../../../../features/shared/eventRoles";
+import { EVENT_ROLES } from "../../../../features/shared/constants/eventRoles";
 
 import { createEvent } from "../../events/eventFactory";
 

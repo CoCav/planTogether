@@ -20,8 +20,8 @@ import { defaultEventImage, getEventImage } from "../utils/uploadedFiles";
 
 import EventDetailsActions from "../components/events/EventDetailsActions";
 import EventDetailsSummary from "../components/events/EventDetailsSummary";
-import EventParticipantsSection from "../components/events/EventParticipantsSection";
-import EventStaffSection from "../components/events/EventStaffSection";
+import EventParticipantsSection from "../components/eventMemberships/EventParticipantsSection";
+import EventStaffSection from "../components/eventMemberships/EventStaffSection";
 
 import Alert from "../components/ui/Alert";
 import Card from "../components/ui/Card";

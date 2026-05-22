@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { EVENT_MODES } from "../../shared/eventModes";
+import { EVENT_MODES } from "../../shared/constants/eventModes";
 
 import { isOnlineEventForm, shouldShowCustomDeadline } from "../eventFormConfig";
 

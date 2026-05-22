@@ -1,4 +1,4 @@
-import { EVENT_STATUS } from "./eventStatus";
+import { EVENT_STATUS } from "./constants/eventStatus";
 
 /* ==================================================
    EVENT LISTING HELPERS

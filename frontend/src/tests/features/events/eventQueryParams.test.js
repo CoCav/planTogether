@@ -11,7 +11,7 @@ import { getInitialPageFromUrl } from "../../../features/shared/eventListingQuer
 
 import { EVENT_PAGE_QUERY_KEY, EVENT_VIEW_QUERY_KEY } from "../../../features/shared/eventListingQueryKeys";
 
-import { EVENT_STATUS } from "../../../features/shared/eventStatus";
+import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
 
 import { createEventFilters } from "../../factories/events/eventFiltersFactory";
 

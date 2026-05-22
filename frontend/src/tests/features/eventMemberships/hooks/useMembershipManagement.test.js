@@ -5,7 +5,7 @@ import useMembershipManagement from "../../../../features/eventMemberships/hooks
 
 import { removeEventMember, transferEventOwnership, updateEventMemberRole } from "../../../../api/eventMemberships/eventMembershipApi";
 
-import { EVENT_ROLES } from "../../../../features/shared/eventRoles";
+import { EVENT_ROLES } from "../../../../features/shared/constants/eventRoles";
 
 import { createMutationHookProps } from "../../../helpers/hooks/createHookProps";
 import { mockConfirmAccepted } from "../../../helpers/mocks/mockWindowConfirm";

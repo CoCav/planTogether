@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import useEventStatus from "../../../../features/events/hooks/useEventStatus";
 
-import { EVENT_STATUS } from "../../../../features/shared/eventStatus";
+import { EVENT_STATUS } from "../../../../features/shared/constants/eventStatus";
 
 import { createEvent } from "../../../factories/events/eventFactory";
 import { createAuthenticatedUser } from "../../../factories/users/userFactory";

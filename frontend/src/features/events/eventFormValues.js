@@ -1,5 +1,5 @@
-import { EVENT_MODES } from "../shared/eventModes";
-import { EVENT_REGISTRATION_DEADLINES } from "../shared/eventRegistrationDeadlines";
+import { EVENT_MODES } from "../shared/constants/eventModes";
+import { EVENT_REGISTRATION_DEADLINES } from "../shared/constants/eventRegistrationDeadlines";
 
 import { createDefaultEventFormValues } from "./eventFormConfig";
 

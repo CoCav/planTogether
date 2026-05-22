@@ -6,7 +6,7 @@ import {
     getEventViewContent
 } from "../../../features/events/eventViewConfig";
 
-import { EVENT_STATUS } from "../../../features/shared/eventStatus";
+import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
 
 import {
     createAllEventsView,

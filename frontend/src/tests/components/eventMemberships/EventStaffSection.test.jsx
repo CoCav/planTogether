@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
-import EventStaffSection from "../../../components/events/EventStaffSection";
+import EventStaffSection from "../../../components/eventMemberships/EventStaffSection";
 
 import { createCoOrganizerMember } from "../../factories/eventMemberships/membershipPermissionsFactory";
 
@@ -24,7 +24,7 @@ import { createAuthenticatedUser } from "../../factories/users/userFactory";
    - uses reusable render helper
 ================================================== */
 
-vi.mock("../../../components/events/EventMembersSection", () => ({
+vi.mock("../../../components/eventMemberships/EventMembersSection", () => ({
     default: ({
         title,
         subtitle,

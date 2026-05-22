@@ -1,5 +1,5 @@
-import { EVENT_MODES } from "../../../features/shared/eventModes";
-import { EVENT_STATUS } from "../../../features/shared/eventStatus";
+import { EVENT_MODES } from "../../../features/shared/constants/eventModes";
+import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
 
 /* ==================================================
    EVENT TEST FACTORY

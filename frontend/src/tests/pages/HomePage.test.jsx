@@ -4,7 +4,7 @@ import { render, screen } from "@testing-library/react";
 
 import HomePage from "../../pages/HomePage";
 
-import { EVENT_ROLES } from "../../features/shared/eventRoles";
+import { EVENT_ROLES } from "../../features/shared/constants/eventRoles";
 
 /* ==================================================
    HOME PAGE TESTS

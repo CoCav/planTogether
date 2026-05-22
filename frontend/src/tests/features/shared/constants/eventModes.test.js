@@ -5,7 +5,7 @@ import {
     VALID_EVENT_MODES,
     EVENT_MODE_LABELS,
     getEventModeLabel
-} from "../../../features/shared/eventModes";
+} from "../../../../features/shared/constants/eventModes";
 
 /* ==================================================
    EVENT MODE CONSTANTS TESTS

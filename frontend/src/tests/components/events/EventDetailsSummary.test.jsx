@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 
 import EventDetailsSummary from "../../../components/events/EventDetailsSummary";
 
-import { getEventModeLabel } from "../../../features/shared/eventModes";
+import { getEventModeLabel } from "../../../features/shared/constants/eventModes";
 
 import { createEvent } from "../../factories/events/eventFactory";
 

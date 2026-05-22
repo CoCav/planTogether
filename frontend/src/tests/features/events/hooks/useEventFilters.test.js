@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import useEventFilters from "../../../../features/events/hooks/useEventFilters";
 
-import { EVENT_STATUS } from "../../../../features/shared/eventStatus";
+import { EVENT_STATUS } from "../../../../features/shared/constants/eventStatus";
 
 import { createEventFilters } from "../../../factories/events/eventFiltersFactory";
 

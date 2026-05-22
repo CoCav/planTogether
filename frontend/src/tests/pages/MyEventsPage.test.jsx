@@ -5,8 +5,8 @@ import { MemoryRouter, useLocation } from "react-router-dom";
 
 import MyEventsPage from "../../pages/MyEventsPage";
 
-import { EVENT_ROLES } from "../../features/shared/eventRoles";
-import { EVENT_STATUS } from "../../features/shared/eventStatus";
+import { EVENT_ROLES } from "../../features/shared/constants/eventRoles";
+import { EVENT_STATUS } from "../../features/shared/constants/eventStatus";
 
 import { getCurrentUserEvents } from "../../api/users/userApi";
 

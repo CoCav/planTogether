@@ -8,8 +8,8 @@ import {
     shouldShowCustomDeadline
 } from "../../../features/events/eventFormConfig";
 
-import { EVENT_MODES } from "../../../features/shared/eventModes";
-import { EVENT_REGISTRATION_DEADLINES } from "../../../features/shared/eventRegistrationDeadlines";
+import { EVENT_MODES } from "../../../features/shared/constants/eventModes";
+import { EVENT_REGISTRATION_DEADLINES } from "../../../features/shared/constants/eventRegistrationDeadlines";
 
 /* ==================================================
    EVENT FORM CONFIG TESTS

@@ -1,4 +1,4 @@
-import { EVENT_MODES } from "../../../features/shared/eventModes";
+import { EVENT_MODES } from "../../../features/shared/constants/eventModes";
 
 import { createEventImageFile } from "../shared/fileFactory";
 

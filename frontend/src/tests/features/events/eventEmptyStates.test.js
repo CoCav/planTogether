@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { getEventEmptyStates } from "../../../features/events/eventEmptyStates";
 
-import { EVENT_STATUS } from "../../../features/shared/eventStatus";
+import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
 
 /* ==================================================
    EVENT EMPTY STATE TESTS

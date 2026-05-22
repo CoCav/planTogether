@@ -1,4 +1,4 @@
-import { EVENT_ROLES } from "../../shared/eventRoles";
+import { EVENT_ROLES } from "../../shared/constants/eventRoles";
 
 /* ==================================================
    MEMBERSHIP PERMISSIONS HOOK

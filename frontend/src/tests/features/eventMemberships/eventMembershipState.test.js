@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { getEventMembershipState } from "../../../features/eventMemberships/eventMembershipState";
 
-import { EVENT_ROLES } from "../../../features/shared/eventRoles";
+import { EVENT_ROLES } from "../../../features/shared/constants/eventRoles";
 
 import { createEvent } from "../../factories/events/eventFactory";
 import { createAuthenticatedUser } from "../../factories/users/userFactory";

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import useMembershipPermissions from "../../../../features/eventMemberships/hooks/useMembershipPermissions";
 
-import { EVENT_ROLES } from "../../../../features/shared/eventRoles";
+import { EVENT_ROLES } from "../../../../features/shared/constants/eventRoles";
 
 import {
     createCoOrganizerMember,

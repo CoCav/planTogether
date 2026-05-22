@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-import EventMembersSection from "../../../components/events/EventMembersSection";
+import EventMembersSection from "../../../components/eventMemberships/EventMembersSection";
 
 import { createOrganizerMember, createParticipantMember } from "../../factories/eventMemberships/membershipPermissionsFactory";
 

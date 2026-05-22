@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { validateChangePasswordForm, validateProfileForm } from "../../../features/users/userValidation";
 
-import { PASSWORD_MESSAGES } from "../../../features/shared/passwordPolicy";
+import { PASSWORD_MESSAGES } from "../../../features/shared/security/passwordPolicy";
 
 import { createMockImageFile, createMockInvalidFile, createMockOversizedFile } from "../../helpers/mocks/mockFile";
 

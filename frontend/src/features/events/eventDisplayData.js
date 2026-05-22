@@ -1,6 +1,6 @@
 import { formatCount, formatEventDateRange, formatTime } from "../../utils/formatters";
 
-import { EVENT_MODES, getEventModeLabel } from "../shared/eventModes";
+import { EVENT_MODES, getEventModeLabel } from "../shared/constants/eventModes";
 
 /* ==================================================
    EVENT DISPLAY DATA

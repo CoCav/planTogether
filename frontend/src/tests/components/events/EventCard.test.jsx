@@ -4,9 +4,9 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import EventCard from "../../../components/events/EventCard";
 
-import { EVENT_MODES } from "../../../features/shared/eventModes";
-import { EVENT_ROLES } from "../../../features/shared/eventRoles";
-import { EVENT_STATUS } from "../../../features/shared/eventStatus";
+import { EVENT_MODES } from "../../../features/shared/constants/eventModes";
+import { EVENT_ROLES } from "../../../features/shared/constants/eventRoles";
+import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
 
 import { createEvent } from "../../factories/events/eventFactory";
 

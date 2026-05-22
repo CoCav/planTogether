@@ -1,4 +1,4 @@
-import { EVENT_STATUS } from "../shared/eventStatus";
+import { EVENT_STATUS } from "../shared/constants/eventStatus";
 
 /* ==================================================
    EVENT VIEW CONFIG

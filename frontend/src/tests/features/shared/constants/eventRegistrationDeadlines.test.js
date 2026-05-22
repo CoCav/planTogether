@@ -5,7 +5,7 @@ import {
     EVENT_REGISTRATION_DEADLINE_LABELS,
     VALID_EVENT_REGISTRATION_DEADLINES,
     getEventRegistrationDeadlineLabel
-} from "../../../features/shared/eventRegistrationDeadlines";
+} from "../../../../features/shared/constants/eventRegistrationDeadlines";
 
 /* ==================================================
    EVENT REGISTRATION DEADLINES TESTS

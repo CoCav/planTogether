@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import useEventListingState from "../../../../features/events/hooks/useEventListingState";
 
-import { EVENT_STATUS } from "../../../../features/shared/eventStatus";
+import { EVENT_STATUS } from "../../../../features/shared/constants/eventStatus";
 
 /* ==================================================
    USE EVENT LISTING STATE TESTS

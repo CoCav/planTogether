@@ -1,7 +1,7 @@
 import { getApiPayload } from "../../api/apiResponse";
 
-import { EVENT_STATUS } from "../shared/eventStatus";
-import { EVENT_MODES } from "../shared/eventModes";
+import { EVENT_STATUS } from "../shared/constants/eventStatus";
+import { EVENT_MODES } from "../shared/constants/eventModes";
 
 /* ==================================================
    EVENT NORMALIZER

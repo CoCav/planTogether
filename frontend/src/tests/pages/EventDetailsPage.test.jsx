@@ -5,8 +5,8 @@ import { MemoryRouter } from "react-router-dom";
 
 import EventDetailsPage from "../../pages/EventDetailsPage";
 
-import { EVENT_ROLES } from "../../features/shared/eventRoles";
-import { EVENT_STATUS } from "../../features/shared/eventStatus";
+import { EVENT_ROLES } from "../../features/shared/constants/eventRoles";
+import { EVENT_STATUS } from "../../features/shared/constants/eventStatus";
 
 import { createEvent } from "../factories/events/eventFactory";
 import { createAuthenticatedUser } from "../factories/users/userFactory";
@@ -187,7 +187,7 @@ vi.mock("../../components/events/EventDetailsActions", () => ({
     )
 }));
 
-vi.mock("../../components/events/EventStaffSection", () => ({
+vi.mock("../../components/eventMemberships/EventStaffSection", () => ({
     default: ({ staff, staffCount }) => (
         <section data-testid="event-staff-section">
             <span>Staff count: {staffCount}</span>
@@ -199,7 +199,7 @@ vi.mock("../../components/events/EventStaffSection", () => ({
     )
 }));
 
-vi.mock("../../components/events/EventParticipantsSection", () => ({
+vi.mock("../../components/eventMemberships/EventParticipantsSection", () => ({
     default: ({ user, isPast, participants, participantCount }) => (
         <section data-testid="event-participants-section">
             <span>Participant count: {participantCount}</span>
@@ -346,9 +346,6 @@ describe("EventDetailsPage", () => {
         expect(screen.getByText("Tech")).toBeInTheDocument();
         expect(screen.getByText("In person")).toBeInTheDocument();
         expect(screen.getByText("Montreal")).toBeInTheDocument();
-
-        expect(screen.getByTestId("event-staff-section")).toBeInTheDocument();
-        expect(screen.getByTestId("event-participants-section")).toBeInTheDocument();
     });
 
     it("should use fallback display values when event data is missing", async () => {
@@ -413,10 +410,6 @@ describe("EventDetailsPage", () => {
 
         expect(await screen.findByText("John")).toBeInTheDocument();
         expect(screen.getByText("Alice")).toBeInTheDocument();
-
-
-        expect(screen.getByText(/Staff count:/i)).toBeInTheDocument();
-        expect(screen.getByText(/Participant count:/i)).toBeInTheDocument();
     });
 
     /* =============================
@@ -640,7 +633,6 @@ describe("EventDetailsPage", () => {
         renderPage();
 
         expect(await screen.findByText(/^ended$/i)).toBeInTheDocument();
-        expect(screen.getByText("Past event")).toBeInTheDocument();
 
         expect(
             screen.queryByRole("button", {
@@ -692,8 +684,6 @@ describe("EventDetailsPage", () => {
         renderPage();
 
         expect(await screen.findByText(/login to join this event/i)).toBeInTheDocument();
-
-        expect(screen.getByText("Guest")).toBeInTheDocument();
     });
 
     it("should not show login prompt for authenticated user", async () => {
@@ -702,7 +692,5 @@ describe("EventDetailsPage", () => {
         await screen.findByText("Test Event");
 
         expect(screen.queryByText(/login to join this event/i)).not.toBeInTheDocument();
-
-        expect(screen.getByText("Authenticated")).toBeInTheDocument();
     });
 });

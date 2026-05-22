@@ -5,7 +5,7 @@ import useMembershipActions from "../../../../features/eventMemberships/hooks/us
 
 import { joinEvent, leaveEvent } from "../../../../api/eventMemberships/eventMembershipApi";
 
-import { EVENT_ROLES } from "../../../../features/shared/eventRoles";
+import { EVENT_ROLES } from "../../../../features/shared/constants/eventRoles";
 
 import { createMembershipActionHookProps } from "../../../helpers/hooks/createHookProps";
 import { mockConfirmAccepted } from "../../../helpers/mocks/mockWindowConfirm";

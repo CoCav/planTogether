@@ -89,7 +89,7 @@ export default function EventsPage() {
        EVENT DATA
     ============================= */
 
-    const { events, loadData, getRoleByEventId } = useEventListingData({
+    const { events, loadData, getCurrentUserRoleByEvent } = useEventListingData({
         user,
         pageSize: pagination.pageSize,
         setError,
@@ -155,7 +155,7 @@ export default function EventsPage() {
         ),
         setMessage,
         setError,
-        getRoleByEventId
+        getCurrentUserRoleByEvent
     });
 
 
@@ -346,7 +346,7 @@ export default function EventsPage() {
                                 key={event.id}
                                 event={event}
                                 user={user}
-                                role={getRoleByEventId(event.id)}
+                                role={getCurrentUserRoleByEvent(event.id)}
                                 onJoin={handleJoinEvent}
                                 onLeave={handleLeaveEvent}
                             />

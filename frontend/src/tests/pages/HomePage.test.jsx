@@ -1,45 +1,97 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+
 import HomePage from "../../pages/HomePage";
+
+import { EVENT_ROLES } from "../../features/shared/eventRoles";
 
 /* ==================================================
    HOME PAGE TESTS
-   Tests landing page rendering and latest events preview
+   Tests homepage rendering and latest events preview
+
+   Handles:
+   - hero section rendering
+   - feature section rendering
+   - guest and authenticated actions
+   - latest events loading state
+   - latest events empty state
+   - latest events rendering
+   - event role forwarding
+   - membership action integration
+   - accessible homepage sections
+
+   Notes:
+   - mocks authenticated user state
+   - mocks home events hook
+   - mocks membership actions hook
+   - mocks EventCard for page-level behavior focus
+   - uses MemoryRouter for navigation links
 ================================================== */
 
-const mockGetAllEvents = vi.fn();
-const mockGetMyEvents = vi.fn();
+/* =============================
+   MOCK DATA
+============================= */
+
+const mockLoadData = vi.fn();
+const mockGetCurrentUserRoleByEvent = vi.fn();
+
+const mockHandleJoinEvent = vi.fn();
+const mockHandleLeaveEvent = vi.fn();
 
 let mockAuthState = {
     user: null
 };
 
-vi.mock("../../context/useAuth", () => ({
+let mockHomeEventsState = {
+    events: [],
+    isLoading: false,
+    loadData: mockLoadData,
+    getCurrentUserRoleByEvent: mockGetCurrentUserRoleByEvent
+};
+
+/* =============================
+   MOCKS
+============================= */
+
+vi.mock("../../features/auth/hooks/useAuth", () => ({
     useAuth: () => mockAuthState
 }));
 
-vi.mock("../../api/eventApi", () => ({
-    getAllEvents: (...args) => mockGetAllEvents(...args)
+vi.mock("../../features/events/hooks/useHomeEvents", () => ({
+    default: () => mockHomeEventsState
 }));
 
-vi.mock("../../api/eventMembershipApi", () => ({
-    getMyEvents: (...args) => mockGetMyEvents(...args)
-}));
-
-vi.mock("../../features/events/normalizeData", () => ({
-    getNormalizedEvents: (response) => response?.data?.events || [],
-    getMyEventsWithRole: (response) => response?.data?.events || []
+vi.mock("../../features/eventMemberships/hooks/useMembershipActions", () => ({
+    default: () => ({
+        handleJoinEvent: mockHandleJoinEvent,
+        handleLeaveEvent: mockHandleLeaveEvent
+    })
 }));
 
 vi.mock("../../components/events/EventCard", () => ({
-    default: ({ event, role }) => (
-        <div>
-            <span>{event.title}</span>
-            {role && <span>role: {role}</span>}
-        </div>
+    default: ({ event, role, onJoin, onLeave }) => (
+        <article>
+            <h3>{event.title}</h3>
+
+            <span data-testid={`event-role-${event.id}`}>
+                {role || "none"}
+            </span>
+
+            <button type="button" onClick={() => onJoin(event.id)}>
+                Join
+            </button>
+
+            <button type="button" onClick={() => onLeave(event.id)}>
+                Leave
+            </button>
+        </article>
     )
 }));
+
+/* =============================
+   TEST HELPERS
+============================= */
 
 const renderPage = () =>
     render(
@@ -49,6 +101,11 @@ const renderPage = () =>
     );
 
 describe("HomePage", () => {
+
+    /* =============================
+       TEST SETUP
+    ============================= */
+
     beforeEach(() => {
         vi.clearAllMocks();
 
@@ -56,125 +113,195 @@ describe("HomePage", () => {
             user: null
         };
 
-        mockGetAllEvents.mockResolvedValue({
-            data: {
-                events: []
-            }
-        });
+        mockHomeEventsState = {
+            events: [],
+            isLoading: false,
+            loadData: mockLoadData,
+            getCurrentUserRoleByEvent: mockGetCurrentUserRoleByEvent
+        };
 
-        mockGetMyEvents.mockResolvedValue({
-            data: {
-                events: []
-            }
-        });
+        mockGetCurrentUserRoleByEvent.mockReturnValue(null);
     });
 
-    it("renders hero section and public actions", () => {
+    /* =============================
+       HERO SECTION
+    ============================= */
+
+    it("renders hero section and guest actions", () => {
         renderPage();
 
-        expect(screen.getByText(/organize, join, and manage events with ease/i)).toBeInTheDocument();
+        expect(screen.getByText("Plan events together")).toBeInTheDocument();
 
-        expect(screen.getByRole("button", { name: /browse events/i })).toBeInTheDocument();
+        expect(screen.getByRole("heading", {
+            level: 1,
+            name: "Organize, join, and manage events with ease"
+        })).toBeInTheDocument();
 
-        expect(screen.getByRole("button", { name: /create account/i })).toBeInTheDocument();
+        expect(screen.getByText(/PlanTogether helps you create events/i)).toBeInTheDocument();
+
+        expect(screen.getByRole("link", {
+            name: "Browse Events"
+        })).toHaveAttribute("href", "/events");
+
+        expect(screen.getByRole("link", {
+            name: "Create Account"
+        })).toHaveAttribute("href", "/register");
+    });
+
+    it("renders authenticated create event action", () => {
+        mockAuthState = {
+            user: {
+                userId: 1
+            }
+        };
+
+        renderPage();
+
+        expect(screen.getByRole("link", {
+            name: "Create Event"
+        })).toHaveAttribute("href", "/events/create");
+
+        expect(screen.queryByRole("link", {
+            name: "Create Account"
+        })).not.toBeInTheDocument();
+    });
+
+    /* =============================
+       FEATURES SECTION
+    ============================= */
+
+    it("renders feature cards", () => {
+        renderPage();
+
+        expect(screen.getByRole("heading", {
+            level: 2,
+            name: "Why PlanTogether?"
+        })).toBeInTheDocument();
+
+        expect(screen.getByText("Create and manage events")).toBeInTheDocument();
+        expect(screen.getByText("Join communities easily")).toBeInTheDocument();
+        expect(screen.getByText("Role-based collaboration")).toBeInTheDocument();
+        expect(screen.getByText("Smart filtering")).toBeInTheDocument();
+    });
+
+    /* =============================
+       DATA LOADING
+    ============================= */
+
+    it("loads home events on mount", () => {
+        renderPage();
+
+        expect(mockLoadData).toHaveBeenCalledTimes(1);
     });
 
     it("displays loading state while events are loading", () => {
-        renderPage();
-
-        expect(screen.getByText(/loading events/i)).toBeInTheDocument();
-    });
-
-    it("calls events API with latest events params", async () => {
-        renderPage();
-
-        await waitFor(() => {
-            expect(mockGetAllEvents).toHaveBeenCalledWith({
-                page: 1,
-                pageSize: 4,
-                sortBy: "createdAt",
-                order: "desc"
-            });
-        });
-    });
-
-    it("displays events when API returns data", async () => {
-        mockGetAllEvents.mockResolvedValue({
-            data: {
-                events: [
-                    { id: 1, title: "Event 1" },
-                    { id: 2, title: "Event 2" }
-                ]
-            }
-        });
-
-        renderPage();
-
-        expect(await screen.findByText("Event 1")).toBeInTheDocument();
-        expect(screen.getByText("Event 2")).toBeInTheDocument();
-    });
-
-    it("displays empty state when no events are returned", async () => {
-        renderPage();
-
-        expect(await screen.findByText(/no events yet/i)).toBeInTheDocument();
-    });
-
-    it("displays error message when API fails", async () => {
-        mockGetAllEvents.mockRejectedValue(new Error("API error"));
-
-        renderPage();
-
-        expect(await screen.findByText(/failed to load events/i)).toBeInTheDocument();
-    });
-
-    it("shows create event action when user is authenticated", () => {
-        mockAuthState = {
-            user: { userId: 1 }
+        mockHomeEventsState = {
+            ...mockHomeEventsState,
+            isLoading: true
         };
 
         renderPage();
 
-        expect(screen.getByRole("button", { name: /create event/i })).toBeInTheDocument();
-
-        expect(screen.queryByRole("button", { name: /create account/i })).not.toBeInTheDocument();
+        expect(screen.getByText("Loading events...")).toBeInTheDocument();
     });
 
-    it("loads user memberships and passes role to event cards", async () => {
-        mockAuthState = {
-            user: { userId: 1 }
+    /* =============================
+       LATEST EVENTS
+    ============================= */
+
+    it("renders latest events section", () => {
+        renderPage();
+
+        expect(screen.getByRole("heading", {
+            level: 2,
+            name: "Latest Events"
+        })).toBeInTheDocument();
+
+        expect(screen.getByText("Discover the most recently created events on PlanTogether.")).toBeInTheDocument();
+    });
+
+    it("displays empty state when no events are returned", () => {
+        renderPage();
+
+        expect(screen.getByText("No events yet.")).toBeInTheDocument();
+    });
+
+    it("displays latest events when available", () => {
+        mockHomeEventsState = {
+            ...mockHomeEventsState,
+            events: [
+                {
+                    id: 1,
+                    title: "React Meetup"
+                },
+                {
+                    id: 2,
+                    title: "Design Workshop"
+                }
+            ]
         };
 
-        mockGetAllEvents.mockResolvedValue({
-            data: {
-                events: [{ id: 1, title: "Joined Event" }]
-            }
-        });
-
-        mockGetMyEvents.mockResolvedValue({
-            data: {
-                events: [
-                    {
-                        id: 1,
-                        role: "participant"
-                    }
-                ]
-            }
-        });
-
         renderPage();
 
-        expect(await screen.findByText("Joined Event")).toBeInTheDocument();
-        expect(screen.getByText(/role: participant/i)).toBeInTheDocument();
+        expect(screen.getByText("React Meetup")).toBeInTheDocument();
+        expect(screen.getByText("Design Workshop")).toBeInTheDocument();
     });
 
-    it("does not fetch memberships when user is not authenticated", async () => {
+    it("passes current user role to event cards", () => {
+        mockHomeEventsState = {
+            ...mockHomeEventsState,
+            events: [
+                {
+                    id: 1,
+                    title: "Joined Event"
+                }
+            ]
+        };
+
+        mockGetCurrentUserRoleByEvent.mockReturnValue(EVENT_ROLES.PARTICIPANT);
+
         renderPage();
 
-        await waitFor(() => {
-            expect(mockGetAllEvents).toHaveBeenCalled();
-        });
+        expect(mockGetCurrentUserRoleByEvent).toHaveBeenCalledWith(1);
 
-        expect(mockGetMyEvents).not.toHaveBeenCalled();
+        expect(screen.getByTestId("event-role-1")).toHaveTextContent(EVENT_ROLES.PARTICIPANT);
+    });
+
+    /* =============================
+       MEMBERSHIP ACTIONS
+    ============================= */
+
+    it("passes join and leave actions to event cards", async () => {
+        mockHomeEventsState = {
+            ...mockHomeEventsState,
+            events: [
+                {
+                    id: 1,
+                    title: "Action Event"
+                }
+            ]
+        };
+
+        renderPage();
+
+        screen.getByRole("button", { name: "Join" }).click();
+        screen.getByRole("button", { name: "Leave" }).click();
+
+        expect(mockHandleJoinEvent).toHaveBeenCalledWith(1);
+        expect(mockHandleLeaveEvent).toHaveBeenCalledWith(1);
+    });
+
+    /* =============================
+       ACCESSIBILITY
+    ============================= */
+
+    it("renders accessible homepage sections", () => {
+        renderPage();
+
+        expect(screen.getByLabelText("Organize, join, and manage events with ease")).toHaveClass("home-hero");
+
+        expect(screen.getByLabelText("Why PlanTogether?")).toHaveClass("home-section");
+
+        expect(screen.getByLabelText("Latest Events")).toHaveClass("home-section");
     });
 });

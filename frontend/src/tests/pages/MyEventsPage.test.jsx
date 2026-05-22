@@ -5,6 +5,9 @@ import { MemoryRouter, useLocation } from "react-router-dom";
 
 import MyEventsPage from "../../pages/MyEventsPage";
 
+import { EVENT_ROLES } from "../../features/shared/eventRoles";
+import { EVENT_STATUS } from "../../features/shared/eventStatus";
+
 import { getCurrentUserEvents } from "../../api/users/userApi";
 
 /* ==================================================
@@ -65,13 +68,13 @@ vi.mock("../../components/events/EventCard", () => ({
 
             <span>Role: {role}</span>
 
-            {role !== "organizer" && event.status !== "past" && (
+            {role !== EVENT_ROLES.ORGANIZER && event.status !== EVENT_STATUS.PAST && (
                 <button type="button" onClick={() => onLeave(event.id)}>
                     Leave
                 </button>
             )}
 
-            {event.status === "past" && <span>Ended</span>}
+            {event.status === EVENT_STATUS.PAST && <span>Ended</span>}
         </article>
     )
 }));
@@ -182,8 +185,8 @@ describe("MyEventsPage", () => {
                     {
                         id: 1,
                         title: "Created Event",
-                        role: "organizer",
-                        status: "upcoming"
+                        role: EVENT_ROLES.ORGANIZER,
+                        status: EVENT_STATUS.UPCOMING
                     }
                 ],
                 totalEvents: 1
@@ -205,8 +208,8 @@ describe("MyEventsPage", () => {
                     {
                         id: 1,
                         title: "Created Event",
-                        role: "organizer",
-                        status: "upcoming"
+                        role: EVENT_ROLES.ORGANIZER,
+                        status: EVENT_STATUS.UPCOMING
                     }
                 ],
                 totalEvents: 12
@@ -426,8 +429,8 @@ describe("MyEventsPage", () => {
                     {
                         id: 1,
                         title: "Event Page 1",
-                        role: "organizer",
-                        status: "upcoming"
+                        role: EVENT_ROLES.ORGANIZER,
+                        status: EVENT_STATUS.UPCOMING
                     }
                 ],
                 page: 1,
@@ -457,8 +460,8 @@ describe("MyEventsPage", () => {
                         {
                             id: 1,
                             title: "Event Page 1",
-                            role: "organizer",
-                            status: "upcoming"
+                            role: EVENT_ROLES.ORGANIZER,
+                            status: EVENT_STATUS.UPCOMING
                         }
                     ],
                     page: 1,
@@ -472,8 +475,8 @@ describe("MyEventsPage", () => {
                         {
                             id: 2,
                             title: "Event Page 2",
-                            role: "organizer",
-                            status: "upcoming"
+                            role: EVENT_ROLES.ORGANIZER,
+                            status: EVENT_STATUS.UPCOMING
                         }
                     ],
                     page: 2,
@@ -530,14 +533,14 @@ describe("MyEventsPage", () => {
                         {
                             id: 1,
                             title: "Created Mixed Event",
-                            role: "organizer",
-                            status: "upcoming"
+                            role: EVENT_ROLES.ORGANIZER,
+                            status: EVENT_STATUS.UPCOMING
                         },
                         {
                             id: 2,
                             title: "Joined Mixed Event",
-                            role: "participant",
-                            status: "upcoming"
+                            role: EVENT_ROLES.PARTICIPANT,
+                            status: EVENT_STATUS.UPCOMING
                         }
                     ],
                     page: 1,
@@ -551,8 +554,8 @@ describe("MyEventsPage", () => {
                         {
                             id: 3,
                             title: "Second Page Event",
-                            role: "co_organizer",
-                            status: "upcoming"
+                            role: EVENT_ROLES.CO_ORGANIZER,
+                            status: EVENT_STATUS.UPCOMING
                         }
                     ],
                     page: 2,
@@ -587,8 +590,8 @@ describe("MyEventsPage", () => {
                     {
                         id: 2,
                         title: "Joined Event",
-                        role: "participant",
-                        status: "upcoming"
+                        role: EVENT_ROLES.PARTICIPANT,
+                        status: EVENT_STATUS.UPCOMING
                     }
                 ],
                 totalEvents: 1

@@ -88,7 +88,7 @@ export default function MyEventsPage() {
        EVENT DATA
     ============================= */
 
-    const { events, loadData, getRoleByEventId } = useMyEventListingData({
+    const { events, loadData, getCurrentUserRoleByEvent } = useMyEventListingData({
         pageSize: pagination.pageSize,
         setError,
         setLoading: setIsLoading,
@@ -152,7 +152,7 @@ export default function MyEventsPage() {
         ),
         setMessage,
         setError,
-        getRoleByEventId
+        getCurrentUserRoleByEvent
     });
 
 

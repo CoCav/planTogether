@@ -17,6 +17,7 @@ import "./styles/pages/account-page.css";
 import "./styles/pages/event-details-page.css";
 import "./styles/pages/event-form-page.css";
 import "./styles/pages/event-listing-page.css";
+import "./styles/pages/home-page.css";
 
 import "./styles/components/auth/login-form.css";
 

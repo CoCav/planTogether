@@ -1,240 +1,224 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../context/useAuth.js";
 
-import { getAllEvents } from "../api/eventApi";
-import { getMyEvents } from "../api/eventMembershipApi";
-import { getNormalizedEvents, getMyEventsWithRole } from "../features/events/normalizeData.js";
+import { useAuth } from "../features/auth/hooks/useAuth";
 
-import useEventActionsWithConfirm from "../hooks/events/useEventActionsWithConfirm.js";
+import useHomeEvents from "../features/events/hooks/useHomeEvents";
 
-import EventCard from "../components/events/EventCard.jsx";
+import useMembershipActions from "../features/eventMemberships/hooks/useMembershipActions";
 
-import Button from "../components/ui/Button";
+import EventCard from "../components/events/EventCard";
+
+import Alert from "../components/ui/Alert";
 import Card from "../components/ui/Card";
 import EmptyState from "../components/ui/EmptyState";
 import LoadingState from "../components/ui/LoadingState";
-import Alert from "../components/ui/Alert";
-
-const MAX_HOME_EVENTS = 4;
 
 /* ==================================================
    HOME PAGE
-   Displays the landing page with:
-   - hero section
-   - feature highlights
-   - latest events preview
+   Displays the public landing page and latest events preview
+
+   Handles:
+   - hero and feature sections
+   - latest event loading
+   - authenticated user event roles
+   - join and leave event actions
+   - loading, empty and error states
 ================================================== */
 
 export default function HomePage() {
     const { user } = useAuth();
 
-    /* =========================
-       Local state
-       Stores page feedback, events, roles and loading state
-    ========================= */
+    /* =============================
+       PAGE STATE
+    ============================= */
+
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
-    const [events, setEvents] = useState([]);
-    const [myEvents, setMyEvents] = useState({});
-    const [loadingEvents, setLoadingEvents] = useState(true);
 
+    /* =============================
+       HOME EVENTS
+    ============================= */
 
-    /* =========================
-       Data helpers
-       Converts membership events into eventId → role map
-    ========================= */
-    const buildMembershipMap = (membershipEvents = []) => {
-        const membershipMap = {};
+    const {
+        events,
+        isLoading,
+        loadData,
+        getCurrentUserRoleByEvent
+    } = useHomeEvents({
+        user,
+        setError
+    });
 
-        membershipEvents.forEach((item) => {
-            if (!item || !item.id) return;
+    /* =============================
+       MEMBERSHIP ACTIONS
+    ============================= */
 
-            membershipMap[item.id] = item.role;
-        });
+    const { handleJoinEvent, handleLeaveEvent } = useMembershipActions({
+        loadData,
+        setMessage,
+        setError,
+        getCurrentUserRoleByEvent
+    });
 
-        return membershipMap;
-    };
+    /* =============================
+       INITIAL DATA LOADING
+    ============================= */
 
-
-    /* =========================
-       Main data loading
-       Fetches latest events and current user roles for cards
-    ========================= */
-    const loadData = useCallback(async () => {
-        try {
-            setError("");
-            setLoadingEvents(true);
-
-            const response = await getAllEvents({
-                page: 1,
-                pageSize: MAX_HOME_EVENTS,
-                sortBy: "createdAt",
-                order: "desc"
-            });
-
-            setEvents(getNormalizedEvents(response));
-
-            if (!user) {
-                setMyEvents({});
-                return;
-            }
-
-            const membershipResponse = await getMyEvents();
-            const membershipEvents = getMyEventsWithRole(membershipResponse);
-
-            setMyEvents(buildMembershipMap(membershipEvents));
-        } catch (error) {
-            console.error("Error fetching homepage events:", error);
-            setError("❌ Failed to load events");
-        } finally {
-            setLoadingEvents(false);
-        }
-    }, [user]);
-
-
-    /* =========================
-       Initial data loading
-       Loads latest homepage events
-    ========================= */
     useEffect(() => {
         loadData();
     }, [loadData]);
 
+    /* =============================
+       FEEDBACK CLEANUP
+    ============================= */
 
-    /* =========================
-       Feedback cleanup
-       Automatically clears success and error messages
-    ========================= */
+    // Auto-clears feedback messages after delay
     useEffect(() => {
-        if (message || error) {
-            const timer = setTimeout(() => {
-                setMessage("");
-                setError("");
-            }, 3000);
+        if (!message && !error) return;
 
-            return () => clearTimeout(timer);
-        }
+        const timer = setTimeout(() => {
+            setMessage("");
+            setError("");
+        }, 3000);
+
+        return () => clearTimeout(timer);
     }, [message, error]);
 
-
-    /* =========================
-       Role resolution
-       Resolves current user's role for each event card
-    ========================= */
-    const getRoleByEventId = (eventOrId) => {
-        if (!user) return null;
-
-        const event = typeof eventOrId === "object" ? eventOrId : events.find((item) => item.id === eventOrId);
-
-        if (!event) return null;
-
-        if (event.creatorId === user.userId) {
-            return "organizer";
-        }
-
-        return myEvents[event.id] || null;
-    };
-
-
-    /* =========================
-       Event actions
-       Handles join / leave operations and reloads data
-    ========================= */
-    const { handleJoinEvent, handleLeaveEvent } = useEventActionsWithConfirm({
-        loadData,
-        setMessage,
-        setError,
-        getRoleByEventId
-    });
-
-
-    /* =========================
-       Main render
-    ========================= */
+    /* =============================
+       MAIN RENDER
+    ============================= */
 
     return (
-        <div className="container page-section">
-
-            <section className="hero-section">
-                <div className="hero-container">
-                    <div className="hero-top-row">
-                        <p className="hero-eyebrow">Plan events together</p>
+        <main className="container page-section">
+            <section className="home-hero" aria-labelledby="home-hero-title">
+                <div className="home-hero-container">
+                    <div className="home-hero-top-row">
+                        <p className="home-hero-label">
+                            Plan events together
+                        </p>
                     </div>
 
-                    <div className="hero-content">
-                        <h1 className="hero-title">Organize, join, and manage events with ease</h1>
-                        <p className="hero-description">PlanTogether helps you create events, invite participants, manage roles, and keep everything organized in one place.</p>
+                    <div className="home-hero-content">
+                        <h1 id="home-hero-title" className="home-hero-title">
+                            Organize, join, and manage events with ease
+                        </h1>
 
-                        <div className="hero-actions">
-                            <Link to="/events">
-                                <Button>Browse Events</Button>
+                        <p className="home-hero-description">
+                            PlanTogether helps you create events,
+                            invite participants, manage roles,
+                            and keep everything organized in one place.
+                        </p>
+
+                        <div className="home-hero-actions">
+
+                            <Link to="/events" className="btn btn-primary">
+                                Browse Events
                             </Link>
 
                             {user ? (
-                                <Link to="/events/create">
-                                    <Button variant="outline">Create Event</Button>
+                                <Link to="/events/create" className="btn btn-outline">
+                                    Create Event
                                 </Link>
                             ) : (
-                                <Link to="/register">
-                                    <Button variant="outline">Create Account</Button>
+                                <Link to="/register" className="btn btn-outline">
+                                    Create Account
                                 </Link>
                             )}
+
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section className="home-section">
+            <section className="home-section" aria-labelledby="home-features-title">
                 <div className="section-header">
-                    <h2 className="section-title">Why PlanTogether?</h2>
-                    <p className="section-subtitle">Everything you need to manage events collaboratively.</p>
+                    <h2 id="home-features-title" className="section-title">
+                        Why PlanTogether?
+                    </h2>
+
+                    <p className="section-subtitle">
+                        Everything you need to manage events collaboratively.
+                    </p>
                 </div>
 
-                <div className="features-grid">
+                <div className="home-features-grid">
+
                     <Card>
-                        <h3 className="feature-title">Create and manage events</h3>
-                        <p className="feature-text">Set up events quickly with title, date, location, type, and theme.</p>
+                        <h3 className="home-feature-title">
+                            Create and manage events
+                        </h3>
+
+                        <p className="home-feature-text">
+                            Set up events quickly with title,
+                            date, location, type, and theme.
+                        </p>
                     </Card>
 
                     <Card>
-                        <h3 className="feature-title">Join communities easily</h3>
-                        <p className="feature-text">Browse events, join what interests you, and leave when needed.</p>
+                        <h3 className="home-feature-title">
+                            Join communities easily
+                        </h3>
+
+                        <p className="home-feature-text">
+                            Browse events, join what interests you,
+                            and leave when needed.
+                        </p>
                     </Card>
 
                     <Card>
-                        <h3 className="feature-title">Role-based collaboration</h3>
-                        <p className="feature-text">Organizers, co-organizers, and participants each have clear permissions.</p>
+                        <h3 className="home-feature-title">
+                            Role-based collaboration
+                        </h3>
+
+                        <p className="home-feature-text">
+                            Organizers, co-organizers,
+                            and participants each have clear permissions.
+                        </p>
                     </Card>
 
                     <Card>
-                        <h3 className="feature-title">Smart filtering</h3>
-                        <p className="feature-text">Search by title, description, type, theme, location, and date.</p>
+                        <h3 className="home-feature-title">
+                            Smart filtering
+                        </h3>
+
+                        <p className="home-feature-text">
+                            Search by title, description,
+                            type, theme, location, and date.
+                        </p>
                     </Card>
+
                 </div>
             </section>
 
-            <section className="home-section">
+            <section className="home-section" aria-labelledby="home-latest-events-title" aria-busy={isLoading}>
                 <div className="section-header">
-                    <h2 className="section-title">Latest Events</h2>
-                    <p className="section-subtitle">Discover the most recently created events on PlanTogether.</p>
+                    <h2 id="home-latest-events-title" className="section-title">
+                        Latest Events
+                    </h2>
+
+                    <p className="section-subtitle">
+                        Discover the most recently created events on PlanTogether.
+                    </p>
                 </div>
 
                 {message && <Alert type="success">{message}</Alert>}
                 {error && <Alert type="danger">{error}</Alert>}
 
-                {loadingEvents ? (
-                    <LoadingState>Loading events...</LoadingState>
+                {isLoading ? (
+                    <LoadingState>
+                        Loading events...
+                    </LoadingState>
                 ) : events.length === 0 ? (
-                    <EmptyState>No events yet.</EmptyState>
+                    <EmptyState title="No events yet." />
                 ) : (
-                    <div className="event-list">
+                    <div className="events-grid">
                         {events.map((event) => (
                             <EventCard
                                 key={event.id}
                                 event={event}
                                 user={user}
-                                role={getRoleByEventId(event)}
+                                role={getCurrentUserRoleByEvent(event.id)}
                                 onJoin={handleJoinEvent}
                                 onLeave={handleLeaveEvent}
                             />
@@ -242,6 +226,6 @@ export default function HomePage() {
                     </div>
                 )}
             </section>
-        </div>
+        </main>
     );
 }

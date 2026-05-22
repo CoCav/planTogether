@@ -139,7 +139,7 @@ export default function EventDetailsPage() {
     });
 
     // Adapts current role lookup for membership action hooks
-    const getRoleByEventId = () => myRole;
+    const getCurrentUserRoleByEvent = () => myRole;
 
 
     /* =============================
@@ -161,7 +161,7 @@ export default function EventDetailsPage() {
         loadData,
         setMessage,
         setError,
-        getRoleByEventId
+        getCurrentUserRoleByEvent
     });
 
     const { handlePromoteMember, handleDemoteMember, handleRemoveMember } = useMembershipManagement({

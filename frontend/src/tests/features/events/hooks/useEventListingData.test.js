@@ -4,16 +4,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import useEventListingData from "../../../../features/events/hooks/useEventListingData";
 
 import { getAllEvents } from "../../../../api/events/eventApi";
-import { getCurrentUserEvents } from "../../../../api/users/userApi";
+
+import useEventMembershipRoles from "../../../../features/eventMemberships/hooks/useEventMembershipRoles";
 
 import { DEFAULT_EVENT_LISTING_FILTERS } from "../../../../features/shared/eventListingDefaults";
-import { EVENT_ROLES } from "../../../../features/shared/eventRoles";
-
-import { fetchAllPaginated } from "../../../../utils/pagination";
 
 /* ==================================================
    USE EVENT LISTING DATA TESTS
-   Tests public event listing data loading and role mapping
+   Tests public event listing data loading and pagination
 
    Handles:
    - public event loading
@@ -21,35 +19,32 @@ import { fetchAllPaginated } from "../../../../utils/pagination";
    - view-based status params
    - default sort resolution
    - pagination updates
-   - authenticated user membership role mapping
-   - organizer role resolution
-   - unknown role fallback
+   - membership role loading integration
    - loading and error states
 
    Notes:
    - mocks API modules
-   - mocks paginated membership fetching
+   - mocks membership role hook
    - uses shared default event listing filters
 ================================================== */
+
+/* =============================
+   MOCK DATA
+============================= */
+
+const mockLoadMembershipRoles = vi.fn();
+const mockGetCurrentUserRoleByEvent = vi.fn();
+
+/* =============================
+   MOCKS
+============================= */
 
 vi.mock("../../../../api/events/eventApi", () => ({
     getAllEvents: vi.fn()
 }));
 
-vi.mock("../../../../api/users/userApi", () => ({
-    getCurrentUserEvents: vi.fn()
-}));
-
-vi.mock("../../../../utils/pagination", () => ({
-    fetchAllPaginated: vi.fn()
-}));
-
-vi.mock("../../../../features/events/eventNormalizer", () => ({
-    getNormalizedEvents: vi.fn((response) => response.events)
-}));
-
-vi.mock("../../../../features/users/authenticated/myEventNormalizer", () => ({
-    getMyEventsWithRole: vi.fn()
+vi.mock("../../../../features/eventMemberships/hooks/useEventMembershipRoles", () => ({
+    default: vi.fn()
 }));
 
 describe("useEventListingData", () => {
@@ -106,6 +101,11 @@ describe("useEventListingData", () => {
         setLoading = vi.fn();
         setInitialLoading = vi.fn();
         setPagination = vi.fn();
+
+        useEventMembershipRoles.mockReturnValue({
+            loadMembershipRoles: mockLoadMembershipRoles,
+            getCurrentUserRoleByEvent: mockGetCurrentUserRoleByEvent
+        });
     });
 
     /* =============================
@@ -136,11 +136,13 @@ describe("useEventListingData", () => {
 
         expect(getAllEvents).toHaveBeenCalledTimes(1);
 
-        expect(result.current.events).toEqual([{
-            id: 1,
-            title: "React meetup",
-            creatorId: 10
-        }]);
+        expect(result.current.events).toEqual([
+            expect.objectContaining({
+                id: 1,
+                title: "React meetup",
+                creatorId: 10
+            })
+        ]);
 
         expect(setError).toHaveBeenCalledWith("");
         expect(setLoading).toHaveBeenCalledWith(true);
@@ -189,11 +191,13 @@ describe("useEventListingData", () => {
             })
         );
 
-        expect(result.current.events).toEqual([{
-            id: 2,
-            title: "Workshop",
-            creatorId: 20
-        }]);
+        expect(result.current.events).toEqual([
+            expect.objectContaining({
+                id: 2,
+                title: "Workshop",
+                creatorId: 20
+            })
+        ]);
     });
 
     it("does not send non-filter fields as API filters", async () => {
@@ -272,10 +276,10 @@ describe("useEventListingData", () => {
     });
 
     /* =============================
-       ROLE RESOLUTION
+       MEMBERSHIP ROLES
     ============================= */
 
-    it("loads current user event roles when user is authenticated", async () => {
+    it("loads membership roles after loading events", async () => {
         getAllEvents.mockResolvedValue(
             createPaginatedEventResponse({
                 events: [
@@ -284,109 +288,10 @@ describe("useEventListingData", () => {
                         title: "React meetup",
                         creatorId: 10
                     }
-                ],
-                overrides: {
-                    totalEvents: 1
-                }
-            })
-        );
-
-        fetchAllPaginated.mockResolvedValue([{
-            id: 1,
-            role: EVENT_ROLES.PARTICIPANT
-        }]);
-
-        const { result } = renderUseEventListingData({
-            user: {
-                userId: 42
-            }
-        });
-
-        await act(async () => {
-            await result.current.loadData(createFilters(), 1, "all");
-        });
-
-        expect(fetchAllPaginated).toHaveBeenCalledWith({
-            fetchPage: getCurrentUserEvents,
-            normalizePage: expect.any(Function),
-            pageSize: 10
-        });
-
-        expect(result.current.getRoleByEventId(1)).toBe(EVENT_ROLES.PARTICIPANT);
-    });
-
-    it("resolves organizer role when current user created the event", async () => {
-        getAllEvents.mockResolvedValue(
-            createPaginatedEventResponse({
-                events: [
-                    {
-                        id: 1,
-                        title: "Created event",
-                        creatorId: 42
-                    }
-                ],
-                overrides: {
-                    totalEvents: 1
-                }
-            })
-        );
-
-        fetchAllPaginated.mockResolvedValue([]);
-
-        const { result } = renderUseEventListingData({
-            user: {
-                userId: 42
-            }
-        });
-
-        await act(async () => {
-            await result.current.loadData(createFilters(), 1, "all");
-        });
-
-        expect(result.current.getRoleByEventId(1)).toBe(EVENT_ROLES.ORGANIZER);
-    });
-
-    it("returns null when no user is authenticated", async () => {
-        getAllEvents.mockResolvedValue(
-            createPaginatedEventResponse({
-                events: [
-                    {
-                        id: 1,
-                        title: "Public event",
-                        creatorId: 10
-                    }
-                ],
-                overrides: {
-                    totalEvents: 1
-                }
-            })
-        );
-
-        const { result } = renderUseEventListingData();
-
-        await act(async () => {
-            await result.current.loadData(createFilters(), 1, "all");
-        });
-
-        expect(fetchAllPaginated).not.toHaveBeenCalled();
-        expect(result.current.getRoleByEventId(1)).toBeNull();
-    });
-
-    it("returns null when event id is unknown", async () => {
-        getAllEvents.mockResolvedValue(
-            createPaginatedEventResponse({
-                events: [
-                    {
-                        id: 1,
-                        title: "Known event",
-                        creatorId: 10
-                    }
                 ]
             })
         );
 
-        fetchAllPaginated.mockResolvedValue([]);
-
         const { result } = renderUseEventListingData({
             user: {
                 userId: 42
@@ -397,7 +302,14 @@ describe("useEventListingData", () => {
             await result.current.loadData(createFilters(), 1, "all");
         });
 
-        expect(result.current.getRoleByEventId(999)).toBeNull();
+        expect(mockLoadMembershipRoles).toHaveBeenCalledTimes(1);
+    });
+
+    it("exposes current user role lookup from membership roles hook", () => {
+        const { result } = renderUseEventListingData();
+
+        expect(result.current.getCurrentUserRoleByEvent)
+            .toBe(mockGetCurrentUserRoleByEvent);
     });
 
     /* =============================

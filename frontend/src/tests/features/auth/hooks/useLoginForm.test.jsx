@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 
-import useLoginForm from "../../../../qfeatures/auth/hooks/useLoginForm";
+import useLoginForm from "../../../../features/auth/hooks/useLoginForm";
 
 import { validateLoginForm } from "../../../../features/auth/authValidation.js";
 

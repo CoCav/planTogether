@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 
-import useEventForm from "../../../../features/events/hooks/useEventForm";
+import useEventForm from "../../../../../features/events/hooks/form/useEventForm";
 
-import { createDefaultEventFormValues } from "../../../../features/events/eventFormConfig";
-import { EVENT_MODES } from "../../../../features/shared/constants/eventModes";
-import { EVENT_REGISTRATION_DEADLINES } from "../../../../features/shared/constants/eventRegistrationDeadlines";
+import { createDefaultEventFormValues } from "../../../../../features/events/form/eventFormConfig";
+import { EVENT_MODES } from "../../../../../features/shared/constants/eventModes";
+import { EVENT_REGISTRATION_DEADLINES } from "../../../../../features/shared/constants/eventRegistrationDeadlines";
 
 /* ==================================================
    USE EVENT FORM TESTS

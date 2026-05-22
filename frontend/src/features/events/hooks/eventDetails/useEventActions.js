@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 
-import { getApiErrorMessage } from "../../../api/apiError";
-import { deleteEvent } from "../../../api/events/eventApi";
+import { getApiErrorMessage } from "../../../../api/apiError";
+import { deleteEvent } from "../../../../api/events/eventApi";
 
 /* ==================================================
    EVENT ACTIONS HOOK

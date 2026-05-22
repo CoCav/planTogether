@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { createEventFormValuesFromEvent, toDateTimeLocalValue } from "../../../features/events/eventFormValues";
+import { createEventFormValuesFromEvent, toDateTimeLocalValue } from "../../../../features/events/form/eventFormValues";
 
-import { createDefaultEventFormValues } from "../../../features/events/eventFormConfig";
-import { EVENT_MODES } from "../../../features/shared/constants/eventModes";
-import { EVENT_REGISTRATION_DEADLINES } from "../../../features/shared/constants/eventRegistrationDeadlines";
+import { createDefaultEventFormValues } from "../../../../features/events/form/eventFormConfig";
+import { EVENT_MODES } from "../../../../features/shared/constants/eventModes";
+import { EVENT_REGISTRATION_DEADLINES } from "../../../../features/shared/constants/eventRegistrationDeadlines";
 
 /* ==================================================
    EVENT FORM VALUES TESTS

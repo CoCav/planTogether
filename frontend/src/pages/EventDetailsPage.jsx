@@ -5,10 +5,10 @@ import { useAuth } from "../features/auth/hooks/useAuth";
 
 import { getEventDisplayData } from "../features/events/eventDisplayData";
 
-import useEventActions from "../features/events/hooks/useEventActions";
-import useEventDetailsData from "../features/events/hooks/useEventDetailsData";
-import useEventDetailsState from "../features/events/hooks/useEventDetailsState";
-import useEventStatus from "../features/events/hooks/useEventStatus";
+import useEventActions from "../features/events/hooks/eventDetails/useEventActions";
+import useEventDetailsData from "../features/events/hooks/eventDetails/useEventDetailsData";
+import useEventDetailsState from "../features/events/hooks/eventDetails/useEventDetailsState";
+import useEventStatus from "../features/events/hooks/eventDetails/useEventStatus";
 
 import { getEventMembershipState } from "../features/eventMemberships/eventMembershipState";
 

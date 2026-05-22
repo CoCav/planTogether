@@ -1,10 +1,10 @@
 import { useState } from "react";
 
-import { EVENT_MODES } from "../../shared/constants/eventModes";
+import { EVENT_MODES } from "../../../shared/constants/eventModes";
 
-import { isOnlineEventForm, shouldShowCustomDeadline } from "../eventFormConfig";
+import { isOnlineEventForm, shouldShowCustomDeadline } from "../../form/eventFormConfig";
 
-import { validateEventForm } from "../eventValidation";
+import { validateEventForm } from "../../form/eventValidation";
 
 /* ==================================================
    USE EVENT FORM

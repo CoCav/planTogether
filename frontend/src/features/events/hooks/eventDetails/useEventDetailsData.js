@@ -1,12 +1,12 @@
 import { useCallback, useState } from "react";
 
-import { getEventById } from "../../../api/events/eventApi";
+import { getEventById } from "../../../../api/events/eventApi";
 
-import { getEventMembers, getEventStaff } from "../../../api/eventMemberships/eventMembershipApi";
+import { getEventMembers, getEventStaff } from "../../../../api/eventMemberships/eventMembershipApi";
 
-import { getNormalizedEvent } from "../eventNormalizer";
+import { getNormalizedEvent } from "../../eventNormalizer";
 
-import { getNormalizedEventStaff, getNormalizedMembers } from "../../eventMemberships/eventMembershipNormalizer";
+import { getNormalizedEventStaff, getNormalizedMembers } from "../../../eventMemberships/eventMembershipNormalizer";
 
 /* ==================================================
    USE EVENT DETAILS DATA

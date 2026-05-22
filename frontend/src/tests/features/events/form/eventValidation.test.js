@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { validateEventForm } from "../../../features/events/eventValidation";
+import { validateEventForm } from "../../../../features/events/form/eventValidation";
 
-import { EVENT_MODES } from "../../../features/shared/constants/eventModes";
+import { EVENT_MODES } from "../../../../features/shared/constants/eventModes";
 
-import { createEventPayload, createOnlineEventPayload } from "../../factories/events/eventPayloadFactory";
+import { createEventPayload, createOnlineEventPayload } from "../../../factories/events/eventPayloadFactory";
 
-import { createMockImageFile, createMockInvalidFile, createMockOversizedFile } from "../../helpers/mocks/mockFile";
+import { createMockImageFile, createMockInvalidFile, createMockOversizedFile } from "../../../helpers/mocks/mockFile";
 
 /* ==================================================
    EVENT VALIDATION TESTS

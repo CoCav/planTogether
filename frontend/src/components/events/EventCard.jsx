@@ -6,7 +6,7 @@ import useMembershipPermissions from "../../features/eventMemberships/hooks/useM
 
 import { getEventDisplayData } from "../../features/events/eventDisplayData";
 
-import useEventStatus from "../../features/events/hooks/useEventStatus";
+import useEventStatus from "../../features/events/hooks/eventDetails/useEventStatus";
 
 import { EVENT_ROLES } from "../../features/shared/constants/eventRoles";
 

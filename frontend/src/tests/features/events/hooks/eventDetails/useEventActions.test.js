@@ -1,12 +1,12 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import useEventActions from "../../../../features/events/hooks/useEventActions";
+import useEventActions from "../../../../../features/events/hooks/eventDetails/useEventActions";
 
-import { deleteEvent } from "../../../../api/events/eventApi";
+import { deleteEvent } from "../../../../../api/events/eventApi";
 
-import { createMutationHookProps } from "../../../helpers/hooks/createHookProps";
-import { mockConfirmAccepted } from "../../../helpers/mocks/mockWindowConfirm";
+import { createMutationHookProps } from "../../../../helpers/hooks/createHookProps";
+import { mockConfirmAccepted } from "../../../../helpers/mocks/mockWindowConfirm";
 
 /* ==================================================
    USE EVENT ACTIONS TESTS
@@ -29,7 +29,7 @@ vi.mock("react-router-dom", () => ({
     useNavigate: () => mockNavigate
 }));
 
-vi.mock("../../../../api/events/eventApi", () => ({
+vi.mock("../../../../../api/events/eventApi", () => ({
     deleteEvent: vi.fn()
 }));
 

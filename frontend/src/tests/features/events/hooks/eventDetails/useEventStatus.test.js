@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import useEventStatus from "../../../../features/events/hooks/useEventStatus";
+import useEventStatus from "../../../../../features/events/hooks/eventDetails/useEventStatus";
 
-import { EVENT_STATUS } from "../../../../features/shared/constants/eventStatus";
+import { EVENT_STATUS } from "../../../../../features/shared/constants/eventStatus";
 
-import { createEvent } from "../../../factories/events/eventFactory";
-import { createAuthenticatedUser } from "../../../factories/users/userFactory";
+import { createEvent } from "../../../../factories/events/eventFactory";
+import { createAuthenticatedUser } from "../../../../factories/users/userFactory";
 
 /* ==================================================
    USE EVENT STATUS TESTS

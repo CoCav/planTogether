@@ -3,10 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { getEventById, updateEvent } from "../api/events/eventApi";
 
-import { buildEventFormPayloadData } from "../features/events/eventPayloadBuilder";
-import { createDefaultEventFormValues } from "../features/events/eventFormConfig";
-import { createEventFormValuesFromEvent } from "../features/events/eventFormValues";
-import useEventForm from "../features/events/hooks/useEventForm";
+import { buildEventFormPayloadData } from "../features/events/form/eventPayloadBuilder";
+import { createDefaultEventFormValues } from "../features/events/form/eventFormConfig";
+import { createEventFormValuesFromEvent } from "../features/events/form/eventFormValues";
+import useEventForm from "../features/events/hooks/form/useEventForm";
 
 import EventForm from "../components/events/EventForm";
 

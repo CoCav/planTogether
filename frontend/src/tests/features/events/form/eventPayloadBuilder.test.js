@@ -6,17 +6,17 @@ import {
     buildEventFormPayloadData,
     buildEventPayload,
     buildRegistrationDeadline
-} from "../../../features/events/eventPayloadBuilder";
+} from "../../../../features/events/form/eventPayloadBuilder";
 
-import { EVENT_MODES } from "../../../features/shared/constants/eventModes";
-import { EVENT_REGISTRATION_DEADLINES } from "../../../features/shared/constants/eventRegistrationDeadlines";
+import { EVENT_MODES } from "../../../../features/shared/constants/eventModes";
+import { EVENT_REGISTRATION_DEADLINES } from "../../../../features/shared/constants/eventRegistrationDeadlines";
 
 import {
     createEventPayload,
     createEventPayloadWithEmptyOptionals,
     createEventPayloadWithImage,
     createOnlineEventPayload
-} from "../../factories/events/eventPayloadFactory";
+} from "../../../factories/events/eventPayloadFactory";
 
 /* ==================================================
    EVENT PAYLOAD BUILDER TESTS

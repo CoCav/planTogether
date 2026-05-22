@@ -1,6 +1,6 @@
-import { validateEventImageFile } from "../shared/security/uploadPolicy";
+import { validateEventImageFile } from "../../shared/security/uploadPolicy";
 
-import { EVENT_MODES } from "../shared/constants/eventModes";
+import { EVENT_MODES } from "../../shared/constants/eventModes";
 
 /* ==================================================
    EVENT VALIDATION

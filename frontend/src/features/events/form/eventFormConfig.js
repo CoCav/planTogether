@@ -1,8 +1,8 @@
-import { EVENT_MODES, getEventModeLabel } from "../shared/constants/eventModes";
+import { EVENT_MODES, getEventModeLabel } from "../../shared/constants/eventModes";
 import {
     EVENT_REGISTRATION_DEADLINES,
     getEventRegistrationDeadlineLabel
-} from "../shared/constants/eventRegistrationDeadlines";
+} from "../../shared/constants/eventRegistrationDeadlines";
 
 /* ==================================================
    EVENT FORM CONFIG

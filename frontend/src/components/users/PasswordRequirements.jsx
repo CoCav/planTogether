@@ -11,7 +11,7 @@ import { PASSWORD_REQUIREMENTS, PASSWORD_REQUIREMENT_LABELS } from "../../featur
    - decorative validation icons
 ================================================== */
 
-export default function PasswordRequirements({ password = "" }) {
+export default function PasswordRequirements({ id, password = "" }) {
 
     /* =============================
        REQUIREMENT STATE
@@ -50,7 +50,7 @@ export default function PasswordRequirements({ password = "" }) {
     ============================= */
 
     return (
-        <div className="password-requirements">
+        <div id={id} className="password-requirements">
             <p className="password-requirements-title">
                 Your password must contain at least:
             </p>

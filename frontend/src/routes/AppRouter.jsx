@@ -10,7 +10,7 @@ import RegisterPage from "../pages/RegisterPage";
 import EventsPage from "../pages/EventsPage";
 import EventDetailsPage from "../pages/EventDetailsPage";
 
-import ProfilePage from "../pages/ProfilePage";
+import MyProfilePage from "../pages/MyProfilePage";
 import MyEventsPage from "../pages/MyEventsPage";
 
 import CreateEventPage from "../pages/CreateEventPage";
@@ -66,7 +66,7 @@ export default function AppRouter() {
                 path="/profile"
                 element={
                     <ProtectedRoute>
-                        <ProfilePage />
+                        <MyProfilePage />
                     </ProtectedRoute>
                 }
             />

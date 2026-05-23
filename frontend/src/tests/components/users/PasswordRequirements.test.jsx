@@ -36,6 +36,19 @@ describe("PasswordRequirements", () => {
         expect(screen.getByText("Your password must contain at least:")).toBeInTheDocument();
     });
 
+    it("applies optional helper id", () => {
+        render(
+            <PasswordRequirements
+                id="newPassword-requirements"
+                password=""
+            />
+        );
+
+        expect(
+            screen.getByText("Your password must contain at least:").parentElement
+        ).toHaveAttribute("id", "newPassword-requirements");
+    });
+
     it("renders all password requirements", () => {
         renderPasswordRequirements();
 

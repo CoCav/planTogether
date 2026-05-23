@@ -44,8 +44,8 @@ vi.mock("../../pages/EventDetailsPage", () => ({
     default: () => <div>Event Details Page</div>
 }));
 
-vi.mock("../../pages/ProfilePage", () => ({
-    default: () => <div>Profile Page</div>
+vi.mock("../../pages/MyProfilePage", () => ({
+    default: () => <div>My Profile Page</div>
 }));
 
 vi.mock("../../pages/MyEventsPage", () => ({
@@ -129,7 +129,7 @@ describe("AppRouter", () => {
     it("should render profile route when authenticated", () => {
         renderWithRouter("/profile");
 
-        expect(screen.getByText("Profile Page")).toBeInTheDocument();
+        expect(screen.getByText("My Profile Page")).toBeInTheDocument();
     });
 
     it("should render my events route when authenticated", () => {

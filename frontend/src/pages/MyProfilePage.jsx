@@ -1,0 +1,179 @@
+import { useEffect, useState } from "react";
+
+import { useAuth } from "../features/auth/hooks/useAuth";
+
+import useMyProfileForm from "../features/users/authenticated/hooks/form/useMyProfileForm";
+import useMyPasswordForm from "../features/users/authenticated/hooks/form/useMyPasswordForm";
+
+import UserForm from "../components/users/UserForm";
+import UserPasswordForm from "../components/users/UserPasswordForm";
+
+import Alert from "../components/ui/Alert";
+import Card from "../components/ui/Card";
+import PageLoader from "../components/ui/PageLoader";
+
+/* ==================================================
+   MY PROFILE PAGE
+   Allows authenticated users to manage profile information
+   and update their password
+
+   Handles:
+   - profile form orchestration
+   - password form orchestration
+   - feedback messages
+   - accessible profile sections
+================================================== */
+
+export default function MyProfilePage() {
+    const { user, refreshUser } = useAuth();
+
+    /* =============================
+       FEEDBACK STATE
+    ============================= */
+
+    const [message, setMessage] = useState("");
+    const [error, setError] = useState("");
+
+    /* =============================
+       PROFILE FORM
+    ============================= */
+
+    const {
+        formState: profileFormState,
+        submitState: profileSubmitState,
+        formActions: profileFormActions
+    } = useMyProfileForm({
+        user,
+        refreshUser,
+        setMessage,
+        setError
+    });
+
+    /* =============================
+       PASSWORD FORM
+    ============================= */
+
+    const {
+        formState: passwordFormState,
+        submitState: passwordSubmitState,
+        passwordState,
+        formActions: passwordFormActions
+    } = useMyPasswordForm({
+        setMessage,
+        setError
+    });
+
+    /* =============================
+       FEEDBACK CLEANUP
+    ============================= */
+
+    // Clears feedback messages automatically after delay
+    useEffect(() => {
+        if (!message && !error) return;
+
+        const timer = setTimeout(() => {
+            setMessage("");
+            setError("");
+        }, 3000);
+
+        return () => clearTimeout(timer);
+
+    }, [
+        message,
+        error
+    ]);
+
+    /* =============================
+       LOADING STATE
+    ============================= */
+
+    if (!user) {
+        return (
+            <PageLoader>
+                Loading profile...
+            </PageLoader>
+        );
+    }
+
+    /* =============================
+       MAIN RENDER
+    ============================= */
+
+    return (
+        <main className="container page-section">
+            <header className="page-header">
+                <div className="page-header-content">
+                    <h1 className="page-title">
+                        My Profile
+                    </h1>
+
+                    <p className="page-subtitle">
+                        Manage your personal information, password, and account settings.
+                    </p>
+                </div>
+            </header>
+
+            {message && <Alert type="success">{message}</Alert>}
+            {error && <Alert type="danger">{error}</Alert>}
+
+            <div className="my-profile-grid">
+                <Card>
+                    <section aria-labelledby="profile-information-title">
+                        <div className="section-header">
+                            <h2 id="profile-information-title" className="section-title">
+                                Profile Information
+                            </h2>
+
+                            <p className="section-subtitle">
+                                Update your public account details.
+                            </p>
+                        </div>
+
+                        <UserForm
+                            values={profileFormState.values}
+                            fieldErrors={profileFormState.fieldErrors}
+
+                            submitLabel="Update Profile"
+                            isSubmitting={profileSubmitState.isSubmitting}
+
+                            showAvatar
+
+                            onFieldChange={profileFormActions.handleFieldChange}
+                            onAvatarChange={profileFormActions.handleAvatarChange}
+                            onRemoveAvatar={profileFormActions.handleRemoveAvatar}
+
+                            onSubmit={profileFormActions.handleSubmit}
+                        />
+                    </section>
+                </Card>
+
+                <Card>
+                    <section aria-labelledby="change-password-title">
+                        <div className="section-header">
+                            <h2 id="change-password-title" className="section-title">
+                                Change Password
+                            </h2>
+
+                            <p className="section-subtitle">
+                                Update your password securely.
+                            </p>
+                        </div>
+
+                        <UserPasswordForm
+                            values={passwordFormState.values}
+                            fieldErrors={passwordFormState.fieldErrors}
+
+                            isSubmitting={passwordSubmitState.isSubmitting}
+
+                            showPasswords={passwordState.showPasswords}
+
+                            onFieldChange={passwordFormActions.handleFieldChange}
+                            onSubmit={passwordFormActions.handleSubmit}
+                            onTogglePassword={passwordFormActions.handleTogglePassword}
+                        />
+                    </section>
+                </Card>
+            </div>
+        </main>
+    );
+}

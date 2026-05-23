@@ -10,14 +10,13 @@ import "./styles/base.css";
 import "./styles/layout.css";
 import "./styles/helpers.css";
 
-import "./styles/pages.css";
-
 /* Refactor in progress */
 import "./styles/pages/account-page.css";
 import "./styles/pages/event-details-page.css";
 import "./styles/pages/event-form-page.css";
 import "./styles/pages/event-listing-page.css";
 import "./styles/pages/home-page.css";
+import "./styles/pages/my-profile-page.css";
 
 import "./styles/components/auth/login-form.css";
 

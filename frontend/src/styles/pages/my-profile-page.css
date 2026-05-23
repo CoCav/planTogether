@@ -1,0 +1,25 @@
+/* ==================================================
+   MY PROFILE PAGE
+   Page-level layout for authenticated user profile settings
+================================================== */
+
+/* ==================================================
+   LAYOUT
+================================================== */
+
+.my-profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--space-5);
+    margin-bottom: var(--space-5);
+}
+
+/* ==================================================
+   RESPONSIVE
+================================================== */
+
+@media (max-width: 640px) {
+    .my-profile-grid {
+        grid-template-columns: 1fr;
+    }
+}

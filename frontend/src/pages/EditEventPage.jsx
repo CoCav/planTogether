@@ -167,7 +167,7 @@ export default function EditEventPage() {
 
             {error && <Alert type="danger">{error}</Alert>}
 
-            <section className="event-form-section" aria-labelledby="event-form-title">
+            <section className="event-form-section" aria-label="Edit event form">
                 <Card className="event-form-card">
                     <EventForm
                         values={values}

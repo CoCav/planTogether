@@ -264,7 +264,7 @@ export default function MyEventsPage() {
         <main className="container page-section">
             <header className="page-header">
                 <div className="page-header-content">
-                    <h1 className="page-title">
+                    <h1 id="my-events-page-title" className="page-title">
                         My Events
                     </h1>
 
@@ -296,7 +296,7 @@ export default function MyEventsPage() {
                 />
             </section>
 
-            <section className="events-results-controls">
+            <section className="events-results-controls" aria-labelledby="my-events-results-title">
                 <EventsToolbar
                     titleId="my-events-results-title"
                     title={viewContent.title}

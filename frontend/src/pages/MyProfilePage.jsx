@@ -103,7 +103,7 @@ export default function MyProfilePage() {
         <main className="container page-section">
             <header className="page-header">
                 <div className="page-header-content">
-                    <h1 className="page-title">
+                    <h1 id="my-profile-page-title" className="page-title">
                         My Profile
                     </h1>
 
@@ -119,7 +119,7 @@ export default function MyProfilePage() {
             <div className="my-profile-grid">
                 <Card>
                     <section aria-labelledby="profile-information-title">
-                        <div className="section-header">
+                        <header className="section-header">
                             <h2 id="profile-information-title" className="section-title">
                                 Profile Information
                             </h2>
@@ -127,7 +127,7 @@ export default function MyProfilePage() {
                             <p className="section-subtitle">
                                 Update your public account details.
                             </p>
-                        </div>
+                        </header>
 
                         <UserForm
                             values={profileFormState.values}
@@ -149,7 +149,7 @@ export default function MyProfilePage() {
 
                 <Card>
                     <section aria-labelledby="change-password-title">
-                        <div className="section-header">
+                        <header className="section-header">
                             <h2 id="change-password-title" className="section-title">
                                 Change Password
                             </h2>
@@ -157,7 +157,7 @@ export default function MyProfilePage() {
                             <p className="section-subtitle">
                                 Update your password securely.
                             </p>
-                        </div>
+                        </header>
 
                         <UserPasswordForm
                             values={passwordFormState.values}

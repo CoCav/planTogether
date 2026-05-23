@@ -236,7 +236,7 @@ export default function EventDetailsPage() {
         <main className="container page-section">
             <header className="page-header">
                 <div className="page-header-content">
-                    <h1 className="page-title">
+                    <h1 id="event-details-page-title" className="page-title">
                         Event details
                     </h1>
 

@@ -132,7 +132,7 @@ describe("LoginPage", () => {
     it("renders the login section with accessible label", () => {
         renderPage();
 
-        expect(screen.getByLabelText("Login")).toHaveClass("account-section");
+        expect(screen.getByLabelText("Login form")).toHaveClass("account-section");
     });
 
     /* =============================

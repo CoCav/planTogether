@@ -109,7 +109,7 @@ export default function LoginPage() {
 
             {error && <Alert type="danger">{error}</Alert>}
 
-            <section className="account-section" aria-labelledby="login-page-title">
+            <section className="account-section" aria-label="Login form">
                 <Card className="account-card">
                     <LoginForm
                         values={values}

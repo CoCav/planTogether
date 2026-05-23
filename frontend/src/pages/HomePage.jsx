@@ -87,47 +87,45 @@ export default function HomePage() {
     return (
         <main className="container page-section">
             <section className="home-hero" aria-labelledby="home-hero-title">
-                <div className="home-hero-container">
-                    <div className="home-hero-top-row">
-                        <p className="home-hero-label">
-                            Plan events together
-                        </p>
-                    </div>
+                <div className="home-hero-top-row">
+                    <p className="home-hero-label">
+                        Plan events together
+                    </p>
+                </div>
 
-                    <div className="home-hero-content">
-                        <h1 id="home-hero-title" className="home-hero-title">
-                            Organize, join, and manage events with ease
-                        </h1>
+                <div className="home-hero-content">
+                    <h1 id="home-hero-title" className="home-hero-title">
+                        Organize, join, and manage events with ease
+                    </h1>
 
-                        <p className="home-hero-description">
-                            PlanTogether helps you create events,
-                            invite participants, manage roles,
-                            and keep everything organized in one place.
-                        </p>
+                    <p className="home-hero-description">
+                        PlanTogether helps you create events,
+                        invite participants, manage roles,
+                        and keep everything organized in one place.
+                    </p>
 
-                        <div className="home-hero-actions">
+                    <div className="home-hero-actions">
 
-                            <Link to="/events" className="btn btn-primary">
-                                Browse Events
+                        <Link to="/events" className="btn btn-primary">
+                            Browse Events
+                        </Link>
+
+                        {user ? (
+                            <Link to="/events/create" className="btn btn-outline">
+                                Create Event
                             </Link>
+                        ) : (
+                            <Link to="/register" className="btn btn-outline">
+                                Create Account
+                            </Link>
+                        )}
 
-                            {user ? (
-                                <Link to="/events/create" className="btn btn-outline">
-                                    Create Event
-                                </Link>
-                            ) : (
-                                <Link to="/register" className="btn btn-outline">
-                                    Create Account
-                                </Link>
-                            )}
-
-                        </div>
                     </div>
                 </div>
             </section>
 
             <section className="home-section" aria-labelledby="home-features-title">
-                <div className="section-header">
+                <header className="section-header">
                     <h2 id="home-features-title" className="section-title">
                         Why PlanTogether?
                     </h2>
@@ -135,7 +133,7 @@ export default function HomePage() {
                     <p className="section-subtitle">
                         Everything you need to manage events collaboratively.
                     </p>
-                </div>
+                </header>
 
                 <div className="home-features-grid">
 
@@ -187,7 +185,7 @@ export default function HomePage() {
             </section>
 
             <section className="home-section" aria-labelledby="home-latest-events-title" aria-busy={isLoading}>
-                <div className="section-header">
+                <header className="section-header">
                     <h2 id="home-latest-events-title" className="section-title">
                         Latest Events
                     </h2>
@@ -195,7 +193,7 @@ export default function HomePage() {
                     <p className="section-subtitle">
                         Discover the most recently created events on PlanTogether.
                     </p>
-                </div>
+                </header>
 
                 {message && <Alert type="success">{message}</Alert>}
                 {error && <Alert type="danger">{error}</Alert>}

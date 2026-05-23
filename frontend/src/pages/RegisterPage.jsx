@@ -102,7 +102,7 @@ export default function RegisterPage() {
 
             {error && <Alert type="danger">{error}</Alert>}
 
-            <section className="account-section" aria-labelledby="register-page-title">
+            <section className="account-section" aria-label="Registration form">
                 <Card className="account-card">
                     <UserForm
                         values={values}

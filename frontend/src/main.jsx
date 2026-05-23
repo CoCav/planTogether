@@ -5,9 +5,9 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import AuthProvider from "./context/auth/AuthProvider";
 
-import "./styles/layout.css";
 import "./styles/reset.css";
 import "./styles/theme.css";
+import "./styles/layout.css";
 
 import "./styles/pages/account-page.css";
 import "./styles/pages/event-details-page.css";
@@ -44,18 +44,18 @@ import "./styles/components/ui/badge.css";
 import "./styles/components/ui/button.css";
 import "./styles/components/ui/card.css";
 import "./styles/components/ui/empty-state.css";
-import "./styles/components/ui//form-controls.css";
-import "./styles/components/ui/formfield.css";
+import "./styles/components/ui/form-controls.css";
+import "./styles/components/ui/form-field.css";
 import "./styles/components/ui/loading-state.css";
 import "./styles/components/ui/pagination.css";
 import "./styles/components/ui/select.css";
 import "./styles/components/ui/textarea.css";
 
-import "./styles/components/link.css"
+import "./styles/components/link.css";
 
 /* ==================================================
    MAIN ENTRY
-   Mounts the React application
+   Initializes and mounts the React application
 
    Provides:
    - React StrictMode

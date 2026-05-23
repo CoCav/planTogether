@@ -144,7 +144,7 @@ describe("RegisterPage", () => {
     it("renders the register section with accessible label", () => {
         renderPage();
 
-        expect(screen.getByLabelText("Register")).toHaveClass("account-section");
+        expect(screen.getByLabelText("Registration form")).toHaveClass("account-section");
     });
 
     /* =============================

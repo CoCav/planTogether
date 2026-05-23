@@ -4,11 +4,11 @@ import Footer from "./components/layout/Footer";
 
 /* ==================================================
    APP
-   Defines the main application layout
+   Defines the global application shell
 
    Includes:
    - navbar
-   - routed page content
+   - routed page views
    - footer
 ================================================== */
 
@@ -17,9 +17,9 @@ function App() {
         <div className="app-layout">
             <Navbar />
 
-            <main className="app-main">
+            <div className="app-main">
                 <AppRouter />
-            </main>
+            </div>
 
             <Footer />
         </div>

@@ -235,7 +235,7 @@ export default function EventDetailsPage() {
     return (
         <main className="container page-section">
             <header className="page-header">
-                <div>
+                <div className="page-header-content">
                     <h1 className="page-title">
                         Event details
                     </h1>
@@ -300,7 +300,7 @@ export default function EventDetailsPage() {
                 </Card>
             </section>
 
-            <section className="event-details-members">
+            <section className="event-details-members" aria-label="Event members">
                 <EventStaffSection
                     user={user}
                     staff={staff}

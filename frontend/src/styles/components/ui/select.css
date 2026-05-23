@@ -3,43 +3,48 @@
    Reusable styled select with custom dropdown icon
 ================================================== */
 
-/* ==================================================
+/* =========================================
    WRAPPER
-================================================== */
+========================================= */
 
 .select-wrapper {
     position: relative;
     width: 100%;
 }
 
-/* ==================================================
+/* =========================================
    SELECT FIELD
-================================================== */
+========================================= */
 
 .select {
-    padding-right: 2.5rem;
+    padding-right: 40px;
 
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
 }
 
-/* ==================================================
+/* =========================================
    ICON
-================================================== */
+========================================= */
 
 .select-icon {
     position: absolute;
     top: 50%;
-    right: 0.85rem;
+    right: 14px;
+
     transform: translateY(-50%);
+
     color: var(--color-text-muted);
+
     pointer-events: none;
-    font-size: 0.95rem;
+
+    font-size: 15px;
     line-height: 1;
+
     transition:
-        transform 0.2s ease,
-        color 0.2s ease;
+        transform var(--transition-fast),
+        color var(--transition-fast);
 }
 
 .select-wrapper:focus-within .select-icon {

@@ -3,28 +3,28 @@
    User account dropdown in the navbar
 ================================================== */
 
-/* ==================================================
+/* =========================================
    MENU
-================================================== */
+========================================= */
 
 .navbar-user-menu {
     position: relative;
 }
 
-/* ==================================================
+/* =========================================
    TRIGGER
-================================================== */
+========================================= */
 
 .navbar-user-trigger {
-    gap: 6px;
+    gap: var(--space-2);
     border: 1px solid #c7d2fe;
-    background: #eef2ff;
+    background: var(--color-primary-subtle);
     color: var(--color-primary);
 }
 
 .navbar-user-trigger:hover:not(:disabled) {
     border-color: #a5b4fc;
-    background: #e0e7ff;
+    background: var(--color-primary-subtle-hover);
     color: var(--color-primary-hover);
 }
 
@@ -33,9 +33,9 @@
     outline-offset: 2px;
 }
 
-/* ==================================================
+/* =========================================
    AVATAR
-================================================== */
+========================================= */
 
 .navbar-avatar {
     width: 32px;
@@ -44,39 +44,46 @@
     object-fit: cover;
 }
 
-/* ==================================================
+/* =========================================
    CARET
-================================================== */
+========================================= */
 
 .navbar-caret {
     color: var(--color-text-muted);
     font-size: var(--font-size-sm);
-    transition: transform 0.2s ease;
+    transition: transform var(--transition-fast);
 }
 
 .navbar-user-trigger[aria-expanded="true"] .navbar-caret {
     transform: rotate(180deg);
 }
 
-/* ==================================================
+/* =========================================
    DROPDOWN
-================================================== */
+========================================= */
 
 .navbar-dropdown {
     position: absolute;
+    z-index: var(--z-dropdown);
     top: calc(100% + 10px);
     right: 0;
+
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: var(--space-1);
+
     min-width: 180px;
-    padding: 8px;
+    padding: var(--space-2);
+
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
+
     background: var(--color-surface);
     box-shadow: var(--shadow-md);
+
     opacity: 0;
     transform: translateY(-6px) scale(0.98);
+
     animation: navbar-dropdown-in 0.16s ease forwards;
 }
 
@@ -87,22 +94,24 @@
     }
 }
 
-/* ==================================================
+/* =========================================
    DROPDOWN ITEMS
-================================================== */
+========================================= */
 
 .navbar-dropdown-item {
     display: block;
     width: 100%;
+
     padding: 10px 12px;
+
     border: none;
     border-radius: var(--radius-sm);
+
     background: transparent;
     color: var(--color-text);
+
     font-size: var(--font-size-sm);
     text-align: left;
-    text-decoration: none;
-    cursor: pointer;
 }
 
 .navbar-dropdown-item:hover {
@@ -118,9 +127,9 @@
     color: var(--color-danger);
 }
 
-/* ==================================================
+/* =========================================
    RESPONSIVE
-================================================== */
+========================================= */
 
 @media (max-width: 768px) {
     .navbar-dropdown {

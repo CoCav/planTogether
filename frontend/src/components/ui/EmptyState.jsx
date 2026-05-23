@@ -16,12 +16,11 @@ export default function EmptyState({ title, description, icon, children }) {
     ========================= */
 
     const content =
-        title
-            ? (
-                <h3 className="empty-state-title">
-                    {title}
-                </h3>
-            )
+        title ? (
+            <h3 className="empty-state-title">
+                {title}
+            </h3>
+        )
             : children;
 
     return (

@@ -85,7 +85,7 @@ export default function PasswordField({
                     {hasMultipleErrors && (
                         <ul id={multipleErrorId} className="password-field-error-list">
                             {error.map((item) => (
-                                <li key={item} className="password-field-error">
+                                <li key={item}>
                                     {item}
                                 </li>
                             ))}

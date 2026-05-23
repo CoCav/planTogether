@@ -14,7 +14,7 @@ export default function Alert({ children, type = "info", className = "", role })
        CSS CLASSES
     ========================= */
 
-    const classes = `alert alert-${type} ${className}`.trim();
+    const alertClasses = `alert alert-${type} ${className}`.trim();
 
     /* =========================
        ACCESSIBILITY
@@ -23,7 +23,7 @@ export default function Alert({ children, type = "info", className = "", role })
     const alertRole = role || (type === "danger" ? "alert" : "status");
 
     return (
-        <div className={classes} role={alertRole}>
+        <div className={alertClasses} role={alertRole}>
             {children}
         </div>
     );

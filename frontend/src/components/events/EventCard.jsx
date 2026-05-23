@@ -76,7 +76,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
 
     return (
         <article className="event-card">
-            <div className="card event-card-inner">
+            <div className="card card-interactive event-card-inner">
 
                 {/* =========================
                     HEADER
@@ -85,8 +85,8 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                 <header className="event-card-header">
                     <div className="event-card-heading">
 
-                        <Link to={eventDetailsPath} className="event-title-link">
-                            <h3 className="event-title">
+                        <Link to={eventDetailsPath} className="event-card-title-link">
+                            <h3 className="event-card-title">
                                 {eventDisplayData.title}
                             </h3>
                         </Link>
@@ -94,7 +94,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                         <div className="event-card-badges" aria-label="Event labels">
 
                             {eventDisplayData.type && (
-                                <span className="event-type-badge">{eventDisplayData.type}</span>
+                                <span className="event-card-type-badge">{eventDisplayData.type}</span>
                             )}
 
                             {shouldShowOrganizerInline && event.creatorName && (
@@ -149,13 +149,13 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
 
                 <div className="event-card-content">
 
-                    <p className="event-description">
+                    <p className="event-card-description">
                         {eventDisplayData.description}
                     </p>
 
-                    <ul className="event-meta-list" aria-label="Event details">
+                    <ul className="event-card-meta-list" aria-label="Event details">
 
-                        <li className={isEventFull ? "event-meta-item text-danger" : "event-meta-item"}>
+                        <li className={isEventFull ? "event-card-meta-item text-danger" : "event-card-meta-item"}>
                             <span aria-hidden="true">👥</span>
 
                             <span>
@@ -163,7 +163,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                             </span>
                         </li>
 
-                        <li className="event-meta-item">
+                        <li className="event-card-meta-item">
                             <span aria-hidden="true">📅</span>
 
                             <span>
@@ -171,7 +171,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                             </span>
                         </li>
 
-                        <li className="event-meta-item">
+                        <li className="event-card-meta-item">
                             <span aria-hidden="true">🕒</span>
 
                             <span>
@@ -180,7 +180,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                         </li>
 
                         {eventDisplayData.registrationDeadline && (
-                            <li className="event-meta-item">
+                            <li className="event-card-meta-item">
                                 <span aria-hidden="true">⏳</span>
 
                                 <span>
@@ -189,7 +189,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                             </li>
                         )}
 
-                        <li className="event-meta-item">
+                        <li className="event-card-meta-item">
                             <span aria-hidden="true">📍</span>
 
                             <span>

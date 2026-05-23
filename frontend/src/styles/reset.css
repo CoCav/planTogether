@@ -1,0 +1,73 @@
+/* ==================================================
+   RESET
+   Global reset and default HTML element styles
+================================================== */
+
+/* =========================================
+   GLOBAL RESET
+========================================= */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* =========================================
+   ROOT LAYOUT
+========================================= */
+
+html,
+body,
+#root {
+    min-height: 100%;
+}
+
+/* =========================================
+   BODY DEFAULTS
+========================================= */
+
+body {
+    min-height: 100vh;
+
+    font-family: system-ui, sans-serif;
+    line-height: 1.5;
+
+    background: var(--color-background);
+    color: var(--color-text);
+
+    -webkit-font-smoothing: antialiased;
+}
+
+/* =========================================
+   MEDIA
+========================================= */
+
+img {
+    display: block;
+    max-width: 100%;
+}
+
+/* =========================================
+   LINKS
+========================================= */
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* =========================================
+   FORM ELEMENTS
+========================================= */
+
+input,
+button,
+textarea,
+select {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}

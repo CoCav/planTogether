@@ -1,7 +1,11 @@
 /* ==================================================
    LAYOUT
-   Shared structural styles for app and page layouts
+   Shared app, page, section and form layout styles
 ================================================== */
+
+/* =========================================
+   APP LAYOUT
+========================================= */
 
 .app-layout {
     min-height: 100vh;
@@ -13,20 +17,23 @@
     flex: 1;
 }
 
+/* =========================================
+   CONTAINER
+========================================= */
+
 .container {
-    max-width: 1100px;
-    margin: 0 auto;
+    max-width: var(--container-width);
+    margin-inline: auto;
     padding: var(--space-5);
 }
 
-.page-title {
-    font-size: var(--font-size-xl);
-    margin-bottom: var(--space-5);
-}
+/* =========================================
+   PAGE LAYOUT
+========================================= */
 
 .page-section {
     padding-top: var(--space-5);
-    padding-bottom: var(--space-6);
+    padding-bottom: var(--page-section-spacing-y);
 }
 
 .page-header {
@@ -38,11 +45,12 @@
     flex-wrap: wrap;
 }
 
-.event-form-page-header {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    max-width: 720px;
+.page-header-content {
+    max-width: var(--page-header-max-width);
+}
+
+.page-title {
+    font-size: var(--font-size-xl);
 }
 
 .page-subtitle {
@@ -50,8 +58,19 @@
     margin-top: var(--space-2);
 }
 
+/* =========================================
+   SECTION LAYOUT
+========================================= */
+
 .section-header {
     margin-bottom: var(--space-4);
+}
+
+.section-header-with-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-4);
 }
 
 .section-title {
@@ -63,31 +82,20 @@
     color: var(--color-text-muted);
 }
 
-.events-section {
-    margin-top: var(--space-6);
-}
-
-.events-section:first-of-type {
-    margin-top: 0;
-}
-
-.section-header-with-action {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: var(--space-4);
-}
+/* =========================================
+   FEEDBACK TEXT
+========================================= */
 
 .status-text,
 .empty-state {
-  color: var(--color-text-muted);
+    color: var(--color-text-muted);
 }
 
-/* ==================================================
+/* =========================================
    FORM LAYOUT
-================================================== */
+========================================= */
 
-.account-form {
+.form-layout {
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
@@ -110,9 +118,9 @@
     flex-wrap: wrap;
 }
 
-/* ==================================================
+/* =========================================
    RESPONSIVE
-================================================== */
+========================================= */
 
 @media (min-width: 768px) {
     .form-grid {

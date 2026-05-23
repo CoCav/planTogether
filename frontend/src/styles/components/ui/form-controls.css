@@ -1,11 +1,16 @@
 /* ==================================================
    FORM CONTROLS
-   Shared base styles for input, select and textarea
+   Shared base styles for form field controls
+
+   Used by:
+   - Input
+   - Select
+   - TextArea
 ================================================== */
 
-/* ==================================================
+/* =========================================
    BASE
-================================================== */
+========================================= */
 
 .input,
 .select,
@@ -19,19 +24,18 @@
     background: var(--color-surface);
     color: var(--color-text);
 
-    font: inherit;
     font-size: var(--font-size-sm);
     line-height: 1.5;
 
     transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        background-color 0.2s ease;
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast),
+        background-color var(--transition-fast);
 }
 
-/* ==================================================
+/* =========================================
    STATES
-================================================== */
+========================================= */
 
 .input:focus,
 .select:focus,

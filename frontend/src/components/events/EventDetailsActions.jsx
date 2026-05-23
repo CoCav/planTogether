@@ -66,19 +66,31 @@ export default function EventDetailsActions({
             )}
 
             {canLeave && (
-                <Button type="button" variant="outline-danger" onClick={() => onLeave(eventId)} >
+                <Button
+                    type="button"
+                    variant="outline-danger"
+                    onClick={() => onLeave(eventId)}
+                >
                     Leave the event
                 </Button>
             )}
 
             {canEdit && (
-                <Button type="button" variant="outline" onClick={onEdit}  >
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onEdit}
+                >
                     Edit Event
                 </Button>
             )}
 
             {canDelete && (
-                <Button type="button" variant="danger" onClick={onDelete}>
+                <Button
+                    type="button"
+                    variant="danger"
+                    onClick={onDelete}
+                >
                     Delete Event
                 </Button>
             )}

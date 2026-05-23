@@ -139,7 +139,7 @@ export default function HomePage() {
 
                 <div className="home-features-grid">
 
-                    <Card>
+                    <Card className="card-interactive">
                         <h3 className="home-feature-title">
                             Create and manage events
                         </h3>
@@ -150,7 +150,7 @@ export default function HomePage() {
                         </p>
                     </Card>
 
-                    <Card>
+                    <Card className="card-interactive">
                         <h3 className="home-feature-title">
                             Join communities easily
                         </h3>
@@ -161,7 +161,7 @@ export default function HomePage() {
                         </p>
                     </Card>
 
-                    <Card>
+                    <Card className="card-interactive">
                         <h3 className="home-feature-title">
                             Role-based collaboration
                         </h3>
@@ -172,7 +172,7 @@ export default function HomePage() {
                         </p>
                     </Card>
 
-                    <Card>
+                    <Card className="card-interactive">
                         <h3 className="home-feature-title">
                             Smart filtering
                         </h3>

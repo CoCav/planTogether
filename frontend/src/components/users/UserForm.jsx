@@ -70,7 +70,7 @@ export default function UserForm({
     ============================= */
 
     return (
-        <form onSubmit={onSubmit} className="account-form">
+        <form onSubmit={onSubmit} className="form-layout">
 
             {/* =============================
                AVATAR
@@ -112,7 +112,7 @@ export default function UserForm({
                                         </span>
                                     </div>
 
-                                    <label className="btn btn-outline user-form-upload-button">
+                                    <label className="btn btn-outline">
                                         Choose file
 
                                         <input

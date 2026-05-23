@@ -66,7 +66,7 @@ export default function EventForm({
     });
 
     return (
-        <form onSubmit={onSubmit} className="event-form">
+        <form onSubmit={onSubmit} className="form-layout">
 
             {/* =============================
                IMAGE
@@ -104,7 +104,7 @@ export default function EventForm({
                                     </span>
                                 </div>
 
-                                <label className="btn btn-outline event-form-upload-button">
+                                <label className="btn btn-outline">
                                     Choose file
 
                                     <input

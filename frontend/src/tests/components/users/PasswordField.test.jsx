@@ -153,8 +153,8 @@ describe("PasswordField", () => {
         });
 
         expect(screen.getByRole("list")).toHaveClass("password-field-error-list");
-        expect(screen.getByText("Password must contain a number")).toHaveClass("password-field-error");
-        expect(screen.getByText("Password must contain an uppercase letter")).toHaveClass("password-field-error");
+        expect(screen.getByText("Password must contain a number")).toBeInTheDocument();
+        expect(screen.getByText("Password must contain an uppercase letter")).toBeInTheDocument();
     });
 
     it("connects the input to multiple errors with aria-describedby", () => {

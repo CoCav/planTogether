@@ -105,7 +105,7 @@ describe("EventCard", () => {
             }
         });
 
-        expect(screen.getByText("workshop")).toHaveClass("event-type-badge");
+        expect(screen.getByText("workshop")).toHaveClass("event-card-type-badge");
     });
 
     it("should display fallback title when event has no title", () => {

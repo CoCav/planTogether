@@ -5,12 +5,10 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import AuthProvider from "./context/auth/AuthProvider";
 
-import "./styles/theme.css";
-import "./styles/base.css";
 import "./styles/layout.css";
-import "./styles/helpers.css";
+import "./styles/reset.css";
+import "./styles/theme.css";
 
-/* Refactor in progress */
 import "./styles/pages/account-page.css";
 import "./styles/pages/event-details-page.css";
 import "./styles/pages/event-form-page.css";
@@ -20,12 +18,15 @@ import "./styles/pages/my-profile-page.css";
 
 import "./styles/components/auth/login-form.css";
 
+import "./styles/components/eventMemberships/event-members-section.css";
+
+import "./styles/components/events/event-shared-actions.css";
+
 import "./styles/components/events/event-card-actions.css";
 import "./styles/components/events/event-card.css";
 import "./styles/components/events/event-details-actions.css";
 import "./styles/components/events/event-details-summary.css";
 import "./styles/components/events/event-form.css";
-import "./styles/components/events/event-members-section.css";
 import "./styles/components/events/event-view-tabs.css";
 import "./styles/components/events/events-filter-card.css";
 import "./styles/components/events/events-toolbar.css";
@@ -49,6 +50,8 @@ import "./styles/components/ui/loading-state.css";
 import "./styles/components/ui/pagination.css";
 import "./styles/components/ui/select.css";
 import "./styles/components/ui/textarea.css";
+
+import "./styles/components/link.css"
 
 /* ==================================================
    MAIN ENTRY

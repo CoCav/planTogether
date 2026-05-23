@@ -1,22 +1,29 @@
 /* ==================================================
-   THEME
-   Global design variables used across the app
+   THEME VARIABLES
+   Global design variables used across the application
 
    Includes:
    - colors
    - spacing
+   - typography
    - radius
    - shadows
-   - typography
+   - layout
+   - transitions
+   - z-index
 ================================================== */
 
 :root {
-    /* Colors */
+
+    /* =========================================
+       COLORS
+    ========================================= */
+
     --color-primary: #4f46e5;
     --color-primary-hover: #4338ca;
 
-    --color-primary-soft: rgba(79, 70, 229, 0.1);
-    --color-primary-soft-hover: rgba(79, 70, 229, 0.15);
+    --color-primary-subtle: rgba(79, 70, 229, 0.1);
+    --color-primary-subtle-hover: rgba(79, 70, 229, 0.15);
 
     --color-danger: #dc2626;
     --color-success: #16a34a;
@@ -28,7 +35,10 @@
     --color-surface: #ffffff;
     --color-border: #e5e7eb;
 
-    /* Spacing */
+    /* =========================================
+       SPACING
+    ========================================= */
+
     --space-1: 4px;
     --space-2: 8px;
     --space-3: 12px;
@@ -36,19 +46,51 @@
     --space-5: 24px;
     --space-6: 32px;
 
-    /* Radius */
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 16px;
+    /* =========================================
+       TYPOGRAPHY
+    ========================================= */
 
-    /* Shadows */
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 8px rgba(0,0,0,0.08);
-
-    /* Typography */
     --font-size-xs: 12px;
     --font-size-sm: 14px;
     --font-size-base: 16px;
     --font-size-lg: 20px;
     --font-size-xl: 28px;
+
+    /* =========================================
+       RADIUS
+    ========================================= */
+
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+
+    /* =========================================
+       SHADOWS
+    ========================================= */
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.08);
+
+    /* =========================================
+       LAYOUT
+    ========================================= */
+
+    --container-width: 1100px;
+    --page-section-spacing-y: var(--space-6);
+    --page-header-max-width: 720px;
+
+    /* =========================================
+       TRANSITIONS
+    ========================================= */
+
+    --transition-fast: 0.2s ease;
+    --transition-base: 0.28s ease;
+
+    /* =========================================
+       Z-INDEX
+    ========================================= */
+
+    --z-navbar: 100;
+    --z-dropdown: 200;
+    --z-mobile-menu: 300;
 }

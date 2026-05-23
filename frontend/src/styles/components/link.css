@@ -1,0 +1,61 @@
+/* ==================================================
+   LINK
+   Reusable link styles and interaction utilities
+================================================== */
+
+/* =========================================
+   INLINE LINK
+========================================= */
+
+.link-inline {
+    color: var(--color-primary);
+    font-weight: 500;
+}
+
+.link-inline:hover {
+    text-decoration: underline;
+}
+
+/* =========================================
+   ANIMATED UNDERLINE LINK
+========================================= */
+
+.link-animated-underline {
+    position: relative;
+    display: inline-flex;
+}
+
+.link-animated-underline::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+
+    width: 100%;
+    height: 2px;
+
+    background: var(--color-primary);
+    border-radius: 999px;
+
+    transform: scaleX(0);
+    transform-origin: left;
+
+    transition: transform var(--transition-base);
+}
+
+.link-animated-underline:hover::after,
+.link-animated-underline.active::after {
+    transform: scaleX(1);
+}
+
+/* =========================================
+   HOVER LINK
+========================================= */
+
+.link-hover-primary {
+    transition: color var(--transition-fast);
+}
+
+.link-hover-primary:hover {
+    color: var(--color-primary);
+}

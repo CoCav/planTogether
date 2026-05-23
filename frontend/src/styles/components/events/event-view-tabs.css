@@ -3,45 +3,53 @@
    Navigation tabs for switching between event views
 ================================================== */
 
-/* ==================================================
+/* =========================================
    TABS
-================================================== */
+========================================= */
 
 .event-view-tabs {
     display: flex;
     align-items: center;
     gap: var(--space-2);
+
     width: fit-content;
+
     padding: var(--space-1);
+
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
+
     background: var(--color-surface);
 }
 
-/* ==================================================
+/* =========================================
    TAB
-================================================== */
+========================================= */
 
 .event-view-tab {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
+
     padding: var(--space-2) var(--space-3);
+
     border: none;
     border-radius: var(--radius-md);
+
     background: transparent;
     color: var(--color-text-muted);
+
     font-size: var(--font-size-sm);
     font-weight: 600;
-    cursor: pointer;
+
     transition:
-        background 0.2s ease,
-        color 0.2s ease,
-        box-shadow 0.2s ease;
+        background var(--transition-fast),
+        color var(--transition-fast),
+        box-shadow var(--transition-fast);
 }
 
 .event-view-tab:hover {
-    background: var(--color-primary-soft);
+    background: var(--color-primary-subtle);
     color: var(--color-primary);
 }
 
@@ -51,10 +59,10 @@
     box-shadow: var(--shadow-sm);
 }
 
-/* ==================================================
+/* =========================================
    ICON
-================================================== */
+========================================= */
 
 .event-view-tab-icon {
-    font-size: 14px;
+    font-size: var(--font-size-sm);
 }

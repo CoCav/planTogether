@@ -1,39 +1,36 @@
 /* ==================================================
    EVENT FORM
-   Shared form layout for create and edit event flows
+   Shared event form layout for create and edit event flows
+
+   Used by:
+   - CreateEventPage
+   - EditEventPage
 ================================================== */
 
-/* ==================================================
-   FORM
-================================================== */
-
-.event-form {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-}
-
-/* ==================================================
+/* =========================================
    IMAGE
-================================================== */
+========================================= */
 
 .event-form-image {
     max-width: 100%;
     margin-bottom: var(--space-5);
 }
 
-/* ==================================================
+/* =========================================
    UPLOAD
-================================================== */
+========================================= */
 
 .event-form-upload {
     padding: var(--space-4);
+
     background: var(--color-surface);
+
     border: 2px dashed var(--color-border);
     border-radius: var(--radius-lg);
+
     transition:
-        border-color 0.2s ease,
-        background-color 0.2s ease;
+        border-color var(--transition-fast),
+        background-color var(--transition-fast);
 }
 
 .event-form-upload:hover {
@@ -42,7 +39,7 @@
 
 .event-form-upload.drag-active {
     border-color: var(--color-primary);
-    background: var(--color-primary-soft);
+    background: var(--color-primary-subtle);
 }
 
 .event-form-upload-header {
@@ -50,6 +47,7 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--space-3);
+
     margin-bottom: var(--space-3);
 }
 
@@ -73,22 +71,26 @@
     display: none;
 }
 
-/* ==================================================
+/* =========================================
    PREVIEW
-================================================== */
+========================================= */
 
 .event-form-preview {
     display: flex;
     align-items: flex-start;
     gap: var(--space-3);
+
     padding-top: var(--space-3);
+
     border-top: 1px solid var(--color-border);
 }
 
 .event-form-preview-image {
     width: 120px;
     height: 80px;
+
     border-radius: var(--radius-md);
+
     object-fit: cover;
 }
 
@@ -96,7 +98,8 @@
     display: flex;
     flex: 1;
     flex-direction: column;
-    gap: 2px;
+    gap: var(--space-1);
+
     min-width: 0;
 }
 
@@ -109,9 +112,9 @@
     flex-shrink: 0;
 }
 
-/* ==================================================
+/* =========================================
    RESPONSIVE
-================================================== */
+========================================= */
 
 @media (max-width: 768px) {
 

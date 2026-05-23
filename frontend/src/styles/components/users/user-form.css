@@ -1,28 +1,35 @@
 /* ==================================================
    USER FORM
-   Shared form layout for register and profile flows
+   Shared user form layout for register and profile flows
+
+   Used by:
+   - RegisterPage
+   - MyProfilePage
 ================================================== */
 
-/* ==================================================
+/* =========================================
    AVATAR
-================================================== */
+========================================= */
 
 .user-form-avatar {
     max-width: 100%;
 }
 
-/* ==================================================
+/* =========================================
    UPLOAD
-================================================== */
+========================================= */
 
 .user-form-upload {
     padding: var(--space-4);
+
     background: var(--color-surface);
+
     border: 2px dashed var(--color-border);
     border-radius: var(--radius-lg);
+
     transition:
-        border-color 0.2s ease,
-        background-color 0.2s ease;
+        border-color var(--transition-fast),
+        background-color var(--transition-fast);
 }
 
 .user-form-upload:hover {
@@ -31,7 +38,7 @@
 
 .user-form-upload.drag-active {
     border-color: var(--color-primary);
-    background: var(--color-primary-soft);
+    background: var(--color-primary-subtle);
 }
 
 .user-form-upload-header {
@@ -39,6 +46,7 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--space-3);
+
     margin-bottom: var(--space-3);
 }
 
@@ -54,30 +62,34 @@
 
 .user-form-upload-hint,
 .user-form-preview-size {
-    font-size: var(--font-size-xs);
     color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
 }
 
 .user-form-upload-input {
     display: none;
 }
 
-/* ==================================================
+/* =========================================
    PREVIEW
-================================================== */
+========================================= */
 
 .user-form-preview {
     display: flex;
     align-items: center;
     gap: var(--space-3);
+
     padding-top: var(--space-3);
+
     border-top: 1px solid var(--color-border);
 }
 
 .user-form-preview-image {
     width: 56px;
     height: 56px;
+
     border-radius: 50%;
+
     object-fit: cover;
 }
 
@@ -85,7 +97,8 @@
     display: flex;
     flex: 1;
     flex-direction: column;
-    gap: 2px;
+    gap: var(--space-1);
+
     min-width: 0;
 }
 
@@ -98,9 +111,9 @@
     flex-shrink: 0;
 }
 
-/* ==================================================
+/* =========================================
    RESPONSIVE
-================================================== */
+========================================= */
 
 @media (max-width: 768px) {
 

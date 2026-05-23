@@ -1,0 +1,30 @@
+/* ==================================================
+   EVENT SHARED ACTIONS
+   Shared action and status styles used across event components
+
+   Used by:
+   - EventCardActions
+   - EventDetailsActions
+================================================== */
+
+/* =========================================
+   STATUS LABEL
+========================================= */
+
+.event-status-label {
+    display: inline-flex;
+    align-items: center;
+
+    padding: var(--space-2) var(--space-3);
+
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+
+    background: var(--color-background);
+    color: var(--color-text-muted);
+
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+
+    white-space: nowrap;
+}

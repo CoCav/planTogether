@@ -17,15 +17,15 @@ export default function Badge({ role, variant, label, children, className = "" }
 
     const roleConfig = role ? EVENT_ROLE_UI[role] : null;
 
+    const badgeVariant =
+        variant ||
+        roleConfig?.badgeVariant ||
+        "";
+
     const badgeLabel =
         label ||
         children ||
         roleConfig?.label ||
-        "";
-
-    const badgeVariant =
-        variant ||
-        roleConfig?.badgeVariant ||
         "";
 
     /* =========================

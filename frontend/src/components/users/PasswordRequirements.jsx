@@ -55,13 +55,13 @@ export default function PasswordRequirements({ id, password = "" }) {
                 Your password must contain at least:
             </p>
 
-            <ul className="password-requirements-list">
+            <ul className="password-rules-list">
                 {requirements.map((requirement) => (
                     <li
                         key={requirement.id}
-                        className={`password-requirement ${requirement.isValid ? "is-valid" : ""}`}
+                        className={`password-rule ${requirement.isValid ? "is-valid" : ""}`}
                     >
-                        <span className="password-requirement-icon" aria-hidden="true">
+                        <span className="password-rule-icon" aria-hidden="true">
                             {requirement.isValid ? "✓" : "•"}
                         </span>
 

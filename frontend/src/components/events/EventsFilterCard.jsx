@@ -57,7 +57,7 @@ export default function EventsFilterCard({
                         location, date, or sorting.
                     </p>
 
-                    <p className="events-results-count" aria-live="polite" >
+                    <p className="events-filter-results-count" aria-live="polite" >
                         {resultsCount} events found
                     </p>
                 </div>

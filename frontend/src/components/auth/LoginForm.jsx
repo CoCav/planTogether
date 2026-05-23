@@ -41,7 +41,7 @@ export default function LoginForm({
     ============================= */
 
     return (
-        <form onSubmit={onSubmit} className="account-form">
+        <form onSubmit={onSubmit} className="form-layout">
             <div className="form-grid">
 
                 <div className="form-grid-column-full">

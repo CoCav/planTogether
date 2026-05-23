@@ -61,7 +61,7 @@ describe("PasswordRequirements", () => {
     it("renders requirements as an accessible list", () => {
         renderPasswordRequirements();
 
-        expect(screen.getByRole("list")).toHaveClass("password-requirements-list");
+        expect(screen.getByRole("list")).toHaveClass("password-rules-list");
         expect(screen.getAllByRole("listitem")).toHaveLength(4);
     });
 

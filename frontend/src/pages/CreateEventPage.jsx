@@ -84,7 +84,7 @@ export default function CreateEventPage() {
     return (
         <main className="container page-section">
             <header className="page-header">
-                <div className="event-form-page-header">
+                <div className="page-header-content">
                     <h1 id="event-form-title" className="page-title">
                         Create Event
                     </h1>

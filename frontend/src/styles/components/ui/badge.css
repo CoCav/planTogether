@@ -6,15 +6,18 @@
 .badge {
     display: inline-flex;
     align-items: center;
-    padding: 4px 8px;
+
+    padding: var(--space-1) var(--space-2);
+
     border-radius: var(--radius-sm);
+
     font-size: var(--font-size-sm);
     font-weight: 500;
 }
 
-/* ==================================================
+/* =========================================
    ROLE VARIANTS
-================================================== */
+========================================= */
 
 .badge-organizer {
     background: #ede9fe;

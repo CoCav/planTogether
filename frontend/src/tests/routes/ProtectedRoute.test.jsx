@@ -1,4 +1,4 @@
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -19,15 +19,39 @@ import { createAuthenticatedUser } from "../factories/users/userFactory";
    - uses reusable authenticated user factories
 ================================================== */
 
+/* =============================
+   MOCK DATA
+============================= */
+
 const mockUseAuth = vi.fn();
+
+/* =============================
+   MOCKS
+============================= */
 
 vi.mock("../../features/auth/hooks/useAuth", () => ({
     useAuth: () => mockUseAuth()
 }));
 
+
 vi.mock("../../components/ui/PageLoader", () => ({
     default: ({ children }) => <div>{children}</div>
 }));
+
+/* =============================
+   LOCATION STATE HELPERS
+============================= */
+
+function LoginLocationStateProbe() {
+    const location = useLocation();
+
+    return (
+        <div>
+            Login Page - from {location.state?.from?.pathname}
+        </div>
+    );
+}
+
 
 describe("ProtectedRoute", () => {
 
@@ -90,6 +114,35 @@ describe("ProtectedRoute", () => {
         renderProtectedRoute();
 
         expect(screen.getByText("Login Page")).toBeInTheDocument();
+    });
+
+    it("should preserve attempted route location when redirecting to login", () => {
+        mockUseAuth.mockReturnValue({
+            user: null,
+            loading: false
+        });
+
+        render(
+            <MemoryRouter initialEntries={["/events/create"]}>
+                <Routes>
+                    <Route
+                        path="/events/create"
+                        element={
+                            <ProtectedRoute>
+                                <div>Protected Content</div>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/login"
+                        element={<LoginLocationStateProbe />}
+                    />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        expect(screen.getByText("Login Page - from /events/create")).toBeInTheDocument();
     });
 
     /* =============================

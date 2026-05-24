@@ -18,7 +18,15 @@ import { createAuthenticatedUser } from "../factories/users/userFactory";
    - uses reusable authenticated user factories
 ================================================== */
 
+/* =============================
+   MOCK DATA
+============================= */
+
 const mockUseAuth = vi.fn();
+
+/* =============================
+   MOCKS
+============================= */
 
 vi.mock("../../features/auth/hooks/useAuth", () => ({
     useAuth: () => mockUseAuth()
@@ -148,5 +156,31 @@ describe("AppRouter", () => {
         renderWithRouter("/events/1/edit");
 
         expect(screen.getByText("Edit Event Page")).toBeInTheDocument();
+    });
+
+    /* =============================
+       PROTECTED ROUTE REDIRECTS
+    ============================ */
+
+    it("should redirect my events route to login when unauthenticated", () => {
+        mockUseAuth.mockReturnValue({
+            user: null,
+            loading: false
+        });
+
+        renderWithRouter("/my-events");
+
+        expect(screen.getByText("Login Page")).toBeInTheDocument();
+    });
+
+    it("should redirect create event route to login when unauthenticated", () => {
+        mockUseAuth.mockReturnValue({
+            user: null,
+            loading: false
+        });
+
+        renderWithRouter("/events/create");
+
+        expect(screen.getByText("Login Page")).toBeInTheDocument();
     });
 });

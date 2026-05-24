@@ -9,17 +9,18 @@ import PageLoader from "../components/ui/PageLoader";
    Protects authenticated-only routes
 
    Handles:
+   - auth context fallback
    - auth loading state
    - unauthenticated redirects
    - redirect state preservation
 ================================================== */
 
 export default function ProtectedRoute({ children }) {
-    const { user, loading } = useAuth();
+    const auth = useAuth();
 
     const location = useLocation();
 
-    if (loading) {
+    if (!auth || auth.loading) {
         return (
             <PageLoader>
                 Loading...
@@ -27,7 +28,7 @@ export default function ProtectedRoute({ children }) {
         );
     }
 
-    if (!user) {
+    if (!auth.user) {
         return (
             <Navigate
                 to="/login"

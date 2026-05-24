@@ -1,14 +1,14 @@
 /* ==================================================
-   REGISTER PAYLOAD BUILDER
-   Builds multipart register payload data
+   REGISTER FORM DATA BUILDER
+   Builds multipart FormData for user registration
 
    Handles:
-   - register payload creation
+   - register form data creation
    - optional avatar upload payload
 ================================================== */
 
 // Builds FormData payload for register requests
-export const buildRegisterPayloadData = (values = {}) => {
+export const buildRegisterFormData = (values = {}) => {
     const formData = new FormData();
 
     formData.append("name", values.name);

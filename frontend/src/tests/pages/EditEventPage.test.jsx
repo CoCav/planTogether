@@ -59,21 +59,19 @@ vi.mock("../../api/events/eventApi", () => ({
 ============================= */
 
 const mockEventResponse = {
-    data: {
-        event: {
-            id: 42,
-            title: "Original Event",
-            description: "Original description",
-            type: "Meetup",
-            theme: "Tech",
-            mode: "in_person",
-            location: "Montreal",
-            startDateTime: "2026-12-20T10:00:00.000Z",
-            endDateTime: "2026-12-20T12:00:00.000Z",
-            maxParticipants: 20,
-            registrationDeadline: "2026-12-19T12:00:00.000Z",
-            image: "/uploads/events/event-current.png"
-        }
+    event: {
+        id: 42,
+        title: "Original Event",
+        description: "Original description",
+        type: "Meetup",
+        theme: "Tech",
+        mode: "in_person",
+        location: "Montreal",
+        startDateTime: "2026-12-20T10:00:00.000Z",
+        endDateTime: "2026-12-20T12:00:00.000Z",
+        maxParticipants: 20,
+        registrationDeadline: "2026-12-19T12:00:00.000Z",
+        image: "/uploads/events/event-current.png"
     }
 };
 
@@ -147,7 +145,7 @@ describe("EditEventPage", () => {
         })).toHaveAttribute("id", "event-form-title");
 
         expect(screen.getByRole("region", {
-            name: /edit event/i
+            name: /edit event form/i
         })).toHaveClass("event-form-section");
     });
 

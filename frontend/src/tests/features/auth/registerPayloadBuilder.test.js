@@ -1,25 +1,25 @@
 import { describe, expect, it } from "vitest";
 
-import { buildRegisterPayloadData } from "../../../features/auth/registerPayloadBuilder";
+import { buildRegisterFormData } from "../../../features/auth/registerPayloadBuilder";
 
 /* ==================================================
-   REGISTER PAYLOAD BUILDER TESTS
-   Tests register multipart payload creation
+   REGISTER FORM DATA BUILDER TESTS
+   Tests register multipart FormData creation
 
    Handles:
-   - register payload creation
+   - register form data creation
    - optional avatar payload
    - form data value mapping
 ================================================== */
 
-describe("buildRegisterPayloadData", () => {
+describe("buildRegisterFormData", () => {
 
     /* =============================
-       PAYLOAD CREATION
+       FORM DATA CREATION
     ============================= */
 
     it("builds register form data payload", () => {
-        const formData = buildRegisterPayloadData({
+        const formData = buildRegisterFormData({
             name: "John",
             email: "john@example.com",
             password: "Password1"
@@ -41,7 +41,7 @@ describe("buildRegisterPayloadData", () => {
             }
         );
 
-        const formData = buildRegisterPayloadData({
+        const formData = buildRegisterFormData({
             name: "John",
             email: "john@example.com",
             password: "Password1",
@@ -52,7 +52,7 @@ describe("buildRegisterPayloadData", () => {
     });
 
     it("does not include avatar when avatar is missing", () => {
-        const formData = buildRegisterPayloadData({
+        const formData = buildRegisterFormData({
             name: "John",
             email: "john@example.com",
             password: "Password1"
@@ -62,7 +62,7 @@ describe("buildRegisterPayloadData", () => {
     });
 
     it("does not include avatar when avatar is null", () => {
-        const formData = buildRegisterPayloadData({
+        const formData = buildRegisterFormData({
             name: "John",
             email: "john@example.com",
             password: "Password1",

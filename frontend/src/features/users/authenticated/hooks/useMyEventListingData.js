@@ -27,6 +27,18 @@ export default function useMyEventListingData({
 }) {
 
     /* =============================
+       HELPERS
+    ============================= */
+
+    const removeEmptyParams = (params = {}) => {
+        return Object.fromEntries(
+            Object.entries(params).filter(([, value]) => {
+                return String(value ?? "").trim() !== "";
+            })
+        );
+    };
+
+    /* =============================
        STATE
     ============================= */
 
@@ -60,17 +72,23 @@ export default function useMyEventListingData({
             const resolvedOrder = order || viewContent.defaultOrder;
 
             /* =============================
-               EVENT FETCHING
+               API PARAMS
             ============================= */
 
-            const response = await getCurrentUserEvents({
+            const params = {
                 view: customView,
                 ...filters,
                 page: customPage,
                 pageSize,
                 sortBy: resolvedSortBy,
                 order: resolvedOrder
-            });
+            };
+
+            /* =============================
+               EVENT FETCHING
+            ============================= */
+
+            const response = await getCurrentUserEvents(removeEmptyParams(params));
 
             const normalizedPayload = normalizePaginatedMyEvents(response);
 

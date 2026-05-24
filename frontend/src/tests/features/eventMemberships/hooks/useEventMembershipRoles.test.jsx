@@ -109,7 +109,7 @@ describe("useEventMembershipRoles", () => {
 
         expect(fetchAllPaginated).toHaveBeenCalledWith({
             fetchPage: getCurrentUserEvents,
-            normalizePage: expect.any(Function),
+            getItems: expect.any(Function),
             pageSize: 10
         });
 

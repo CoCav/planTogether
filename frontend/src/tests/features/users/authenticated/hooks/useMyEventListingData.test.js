@@ -205,6 +205,48 @@ describe("useMyEventListingData", () => {
         );
     });
 
+    it("removes empty filter params before fetching current user events", async () => {
+        getCurrentUserEvents.mockResolvedValue(createPaginatedMyEventResponse());
+
+        const { result } = renderUseMyEventListingData();
+
+        await act(async () => {
+            await result.current.loadData(
+                createMyEventFilters({
+                    search: "",
+                    type: "",
+                    theme: "",
+                    location: "",
+                    date: "",
+                    startDate: "",
+                    endDate: ""
+                }),
+                1,
+                "created"
+            );
+        });
+
+        expect(getCurrentUserEvents).toHaveBeenCalledWith(
+            expect.not.objectContaining({
+                search: "",
+                type: "",
+                theme: "",
+                location: "",
+                date: "",
+                startDate: "",
+                endDate: ""
+            })
+        );
+
+        expect(getCurrentUserEvents).toHaveBeenCalledWith(
+            expect.objectContaining({
+                view: "created",
+                page: 1,
+                pageSize: 4
+            })
+        );
+    });
+
     it("uses view default sorting when filters do not provide sort values", async () => {
         getCurrentUserEvents.mockResolvedValue(createPaginatedMyEventResponse());
 

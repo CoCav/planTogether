@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/hooks/useAuth";
 import { registerUser } from "../api/auth/authApi";
 
-import { buildRegisterPayloadData } from "../features/auth/registerPayloadBuilder";
+import { buildRegisterFormData } from "../features/auth/registerPayloadBuilder";
 import useRegisterForm from "../features/auth/hooks/useRegisterForm";
 
 import UserForm from "../components/users/UserForm";
@@ -35,10 +35,10 @@ export default function RegisterPage() {
     ============================= */
 
     const handleRegister = async (values) => {
-        const response = await registerUser(buildRegisterPayloadData(values));
+        const response = await registerUser(buildRegisterFormData(values));
 
         // Register endpoint returns an auth token
-        const token = response.data.token;
+        const token = response.token;
 
         // Logs the user in immediately after account creation
         await login(token);

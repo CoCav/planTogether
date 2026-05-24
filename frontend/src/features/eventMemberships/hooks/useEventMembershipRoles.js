@@ -37,7 +37,7 @@ export default function useEventMembershipRoles({
 
         const membershipEvents = await fetchAllPaginated({
             fetchPage: getCurrentUserEvents,
-            normalizePage: getMyEventsWithRole,
+            getItems: getMyEventsWithRole,
             pageSize: 10
         });
 

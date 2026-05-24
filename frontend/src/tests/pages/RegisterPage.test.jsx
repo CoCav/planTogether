@@ -283,9 +283,7 @@ describe("RegisterPage", () => {
         const user = userEvent.setup();
 
         mockRegisterUser.mockResolvedValue({
-            data: {
-                token: "fake-token"
-            }
+            token: "fake-token"
         });
 
         mockLogin.mockResolvedValue();
@@ -321,9 +319,7 @@ describe("RegisterPage", () => {
         });
 
         mockRegisterUser.mockResolvedValue({
-            data: {
-                token: "fake-token"
-            }
+            token: "fake-token"
         });
 
         mockLogin.mockResolvedValue();
@@ -374,9 +370,7 @@ describe("RegisterPage", () => {
         })).toBeDisabled();
 
         resolveRequest({
-            data: {
-                token: "fake-token"
-            }
+            token: "fake-token"
         });
     });
 

@@ -96,7 +96,7 @@ export default function EditEventPage() {
             setError("");
 
             const response = await getEventById(eventId);
-            const event = response.data.event;
+            const event = response.event;
 
             // Populate form with existing event values
             setValues(createEventFormValuesFromEvent(event));

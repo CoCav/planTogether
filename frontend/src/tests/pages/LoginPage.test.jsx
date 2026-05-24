@@ -237,9 +237,7 @@ describe("LoginPage", () => {
         const user = userEvent.setup();
 
         mockLoginUser.mockResolvedValue({
-            data: {
-                token: "fake-token"
-            }
+            token: "fake-token"
         });
 
         mockLogin.mockResolvedValue();
@@ -273,9 +271,7 @@ describe("LoginPage", () => {
         mockLocationState = null;
 
         mockLoginUser.mockResolvedValue({
-            data: {
-                token: "fake-token"
-            }
+            token: "fake-token"
         });
 
         mockLogin.mockResolvedValue();
@@ -319,9 +315,7 @@ describe("LoginPage", () => {
         })).toBeDisabled();
 
         resolveRequest({
-            data: {
-                token: "fake-token"
-            }
+            token: "fake-token"
         });
     });
 

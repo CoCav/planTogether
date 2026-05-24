@@ -46,7 +46,7 @@ export default function LoginPage() {
         const response = await loginUser(values);
 
         // Login endpoint returns an auth token
-        const token = response.data.token;
+        const token = response.token;
 
         // Initializes authenticated session with remember me preference
         await login(token, rememberMe);

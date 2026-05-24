@@ -2,23 +2,24 @@
 
 ![Vitest](https://img.shields.io/badge/Test-Vitest-6E9F18)
 ![RTL](https://img.shields.io/badge/Test-React%20Testing%20Library-E33332)
-![Test Suites](https://img.shields.io/badge/test%20suites-55%20safe--scope%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-357%20safe--scope%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-in%20progress-lightgrey)
+![Test Files](https://img.shields.io/badge/test%20files-121%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-1040%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-97.49%25%20statements%20%7C%2094.17%25%20branches-brightgreen)
 
 This document describes the testing architecture and overall testing strategy used in the PlanTogether frontend.
 
-The project uses **Vitest** and **React Testing Library** to validate frontend business logic, API communication, routing, hooks, utilities, and progressively refactored UI behavior.
+The project uses **Vitest** and **React Testing Library** to validate both isolated frontend business logic and complete user-facing application behavior.
 
 The testing architecture focuses on:
 
 - frontend reliability and long-term maintainability
-- reusable feature, hook, route, API, and utility testing
-- role-based UI behavior and permission logic
-- filtering, pagination, query synchronization, and upload behavior
-- reusable test helpers, factories, mocks, and render utilities
-- safer frontend refactoring during the page and component rewrite
-- progressively restoring full frontend test coverage
+- reusable frontend business logic and query synchronization
+- routing, authentication, and frontend access guard validation
+- filtering, pagination, listing, and state synchronization behavior
+- reusable factories, mocks, helpers, and render utilities
+- API abstraction and normalization consistency
+- isolated and predictable frontend test flows
+- scalable and maintainable frontend testing workflows
 
 ---
 
@@ -26,36 +27,41 @@ The testing architecture focuses on:
 
 The frontend testing architecture is designed to validate:
 
-- authentication behavior and protected access
+- authentication flows and protected access behavior
 - API request helpers and response normalization
-- frontend error handling
-- event filtering and URL query synchronization
-- event and membership business logic
-- role-based permissions and protected frontend actions
-- public and authenticated user logic
-- reusable hooks and stateful frontend behavior
-- shared utilities such as formatting, pagination, and uploaded file URL handling
-- reusable factories and helpers used across the test suite
+- frontend error handling and validation behavior
+- event filtering, pagination, and URL query synchronization
+- event and membership frontend business logic
+- role-based permissions and frontend access guards
+- public and authenticated user behavior
+- reusable hooks and frontend state management
+- page rendering and routing behavior
+- shared frontend utilities and formatting helpers
+- reusable factories, mocks, and render helpers
 
-The current safe-scope frontend test suite includes:
+The current frontend test suite includes:
 
-- **55 passing safe-scope test suites**
-- **357 passing safe-scope tests**
+- **121 passing test files**
+- **1040 passing tests**
+- **97.49% statement coverage**
+- **94.17% branch coverage**
+- **94.48% function coverage**
+- **97.79% line coverage**
 
-> The current safe-scope intentionally excludes legacy page and component tests while the frontend UI refactor is in progress.
-
-Coverage metrics will be refreshed after the page and component refactor is finalized.
+The combination of integration-style frontend testing, isolated business-logic testing, route testing, and reusable utility testing helps ensure frontend reliability, maintainability, UI consistency, and safer long-term frontend refactoring.
 
 ---
 
 ## 🛠️ Testing Stack
+
+The frontend testing architecture relies on the following tools and libraries:
 
 ### Core Testing
 
 - **Vitest** — test runner, mocking system, and assertion framework
 - **React Testing Library** — React rendering and user-facing behavior testing
 
-### Supporting Testing Utilities
+### Browser & Interaction Testing
 
 - **@testing-library/jest-dom** — DOM-specific assertions
 - **@testing-library/user-event** — realistic user interaction helpers
@@ -63,17 +69,31 @@ Coverage metrics will be refreshed after the page and component refactor is fina
 
 ### Frontend Testing Utilities
 
-- Reusable factories for consistent test data generation
-- Reusable render helpers for providers and routing
-- Reusable hook prop helpers
-- Shared mocks for API behavior, uploads, dialogs, and paginated data
+- Reusable factories for consistent frontend test data generation
+- Reusable render helpers for providers, routing, and protected flows
+- Reusable hook testing utilities
+- Shared mocks for API behavior, uploads, dialogs, pagination, and routing
 - Centralized frontend test setup and cleanup utilities
 
-The testing stack is designed to support reliable frontend refactoring, reusable test setup, predictable assertions, and maintainable long-term test coverage.
+### Frontend Testing Scope
+
+The testing stack is designed to support reliable frontend refactoring and long-term maintainability across:
+
+- API modules and normalization helpers
+- reusable frontend business logic
+- routing and protected access behavior
+- query synchronization and listing architecture
+- reusable hooks and state management
+- page-level rendering and interaction behavior
+- reusable UI helpers and upload interactions
+
+This testing architecture helps maintain predictable frontend behavior, reusable test setup, isolated business-logic validation, and long-term frontend maintainability.
 
 ---
 
 ## 📁 Test Folder Structure
+
+The frontend test suite is organized into reusable helpers, factories, page rendering and interaction tests, route tests, API tests, and isolated frontend business-logic tests.
 
 ```txt
 src/tests
@@ -101,25 +121,36 @@ src/tests
 └── utils/
 ```
 
-The frontend testing structure mirrors the frontend architecture and separates reusable test utilities from feature, hook, route, API, context, and utility tests.
+The frontend testing structure mirrors the frontend architecture and separates reusable testing utilities from feature, hook, page, route, API, context, and utility testing layers.
 
-This organization improves readability, maintainability, consistency, and long-term test scalability as the frontend evolves.
+This organization improves:
+
+- readability and long-term maintainability
+- reusable test setup and rendering behavior
+- consistent frontend business-logic validation
+- scalable page and routing test coverage
+- safer frontend refactoring and architecture evolution
 
 ---
 
 ## 🧪 Frontend Testing Layers
 
-The current safe-scope covers the refactored frontend layers:
+The frontend test suite combines isolated business-logic validation, reusable hook testing, route testing, API testing, and page-level interaction testing across the application.
 
-- API modules
-- feature logic
-- hooks
-- context
-- routes
-- shared utilities
-- reusable testing factories and helpers
+Covered testing layers include:
 
-Legacy page and component tests are being updated progressively during the frontend UI refactor.
+- API modules and normalization helpers
+- reusable frontend business logic
+- reusable hooks and state management
+- authentication context behavior
+- protected routes and routing flows
+- page rendering and interaction behavior
+- query synchronization and listing architecture
+- upload interactions and validation behavior
+- shared frontend utilities and helpers
+- reusable testing factories, mocks, and render utilities
+
+The testing architecture separates frontend business logic from rendering concerns whenever possible, helping keep tests predictable, reusable, and easier to maintain during long-term frontend refactoring.
 
 ---
 
@@ -130,15 +161,16 @@ Feature and hook tests validate reusable frontend business logic independently f
 Covered areas include:
 
 - authentication normalization, validation, and token persistence
-- event filtering, empty states, query params, and view configuration
+- event filtering, empty states, URL query synchronization, and view configuration
 - event validation and payload normalization
 - membership validation, permissions, actions, and management behavior
-- authenticated user event filters, views, query params, and normalizers
-- public user filters, views, query params, normalizers, and event data
+- authenticated user event filters, views, URL query synchronization, and normalizers
+- public user filters, views, URL query synchronization, normalizers, and event data
 - shared frontend constants, upload rules, password rules, and listing helpers
+- reusable listing state management and query synchronization
 - pagination hook behavior
 
-These tests help keep business logic predictable, isolated, and easier to refactor.
+These tests help keep frontend business logic predictable, maintainable, reusable, and safer to refactor.
 
 ---
 
@@ -150,9 +182,11 @@ Covered areas include:
 
 - centralized Axios client behavior
 - JWT authorization header injection
+- paginated and normalized payload handling
 - API response unwrapping
-- paginated payload normalization
 - API error normalization
+- frontend access and permission endpoints
+- multipart upload request handling
 - auth API requests
 - event API requests
 - event membership API requests
@@ -162,7 +196,7 @@ API calls are mocked so tests can focus on:
 
 - endpoint paths
 - request payloads
-- query params
+- URL query parameters
 - returned payload shapes
 - error and response handling helpers
 
@@ -178,6 +212,8 @@ Covered areas include:
 - public route rendering
 - protected route rendering
 - unauthenticated redirects
+- redirect restoration behavior
+- protected event edit access flows
 - loading states during auth initialization
 - authenticated context behavior
 
@@ -197,6 +233,8 @@ Covered areas include:
 - uploaded file URL resolution
 - avatar and event image fallbacks
 - paginated fetching and item merging
+- query parameter synchronization helpers
+- event listing normalization helpers
 
 These tests help keep shared helpers stable across components, pages, and feature logic.
 
@@ -206,7 +244,7 @@ These tests help keep shared helpers stable across components, pages, and featur
 
 Factories generate reusable and customizable frontend test data.
 
-They help reduce duplicated mock data and keep tests consistent across the test suite.
+They help reduce duplicated mock data and keep tests consistent across the frontend test suite.
 
 Examples include:
 
@@ -215,11 +253,11 @@ Examples include:
 - auth payload factories
 - event factories
 - event payload factories
-- event view factories
+- event listing and view factories
 - membership factories
 - membership payload factories
 - user event factories
-- query params factories
+- URL query parameter factories
 
 Factories support overrides for scenario-specific test data.
 
@@ -232,17 +270,18 @@ createEvent({
 });
 ```
 
-This approach improves readability, reduces duplication, and makes large frontend refactors safer.
+This approach improves readability, reduces duplication, and helps make large frontend refactors easier to maintain.
 
 ---
 
 ## 🔧 Helpers
 
-Reusable helpers simplify common test setup.
+Reusable helpers simplify common frontend test setup.
 
 Examples include:
 
 - render helpers for providers and routing
+- reusable route and navigation helpers
 - hook prop helpers
 - mock API error helpers
 - mock file helpers
@@ -253,26 +292,30 @@ Examples include:
 
 Helpers keep tests focused on behavior and assertions instead of repetitive setup logic.
 
-They also improve consistency across feature, hook, route, API, and utility tests.
+They also improve consistency across feature, hook, route, API, page, and utility tests.
 
 ---
 
 ## 🔁 Mocking Strategy
 
-The frontend uses targeted mocking depending on the tested layer.
+The frontend uses targeted mocking depending on the tested layer and the level of isolation required.
 
-### API Tests
+### 🔌 API Tests
 
 API tests mock the centralized API client to validate:
 
 - endpoint paths
 - request payloads
-- params
+- URL query parameters
 - response unwrapping
+- normalized payload handling
+- error handling behavior
 
-### Feature and Hook Tests
+### 🧩 Feature & Hook Tests
 
-Feature and hook tests mock external dependencies when needed, such as:
+Feature and hook tests mock external dependencies when necessary to isolate frontend business logic.
+
+Examples include:
 
 - API modules
 - navigation helpers
@@ -280,58 +323,28 @@ Feature and hook tests mock external dependencies when needed, such as:
 - hook callbacks
 - upload files
 - dates and timers
+- browser APIs
 
-### Route and Context Tests
+### 🛣️ Route & Context Tests
 
-Route and context tests mock authentication state, API calls, and router behavior when necessary to isolate frontend access behavior.
+Route and context tests mock authentication state, API calls, and router behavior when necessary to isolate frontend access and navigation behavior.
 
-### Utility Tests
+### 🧰 Utility Tests
 
-Utility tests usually avoid mocking unless testing dates, files, or browser-specific behavior.
+Utility tests usually avoid heavy mocking unless testing:
 
-This strategy keeps tests fast, focused, deterministic, and easier to maintain during the frontend refactor.
+- dates and timers
+- uploaded files
+- browser-specific behavior
+- URL-related utilities
 
----
-
-## 🧪 Safe-Scope Testing Strategy
-
-The project currently uses a safe-scope testing strategy while legacy page and component tests are being refactored.
-
-The current safe-scope command is:
-
-```bash
-npm test -- src/tests/features src/tests/hooks src/tests/context src/tests/routes src/tests/api src/tests/utils
-```
-
-This scope includes the refactored and stabilized layers:
-
-- features
-- hooks
-- context
-- routes
-- API
-- utilities
-
-It intentionally excludes:
-
-- legacy page tests
-- legacy component tests
-
-This allows the refactor to progress safely while keeping the stabilized frontend logic covered by automated tests.
-
-Once pages and components are fully refactored, the full test suite and coverage metrics will be restored.
+This strategy helps keep tests fast, focused, deterministic, and easier to maintain during long-term frontend development and refactoring.
 
 ---
 
 ## ▶️ Running Tests
 
-Run the current safe-scope test suite:
-
-```bash
-npm test -- src/tests/features src/tests/hooks src/tests/context src/tests/routes src/tests/api src/tests/utils
-```
-
-Run all tests:
+Run the full frontend test suite:
 
 ```bash
 npm run test:run
@@ -343,13 +356,13 @@ Run tests with coverage:
 npx vitest run --coverage
 ```
 
-Run tests in watch mode:
+Run tests in watch mode during development:
 
 ```bash
 npm test --watch
 ```
 
-Run a specific test folder:
+Run all tests inside a specific folder:
 
 ```bash
 npm test -- src/tests/features/events
@@ -361,24 +374,26 @@ Run a specific test file:
 npm test -- src/tests/features/events/eventValidation.test.js
 ```
 
+These commands help target specific frontend layers during development, debugging, feature implementation, testing, and refactoring workflows.
+
 ---
 
 ## 🎯 Testing Design Goals
 
 The frontend testing architecture aims to provide:
 
-- reliable frontend business logic
+- reliable frontend business logic validation
 - predictable API abstraction behavior
-- safe role-based and permission-based interactions
+- safe role-based and permission-aware interactions
 - reusable test data and setup utilities
 - reduced duplicated mocks and payloads
-- isolated and deterministic tests
-- clear separation between test layers
-- safer frontend refactoring
-- maintainable long-term test coverage
-- progressive restoration of full page and component test coverage
+- isolated and deterministic test behavior
+- clear separation between testing layers
+- scalable frontend testing architecture
+- maintainable long-term frontend test coverage
+- safer long-term frontend refactoring
 
-These goals support long-term frontend maintainability, safer feature development, and smoother UI refactors.
+These goals support long-term frontend maintainability, safer feature development, predictable UI behavior, and scalable frontend architecture evolution.
 
 ---
 
@@ -386,11 +401,13 @@ These goals support long-term frontend maintainability, safer feature developmen
 
 Potential future testing improvements include:
 
-- restoring full page and component test coverage
-- extending lower-level reusable UI component tests
-- adding end-to-end testing for complete user journeys
-- improving accessibility-oriented UI tests
-- expanding interaction tests for role-based event management flows
-- further refining reusable factories and helpers as duplication appears
-- refreshing full coverage metrics after the UI refactor
-- improving reusable render helpers and test providers
+- additional end-to-end testing for complete user journeys
+- expanded reusable UI component testing
+- improved accessibility-oriented UI testing
+- expanded interaction testing for role-based event management flows
+- further refinement of reusable factories, mocks, and helpers
+- improved reusable render helpers and test providers
+- deeper coverage for complex listing and query synchronization flows
+- continued frontend testing architecture cleanup and simplification
+
+---

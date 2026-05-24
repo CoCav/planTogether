@@ -13,9 +13,9 @@ PlanTogether is a collaborative event management platform where users can create
 
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
 ![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
-![Test Suites](https://img.shields.io/badge/test%20suites-76%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-570%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-98.54%25%20statements%20%7C%2092.85%25%20branches-brightgreen)
+![Test Suites](https://img.shields.io/badge/test%20suites-78%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-589%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-98.56%25%20statements%20%7C%2093.01%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -272,6 +272,7 @@ Additional security features:
 - Create events
 - Retrieve all events
 - Retrieve a single event
+- Retrieve current authenticated user event access and permissions for frontend guards
 - Update events *(organizer or co_organizer)*
 - Delete events *(organizer only)*
 - Event image upload and replacement (`multipart/form-data`)
@@ -335,6 +336,29 @@ The API enforces a strict role hierarchy:
 
 - Join events
 - Leave events
+
+#### Event access endpoint
+
+Authenticated clients can retrieve the current user's role and action access for a specific event:
+
+```http
+GET /api/events/:eventId/me
+```
+
+This endpoint returns:
+
+- the current user's event role
+- the computed event status (`upcoming` or `past`)
+- action access flags such as `canEdit` and `canDelete`
+
+It is primarily used by frontend route guards and permission-based UI rendering.
+
+This allows the frontend to:
+- prevent unauthorized users from accessing edit pages
+- conditionally render edit/delete actions
+- centralize event access checks without duplicating backend authorization logic
+
+The backend remains the source of truth through role authorization middlewares and service-layer business rules.
 
 #### Public access
 
@@ -469,17 +493,17 @@ npm test
 npm run test:coverage
 ```
 
-### 📊 Results
+### 📊 Testing Results
 
-- ✅ 76 passing test suites
-- ✅ 570 passing tests
+- ✅ 78 passing test suites
+- ✅ 589 passing tests
 - ✅ All passing
 
 **Coverage:**
-- 98.54% statements coverage
-- 92.85% branch coverage
-- 99.25% functions coverage
-- 98.69% lines coverage
+- 98.56% statements coverage
+- 93.01% branch coverage
+- 99.27% functions coverage
+- 98.71% lines coverage
 
 ✅ High coverage across authentication, authorization, filtering, uploads, soft-delete flows, ownership transfer, transactions, query optimization, and full API flows.
 
@@ -529,6 +553,7 @@ Integration tests run against the real Express application using Supertest and a
 
 - **Events**
   - CRUD operations
+  - Current user event access retrieval
   - Event image upload and replacement
   - Filtering, sorting, and pagination
   - Creator-based filtering
@@ -571,6 +596,7 @@ These tests validate isolated internal application logic independently of HTTP r
   - Soft-delete lifecycle handling
   - Query optimization helpers
   - Scalable query-builder utilities
+  - Event access resolution
 
 - **Middlewares**
   - Authentication (`authenticateToken`)
@@ -883,6 +909,7 @@ Endpoints for event management and public event access.
 ```http
 GET    /api/events                     (filtering, sorting, and pagination)
 GET    /api/events/:eventId
+GET    /api/events/:eventId/me         (authenticated, current user event access)
 
 POST   /api/events                     (authenticated, supports image upload via multipart/form-data)
 PUT    /api/events/:eventId            (organizer or co_organizer, supports image upload via multipart/form-data)
@@ -937,6 +964,7 @@ GET    /
 - Refined layered role-based authorization and membership protection rules
 - Improved event status handling, past-event restrictions, and membership restoration flows
 - Added Sequelize transactions for critical operations
+- Added current user event access endpoint for frontend route and UI permission guards
 
 ### 🗄️ Database & Performance
 
@@ -952,7 +980,7 @@ GET    /
 - Expanded unit and integration test coverage across all backend layers
 - Added coverage for configuration, constants, security policies, soft-delete flows, ownership transfer, account deletion, and query optimization
 - Added automated GitHub Actions continuous integration testing
-- Reached 76 passing test suites and 570 passing tests
+- Reached 78 passing test suites and 589 passing tests
 - Achieved high coverage across authentication, authorization, filtering, uploads, validation, business rules, and API flows
 
 ---
@@ -971,8 +999,8 @@ GET    /
 | Logging | ✅ Centralized structured logging with Pino |
 | Database | ✅ PostgreSQL + Sequelize with transactions, indexes, and optimized queries |
 | API Consistency | ✅ Standardized JSON responses and centralized error handling |
-| Testing | ✅ 570 tests across 76 test suites |
-| Coverage | ✅ 98.54% statements / 92.85% branches / 99.25% functions |
+| Testing | ✅ 589 tests across 78 test suites |
+| Coverage | ✅ 98.56% statements / 93.01% branches / 99.27% functions |
 | Continuous Integration | ✅ Automated GitHub Actions backend testing |
 | Frontend Integration | 🔗 Connected and functional |
 

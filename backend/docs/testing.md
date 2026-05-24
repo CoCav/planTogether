@@ -2,9 +2,9 @@
 
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
 ![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
-![Test Suites](https://img.shields.io/badge/test%20suites-76%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-570%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-98.54%25%20statements%20%7C%2092.85%25%20branches-brightgreen)
+![Test Suites](https://img.shields.io/badge/test%20suites-78%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-589%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-98.56%25%20statements%20%7C%2093.01%25%20branches-brightgreen)
 
 This document describes the testing architecture and overall testing strategy used in the PlanTogether backend.
 
@@ -29,6 +29,7 @@ The testing architecture is designed to validate:
 - API behavior and response consistency
 - business rules and authorization flows
 - authentication and access control
+- current user event access validation and frontend guard support
 - validation logic and error handling
 - upload handling and security protections
 - service-layer business logic
@@ -40,12 +41,12 @@ The testing architecture is designed to validate:
 
 The current backend test suite includes:
 
-- **76 passing test suites**
-- **570 passing tests**
-- **98.54% statement coverage**
-- **92.85% branch coverage**
-- **99.25% function coverage**
-- **98.69% line coverage**
+- **78 passing test suites**
+- **589 passing tests**
+- **98.56% statement coverage**
+- **93.01% branch coverage**
+- **99.27% function coverage**
+- **98.71% line coverage**
 
 The combination of integration and unit testing helps ensure backend reliability, maintainability, security, query consistency, transaction safety, and safer long-term refactoring across the application.
 
@@ -137,6 +138,7 @@ Covered areas include:
 - user profile, password, and account deletion flows
 - public and authenticated user routes
 - event CRUD operations
+- current user event access endpoint
 - event filtering, sorting, pagination, and query behavior
 - event membership workflows
 - organizer ownership transfer flows
@@ -181,6 +183,7 @@ Covered modules include:
 Unit tests are used to verify:
 
 - service business rules
+- event access resolution logic
 - transaction-related behavior
 - soft-delete lifecycle handling
 - ownership transfer restrictions
@@ -204,6 +207,7 @@ Reusable helpers reduce duplication across the test suite and simplify common te
 Examples include:
 
 - API helpers for authenticated request flows
+- event access request helpers
 - database helpers for initialization, reset, and cleanup
 - reusable pagination, filtering, query-builder, and query testing helpers
 - Express request/response mocks for controller and middleware testing
@@ -452,6 +456,7 @@ The testing architecture aims to provide:
 
 - reliable and consistent API behavior
 - strong business-rule and authorization coverage
+- current user event access validation
 - clear and scalable test organization
 - reusable setup helpers and factories
 - predictable database isolation
@@ -476,6 +481,5 @@ Potential future testing improvements include:
 - expanded edge-case coverage for membership and authorization rules
 - deeper integration coverage for complex transaction rollback scenarios
 - performance-oriented testing for complex query behavior
-- frontend/backend integration testing documentation
 
 ---

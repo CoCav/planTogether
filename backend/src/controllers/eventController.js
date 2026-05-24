@@ -7,6 +7,7 @@ const eventService = require("../services/eventService");
    - event creation
    - event listing with optional filters and pagination
    - single event retrieval
+   - current authenticated user event access
    - event update
    - event deletion
    - API response formatting
@@ -14,6 +15,7 @@ const eventService = require("../services/eventService");
    Notes:
    - business logic is delegated to eventService
    - uploaded event image paths are formatted here
+   - event access responses support frontend UI guards
    - successful responses include success, message and top-level payload fields when needed
 ================================================== */
 
@@ -45,7 +47,6 @@ const createEvent = async (req, res, next) => {
     }
 };
 
-
 /* =============================
    GET EVENTS
 ============================= */
@@ -59,6 +60,25 @@ const getAllEvents = async (req, res, next) => {
             success: true,
             message: "Events retrieved successfully",
             ...events
+        });
+
+    } catch (error) {
+        return next(error);
+    }
+};
+
+// Get current authenticated user's access for one event
+const getCurrentUserEventAccess = async (req, res, next) => {
+    try {
+        const access = await eventService.getCurrentUserEventAccess(
+            req.params.eventId,
+            req.user.userId
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Current user event access retrieved successfully",
+            ...access
         });
 
     } catch (error) {
@@ -111,7 +131,6 @@ const updateEvent = async (req, res, next) => {
     }
 };
 
-
 // Delete an event
 const deleteEvent = async (req, res, next) => {
     try {
@@ -130,6 +149,7 @@ const deleteEvent = async (req, res, next) => {
 module.exports = {
     createEvent,
     getAllEvents,
+    getCurrentUserEventAccess,
     getEvent,
     updateEvent,
     deleteEvent

@@ -4,12 +4,14 @@
    Handles:
    - authenticated event creation
    - event creation with organizer setup
+   - authenticated current user event access requests
 
    Notes:
    - shared across integration tests
    - createAuthenticatedEvent expects auth headers from authHelper
    - createAuthenticatedEvent returns the full Supertest response
    - createEventWithOrganizer returns organizer auth data and created event
+   - getAuthenticatedEventAccess fetches /events/:eventId/me
 ================================================== */
 
 const request = require("supertest");
@@ -17,6 +19,10 @@ const app = require("../../../src/app");
 
 const { createEventPayload } = require("../../factories/eventFactory");
 const { registerAndGetToken } = require("./authHelper");
+
+/* =============================
+   EVENT CREATION
+============================= */
 
 // Create an authenticated event request
 const createAuthenticatedEvent = async (headers, overrides = {}) => {
@@ -50,4 +56,15 @@ const createEventWithOrganizer = async ({
     };
 };
 
-module.exports = { createAuthenticatedEvent, createEventWithOrganizer };
+/* =============================
+   EVENT ACCESS
+============================= */
+
+// Fetch authenticated current user's access for one event
+const getAuthenticatedEventAccess = async (eventId, headers = {}) => {
+    return request(app)
+        .get(`/api/events/${eventId}/me`)
+        .set(headers);
+};
+
+module.exports = { createAuthenticatedEvent, createEventWithOrganizer, getAuthenticatedEventAccess };

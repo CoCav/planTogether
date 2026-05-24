@@ -11,6 +11,8 @@ import EditEventPage from "../../pages/EditEventPage";
 
    Handles:
    - loading state
+   - event access loading
+   - protected edit form access
    - event form hydration
    - accessible form section
    - existing image preview
@@ -30,6 +32,7 @@ import EditEventPage from "../../pages/EditEventPage";
 ============================= */
 
 const mockNavigate = vi.fn();
+const mockGetCurrentUserEventAccess = vi.fn();
 const mockGetEventById = vi.fn();
 const mockUpdateEvent = vi.fn();
 
@@ -50,6 +53,7 @@ vi.mock("react-router-dom", async () => {
 });
 
 vi.mock("../../api/events/eventApi", () => ({
+    getCurrentUserEventAccess: (...args) => mockGetCurrentUserEventAccess(...args),
     getEventById: (...args) => mockGetEventById(...args),
     updateEvent: (...args) => mockUpdateEvent(...args)
 }));
@@ -96,6 +100,14 @@ describe("EditEventPage", () => {
     beforeEach(() => {
         vi.clearAllMocks();
 
+        mockGetCurrentUserEventAccess.mockResolvedValue({
+            success: true,
+            role: "organizer",
+            status: "upcoming",
+            canEdit: true,
+            canDelete: true
+        });
+
         mockGetEventById.mockResolvedValue(mockEventResponse);
         mockUpdateEvent.mockResolvedValue({});
 
@@ -108,13 +120,49 @@ describe("EditEventPage", () => {
     ============================= */
 
     it("renders loading state before event is loaded", () => {
-        mockGetEventById.mockReturnValue(
+        mockGetCurrentUserEventAccess.mockReturnValue(
             new Promise(() => { })
         );
 
         renderPage();
 
         expect(screen.getByText(/loading event form/i)).toBeInTheDocument();
+    });
+
+
+    /* =============================
+       ACCESS GUARD
+    ============================= */
+
+    it("loads current user event access before loading event details", async () => {
+        renderPage();
+
+        await screen.findByDisplayValue("Original Event");
+
+        expect(mockGetCurrentUserEventAccess).toHaveBeenCalledWith("42");
+        expect(mockGetEventById).toHaveBeenCalledWith("42");
+    });
+
+    it("does not render edit form when user cannot edit event", async () => {
+        mockGetCurrentUserEventAccess.mockResolvedValue({
+            success: true,
+            role: "participant",
+            status: "upcoming",
+            canEdit: false,
+            canDelete: false
+        });
+
+        renderPage();
+
+        expect(
+            await screen.findByText(/you do not have permission to edit this event/i)
+        ).toBeInTheDocument();
+
+        expect(screen.queryByRole("region", {
+            name: /edit event form/i
+        })).not.toBeInTheDocument();
+
+        expect(mockGetEventById).not.toHaveBeenCalled();
     });
 
     /* =============================

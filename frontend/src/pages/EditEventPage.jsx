@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { getEventById, updateEvent } from "../api/events/eventApi";
+import { getCurrentUserEventAccess, getEventById, updateEvent } from "../api/events/eventApi";
 
-import { buildEventFormPayloadData } from "../features/events/form/eventPayloadBuilder";
 import { createDefaultEventFormValues } from "../features/events/form/eventFormConfig";
+import { buildEventFormPayloadData } from "../features/events/form/eventPayloadBuilder";
 import { createEventFormValuesFromEvent } from "../features/events/form/eventFormValues";
 import useEventForm from "../features/events/hooks/form/useEventForm";
 
@@ -19,17 +19,29 @@ import PageLoader from "../components/ui/PageLoader";
    Allows authorized users to update an existing event
 
    Handles:
+   - event permission loading
+   - protected event form access
    - event form loading
    - edit event form orchestration
    - update event submission
    - redirect after successful update
    - accessible form section
+
+   Notes:
+   - frontend permissions improve UX only
+   - backend authorization remains the source of truth
 ================================================== */
 
 export default function EditEventPage() {
     const { eventId } = useParams();
     const navigate = useNavigate();
 
+
+    /* =============================
+       ACCESS STATE
+    ============================= */
+
+    const [canAccessEditForm, setCanAccessEditForm] = useState(false);
 
     /* =============================
        LOADING STATE
@@ -95,8 +107,20 @@ export default function EditEventPage() {
             setIsLoading(true);
             setError("");
 
+            const access = await getCurrentUserEventAccess(eventId);
+
+            // Prevent unauthorized users from loading the edit form
+            if (!access.canEdit) {
+                setCanAccessEditForm(false);
+                setError("You do not have permission to edit this event.");
+                return;
+            }
+
             const response = await getEventById(eventId);
             const event = response.event;
+
+            // Allow rendering of the protected edit form
+            setCanAccessEditForm(true);
 
             // Populate form with existing event values
             setValues(createEventFormValuesFromEvent(event));
@@ -167,27 +191,25 @@ export default function EditEventPage() {
 
             {error && <Alert type="danger">{error}</Alert>}
 
-            <section className="event-form-section" aria-label="Edit event form">
-                <Card className="event-form-card">
-                    <EventForm
-                        values={values}
-                        fieldErrors={fieldErrors}
-
-                        submitLabel="Update Event"
-                        isSubmitting={isSubmitting}
-
-                        isOnlineEvent={isOnlineEvent}
-                        showCustomDeadline={showCustomDeadline}
-
-                        onFieldChange={handleFieldChange}
-                        onImageChange={handleImageChange}
-                        onRemoveImage={handleRemoveImage}
-
-                        onSubmit={handleSubmit}
-                        onCancel={handleCancel}
-                    />
-                </Card>
-            </section>
+            {canAccessEditForm && (
+                <section className="event-form-section" aria-label="Edit event form">
+                    <Card className="event-form-card">
+                        <EventForm
+                            values={values}
+                            fieldErrors={fieldErrors}
+                            submitLabel="Update Event"
+                            isSubmitting={isSubmitting}
+                            isOnlineEvent={isOnlineEvent}
+                            showCustomDeadline={showCustomDeadline}
+                            onFieldChange={handleFieldChange}
+                            onImageChange={handleImageChange}
+                            onRemoveImage={handleRemoveImage}
+                            onSubmit={handleSubmit}
+                            onCancel={handleCancel}
+                        />
+                    </Card>
+                </section>
+            )}
         </main>
     );
 }

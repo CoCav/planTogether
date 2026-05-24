@@ -36,7 +36,7 @@ describe("eventMembershipController", () => {
     });
 
     /* =============================
-       JOIN / LEAVE EVENTS
+       JOIN EVENTS
     ============================= */
 
     describe("joinEvent", () => {
@@ -79,6 +79,10 @@ describe("eventMembershipController", () => {
         });
     });
 
+    /* =============================
+       LEAVE EVENTS
+    ============================= */
+
     describe("leaveEvent", () => {
         it("should leave an event", async () => {
             const { req, res, next } = createEventControllerMocks();
@@ -112,9 +116,9 @@ describe("eventMembershipController", () => {
         });
     });
 
-    /* ==================================================
-       MEMBERS / STAFF
-    ================================================== */
+    /* =============================
+       GET EVENT MEMBERS
+    ============================= */
 
     describe("getEventMembers", () => {
         it("should get event members", async () => {
@@ -151,6 +155,10 @@ describe("eventMembershipController", () => {
             expect(next).toHaveBeenCalledWith(error);
         });
     });
+
+    /* =============================
+       GET EVENT STAFF
+    ============================= */
 
     describe("getEventStaff", () => {
         it("should get event staff with organizer and co-organizer roles", async () => {

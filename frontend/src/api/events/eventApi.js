@@ -3,10 +3,11 @@ import { unwrapApiResponse } from "../apiResponse";
 
 /* ==================================================
    EVENT API
-   Handles event CRUD and event listing requests
+   Handles event CRUD, listing and access requests
 
    Routes:
    - GET /events
+   - GET /events/:eventId/me
    - GET /events/:eventId
    - POST /events
    - PUT /events/:eventId
@@ -14,6 +15,7 @@ import { unwrapApiResponse } from "../apiResponse";
 
    Notes:
    - event listing supports filters and pagination through query params
+   - current user event access supports frontend UI guards
    - create/update support FormData when an image is uploaded
    - protected write routes are handled by the backend
 ================================================== */
@@ -25,6 +27,12 @@ import { unwrapApiResponse } from "../apiResponse";
 // Fetches all events with optional filters and pagination
 export const getAllEvents = async (params = {}) => {
     const response = await apiClient.get("/events", { params });
+    return unwrapApiResponse(response);
+};
+
+// Fetches current user's access for one event
+export const getCurrentUserEventAccess = async (eventId) => {
+    const response = await apiClient.get(`/events/${eventId}/me`);
     return unwrapApiResponse(response);
 };
 

@@ -4,11 +4,15 @@ import {
     createEvent,
     deleteEvent,
     getAllEvents,
+    getCurrentUserEventAccess,
     getEventById,
     updateEvent
 } from "../../../api/events/eventApi";
 
 import apiClient from "../../../api/apiClient";
+
+import { EVENT_ROLES } from "../../../features/shared/constants/eventRoles";
+import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
 
 import { createEvent as createEventData } from "../../factories/events/eventFactory";
 
@@ -18,6 +22,7 @@ import { createEvent as createEventData } from "../../factories/events/eventFact
 
    Handles:
    - event listing requests
+   - current user event access requests
    - single event retrieval
    - event creation
    - event updates
@@ -25,6 +30,7 @@ import { createEvent as createEventData } from "../../factories/events/eventFact
 
    Notes:
    - uses reusable event test factories
+   - API helpers return unwrapped backend payloads
 ================================================== */
 
 vi.mock("../../../api/apiClient", () => ({
@@ -64,6 +70,26 @@ describe("eventApi", () => {
         const result = await getAllEvents(params);
 
         expect(apiClient.get).toHaveBeenCalledWith("/events", { params });
+
+        expect(result).toEqual(mockPayload);
+    });
+
+    it("should fetch current user event access by event ID", async () => {
+        const mockPayload = {
+            success: true,
+            role: EVENT_ROLES.ORGANIZER,
+            status: EVENT_STATUS.UPCOMING,
+            canEdit: true,
+            canDelete: true
+        };
+
+        apiClient.get.mockResolvedValue({
+            data: mockPayload
+        });
+
+        const result = await getCurrentUserEventAccess(1);
+
+        expect(apiClient.get).toHaveBeenCalledWith("/events/1/me");
 
         expect(result).toEqual(mockPayload);
     });

@@ -4,6 +4,7 @@
    Tests:
    - event creation
    - event listing
+   - current user event access retrieval
    - single event retrieval
    - event update
    - event deletion
@@ -11,6 +12,7 @@
    Ensures:
    - controller calls service correctly
    - uploaded event images are handled correctly
+   - event access responses are properly formatted
    - HTTP responses are properly formatted
    - errors are forwarded to next()
 ================================================== */
@@ -19,6 +21,9 @@ jest.mock("../../../src/services/eventService");
 
 const eventController = require("../../../src/controllers/eventController");
 const eventService = require("../../../src/services/eventService");
+
+const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
+const { EVENT_STATUS } = require("../../../src/constants/eventStatus");
 
 const { createEventControllerMocks } = require("../../helpers/express/mockExpress");
 
@@ -105,6 +110,10 @@ describe("eventController", () => {
        READ EVENTS
     ============================= */
 
+    /* =============================
+       GET ALL EVENTS
+    ============================= */
+
     describe("getAllEvents", () => {
         it("should get all events", async () => {
             const { req, res, next } = createEventControllerMocks({
@@ -145,6 +154,61 @@ describe("eventController", () => {
         });
     });
 
+    /* =============================
+       CURRENT USER EVENT ACCESS
+    ============================= */
+
+    describe("getCurrentUserEventAccess", () => {
+        it("should get current user event access", async () => {
+            const { req, res, next } = createEventControllerMocks({
+                params: { eventId: "42" },
+                user: { userId: 10 }
+            });
+
+            const access = {
+                role: EVENT_ROLES.ORGANIZER,
+                status: EVENT_STATUS.UPCOMING,
+                canEdit: true,
+                canDelete: true
+            };
+
+            eventService.getCurrentUserEventAccess.mockResolvedValue(access);
+
+            await eventController.getCurrentUserEventAccess(req, res, next);
+
+            expect(eventService.getCurrentUserEventAccess).toHaveBeenCalledWith(
+                "42",
+                10
+            );
+
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: "Current user event access retrieved successfully",
+                ...access
+            });
+        });
+
+        it("should forward current user event access errors to next", async () => {
+            const { req, res, next } = createEventControllerMocks({
+                params: { eventId: "42" },
+                user: { userId: 10 }
+            });
+
+            const error = new Error("Access failed");
+
+            eventService.getCurrentUserEventAccess.mockRejectedValue(error);
+
+            await eventController.getCurrentUserEventAccess(req, res, next);
+
+            expect(next).toHaveBeenCalledWith(error);
+        });
+    });
+
+    /* =============================
+       GET EVENT
+    ============================= */
+
     describe("getEvent", () => {
         it("should get an event by ID", async () => {
             const { req, res, next } = createEventControllerMocks({
@@ -183,7 +247,7 @@ describe("eventController", () => {
     });
 
     /* =============================
-       UPDATE / DELETE EVENT
+       UPDATE EVENT
     ============================= */
 
     describe("updateEvent", () => {
@@ -256,6 +320,10 @@ describe("eventController", () => {
             expect(next).toHaveBeenCalledWith(error);
         });
     });
+
+    /* =============================
+       DELETE EVENT
+    ============================= */
 
     describe("deleteEvent", () => {
         it("should delete an event", async () => {

@@ -9,7 +9,13 @@ const { uploadEventImage } = require("../middlewares/uploadFiles");
 const { EVENT_ROLES } = require("../constants/eventRoles");
 const authorizeEventRole = require("../middlewares/authorization/authorizeEventRole");
 
-const { eventIdParamValidator, createEventValidator, updateEventValidator, getAllEventsValidator } = require("../validators/eventValidator");
+const {
+    eventIdParamValidator,
+    createEventValidator,
+    updateEventValidator,
+    getAllEventsValidator
+} = require("../validators/eventValidator");
+
 const handleValidationErrors = require("../middlewares/errors/handleValidationErrors");
 
 /* ==================================================
@@ -19,13 +25,16 @@ const handleValidationErrors = require("../middlewares/errors/handleValidationEr
    - event creation
    - event listing with optional query filters
    - single event retrieval
+   - current user event access retrieval
    - event update
    - event deletion
 
    Notes:
    - /api/events is the main listing endpoint
+   - /:eventId/me must be declared before /:eventId
+   - /:eventId/me supports frontend access checks
    - update/delete routes require event role authorization
-   - static routes must be declared before /:eventId if added later
+   - write routes require authentication
 ================================================== */
 
 /* =============================
@@ -33,10 +42,26 @@ const handleValidationErrors = require("../middlewares/errors/handleValidationEr
 ============================= */
 
 // Get all events with optional filters and pagination
-router.get("/", getAllEventsValidator, handleValidationErrors, eventController.getAllEvents);
-// Get one event by ID
-router.get("/:eventId", eventIdParamValidator, handleValidationErrors, eventController.getEvent);
+router.get("/",
+    getAllEventsValidator,
+    handleValidationErrors,
+    eventController.getAllEvents
+);
 
+// Get current user's access for one event
+router.get("/:eventId/me",
+    authenticateToken,
+    eventIdParamValidator,
+    handleValidationErrors,
+    eventController.getCurrentUserEventAccess
+);
+
+// Get one event by ID
+router.get("/:eventId",
+    eventIdParamValidator,
+    handleValidationErrors,
+    eventController.getEvent
+);
 
 /* =============================
    WRITE EVENTS

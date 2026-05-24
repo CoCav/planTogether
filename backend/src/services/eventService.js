@@ -5,6 +5,7 @@ const User = require("../models/userModel");
 const EventUserRole = require("../models/relations/eventUserRoleModel");
 
 const { EVENT_ROLES } = require("../constants/eventRoles");
+const { EVENT_STATUS } = require("../constants/eventStatus");
 
 const { throwHttpError } = require("../utils/errors/httpError");
 
@@ -28,7 +29,8 @@ const { getPaginationOptions } = require("../utils/pagination");
    Handles:
    - event creation
    - optimized event listing with optional filters and pagination
-   - single event retrieval with optimized participant counts
+   - single event retrieval and access resolution
+   - current authenticated user event access
    - event update and deletion
    - participant count and status enrichment
 
@@ -141,6 +143,43 @@ const getAllEvents = async (query = {}) => {
     };
 };
 
+// Get current authenticated user's access permissions for one event
+const getCurrentUserEventAccess = async (eventId, userId) => {
+    const event = await Event.findByPk(eventId);
+
+    if (!event) {
+        throwHttpError(404, "Event not found");
+    }
+
+    // Look for the user's active membership on this event
+    const membership = await EventUserRole.findOne({
+        where: {
+            eventId,
+            userId,
+            deletedAt: null
+        }
+    });
+
+    const role = membership?.role || null;
+    const status = getEventStatus(event);
+    const isPast = status === EVENT_STATUS.PAST;
+
+    // Organizers and co-organizers can edit upcoming events
+    const canEdit = !isPast && (
+        role === EVENT_ROLES.ORGANIZER ||
+        role === EVENT_ROLES.CO_ORGANIZER
+    );
+
+    // Only organizers can delete upcoming events
+    const canDelete = !isPast && role === EVENT_ROLES.ORGANIZER;
+
+    return {
+        role,
+        status,
+        canEdit,
+        canDelete
+    };
+};
 
 // Get a single event by ID
 const getEventByID = async (id) => {
@@ -254,6 +293,7 @@ const deleteEventByID = async (id) => {
 module.exports = {
     createEvent,
     getAllEvents,
+    getCurrentUserEventAccess,
     getEventByID,
     updateEventByID,
     deleteEventByID

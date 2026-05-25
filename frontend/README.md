@@ -19,19 +19,19 @@ PlanTogether is a collaborative event management platform where users can create
 
 This is the **frontend application** of PlanTogether, built with **React, Vite, Axios, and React Router**.
 
-It provides a responsive and role-aware interface for interacting with the PlanTogether backend API.
+It provides a responsive, accessibility-focused, and role-aware interface for interacting with the PlanTogether backend API.
 
-The frontend has been heavily refactored around:
+The frontend architecture emphasizes:
 
 - feature-oriented architecture
-- reusable hooks and frontend business logic
+- reusable hooks and reusable frontend patterns
 - centralized API communication
 - protected routing and authentication flows
 - role-aware UI permissions and frontend access guards
-- reusable filtering and query synchronization helpers
+- reusable filtering, listing, and query synchronization helpers
 - comprehensive automated testing with Vitest and React Testing Library
 
-The application focuses on scalability, maintainability, UI consistency, and long-term reliability.
+The frontend focuses on scalable architecture, domain-driven frontend behavior, accessibility-focused UI patterns, maintainable testing workflows, and long-term reliability.
 
 ---
 
@@ -52,7 +52,7 @@ It allows users to:
 - Access personalized dashboards for created and joined events
 - Navigate through protected frontend routes and access guards
 
-The application is designed around reusable frontend logic, centralized state and query synchronization, protected routing, and consistent role-aware user interactions across core features.
+The application is designed around reusable frontend workflows, centralized state and query synchronization, protected routing, and consistent role-aware user interactions across core features.
 
 ---
 
@@ -71,10 +71,10 @@ The frontend is built using modern and efficient tools to ensure performance, sc
 
 - **Feature-oriented architecture** – domain-based frontend organization
 - **Context API** – global authentication state management
-- **Custom hooks** – reusable frontend state and business logic
+- **Custom hooks** – reusable hooks and centralized feature logic
 - **Query synchronization** – reusable URL-driven filtering and pagination behavior
 - **Session Storage / Local Storage** – token persistence and session handling
-- **Shared utilities and configs** – reusable frontend helpers
+- **Shared utilities and configs** – reusable shared frontend utilities
 
 ### UI & User Experience
 
@@ -84,13 +84,13 @@ The frontend is built using modern and efficient tools to ensure performance, sc
 - **Drag-and-drop file uploads** – avatar and event image uploads
 - **FormData-based upload flows** – image upload and API integration
 - **URL-synchronized filtering and pagination** – filters, pages, and active views reflected in the browser URL
-- **Contextual loading and empty states** – clear UI feedback during async loading and empty results
+- **Contextual loading, error, and empty states** – clear UI feedback during async loading and empty results
 
 ### Testing
 
 - **Vitest** – unit and integration testing
 - **React Testing Library** – user interaction and UI behavior testing
-- **Reusable factories and helpers** – maintainable test architecture
+- **Reusable factories, mocks, and render helpers** – maintainable frontend testing architecture
 
 ---
 
@@ -220,7 +220,9 @@ frontend
 
 - **Tests** mirror the frontend architecture with reusable factories, mocks, render helpers, and domain-based test organization.
 
-This architecture helps separate UI rendering, frontend business logic, routing, API communication, styling, and testing concerns into clear frontend domains.
+This architecture separates UI rendering, frontend behavior, routing, API communication, styling, and testing concerns into clear and maintainable frontend domains.
+
+The frontend also emphasizes semantic structure, reusable accessible UI patterns, and consistent accessibility-focused component behavior.
 
 ---
 
@@ -265,8 +267,7 @@ This architecture helps separate UI rendering, frontend business logic, routing,
 Frontend behavior includes:
 
 - Validation aligned with backend business rules
-- Dynamic UI behavior based on event state and permissions
-- Role-aware event actions and frontend access handling
+- Role-aware UI actions and frontend access behavior based on event state and permissions
 - Preventing past start dates
 - Ensuring end dates occur after start dates
 - Validating uploaded image types and sizes
@@ -378,9 +379,10 @@ The UI dynamically adapts based on the user's permissions and authentication sta
 
 - Contextual empty states based on filters and active views
 - Loading states for asynchronous operations
-- Responsive layouts and reusable UI components
-- Consistent UI behavior across pages and features
-- Reusable loading, error, and empty-state patterns
+- Responsive and consistent UI behavior across pages and features
+- Semantic HTML structure and accessibility-focused UI patterns
+- Accessible forms, validation feedback, and ARIA support
+- Keyboard-friendly navigation and interactive behaviors
 
 ---
 
@@ -547,7 +549,7 @@ features/
 
 ### 🧩 Logic Responsibilities
 
-The feature layer centralizes reusable frontend logic such as:
+The feature layer centralizes reusable domain logic such as:
 
 - frontend validation
 - event filtering and query synchronization
@@ -605,9 +607,9 @@ The user layer separates:
 
 ### 🔁 Shared Frontend Utilities
 
-Shared frontend logic includes:
+Shared frontend utilities include:
 
-- reusable hooks
+- reusable cross-feature hooks
 - formatting utilities
 - uploaded file helpers
 - pagination helpers
@@ -715,11 +717,12 @@ npm run test:run
 ```bash
 npx vitest run --coverage
 ```
+
 ### 📊 Testing Results
 
 - ✅ 121 passing test files
 - ✅ 1040 passing tests
-- ✅ All passing
+- ✅ All tests passing
 
 **Coverage:**
 - 97.49% statements coverage
@@ -739,11 +742,14 @@ The frontend test suite covers:
 - event permissions and frontend access guards
 - filtering, pagination, and listing behavior
 - reusable factories, mocks, and render utilities
+- semantic structure and accessibility behavior
+- ARIA attribute validation
+- accessible navigation and interaction flows
 
 ### 🔁 Testing Strategy
 
 - Tests simulate realistic frontend behavior using `React Testing Library`
-- API calls are mocked to isolate frontend logic
+- API calls are mocked to isolate feature behavior
 - Routing behavior is tested through the application router
 - Authentication and protected access flows are validated
 - Critical frontend logic is tested in isolation
@@ -792,29 +798,31 @@ The application will be available at:
 
 ### 🔧 Frontend Features & UX
 
-- Fully refactored page architecture
+- Standardized page architecture across core application flows
 - Shared event listing architecture across public and authenticated pages
 - Centralized query parameter synchronization
 - Role-aware event access guards
-- Improved authentication redirect flows
-- Improved loading and empty-state handling
+- Centralized authentication redirect and route restoration flows
+- Reusable loading, error, and empty-state UI patterns
+- Accessibility-focused UI architecture with semantic HTML and ARIA support
 
 ### 🔌 Frontend Architecture
 
-- Feature-oriented frontend business logic
+- Feature-oriented frontend architecture and reusable business logic
 - Reusable event listing hooks and centralized listing state management
 - Centralized API normalization helpers
-- Improved separation between UI rendering and frontend business logic
-- Improved protected route architecture
+- Clear separation between UI rendering and frontend business logic
+- Centralized protected route and access guard architecture
 
 ### 🧪 Frontend Testing
 
-- Expanded frontend test coverage
+- Comprehensive frontend testing across routing, logic, permissions, and accessibility
 - Protected route and authentication flow testing
 - Page-level integration testing
-- Improved query synchronization testing
-- Improved event access and permission testing
+- Query synchronization and listing architecture testing
+- Role-aware access guard and permission testing
 - Expanded listing architecture and filtering tests
+- Added accessibility-oriented component and interaction testing
 
 ---
 
@@ -822,11 +830,11 @@ The application will be available at:
 
 | Area | Status |
 |---|---|
-| Frontend UI / Pages | ✅ Core pages refactored |
-| Reusable Components | 🚧 Refactor in progress |
-| Frontend Business Logic | ✅ Refactored and tested |
-| Routing & Access Control | ✅ Refactored and tested |
-| API Communication Layer | ✅ Refactored and tested |
+| Frontend UI / Pages | ✅ Standardized, role-aware, and accessibility-focused |
+| Reusable Components | ✅ Standardized, reusable, and accessibility-focused |
+| Frontend Business Logic | ✅ Modular, reusable, and fully tested |
+| Routing & Access Control | ✅ Centralized, role-aware, and fully tested |
+| API Communication Layer | ✅ Centralized Axios architecture and normalized API handling |
 | File Upload System | ✅ Avatar and event image uploads supported |
 | Testing | ✅ 1040 tests across 121 test files |
 | Coverage | ✅ 97.49% statements / 94.17% branches / 94.48% functions |
@@ -840,12 +848,12 @@ The application will be available at:
 
 - Notifications and reminder features
 - Improved mobile responsiveness across devices
-- Accessibility improvements (`ARIA`, semantic structure, keyboard navigation)
+- Continued accessibility improvements and broader keyboard interaction coverage
 - Enhanced UI feedback (toasts, async feedback, contextual states)
 - Expanded role-aware event management interactions
 - Improved dashboard and event management flows
 - Additional reusable UI component extraction
-- Continued frontend styling architecture cleanup
+- Continued frontend styling consistency improvements
 
 ### 🧪 Frontend Testing
 
@@ -854,7 +862,7 @@ Planned testing improvements include:
 - End-to-end testing for complete user journeys
 - Additional reusable UI component coverage
 - Expanded frontend testing documentation
-- Continued testing architecture cleanup
+- Expanded frontend integration and accessibility testing workflows
 - Improved integration coverage for complex listing flows
 
 ---

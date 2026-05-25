@@ -31,17 +31,17 @@ Users can create, join, leave, update, and manage events depending on their role
 - `co_organizer`
 - `participant`
 
-The backend architecture focuses on:
+The backend architecture emphasizes:
 
-- scalable and maintainable service-oriented architecture
+- service-oriented architecture designed for scalability and maintainability
 - layered role-based authorization and permissions
-- centralized validation, security, and error handling
+- centralized validation and security workflows
 - consistent and predictable API responses
 - reusable filtering, formatting, and pagination utilities
 - secure upload and authentication flows
-- transaction-safe critical operations
-- optimized and scalable database query patterns
-- centralized structured logging with Pino
+- transaction-safe workflows for sensitive operations
+- optimized database query strategies
+- structured logging with Pino
 - automated CI testing with GitHub Actions
 - extensive unit and integration test coverage
 
@@ -66,18 +66,17 @@ Clients can:
 
 The backend centralizes validation, authorization, and business logic to ensure:
 
-- secure and predictable API behavior
-- consistent JSON responses
+- secure, predictable, and consistent API behavior
 - strong role-based access control
 - reliable data integrity across operations
 
 Additional backend architecture features include:
 
-- reusable filtering, formatting, and pagination utilities
-- centralized validation and error-handling middleware
-- Sequelize transactions for critical operations
+- scalable query-builder and filtering utilities
+- shared validation and error-handling middleware
+- Sequelize transactions for sensitive workflows
 - centralized security policies for passwords, uploads, and CORS
-- reusable public and authenticated user formatting utilities
+- standardized public and authenticated user formatting helpers
 - optimized database queries and indexing strategies
 - structured logging with Pino
 - automated GitHub Actions CI testing
@@ -116,7 +115,7 @@ The backend is built with scalable and modular technologies focused on performan
 - **MVC architecture** – modular application structure
 - **Service layer architecture** – centralized business logic abstraction
 - **Soft-delete architecture** – membership and account lifecycle preservation
-- **Centralized constants and utilities** – reusable business rules, formatting, filtering, and pagination helpers
+- **Centralized constants and utilities** - reusable business rules, formatting, and query helpers
 - **Query optimization utilities** – grouped participant counts and scalable filtering strategies
 - **Sequelize transactions** – critical operation safety and data consistency
 - **Pino** – structured centralized logging
@@ -233,7 +232,7 @@ The `utils` layer centralizes reusable logic such as:
 
 The `middlewares` layer contains reusable authentication, authorization, validation handling, upload handling, rate limiting, and centralized error-handling components.
 
-The testing architecture mirrors the backend structure and separates reusable helpers, factories, unit tests, and full API integration flows to improve maintainability, readability, and coverage consistency.
+The testing architecture mirrors the backend structure and separates reusable helpers, factories, unit tests, and full API integration flows to improve maintainability, readability, and testing consistency.
 
 This structure promotes scalability, testability, reusable business logic, secure API design, soft-delete lifecycle management, transaction-safe database operations, and long-term maintainability.
 
@@ -241,7 +240,7 @@ This structure promotes scalability, testability, reusable business logic, secur
 
 ## ✨ Features
 
-The API provides a complete set of endpoints for managing users, events, memberships, and permissions through a secure and scalable role-based architecture.
+The API provides a complete set of endpoints for managing users, events, memberships, and permissions through a scalable role-based architecture.
 
 ### 👤 User Management
 
@@ -258,7 +257,7 @@ The API provides a complete set of endpoints for managing users, events, members
 - Centralized validation and error-handling middleware
 - Secure authenticated account deletion with anonymization
 - Soft-delete account lifecycle preservation
-- Consistent JSON API responses
+- Unified JSON responses
 
 Additional security features:
 
@@ -285,7 +284,7 @@ Additional capabilities:
 - Event image paths included in API responses
 - Strong validation and business rule enforcement
 - Upload validation for supported image types, extensions, and file sizes
-- Sequelize transactions for critical operations
+- Sequelize transactions for protected operations
 - Optimized database queries and indexing strategies
 
 Each event automatically assigns the creator as **organizer**.
@@ -445,7 +444,7 @@ Additional features:
 - Consistent filtering behavior across public and authenticated endpoints
 - Optimized participant count queries without N+1 database queries
 - Active participant counting excluding soft-deleted memberships
-- Reusable query-builder utilities for scalable filtering logic
+- Scalable query-builder utilities for filtering logic
 
 #### Examples
 
@@ -497,7 +496,7 @@ npm run test:coverage
 
 - ✅ 78 passing test suites
 - ✅ 589 passing tests
-- ✅ All passing
+- ✅ All tests passing
 
 **Coverage:**
 - 98.56% statements coverage
@@ -945,7 +944,7 @@ GET    /
 
 - Reorganized the backend into dedicated layers for authentication, authorization, error handling, configuration, constants, and reusable utilities
 - Centralized shared business constants (`EVENT_ROLES`, `EVENT_MODES`, `EVENT_STATUS`)
-- Introduced reusable formatting, normalization, pagination, query-builder, and HTTP error utilities
+- Introduced reusable normalization, query-builder, and HTTP error utilities
 - Standardized JSON API response structures across endpoints
 - Added centralized structured logging with Pino
 
@@ -955,7 +954,7 @@ GET    /
 - Centralized password, upload, and CORS security policies
 - Strengthened upload security with MIME type, extension, file size validation, cleanup, and path normalization protections
 - Improved centralized validation and error-handling middleware
-- Added centralized global error handling through `errorHandler`
+- Added global error handling through `errorHandler`
 
 ### 📅 Events & Membership System
 
@@ -963,7 +962,7 @@ GET    /
 - Added soft-delete membership and account deletion lifecycle handling
 - Refined layered role-based authorization and membership protection rules
 - Improved event status handling, past-event restrictions, and membership restoration flows
-- Added Sequelize transactions for critical operations
+- Added Sequelize transactions for transaction-safe workflows
 - Added current user event access endpoint for frontend route and UI permission guards
 
 ### 🗄️ Database & Performance
@@ -976,7 +975,7 @@ GET    /
 
 ### 🧪 Testing
 
-- Refactored the testing architecture for improved maintainability
+- Standardized the testing architecture for improved maintainability
 - Expanded unit and integration test coverage across all backend layers
 - Added coverage for configuration, constants, security policies, soft-delete flows, ownership transfer, account deletion, and query optimization
 - Added automated GitHub Actions continuous integration testing
@@ -989,7 +988,7 @@ GET    /
 
 | Area | Status |
 |---|---|
-| Backend API | ✅ Fully functional |
+| Backend API | ✅ Stable, scalable, and production-oriented |
 | Architecture | ✅ Modular, scalable, and layered |
 | Authentication & Users | ✅ JWT authentication, profile management, password updates, and secure account deletion |
 | Authorization | ✅ Advanced role-based access control and ownership transfer |

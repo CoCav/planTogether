@@ -13,7 +13,7 @@ The project uses **Vitest** and **React Testing Library** to validate both isola
 The testing architecture focuses on:
 
 - frontend reliability and long-term maintainability
-- reusable frontend business logic and query synchronization
+- reusable frontend interaction logic and query synchronization
 - routing, authentication, and frontend access guard validation
 - filtering, pagination, listing, and state synchronization behavior
 - reusable factories, mocks, helpers, and render utilities
@@ -31,13 +31,14 @@ The frontend testing architecture is designed to validate:
 - API request helpers and response normalization
 - frontend error handling and validation behavior
 - event filtering, pagination, and URL query synchronization
-- event and membership frontend business logic
+- event and membership workflows and permissions
 - role-based permissions and frontend access guards
 - public and authenticated user behavior
 - reusable hooks and frontend state management
 - page rendering and routing behavior
 - shared frontend utilities and formatting helpers
 - reusable factories, mocks, and render helpers
+- semantic structure, ARIA validation, and accessible interaction testing
 
 The current frontend test suite includes:
 
@@ -48,7 +49,7 @@ The current frontend test suite includes:
 - **94.48% function coverage**
 - **97.79% line coverage**
 
-The combination of integration-style frontend testing, isolated business-logic testing, route testing, and reusable utility testing helps ensure frontend reliability, maintainability, UI consistency, and safer long-term frontend refactoring.
+The combination of integration-style frontend testing, isolated business-logic testing, route testing, and reusable utility testing helps ensure frontend reliability, UI consistency, predictable behavior, and scalable long-term frontend development.
 
 ---
 
@@ -67,17 +68,18 @@ The frontend testing architecture relies on the following tools and libraries:
 - **@testing-library/user-event** — realistic user interaction helpers
 - **jsdom** — browser-like test environment
 
-### Frontend Testing Utilities
+### Testing Utilities
 
 - Reusable factories for consistent frontend test data generation
 - Reusable render helpers for providers, routing, and protected flows
 - Reusable hook testing utilities
 - Shared mocks for API behavior, uploads, dialogs, pagination, and routing
 - Centralized frontend test setup and cleanup utilities
+- Shared helpers for semantic structure and accessibility-oriented assertions
 
-### Frontend Testing Scope
+### Coverage Scope
 
-The testing stack is designed to support reliable frontend refactoring and long-term maintainability across:
+The testing stack is designed to support reliable frontend evolution and long-term maintainability across:
 
 - API modules and normalization helpers
 - reusable frontend business logic
@@ -85,9 +87,10 @@ The testing stack is designed to support reliable frontend refactoring and long-
 - query synchronization and listing architecture
 - reusable hooks and state management
 - page-level rendering and interaction behavior
-- reusable UI helpers and upload interactions
+- reusable UI interaction patterns, upload behavior, and accessibility patterns
+- semantic structure, ARIA validation, and accessibility-focused interaction behavior
 
-This testing architecture helps maintain predictable frontend behavior, reusable test setup, isolated business-logic validation, and long-term frontend maintainability.
+This testing architecture helps maintain predictable frontend behavior, isolated business-logic validation, reusable testing workflows, and long-term frontend maintainability.
 
 ---
 
@@ -129,7 +132,7 @@ This organization improves:
 - reusable test setup and rendering behavior
 - consistent frontend business-logic validation
 - scalable page and routing test coverage
-- safer frontend refactoring and architecture evolution
+- scalable frontend testing workflows
 
 ---
 
@@ -140,7 +143,7 @@ The frontend test suite combines isolated business-logic validation, reusable ho
 Covered testing layers include:
 
 - API modules and normalization helpers
-- reusable frontend business logic
+- centralized frontend logic
 - reusable hooks and state management
 - authentication context behavior
 - protected routes and routing flows
@@ -149,14 +152,16 @@ Covered testing layers include:
 - upload interactions and validation behavior
 - shared frontend utilities and helpers
 - reusable testing factories, mocks, and render utilities
+- semantic structure and accessibility-oriented testing
+- ARIA attributes and accessible interaction behavior
 
-The testing architecture separates frontend business logic from rendering concerns whenever possible, helping keep tests predictable, reusable, and easier to maintain during long-term frontend refactoring.
+The testing architecture separates frontend business logic from rendering concerns whenever possible, helping keep tests predictable, scalable, and maintainable as the frontend architecture evolves.
 
 ---
 
 ## 🧩 Feature & Hook Testing
 
-Feature and hook tests validate reusable frontend business logic independently from full page rendering.
+Feature and hook tests validate reusable frontend behavior independently from full page rendering.
 
 Covered areas include:
 
@@ -169,8 +174,10 @@ Covered areas include:
 - shared frontend constants, upload rules, password rules, and listing helpers
 - reusable listing state management and query synchronization
 - pagination hook behavior
+- accessible form validation behavior
+- query synchronization and accessible navigation flows
 
-These tests help keep frontend business logic predictable, maintainable, reusable, and safer to refactor.
+These tests help keep frontend business logic predictable, scalable, maintainable, and easier to evolve over time.
 
 ---
 
@@ -232,6 +239,7 @@ Covered areas include:
 - count and text formatting
 - uploaded file URL resolution
 - avatar and event image fallbacks
+- accessible uploaded file and fallback behavior
 - paginated fetching and item merging
 - query parameter synchronization helpers
 - event listing normalization helpers
@@ -270,7 +278,7 @@ createEvent({
 });
 ```
 
-This approach improves readability, reduces duplication, and helps make large frontend refactors easier to maintain.
+This approach improves readability, reduces duplication, and helps make large frontend architecture changes easier to maintain.
 
 ---
 
@@ -338,7 +346,7 @@ Utility tests usually avoid heavy mocking unless testing:
 - browser-specific behavior
 - URL-related utilities
 
-This strategy helps keep tests fast, focused, deterministic, and easier to maintain during long-term frontend development and refactoring.
+This strategy helps keep tests fast, focused, deterministic, and easier to maintain during long-term frontend development and architecture evolution.
 
 ---
 
@@ -374,7 +382,7 @@ Run a specific test file:
 npm test -- src/tests/features/events/eventValidation.test.js
 ```
 
-These commands help target specific frontend layers during development, debugging, feature implementation, testing, and refactoring workflows.
+These commands help target specific frontend layers during development, debugging, feature implementation, testing, and maintenance workflows.
 
 ---
 
@@ -390,8 +398,8 @@ The frontend testing architecture aims to provide:
 - isolated and deterministic test behavior
 - clear separation between testing layers
 - scalable frontend testing architecture
-- maintainable long-term frontend test coverage
-- safer long-term frontend refactoring
+- maintainable long-term frontend testing workflows
+- consistent semantic and accessibility-focused component behavior
 
 These goals support long-term frontend maintainability, safer feature development, predictable UI behavior, and scalable frontend architecture evolution.
 
@@ -403,11 +411,11 @@ Potential future testing improvements include:
 
 - additional end-to-end testing for complete user journeys
 - expanded reusable UI component testing
-- improved accessibility-oriented UI testing
+- expanded accessibility-oriented UI testing
 - expanded interaction testing for role-based event management flows
 - further refinement of reusable factories, mocks, and helpers
 - improved reusable render helpers and test providers
 - deeper coverage for complex listing and query synchronization flows
-- continued frontend testing architecture cleanup and simplification
+- continued frontend testing architecture improvements and standardization
 
 ---

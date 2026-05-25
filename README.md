@@ -31,7 +31,7 @@ The project is composed of:
 - a **Node.js / Express backend API** responsible for authentication, business logic, permissions, filtering, uploads, transactions, logging, validation, and data persistence
 - a **React frontend application** providing a responsive and interactive user experience with protected routes, advanced filtering, query synchronization, and dynamic role-aware UI behavior
 
-Together, they provide a complete end-to-end experience, from secure API workflows and database operations to modern frontend interactions, reusable frontend business logic, and user-focused features.
+Together, they provide a complete end-to-end experience, from secure API workflows and database operations to modern frontend interactions, scalable frontend architecture, and user-focused features.
 
 The application focuses on **clean architecture, scalability, security, API consistency, continuous integration, reusable frontend and backend architecture, and comprehensive automated testing**, helping ensure reliability, maintainability, and predictable behavior across both backend and frontend layers.
 
@@ -49,9 +49,10 @@ The application focuses on **clean architecture, scalability, security, API cons
 - 🔍 **Advanced event filtering and listing architecture** (search, creator, date range, sorting, pagination, synchronized views)
 - 🔗 **URL-synchronized filters, pagination, and active views**
 - 🖼️ **Secure image upload system** with validation, preview, drag-and-drop, replacement cleanup, and upload protection
-- ⚛️ **Modern React frontend** with protected routes, reusable frontend logic, and dynamic role-aware UI behavior
+- ⚛️ **Modern React frontend with protected routes, accessibility-focused** UI patterns, reusable frontend workflows, and role-aware interactions
 - 🛡️ **Centralized validation, security, error handling, and API consistency** across backend and frontend layers
 - ♻️ **Soft-delete lifecycle handling** for memberships and secure account deletion flows
+- ♿ **Accessibility-focused** frontend architecture with semantic HTML and ARIA support
 
 ---
 
@@ -68,13 +69,13 @@ Users can:
 - Interact with events through a role-based system (`organizer`, `co_organizer`, `participant`)
 - Manage their profile and authentication securely
 
-The platform is designed to provide a smooth and intuitive user experience through dynamic role-aware UI behavior, protected frontend flows, centralized backend permission management, transaction-safe backend workflows, and consistent API-driven interactions.
+The platform is designed to provide a smooth and intuitive user experience through contextual and permission-aware frontend interactions, protected frontend flows, centralized backend permission management, transaction-safe backend workflows, and consistent API-driven interactions.
 
 Additional frontend capabilities include:
 
 - URL-synchronized filters, pagination, and active views
-- protected frontend routes and frontend access guards
-- reusable frontend business logic and query synchronization
+- protected frontend routes and role-aware access guards
+- reusable filtering, listing, and query synchronization workflows
 - upload previews and drag-and-drop interactions
 - contextual loading and empty-state behavior
 
@@ -206,7 +207,7 @@ It includes:
 - feature-oriented frontend logic and reusable hooks
 - routing, authentication, and frontend access guards
 - query synchronization and listing architecture
-- API integration and frontend business logic
+- API integration and feature-oriented frontend workflows
 - styling architecture and UI behavior
 - frontend testing overview
 
@@ -351,7 +352,7 @@ planTogether/
 └── README.md
 ```
 
-This structure supports clear separation of concerns across backend and frontend layers while improving scalability, maintainability, testing, reusable architecture patterns, and long-term project organization.
+This structure supports clear separation of concerns across backend and frontend layers while improving scalability, maintainability, testing workflows, reusable architecture patterns, and long-term project organization.
 
 Testing strategies are intentionally separated:
 
@@ -395,7 +396,7 @@ Testing strategies are intentionally separated:
 - Manage personalized event dashboards (created, joined, archived)
 - Membership restoration and soft-delete lifecycle handling
 - Organizer ownership transfer workflows
-- Role-aware membership actions and frontend access behavior
+- Role-aware membership actions and protected event interactions
 
 ### 🔍 Event Search & Filtering
 
@@ -405,7 +406,7 @@ Testing strategies are intentionally separated:
 - Exact date and date range filtering
 - Combined filters with sorting and pagination
 - URL-synchronized filters, pagination, and active views
-- Shared query synchronization and listing state behavior
+- Centralized active views and synchronized listing states
 
 ### 🖼️ Media & Upload Experience
 
@@ -446,8 +447,10 @@ Access control is enforced through:
 - Contextual empty states based on filters and views
 - Loading states for asynchronous operations
 - Config-driven event tabs and active views
-- Responsive UI and reusable component architecture
-- Reusable frontend business logic and query synchronization
+- Responsive UI and standardized component architecture
+- Consistent filtering, listing, and synchronization behavior
+- Semantic HTML structure and accessibility-focused UI behavior
+- Accessible forms, validation feedback, and keyboard-friendly interactions
 
 ---
 
@@ -484,7 +487,7 @@ This architecture supports:
 
 ### ⚛️ Frontend
 
-The frontend uses a component-based and feature-oriented architecture designed for scalability, maintainability, reusable frontend business logic, and predictable UI behavior.
+The frontend uses a component-based and feature-oriented architecture designed for scalability, maintainability, reusable frontend patterns, and predictable UI behavior.
 
 The frontend architecture is organized around:
 
@@ -500,14 +503,13 @@ The frontend architecture is organized around:
 This architecture supports:
 
 - dynamic and responsive UI behavior
-- role-aware frontend rendering and interactions
+- permission-aware frontend rendering and interactions
 - URL-synchronized filters, pagination, and active views
-- reusable frontend validation and normalization logic
+- reusable frontend validation and normalization patterns
 - scalable feature-oriented frontend organization
-- reusable frontend testing utilities and factories
-- protected frontend routes and frontend access guards
-- reusable listing and query synchronization architecture
-- maintainable long-term frontend development
+- reusable testing helpers and factories
+- protected routes and role-aware access guards
+- reusable listing and synchronization architecture
 
 Together, this structure helps maintain consistent frontend behavior, predictable state management, reusable business logic, and scalable long-term frontend development.
 
@@ -564,13 +566,15 @@ npm run test:run
 - Authentication and protected access flows
 - Routing and frontend access guards
 - API layers and normalization helpers
-- Feature-oriented frontend business logic
+- Feature-oriented frontend workflows and interactions
 - Hooks and reusable state management
 - Event filtering, pagination, and query synchronization
 - Event listing architecture and active views
 - Upload interactions and validation behavior
 - Role-aware frontend interactions and permissions
 - Reusable factories, mocks, render helpers, and testing utilities
+- Semantic structure and accessibility-oriented testing
+- ARIA validation and accessible interaction flows
 
 ### 🔁 Test Strategy
 
@@ -661,8 +665,8 @@ These mechanisms help ensure secure data handling, predictable application behav
 - Introduced URL-synchronized filters, pagination, and active views
 - Implemented reusable event listing architecture across public and authenticated pages
 - Added protected frontend routes and frontend access guards
-- Improved feature-oriented frontend architecture and reusable business logic organization
-- Refactored the frontend API layer and normalization helpers
+- Improved feature-oriented frontend architecture and reusable frontend workflows
+- Centralized the frontend API layer and normalization helpers
 - Improved contextual empty states and loading behavior
 - Expanded frontend testing coverage across routes, features, hooks, APIs, and query synchronization flows
 - Added dedicated frontend testing documentation (`frontend/docs/testing.md`)
@@ -694,12 +698,12 @@ These mechanisms help ensure secure data handling, predictable application behav
 | Area | Status |
 |---|---|
 | Backend Architecture | ✅ Modular, scalable & production-oriented |
-| Frontend Architecture | ✅ Feature-oriented and reusable |
+| Frontend Architecture | ✅ Feature-oriented, scalable, and accessibility-focused |
 | Authentication & RBAC | ✅ Complete |
 | Security | ✅ Centralized & robust |
 | Database & Transactions | ✅ Optimized and transaction-safe |
 | Backend API | ✅ Stable and well-tested |
-| Frontend Application | ✅ Stable and fully functional |
+| Frontend Application | ✅ Standardized, role-aware, and accessibility-focused |
 | Backend Testing & CI | ✅ 589 tests across 78 test suites |
 | Frontend Testing & CI | ✅ 1040 tests across 121 test files |
 | Documentation | ✅ Backend and frontend documentation available |
@@ -726,7 +730,7 @@ These mechanisms help ensure secure data handling, predictable application behav
 
 ### ⚛️ Frontend & UX
 
-- Continue reusable UI component extraction and styling cleanup
+- Continue reusable UI component extraction and styling consistency improvements
 - Improve mobile responsiveness and accessibility
 - Enhance UI consistency, animations, and loading transitions
 - Expand reusable frontend hooks and feature abstractions
@@ -760,18 +764,18 @@ Through this project, I strengthened my fullstack development skills and gained 
 - Improving query consistency and optimization for scalable backend behavior
 - Managing soft-delete lifecycle handling and ownership transfer workflows
 - Centralizing validation, security policies, logging, and API response handling
-- Improving maintainability and backend organization through large-scale refactoring
+- Improving maintainability and backend organization through scalable architecture patterns
 
 ### ⚛️ Frontend
 
 - Structuring a modular and feature-oriented React application
 - Managing global state with the Context API
-- Creating reusable frontend business logic with custom hooks
+- Creating reusable frontend patterns with custom hooks
 - Building dynamic and role-aware UI behavior
 - Synchronizing application state with URL parameters (filters, pagination, active views)
-- Designing reusable listing and query synchronization architecture
+- Designing scalable filtering and synchronized state architectures
 - Designing interactive UX patterns (drag-and-drop uploads, previews, empty states)
-- Improving frontend maintainability through reusable and scalable architecture patterns
+- Improving frontend maintainability through reusable and scalable frontend architecture patterns
 
 ### 🧪 Testing & Quality
 

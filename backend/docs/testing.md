@@ -17,8 +17,7 @@ The testing architecture focuses on:
 - security, authorization, and upload testing
 - soft-delete lifecycle and ownership protection testing
 - reusable test helpers, factories, and utilities
-- isolated and predictable automated test flows
-- safer long-term backend refactoring
+- isolated and reliable automated test flows
 
 ---
 
@@ -48,7 +47,7 @@ The current backend test suite includes:
 - **99.27% function coverage**
 - **98.71% line coverage**
 
-The combination of integration and unit testing helps ensure backend reliability, maintainability, security, query consistency, transaction safety, and safer long-term refactoring across the application.
+The combination of integration and unit testing helps ensure backend reliability, maintainability, security, query consistency, transaction safety, and safer long-term backend stability across the application.
 
 ---
 
@@ -72,13 +71,13 @@ The backend testing architecture relies on the following tools and libraries:
 
 ### Testing Utilities
 
-- Reusable factories for consistent test data generation
-- Reusable helpers for API flows, validation, authentication, and database setup
-- Reusable query, formatting, and validation test utilities
+- Factories for consistent test data generation
+- Helpers for API flows, validation, authentication, and database setup
+- Shared query, formatting, and validation test utilities
 - Express request/response mocks for isolated middleware and controller testing
 - Shared mock utilities for dates and isolated behaviors
 
-The testing stack is designed to support reliable integration testing, isolated unit testing, safer refactoring, transaction safety validation, and maintainable long-term backend development.
+The testing stack is designed to support reliable integration testing, isolated unit testing, safer backend evolution, transaction safety validation, and maintainable backend development.
 
 ---
 
@@ -117,7 +116,7 @@ tests
 
 The testing structure mirrors the backend architecture and separates reusable test utilities from isolated test flows.
 
-This organization improves readability, maintainability, scalability, and long-term test consistency as the backend evolves.
+This organization improves readability, maintainability, scalability, and test consistency as the backend evolves.
 
 ---
 
@@ -159,7 +158,7 @@ Integration tests intentionally avoid heavy mocking in order to validate:
 - end-to-end business rules and membership lifecycle protections
 - consistent API responses
 
-This approach provides stronger confidence during refactors and helps ensure stable backend behavior under realistic application conditions.
+This approach provides stronger confidence during backend evolution and helps ensure stable backend behavior under realistic application conditions.
 
 ---
 
@@ -190,13 +189,13 @@ Unit tests are used to verify:
 - validation chains
 - middleware responses
 - utility and query-builder output
-- configuration, logging, and security behavior
+- configuration and security behavior
 - error propagation
 - reusable helper and formatter behavior
 
 Dependencies are mocked when necessary to isolate the module under test and keep unit tests fast, focused, and deterministic.
 
-This testing layer provides rapid feedback during development while helping maintain safer long-term backend refactoring, query optimization consistency, reusable business-rule validation, and predictable internal module behavior.
+This testing layer provides rapid feedback during development while helping maintain query optimization consistency, reusable business-rule validation, and predictable internal module behavior.
 
 ---
 
@@ -209,14 +208,14 @@ Examples include:
 - API helpers for authenticated request flows
 - event access request helpers
 - database helpers for initialization, reset, and cleanup
-- reusable pagination, filtering, query-builder, and query testing helpers
+- shared pagination, filtering, query-builder, and query testing helpers
 - Express request/response mocks for controller and middleware testing
-- shared date mocks for stable and predictable test behavior
+- shared date mocks for stable and reliable test behavior
 - validation helpers for `express-validator` chains
 
 Helpers keep tests focused on assertions and business behavior instead of repetitive setup logic.
 
-They also improve readability, maintainability, consistency, and long-term scalability across the testing architecture.
+They also improve readability, maintainability, consistency, and scalability across the testing architecture.
 
 ---
 
@@ -245,7 +244,7 @@ Factories are especially useful for:
 - filtering and query-related scenarios
 - complex business-rule validation
 
-This approach reduces duplicated test data and improves long-term test maintainability, readability, and scalability.
+This approach reduces duplicated test data and improves test maintainability, readability, and scalability.
 
 ---
 
@@ -270,7 +269,7 @@ The testing environment uses:
 - automated database cleanup helpers
 - isolated PostgreSQL test services in GitHub Actions CI
 
-This approach helps maintain stable automated testing, safer backend refactoring, transaction safety validation, predictable query behavior, and prevents accidental interaction with development data.
+This approach helps maintain stable automated testing, transaction safety validation, predictable query behavior, and prevents accidental interaction with development data.
 
 ---
 
@@ -317,7 +316,7 @@ Examples include:
 - service dependencies
 - shared date utilities
 
-This approach keeps unit tests fast, focused, deterministic, and easier to maintain during long-term backend development, testing, and refactoring workflows.
+This approach keeps unit tests fast, focused, deterministic, and easier to maintain during backend development, testing, and maintenance workflows.
 
 ---
 
@@ -350,7 +349,7 @@ Covered transaction scenarios include:
 
 Transaction testing is especially important for operations involving both database mutations and filesystem changes.
 
-This testing layer helps validate safer backend behavior, upload rollback protection, and transaction-safe write operations during long-term backend development and refactoring.
+This testing layer helps validate safe backend behavior, upload rollback protection, and transaction-safe write operations during backend development and maintenance.
 
 ---
 
@@ -371,7 +370,7 @@ Covered upload behavior includes:
 - upload rollback protection during failed operations
 - upload path normalization and protection
 
-These tests help ensure secure, predictable, and consistent upload behavior across the backend.
+These tests help ensure secure and reliable upload behavior across the backend.
 
 Upload testing is especially important because file handling combines:
 
@@ -446,7 +445,7 @@ Run a specific test file:
 npm test -- tests/unit/validators/authValidator.test.js
 ```
 
-These commands help target specific backend layers during development, debugging, feature implementation, testing, and refactoring workflows.
+These commands help target specific backend layers during development, debugging, feature implementation, testing, and maintenance workflows.
 
 ---
 
@@ -458,16 +457,15 @@ The testing architecture aims to provide:
 - strong business-rule and authorization coverage
 - current user event access validation
 - clear and scalable test organization
-- reusable setup helpers and factories
+- shared setup helpers and factories
 - predictable database isolation
-- confidence during refactors
+- confidence during large-scale backend changes
 - maintainable and readable test files
 - filtering and query behavior consistency
 - query optimization validation
-- transaction-safe and soft-delete lifecycle validation
-- strong coverage across critical backend layers
+- transaction-safe workflow validation
 
-These design goals help support long-term backend maintainability, safer feature development, more reliable production behavior, and easier large-scale backend refactoring.
+These design goals help support long-term backend maintainability, safer feature development, more reliable production behavior, and easier large-scale backend evolution.
 
 ---
 

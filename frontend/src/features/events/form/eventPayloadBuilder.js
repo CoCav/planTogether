@@ -16,7 +16,8 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../shared/constants/eventRegist
    - aligned with backend eventDataBuilder
    - event forms use datetime-local values
    - online events always use null location
-   - empty optional fields are normalized to null and omitted from FormData
+   - create payloads omit null optional fields
+   - update payloads preserve explicit null field clearing
 ================================================== */
 
 /* =============================
@@ -132,7 +133,8 @@ export const buildEventPayload = (data = {}) => ({
    FORM DATA PAYLOADS
 ============================= */
 
-// Builds FormData for event create/update requests with image support
+// Builds FormData for event creation requests
+// Null optional fields are omitted
 export const buildEventFormData = (data = {}) => {
     const payload = buildEventPayload(data);
     const formData = new FormData();
@@ -146,9 +148,31 @@ export const buildEventFormData = (data = {}) => {
     return formData;
 };
 
+// Builds FormData for event update requests
+// Null values are sent as empty strings to clear existing data
+export const buildEventUpdateFormData = (data = {}) => {
+    const payload = buildEventPayload(data);
+    const formData = new FormData();
+
+    Object.entries(payload).forEach(([key, value]) => {
+        if (value === undefined) return;
+
+        formData.append(key, value === null ? "" : value);
+    });
+
+    return formData;
+};
+
 // Builds FormData directly from event form values
 export const buildEventFormPayloadData = (values = {}) => {
     return buildEventFormData(
+        buildEventFormPayload(values)
+    );
+};
+
+// Builds update FormData directly from event form values
+export const buildEventUpdateFormPayloadData = (values = {}) => {
+    return buildEventUpdateFormData(
         buildEventFormPayload(values)
     );
 };

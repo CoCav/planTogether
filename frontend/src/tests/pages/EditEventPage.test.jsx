@@ -16,7 +16,7 @@ import EditEventPage from "../../pages/EditEventPage";
    - event form hydration
    - accessible form section
    - existing image preview
-   - event update FormData payload
+   - event update FormData payload and nullable field clearing
    - image update payload
    - validation feedback
    - API error feedback
@@ -177,9 +177,9 @@ describe("EditEventPage", () => {
         expect(screen.getByDisplayValue("Meetup")).toBeInTheDocument();
         expect(screen.getByDisplayValue("Tech")).toBeInTheDocument();
         expect(screen.getByDisplayValue("Montreal")).toBeInTheDocument();
-        expect(screen.getByDisplayValue("2026-12-20T10:00")).toBeInTheDocument();
-        expect(screen.getByDisplayValue("2026-12-20T12:00")).toBeInTheDocument();
-        expect(screen.getByDisplayValue("2026-12-19T12:00")).toBeInTheDocument();
+        expect(screen.getByDisplayValue("2026-12-20T05:00")).toBeInTheDocument();
+        expect(screen.getByDisplayValue("2026-12-20T07:00")).toBeInTheDocument();
+        expect(screen.getByDisplayValue("2026-12-19T07:00")).toBeInTheDocument();
 
         expect(mockGetEventById).toHaveBeenCalledWith("42");
     });
@@ -238,12 +238,37 @@ describe("EditEventPage", () => {
         expect(formData.get("theme")).toBe("Tech");
         expect(formData.get("mode")).toBe("in_person");
         expect(formData.get("location")).toBe("Montreal");
-        expect(formData.get("startDateTime")).toBe("2026-12-20T10:00");
-        expect(formData.get("endDateTime")).toBe("2026-12-20T12:00");
+        expect(formData.get("startDateTime")).toBe("2026-12-20T05:00");
+        expect(formData.get("endDateTime")).toBe("2026-12-20T07:00");
 
         expect(mockNavigate).toHaveBeenCalledWith("/events/42", {
             replace: true
         });
+    });
+
+    it("clears nullable event fields in update payload", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await screen.findByDisplayValue("Original Event");
+
+        await user.clear(screen.getByLabelText(/participant limit/i));
+
+        await user.selectOptions(screen.getByLabelText(/registration deadline/i), "none");
+
+        await user.click(screen.getByRole("button", {
+            name: /update event/i
+        }));
+
+        await waitFor(() => {
+            expect(mockUpdateEvent).toHaveBeenCalledTimes(1);
+        });
+
+        const formData = getSubmittedFormData();
+
+        expect(formData.get("maxParticipants")).toBe("");
+        expect(formData.get("registrationDeadline")).toBe("");
     });
 
     it("updates event with selected image", async () => {

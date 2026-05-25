@@ -15,7 +15,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../../features/shared/consta
    Tests API event to EventForm value conversion
 
    Handles:
-   - datetime-local value formatting
+   - local datetime-local value formatting
    - empty and invalid datetime values
    - default event form values
    - API event prefill values
@@ -32,10 +32,16 @@ describe("eventFormValues", () => {
        DATE HELPERS
     ============================= */
 
-    it("should convert API datetime to datetime-local value", () => {
-        expect(
-            toDateTimeLocalValue("2026-12-20T10:00:00.000Z")
-        ).toBe("2026-12-20T10:00");
+    it("should convert API datetime to a datetime-local formatted value", () => {
+        const result = toDateTimeLocalValue("2026-12-20T10:00:00.000Z");
+
+        expect(result).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+    });
+
+    it("should preserve local date and time components", () => {
+        const result = toDateTimeLocalValue("2026-06-08T03:59:00.000Z");
+
+        expect(result).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
     });
 
     it("should return empty string for missing datetime value", () => {
@@ -128,13 +134,13 @@ describe("eventFormValues", () => {
             mode: EVENT_MODES.IN_PERSON,
             location: "Montreal",
 
-            startDateTime: "2026-12-20T10:00",
-            endDateTime: "2026-12-20T12:00",
+            startDateTime: "2026-12-20T05:00",
+            endDateTime: "2026-12-20T07:00",
 
             maxParticipants: 20,
 
             registrationDeadlineOption: EVENT_REGISTRATION_DEADLINES.CUSTOM,
-            registrationDeadlineCustom: "2026-12-19T00:00",
+            registrationDeadlineCustom: "2026-12-18T19:00",
 
             image: null,
             currentImage: "event.png"

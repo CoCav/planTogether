@@ -4,6 +4,7 @@
    Tests:
    - event creation validation
    - event update validation
+   - clearable optional update fields
    - event query validation
    - eventId param validation
    - date order validation
@@ -12,6 +13,7 @@
    Ensures:
    - invalid event payloads are rejected early
    - required event fields are enforced
+   - nullable update fields can be cleared
    - event dates, query params and route params are validated
 ================================================== */
 
@@ -162,6 +164,97 @@ describe("eventValidator", () => {
                 ])
             );
         });
+    });
+
+    it("should allow clearing maxParticipants on update", async () => {
+        const req = {
+            params: { eventId: "1" },
+            body: {
+                maxParticipants: ""
+            }
+        };
+
+        const result = await runValidation(updateEventValidator, req);
+
+        expect(result.isEmpty()).toBe(true);
+        expect(req.body.maxParticipants).toBeNull();
+    });
+
+    it("should allow clearing registrationDeadline on update", async () => {
+        const req = {
+            params: { eventId: "1" },
+            body: {
+                registrationDeadline: ""
+            }
+        };
+
+        const result = await runValidation(updateEventValidator, req);
+
+        expect(result.isEmpty()).toBe(true);
+        expect(req.body.registrationDeadline).toBeNull();
+    });
+
+    it("should allow null registrationDeadline on update", async () => {
+        const result = await runValidation(updateEventValidator, {
+            params: { eventId: "1" },
+            body: {
+                registrationDeadline: null
+            }
+        });
+
+        expect(result.isEmpty()).toBe(true);
+    });
+
+    it("should fail when update maxParticipants is invalid", async () => {
+        const result = await runValidation(updateEventValidator, {
+            params: { eventId: "1" },
+            body: {
+                maxParticipants: "abc"
+            }
+        });
+
+        expect(result.array()).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    msg: "Max participants must be a positive integer"
+                })
+            ])
+        );
+    });
+
+    it("should fail when update registrationDeadline is invalid", async () => {
+        const result = await runValidation(updateEventValidator, {
+            params: { eventId: "1" },
+            body: {
+                registrationDeadline: "invalid-date"
+            }
+        });
+
+        expect(result.array()).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    msg: "Registration deadline must be a valid ISO8601 date"
+                })
+            ])
+        );
+    });
+
+    it("should fail when update registrationDeadline is after startDateTime", async () => {
+        const result = await runValidation(updateEventValidator, {
+            params: { eventId: "1" },
+            body: {
+                startDateTime: "2026-12-20T10:00:00.000Z",
+                registrationDeadline: "2026-12-20T11:00:00.000Z"
+            }
+        });
+
+        expect(result.array()).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    msg: "Registration deadline must be before event start date"
+                })
+            ])
+        );
     });
 
     /* =============================

@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getCurrentUserEventAccess, getEventById, updateEvent } from "../api/events/eventApi";
 
 import { createDefaultEventFormValues } from "../features/events/form/eventFormConfig";
-import { buildEventFormPayloadData } from "../features/events/form/eventPayloadBuilder";
+import { buildEventUpdateFormPayloadData } from "../features/events/form/eventPayloadBuilder";
 import { createEventFormValuesFromEvent } from "../features/events/form/eventFormValues";
 import useEventForm from "../features/events/hooks/form/useEventForm";
 
@@ -57,7 +57,7 @@ export default function EditEventPage() {
     const handleUpdateEvent = async (values) => {
         await updateEvent(
             eventId,
-            buildEventFormPayloadData(values)
+            buildEventUpdateFormPayloadData(values)
         );
 
         navigate(`/events/${eventId}`, {

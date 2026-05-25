@@ -14,6 +14,7 @@ const { EVENT_MODES } = require("../constants/eventModes");
    Notes:
    - handleValidationErrors must run after these validators
    - update validators use optional fields
+   - update validators allow clearing nullable optional fields
    - query validators support filtering + pagination
 ================================================== */
 
@@ -165,12 +166,30 @@ const updateEventValidator = [
         }),
 
     body("maxParticipants")
-        .optional()
-        .isInt({ min: 1 }).withMessage("Max participants must be a positive integer"),
+        .optional({ values: "undefined" })
+        .customSanitizer((value) => value === "" ? null : value)
+        .custom((value) => {
+            if (value === null) return true;
+
+            if (!Number.isInteger(Number(value)) || Number(value) < 1) {
+                throw new Error("Max participants must be a positive integer");
+            }
+
+            return true;
+        }),
 
     body("registrationDeadline")
-        .optional()
-        .isISO8601().withMessage("Registration deadline must be a valid ISO8601 date")
+        .optional({ values: "undefined" })
+        .customSanitizer((value) => value === "" ? null : value)
+        .custom((value) => {
+            if (value === null) return true;
+
+            if (Number.isNaN(new Date(value).getTime())) {
+                throw new Error("Registration deadline must be a valid ISO8601 date");
+            }
+
+            return true;
+        })
         .custom((value, { req }) => {
             if (!value || !req.body.startDateTime) return true;
 

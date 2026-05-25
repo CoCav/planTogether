@@ -5,6 +5,8 @@ import {
     buildEventFormPayload,
     buildEventFormPayloadData,
     buildEventPayload,
+    buildEventUpdateFormData,
+    buildEventUpdateFormPayloadData,
     buildRegistrationDeadline
 } from "../../../../features/events/form/eventPayloadBuilder";
 
@@ -29,7 +31,8 @@ import {
    - online location normalization
    - nullable optional fields
    - image field handling
-   - FormData payload creation
+   - create FormData payload creation
+   - update FormData field clearing
 
    Notes:
    - uses reusable event payload factories
@@ -244,6 +247,26 @@ describe("eventPayloadBuilder", () => {
         );
     });
 
+    it("should build update FormData directly from event form values", () => {
+        const formData = buildEventUpdateFormPayloadData({
+            title: "Test Event",
+            description: "A test event",
+            type: "Meetup",
+            theme: "Tech",
+            mode: EVENT_MODES.IN_PERSON,
+            location: "Montreal",
+            startDateTime: "2026-12-20T10:00",
+            endDateTime: "2026-12-20T12:00",
+            maxParticipants: "",
+            registrationDeadlineOption: EVENT_REGISTRATION_DEADLINES.NONE,
+            image: null
+        });
+
+        expect(formData.get("title")).toBe("Test Event");
+        expect(formData.get("maxParticipants")).toBe("");
+        expect(formData.get("registrationDeadline")).toBe("");
+    });
+
     it("should omit null optional values from FormData", () => {
         const formData = buildEventFormData(
             createEventPayloadWithEmptyOptionals({
@@ -255,6 +278,19 @@ describe("eventPayloadBuilder", () => {
         expect(formData.has("location")).toBe(false);
         expect(formData.has("maxParticipants")).toBe(false);
         expect(formData.has("registrationDeadline")).toBe(false);
+    });
+
+    it("should send null optional values as empty strings in update FormData", () => {
+        const formData = buildEventUpdateFormData(
+            createEventPayloadWithEmptyOptionals({
+                mode: EVENT_MODES.ONLINE,
+                location: "Montreal"
+            })
+        );
+
+        expect(formData.get("location")).toBe("");
+        expect(formData.get("maxParticipants")).toBe("");
+        expect(formData.get("registrationDeadline")).toBe("");
     });
 
     it("should skip undefined values in FormData", () => {

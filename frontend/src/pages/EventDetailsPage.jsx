@@ -36,6 +36,7 @@ import PageLoader from "../components/ui/PageLoader";
    - event details, members, and staff loading
    - event availability state
    - membership permissions
+   - ownership transfer orchestration
    - join / leave event actions
    - event deletion
    - staff and participant management
@@ -121,10 +122,14 @@ export default function EventDetailsPage() {
 
     const {
         myRole,
+
         canJoin,
         canLeave,
+
         canEdit,
         canDelete,
+
+        canTransferOwnership,
         canPromote,
         canDemote,
         canRemove
@@ -161,7 +166,12 @@ export default function EventDetailsPage() {
         currentUserRole: myRole
     });
 
-    const { handlePromoteMember, handleDemoteMember, handleRemoveMember } = useMembershipManagement({
+    const {
+        handleTransferOwnership,
+        handlePromoteMember,
+        handleDemoteMember,
+        handleRemoveMember
+    } = useMembershipManagement({
         eventId,
         loadData,
         setMessage,
@@ -260,15 +270,21 @@ export default function EventDetailsPage() {
                         <EventDetailsActions
                             eventId={event.id}
                             isPast={isPast}
+
                             canJoin={canJoin}
                             canLeave={canLeave}
+
                             canEdit={canEdit}
                             canDelete={canDelete}
+
                             showEventFullButton={showEventFullButton}
                             showRegistrationClosedButton={showRegistrationClosedButton}
+
                             showLoginPrompt={showLoginPrompt}
+
                             onJoin={handleJoinEvent}
                             onLeave={handleLeaveEvent}
+
                             onEdit={() => navigate(`/events/${event.id}/edit`)}
                             onDelete={handleDeleteEvent}
                         />
@@ -303,10 +319,15 @@ export default function EventDetailsPage() {
             <section className="event-details-members" aria-label="Event members">
                 <EventStaffSection
                     user={user}
+
                     staff={staff}
                     staffCount={staffCount}
+
+                    canTransferOwnership={canTransferOwnership}
                     canDemote={canDemote}
                     canRemove={canRemove}
+
+                    onTransferOwnership={handleTransferOwnership}
                     onDemote={handleDemoteMember}
                     onRemove={handleRemoveMember}
                 />
@@ -314,10 +335,15 @@ export default function EventDetailsPage() {
                 <EventParticipantsSection
                     user={user}
                     isPast={isPast}
+
                     participants={participants}
                     participantCount={participantCount}
+
+                    canTransferOwnership={canTransferOwnership}
                     canPromote={canPromote}
                     canRemove={canRemove}
+
+                    onTransferOwnership={handleTransferOwnership}
                     onPromote={handlePromoteMember}
                     onRemove={handleRemoveMember}
                 />

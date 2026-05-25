@@ -48,8 +48,6 @@ export const validateEventMemberRoleUpdate = ({ userId, newRole }) => {
 ============================= */
 
 // Validates ownership transfer data
-export const validateOwnershipTransfer = ({
-    targetUserId
-}) => {
+export const validateOwnershipTransfer = ({ targetUserId }) => {
     return validateTargetUserId(targetUserId);
 };

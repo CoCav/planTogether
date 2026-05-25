@@ -303,13 +303,13 @@ describe("useMembershipPermissions", () => {
             staff: createOrganizerStaff()
         });
 
-        expect(result.canTransferOwnershipTo(
+        expect(result.canTransferOwnership(
             createParticipantMember({
                 id: 2
             })
         )).toBe(true);
 
-        expect(result.canTransferOwnershipTo(
+        expect(result.canTransferOwnership(
             createCoOrganizerMember({
                 id: 3
             })
@@ -321,7 +321,7 @@ describe("useMembershipPermissions", () => {
             staff: createOrganizerStaff()
         });
 
-        expect(result.canTransferOwnershipTo(
+        expect(result.canTransferOwnership(
             createParticipantMember({
                 id: 1
             })
@@ -333,7 +333,7 @@ describe("useMembershipPermissions", () => {
             staff: createCoOrganizerStaff()
         });
 
-        expect(result.canTransferOwnershipTo(
+        expect(result.canTransferOwnership(
             createParticipantMember({
                 id: 2
             })
@@ -345,9 +345,22 @@ describe("useMembershipPermissions", () => {
             staff: createOrganizerStaff()
         });
 
-        expect(result.canTransferOwnershipTo({
+        expect(result.canTransferOwnership({
             id: 2,
             role: null
         })).toBe(false);
+    });
+
+    it("should prevent ownership transfer on past events", () => {
+        const result = usePermissions({
+            staff: createOrganizerStaff(),
+            isPast: true
+        });
+
+        expect(result.canTransferOwnership(
+            createParticipantMember({
+                id: 2
+            })
+        )).toBe(false);
     });
 });

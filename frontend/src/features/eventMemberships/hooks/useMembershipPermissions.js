@@ -123,7 +123,7 @@ export default function useMembershipPermissions({
        OWNERSHIP TRANSFER PERMISSIONS
     ============================= */
 
-    const canTransferOwnershipTo = (person) => {
+    const canTransferOwnership = (person) => {
         if (isPast) return false;
 
         if (!isOrganizer) {
@@ -167,7 +167,7 @@ export default function useMembershipPermissions({
         canPromote,
         canDemote,
         canRemove,
-        canTransferOwnershipTo,
+        canTransferOwnership,
 
         showJoinButton
     };

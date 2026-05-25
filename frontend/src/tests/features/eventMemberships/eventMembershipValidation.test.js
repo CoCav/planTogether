@@ -92,18 +92,18 @@ describe("eventMembershipValidation", () => {
     ============================= */
 
     it("should validate ownership transfer data", () => {
-        expect(
-            validateOwnershipTransfer({
-                targetUserId: 2
-            })
-        ).toBe(true);
+        expect(validateOwnershipTransfer({
+            targetUserId: 2
+        })).toBe(true);
+    });
+
+    it("should reject ownership transfer when target user ID is missing", () => {
+        expect(validateOwnershipTransfer({})).toBe(false);
     });
 
     it("should reject ownership transfer with invalid target user ID", () => {
-        expect(
-            validateOwnershipTransfer({
-                targetUserId: 0
-            })
-        ).toBe(false);
+        expect(validateOwnershipTransfer({
+            targetUserId: 0
+        })).toBe(false);
     });
 });

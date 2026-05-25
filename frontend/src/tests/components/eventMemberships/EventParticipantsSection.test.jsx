@@ -17,6 +17,8 @@ import { createAuthenticatedUser } from "../../factories/users/userFactory";
    - active and past empty messages
    - guest header messages
    - accessible guest messaging
+   - ownership transfer action callback
+   - ownership transfer action visibility
    - promote action callback
    - remove action callback
    - authenticated action visibility
@@ -75,12 +77,17 @@ describe("EventParticipantsSection", () => {
     const baseProps = {
         user: createAuthenticatedUser(),
         isPast: false,
+
         participants,
         participantCount: 1,
+
+        canTransferOwnership: vi.fn(() => false),
         canPromote: vi.fn(() => false),
         canRemove: vi.fn(() => false),
+
         onPromote: vi.fn(),
-        onRemove: vi.fn()
+        onRemove: vi.fn(),
+        onTransferOwnership: vi.fn()
     };
 
     /* =============================
@@ -160,6 +167,36 @@ describe("EventParticipantsSection", () => {
        ACTION CALLBACKS
     ============================= */
 
+    it("should call onTransferOwnership when ownership transfer action is allowed", () => {
+        const onTransferOwnership = vi.fn();
+
+        renderEventParticipantsSection({
+            canTransferOwnership: () => true,
+            onTransferOwnership
+        });
+
+        fireEvent.click(screen.getByRole("button", {
+            name: "Transfer ownership"
+        }));
+
+        expect(onTransferOwnership).toHaveBeenCalledWith(2);
+    });
+
+    it("should hide ownership transfer action when ownership transfer is not allowed", () => {
+        renderEventParticipantsSection({
+            canTransferOwnership: () => false,
+            canPromote: () => true
+        });
+
+        expect(screen.queryByRole("button", {
+            name: "Transfer ownership"
+        })).not.toBeInTheDocument();
+
+        expect(screen.getByRole("button", {
+            name: "Promote"
+        })).toBeInTheDocument();
+    });
+
     it("should call onPromote when promote action is allowed", () => {
         const onPromote = vi.fn();
 
@@ -200,12 +237,18 @@ describe("EventParticipantsSection", () => {
         expect(onRemove).toHaveBeenCalledWith(2);
     });
 
+
     it("should hide actions for guest users", () => {
         renderEventParticipantsSection({
             user: null,
+            canTransferOwnership: () => true,
             canPromote: () => true,
             canRemove: () => true
         });
+
+        expect(screen.queryByRole("button", {
+            name: "Transfer ownership"
+        })).not.toBeInTheDocument();
 
         expect(screen.queryByRole("button", {
             name: "Promote"
@@ -214,5 +257,6 @@ describe("EventParticipantsSection", () => {
         expect(screen.queryByRole("button", {
             name: "Remove"
         })).not.toBeInTheDocument();
+
     });
 });

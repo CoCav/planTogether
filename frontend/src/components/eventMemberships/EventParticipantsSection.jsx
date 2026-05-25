@@ -11,6 +11,7 @@ import Card from "../ui/Card";
 
    Handles:
    - participant section copy
+   - ownership transfer action
    - promote action
    - remove action
    - guest / past-event message
@@ -19,11 +20,17 @@ import Card from "../ui/Card";
 
 export default function EventParticipantsSection({
     user,
+
     isPast,
+
     participants,
     participantCount,
+
+    canTransferOwnership,
     canPromote,
     canRemove,
+
+    onTransferOwnership,
     onPromote,
     onRemove
 }) {
@@ -49,6 +56,16 @@ export default function EventParticipantsSection({
                 }
                 renderActions={(person) => (
                     <>
+                        {canTransferOwnership?.(person) && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => onTransferOwnership(person.id)}
+                            >
+                                Transfer ownership
+                            </Button>
+                        )}
+
                         {canPromote(person) && (
                             <Button
                                 type="button"

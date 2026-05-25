@@ -15,6 +15,8 @@ import { createAuthenticatedUser } from "../../factories/users/userFactory";
    - staff section copy
    - accessible staff section copy
    - staff empty message
+   - ownership transfer action callback
+   - ownership transfer action visibility
    - demote action callback
    - remove action callback
    - authenticated action visibility
@@ -69,10 +71,15 @@ describe("EventStaffSection", () => {
 
     const baseProps = {
         user: createAuthenticatedUser(),
+
         staff,
         staffCount: 1,
+
+        canTransferOwnership: vi.fn(() => false),
         canDemote: vi.fn(() => false),
         canRemove: vi.fn(() => false),
+
+        onTransferOwnership: vi.fn(),
         onDemote: vi.fn(),
         onRemove: vi.fn()
     };
@@ -121,6 +128,36 @@ describe("EventStaffSection", () => {
        ACTION CALLBACKS
     ============================= */
 
+    it("should call onTransferOwnership when ownership transfer action is allowed", () => {
+        const onTransferOwnership = vi.fn();
+
+        renderEventStaffSection({
+            canTransferOwnership: () => true,
+            onTransferOwnership
+        });
+
+        fireEvent.click(screen.getByRole("button", {
+            name: "Transfer ownership"
+        }));
+
+        expect(onTransferOwnership).toHaveBeenCalledWith(2);
+    });
+
+    it("should hide ownership transfer action when ownership transfer is not allowed", () => {
+        renderEventStaffSection({
+            canTransferOwnership: () => false,
+            canDemote: () => true
+        });
+
+        expect(screen.queryByRole("button", {
+            name: "Transfer ownership"
+        })).not.toBeInTheDocument();
+
+        expect(screen.getByRole("button", {
+            name: "Demote"
+        })).toBeInTheDocument();
+    });
+
     it("should call onDemote when demote action is allowed", () => {
         const onDemote = vi.fn();
 
@@ -164,9 +201,14 @@ describe("EventStaffSection", () => {
     it("should hide actions for guest users", () => {
         renderEventStaffSection({
             user: null,
+            canTransferOwnership: () => true,
             canDemote: () => true,
             canRemove: () => true
         });
+
+        expect(screen.queryByRole("button", {
+            name: "Transfer ownership"
+        })).not.toBeInTheDocument();
 
         expect(screen.queryByRole("button", {
             name: "Demote"

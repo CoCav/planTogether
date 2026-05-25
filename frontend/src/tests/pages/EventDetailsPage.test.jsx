@@ -12,6 +12,7 @@ import { createEvent } from "../factories/events/eventFactory";
 import { createAuthenticatedUser } from "../factories/users/userFactory";
 import {
     createOrganizerMember,
+    createCoOrganizerMember,
     createParticipantMember
 } from "../factories/eventMemberships/membershipPermissionsFactory";
 
@@ -25,8 +26,8 @@ import {
    - event display data rendering
    - image fallback behavior
    - accessible event image description
+   - membership section and ownership transfer integration
    - event action integration
-   - membership section integration
    - authenticated and guest states
 
    Notes:
@@ -45,6 +46,7 @@ const mockNavigate = vi.fn();
 const mockGetEventById = vi.fn();
 const mockGetEventMembers = vi.fn();
 const mockGetEventStaff = vi.fn();
+const mockTransferEventOwnership = vi.fn();
 const mockDeleteEvent = vi.fn();
 
 let mockAuthState = {
@@ -86,7 +88,8 @@ vi.mock("../../api/events/eventApi", () => ({
 
 vi.mock("../../api/eventMemberships/eventMembershipApi", () => ({
     getEventMembers: (...args) => mockGetEventMembers(...args),
-    getEventStaff: (...args) => mockGetEventStaff(...args)
+    getEventStaff: (...args) => mockGetEventStaff(...args),
+    transferEventOwnership: (...args) => mockTransferEventOwnership(...args)
 }));
 
 vi.mock("../../features/events/eventNormalizer", () => ({
@@ -188,26 +191,60 @@ vi.mock("../../components/events/EventDetailsActions", () => ({
 }));
 
 vi.mock("../../components/eventMemberships/EventStaffSection", () => ({
-    default: ({ staff, staffCount }) => (
+    default: ({
+        staff,
+        staffCount,
+        canTransferOwnership,
+        onTransferOwnership
+    }) => (
         <section data-testid="event-staff-section">
             <span>Staff count: {staffCount}</span>
 
             {staff.map((person) => (
-                <span key={person.id}>{person.name}</span>
+                <div key={person.id}>
+                    <span>{person.name}</span>
+
+                    {canTransferOwnership?.(person) && (
+                        <button
+                            type="button"
+                            onClick={() => onTransferOwnership(person.id)}
+                        >
+                            Transfer ownership to {person.name}
+                        </button>
+                    )}
+                </div>
             ))}
         </section>
     )
 }));
 
 vi.mock("../../components/eventMemberships/EventParticipantsSection", () => ({
-    default: ({ user, isPast, participants, participantCount }) => (
+    default: ({
+        user,
+        isPast,
+        participants,
+        participantCount,
+        canTransferOwnership,
+        onTransferOwnership
+    }) => (
         <section data-testid="event-participants-section">
             <span>Participant count: {participantCount}</span>
             <span>{isPast ? "Past event" : "Active event"}</span>
             <span>{user ? "Authenticated" : "Guest"}</span>
 
             {participants.map((person) => (
-                <span key={person.id}>{person.name}</span>
+                <div key={person.id}>
+                    <span>{person.name}</span>
+
+                    {canTransferOwnership?.(person) && (
+                        <button
+                            type="button"
+                            onClick={() => onTransferOwnership(person.id)}
+                        >
+                            Transfer ownership to {person.name}
+                        </button>
+                    )}
+                </div>
             ))}
         </section>
     )
@@ -410,6 +447,76 @@ describe("EventDetailsPage", () => {
 
         expect(await screen.findByText("John")).toBeInTheDocument();
         expect(screen.getByText("Alice")).toBeInTheDocument();
+    });
+
+    /* =============================
+       MEMBERSHIP SECTIONS
+    ============================= */
+
+    it("should allow organizer to transfer ownership to a co-organizer from staff section", async () => {
+        const user = userEvent.setup();
+
+        setupApi({
+            staff: [
+                createOrganizerMember({
+                    id: 1,
+                    name: "John"
+                }),
+                createCoOrganizerMember({
+                    id: 2,
+                    name: "Alice"
+                })
+            ]
+        });
+
+        vi.spyOn(window, "confirm").mockReturnValue(true);
+        mockTransferEventOwnership.mockResolvedValue({});
+
+        renderPage();
+
+        await user.click(
+            await screen.findByRole("button", {
+                name: "Transfer ownership to Alice"
+            })
+        );
+
+        await waitFor(() => {
+            expect(mockTransferEventOwnership).toHaveBeenCalledWith("1", 2);
+        });
+    });
+
+    it("should allow organizer to transfer ownership to a participant from participants section", async () => {
+        const user = userEvent.setup();
+
+        setupApi({
+            staff: [
+                createOrganizerMember({
+                    id: 1,
+                    name: "John"
+                })
+            ],
+            members: [
+                createParticipantMember({
+                    id: 2,
+                    name: "Alice"
+                })
+            ]
+        });
+
+        vi.spyOn(window, "confirm").mockReturnValue(true);
+        mockTransferEventOwnership.mockResolvedValue({});
+
+        renderPage();
+
+        await user.click(
+            await screen.findByRole("button", {
+                name: "Transfer ownership to Alice"
+            })
+        );
+
+        await waitFor(() => {
+            expect(mockTransferEventOwnership).toHaveBeenCalledWith("1", 2);
+        });
     });
 
     /* =============================
@@ -634,17 +741,13 @@ describe("EventDetailsPage", () => {
 
         expect(await screen.findByText(/^ended$/i)).toBeInTheDocument();
 
-        expect(
-            screen.queryByRole("button", {
-                name: /edit event/i
-            })
-        ).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", {
+            name: /edit event/i
+        })).not.toBeInTheDocument();
 
-        expect(
-            screen.queryByRole("button", {
-                name: /delete event/i
-            })
-        ).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", {
+            name: /delete event/i
+        })).not.toBeInTheDocument();
     });
 
     it("should show full state when event has reached participant limit", async () => {
@@ -664,11 +767,9 @@ describe("EventDetailsPage", () => {
 
         expect(fullButton).toBeDisabled();
 
-        expect(
-            screen.queryByRole("button", {
-                name: /join the event/i
-            })
-        ).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", {
+            name: /join the event/i
+        })).not.toBeInTheDocument();
     });
 
     /* =============================

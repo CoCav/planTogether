@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { createEventFormValuesFromEvent, toDateTimeLocalValue } from "../../../../features/events/form/eventFormValues";
+import {
+    createEventFormValuesFromEvent,
+    resolveRegistrationDeadlineOption,
+    toDateTimeLocalValue
+} from "../../../../features/events/form/eventFormValues";
 
 import { createDefaultEventFormValues } from "../../../../features/events/form/eventFormConfig";
 import { EVENT_MODES } from "../../../../features/shared/constants/eventModes";
@@ -15,7 +19,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../../features/shared/consta
    - empty and invalid datetime values
    - default event form values
    - API event prefill values
-   - registration deadline mapping
+   - registration deadline option resolution
    - existing image mapping
 
    Notes:
@@ -45,6 +49,55 @@ describe("eventFormValues", () => {
     });
 
     /* =============================
+       REGISTRATION DEADLINE HELPERS
+    ============================= */
+
+    it("should resolve no deadline option when registration deadline is missing", () => {
+        expect(
+            resolveRegistrationDeadlineOption({
+                startDateTime: "2026-12-20T10:00:00.000Z",
+                registrationDeadline: null
+            })
+        ).toBe(EVENT_REGISTRATION_DEADLINES.NONE);
+    });
+
+    it("should resolve one day before registration deadline option", () => {
+        expect(
+            resolveRegistrationDeadlineOption({
+                startDateTime: "2026-12-20T10:00:00.000Z",
+                registrationDeadline: "2026-12-19T10:00:00.000Z"
+            })
+        ).toBe(EVENT_REGISTRATION_DEADLINES.DAY_BEFORE);
+    });
+
+    it("should resolve two days before registration deadline option", () => {
+        expect(
+            resolveRegistrationDeadlineOption({
+                startDateTime: "2026-12-20T10:00:00.000Z",
+                registrationDeadline: "2026-12-18T10:00:00.000Z"
+            })
+        ).toBe(EVENT_REGISTRATION_DEADLINES.TWO_DAYS_BEFORE);
+    });
+
+    it("should resolve custom registration deadline option", () => {
+        expect(
+            resolveRegistrationDeadlineOption({
+                startDateTime: "2026-12-20T10:00:00.000Z",
+                registrationDeadline: "2026-12-19T00:00:00.000Z"
+            })
+        ).toBe(EVENT_REGISTRATION_DEADLINES.CUSTOM);
+    });
+
+    it("should resolve custom registration deadline option when dates are invalid", () => {
+        expect(
+            resolveRegistrationDeadlineOption({
+                startDateTime: "invalid-date",
+                registrationDeadline: "2026-12-19T10:00:00.000Z"
+            })
+        ).toBe(EVENT_REGISTRATION_DEADLINES.CUSTOM);
+    });
+
+    /* =============================
        EVENT FORM VALUES
     ============================= */
 
@@ -59,7 +112,7 @@ describe("eventFormValues", () => {
             startDateTime: "2026-12-20T10:00:00.000Z",
             endDateTime: "2026-12-20T12:00:00.000Z",
             maxParticipants: 20,
-            registrationDeadline: "2026-12-19T12:00:00.000Z",
+            registrationDeadline: "2026-12-19T00:00:00.000Z",
             image: "event.png"
         };
 
@@ -81,7 +134,7 @@ describe("eventFormValues", () => {
             maxParticipants: 20,
 
             registrationDeadlineOption: EVENT_REGISTRATION_DEADLINES.CUSTOM,
-            registrationDeadlineCustom: "2026-12-19T12:00",
+            registrationDeadlineCustom: "2026-12-19T00:00",
 
             image: null,
             currentImage: "event.png"
@@ -118,6 +171,28 @@ describe("eventFormValues", () => {
         });
 
         expect(values.registrationDeadlineOption).toBe(EVENT_REGISTRATION_DEADLINES.NONE);
+
+        expect(values.registrationDeadlineCustom).toBe("");
+    });
+
+    it("should use one day before option and clear custom deadline value", () => {
+        const values = createEventFormValuesFromEvent({
+            startDateTime: "2026-12-20T10:00:00.000Z",
+            registrationDeadline: "2026-12-19T10:00:00.000Z"
+        });
+
+        expect(values.registrationDeadlineOption).toBe(EVENT_REGISTRATION_DEADLINES.DAY_BEFORE);
+
+        expect(values.registrationDeadlineCustom).toBe("");
+    });
+
+    it("should use two days before option and clear custom deadline value", () => {
+        const values = createEventFormValuesFromEvent({
+            startDateTime: "2026-12-20T10:00:00.000Z",
+            registrationDeadline: "2026-12-18T10:00:00.000Z"
+        });
+
+        expect(values.registrationDeadlineOption).toBe(EVENT_REGISTRATION_DEADLINES.TWO_DAYS_BEFORE);
 
         expect(values.registrationDeadlineCustom).toBe("");
     });

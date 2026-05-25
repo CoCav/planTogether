@@ -16,7 +16,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../shared/constants/eventRegist
    - aligned with backend eventDataBuilder
    - event forms use datetime-local values
    - online events always use null location
-   - empty optional fields are normalized to null
+   - empty optional fields are normalized to null and omitted from FormData
 ================================================== */
 
 /* =============================
@@ -138,9 +138,9 @@ export const buildEventFormData = (data = {}) => {
     const formData = new FormData();
 
     Object.entries(payload).forEach(([key, value]) => {
-        if (value === undefined) return;
+        if (value === undefined || value === null) return;
 
-        formData.append(key, value === null ? "" : value);
+        formData.append(key, value);
     });
 
     return formData;

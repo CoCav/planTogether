@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { EVENT_MODES } from "../../../shared/constants/eventModes";
+import { EVENT_REGISTRATION_DEADLINES } from "../../../shared/constants/eventRegistrationDeadlines";
 
 import { isOnlineEventForm, shouldShowCustomDeadline } from "../../form/eventFormConfig";
 
@@ -16,6 +17,7 @@ import { validateEventForm } from "../../form/eventValidation";
    - page-level errors
    - submit loading state
    - field changes
+   - dependent field resets
    - image changes
    - shared submit validation flow
    - configurable validation options
@@ -74,6 +76,15 @@ export default function useEventForm({
                     ...prev,
                     mode: value,
                     location: ""
+                };
+            }
+
+            // Clear custom deadline value when switching away from custom deadline
+            if (name === "registrationDeadlineOption" && value !== EVENT_REGISTRATION_DEADLINES.CUSTOM) {
+                return {
+                    ...prev,
+                    registrationDeadlineOption: value,
+                    registrationDeadlineCustom: ""
                 };
             }
 

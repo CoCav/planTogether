@@ -14,6 +14,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../../../features/shared/con
    Handles:
    - initial form state
    - field changes
+   - dependent field resets
    - online mode location reset
    - image changes
    - image removal
@@ -181,6 +182,50 @@ describe("useEventForm", () => {
 
         expect(result.current.formState.values.mode).toBe(EVENT_MODES.ONLINE);
         expect(result.current.formState.values.location).toBe("");
+    });
+
+    it("should clear custom registration deadline when switching to no deadline", () => {
+        const { result } = setupHook({
+            initialValues: createValidValues({
+                registrationDeadlineOption: EVENT_REGISTRATION_DEADLINES.CUSTOM,
+                registrationDeadlineCustom: "2026-12-19T10:00"
+            })
+        });
+
+        act(() => {
+            result.current.formActions.handleFieldChange(
+                createChangeEvent({
+                    name: "registrationDeadlineOption",
+                    value: EVENT_REGISTRATION_DEADLINES.NONE
+                })
+            );
+        });
+
+        expect(result.current.formState.values.registrationDeadlineOption).toBe(EVENT_REGISTRATION_DEADLINES.NONE);
+
+        expect(result.current.formState.values.registrationDeadlineCustom).toBe("");
+    });
+
+    it("should clear custom registration deadline when switching to automatic deadline", () => {
+        const { result } = setupHook({
+            initialValues: createValidValues({
+                registrationDeadlineOption: EVENT_REGISTRATION_DEADLINES.CUSTOM,
+                registrationDeadlineCustom: "2026-12-19T10:00"
+            })
+        });
+
+        act(() => {
+            result.current.formActions.handleFieldChange(
+                createChangeEvent({
+                    name: "registrationDeadlineOption",
+                    value: EVENT_REGISTRATION_DEADLINES.DAY_BEFORE
+                })
+            );
+        });
+
+        expect(result.current.formState.values.registrationDeadlineOption).toBe(EVENT_REGISTRATION_DEADLINES.DAY_BEFORE);
+
+        expect(result.current.formState.values.registrationDeadlineCustom).toBe("");
     });
 
     /* =============================

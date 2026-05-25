@@ -244,7 +244,7 @@ describe("eventPayloadBuilder", () => {
         );
     });
 
-    it("should convert null values to empty strings in FormData", () => {
+    it("should omit null optional values from FormData", () => {
         const formData = buildEventFormData(
             createEventPayloadWithEmptyOptionals({
                 mode: EVENT_MODES.ONLINE,
@@ -252,9 +252,9 @@ describe("eventPayloadBuilder", () => {
             })
         );
 
-        expect(formData.get("location")).toBe("");
-        expect(formData.get("maxParticipants")).toBe("");
-        expect(formData.get("registrationDeadline")).toBe("");
+        expect(formData.has("location")).toBe(false);
+        expect(formData.has("maxParticipants")).toBe(false);
+        expect(formData.has("registrationDeadline")).toBe(false);
     });
 
     it("should skip undefined values in FormData", () => {

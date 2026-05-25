@@ -31,6 +31,7 @@ import "./styles/components/events/event-view-tabs.css";
 import "./styles/components/events/events-filter-card.css";
 import "./styles/components/events/events-toolbar.css";
 
+import "./styles/components/users/delete-account-section.css";
 import "./styles/components/users/password-field.css";
 import "./styles/components/users/password-requirements.css";
 import "./styles/components/users/user-form.css";

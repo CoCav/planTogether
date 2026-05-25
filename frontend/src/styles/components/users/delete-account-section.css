@@ -1,0 +1,45 @@
+/* ==================================================
+   DELETE ACCOUNT SECTION
+   Destructive account deletion area
+================================================== */
+
+/* =========================================
+   DANGER ZONE
+========================================= */
+
+.danger-zone {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+
+    padding: var(--space-4);
+
+    border: 1px solid rgba(220, 38, 38, 0.25);
+    border-radius: var(--radius-md);
+
+    background-color: rgba(220, 38, 38, 0.06);
+}
+
+.danger-zone-content {
+    max-width: 640px;
+}
+
+.danger-zone-content p {
+    margin: 0;
+
+    color: var(--color-text);
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+}
+
+/* ==================================================
+   RESPONSIVE
+================================================== */
+
+@media (max-width: 768px) {
+    .danger-zone {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

@@ -4,9 +4,11 @@ import { useAuth } from "../features/auth/hooks/useAuth";
 
 import useMyProfileForm from "../features/users/authenticated/hooks/form/useMyProfileForm";
 import useMyPasswordForm from "../features/users/authenticated/hooks/form/useMyPasswordForm";
+import useDeleteAccount from "../features/users/authenticated/hooks/useDeleteAccount";
 
 import UserForm from "../components/users/UserForm";
 import UserPasswordForm from "../components/users/UserPasswordForm";
+import DeleteAccountSection from "../components/users/DeleteAccountSection";
 
 import Alert from "../components/ui/Alert";
 import Card from "../components/ui/Card";
@@ -14,18 +16,19 @@ import PageLoader from "../components/ui/PageLoader";
 
 /* ==================================================
    MY PROFILE PAGE
-   Allows authenticated users to manage profile information
-   and update their password
+   Allows authenticated users to manage profile information,
+   update their password, and manage account settings
 
    Handles:
    - profile form orchestration
    - password form orchestration
+   - account deletion orchestration
    - feedback messages
    - accessible profile sections
 ================================================== */
 
 export default function MyProfilePage() {
-    const { user, refreshUser } = useAuth();
+    const { user, refreshUser, logout } = useAuth();
 
     /* =============================
        FEEDBACK STATE
@@ -59,6 +62,16 @@ export default function MyProfilePage() {
         passwordState,
         formActions: passwordFormActions
     } = useMyPasswordForm({
+        setMessage,
+        setError
+    });
+
+    /* =============================
+       DELETE ACCOUNT
+    ============================= */
+
+    const { isDeleting, handleDeleteAccount } = useDeleteAccount({
+        logout,
         setMessage,
         setError
     });
@@ -172,6 +185,15 @@ export default function MyProfilePage() {
                             onTogglePassword={passwordFormActions.handleTogglePassword}
                         />
                     </section>
+                </Card>
+            </div>
+
+            <div className="my-profile-danger-section">
+                <Card>
+                    <DeleteAccountSection
+                        isDeleting={isDeleting}
+                        onDeleteAccount={handleDeleteAccount}
+                    />
                 </Card>
             </div>
         </main>

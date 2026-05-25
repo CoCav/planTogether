@@ -6,6 +6,7 @@ import MyProfilePage from "../../pages/MyProfilePage";
 
 import useMyProfileForm from "../../features/users/authenticated/hooks/form/useMyProfileForm";
 import useMyPasswordForm from "../../features/users/authenticated/hooks/form/useMyPasswordForm";
+import useDeleteAccount from "../../features/users/authenticated/hooks/useDeleteAccount";
 
 /* ==================================================
    MY PROFILE PAGE TESTS
@@ -17,6 +18,7 @@ import useMyPasswordForm from "../../features/users/authenticated/hooks/form/use
    - accessible profile sections
    - profile form integration
    - password form integration
+   - delete account integration
    - hook initialization
 ================================================== */
 
@@ -25,6 +27,11 @@ import useMyPasswordForm from "../../features/users/authenticated/hooks/form/use
 ============================= */
 
 const mockRefreshUser = vi.fn();
+const mockLogout = vi.fn();
+
+let mockProfileHookState;
+let mockPasswordHookState;
+let mockDeleteAccountHookState;
 
 let mockAuthState = {
     user: {
@@ -33,7 +40,8 @@ let mockAuthState = {
         email: "john@test.com",
         avatar: null
     },
-    refreshUser: mockRefreshUser
+    refreshUser: mockRefreshUser,
+    logout: mockLogout
 };
 
 const mockProfileFormActions = {
@@ -49,8 +57,9 @@ const mockPasswordFormActions = {
     handleSubmit: vi.fn()
 };
 
-let mockProfileHookState;
-let mockPasswordHookState;
+const mockDeleteAccountActions = {
+    handleDeleteAccount: vi.fn()
+};
 
 /* =============================
    MOCKS
@@ -66,6 +75,10 @@ vi.mock("../../features/users/authenticated/hooks/form/useMyProfileForm", () => 
 
 vi.mock("../../features/users/authenticated/hooks/form/useMyPasswordForm", () => ({
     default: vi.fn(() => mockPasswordHookState)
+}));
+
+vi.mock("../../features/users/authenticated/hooks/useDeleteAccount", () => ({
+    default: vi.fn(() => mockDeleteAccountHookState)
 }));
 
 vi.mock("../../components/users/UserForm", () => ({
@@ -147,6 +160,22 @@ vi.mock("../../components/users/UserPasswordForm", () => ({
     )
 }));
 
+vi.mock("../../components/users/DeleteAccountSection", () => ({
+    default: ({
+        isDeleting,
+        onDeleteAccount
+    }) => (
+        <section data-testid="delete-account-section">
+            <span>Delete account section</span>
+            <span>Deleting account: {String(isDeleting)}</span>
+
+            <button type="button" onClick={onDeleteAccount}>
+                Delete account action
+            </button>
+        </section>
+    )
+}));
+
 /* =============================
    TEST HELPERS
 ============================= */
@@ -205,6 +234,12 @@ const createPasswordHookState = (overrides = {}) => ({
     }
 });
 
+const createDeleteAccountHookState = (overrides = {}) => ({
+    isDeleting: false,
+    handleDeleteAccount: mockDeleteAccountActions.handleDeleteAccount,
+    ...overrides
+});
+
 const renderPage = () => {
     return render(<MyProfilePage />);
 };
@@ -225,11 +260,13 @@ describe("MyProfilePage", () => {
                 email: "john@test.com",
                 avatar: null
             },
-            refreshUser: mockRefreshUser
+            refreshUser: mockRefreshUser,
+            logout: mockLogout
         };
 
         mockProfileHookState = createProfileHookState();
         mockPasswordHookState = createPasswordHookState();
+        mockDeleteAccountHookState = createDeleteAccountHookState();
     });
 
     /* =============================
@@ -239,7 +276,8 @@ describe("MyProfilePage", () => {
     it("shows loading state when user is not available", () => {
         mockAuthState = {
             user: null,
-            refreshUser: mockRefreshUser
+            refreshUser: mockRefreshUser,
+            logout: mockLogout
         };
 
         renderPage();
@@ -292,6 +330,14 @@ describe("MyProfilePage", () => {
         renderPage();
 
         expect(screen.getByTestId("user-form").closest(".my-profile-grid")).toBeInTheDocument();
+    });
+
+    it("renders delete account section inside danger section layout", () => {
+        renderPage();
+
+        expect(
+            screen.getByTestId("delete-account-section").closest(".my-profile-danger-section")
+        ).toBeInTheDocument();
     });
 
     /* =============================
@@ -415,6 +461,33 @@ describe("MyProfilePage", () => {
     });
 
     /* =============================
+       DELETE ACCOUNT INTEGRATION
+    ============================= */
+
+    it("passes delete account state to DeleteAccountSection", () => {
+        mockDeleteAccountHookState = createDeleteAccountHookState({
+            isDeleting: true
+        });
+
+        renderPage();
+
+        expect(screen.getByTestId("delete-account-section")).toBeInTheDocument();
+        expect(screen.getByText("Deleting account: true")).toBeInTheDocument();
+    });
+
+    it("passes delete account action to DeleteAccountSection", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await user.click(screen.getByRole("button", {
+            name: "Delete account action"
+        }));
+
+        expect(mockDeleteAccountActions.handleDeleteAccount).toHaveBeenCalled();
+    });
+
+    /* =============================
        HOOK INTEGRATION
     ============================= */
 
@@ -433,6 +506,16 @@ describe("MyProfilePage", () => {
         renderPage();
 
         expect(useMyPasswordForm).toHaveBeenCalledWith({
+            setMessage: expect.any(Function),
+            setError: expect.any(Function)
+        });
+    });
+
+    it("initializes delete account hook with auth and feedback handlers", () => {
+        renderPage();
+
+        expect(useDeleteAccount).toHaveBeenCalledWith({
+            logout: mockLogout,
             setMessage: expect.any(Function),
             setError: expect.any(Function)
         });

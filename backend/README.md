@@ -14,8 +14,8 @@ PlanTogether is a collaborative event management platform where users can create
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
 ![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
 ![Test Suites](https://img.shields.io/badge/test%20suites-78%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-589%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-98.56%25%20statements%20%7C%2093.01%25%20branches-brightgreen)
+![Tests](https://img.shields.io/badge/tests-595%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-99.11%25%20statements%20%7C%2093.93%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -284,8 +284,9 @@ Additional capabilities:
 - Event image paths included in API responses
 - Strong validation and business rule enforcement
 - Upload validation for supported image types, extensions, and file sizes
-- Sequelize transactions for protected operations
+- Sequelize transactions for transaction-safe workflows
 - Optimized database queries and indexing strategies
+- Flexible registration deadline system with predefined and custom deadline support
 
 Each event automatically assigns the creator as **organizer**.
 
@@ -495,14 +496,14 @@ npm run test:coverage
 ### 📊 Testing Results
 
 - ✅ 78 passing test suites
-- ✅ 589 passing tests
+- ✅ 595 passing tests
 - ✅ All tests passing
 
 **Coverage:**
-- 98.56% statements coverage
-- 93.01% branch coverage
-- 99.27% functions coverage
-- 98.71% lines coverage
+- 99.11% statements coverage
+- 93.93% branch coverage
+- 100% functions coverage
+- 99.18% lines coverage
 
 ✅ High coverage across authentication, authorization, filtering, uploads, soft-delete flows, ownership transfer, transactions, query optimization, and full API flows.
 
@@ -645,6 +646,7 @@ The API implements multiple security layers to protect sensitive data, enforce s
 - Protected routes require a valid JWT authentication token
 - Password updates require current password verification
 - `authRateLimiter` middleware helps protect authentication endpoints against brute-force attacks
+- Authentication rate limiting is configurable through environment variables
 
 ### 🛡️ Authorization
 
@@ -803,6 +805,9 @@ DB_SSL=false
 
 LOG_LEVEL=info
 
+AUTH_RATE_LIMIT_WINDOW_MS=900000
+AUTH_RATE_LIMIT_MAX=10
+
 NODE_ENV=development
 
 CORS_ORIGIN=http://localhost:5173
@@ -816,10 +821,12 @@ CORS_ORIGIN=http://localhost:5173
 - `DB_LOGGING` → enables Sequelize SQL query logging (`true` or `false`)
 - `DB_SSL` → enables SSL for production or cloud-hosted databases
 - `LOG_LEVEL` → configures the Pino logger level (`info`, `debug`, `error`, etc.)
+- `AUTH_RATE_LIMIT_WINDOW_MS` → authentication rate limit window in milliseconds
+- `AUTH_RATE_LIMIT_MAX` → maximum authentication attempts allowed during the configured window
 - `CORS_ORIGIN` → allowed frontend origins (comma-separated values supported)
 - `UPLOAD_DIR` → configurable upload root directory for avatars and event images
 
-👉 `.env.example` and `.env.test` files are provided as reference configurations.
+`.env.example` and `.env.test` files are provided as reference configurations.
 
 ---
 
@@ -950,7 +957,7 @@ GET    /
 
 ### 🔐 Security & Validation
 
-- Added Helmet security protections and authentication rate limiting
+- Added Helmet security protections and configurable authentication rate limiting
 - Centralized password, upload, and CORS security policies
 - Strengthened upload security with MIME type, extension, file size validation, cleanup, and path normalization protections
 - Improved centralized validation and error-handling middleware
@@ -964,6 +971,7 @@ GET    /
 - Improved event status handling, past-event restrictions, and membership restoration flows
 - Added Sequelize transactions for transaction-safe workflows
 - Added current user event access endpoint for frontend route and UI permission guards
+- Improved registration deadline handling for create and update workflows
 
 ### 🗄️ Database & Performance
 
@@ -979,8 +987,9 @@ GET    /
 - Expanded unit and integration test coverage across all backend layers
 - Added coverage for configuration, constants, security policies, soft-delete flows, ownership transfer, account deletion, and query optimization
 - Added automated GitHub Actions continuous integration testing
-- Reached 78 passing test suites and 589 passing tests
+- Reached 78 passing test suites and 595 passing tests
 - Achieved high coverage across authentication, authorization, filtering, uploads, validation, business rules, and API flows
+- Expanded coverage for registration deadline flows and authentication rate limiting
 
 ---
 
@@ -998,8 +1007,8 @@ GET    /
 | Logging | ✅ Centralized structured logging with Pino |
 | Database | ✅ PostgreSQL + Sequelize with transactions, indexes, and optimized queries |
 | API Consistency | ✅ Standardized JSON responses and centralized error handling |
-| Testing | ✅ 589 tests across 78 test suites |
-| Coverage | ✅ 98.56% statements / 93.01% branches / 99.27% functions |
+| Testing | ✅ 595 tests across 78 test suites |
+| Coverage | ✅ 99.11% statements / 93.93% branches / 100% functions / 99.18% lines |
 | Continuous Integration | ✅ Automated GitHub Actions backend testing |
 | Frontend Integration | 🔗 Connected and functional |
 

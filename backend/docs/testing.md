@@ -3,8 +3,8 @@
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
 ![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
 ![Test Suites](https://img.shields.io/badge/test%20suites-78%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-589%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-98.56%25%20statements%20%7C%2093.01%25%20branches-brightgreen)
+![Tests](https://img.shields.io/badge/tests-595%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-99.11%25%20statements%20%7C%2093.93%25%20branches-brightgreen)
 
 This document describes the testing architecture and overall testing strategy used in the PlanTogether backend.
 
@@ -41,11 +41,11 @@ The testing architecture is designed to validate:
 The current backend test suite includes:
 
 - **78 passing test suites**
-- **589 passing tests**
-- **98.56% statement coverage**
-- **93.01% branch coverage**
-- **99.27% function coverage**
-- **98.71% line coverage**
+- **595 passing tests**
+- **99.11% statement coverage**
+- **93.93% branch coverage**
+- **100% function coverage**
+- **99.18% line coverage**
 
 The combination of integration and unit testing helps ensure backend reliability, maintainability, security, query consistency, transaction safety, and safer long-term backend stability across the application.
 
@@ -392,7 +392,7 @@ Covered validation areas include:
 
 - authentication payloads
 - password policy enforcement
-- event creation and update payloads, including shared event mode validation
+- event creation and update payloads, including event mode and registration deadline validation
 - event membership parameters and role validation
 - ownership transfer validation
 - account deletion protection flows

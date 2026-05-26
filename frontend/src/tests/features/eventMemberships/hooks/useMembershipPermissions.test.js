@@ -24,6 +24,7 @@ import {
    - member management permissions
    - ownership transfer permissions
    - past event restrictions
+   - started event delete restrictions
 
    Notes:
    - uses reusable membership permission factories
@@ -168,6 +169,19 @@ describe("useMembershipPermissions", () => {
         expect(result.canLeave).toBe(false);
         expect(result.canEdit).toBe(true);
         expect(result.canDelete).toBe(true);
+    });
+
+    it("should prevent organizer from deleting started event", () => {
+        const result = usePermissions({
+            staff: createOrganizerStaff(),
+            isStarted: true
+        });
+
+        expect(result.canLeave).toBe(false);
+
+        expect(result.canEdit).toBe(true);
+
+        expect(result.canDelete).toBe(false);
     });
 
     it("should allow co-organizer to edit but not delete", () => {

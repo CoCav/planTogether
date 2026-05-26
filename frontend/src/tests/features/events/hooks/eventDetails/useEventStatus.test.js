@@ -13,6 +13,7 @@ import { createAuthenticatedUser } from "../../../../factories/users/userFactory
 
    Handles:
    - past event detection
+   - started event detection
    - participant limit checks
    - registration deadline checks
    - guest login prompt
@@ -59,6 +60,54 @@ describe("useEventStatus", () => {
         expect(result.isPast).toBe(true);
 
         expect(result.joinDisabledReason).toBe("Event ended");
+    });
+
+    it("should detect started events", () => {
+        const result = useEventStatus({
+            user,
+            event: createEvent({
+                ...baseEvent,
+                startDateTime: "2026-04-24T11:59:00.000Z"
+            })
+        });
+
+        expect(result.isStarted).toBe(true);
+    });
+
+    it("should detect event as started when start time is equal to now", () => {
+        const result = useEventStatus({
+            user,
+            event: createEvent({
+                ...baseEvent,
+                startDateTime: "2026-04-24T12:00:00.000Z"
+            })
+        });
+
+        expect(result.isStarted).toBe(true);
+    });
+
+    it("should not detect future events as started", () => {
+        const result = useEventStatus({
+            user,
+            event: createEvent({
+                ...baseEvent,
+                startDateTime: "2026-04-24T12:01:00.000Z"
+            })
+        });
+
+        expect(result.isStarted).toBe(false);
+    });
+
+    it("should not detect missing event start date as started", () => {
+        const result = useEventStatus({
+            user,
+            event: createEvent({
+                ...baseEvent,
+                startDateTime: null
+            })
+        });
+
+        expect(result.isStarted).toBe(false);
     });
 
     it("should detect full events", () => {

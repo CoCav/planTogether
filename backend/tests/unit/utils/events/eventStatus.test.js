@@ -2,21 +2,31 @@
    EVENT STATUS TESTS
 
    Tests:
+   - event start detection
    - past event detection
    - missing event handling
    - event status computation
    - past event action protection
+   - started event deletion protection
 
    Ensures:
+   - started events are detected from startDateTime
    - event status is based on endDateTime
-   - active/future events remain actionable
+   - active/future events remain actionable where allowed
    - past events throw a 403 business error
+   - started events cannot be deleted
    - shared event status constants are used for expected statuses
 ================================================== */
 
 const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
 
-const { isEventPast, getEventStatus, assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
+const {
+    hasEventStarted,
+    isEventPast,
+    getEventStatus,
+    assertEventNotPast,
+    assertEventNotStarted
+} = require("../../../../src/utils/events/eventStatus");
 
 const { mockSystemDate } = require("../../../helpers/mocks/dateMocks");
 
@@ -25,10 +35,47 @@ describe("eventStatus utils", () => {
     mockSystemDate("2026-04-25T12:00:00.000Z");
 
     /* =============================
+       STARTED EVENT DETECTION
+    ============================= */
+
+    it("should return false when checking started state for missing event", () => {
+        expect(hasEventStarted(null)).toBe(false);
+        expect(hasEventStarted(undefined)).toBe(false);
+    });
+
+    it("should return false when startDateTime is missing", () => {
+        expect(hasEventStarted({ id: 1 })).toBe(false);
+    });
+
+    it("should return true when event startDateTime is before now", () => {
+        expect(
+            hasEventStarted({
+                startDateTime: "2026-04-25T11:59:00.000Z"
+            })
+        ).toBe(true);
+    });
+
+    it("should return true when event startDateTime is equal to now", () => {
+        expect(
+            hasEventStarted({
+                startDateTime: "2026-04-25T12:00:00.000Z"
+            })
+        ).toBe(true);
+    });
+
+    it("should return false when event startDateTime is after now", () => {
+        expect(
+            hasEventStarted({
+                startDateTime: "2026-04-25T12:01:00.000Z"
+            })
+        ).toBe(false);
+    });
+
+    /* =============================
        PAST EVENT DETECTION
     ============================= */
 
-    it("should return false when event is missing", () => {
+    it("should return false when checking past state for missing event", () => {
         expect(isEventPast(null)).toBe(false);
         expect(isEventPast(undefined)).toBe(false);
     });
@@ -103,6 +150,34 @@ describe("eventStatus utils", () => {
         try {
             assertEventNotPast({
                 endDateTime: "2026-04-25T11:59:00.000Z"
+            });
+        } catch (error) {
+            expect(error.statusCode).toBe(403);
+        }
+    });
+
+    /* =============================
+       STARTED EVENT DELETION PROTECTION
+    ============================= */
+
+    it("should not throw when event has not started", () => {
+        expect(() =>
+            assertEventNotStarted({
+                startDateTime: "2026-04-25T12:01:00.000Z"
+            })
+        ).not.toThrow();
+    });
+
+    it("should throw 403 error when event has already started", () => {
+        expect(() =>
+            assertEventNotStarted({
+                startDateTime: "2026-04-25T12:00:00.000Z"
+            })
+        ).toThrow("An event that has already started cannot be deleted");
+
+        try {
+            assertEventNotStarted({
+                startDateTime: "2026-04-25T12:00:00.000Z"
             });
         } catch (error) {
             expect(error.statusCode).toBe(403);

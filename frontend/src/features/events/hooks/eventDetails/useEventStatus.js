@@ -6,6 +6,7 @@ import { EVENT_STATUS } from "../../../shared/constants/eventStatus";
 
    Handles:
    - past event detection
+   - started event detection
    - participant limit checks
    - registration deadline checks
    - event availability UI helpers
@@ -18,6 +19,11 @@ export default function useEventStatus({ user, event, isMember = false }) {
     ============================= */
 
     const isPast = event?.status === EVENT_STATUS.PAST;
+
+    // Checks wether the event has already started
+    const isStarted =
+        Boolean(event?.startDateTime) &&
+        new Date(event.startDateTime).getTime() <= Date.now();
 
     const participantCount = event?.participantCount ?? 0;
     const maxParticipants = event?.maxParticipants ?? null;
@@ -69,6 +75,7 @@ export default function useEventStatus({ user, event, isMember = false }) {
 
     return {
         isPast,
+        isStarted,
         isEventFull,
         isRegistrationClosed,
         showEventFullButton,

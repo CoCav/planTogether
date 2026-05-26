@@ -7,6 +7,7 @@
    - participant access resolution
    - non-member access resolution
    - past event access restrictions
+   - started event delete access restrictions
    - missing event rejection
    - database error propagation
 
@@ -14,6 +15,7 @@
    - current user event role is resolved from active membership
    - edit/delete access follows event role rules
    - past events disable edit/delete access
+   - started events disable delete access
    - missing events return a 404 error
    - shared event status constants are used for expected statuses
 ================================================== */
@@ -27,7 +29,8 @@ jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
 }));
 
 jest.mock("../../../../src/utils/events/eventStatus", () => ({
-    getEventStatus: jest.fn()
+    getEventStatus: jest.fn(),
+    hasEventStarted: jest.fn()
 }));
 
 const Event = require("../../../../src/models/eventModel");
@@ -37,7 +40,7 @@ const eventService = require("../../../../src/services/eventService");
 
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
-const { getEventStatus } = require("../../../../src/utils/events/eventStatus");
+const { getEventStatus, hasEventStarted } = require("../../../../src/utils/events/eventStatus");
 
 const { createMockEventModel } = require("../../../factories/eventFactory");
 const { createMockMembership } = require("../../../factories/eventMembershipFactory");
@@ -52,6 +55,7 @@ describe("eventService - getCurrentUserEventAccess", () => {
         }));
 
         getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
+        hasEventStarted.mockReturnValue(false);
     });
 
     /* =============================
@@ -82,6 +86,31 @@ describe("eventService - getCurrentUserEventAccess", () => {
             status: EVENT_STATUS.UPCOMING,
             canEdit: true,
             canDelete: true
+        });
+    });
+
+    it("should disable delete access for organizer when event has already started", async () => {
+        EventUserRole.findOne.mockResolvedValue(createMockMembership({
+            eventId: 1,
+            userId: 10,
+            role: EVENT_ROLES.ORGANIZER
+        }));
+
+        hasEventStarted.mockReturnValue(true);
+
+        const result = await eventService.getCurrentUserEventAccess(1, 10);
+
+        expect(hasEventStarted).toHaveBeenCalledWith(
+            expect.objectContaining({
+                id: 1
+            })
+        );
+
+        expect(result).toEqual({
+            role: EVENT_ROLES.ORGANIZER,
+            status: EVENT_STATUS.UPCOMING,
+            canEdit: true,
+            canDelete: false
         });
     });
 

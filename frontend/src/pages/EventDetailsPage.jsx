@@ -39,6 +39,7 @@ import PageLoader from "../components/ui/PageLoader";
    - ownership transfer orchestration
    - join / leave event actions
    - event deletion
+   - started and past event restrictions
    - staff and participant management
    - display-ready event data
    - accessible event image description
@@ -102,10 +103,14 @@ export default function EventDetailsPage() {
        EVENT STATUS
     ============================= */
 
+    // Resolves event availability and time-based restrictions
     const {
         isPast,
+        isStarted,
+
         isEventFull,
         isRegistrationClosed,
+
         showEventFullButton,
         showLoginPrompt,
         showRegistrationClosedButton
@@ -136,9 +141,13 @@ export default function EventDetailsPage() {
     } = useMembershipPermissions({
         user,
         currentUserRole,
+
         members,
         staff,
+
         isPast,
+        isStarted,
+
         isEventFull,
         isRegistrationClosed
     });

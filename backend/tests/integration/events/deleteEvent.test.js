@@ -7,14 +7,14 @@
    - participant delete rejection
    - co-organizer delete rejection
    - nonexistent event handling
-   - past event deletion rejection
+   - started event deletion rejection
    - invalid event ID validation
 
    Ensures:
    - only organizers can delete events
    - deleted events are no longer retrievable
    - role middleware protects delete route
-   - business rules prevent deleting past events
+   - business rules prevent deleting started events
    - shared event role constants are used for valid role scenarios
 =============================================== */
 
@@ -133,7 +133,7 @@ describe("Delete Event API", () => {
        BUSINESS RULES
     ============================= */
 
-    it("should reject deleting past event", async () => {
+    it("should reject deleting event that has already started", async () => {
         const { organizerAuth, event } = await createEventWithOrganizer({
             organizer: {
                 name: "Past Event Deleter",
@@ -142,13 +142,15 @@ describe("Delete Event API", () => {
             event: {
                 title: "Past Event",
                 startDateTime: "2020-01-01T10:00:00.000Z",
-                endDateTime: "2020-01-01T12:00:00.000Z"
+                endDateTime: "2999-01-01T12:00:00.000Z"
             }
         });
 
         const res = await request(app)
             .delete(`/api/events/${event.id}`)
             .set(organizerAuth.headers);
+
+        expect(res.body).toHaveProperty("message", "An event that has already started cannot be deleted");
 
         expect(res.statusCode).toBe(403);
     });

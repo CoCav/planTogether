@@ -10,7 +10,7 @@ const { EVENT_ROLES, VALID_EVENT_ROLES } = require("../constants/eventRoles");
 
 const { throwHttpError } = require("../utils/errors/httpError");
 
-const { assertEventNotPast, getEventStatus } = require("../utils/events/eventStatus");
+const { assertEventNotPast } = require("../utils/events/eventStatus");
 const { getPaginationOptions } = require("../utils/pagination");
 
 /* ==================================================

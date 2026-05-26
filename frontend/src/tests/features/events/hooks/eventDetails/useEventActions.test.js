@@ -13,7 +13,7 @@ import { mockConfirmAccepted } from "../../../../helpers/mocks/mockWindowConfirm
    Tests organizer event actions
 
    Handles:
-   - event deletion confirmation
+   - destructive event deletion confirmation
    - event deletion redirect
    - delete cancellation
    - delete API error handling
@@ -71,7 +71,7 @@ describe("useEventActions", () => {
         });
 
         expect(window.confirm).toHaveBeenCalledWith(
-            "Are you sure you want to delete this event?"
+            "Are you sure you want to delete this event? This action cannot be undone and will remove the event for all participants."
         );
 
         expect(hookProps.setError).toHaveBeenCalledWith("");

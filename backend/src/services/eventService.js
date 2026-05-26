@@ -18,7 +18,12 @@ const {
 
 const { buildEventCreateData, buildEventUpdateData } = require("../utils/events/eventDataBuilder");
 
-const { assertEventNotPast, getEventStatus } = require("../utils/events/eventStatus");
+const {
+    assertEventNotPast,
+    assertEventNotStarted,
+    hasEventStarted,
+    getEventStatus
+} = require("../utils/events/eventStatus");
 
 const { deleteUploadedFile } = require("../utils/files/uploadedFileStorage");
 const { getPaginationOptions } = require("../utils/pagination");
@@ -40,7 +45,8 @@ const { getPaginationOptions } = require("../utils/pagination");
    - event listings count active participants with COUNT DISTINCT
    - participant count queries ignore soft-deleted memberships
    - getAllEvents supports filters through query params
-   - past events cannot be updated or deleted
+   - past events cannot be updated
+   - started events cannot be deleted
    - event images are cleaned only after successful DB commits
    - event roles are centralized through shared constants
    - uses shared HTTP error utilities
@@ -161,17 +167,23 @@ const getCurrentUserEventAccess = async (eventId, userId) => {
     });
 
     const role = membership?.role || null;
+
+    // Access rules depend on event lifecycle state
     const status = getEventStatus(event);
     const isPast = status === EVENT_STATUS.PAST;
+    const isStarted = hasEventStarted(event);
 
-    // Organizers and co-organizers can edit upcoming events
+    // Organizers and co-organizers can edit events until they end
     const canEdit = !isPast && (
         role === EVENT_ROLES.ORGANIZER ||
         role === EVENT_ROLES.CO_ORGANIZER
     );
 
-    // Only organizers can delete upcoming events
-    const canDelete = !isPast && role === EVENT_ROLES.ORGANIZER;
+    // Only organizers can delete events that have not started
+    const canDelete =
+        role === EVENT_ROLES.ORGANIZER &&
+        !isPast &&
+        !isStarted;
 
     return {
         role,
@@ -223,6 +235,7 @@ const updateEventByID = async (id, data) => {
             throwHttpError(404, "Event not found");
         }
 
+        // Past events cannot be updated
         assertEventNotPast(event);
 
         const oldImage = event.image;
@@ -265,8 +278,8 @@ const deleteEventByID = async (id) => {
             throwHttpError(404, "Event not found");
         }
 
-        // Past events cannot be deleted
-        assertEventNotPast(event);
+        // Events cannot be deleted after they have started
+        assertEventNotStarted(event);
 
         const oldImage = event.image;
 

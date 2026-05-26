@@ -29,6 +29,7 @@ import {
    - membership section and ownership transfer integration
    - event action integration
    - authenticated and guest states
+   - started and past event restrictions
 
    Notes:
    - mocks API modules
@@ -588,11 +589,36 @@ describe("EventDetailsPage", () => {
             })
         ).toBeInTheDocument();
 
+        expect(screen.getByRole("button", {
+            name: /delete event/i
+        })).toBeInTheDocument();
+    });
+
+    it("should allow edit but hide delete action for started event", async () => {
+        setupApi({
+            event: createEvent({
+                ...mockEvent,
+                startDateTime: "2026-01-01T00:00:00.000Z"
+            }),
+            staff: [
+                createOrganizerMember({
+                    id: 1,
+                    name: "John"
+                })
+            ]
+        });
+
+        renderPage();
+
         expect(
-            screen.getByRole("button", {
-                name: /delete event/i
+            await screen.findByRole("button", {
+                name: /edit event/i
             })
         ).toBeInTheDocument();
+
+        expect(screen.queryByRole("button", {
+            name: /delete event/i
+        })).not.toBeInTheDocument();
     });
 
     it("should navigate to edit page when clicking Edit Event", async () => {

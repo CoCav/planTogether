@@ -7,6 +7,7 @@
    - participant event access retrieval
    - non-member event access retrieval
    - past event access restrictions
+   - started event delete access restrictions
    - authentication requirement
    - nonexistent event handling
    - invalid event ID validation
@@ -15,6 +16,7 @@
    - authenticated users can retrieve their role and action access for one event
    - edit/delete access follows event role rules
    - past events disable edit/delete access
+   - started events disable delete access
    - unauthenticated requests are rejected
 =============================================== */
 
@@ -63,6 +65,30 @@ describe("Get Current User Event Access API", () => {
             status: EVENT_STATUS.UPCOMING,
             canEdit: true,
             canDelete: true
+        });
+    });
+
+    it("should disable delete access for organizer when event has already started", async () => {
+        const { organizerAuth, event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Started Access Organizer",
+                email: `startedaccess${Date.now()}@test.com`
+            },
+            event: {
+                title: "Started Access Event",
+                startDateTime: "2020-01-01T10:00:00.000Z",
+                endDateTime: "2999-01-01T12:00:00.000Z"
+            }
+        });
+
+        const res = await getAuthenticatedEventAccess(event.id, organizerAuth.headers);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toMatchObject({
+            role: EVENT_ROLES.ORGANIZER,
+            status: EVENT_STATUS.UPCOMING,
+            canEdit: true,
+            canDelete: false
         });
     });
 

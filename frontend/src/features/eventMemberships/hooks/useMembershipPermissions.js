@@ -10,6 +10,7 @@ import { EVENT_ROLES } from "../../shared/constants/eventRoles";
    - member management permissions
    - ownership transfer permissions
    - membership UI visibility
+   - started and past event restrictions
 
    Notes:
    - accepts explicit currentUserRole for lightweight components
@@ -24,6 +25,7 @@ export default function useMembershipPermissions({
     members = [],
     staff = [],
     isPast = false,
+    isStarted = false,
     isEventFull = false,
     isRegistrationClosed = false
 }) {
@@ -72,10 +74,11 @@ export default function useMembershipPermissions({
         !isPast &&
         (isOrganizer || isCoOrganizer);
 
-    // Determines whether the current user can delete the event
+    // Determines whether the current user can delete an event that has not started
     const canDelete =
         Boolean(user) &&
         !isPast &&
+        !isStarted &&
         isOrganizer;
 
     /* =============================

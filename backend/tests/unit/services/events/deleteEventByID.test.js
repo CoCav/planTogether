@@ -5,7 +5,7 @@
    - successful event deletion
    - membership cleanup before event deletion
    - event image cleanup after successful DB commit
-   - past event deletion rejection
+   - started event deletion rejection
    - missing event rejection
    - transaction rollback on database errors
 
@@ -13,7 +13,7 @@
    - events can be deleted only when allowed
    - related memberships are deleted with the event
    - event image files are deleted only after successful DB commit
-   - past event rules are enforced
+   - started event deletion rules are enforced
    - Sequelize transactions are committed on successful deletions
    - Sequelize transactions are rolled back on failed deletions
 ================================================== */
@@ -33,7 +33,10 @@ jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
 }));
 
 jest.mock("../../../../src/utils/events/eventStatus", () => ({
-    assertEventNotPast: jest.fn()
+    assertEventNotPast: jest.fn(),
+    assertEventNotStarted: jest.fn(),
+    hasEventStarted: jest.fn(),
+    getEventStatus: jest.fn()
 }));
 
 jest.mock("../../../../src/utils/files/uploadedFileStorage", () => ({
@@ -46,7 +49,7 @@ const EventUserRole = require("../../../../src/models/relations/eventUserRoleMod
 
 const eventService = require("../../../../src/services/eventService");
 
-const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
+const { assertEventNotStarted } = require("../../../../src/utils/events/eventStatus");
 const { deleteUploadedFile } = require("../../../../src/utils/files/uploadedFileStorage");
 
 const { createMockEventModel } = require("../../../factories/eventFactory");
@@ -77,7 +80,7 @@ describe("eventService - deleteEventByID", () => {
         });
 
         Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => { });
+        assertEventNotStarted.mockImplementation(() => { });
         EventUserRole.destroy.mockResolvedValue(1);
 
         await eventService.deleteEventByID(1);
@@ -86,7 +89,7 @@ describe("eventService - deleteEventByID", () => {
 
         expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
 
-        expect(assertEventNotPast).toHaveBeenCalledWith(event);
+        expect(assertEventNotStarted).toHaveBeenCalledWith(event);
 
         expect(EventUserRole.destroy).toHaveBeenCalledWith({
             where: { eventId: 1 },
@@ -109,7 +112,7 @@ describe("eventService - deleteEventByID", () => {
         });
 
         Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => { });
+        assertEventNotStarted.mockImplementation(() => { });
         EventUserRole.destroy.mockResolvedValue(1);
 
         await eventService.deleteEventByID(1);
@@ -118,7 +121,7 @@ describe("eventService - deleteEventByID", () => {
 
         expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
 
-        expect(assertEventNotPast).toHaveBeenCalledWith(event);
+        expect(assertEventNotStarted).toHaveBeenCalledWith(event);
 
         expect(EventUserRole.destroy).toHaveBeenCalledWith({
             where: { eventId: 1 },
@@ -139,7 +142,7 @@ describe("eventService - deleteEventByID", () => {
        BUSINESS RULES
     ============================= */
 
-    it("should block deletion if event is past", async () => {
+    it("should block deletion if event has already started", async () => {
         const event = createMockEventModel({
             id: 1,
             image: null,
@@ -148,15 +151,15 @@ describe("eventService - deleteEventByID", () => {
 
         Event.findByPk.mockResolvedValue(event);
 
-        const error = new Error("No action is allowed on a past event");
+        const error = new Error("An event that has already started cannot be deleted");
         error.statusCode = 403;
 
-        assertEventNotPast.mockImplementation(() => {
+        assertEventNotStarted.mockImplementation(() => {
             throw error;
         });
 
         await expect(eventService.deleteEventByID(1)).rejects.toMatchObject({
-            message: "No action is allowed on a past event",
+            message: "An event that has already started cannot be deleted",
             statusCode: 403
         });
 
@@ -164,7 +167,7 @@ describe("eventService - deleteEventByID", () => {
 
         expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
 
-        expect(assertEventNotPast).toHaveBeenCalledWith(event);
+        expect(assertEventNotStarted).toHaveBeenCalledWith(event);
 
         expect(EventUserRole.destroy).not.toHaveBeenCalled();
         expect(event.destroy).not.toHaveBeenCalled();
@@ -191,7 +194,7 @@ describe("eventService - deleteEventByID", () => {
 
         expect(Event.findByPk).toHaveBeenCalledWith(999, { transaction });
 
-        expect(assertEventNotPast).not.toHaveBeenCalled();
+        expect(assertEventNotStarted).not.toHaveBeenCalled();
         expect(EventUserRole.destroy).not.toHaveBeenCalled();
 
         expect(transaction.rollback).toHaveBeenCalled();

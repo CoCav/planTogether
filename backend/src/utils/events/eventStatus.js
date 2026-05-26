@@ -3,6 +3,7 @@
 
    Handles:
    - event status computation (past / upcoming)
+   - event start and end time checks
    - time-based business rules enforcement
 
    Notes:
@@ -13,6 +14,17 @@
 const { EVENT_STATUS } = require("../../constants/eventStatus");
 const { throwHttpError } = require("../errors/httpError");
 
+/* =============================
+   STATUS HELPERS
+============================= */
+
+// Check if event has already started
+const hasEventStarted = (event) => {
+    if (!event || !event.startDateTime) return false;
+
+    return new Date(event.startDateTime) <= new Date();
+};
+
 // Check if event has already ended
 const isEventPast = (event) => {
     if (!event || !event.endDateTime) return false;
@@ -22,8 +34,14 @@ const isEventPast = (event) => {
 
 // Get event status
 const getEventStatus = (event) => {
-    return isEventPast(event) ? EVENT_STATUS.PAST : EVENT_STATUS.UPCOMING;
+    return isEventPast(event)
+        ? EVENT_STATUS.PAST
+        : EVENT_STATUS.UPCOMING;
 };
+
+/* =============================
+   BUSINESS RULES
+============================= */
 
 // Prevent actions on past events
 const assertEventNotPast = (event) => {
@@ -32,4 +50,20 @@ const assertEventNotPast = (event) => {
     }
 };
 
-module.exports = { isEventPast, getEventStatus, assertEventNotPast };
+// Prevent deleting events that already started
+const assertEventNotStarted = (event) => {
+    if (hasEventStarted(event)) {
+        throwHttpError(
+            403,
+            "An event that has already started cannot be deleted"
+        );
+    }
+};
+
+module.exports = {
+    hasEventStarted,
+    isEventPast,
+    getEventStatus,
+    assertEventNotPast,
+    assertEventNotStarted
+};

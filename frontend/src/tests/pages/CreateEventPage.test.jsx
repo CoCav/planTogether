@@ -189,7 +189,7 @@ describe("CreateEventPage", () => {
         expect(formData.get("location")).toBe("Montreal");
         expect(formData.get("startDateTime")).toBe("2026-12-20T10:00");
         expect(formData.get("endDateTime")).toBe("2026-12-20T12:00");
-        expect(formData.get("registrationDeadline")).toBe("");
+        expect(formData.has("registrationDeadline")).toBe(false);
         expect(formData.has("image")).toBe(false);
 
         expect(mockNavigate).toHaveBeenCalledWith("/events");
@@ -260,7 +260,7 @@ describe("CreateEventPage", () => {
         const formData = getSubmittedFormData();
 
         expect(formData.get("mode")).toBe("online");
-        expect(formData.get("location")).toBe("");
+        expect(formData.has("location")).toBe(false);
     });
 
     it("creates an event with custom registration deadline", async () => {

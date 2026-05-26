@@ -134,13 +134,15 @@ describe("eventFormValues", () => {
             mode: EVENT_MODES.IN_PERSON,
             location: "Montreal",
 
-            startDateTime: "2026-12-20T05:00",
-            endDateTime: "2026-12-20T07:00",
+            startDateTime: toDateTimeLocalValue(event.startDateTime),
+            endDateTime: toDateTimeLocalValue(event.endDateTime),
 
             maxParticipants: 20,
 
             registrationDeadlineOption: EVENT_REGISTRATION_DEADLINES.CUSTOM,
-            registrationDeadlineCustom: "2026-12-18T19:00",
+            registrationDeadlineCustom: toDateTimeLocalValue(
+                event.registrationDeadline
+            ),
 
             image: null,
             currentImage: "event.png"

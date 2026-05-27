@@ -2,9 +2,9 @@
 
 ![Vitest](https://img.shields.io/badge/Test-Vitest-6E9F18)
 ![RTL](https://img.shields.io/badge/Test-React%20Testing%20Library-E33332)
-![Test Files](https://img.shields.io/badge/test%20files-121%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-1040%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-97.49%25%20statements%20%7C%2094.17%25%20branches-brightgreen)
+![Test Files](https://img.shields.io/badge/test%20files-123%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-1103%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-97.64%25%20statements%20%7C%2094.51%25%20branches-brightgreen)
 
 This document describes the testing architecture and overall testing strategy used in the PlanTogether frontend.
 
@@ -39,15 +39,18 @@ The frontend testing architecture is designed to validate:
 - shared frontend utilities and formatting helpers
 - reusable factories, mocks, and render helpers
 - semantic structure, ARIA validation, and accessible interaction testing
+- ongoing event view behavior
+- event status synchronization and status badges
+- started-event restrictions and permission-aware actions
 
 The current frontend test suite includes:
 
-- **121 passing test files**
-- **1040 passing tests**
-- **97.49% statement coverage**
-- **94.17% branch coverage**
-- **94.48% function coverage**
-- **97.79% line coverage**
+- **123 passing test files**
+- **1103 passing tests**
+- **97.64% statement coverage**
+- **94.51% branch coverage**
+- **94.6% function coverage**
+- **97.87% line coverage**
 
 The combination of integration-style frontend testing, isolated business-logic testing, route testing, and reusable utility testing helps ensure frontend reliability, UI consistency, predictable behavior, and scalable long-term frontend development.
 
@@ -166,7 +169,7 @@ Feature and hook tests validate reusable frontend behavior independently from fu
 Covered areas include:
 
 - authentication normalization, validation, and token persistence
-- event filtering, empty states, URL query synchronization, and view configuration
+- event filtering, empty states, URL query synchronization, view configuration, and status handling
 - event validation and payload normalization
 - membership validation, permissions, actions, and management behavior
 - authenticated user event filters, views, URL query synchronization, and normalizers
@@ -176,6 +179,9 @@ Covered areas include:
 - pagination hook behavior
 - accessible form validation behavior
 - query synchronization and accessible navigation flows
+- ongoing event view behavior
+- started-event restriction logic
+- event status badge configuration
 
 These tests help keep frontend business logic predictable, scalable, maintainable, and easier to evolve over time.
 
@@ -223,6 +229,8 @@ Covered areas include:
 - protected event edit access flows
 - loading states during auth initialization
 - authenticated context behavior
+- event access permission flows
+- started-event deletion restrictions
 
 The route tests use mocked auth state and router utilities to validate navigation behavior in isolation.
 
@@ -243,6 +251,7 @@ Covered areas include:
 - paginated fetching and item merging
 - query parameter synchronization helpers
 - event listing normalization helpers
+- event status helpers
 
 These tests help keep shared helpers stable across components, pages, and feature logic.
 
@@ -297,6 +306,7 @@ Examples include:
 - mock paginated fetch helpers
 - mock confirmation dialog helpers
 - centralized frontend test setup utilities
+- event listing test helpers
 
 Helpers keep tests focused on behavior and assertions instead of repetitive setup logic.
 
@@ -400,6 +410,7 @@ The frontend testing architecture aims to provide:
 - scalable frontend testing architecture
 - maintainable long-term frontend testing workflows
 - consistent semantic and accessibility-focused component behavior
+- reliable event status and permission validation
 
 These goals support long-term frontend maintainability, safer feature development, predictable UI behavior, and scalable frontend architecture evolution.
 

@@ -9,9 +9,9 @@ PlanTogether is a collaborative event management platform where users can create
 
 ![Vitest](https://img.shields.io/badge/Test-Vitest-6E9F18)
 ![RTL](https://img.shields.io/badge/Test-React%20Testing%20Library-E33332)
-![Test Files](https://img.shields.io/badge/test%20files-121%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-1040%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-97.49%25%20statements%20%7C%2094.17%25%20branches-brightgreen)
+![Test Files](https://img.shields.io/badge/test%20files-123%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-1103%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-97.64%25%20statements%20%7C%2094.51%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -42,10 +42,12 @@ The frontend provides a complete interface for interacting with the PlanTogether
 It allows users to:
 
 - Authenticate securely using JWT
-- Browse, search, filter, and manage events
+- Browse, search, filter, and manage events across ongoing, upcoming, all, and archived views
 - Join and leave events
 - Interact with role-aware event actions (`organizer`, `co_organizer`, `participant`)
 - Create, edit, and delete events
+- Event status-aware actions and restrictions
+- Started-event deletion protection aligned with backend authorization rules
 - Manage profile information and passwords
 - Upload avatars and event images
 - Persist authenticated sessions with a "Remember me" feature
@@ -257,17 +259,21 @@ The frontend also emphasizes semantic structure, reusable accessible UI patterns
 ### 📅 Event Management
 
 - Browse all public events
+- View events across ongoing, upcoming, all, and archived views
 - Create, edit, and delete events
 - Upload and preview event images
 - URL-synchronized event filtering
-- Shared event listing architecture across pages
+- Shared listing behavior with private event pages
 - Reusable event form state and validation handling
-- Shared event payload normalization helpers
+- Filter events by active views (`ongoing`, `upcoming`, `all`, `archives`)
 
 Frontend behavior includes:
 
 - Validation aligned with backend business rules
 - Role-aware UI actions and frontend access behavior based on event state and permissions
+- Event status awareness (`upcoming`, `ongoing`, `ended`)
+- Status badge display across event listings and event details
+- Hiding restricted actions when events have already started
 - Preventing past start dates
 - Ensuring end dates occur after start dates
 - Validating uploaded image types and sizes
@@ -280,15 +286,16 @@ Frontend behavior includes:
 - Remove members
 - Transfer event ownership
 - Role-aware membership actions
-- Membership permission helpers
+- Membership permission and access helpers
 
 ### 📂 My Events Dashboard
 
 - View created events
+- View created event history
 - View joined events
-- View archived events
+- View joined event history
 - Leave events directly from the interface
-- Filter events by active views (`created`, `joined`, `archives`)
+- Filter events by active views (`created`, `created history`, `joined`, `joined history`)
 - Shared listing behavior with public event pages
 
 The dashboard uses:
@@ -331,7 +338,7 @@ Filtering behavior includes:
 
 - URL-synchronized filters, pagination, and active views
 - Persistent UI state across refresh and navigation
-- Config-driven event views (`All`, `Upcoming`, `Archives`, etc.)
+- Config-driven event views (`Ongoing`, `Upcoming`, `All`, `Archives` / `Created`, `Created History`, `Joined`, `Joined History`)
 - Shared view configuration architecture
 - Reusable query parameter synchronization helpers
 
@@ -348,7 +355,7 @@ participant
 #### Organizer
 
 - Edit events
-- Delete events
+- Delete events before they start
 - Promote participants
 - Demote co-organizers
 - Remove participants and co-organizers
@@ -441,6 +448,7 @@ The frontend uses centralized event access checks to:
 
 - prevent unauthorized users from accessing edit pages
 - conditionally render edit and delete actions
+- hide deletion actions for events that have already started
 - synchronize frontend permissions with backend authorization rules
 - preserve consistent role-aware UI behavior
 
@@ -456,6 +464,7 @@ This endpoint allows the frontend to retrieve:
 - event status
 - edit permissions
 - delete permissions
+- started-event restrictions
 
 These frontend guards improve UX consistency while keeping the backend as the source of truth for protected actions and authorization rules.
 
@@ -581,7 +590,9 @@ The event layer handles:
 - reusable listing behavior
 - event validation
 - event payload normalization
-- dynamic event state behavior
+- dynamic event status behavior
+- ongoing event handling
+- started-event restriction handling
 
 ### 👥 Membership Logic
 
@@ -720,15 +731,15 @@ npx vitest run --coverage
 
 ### 📊 Testing Results
 
-- ✅ 121 passing test files
-- ✅ 1040 passing tests
+- ✅ 123 passing test files
+- ✅ 1103 passing tests
 - ✅ All tests passing
 
 **Coverage:**
-- 97.49% statements coverage
-- 94.17% branch coverage
-- 94.48% function coverage
-- 97.79% line coverage
+- 97.64% statements coverage
+- 94.51% branch coverage
+- 94.6% function coverage
+- 97.87% line coverage
 
 ### 📦 Tested Areas
 
@@ -745,6 +756,10 @@ The frontend test suite covers:
 - semantic structure and accessibility behavior
 - ARIA attribute validation
 - accessible navigation and interaction flows
+- ongoing event view behavior
+- status badge rendering
+- started-event restrictions
+- event status synchronization
 
 ### 🔁 Testing Strategy
 
@@ -798,31 +813,33 @@ The application will be available at:
 
 ### 🔧 Frontend Features & UX
 
-- Standardized page architecture across core application flows
 - Shared event listing architecture across public and authenticated pages
-- Centralized query parameter synchronization
 - Role-aware event access guards
 - Centralized authentication redirect and route restoration flows
 - Reusable loading, error, and empty-state UI patterns
 - Accessibility-focused UI architecture with semantic HTML and ARIA support
+- Added ongoing event view support and default event listing behavior
+- Added centralized event status badge system
+- Added status-aware event actions and restrictions
+- Aligned started-event deletion behavior with backend authorization rules
 
 ### 🔌 Frontend Architecture
 
 - Feature-oriented frontend architecture and reusable business logic
 - Reusable event listing hooks and centralized listing state management
-- Centralized API normalization helpers
-- Clear separation between UI rendering and frontend business logic
 - Centralized protected route and access guard architecture
+- Centralized event status configuration and badge rendering
+- Shared ongoing event view configuration and filtering behavior
 
 ### 🧪 Frontend Testing
 
-- Comprehensive frontend testing across routing, logic, permissions, and accessibility
-- Protected route and authentication flow testing
-- Page-level integration testing
 - Query synchronization and listing architecture testing
 - Role-aware access guard and permission testing
 - Expanded listing architecture and filtering tests
 - Added accessibility-oriented component and interaction testing
+- Added coverage for ongoing event views
+- Added coverage for status badge rendering
+- Added coverage for started-event restrictions
 
 ---
 
@@ -836,8 +853,8 @@ The application will be available at:
 | Routing & Access Control | ✅ Centralized, role-aware, and fully tested |
 | API Communication Layer | ✅ Centralized Axios architecture and normalized API handling |
 | File Upload System | ✅ Avatar and event image uploads supported |
-| Testing | ✅ 1040 tests across 121 test files |
-| Coverage | ✅ 97.49% statements / 94.17% branches / 94.48% functions |
+| Testing | ✅ 1103 tests across 123 test files |
+| Coverage | ✅ 97.64% statements / 94.51% branches / 94.6% functions / 97.87% lines |
 | UX Improvements | 🚧 Ongoing |
 
 ---

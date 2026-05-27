@@ -37,19 +37,18 @@ export const DEFAULT_EVENT_VIEW_CONTENT = {
 
 export const PUBLIC_EVENT_VIEWS = [
     {
-        key: "all",
-        label: "All",
-        icon: "📋",
-        title: "All Events",
-        subtitle: "Browse all events and refine your search.",
-        empty: "No events found.",
-        status: "",
-        defaultSortBy: "createdAt",
-        defaultOrder: "desc",
+        key: EVENT_STATUS.ONGOING,
+        label: "Ongoing",
+        icon: "⏳",
+        title: "Ongoing Events",
+        subtitle: "See events currently happening.",
+        empty: "No ongoing events.",
+        status: EVENT_STATUS.ONGOING,
+        defaultSortBy: "startDateTime",
+        defaultOrder: "asc",
         showQuickActions: true,
         clearDateFiltersOnEnter: false
     },
-
     {
         key: EVENT_STATUS.UPCOMING,
         label: "Upcoming",
@@ -60,6 +59,20 @@ export const PUBLIC_EVENT_VIEWS = [
         status: EVENT_STATUS.UPCOMING,
         defaultSortBy: "startDateTime",
         defaultOrder: "asc",
+        showQuickActions: true,
+        clearDateFiltersOnEnter: false
+    },
+
+    {
+        key: "all",
+        label: "All",
+        icon: "📋",
+        title: "All Events",
+        subtitle: "Browse all events and refine your search.",
+        empty: "No events found.",
+        status: "",
+        defaultSortBy: "createdAt",
+        defaultOrder: "desc",
         showQuickActions: true,
         clearDateFiltersOnEnter: false
     },

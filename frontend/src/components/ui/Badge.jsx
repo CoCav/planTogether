@@ -1,31 +1,39 @@
 import { EVENT_ROLE_UI } from "../../features/shared/constants/eventRoles";
+import { EVENT_STATUS_UI } from "../../features/shared/constants/eventStatus";
 
 /* ==================================================
    BADGE
-   Displays a styled label for roles or custom variants
+   Displays a styled label for roles, statuses or custom variants
 
    Supports:
    - role-based badges
+   - status-based badges
    - custom variant and label
 ================================================== */
 
-export default function Badge({ role, variant, label, children, className = "" }) {
+export default function Badge({ role, status, variant, label, children, className = "" }) {
 
     /* =========================
-       ROLE CONFIGURATION
+       BADGE CONFIGURATION
     ========================= */
 
+    // Resolves role and status UI configuration
     const roleConfig = role ? EVENT_ROLE_UI[role] : null;
+    const statusConfig = status ? EVENT_STATUS_UI[status] : null;
 
+    // Resolves badge variant from explicit prop or shared UI config
     const badgeVariant =
         variant ||
         roleConfig?.badgeVariant ||
+        statusConfig?.badgeVariant ||
         "";
 
+    // Resolves badge label from explicit prop, children or shared UI config
     const badgeLabel =
         label ||
         children ||
         roleConfig?.label ||
+        statusConfig?.label ||
         "";
 
     /* =========================

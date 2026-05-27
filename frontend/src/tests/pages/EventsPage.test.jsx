@@ -180,7 +180,7 @@ describe("EventsPage", () => {
     it("displays empty state when no events are returned", async () => {
         await renderLoadedEmptyEventsPage();
 
-        expect(screen.getByText(/no events found/i)).toBeInTheDocument();
+        expect(screen.getByText(/no ongoing events/i)).toBeInTheDocument();
     });
 
     it("calls events API on load with default params", async () => {
@@ -275,7 +275,7 @@ describe("EventsPage", () => {
 
         renderPage("/events?sortBy=title&order=asc");
 
-        await screen.findByText(/no events found/i);
+        await screen.findByText(/no ongoing events/i);
 
         await user.click(screen.getByRole("tab", { name: /archives/i }));
 

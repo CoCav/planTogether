@@ -2,7 +2,8 @@ const { body, param, query } = require("express-validator");
 
 const { PASSWORD_REQUIREMENTS, PASSWORD_MESSAGES } = require("../config/security/passwordPolicy");
 
-const { EVENT_MODES } = require("../constants/eventModes");
+const { VALID_EVENT_MODES } = require("../constants/eventModes");
+const { VALID_EVENT_STATUS } = require("../constants/eventStatus");
 
 /* ==================================================
    USER VALIDATORS
@@ -31,8 +32,8 @@ const getCurrentUserEventsValidator = [
 
     query("status")
         .optional()
-        .isIn(["upcoming", "past"])
-        .withMessage("Status must be upcoming or past"),
+        .isIn(VALID_EVENT_STATUS)
+        .withMessage("Status must be upcoming, ongoing or past"),
 
     query("creatorId")
         .optional()
@@ -46,7 +47,7 @@ const getCurrentUserEventsValidator = [
 
     query("mode")
         .optional()
-        .isIn([EVENT_MODES.ONLINE, EVENT_MODES.IN_PERSON])
+        .isIn(VALID_EVENT_MODES)
         .withMessage("Mode must be online or in_person"),
 
     query("type")

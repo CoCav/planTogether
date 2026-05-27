@@ -3,35 +3,36 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import EventDetailsActions from "../../../components/events/EventDetailsActions";
 
+import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
+
 /* ==================================================
    EVENT DETAILS ACTIONS TESTS
-   Tests single event action rendering
+   Tests single event contextual action rendering
 
    Handles:
    - past event status display
-   - event full action state
-   - registration closed action state
+   - ended status badge
+   - availability disabled states
    - guest login prompt
    - join callback
    - leave callback
    - edit callback
    - delete callback
-   - accessible ended status
-   - accessible guest prompt
+   - default empty action state
 
    Notes:
    - focuses on action visibility and callbacks
-   - uses reusable render helper
+   - past events display status instead of interactive actions
 ================================================== */
-describe("EventDetailsActions", () => {
 
+describe("EventDetailsActions", () => {
     /* =============================
        TEST DATA
     ============================= */
 
     const baseProps = {
         eventId: 1,
-
+        status: EVENT_STATUS.UPCOMING,
         isPast: false,
 
         canJoin: false,
@@ -70,25 +71,19 @@ describe("EventDetailsActions", () => {
        PAST EVENT STATE
     ============================= */
 
-    it("should display ended status for past events", () => {
+    it("should display ended status badge for past events", () => {
         renderEventDetailsActions({
-            isPast: true
+            isPast: true,
+            status: EVENT_STATUS.PAST
         });
 
-        expect(screen.getByText("Ended")).toBeInTheDocument();
-    });
-
-    it("should expose accessible ended status label", () => {
-        renderEventDetailsActions({
-            isPast: true
-        });
-
-        expect(screen.getByLabelText(/event ended/i)).toBeInTheDocument();
+        expect(screen.getByText("Ended")).toHaveClass("badge-past");
     });
 
     it("should hide interactive actions for past events", () => {
         renderEventDetailsActions({
             isPast: true,
+            status: EVENT_STATUS.PAST,
             canJoin: true,
             canLeave: true,
             canEdit: true,
@@ -98,11 +93,33 @@ describe("EventDetailsActions", () => {
             showLoginPrompt: true
         });
 
-        expect(screen.getByText("Ended")).toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "Join the event" })).not.toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "Leave the event" })).not.toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "Edit Event" })).not.toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "Delete Event" })).not.toBeInTheDocument();
+        expect(screen.getByText("Ended")).toHaveClass("badge-past");
+
+        expect(screen.queryByRole("button", {
+            name: /join the event/i
+        })).not.toBeInTheDocument();
+
+        expect(screen.queryByRole("button", {
+            name: /leave the event/i
+        })).not.toBeInTheDocument();
+
+        expect(screen.queryByRole("button", {
+            name: /edit event/i
+        })).not.toBeInTheDocument();
+
+        expect(screen.queryByRole("button", {
+            name: /delete event/i
+        })).not.toBeInTheDocument();
+
+        expect(screen.queryByRole("button", {
+            name: /event full/i
+        })).not.toBeInTheDocument();
+
+        expect(screen.queryByRole("button", {
+            name: /registration closed/i
+        })).not.toBeInTheDocument();
+
+        expect(screen.queryByText(/login to join/i)).not.toBeInTheDocument();
     });
 
     /* =============================
@@ -114,11 +131,9 @@ describe("EventDetailsActions", () => {
             showEventFullButton: true
         });
 
-        expect(
-            screen.getByRole("button", {
-                name: "Event full"
-            })
-        ).toBeDisabled();
+        expect(screen.getByRole("button", {
+            name: /event full/i
+        })).toBeDisabled();
     });
 
     /* =============================
@@ -130,11 +145,9 @@ describe("EventDetailsActions", () => {
             showRegistrationClosedButton: true
         });
 
-        expect(
-            screen.getByRole("button", {
-                name: "Registration closed"
-            })
-        ).toBeDisabled();
+        expect(screen.getByRole("button", {
+            name: /registration closed/i
+        })).toBeDisabled();
     });
 
     /* =============================
@@ -146,19 +159,11 @@ describe("EventDetailsActions", () => {
             showLoginPrompt: true
         });
 
-        expect(screen.getByText("🔐 Login to join this event.")).toBeInTheDocument();
-    });
-
-    it("should display accessible guest login prompt", () => {
-        renderEventDetailsActions({
-            showLoginPrompt: true
-        });
-
         expect(screen.getByText(/login to join this event/i)).toBeInTheDocument();
     });
 
     /* =============================
-       ACTION CALLBACKS
+       JOIN ACTION
     ============================= */
 
     it("should call onJoin with event id", () => {
@@ -170,11 +175,15 @@ describe("EventDetailsActions", () => {
         });
 
         fireEvent.click(screen.getByRole("button", {
-            name: "Join the event"
+            name: /join the event/i
         }));
 
         expect(onJoin).toHaveBeenCalledWith(1);
     });
+
+    /* =============================
+       LEAVE ACTION
+    ============================= */
 
     it("should call onLeave with event id", () => {
         const onLeave = vi.fn();
@@ -185,13 +194,17 @@ describe("EventDetailsActions", () => {
         });
 
         fireEvent.click(screen.getByRole("button", {
-            name: "Leave the event"
+            name: /leave the event/i
         }));
 
         expect(onLeave).toHaveBeenCalledWith(1);
     });
 
-    it("should call onEdit", () => {
+    /* =============================
+       EDIT ACTION
+    ============================= */
+
+    it("should call onEdit when clicking edit event", () => {
         const onEdit = vi.fn();
 
         renderEventDetailsActions({
@@ -200,13 +213,17 @@ describe("EventDetailsActions", () => {
         });
 
         fireEvent.click(screen.getByRole("button", {
-            name: "Edit Event"
+            name: /edit event/i
         }));
 
         expect(onEdit).toHaveBeenCalled();
     });
 
-    it("should call onDelete", () => {
+    /* =============================
+       DELETE ACTION
+    ============================= */
+
+    it("should call onDelete when clicking delete event", () => {
         const onDelete = vi.fn();
 
         renderEventDetailsActions({
@@ -215,7 +232,7 @@ describe("EventDetailsActions", () => {
         });
 
         fireEvent.click(screen.getByRole("button", {
-            name: "Delete Event"
+            name: /delete event/i
         }));
 
         expect(onDelete).toHaveBeenCalled();
@@ -229,9 +246,7 @@ describe("EventDetailsActions", () => {
         renderEventDetailsActions();
 
         expect(screen.queryByRole("button")).not.toBeInTheDocument();
-
         expect(screen.queryByText("Ended")).not.toBeInTheDocument();
-
         expect(screen.queryByText(/login to join/i)).not.toBeInTheDocument();
     });
 });

@@ -40,27 +40,21 @@ describe("eventRoles", () => {
     ============================= */
 
     it("should expose organizer UI configuration", () => {
-        expect(
-            EVENT_ROLE_UI[EVENT_ROLES.ORGANIZER]
-        ).toEqual({
+        expect(EVENT_ROLE_UI[EVENT_ROLES.ORGANIZER]).toEqual({
             label: "👑 Organizer",
             badgeVariant: "organizer"
         });
     });
 
     it("should expose co-organizer UI configuration", () => {
-        expect(
-            EVENT_ROLE_UI[EVENT_ROLES.CO_ORGANIZER]
-        ).toEqual({
+        expect(EVENT_ROLE_UI[EVENT_ROLES.CO_ORGANIZER]).toEqual({
             label: "🛡️ Co-organizer",
             badgeVariant: "co-organizer"
         });
     });
 
     it("should expose participant UI configuration", () => {
-        expect(
-            EVENT_ROLE_UI[EVENT_ROLES.PARTICIPANT]
-        ).toEqual({
+        expect(EVENT_ROLE_UI[EVENT_ROLES.PARTICIPANT]).toEqual({
             label: "👤 Participant",
             badgeVariant: "participant"
         });

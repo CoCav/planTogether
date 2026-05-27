@@ -2,6 +2,8 @@ import { useCallback, useMemo, useState } from "react";
 
 import { getInitialPageFromUrl } from "../../shared/eventListingQueryParams";
 
+import { EVENT_STATUS } from "../../shared/constants/eventStatus";
+
 import { buildEventSearchParams, getInitialViewFromUrl } from "../eventQueryParams";
 
 import { getEventViewContent, PUBLIC_EVENT_VIEWS } from "../eventViewConfig";
@@ -20,7 +22,7 @@ import { getEventViewContent, PUBLIC_EVENT_VIEWS } from "../eventViewConfig";
    - view-based filter cleanup
 ================================================== */
 
-export default function useEventListingState({ searchParams, setSearchParams, fallbackView = "all" }) {
+export default function useEventListingState({ searchParams, setSearchParams, fallbackView = EVENT_STATUS.ONGOING }) {
 
     /* =============================
        INITIAL URL STATE

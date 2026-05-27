@@ -2,7 +2,7 @@
    EVENT QUERY BUILDER TESTS
 
    Tests:
-   - status filters
+   - upcoming, ongoing and past status filters
    - basic event filters
    - date filters
    - combined query filters
@@ -11,6 +11,7 @@
    - participant count attribute builder
 
    Ensures:
+   - upcoming, ongoing and past filters generate correct date conditions
    - Sequelize where conditions are built correctly
    - date overlap logic is applied
    - creator filtering is handled through includes
@@ -67,7 +68,18 @@ describe("eventQueryBuilder utils", () => {
 
             applyEventStatusFilter(whereConditions, EVENT_STATUS.UPCOMING);
 
-            expect(whereConditions[Op.and][0].endDateTime[Op.gte]).toBeInstanceOf(Date);
+            expect(whereConditions[Op.and][0].startDateTime[Op.gt]).toBeInstanceOf(Date);
+        });
+
+        it("should add ongoing conditions", () => {
+            const whereConditions = {};
+
+            applyEventStatusFilter(whereConditions, EVENT_STATUS.ONGOING);
+
+            expect(whereConditions[Op.and]).toHaveLength(2);
+
+            expect(whereConditions[Op.and][0].startDateTime[Op.lte]).toBeInstanceOf(Date);
+            expect(whereConditions[Op.and][1].endDateTime[Op.gte]).toBeInstanceOf(Date);
         });
 
         it("should add past condition", () => {
@@ -180,6 +192,36 @@ describe("eventQueryBuilder utils", () => {
             expect(whereConditions[Op.or]).toBeDefined();
             expect(whereConditions.mode).toBe(EVENT_MODES.ONLINE);
             expect(whereConditions.creatorId).toBe(5);
+        });
+
+        it("should apply upcoming status filter", () => {
+            const whereConditions = {};
+
+            buildEventWhereConditions(whereConditions, {
+                status: EVENT_STATUS.UPCOMING
+            });
+
+            expect(whereConditions[Op.and]).toHaveLength(1);
+        });
+
+        it("should apply ongoing status filter", () => {
+            const whereConditions = {};
+
+            buildEventWhereConditions(whereConditions, {
+                status: EVENT_STATUS.ONGOING
+            });
+
+            expect(whereConditions[Op.and]).toHaveLength(2);
+        });
+
+        it("should apply past status filter", () => {
+            const whereConditions = {};
+
+            buildEventWhereConditions(whereConditions, {
+                status: EVENT_STATUS.PAST
+            });
+
+            expect(whereConditions[Op.and]).toHaveLength(1);
         });
 
         it("should skip status when includeStatus is false", () => {

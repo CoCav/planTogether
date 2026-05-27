@@ -11,7 +11,9 @@ import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
    Handles:
    - filter-based empty states
    - date-specific empty states
-   - public event view empty states
+   - ongoing view empty state
+   - upcoming view empty state
+   - archived view empty state
    - default empty state
 ================================================== */
 
@@ -56,6 +58,14 @@ describe("eventEmptyState", () => {
        PUBLIC VIEW EMPTY STATES
     ============================= */
 
+    it("should return ongoing empty state", () => {
+        const state = getEventEmptyStates({
+            activeView: EVENT_STATUS.ONGOING
+        });
+
+        expect(state.title).toBe("No ongoing events.");
+    });
+
     it("should return upcoming empty state", () => {
         const state = getEventEmptyStates({
             activeView: EVENT_STATUS.UPCOMING
@@ -72,8 +82,16 @@ describe("eventEmptyState", () => {
         expect(state.title).toBe("No archived events.");
     });
 
-    it("should return default empty state", () => {
+    it("should return ongoing empty state by default", () => {
         const state = getEventEmptyStates({});
+
+        expect(state.title).toBe("No ongoing events.");
+    });
+
+    it("should return fallback empty state for unknown view", () => {
+        const state = getEventEmptyStates({
+            activeView: "unknown"
+        });
 
         expect(state.title).toBe("No events found.");
     });

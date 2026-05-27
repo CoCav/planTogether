@@ -3,18 +3,20 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import EventCardActions from "../../../components/events/EventCardActions";
 
+import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
+
 /* ==================================================
    EVENT CARD ACTIONS TESTS
    Tests event preview action rendering
 
    Handles:
    - past event status display
+   - ended status badge
    - event full action state
    - registration closed action state
    - guest login prompt
    - join callback
    - leave callback
-   - accessible ended status
    - accessible guest prompt
 
    Notes:
@@ -30,6 +32,7 @@ describe("EventCardActions", () => {
 
     const baseProps = {
         eventId: 1,
+        status: EVENT_STATUS.UPCOMING,
         isPast: false,
         canLeave: false,
         showJoinButton: false,
@@ -53,18 +56,13 @@ describe("EventCardActions", () => {
        PAST EVENT STATE
     ============================= */
 
-    it("should display ended status for past events", () => {
-        renderEventCardActions({ isPast: true });
-
-        expect(screen.getByText("Ended")).toBeInTheDocument();
-    });
-
-    it("should expose accessible ended status label", () => {
+    it("should display ended status badge for past events", () => {
         renderEventCardActions({
-            isPast: true
+            isPast: true,
+            status: EVENT_STATUS.PAST
         });
 
-        expect(screen.getByLabelText(/event ended/i)).toBeInTheDocument();
+        expect(screen.getByText("Ended")).toHaveClass("badge-past");
     });
 
     /* =============================

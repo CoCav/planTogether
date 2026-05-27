@@ -22,8 +22,8 @@ describe("eventModes constants", () => {
 
     it("should expose all valid event modes", () => {
         expect(VALID_EVENT_MODES).toEqual([
-            "online",
-            "in_person"
+            EVENT_MODES.ONLINE,
+            EVENT_MODES.IN_PERSON
         ]);
     });
 });

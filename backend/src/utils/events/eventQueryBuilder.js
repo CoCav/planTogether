@@ -8,7 +8,7 @@ const { EVENT_ROLES } = require("../../constants/eventRoles");
 
    Handles:
    - dynamic Sequelize where clause building
-   - event status filtering (past / upcoming)
+   - event status filtering (upcoming / ongoing / past)
    - event date overlap filtering
    - text search and category filters
    - event creator include with optional filtering
@@ -66,23 +66,34 @@ const buildEventCreatorInclude = (User, creator) => ({
    STATUS FILTER
 ============================= */
 
-// Apply event status filtering (past / upcoming)
+// Apply event status filtering (upcoming / ongoing / past)
 const applyEventStatusFilter = (whereConditions, status) => {
     if (!status) return;
 
+    const now = new Date();
+
     if (status === EVENT_STATUS.UPCOMING) {
         addAndCondition(whereConditions, {
-            endDateTime: { [Op.gte]: new Date() }
+            startDateTime: { [Op.gt]: now }
+        });
+    }
+
+    if (status === EVENT_STATUS.ONGOING) {
+        addAndCondition(whereConditions, {
+            startDateTime: { [Op.lte]: now }
+        });
+
+        addAndCondition(whereConditions, {
+            endDateTime: { [Op.gte]: now }
         });
     }
 
     if (status === EVENT_STATUS.PAST) {
         addAndCondition(whereConditions, {
-            endDateTime: { [Op.lt]: new Date() }
+            endDateTime: { [Op.lt]: now }
         });
     }
 };
-
 
 /* =============================
    DATE FILTERS (OVERLAP LOGIC)

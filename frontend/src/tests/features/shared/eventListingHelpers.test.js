@@ -66,6 +66,13 @@ describe("eventListingHelpers", () => {
         expect(labels["startDateTime-desc"]).toBe("Most recent");
     });
 
+    it("should return ongoing-view specific sort labels", () => {
+        const labels = getSortLabels(EVENT_STATUS.ONGOING);
+
+        expect(labels["startDateTime-asc"]).toBe("Started earliest");
+        expect(labels["startDateTime-desc"]).toBe("Started most recently");
+    });
+
     /* =============================
        TODAY FILTERS
     ============================= */

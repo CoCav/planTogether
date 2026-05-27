@@ -17,7 +17,7 @@ import { createEvent } from "../../factories/events/eventFactory";
    Handles:
    - event information rendering
    - event image rendering and fallback
-   - role and type badge display
+   - role, status and type badge display
    - fallback display values
    - join and leave action visibility
    - guest login prompt
@@ -26,7 +26,6 @@ import { createEvent } from "../../factories/events/eventFactory";
    - join and leave callbacks
    - accessible image links
    - accessible event labels
-   - accessible ended status
    - decorative icon accessibility
 
    Notes:
@@ -211,6 +210,26 @@ describe("EventCard", () => {
         expect(screen.getByText("👤 Participant")).toBeInTheDocument();
     });
 
+    it("should display status badge for upcoming event", () => {
+        renderCard({
+            event: {
+                status: EVENT_STATUS.UPCOMING
+            }
+        });
+
+        expect(screen.getByText("Upcoming")).toHaveClass("badge-upcoming");
+    });
+
+    it("should display status badge for ongoing event", () => {
+        renderCard({
+            event: {
+                status: EVENT_STATUS.ONGOING
+            }
+        });
+
+        expect(screen.getByText("Ongoing")).toHaveClass("badge-ongoing");
+    });
+
     /* =============================
        JOIN EVENT
     ============================= */
@@ -286,24 +305,14 @@ describe("EventCard", () => {
        PAST EVENT STATE
     ============================= */
 
-    it("should show ended label when event is past", () => {
+    it("should display ended status badge when event is past", () => {
         renderCard({
             event: {
                 status: EVENT_STATUS.PAST
             }
         });
 
-        expect(screen.getByText(/ended/i)).toBeInTheDocument();
-    });
-
-    it("should expose accessible ended status label", () => {
-        renderCard({
-            event: {
-                status: EVENT_STATUS.PAST
-            }
-        });
-
-        expect(screen.getByLabelText(/event ended/i)).toBeInTheDocument();
+        expect(screen.getByText("Ended")).toHaveClass("badge-past");
     });
 
     it("should not show join or leave buttons when event is past", () => {

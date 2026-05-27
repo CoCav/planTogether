@@ -21,12 +21,15 @@ import Badge from "../ui/Badge";
    Handles:
    - event preview content
    - role and type badges
+   - event status display
    - event metadata display
    - membership action visibility
    - image fallback handling
    - accessible image links
    - accessible event labels
-   - accessible ended status
+
+   Notes:
+   - supports role and status badge display
 ================================================== */
 
 export default function EventCard({ event, user, role = null, onJoin, onLeave }) {
@@ -93,6 +96,10 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
 
                         <div className="event-card-badges" aria-label="Event labels">
 
+                            {!isPast && (
+                                <Badge status={eventDisplayData.status} />
+                            )}
+
                             {eventDisplayData.type && (
                                 <span className="event-card-type-badge">{eventDisplayData.type}</span>
                             )}
@@ -110,6 +117,8 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
 
                     <EventCardActions
                         eventId={event.id}
+
+                        status={eventDisplayData.status}
                         isPast={isPast}
 
                         canLeave={canLeave}

@@ -4,14 +4,17 @@ import { render, screen } from "@testing-library/react";
 import Badge from "../../../components/ui/Badge";
 
 import { EVENT_ROLES } from "../../../features/shared/constants/eventRoles";
+import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
 
 /* ==================================================
    BADGE TESTS
-   Tests role-based and custom badge rendering
+   Tests role, status and custom badge rendering
 
    Handles:
    - role badge rendering
    - role badge variants
+   - status badge rendering
+   - status badge variants
    - custom variants and labels
    - children fallback labels
    - custom class support
@@ -58,6 +61,34 @@ describe("Badge", () => {
         });
 
         expect(screen.getByText(/participant/i)).toHaveClass("badge-participant");
+    });
+
+    /* =============================
+       STATUS BADGES
+    ============================= */
+
+    it("should render upcoming status badge", () => {
+        renderBadge({
+            status: EVENT_STATUS.UPCOMING
+        });
+
+        expect(screen.getByText("Upcoming")).toHaveClass("badge-upcoming");
+    });
+
+    it("should render ongoing status badge", () => {
+        renderBadge({
+            status: EVENT_STATUS.ONGOING
+        });
+
+        expect(screen.getByText("Ongoing")).toHaveClass("badge-ongoing");
+    });
+
+    it("should render ended status badge", () => {
+        renderBadge({
+            status: EVENT_STATUS.PAST
+        });
+
+        expect(screen.getByText("Ended")).toHaveClass("badge-past");
     });
 
     /* =============================

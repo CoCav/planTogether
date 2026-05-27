@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { getEventDisplayData } from "../../../features/events/eventDisplayData";
 
 import { EVENT_MODES } from "../../../features/shared/constants/eventModes";
+import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
 
 import { createEvent } from "../../factories/events/eventFactory";
 
@@ -17,6 +18,7 @@ import { createEvent } from "../../factories/events/eventFactory";
    - display mode and location handling
    - capacity display
    - registration deadline display
+   - event status display data
    - nullable display fields
 
    Notes:
@@ -181,5 +183,17 @@ describe("getEventDisplayData", () => {
         });
 
         expect(data.registrationDeadline).toBeNull();
+    });
+
+    /* =============================
+       EVENT STATUS
+    ============================= */
+
+    it("should return event status", () => {
+        const data = getDisplayData({
+            status: EVENT_STATUS.ONGOING
+        });
+
+        expect(data.status).toBe(EVENT_STATUS.ONGOING);
     });
 });

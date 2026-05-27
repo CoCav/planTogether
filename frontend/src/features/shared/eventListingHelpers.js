@@ -64,23 +64,44 @@ export const EVENT_SORT_MAP = {
 };
 
 // Returns sort labels adapted to the active view
-export const getSortLabels = (view) => ({
-    "startDateTime-asc":
-        view === EVENT_STATUS.PAST
-            ? "Oldest first"
-            : "Soonest first",
+export const getSortLabels = (view) => {
+    if (view === EVENT_STATUS.PAST) {
+        return {
+            "startDateTime-asc": "Oldest first",
+            "startDateTime-desc": "Most recent",
 
-    "startDateTime-desc":
-        view === EVENT_STATUS.PAST
-            ? "Most recent"
-            : "Farthest first",
+            "title-asc": "Title A-Z",
+            "title-desc": "Title Z-A",
 
-    "title-asc": "Title A-Z",
-    "title-desc": "Title Z-A",
+            "createdAt-desc": "Newest created",
+            "createdAt-asc": "Oldest created"
+        };
+    }
 
-    "createdAt-desc": "Newest created",
-    "createdAt-asc": "Oldest created"
-});
+    if (view === EVENT_STATUS.ONGOING) {
+        return {
+            "startDateTime-asc": "Started earliest",
+            "startDateTime-desc": "Started most recently",
+
+            "title-asc": "Title A-Z",
+            "title-desc": "Title Z-A",
+
+            "createdAt-desc": "Newest created",
+            "createdAt-asc": "Oldest created"
+        };
+    }
+
+    return {
+        "startDateTime-asc": "Soonest first",
+        "startDateTime-desc": "Farthest first",
+
+        "title-asc": "Title A-Z",
+        "title-desc": "Title Z-A",
+
+        "createdAt-desc": "Newest created",
+        "createdAt-asc": "Oldest created"
+    };
+};
 
 /* =============================
    TODAY FILTERS

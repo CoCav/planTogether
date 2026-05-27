@@ -3,6 +3,7 @@
 
    Tests:
    - current user events query validation
+   - status and mode allowlists
    - current user profile update validation
    - current user password update validation
    - public user ID param validation
@@ -52,6 +53,19 @@ describe("userValidator", () => {
             expect(result.isEmpty()).toBe(true);
         });
 
+        it("should allow ongoing status", async () => {
+            const result = await runValidation(
+                getCurrentUserEventsValidator,
+                {
+                    query: {
+                        status: EVENT_STATUS.ONGOING
+                    }
+                }
+            );
+
+            expect(result.isEmpty()).toBe(true);
+        });
+
         it("should fail with invalid view", async () => {
             const result = await runValidation(getCurrentUserEventsValidator, {
                 query: {
@@ -80,6 +94,44 @@ describe("userValidator", () => {
             });
 
             expect(result.array()[0].msg).toMatch(/sort field must be one of/i);
+        });
+
+        it("should fail with invalid status", async () => {
+            const result = await runValidation(
+                getCurrentUserEventsValidator,
+                {
+                    query: {
+                        status: "cancelled"
+                    }
+                }
+            );
+
+            expect(result.array()).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        msg: "Status must be upcoming, ongoing or past"
+                    })
+                ])
+            );
+        });
+
+        it("should fail with invalid mode", async () => {
+            const result = await runValidation(
+                getCurrentUserEventsValidator,
+                {
+                    query: {
+                        mode: "hybrid"
+                    }
+                }
+            );
+
+            expect(result.array()).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        msg: "Mode must be online or in_person"
+                    })
+                ])
+            );
         });
     });
 

@@ -60,6 +60,26 @@ export const createAllEventsView = (overrides = {}) => ({
     ...overrides
 });
 
+// Generate ongoing events view content
+export const createOngoingEventsView = (overrides = {}) => ({
+    key: EVENT_STATUS.ONGOING,
+    label: "Ongoing",
+    icon: "⏳",
+    title: "Ongoing Events",
+    subtitle: "See events currently happening.",
+    empty: "No ongoing events.",
+
+    status: EVENT_STATUS.ONGOING,
+
+    defaultSortBy: "startDateTime",
+    defaultOrder: "asc",
+
+    showQuickActions: true,
+    clearDateFiltersOnEnter: false,
+
+    ...overrides
+});
+
 // Generate upcoming events view content
 export const createUpcomingEventsView = (overrides = {}) => ({
     key: EVENT_STATUS.UPCOMING,

@@ -13,6 +13,7 @@ import { EVENT_MODES, getEventModeLabel } from "../shared/constants/eventModes";
    - participant display labels
    - capacity display
    - registration deadline display
+   - event status display data
 ================================================== */
 
 export function getEventDisplayData(event) {
@@ -47,6 +48,8 @@ export function getEventDisplayData(event) {
 
         registrationDeadline: event.registrationDeadline
             ? formatEventDateRange(event.registrationDeadline, event.registrationDeadline)
-            : null
+            : null,
+
+        status: event.status
     };
 }

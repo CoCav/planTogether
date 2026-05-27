@@ -7,6 +7,8 @@ import { getAllEvents } from "../../../../api/events/eventApi";
 
 import useEventMembershipRoles from "../../../../features/eventMemberships/hooks/useEventMembershipRoles";
 
+import { EVENT_STATUS } from "../../../../features/shared/constants/eventStatus";
+
 import { DEFAULT_EVENT_LISTING_FILTERS } from "../../../../features/shared/eventListingDefaults";
 
 /* ==================================================
@@ -112,7 +114,7 @@ describe("useEventListingData", () => {
        PUBLIC EVENT LOADING
     ============================= */
 
-    it("loads all events when no filters are active", async () => {
+    it("loads events when no filters are active", async () => {
         getAllEvents.mockResolvedValue(
             createPaginatedEventResponse({
                 events: [
@@ -131,7 +133,7 @@ describe("useEventListingData", () => {
         const { result } = renderUseEventListingData();
 
         await act(async () => {
-            await result.current.loadData(createFilters(), 1, "all");
+            await result.current.loadData(createFilters(), 1, EVENT_STATUS.ONGOING);
         });
 
         expect(getAllEvents).toHaveBeenCalledTimes(1);
@@ -177,7 +179,7 @@ describe("useEventListingData", () => {
                     search: "workshop"
                 }),
                 2,
-                "all"
+                EVENT_STATUS.ONGOING
             );
         });
 
@@ -213,7 +215,7 @@ describe("useEventListingData", () => {
                     unknownField: "should-not-be-sent"
                 }),
                 1,
-                "all"
+                EVENT_STATUS.ONGOING
             );
         });
 
@@ -233,20 +235,66 @@ describe("useEventListingData", () => {
         );
     });
 
-    it("adds view status to API params when the selected view has a status", async () => {
+    it("adds upcoming status to API params when the selected view has a status", async () => {
         getAllEvents.mockResolvedValue(createPaginatedEventResponse());
 
         const { result } = renderUseEventListingData();
 
         await act(async () => {
-            await result.current.loadData(createFilters(), 1, "upcoming");
+            await result.current.loadData(
+                createFilters(),
+                1,
+                EVENT_STATUS.UPCOMING
+            );
         });
 
         expect(getAllEvents).toHaveBeenCalledWith(
             expect.objectContaining({
-                status: expect.any(String),
+                status: EVENT_STATUS.UPCOMING,
                 page: 1,
                 pageSize: 4
+            })
+        );
+    });
+
+    it("uses ongoing view by default when no view is provided", async () => {
+        getAllEvents.mockResolvedValue(createPaginatedEventResponse());
+
+        const { result } = renderUseEventListingData();
+
+        await act(async () => {
+            await result.current.loadData(createFilters());
+        });
+
+        expect(getAllEvents).toHaveBeenCalledWith(
+            expect.objectContaining({
+                status: EVENT_STATUS.ONGOING,
+                sortBy: "startDateTime",
+                order: "asc",
+                page: 1,
+                pageSize: 4
+            })
+        );
+    });
+
+    it("adds ongoing status to API params for ongoing view", async () => {
+        getAllEvents.mockResolvedValue(createPaginatedEventResponse());
+
+        const { result } = renderUseEventListingData();
+
+        await act(async () => {
+            await result.current.loadData(
+                createFilters(),
+                1,
+                EVENT_STATUS.ONGOING
+            );
+        });
+
+        expect(getAllEvents).toHaveBeenCalledWith(
+            expect.objectContaining({
+                status: EVENT_STATUS.ONGOING,
+                sortBy: "startDateTime",
+                order: "asc"
             })
         );
     });
@@ -263,14 +311,14 @@ describe("useEventListingData", () => {
                     order: ""
                 }),
                 1,
-                "all"
+                EVENT_STATUS.ONGOING
             );
         });
 
         expect(getAllEvents).toHaveBeenCalledWith(
             expect.objectContaining({
-                sortBy: expect.any(String),
-                order: expect.any(String)
+                sortBy: "startDateTime",
+                order: "asc"
             })
         );
     });
@@ -299,7 +347,7 @@ describe("useEventListingData", () => {
         });
 
         await act(async () => {
-            await result.current.loadData(createFilters(), 1, "all");
+            await result.current.loadData(createFilters(), 1, EVENT_STATUS.ONGOING);
         });
 
         expect(mockLoadMembershipRoles).toHaveBeenCalledTimes(1);
@@ -322,7 +370,7 @@ describe("useEventListingData", () => {
         const { result } = renderUseEventListingData();
 
         await act(async () => {
-            await result.current.loadData(createFilters(), 1, "all");
+            await result.current.loadData(createFilters(), 1, EVENT_STATUS.ONGOING);
         });
 
         expect(setError).toHaveBeenCalledWith("❌ Failed to load events");

@@ -5,7 +5,7 @@
    - event creation validation
    - event update validation
    - clearable optional update fields
-   - event query validation
+   - event query validation with status, mode, sorting and pagination
    - eventId param validation
    - date order validation
    - mode and location validation
@@ -277,6 +277,16 @@ describe("eventValidator", () => {
             expect(result.isEmpty()).toBe(true);
         });
 
+        it("should allow ongoing status query param", async () => {
+            const result = await runValidation(getAllEventsValidator, {
+                query: {
+                    status: EVENT_STATUS.ONGOING
+                }
+            });
+
+            expect(result.isEmpty()).toBe(true);
+        });
+
         it("should fail with invalid sortBy", async () => {
             const result = await runValidation(getAllEventsValidator, {
                 query: {
@@ -305,6 +315,22 @@ describe("eventValidator", () => {
             });
 
             expect(result.array()[0].msg).toMatch(/date must be a valid iso8601 date/i);
+        });
+
+        it("should fail with invalid status", async () => {
+            const result = await runValidation(getAllEventsValidator, {
+                query: {
+                    status: "cancelled"
+                }
+            });
+
+            expect(result.array()).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        msg: "Status must be upcoming, ongoing or past"
+                    })
+                ])
+            );
         });
     });
 

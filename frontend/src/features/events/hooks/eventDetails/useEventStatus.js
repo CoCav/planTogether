@@ -20,7 +20,7 @@ export default function useEventStatus({ user, event, isMember = false }) {
 
     const isPast = event?.status === EVENT_STATUS.PAST;
 
-    // Checks wether the event has already started
+    // Checks whether the event has already started
     const isStarted =
         Boolean(event?.startDateTime) &&
         new Date(event.startDateTime).getTime() <= Date.now();

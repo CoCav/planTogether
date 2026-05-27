@@ -17,6 +17,7 @@ import { createEventFilters } from "../../factories/events/eventFiltersFactory";
 
 import {
     createAllEventsView,
+    createOngoingEventsView,
     createPastEventsView,
     createUpcomingEventsView
 } from "../../factories/events/eventViewFactory";
@@ -27,7 +28,7 @@ import {
 
    Handles:
    - public event query keys
-   - view parsing
+   - view parsing and fallback resolution
    - shared page parsing
    - filter parsing
    - URLSearchParams building
@@ -40,6 +41,7 @@ import {
 
 const views = [
     createAllEventsView(),
+    createOngoingEventsView(),
     createUpcomingEventsView(),
     createPastEventsView()
 ];
@@ -85,13 +87,25 @@ describe("eventQueryParams", () => {
             `${EVENT_VIEW_QUERY_KEY}=invalid`
         );
 
-        expect(getInitialViewFromUrl(searchParams, views)).toBe("all");
+        expect(getInitialViewFromUrl(searchParams, views)).toBe(EVENT_STATUS.ONGOING);
     });
 
     it("should return fallback view when URL view is missing", () => {
         const searchParams = new URLSearchParams();
 
-        expect(getInitialViewFromUrl(searchParams, views)).toBe("all");
+        expect(getInitialViewFromUrl(searchParams, views)).toBe(EVENT_STATUS.ONGOING);
+    });
+
+    it("should return custom fallback view when provided", () => {
+        const searchParams = new URLSearchParams();
+
+        expect(
+            getInitialViewFromUrl(
+                searchParams,
+                views,
+                EVENT_STATUS.UPCOMING
+            )
+        ).toBe(EVENT_STATUS.UPCOMING);
     });
 
     /* =============================
@@ -205,10 +219,19 @@ describe("eventQueryParams", () => {
         const params = buildEventSearchParams({
             filters: createEventFilters(),
             page: 1,
-            view: "all"
+            view: EVENT_STATUS.ONGOING
         });
 
         expect(params.has(EVENT_VIEW_QUERY_KEY)).toBe(false);
         expect(params.has(EVENT_PAGE_QUERY_KEY)).toBe(false);
+    });
+
+    it("should include view when it differs from fallback view", () => {
+        const params = buildEventSearchParams({
+            filters: createEventFilters(),
+            view: EVENT_STATUS.UPCOMING
+        });
+
+        expect(params.get(EVENT_VIEW_QUERY_KEY)).toBe(EVENT_STATUS.UPCOMING);
     });
 });

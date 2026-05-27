@@ -1,5 +1,7 @@
 import { EVENT_PAGE_QUERY_KEY, EVENT_VIEW_QUERY_KEY } from "../shared/eventListingQueryKeys";
 
+import { EVENT_STATUS } from "../shared/constants/eventStatus";
+
 import { getDefaultEventFilters } from "./eventFilters";
 
 /* ==================================================
@@ -32,7 +34,7 @@ export const PUBLIC_EVENT_FILTER_QUERY_KEYS = [
 ];
 
 // Gets the initial active view from URL params
-export const getInitialViewFromUrl = (searchParams, views, fallbackView = "all") => {
+export const getInitialViewFromUrl = (searchParams, views, fallbackView = EVENT_STATUS.ONGOING) => {
 
     const view = searchParams.get(EVENT_VIEW_QUERY_KEY);
 
@@ -55,12 +57,7 @@ export const getInitialEventFiltersFromUrl = (searchParams) => {
 };
 
 // Builds URL params from public event filters
-export const buildEventSearchParams = ({
-    filters = {},
-    page = 1,
-    view = "all",
-    fallbackView = "all"
-}) => {
+export const buildEventSearchParams = ({ filters = {}, page = 1, view = EVENT_STATUS.ONGOING, fallbackView = EVENT_STATUS.ONGOING }) => {
 
     const params = new URLSearchParams();
 

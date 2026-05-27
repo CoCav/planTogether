@@ -86,7 +86,7 @@ describe("Get Current User Event Access API", () => {
         expect(res.statusCode).toBe(200);
         expect(res.body).toMatchObject({
             role: EVENT_ROLES.ORGANIZER,
-            status: EVENT_STATUS.UPCOMING,
+            status: EVENT_STATUS.ONGOING,
             canEdit: true,
             canDelete: false
         });

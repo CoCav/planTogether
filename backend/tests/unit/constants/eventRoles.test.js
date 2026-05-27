@@ -23,9 +23,9 @@ describe("eventRoles constants", () => {
 
     it("should expose all valid event roles", () => {
         expect(VALID_EVENT_ROLES).toEqual([
-            "organizer",
-            "co_organizer",
-            "participant"
+            EVENT_ROLES.ORGANIZER,
+            EVENT_ROLES.CO_ORGANIZER,
+            EVENT_ROLES.PARTICIPANT
         ]);
     });
 });

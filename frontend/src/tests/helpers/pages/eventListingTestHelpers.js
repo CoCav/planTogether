@@ -7,6 +7,9 @@ import { expect } from "vitest";
    - authenticated / guest test user setup
    - paginated API expectations
    - loaded empty listing state
+
+   Notes:
+   - public events default to the ongoing view
 ================================================== */
 
 /* =============================
@@ -39,9 +42,6 @@ export const expectListingApiCalledWith = (mockApi, params = {}) => {
    LOADED EMPTY STATE
 ============================= */
 
-export const waitForEmptyListingState = async (
-    screen,
-    emptyText = /no events found/i
-) => {
+export const waitForEmptyListingState = async (screen, emptyText = /no ongoing events/i) => {
     await screen.findByText(emptyText);
 };

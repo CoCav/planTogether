@@ -28,6 +28,7 @@ import {
    - accessible event image description
    - membership section and ownership transfer integration
    - event action integration
+   - event status badge display
    - authenticated and guest states
    - started and past event restrictions
 
@@ -766,6 +767,8 @@ describe("EventDetailsPage", () => {
         renderPage();
 
         expect(await screen.findByText(/^ended$/i)).toBeInTheDocument();
+        expect(screen.queryByText("Upcoming")).not.toBeInTheDocument();
+        expect(screen.queryByText("Ongoing")).not.toBeInTheDocument();
 
         expect(screen.queryByRole("button", {
             name: /edit event/i
@@ -796,6 +799,33 @@ describe("EventDetailsPage", () => {
         expect(screen.queryByRole("button", {
             name: /join the event/i
         })).not.toBeInTheDocument();
+    });
+
+    it("should display upcoming status badge", async () => {
+        setupApi({
+            event: createEvent({
+                ...mockEvent,
+                status: EVENT_STATUS.UPCOMING
+            })
+        });
+
+        renderPage();
+
+        expect(await screen.findByText("Upcoming")).toBeInTheDocument();
+    });
+
+    it("should display ongoing status badge", async () => {
+        setupApi({
+            event: createEvent({
+                ...mockEvent,
+                status: EVENT_STATUS.ONGOING
+            })
+        });
+
+        renderPage();
+
+        expect(await screen.findByText("Ongoing")).toBeInTheDocument();
+
     });
 
     /* =============================

@@ -1,4 +1,5 @@
 import Alert from "../ui/Alert";
+import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 
 /* ==================================================
@@ -11,13 +12,16 @@ import Button from "../ui/Button";
    - edit / delete actions
    - availability disabled states
    - guest login prompt
-   - accessible ended status
-   - accessible guest prompt
+
+   Notes:
+   - past events do not expose interactive actions
+   - the status badge replaces action buttons for past events
 ================================================== */
 
 export default function EventDetailsActions({
     eventId,
 
+    status,
     isPast,
 
     canJoin,
@@ -34,19 +38,24 @@ export default function EventDetailsActions({
     onEdit,
     onDelete
 }) {
-    // Past events do not expose interactive event actions
+
+    /* =========================
+       PAST EVENT STATE
+    ========================= */
+
+    // Past events do not expose interactive actions.
+    // Display the event status badge instead.
     if (isPast) {
         return (
             <div className="event-details-actions">
-                <span className="event-status-label" aria-label="Event ended">
-                    Ended
-                </span>
+                <Badge status={status} />
             </div>
         );
     }
 
     return (
         <div className="event-details-actions">
+
             {showEventFullButton && (
                 <Button type="button" disabled>
                     Event full

@@ -4,6 +4,8 @@ import { getAllEvents } from "../../../api/events/eventApi";
 
 import useEventMembershipRoles from "../../eventMemberships/hooks/useEventMembershipRoles";
 
+import { EVENT_STATUS } from "../../shared/constants/eventStatus";
+
 import { getNormalizedEvents } from "../eventNormalizer";
 import { getEventFilterFields } from "../eventFilters";
 import { getEventViewContent } from "../eventViewConfig";
@@ -58,11 +60,7 @@ export default function useEventListingData({
        EVENT LOADING
     ============================= */
 
-    const loadData = useCallback(async (
-        customFilters = {},
-        customPage = 1,
-        customView = "all"
-    ) => {
+    const loadData = useCallback(async (customFilters = {}, customPage = 1, customView = EVENT_STATUS.ONGOING) => {
 
         try {
             setError("");

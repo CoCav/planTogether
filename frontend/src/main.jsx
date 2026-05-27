@@ -20,8 +20,6 @@ import "./styles/components/auth/login-form.css";
 
 import "./styles/components/eventMemberships/event-members-section.css";
 
-import "./styles/components/events/event-shared-actions.css";
-
 import "./styles/components/events/event-card-actions.css";
 import "./styles/components/events/event-card.css";
 import "./styles/components/events/event-details-actions.css";

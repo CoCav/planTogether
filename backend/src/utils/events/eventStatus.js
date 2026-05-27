@@ -2,7 +2,7 @@
    EVENT STATUS
 
    Handles:
-   - event status computation (past / upcoming)
+   - event status computation (upcoming / ongoing / past)
    - event start and end time checks
    - time-based business rules enforcement
 
@@ -34,9 +34,15 @@ const isEventPast = (event) => {
 
 // Get event status
 const getEventStatus = (event) => {
-    return isEventPast(event)
-        ? EVENT_STATUS.PAST
-        : EVENT_STATUS.UPCOMING;
+    if (isEventPast(event)) {
+        return EVENT_STATUS.PAST;
+    }
+
+    if (hasEventStarted(event)) {
+        return EVENT_STATUS.ONGOING;
+    }
+
+    return EVENT_STATUS.UPCOMING;
 };
 
 /* =============================

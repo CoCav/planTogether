@@ -35,7 +35,7 @@ const hasActiveEventFilters = (filters = {}) => {
 };
 
 // Builds the empty state for public event pages
-export const getEventEmptyStates = ({ filters = {}, activeView = "all" }) => {
+export const getEventEmptyStates = ({ filters = {}, activeView = EVENT_STATUS.ONGOING }) => {
     if (filters.date) {
         return {
             title: "No events are scheduled for this date.",
@@ -54,6 +54,13 @@ export const getEventEmptyStates = ({ filters = {}, activeView = "all" }) => {
         return {
             title: "No events match your filters.",
             description: "Try adjusting or resetting your filters."
+        };
+    }
+
+    if (activeView === EVENT_STATUS.ONGOING) {
+        return {
+            title: "No ongoing events.",
+            description: "Check upcoming events or create your own event."
         };
     }
 

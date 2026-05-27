@@ -24,6 +24,7 @@ import EventParticipantsSection from "../components/eventMemberships/EventPartic
 import EventStaffSection from "../components/eventMemberships/EventStaffSection";
 
 import Alert from "../components/ui/Alert";
+import Badge from "../components/ui/Badge";
 import Card from "../components/ui/Card";
 import EmptyState from "../components/ui/EmptyState";
 import PageLoader from "../components/ui/PageLoader";
@@ -42,6 +43,7 @@ import PageLoader from "../components/ui/PageLoader";
    - started and past event restrictions
    - staff and participant management
    - display-ready event data
+   - event status badge display
    - accessible event image description
 ================================================== */
 
@@ -272,12 +274,18 @@ export default function EventDetailsPage() {
             <section className="event-details-overview" aria-labelledby="event-details-title">
                 <Card className="event-details-card">
                     <div className="event-details-header">
-                        <h2 id="event-details-title" className="event-details-title">
-                            {eventDisplayData.title}
-                        </h2>
+                        <div className="event-details-title-row">
+                            <h2 className="event-details-title">
+                                {eventDisplayData.title}
+                            </h2>
+
+                            {!isPast && <Badge status={eventDisplayData.status} />}
+                        </div>
 
                         <EventDetailsActions
                             eventId={event.id}
+
+                            status={eventDisplayData.status}
                             isPast={isPast}
 
                             canJoin={canJoin}

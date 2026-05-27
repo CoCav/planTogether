@@ -11,8 +11,8 @@
 
    Ensures:
    - started events are detected from startDateTime
-   - event status is based on endDateTime
-   - active/future events remain actionable where allowed
+   - event status is computed from event start and end dates
+   - upcoming and ongoing events remain actionable where allowed
    - past events throw a 403 business error
    - started events cannot be deleted
    - shared event status constants are used for expected statuses
@@ -112,20 +112,39 @@ describe("eventStatus utils", () => {
        EVENT STATUS COMPUTATION
     ============================= */
 
+    it("should return upcoming status for future event", () => {
+        expect(
+            getEventStatus({
+                startDateTime: "2026-04-25T13:00:00.000Z",
+                endDateTime: "2026-04-25T14:00:00.000Z"
+            })
+        ).toBe(EVENT_STATUS.UPCOMING);
+    });
+
+    it("should return ongoing status for started event that has not ended", () => {
+        expect(
+            getEventStatus({
+                startDateTime: "2026-04-25T11:00:00.000Z",
+                endDateTime: "2026-04-25T13:00:00.000Z"
+            })
+        ).toBe(EVENT_STATUS.ONGOING);
+    });
+
+    it("should return ongoing status when event starts exactly now", () => {
+        expect(
+            getEventStatus({
+                startDateTime: "2026-04-25T12:00:00.000Z",
+                endDateTime: "2026-04-25T13:00:00.000Z"
+            })
+        ).toBe(EVENT_STATUS.ONGOING);
+    });
+
     it("should return past status for past event", () => {
         expect(
             getEventStatus({
                 endDateTime: "2026-04-25T11:59:00.000Z"
             })
         ).toBe(EVENT_STATUS.PAST);
-    });
-
-    it("should return upcoming status for active or future event", () => {
-        expect(
-            getEventStatus({
-                endDateTime: "2026-04-25T12:01:00.000Z"
-            })
-        ).toBe(EVENT_STATUS.UPCOMING);
     });
 
     /* =============================

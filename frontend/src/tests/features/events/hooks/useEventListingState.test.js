@@ -74,8 +74,8 @@ describe("useEventListingState", () => {
     it("uses fallback view when URL view is invalid", () => {
         const { result } = renderUseEventListingState("view=unknown&page=2");
 
-        expect(result.current.view.initialView).toBe("all");
-        expect(result.current.view.activeView).toBe("all");
+        expect(result.current.view.initialView).toBe(EVENT_STATUS.ONGOING);
+        expect(result.current.view.activeView).toBe(EVENT_STATUS.ONGOING);
 
         expect(result.current.paginationState.initialPage).toBe(2);
         expect(result.current.paginationState.pagination.page).toBe(2);

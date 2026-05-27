@@ -1,6 +1,7 @@
 const { body, param, query } = require("express-validator");
 
-const { EVENT_MODES } = require("../constants/eventModes");
+const { EVENT_MODES, VALID_EVENT_MODES } = require("../constants/eventModes");
+const { VALID_EVENT_STATUS } = require("../constants/eventStatus");
 
 /* ==================================================
    EVENT VALIDATORS
@@ -55,7 +56,7 @@ const createEventValidator = [
     body("mode")
         .trim()
         .notEmpty().withMessage("Mode is required")
-        .isIn([EVENT_MODES.ONLINE, EVENT_MODES.IN_PERSON]).withMessage("Mode must be online or in_person"),
+        .isIn(VALID_EVENT_MODES).withMessage("Mode must be online or in_person"),
 
     body("location")
         .optional({ nullable: true })
@@ -132,7 +133,7 @@ const updateEventValidator = [
     body("mode")
         .optional()
         .trim()
-        .isIn([EVENT_MODES.ONLINE, EVENT_MODES.IN_PERSON]).withMessage("Mode must be online or in_person"),
+        .isIn(VALID_EVENT_MODES).withMessage("Mode must be online or in_person"),
 
     body("location")
         .optional({ nullable: true })
@@ -228,7 +229,7 @@ const getAllEventsValidator = [
 
     query("mode")
         .optional()
-        .isIn([EVENT_MODES.ONLINE, EVENT_MODES.IN_PERSON]).withMessage("Mode must be online or in_person"),
+        .isIn(VALID_EVENT_MODES).withMessage("Mode must be online or in_person"),
 
     query("location")
         .optional()
@@ -253,7 +254,8 @@ const getAllEventsValidator = [
 
     query("status")
         .optional()
-        .isIn(["upcoming", "past"]).withMessage("Status must be upcoming or past"),
+        .isIn(VALID_EVENT_STATUS)
+        .withMessage("Status must be upcoming, ongoing or past"),
 
     query("page")
         .optional()

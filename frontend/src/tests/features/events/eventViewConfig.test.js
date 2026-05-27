@@ -11,6 +11,7 @@ import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
 import {
     createAllEventsView,
     createDefaultEventView,
+    createOngoingEventsView,
     createPastEventsView,
     createUpcomingEventsView
 } from "../../factories/events/eventViewFactory";
@@ -36,11 +37,12 @@ describe("eventViewConfig", () => {
     ============================= */
 
     it("should expose public event views", () => {
-        expect(PUBLIC_EVENT_VIEWS).toHaveLength(3);
+        expect(PUBLIC_EVENT_VIEWS).toHaveLength(4);
 
         expect(PUBLIC_EVENT_VIEWS.map((view) => view.key)).toEqual([
-            "all",
+            EVENT_STATUS.ONGOING,
             EVENT_STATUS.UPCOMING,
+            "all",
             EVENT_STATUS.PAST
         ]);
     });
@@ -49,6 +51,12 @@ describe("eventViewConfig", () => {
         const view = getEventViewContent("all");
 
         expect(view).toMatchObject(createAllEventsView());
+    });
+
+    it("should return ongoing events view content", () => {
+        const view = getEventViewContent(EVENT_STATUS.ONGOING);
+
+        expect(view).toMatchObject(createOngoingEventsView());
     });
 
     it("should return upcoming events view content", () => {

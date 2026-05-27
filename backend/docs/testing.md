@@ -3,8 +3,8 @@
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
 ![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
 ![Test Suites](https://img.shields.io/badge/test%20suites-78%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-595%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-99.11%25%20statements%20%7C%2093.93%25%20branches-brightgreen)
+![Tests](https://img.shields.io/badge/tests-616%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-99.12%25%20statements%20%7C%2094.08%25%20branches-brightgreen)
 
 This document describes the testing architecture and overall testing strategy used in the PlanTogether backend.
 
@@ -37,15 +37,16 @@ The testing architecture is designed to validate:
 - soft-delete lifecycle handling
 - ownership transfer and membership protection flows
 - optimized query and participant count behavior
+- ongoing event status handling
+- started-event deletion restrictions
 
 The current backend test suite includes:
 
-- **78 passing test suites**
-- **595 passing tests**
-- **99.11% statement coverage**
-- **93.93% branch coverage**
+- **616 passing tests**
+- **99.12% statement coverage**
+- **94.08% branch coverage**
 - **100% function coverage**
-- **99.18% line coverage**
+- **99.19% line coverage**
 
 The combination of integration and unit testing helps ensure backend reliability, maintainability, security, query consistency, transaction safety, and safer long-term backend stability across the application.
 
@@ -145,6 +146,9 @@ Covered areas include:
 - inactive membership protection rules
 - role-based authorization
 - upload workflows and upload security protections
+- ongoing event status filtering
+- started-event deletion restrictions
+- event access permission updates
 - validation errors
 - health check and application routes
 - global error handling
@@ -176,6 +180,7 @@ Covered modules include:
 - formatters
 - configuration modules (`database`, `logger`, `cors`)
 - shared constants and business values (`EVENT_ROLES`, `EVENT_STATUS`, `EVENT_MODES`)
+- event status and started-event helpers
 - security-related helpers and policies
 - query builders and query utility helpers
 
@@ -183,6 +188,7 @@ Unit tests are used to verify:
 
 - service business rules
 - event access resolution logic
+- started-event restriction enforcement
 - transaction-related behavior
 - soft-delete lifecycle handling
 - ownership transfer restrictions
@@ -307,7 +313,7 @@ Examples include:
 - Sequelize models
 - database transactions
 - uploaded file cleanup
-- event status helpers
+- event status and started-event helpers
 - query builders and optimization utilities
 - soft-delete lifecycle utilities
 - ownership transfer business rules
@@ -341,7 +347,7 @@ Covered transaction scenarios include:
 
 - event creation
 - event update
-- event deletion
+- event deletion, including started-event restrictions
 - event joining
 - organizer ownership transfer
 - secure account deletion and anonymization
@@ -464,6 +470,7 @@ The testing architecture aims to provide:
 - filtering and query behavior consistency
 - query optimization validation
 - transaction-safe workflow validation
+- event state restriction reliability
 
 These design goals help support long-term backend maintainability, safer feature development, more reliable production behavior, and easier large-scale backend evolution.
 

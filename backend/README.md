@@ -14,8 +14,8 @@ PlanTogether is a collaborative event management platform where users can create
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
 ![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
 ![Test Suites](https://img.shields.io/badge/test%20suites-78%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-595%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-99.11%25%20statements%20%7C%2093.93%25%20branches-brightgreen)
+![Tests](https://img.shields.io/badge/tests-616%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-99.12%25%20statements%20%7C%2094.08%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -273,7 +273,7 @@ Additional security features:
 - Retrieve a single event
 - Retrieve current authenticated user event access and permissions for frontend guards
 - Update events *(organizer or co_organizer)*
-- Delete events *(organizer only)*
+- Delete events *(organizer only, before the event starts)*
 - Event image upload and replacement (`multipart/form-data`)
 - Automatic old event image cleanup when replaced
 - Organizer ownership transfer between active event members
@@ -348,8 +348,9 @@ GET /api/events/:eventId/me
 This endpoint returns:
 
 - the current user's event role
-- the computed event status (`upcoming` or `past`)
+- the computed event status (`upcoming`, `ongoing`, or `past`)
 - action access flags such as `canEdit` and `canDelete`
+- deletion access automatically respects started-event restrictions
 
 It is primarily used by frontend route guards and permission-based UI rendering.
 
@@ -372,7 +373,8 @@ The API prevents invalid or unsafe operations:
 - Cannot promote another user to organizer
 - Cannot remove the organizer
 - Co_organizers cannot manage other co_organizers
-- Past events cannot be modified through protected actions
+- Started events cannot be deleted
+- Past events remain protected from restricted actions
 - Invalid memberships and unauthorized actions are blocked consistently
 - Ownership transfer is restricted to active event members
 - Inactive memberships cannot manage or receive protected roles
@@ -395,6 +397,7 @@ The backend uses a layered middleware architecture:
   - organizer protection
   - membership management restrictions
   - event state restrictions
+  - started event deletion protection
   - ownership transfer restrictions
   - soft-delete membership protection
   - inactive membership handling
@@ -435,7 +438,7 @@ Supported filters:
 - `startDate` → filter events starting from a specific date
 - `endDate` → filter events up to a specific date
 - `date` → filter events for an exact day (overrides range)
-- `status` → filter upcoming or past events
+- `status` → filter upcoming, ongoing or past events
 
 Additional features:
 
@@ -496,14 +499,14 @@ npm run test:coverage
 ### 📊 Testing Results
 
 - ✅ 78 passing test suites
-- ✅ 595 passing tests
+- ✅ 616 passing tests
 - ✅ All tests passing
 
-**Coverage:**
-- 99.11% statements coverage
-- 93.93% branch coverage
-- 100% functions coverage
-- 99.18% lines coverage
+**Coverage**:
+- 99.12% statements
+- 94.08% branches
+- 100% functions
+- 99.19% lines
 
 ✅ High coverage across authentication, authorization, filtering, uploads, soft-delete flows, ownership transfer, transactions, query optimization, and full API flows.
 
@@ -560,6 +563,8 @@ Integration tests run against the real Express application using Supertest and a
   - Role-based permissions
   - Validation and protected actions
   - Event state restrictions
+  - Started event deletion restrictions
+  - Event access permission resolution
 
 - **Event Membership**
   - Join and leave events
@@ -615,6 +620,7 @@ These tests validate isolated internal application logic independently of HTTP r
   - Authentication token utilities
   - Event filtering, query-builder, query optimization, and status utilities
   - Grouped participant count helpers
+  - Event status and started-event helpers
   - Pagination utilities
   - User formatting utilities
   - Uploaded file storage and cleanup
@@ -670,6 +676,7 @@ Additional protections include:
 - membership hierarchy enforcement
 - protected role management operations
 - past event restrictions
+- started event deletion restrictions
 - unauthorized action prevention
 - ownership transfer restrictions
 - inactive membership protection
@@ -919,7 +926,7 @@ GET    /api/events/:eventId/me         (authenticated, current user event access
 
 POST   /api/events                     (authenticated, supports image upload via multipart/form-data)
 PUT    /api/events/:eventId            (organizer or co_organizer, supports image upload via multipart/form-data)
-DELETE /api/events/:eventId            (organizer only)
+DELETE /api/events/:eventId            (organizer only, before the event starts)
 ```
 
 ### 👥 Event Membership
@@ -972,6 +979,10 @@ GET    /
 - Added Sequelize transactions for transaction-safe workflows
 - Added current user event access endpoint for frontend route and UI permission guards
 - Improved registration deadline handling for create and update workflows
+- Added started-event deletion restrictions across authorization and business-rule layers
+- Added reusable hasEventStarted and assertEventNotStarted helpers
+- Extended event status support with ongoing event handling
+- Improved frontend permission alignment through event access rules
 
 ### 🗄️ Database & Performance
 
@@ -987,9 +998,10 @@ GET    /
 - Expanded unit and integration test coverage across all backend layers
 - Added coverage for configuration, constants, security policies, soft-delete flows, ownership transfer, account deletion, and query optimization
 - Added automated GitHub Actions continuous integration testing
-- Reached 78 passing test suites and 595 passing tests
+- Reached 78 passing test suites and 616 passing tests
 - Achieved high coverage across authentication, authorization, filtering, uploads, validation, business rules, and API flows
 - Expanded coverage for registration deadline flows and authentication rate limiting
+- Expanded coverage for started-event restrictions and event access permissions
 
 ---
 
@@ -1007,8 +1019,8 @@ GET    /
 | Logging | ✅ Centralized structured logging with Pino |
 | Database | ✅ PostgreSQL + Sequelize with transactions, indexes, and optimized queries |
 | API Consistency | ✅ Standardized JSON responses and centralized error handling |
-| Testing | ✅ 595 tests across 78 test suites |
-| Coverage | ✅ 99.11% statements / 93.93% branches / 100% functions / 99.18% lines |
+| Testing | ✅ 616 tests across 78 test suites |
+| Coverage | ✅ 99.12% statements / 94.08% branches / 100% functions / 99.19% lines |
 | Continuous Integration | ✅ Automated GitHub Actions backend testing |
 | Frontend Integration | 🔗 Connected and functional |
 

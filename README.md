@@ -11,11 +11,11 @@
 
 ![Auth](https://img.shields.io/badge/Auth-JWT-yellow)
 
-![Backend Tests](https://img.shields.io/badge/backend-589%20passing-brightgreen)
-![Backend Coverage](https://img.shields.io/badge/backend%20coverage-98.56%25%20statements%20%7C%2093.01%25%20branches-brightgreen)
+![Backend Tests](https://img.shields.io/badge/backend-616%20passing-brightgreen)
+![Backend Coverage](https://img.shields.io/badge/backend%20coverage-99.12%25%20statements%20%7C%2094.08%25%20branches-brightgreen)
 
-![Frontend Tests](https://img.shields.io/badge/frontend-1040%20passing-brightgreen)
-![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-97.49%25%20statements%20%7C%2094.17%25%20branches-brightgreen)
+![Frontend Tests](https://img.shields.io/badge/frontend-1103%20passing-brightgreen)
+![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-97.64%25%20statements%20%7C%2094.51%25%20branches-brightgreen)
 
 ![Backend CI](https://github.com/CoCav/planTogether/actions/workflows/backend-ci.yml/badge.svg)
 ![Frontend CI](https://github.com/CoCav/planTogether/actions/workflows/frontend-ci.yml/badge.svg)
@@ -39,8 +39,8 @@ The application focuses on **clean architecture, scalability, security, API cons
 
 ## 🎯 Key Highlights
 
-- 🧪 **1600+ automated tests across backend and frontend** (Jest + Supertest + Vitest + React Testing Library)
-- 📊 **High automated test coverage** (~98% backend / ~97% frontend)
+- 🧪 **1719 automated tests across backend and frontend** (Jest + Supertest + Vitest + React Testing Library)
+- 📊 **High automated test coverage** (~99% backend / ~98% frontend)
 - 🔁 **Separate backend and frontend CI workflows using GitHub Actions**
 - 🔐 **Secure authentication and role-based access control (RBAC)**
 - 🧱 **Clean fullstack architecture** (modular backend services + feature-oriented React frontend)
@@ -68,6 +68,8 @@ Users can:
 - Upload and manage avatars and event images
 - Interact with events through a role-based system (`organizer`, `co_organizer`, `participant`)
 - Manage their profile and authentication securely
+- Interact with status-aware event workflows (`ongoing`, `upcoming`, `ended`)
+- Benefit from permission-aware actions aligned across frontend and backend
 
 The platform is designed to provide a smooth and intuitive user experience through contextual and permission-aware frontend interactions, protected frontend flows, centralized backend permission management, transaction-safe backend workflows, and consistent API-driven interactions.
 
@@ -386,14 +388,16 @@ Testing strategies are intentionally separated:
 - Centralized filtering, pagination, sorting, and listing behavior
 - URL-synchronized event filtering and active views
 - Optimized participant count and query behavior
-- Reusable frontend event listing architecture
+- Ongoing, upcoming, all, and archived event views
+- Centralized event status handling and status badges
+- Started-event restrictions aligned across frontend and backend
 
 ### 👥 Event Participation
 
 - Join and leave events (except for the organizer)
 - Prevent duplicate participation
 - Retrieve event members and organizers
-- Manage personalized event dashboards (created, joined, archived)
+- Manage personalized event dashboards with active and historical views
 - Membership restoration and soft-delete lifecycle handling
 - Organizer ownership transfer workflows
 - Role-aware membership actions and protected event interactions
@@ -537,8 +541,8 @@ npm run test:run
 
 ### 📊 Results
 
-- Backend: 589 tests (78 test suites)
-- Frontend: 1040 tests (121 test files)
+- Backend: 616 tests (78 test suites)
+- Frontend: 1103 tests (123 test files)
 - ✅ Backend and frontend testing architectures fully integrated
 - ✅ High automated coverage across backend and frontend layers
 
@@ -575,6 +579,9 @@ npm run test:run
 - Reusable factories, mocks, render helpers, and testing utilities
 - Semantic structure and accessibility-oriented testing
 - ARIA validation and accessible interaction flows
+- Ongoing event view behavior
+- Event status synchronization and badge rendering
+- Started-event restrictions and permission-aware actions
 
 ### 🔁 Test Strategy
 
@@ -615,7 +622,8 @@ The application implements multiple security mechanisms to protect data, enforce
 ### 🛡️ Authorization
 
 - Role-based access control (RBAC) across backend and frontend
-- Fine-grained permission checks for events and memberships
+- Permission checks for events and memberships
+- Event state-aware restrictions and started-event protections
 - Centralized permission validation and protected actions
 - Frontend access guards for protected event flows
 - Strict role hierarchy enforcement
@@ -664,30 +672,35 @@ These mechanisms help ensure secure data handling, predictable application behav
 
 - Introduced URL-synchronized filters, pagination, and active views
 - Implemented reusable event listing architecture across public and authenticated pages
-- Added protected frontend routes and frontend access guards
 - Improved feature-oriented frontend architecture and reusable frontend workflows
-- Centralized the frontend API layer and normalization helpers
-- Improved contextual empty states and loading behavior
+- Added protected frontend routes and frontend access guards
+- Added ongoing event views and default event listing behavior
+- Added centralized event status badge system
+- Added status-aware event actions and restrictions
+- Aligned started-event deletion behavior with backend authorization rules
 - Expanded frontend testing coverage across routes, features, hooks, APIs, and query synchronization flows
 - Added dedicated frontend testing documentation (`frontend/docs/testing.md`)
 
 ### 🔧 Backend
 
-- Refactored the backend into a more modular and scalable architecture
 - Centralized filtering, pagination, query builders, and reusable query utilities
 - Added transaction-safe workflows for critical operations
-- Improved authorization architecture and protected action handling
 - Added organizer ownership transfer and soft-delete membership lifecycle handling
-- Strengthened upload validation, centralized logging, error handling, and API consistency
-- Added database indexes and improved Sequelize query consistency
+- Added ongoing event status support across filtering and access rules
+- Added started-event deletion restrictions
+- Added reusable started-event business-rule helpers
+- Extended event access permission resolution
 - Added dedicated backend testing documentation (`backend/docs/testing.md`)
 
 ### 🧪 Testing
 
-- Expanded backend testing architecture to 589 tests across 78 test suites
-- Expanded frontend testing architecture to 1040 tests across 121 test files
+- Expanded backend testing architecture to 616 tests across 78 test suites
+- Expanded frontend testing architecture to 1103 tests across 123 test files
 - Added separate backend and frontend CI workflows using GitHub Actions
 - Added isolated PostgreSQL test services for backend integration testing
+- Added coverage for ongoing event workflows
+- Added coverage for event status badge rendering
+- Added coverage for started-event restrictions and permission-aware actions
 - Improved reusable frontend and backend factories, mocks, helpers, and render utilities
 - Expanded testing coverage across permissions, uploads, filtering, validation, synchronization, routing, and business rules
 
@@ -704,8 +717,8 @@ These mechanisms help ensure secure data handling, predictable application behav
 | Database & Transactions | ✅ Optimized and transaction-safe |
 | Backend API | ✅ Stable and well-tested |
 | Frontend Application | ✅ Standardized, role-aware, and accessibility-focused |
-| Backend Testing & CI | ✅ 589 tests across 78 test suites |
-| Frontend Testing & CI | ✅ 1040 tests across 121 test files |
+| Backend Testing & CI | ✅ 616 tests across 78 test suites |
+| Frontend Testing & CI | ✅ 1103 tests across 123 test files |
 | Documentation | ✅ Backend and frontend documentation available |
 | UX Improvements | 🚧 Ongoing |
 
@@ -765,6 +778,7 @@ Through this project, I strengthened my fullstack development skills and gained 
 - Managing soft-delete lifecycle handling and ownership transfer workflows
 - Centralizing validation, security policies, logging, and API response handling
 - Improving maintainability and backend organization through scalable architecture patterns
+- Enforcing business rules consistently across frontend and backend layers
 
 ### ⚛️ Frontend
 
@@ -776,6 +790,7 @@ Through this project, I strengthened my fullstack development skills and gained 
 - Designing scalable filtering and synchronized state architectures
 - Designing interactive UX patterns (drag-and-drop uploads, previews, empty states)
 - Improving frontend maintainability through reusable and scalable frontend architecture patterns
+- Designing status-aware and permission-aware UI workflows
 
 ### 🧪 Testing & Quality
 

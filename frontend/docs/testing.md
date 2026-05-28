@@ -3,7 +3,7 @@
 ![Vitest](https://img.shields.io/badge/Test-Vitest-6E9F18)
 ![RTL](https://img.shields.io/badge/Test-React%20Testing%20Library-E33332)
 ![Test Files](https://img.shields.io/badge/test%20files-123%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-1103%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-1106%20passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-97.64%25%20statements%20%7C%2094.51%25%20branches-brightgreen)
 
 This document describes the testing architecture and overall testing strategy used in the PlanTogether frontend.
@@ -42,11 +42,13 @@ The frontend testing architecture is designed to validate:
 - ongoing event view behavior
 - event status synchronization and status badges
 - started-event restrictions and permission-aware actions
+- event image preservation, replacement, and removal behavior
+- authenticated user event image metadata handling
 
 The current frontend test suite includes:
 
 - **123 passing test files**
-- **1103 passing tests**
+- **1106 passing tests**
 - **97.64% statement coverage**
 - **94.51% branch coverage**
 - **94.6% function coverage**
@@ -152,7 +154,7 @@ Covered testing layers include:
 - protected routes and routing flows
 - page rendering and interaction behavior
 - query synchronization and listing architecture
-- upload interactions and validation behavior
+- upload interactions, image lifecycle handling, and validation behavior
 - shared frontend utilities and helpers
 - reusable testing factories, mocks, and render utilities
 - semantic structure and accessibility-oriented testing
@@ -170,7 +172,7 @@ Covered areas include:
 
 - authentication normalization, validation, and token persistence
 - event filtering, empty states, URL query synchronization, view configuration, and status handling
-- event validation and payload normalization
+- event validation, payload normalization, and image lifecycle handling
 - membership validation, permissions, actions, and management behavior
 - authenticated user event filters, views, URL query synchronization, and normalizers
 - public user filters, views, URL query synchronization, normalizers, and event data
@@ -182,6 +184,7 @@ Covered areas include:
 - ongoing event view behavior
 - started-event restriction logic
 - event status badge configuration
+- event image preservation, replacement, and removal flows
 
 These tests help keep frontend business logic predictable, scalable, maintainable, and easier to evolve over time.
 
@@ -200,6 +203,7 @@ Covered areas include:
 - API error normalization
 - frontend access and permission endpoints
 - multipart upload request handling
+- image preservation, replacement, and removal request flows
 - auth API requests
 - event API requests
 - event membership API requests
@@ -247,6 +251,7 @@ Covered areas include:
 - count and text formatting
 - uploaded file URL resolution
 - avatar and event image fallbacks
+- uploaded event image lifecycle helpers
 - accessible uploaded file and fallback behavior
 - paginated fetching and item merging
 - query parameter synchronization helpers
@@ -340,6 +345,7 @@ Examples include:
 - confirmation dialogs
 - hook callbacks
 - upload files
+- uploaded image state transitions
 - dates and timers
 - browser APIs
 
@@ -411,6 +417,7 @@ The frontend testing architecture aims to provide:
 - maintainable long-term frontend testing workflows
 - consistent semantic and accessibility-focused component behavior
 - reliable event status and permission validation
+- reliable event image lifecycle handling
 
 These goals support long-term frontend maintainability, safer feature development, predictable UI behavior, and scalable frontend architecture evolution.
 

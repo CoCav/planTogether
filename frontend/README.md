@@ -10,7 +10,7 @@ PlanTogether is a collaborative event management platform where users can create
 ![Vitest](https://img.shields.io/badge/Test-Vitest-6E9F18)
 ![RTL](https://img.shields.io/badge/Test-React%20Testing%20Library-E33332)
 ![Test Files](https://img.shields.io/badge/test%20files-123%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-1103%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-1106%20passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-97.64%25%20statements%20%7C%2094.51%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
@@ -277,6 +277,8 @@ Frontend behavior includes:
 - Preventing past start dates
 - Ensuring end dates occur after start dates
 - Validating uploaded image types and sizes
+- Event image preservation when editing without image changes
+- Event image replacement and removal support
 
 ### 👥 Event Memberships
 
@@ -531,7 +533,7 @@ Handles:
 ### 📌 API Architecture Notes
 
 - JWT tokens are automatically attached to authenticated requests
-- Upload requests support `FormData`
+- Upload requests support `FormData` with image preservation, replacement, and removal flows
 - API responses are normalized before being consumed by the UI
 - Errors are standardized through reusable helpers
 - Frontend access guards are synchronized through dedicated event access endpoints
@@ -593,6 +595,7 @@ The event layer handles:
 - dynamic event status behavior
 - ongoing event handling
 - started-event restriction handling
+- event image lifecycle handling
 
 ### 👥 Membership Logic
 
@@ -732,7 +735,7 @@ npx vitest run --coverage
 ### 📊 Testing Results
 
 - ✅ 123 passing test files
-- ✅ 1103 passing tests
+- ✅ 1106 passing tests
 - ✅ All tests passing
 
 **Coverage:**
@@ -760,6 +763,7 @@ The frontend test suite covers:
 - status badge rendering
 - started-event restrictions
 - event status synchronization
+- event image preservation, replacement, and removal behavior
 
 ### 🔁 Testing Strategy
 
@@ -822,6 +826,8 @@ The application will be available at:
 - Added centralized event status badge system
 - Added status-aware event actions and restrictions
 - Aligned started-event deletion behavior with backend authorization rules
+- Added event image lifecycle handling for preservation, replacement, and removal
+- Fixed My Events image rendering using authenticated user event image metadata
 
 ### 🔌 Frontend Architecture
 
@@ -840,6 +846,8 @@ The application will be available at:
 - Added coverage for ongoing event views
 - Added coverage for status badge rendering
 - Added coverage for started-event restrictions
+- Added coverage for event image preservation, replacement, and removal flows
+- Added coverage for authenticated user event image metadata handling
 
 ---
 
@@ -852,8 +860,8 @@ The application will be available at:
 | Frontend Business Logic | ✅ Modular, reusable, and fully tested |
 | Routing & Access Control | ✅ Centralized, role-aware, and fully tested |
 | API Communication Layer | ✅ Centralized Axios architecture and normalized API handling |
-| File Upload System | ✅ Avatar and event image uploads supported |
-| Testing | ✅ 1103 tests across 123 test files |
+| File Upload System | ✅ Avatar and event image upload, replacement, and removal supported |
+| Testing | ✅ 1106 tests across 123 test files |
 | Coverage | ✅ 97.64% statements / 94.51% branches / 94.6% functions / 97.87% lines |
 | UX Improvements | 🚧 Ongoing |
 

@@ -14,8 +14,8 @@ PlanTogether is a collaborative event management platform where users can create
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
 ![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
 ![Test Suites](https://img.shields.io/badge/test%20suites-78%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-616%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-99.12%25%20statements%20%7C%2094.08%25%20branches-brightgreen)
+![Tests](https://img.shields.io/badge/tests-624%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-99.13%25%20statements%20%7C%2094.14%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -274,8 +274,8 @@ Additional security features:
 - Retrieve current authenticated user event access and permissions for frontend guards
 - Update events *(organizer or co_organizer)*
 - Delete events *(organizer only, before the event starts)*
-- Event image upload and replacement (`multipart/form-data`)
-- Automatic old event image cleanup when replaced
+- Event image upload, replacement, and removal (`multipart/form-data`)
+- Automatic old event image cleanup when replaced or removed
 - Organizer ownership transfer between active event members
 
 Additional capabilities:
@@ -499,12 +499,12 @@ npm run test:coverage
 ### 📊 Testing Results
 
 - ✅ 78 passing test suites
-- ✅ 616 passing tests
+- ✅ 624 passing tests
 - ✅ All tests passing
 
 **Coverage**:
-- 99.12% statements
-- 94.08% branches
+- 99.13% statements
+- 94.14% branches
 - 100% functions
 - 99.19% lines
 
@@ -557,7 +557,7 @@ Integration tests run against the real Express application using Supertest and a
 - **Events**
   - CRUD operations
   - Current user event access retrieval
-  - Event image upload and replacement
+  - Event image upload, replacement, removal, and cleanup
   - Filtering, sorting, and pagination
   - Creator-based filtering
   - Role-based permissions
@@ -700,6 +700,7 @@ Unauthenticated users only have read-only access to public resources.
 - File size limits
 - Restricted and normalized upload destinations
 - Secure upload cleanup and path normalization protection
+- Explicit event image removal support with safe cleanup
 
 ### 🔒 Data Protection
 
@@ -983,6 +984,8 @@ GET    /
 - Added reusable hasEventStarted and assertEventNotStarted helpers
 - Extended event status support with ongoing event handling
 - Improved frontend permission alignment through event access rules
+- Improved event image lifecycle handling for preservation, replacement, and removal
+- Ensured authenticated user event listings include event image metadata
 
 ### 🗄️ Database & Performance
 
@@ -998,10 +1001,11 @@ GET    /
 - Expanded unit and integration test coverage across all backend layers
 - Added coverage for configuration, constants, security policies, soft-delete flows, ownership transfer, account deletion, and query optimization
 - Added automated GitHub Actions continuous integration testing
-- Reached 78 passing test suites and 616 passing tests
+- Reached 78 passing test suites and 624 passing tests
 - Achieved high coverage across authentication, authorization, filtering, uploads, validation, business rules, and API flows
 - Expanded coverage for registration deadline flows and authentication rate limiting
 - Expanded coverage for started-event restrictions and event access permissions
+- Expanded coverage for event image preservation, replacement, removal, and current user event image metadata
 
 ---
 
@@ -1019,8 +1023,8 @@ GET    /
 | Logging | ✅ Centralized structured logging with Pino |
 | Database | ✅ PostgreSQL + Sequelize with transactions, indexes, and optimized queries |
 | API Consistency | ✅ Standardized JSON responses and centralized error handling |
-| Testing | ✅ 616 tests across 78 test suites |
-| Coverage | ✅ 99.12% statements / 94.08% branches / 100% functions / 99.19% lines |
+| Testing | ✅ 624 tests across 78 test suites |
+| Coverage | ✅ 99.13% statements / 94.14% branches / 100% functions / 99.19% lines |
 | Continuous Integration | ✅ Automated GitHub Actions backend testing |
 | Frontend Integration | 🔗 Connected and functional |
 

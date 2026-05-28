@@ -3,8 +3,8 @@
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
 ![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
 ![Test Suites](https://img.shields.io/badge/test%20suites-78%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-616%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-99.12%25%20statements%20%7C%2094.08%25%20branches-brightgreen)
+![Tests](https://img.shields.io/badge/tests-624%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-99.13%25%20statements%20%7C%2094.14%25%20branches-brightgreen)
 
 This document describes the testing architecture and overall testing strategy used in the PlanTogether backend.
 
@@ -42,9 +42,9 @@ The testing architecture is designed to validate:
 
 The current backend test suite includes:
 
-- **616 passing tests**
-- **99.12% statement coverage**
-- **94.08% branch coverage**
+- **624 passing tests**
+- **99.13% statement coverage**
+- **94.14% branch coverage**
 - **100% function coverage**
 - **99.19% line coverage**
 
@@ -149,6 +149,8 @@ Covered areas include:
 - ongoing event status filtering
 - started-event deletion restrictions
 - event access permission updates
+- event image preservation, replacement, removal, and cleanup
+- authenticated user event image metadata
 - validation errors
 - health check and application routes
 - global error handling
@@ -187,6 +189,7 @@ Covered modules include:
 Unit tests are used to verify:
 
 - service business rules
+- event image lifecycle preservation, replacement, and removal behavior
 - event access resolution logic
 - started-event restriction enforcement
 - transaction-related behavior
@@ -312,6 +315,7 @@ Examples include:
 
 - Sequelize models
 - database transactions
+- event image lifecycle utilities and cleanup behavior
 - uploaded file cleanup
 - event status and started-event helpers
 - query builders and optimization utilities
@@ -346,7 +350,7 @@ This helps ensure database consistency and prevents partial or unsafe operations
 Covered transaction scenarios include:
 
 - event creation
-- event update
+- event update, including image preservation, replacement, and removal
 - event deletion, including started-event restrictions
 - event joining
 - organizer ownership transfer
@@ -371,7 +375,9 @@ Covered upload behavior includes:
 - MIME type validation
 - file extension validation
 - invalid upload rejection
-- old file cleanup on replacement
+- explicit event image removal
+- event image preservation when updates omit image changes
+- old file cleanup on replacement or removal
 - safe uploaded file deletion
 - upload rollback protection during failed operations
 - upload path normalization and protection

@@ -11,10 +11,10 @@
 
 ![Auth](https://img.shields.io/badge/Auth-JWT-yellow)
 
-![Backend Tests](https://img.shields.io/badge/backend-616%20passing-brightgreen)
-![Backend Coverage](https://img.shields.io/badge/backend%20coverage-99.12%25%20statements%20%7C%2094.08%25%20branches-brightgreen)
+![Backend Tests](https://img.shields.io/badge/backend-624%20passing-brightgreen)
+![Backend Coverage](https://img.shields.io/badge/backend%20coverage-99.13%25%20statements%20%7C%2094.14%25%20branches-brightgreen)
 
-![Frontend Tests](https://img.shields.io/badge/frontend-1103%20passing-brightgreen)
+![Frontend Tests](https://img.shields.io/badge/frontend-1106%20passing-brightgreen)
 ![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-97.64%25%20statements%20%7C%2094.51%25%20branches-brightgreen)
 
 ![Backend CI](https://github.com/CoCav/planTogether/actions/workflows/backend-ci.yml/badge.svg)
@@ -39,7 +39,7 @@ The application focuses on **clean architecture, scalability, security, API cons
 
 ## 🎯 Key Highlights
 
-- 🧪 **1719 automated tests across backend and frontend** (Jest + Supertest + Vitest + React Testing Library)
+- 🧪 **1730 automated tests across backend and frontend** (Jest + Supertest + Vitest + React Testing Library)
 - 📊 **High automated test coverage** (~99% backend / ~98% frontend)
 - 🔁 **Separate backend and frontend CI workflows using GitHub Actions**
 - 🔐 **Secure authentication and role-based access control (RBAC)**
@@ -48,7 +48,7 @@ The application focuses on **clean architecture, scalability, security, API cons
 - 🗄️ **Optimized backend query architecture** (filtering, pagination, indexes, participant counts, reusable query helpers)
 - 🔍 **Advanced event filtering and listing architecture** (search, creator, date range, sorting, pagination, synchronized views)
 - 🔗 **URL-synchronized filters, pagination, and active views**
-- 🖼️ **Secure image upload system** with validation, preview, drag-and-drop, replacement cleanup, and upload protection
+- 🖼️ **Secure image upload system** with validation, preview, drag-and-drop, preservation, replacement, removal, cleanup, and upload protection
 - ⚛️ **Modern React frontend with protected routes, accessibility-focused** UI patterns, reusable frontend workflows, and role-aware interactions
 - 🛡️ **Centralized validation, security, error handling, and API consistency** across backend and frontend layers
 - ♻️ **Soft-delete lifecycle handling** for memberships and secure account deletion flows
@@ -380,7 +380,8 @@ Testing strategies are intentionally separated:
 ### 📅 Event Management
 
 - Create, update, delete, and view events
-- Upload and manage event images (with preview and fallback support)
+- Upload, preserve, replace, remove, and manage event images with preview and fallback support
+- Event image lifecycle handling aligned across frontend and backend
 - Automatic organizer assignment upon event creation
 - Strong frontend and backend validation
 - Date consistency rules and protected event restrictions
@@ -419,9 +420,11 @@ Testing strategies are intentionally separated:
 - Image preview with filename and size
 - Remove uploaded files before submission
 - Default image fallback for missing or broken images
-- Automatic cleanup of replaced uploaded files
+- Automatic cleanup of replaced or removed uploaded files
 - Upload rollback protection during failed operations
 - Secure upload validation and protected file handling
+- Event image preservation when editing without image changes
+- Event image removal with fallback image behavior
 
 ### 🎭 Roles & Permissions
 
@@ -541,8 +544,9 @@ npm run test:run
 
 ### 📊 Results
 
-- Backend: 616 tests (78 test suites)
-- Frontend: 1103 tests (123 test files)
+- Backend: 624 tests (78 test suites)
+- Frontend: 1106 tests (123 test files)
+- Total: 1730 automated tests
 - ✅ Backend and frontend testing architectures fully integrated
 - ✅ High automated coverage across backend and frontend layers
 
@@ -559,6 +563,8 @@ npm run test:run
 - Role hierarchy and protected actions (RBAC)
 - Validation, edge cases, and security rules
 - File upload handling, cleanup, and rollback protection
+- Event image preservation, replacement, removal, and cleanup
+- Authenticated user event image metadata
 - Transaction-safe workflows
 - Soft-delete lifecycle handling and ownership transfer flows
 - API response consistency and centralized error handling
@@ -575,6 +581,8 @@ npm run test:run
 - Event filtering, pagination, and query synchronization
 - Event listing architecture and active views
 - Upload interactions and validation behavior
+- Event image preservation, replacement, and removal behavior
+- Authenticated user event image metadata handling
 - Role-aware frontend interactions and permissions
 - Reusable factories, mocks, render helpers, and testing utilities
 - Semantic structure and accessibility-oriented testing
@@ -642,7 +650,7 @@ The application implements multiple security mechanisms to protect data, enforce
 - File extension validation
 - File size limits
 - Controlled and normalized upload destinations
-- Secure uploaded file replacement and cleanup
+- Secure uploaded file preservation, replacement, removal, and cleanup
 - Upload rollback protection during failed operations
 - Protected file handling and path normalization
 
@@ -672,8 +680,8 @@ These mechanisms help ensure secure data handling, predictable application behav
 
 - Introduced URL-synchronized filters, pagination, and active views
 - Implemented reusable event listing architecture across public and authenticated pages
-- Improved feature-oriented frontend architecture and reusable frontend workflows
-- Added protected frontend routes and frontend access guards
+- Added event image lifecycle handling for preservation, replacement, and removal
+- Fixed My Events image rendering using authenticated user event image metadata
 - Added ongoing event views and default event listing behavior
 - Added centralized event status badge system
 - Added status-aware event actions and restrictions
@@ -685,6 +693,8 @@ These mechanisms help ensure secure data handling, predictable application behav
 
 - Centralized filtering, pagination, query builders, and reusable query utilities
 - Added transaction-safe workflows for critical operations
+- Improved event image lifecycle handling for preservation, replacement, and removal
+- Ensured authenticated user event listings include event image metadata
 - Added organizer ownership transfer and soft-delete membership lifecycle handling
 - Added ongoing event status support across filtering and access rules
 - Added started-event deletion restrictions
@@ -694,13 +704,15 @@ These mechanisms help ensure secure data handling, predictable application behav
 
 ### 🧪 Testing
 
-- Expanded backend testing architecture to 616 tests across 78 test suites
-- Expanded frontend testing architecture to 1103 tests across 123 test files
+- Expanded backend testing architecture to 624 tests across 78 test suites
+- Expanded frontend testing architecture to 1106 tests across 123 test files
+- Reached 1730 automated tests across the fullstack projects
 - Added separate backend and frontend CI workflows using GitHub Actions
 - Added isolated PostgreSQL test services for backend integration testing
 - Added coverage for ongoing event workflows
 - Added coverage for event status badge rendering
 - Added coverage for started-event restrictions and permission-aware actions
+- Added coverage for event image preservation, replacement, removal, and authenticated user event image metadata
 - Improved reusable frontend and backend factories, mocks, helpers, and render utilities
 - Expanded testing coverage across permissions, uploads, filtering, validation, synchronization, routing, and business rules
 
@@ -717,8 +729,8 @@ These mechanisms help ensure secure data handling, predictable application behav
 | Database & Transactions | ✅ Optimized and transaction-safe |
 | Backend API | ✅ Stable and well-tested |
 | Frontend Application | ✅ Standardized, role-aware, and accessibility-focused |
-| Backend Testing & CI | ✅ 616 tests across 78 test suites |
-| Frontend Testing & CI | ✅ 1103 tests across 123 test files |
+| Backend Testing & CI | ✅ 624 tests across 78 test suites |
+| Frontend Testing & CI | ✅ 1106 tests across 123 test files |
 | Documentation | ✅ Backend and frontend documentation available |
 | UX Improvements | 🚧 Ongoing |
 
@@ -779,6 +791,7 @@ Through this project, I strengthened my fullstack development skills and gained 
 - Centralizing validation, security policies, logging, and API response handling
 - Improving maintainability and backend organization through scalable architecture patterns
 - Enforcing business rules consistently across frontend and backend layers
+- Managing event image lifecycle behavior across database updates and filesystem cleanup
 
 ### ⚛️ Frontend
 
@@ -791,6 +804,7 @@ Through this project, I strengthened my fullstack development skills and gained 
 - Designing interactive UX patterns (drag-and-drop uploads, previews, empty states)
 - Improving frontend maintainability through reusable and scalable frontend architecture patterns
 - Designing status-aware and permission-aware UI workflows
+- Distinguishing unchanged, replaced, and removed image states in form workflows
 
 ### 🧪 Testing & Quality
 

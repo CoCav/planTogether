@@ -11,11 +11,13 @@ import { createDefaultEventFormValues } from "./eventFormConfig";
    - edit event form prefill values
    - datetime-local value formatting
    - existing image mapping
+   - unchanged image state preservation
    - registration deadline option resolution
 
    Notes:
    - used by EditEventPage
    - keeps API event -> EventForm conversion centralized
+   - image remains undefined until users select or remove an image
 ================================================== */
 
 /* =============================
@@ -124,7 +126,7 @@ export const createEventFormValuesFromEvent = (event = {}) => {
                 ? toDateTimeLocalValue(event.registrationDeadline)
                 : "",
 
-        image: null,
-        currentImage: event.image || null
+        image: undefined, // unchanged until user selects or removes an image
+        currentImage: event.image ?? null
     };
 };

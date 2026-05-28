@@ -5,6 +5,7 @@
    - authenticated user's active events retrieval
    - authentication protection
    - event status enrichment
+   - event image metadata
    - active participant count enrichment
    - pagination by view
    - created view filtering
@@ -17,7 +18,7 @@
    Ensures:
    - authenticated users can retrieve their active related events
    - inactive memberships are excluded from current user events
-   - response includes event metadata
+   - response includes event metadata including images
    - participant counts only include active memberships
    - view filters and pagination work correctly
    - query validators protect the route
@@ -32,6 +33,7 @@ const { EventUserRole } = require("../../../../src/models");
 
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
+const { EVENT_MODES } = require("../../../../src/constants/eventModes");
 
 const { initDB, resetDB, closeDB } = require("../../../helpers/database/dbTestHelper");
 
@@ -150,6 +152,45 @@ describe("Get Current User Events API", () => {
         expect(Number(eventMembership.event.participantCount)).toBe(1);
 
         expect(eventMembership.event).toHaveProperty("status");
+    });
+
+    it("should include event image in current user events", async () => {
+        const { organizerAuth } = await createEventWithOrganizer({
+            organizer: {
+                name: "Image Creator",
+                email: `imagemetadata${Date.now()}@test.com`
+            }
+        });
+
+        const createRes = await request(app)
+            .post("/api/events")
+            .set(organizerAuth.headers)
+            .field("title", "Image Metadata Event")
+            .field("description", "Image metadata test")
+            .field("type", "Meetup")
+            .field("theme", "Technology")
+            .field("mode", EVENT_MODES.IN_PERSON)
+            .field("location", "Montreal")
+            .field("startDateTime", "2026-12-31T10:00:00.000Z")
+            .field("endDateTime", "2026-12-31T12:00:00.000Z")
+            .attach("image", Buffer.from("event image"), {
+                filename: "metadata.png",
+                contentType: "image/png"
+            });
+
+        const eventId = createRes.body.event.id;
+
+        const res = await request(app)
+            .get("/api/users/me/events")
+            .set(organizerAuth.headers);
+
+        expect(res.statusCode).toBe(200);
+
+        const eventMembership = res.body.events.find((item) => item.event.id === eventId);
+
+        expect(eventMembership).toBeDefined();
+
+        expect(eventMembership.event.image).toMatch(/^\/uploads\/events\/event-/);
     });
 
     /* =============================

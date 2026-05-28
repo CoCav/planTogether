@@ -8,13 +8,13 @@ const eventService = require("../services/eventService");
    - event listing with optional filters and pagination
    - single event retrieval
    - current authenticated user event access
-   - event update
+   - event update with image preservation, replacement and removal
    - event deletion
    - API response formatting
 
    Notes:
    - business logic is delegated to eventService
-   - uploaded event image paths are formatted here
+   - uploaded event image paths and clear-image requests are formatted here
    - event access responses support frontend UI guards
    - successful responses include success, message and top-level payload fields when needed
 ================================================== */
@@ -109,8 +109,14 @@ const getEvent = async (req, res, next) => {
 // Update an event
 const updateEvent = async (req, res, next) => {
     try {
-        // Undefined keeps existing image unchanged in service
-        const image = req.file ? `/uploads/events/${req.file.filename}` : undefined;
+        // Uploaded file replaces the existing image.
+        // Empty image field clears the existing image.
+        // Missing image field keeps the existing image unchanged.
+        const image = req.file
+            ? `/uploads/events/${req.file.filename}`
+            : req.body.image !== undefined
+                ? req.body.image || null
+                : undefined;
 
         const event = await eventService.updateEventByID(
             req.params.eventId,

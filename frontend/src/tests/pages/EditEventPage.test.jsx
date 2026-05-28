@@ -317,7 +317,8 @@ describe("EditEventPage", () => {
             expect(mockUpdateEvent).toHaveBeenCalledTimes(1);
         });
 
-        expect(getSubmittedFormData().has("image")).toBe(false);
+        expect(getSubmittedFormData().has("image")).toBe(true);
+        expect(getSubmittedFormData().get("image")).toBe("");
     });
 
     it("updates online event with empty location", async () => {

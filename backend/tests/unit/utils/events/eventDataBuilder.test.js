@@ -8,13 +8,13 @@
    - partial event update payload building
    - online event update location normalization
    - existing image preservation
-   - image update handling
+   - image replacement and clearing
 
    Ensures:
    - event create payloads are normalized before persistence
-   - partial update payloads only include provided fields
+   - partial update payloads preserve omitted fields
    - online events never keep a physical location
-   - existing images are preserved unless explicitly updated
+   - existing images are preserved unless explicitly updated or cleared
 ================================================== */
 
 const { buildEventCreateData, buildEventUpdateData } = require("../../../../src/utils/events/eventDataBuilder");
@@ -155,7 +155,7 @@ describe("eventDataBuilder utils", () => {
         expect(result.image).toBe("/uploads/events/current.png");
     });
 
-    it("should set image when image is provided", () => {
+    it("should replace existing image when a new image is provided", () => {
         const event = {
             image: "/uploads/events/current.png"
         };
@@ -165,5 +165,29 @@ describe("eventDataBuilder utils", () => {
         });
 
         expect(result.image).toBe("/uploads/events/new.png");
+    });
+
+    it("should clear existing image when image is null", () => {
+        const event = {
+            image: "/uploads/events/current.png"
+        };
+
+        const result = buildEventUpdateData(event, {
+            image: null
+        });
+
+        expect(result.image).toBeNull();
+    });
+
+    it("should clear existing image when image is an empty string", () => {
+        const event = {
+            image: "/uploads/events/current.png"
+        };
+
+        const result = buildEventUpdateData(event, {
+            image: ""
+        });
+
+        expect(result.image).toBeNull();
     });
 });

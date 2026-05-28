@@ -21,9 +21,12 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../../features/shared/consta
    - API event prefill values
    - registration deadline option resolution
    - existing image mapping
+   - unchanged image state preservation
 
    Notes:
    - used by EditEventPage form hydration
+   - existing images are stored as currentImage
+   - image remains undefined until users select or remove an image
 ================================================== */
 
 describe("eventFormValues", () => {
@@ -144,15 +147,16 @@ describe("eventFormValues", () => {
                 event.registrationDeadline
             ),
 
-            image: null,
+            image: undefined,
             currentImage: "event.png"
         });
     });
 
     it("should use default values for missing event fields", () => {
-        expect(createEventFormValuesFromEvent({})).toEqual(
-            createDefaultEventFormValues()
-        );
+        expect(createEventFormValuesFromEvent({})).toEqual({
+            ...createDefaultEventFormValues(),
+            image: undefined
+        });
     });
 
     it("should fallback to in-person mode when event mode is missing", () => {
@@ -210,7 +214,7 @@ describe("eventFormValues", () => {
             image: "event.png"
         });
 
-        expect(values.image).toBeNull();
+        expect(values.image).toBeUndefined();
         expect(values.currentImage).toBe("event.png");
     });
 });

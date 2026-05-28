@@ -282,6 +282,32 @@ describe("userService - getCurrentUserEventsByID", () => {
         });
     });
 
+    it("should preserve event image data in current user events", async () => {
+        const membership = {
+            toJSON: () => ({
+                id: 1,
+                event: {
+                    id: 100,
+                    title: "Image Event",
+                    image: "/uploads/events/image.jpg"
+                }
+            })
+        };
+
+        User.findByPk.mockResolvedValue({ id: 1 });
+
+        EventUserRole.findAndCountAll.mockResolvedValue({
+            count: 1,
+            rows: [membership]
+        });
+
+        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
+
+        const result = await userService.getCurrentUserEventsByID(1, {});
+
+        expect(result.events[0].event.image).toBe("/uploads/events/image.jpg");
+    });
+
     /* =============================
        PARTICIPANT COUNT
     ============================= */
@@ -301,6 +327,33 @@ describe("userService - getCurrentUserEventsByID", () => {
             expect.any(Object),
             []
         );
+    });
+
+    it("should fallback participant count to zero when count is missing", async () => {
+        const membership = {
+            toJSON: () => ({
+                id: 1,
+                event: {
+                    id: 999,
+                    title: "Empty Event"
+                }
+            })
+        };
+
+        User.findByPk.mockResolvedValue({ id: 1 });
+
+        EventUserRole.findAndCountAll.mockResolvedValue({
+            count: 1,
+            rows: [membership]
+        });
+
+        countActiveParticipantsByEventIds.mockResolvedValue({});
+
+        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
+
+        const result = await userService.getCurrentUserEventsByID(1, {});
+
+        expect(result.events[0].event.participantCount).toBe(0);
     });
 
     /* =============================

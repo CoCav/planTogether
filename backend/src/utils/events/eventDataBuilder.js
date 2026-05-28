@@ -8,10 +8,12 @@ const { EVENT_MODES } = require("../../constants/eventModes");
    - partial event update payload normalization
    - online event location normalization
    - nullable event field normalization
+   - event image preservation, replacement and clearing
 
    Notes:
    - create payloads always contain full event data
    - update payloads preserve existing fields when omitted
+   - update payloads can explicitly clear nullable fields
    - online events always use a null location
 ================================================== */
 
@@ -73,9 +75,9 @@ const buildEventUpdateData = (event, data) => {
         updatedData.location = data.location;
     }
 
-    // Keep existing image unless explicitly updated
+    // Keep existing image unless explicitly updated or cleared
     if (data.image !== undefined) {
-        updatedData.image = data.image;
+        updatedData.image = data.image || null;
 
     } else {
         updatedData.image = event.image;

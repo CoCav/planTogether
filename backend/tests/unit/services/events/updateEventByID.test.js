@@ -5,6 +5,8 @@
    - successful event update
    - partial update field preservation
    - event image replacement
+   - event image removal
+   - image preservation when omitted
    - invalid date order rejection
    - past event update rejection
    - missing event rejection
@@ -13,6 +15,7 @@
    Ensures:
    - event updates are applied through normalized update data
    - partial updates preserve omitted fields
+   - images can be preserved, replaced or removed
    - old images are deleted only after successful DB commit
    - past event rules are enforced
    - Sequelize transactions are committed on successful updates
@@ -176,6 +179,30 @@ describe("eventService - updateEventByID", () => {
 
         expect(transaction.commit).toHaveBeenCalled();
         expect(transaction.rollback).not.toHaveBeenCalled();
+
+        expect(deleteUploadedFile).toHaveBeenCalledWith("/uploads/events/old-event.png");
+    });
+
+    it("should remove event image and delete previous image", async () => {
+        const event = createMockEventModel({
+            id: 1,
+            image: "/uploads/events/old-event.png",
+            update: jest.fn().mockResolvedValue()
+        });
+
+        const updateData = createMockEventModel({
+            image: null
+        });
+
+        Event.findByPk.mockResolvedValue(event);
+        assertEventNotPast.mockImplementation(() => { });
+        buildEventUpdateData.mockReturnValue(updateData);
+
+        await eventService.updateEventByID(1, {
+            image: null
+        });
+
+        expect(transaction.commit).toHaveBeenCalled();
 
         expect(deleteUploadedFile).toHaveBeenCalledWith("/uploads/events/old-event.png");
     });

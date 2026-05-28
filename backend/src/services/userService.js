@@ -137,20 +137,6 @@ const getCurrentUserEventsByID = async (userId, query = {}) => {
             model: Event,
             as: "event",
             where: eventFilter,
-            attributes: [
-                "id",
-                "title",
-                "description",
-                "type",
-                "theme",
-                "mode",
-                "location",
-                "startDateTime",
-                "endDateTime",
-                "maxParticipants",
-                "registrationDeadline",
-                "creatorId"
-            ],
             include: [
                 buildEventCreatorInclude(User, creator)
             ]

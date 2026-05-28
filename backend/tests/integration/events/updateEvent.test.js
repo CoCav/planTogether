@@ -5,6 +5,8 @@
    - organizer event update
    - co-organizer event update
    - event update with image upload
+   - event image removal
+   - image cleanup after replacement
    - authentication protection
    - participant update rejection
    - nonexistent event handling
@@ -18,7 +20,7 @@
    - organizers and co-organizers can update events
    - participants cannot update events
    - validators and authorization protect event updates
-   - uploaded event images are updated correctly
+   - uploaded event images are preserved, replaced or removed correctly
    - shared event role constants are used for valid role scenarios
 ================================================ */
 
@@ -162,6 +164,51 @@ describe("Update Event API", () => {
 
         expect(updateRes.statusCode).toBe(200);
         expect(updateRes.body).toHaveProperty("message", "Event updated successfully");
+
+        // Old image should be deleted
+        expect(fs.existsSync(oldImagePath)).toBe(false);
+    });
+
+    it("should remove event image and fallback to default image", async () => {
+        const { organizerAuth } = await createEventWithOrganizer({
+            organizer: {
+                name: "Remove Image Organizer",
+                email: `removeimage${Date.now()}@test.com`
+            }
+        });
+
+        // Create event with image
+        const createRes = await request(app)
+            .post("/api/events")
+            .set(organizerAuth.headers)
+            .field("title", "Remove Image Event")
+            .field("description", "Image removal test")
+            .field("type", "Meetup")
+            .field("theme", "Technology")
+            .field("mode", EVENT_MODES.IN_PERSON)
+            .field("location", "Montreal")
+            .field("startDateTime", "2026-12-31T10:00:00.000Z")
+            .field("endDateTime", "2026-12-31T12:00:00.000Z")
+            .attach("image", Buffer.from("event image"), {
+                filename: "event.png",
+                contentType: "image/png"
+            });
+
+        const event = createRes.body.event;
+
+        const oldImagePath = path.join(__dirname, "../../../", event.image);
+
+        expect(fs.existsSync(oldImagePath)).toBe(true);
+
+        // Remove image
+        const updateRes = await request(app)
+            .put(`/api/events/${event.id}`)
+            .set(organizerAuth.headers)
+            .field("image", "");
+
+        expect(updateRes.statusCode).toBe(200);
+
+        expect(updateRes.body.event.image).toBeNull();
 
         // Old image should be deleted
         expect(fs.existsSync(oldImagePath)).toBe(false);

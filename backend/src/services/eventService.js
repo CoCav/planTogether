@@ -37,6 +37,7 @@ const { getPaginationOptions } = require("../utils/pagination");
    - single event retrieval and access resolution
    - current authenticated user event access
    - event update and deletion
+   - event image replacement and removal
    - participant count and status enrichment
 
    Notes:
@@ -47,6 +48,8 @@ const { getPaginationOptions } = require("../utils/pagination");
    - getAllEvents supports filters through query params
    - past events cannot be updated
    - started events cannot be deleted
+   - event images are preserved when omitted from updates
+   - event images can be replaced or removed explicitly
    - event images are cleaned only after successful DB commits
    - event roles are centralized through shared constants
    - uses shared HTTP error utilities
@@ -253,8 +256,14 @@ const updateEventByID = async (id, data) => {
 
         await transaction.commit();
 
+
         // Delete old image only after successful DB commit
-        if (image !== undefined && image && oldImage && oldImage !== image) {
+        const shouldDeleteOldImage =
+            image !== undefined &&
+            oldImage &&
+            oldImage !== image;
+
+        if (shouldDeleteOldImage) {
             await deleteUploadedFile(oldImage);
         }
 

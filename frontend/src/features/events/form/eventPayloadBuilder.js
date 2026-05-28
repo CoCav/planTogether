@@ -10,6 +10,8 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../shared/constants/eventRegist
    - create/update event payloads
    - online event location normalization
    - nullable event field normalization
+   - unchanged image omission
+   - explicit image clearing for updates
    - multipart form data support
 
    Notes:
@@ -18,6 +20,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../shared/constants/eventRegist
    - online events always use null location
    - create payloads omit null optional fields
    - update payloads preserve explicit null field clearing
+   - undefined image values are omitted to keep existing images unchanged
 ================================================== */
 
 /* =============================
@@ -126,7 +129,7 @@ export const buildEventPayload = (data = {}) => ({
 
     registrationDeadline: toNullableValue(data.registrationDeadline),
 
-    image: data.image ?? undefined
+    image: data.image === undefined ? undefined : data.image
 });
 
 /* =============================

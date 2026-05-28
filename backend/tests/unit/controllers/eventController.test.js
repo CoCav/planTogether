@@ -7,11 +7,12 @@
    - current user event access retrieval
    - single event retrieval
    - event update
+   - event image preservation, replacement and removal
    - event deletion
 
    Ensures:
    - controller calls service correctly
-   - uploaded event images are handled correctly
+   - uploaded event images are preserved, replaced and cleared correctly
    - event access responses are properly formatted
    - HTTP responses are properly formatted
    - errors are forwarded to next()
@@ -269,6 +270,38 @@ describe("eventController", () => {
             expect(eventService.updateEventByID).toHaveBeenCalledWith("42", {
                 title: "Updated Event",
                 image: undefined
+            });
+
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: "Event updated successfully",
+                event
+            });
+        });
+
+        it("should clear event image when empty image field is provided", async () => {
+            const { req, res, next } = createEventControllerMocks({
+                params: { eventId: "42" },
+                body: {
+                    title: "Updated Event",
+                    image: ""
+                }
+            });
+
+            const event = createEventResponse({
+                id: 42,
+                title: "Updated Event",
+                image: null
+            });
+
+            eventService.updateEventByID.mockResolvedValue(event);
+
+            await eventController.updateEvent(req, res, next);
+
+            expect(eventService.updateEventByID).toHaveBeenCalledWith("42", {
+                title: "Updated Event",
+                image: null
             });
 
             expect(res.status).toHaveBeenCalledWith(200);

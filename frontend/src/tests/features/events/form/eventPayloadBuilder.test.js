@@ -31,12 +31,15 @@ import {
    - online location normalization
    - nullable optional fields
    - image field handling
+   - unchanged image omission
+   - explicit image clearing in update payloads
    - create FormData payload creation
    - update FormData field clearing
 
    Notes:
    - uses reusable event payload factories
    - event forms use datetime-local values
+   - update payloads distinguish unchanged and cleared images
 ================================================== */
 
 describe("eventPayloadBuilder", () => {
@@ -200,6 +203,16 @@ describe("eventPayloadBuilder", () => {
         expect(payload.image).toBeUndefined();
     });
 
+    it("should preserve null image value for update clearing", () => {
+        const payload = buildEventPayload(
+            createEventPayload({
+                image: null
+            })
+        );
+
+        expect(payload.image).toBeNull();
+    });
+
     /* =============================
        FORM DATA PAYLOAD
     ============================= */
@@ -265,6 +278,26 @@ describe("eventPayloadBuilder", () => {
         expect(formData.get("title")).toBe("Test Event");
         expect(formData.get("maxParticipants")).toBe("");
         expect(formData.get("registrationDeadline")).toBe("");
+    });
+
+    it("should send removed image as empty string in update FormData", () => {
+        const formData = buildEventUpdateFormData(
+            createEventPayload({
+                image: null
+            })
+        );
+
+        expect(formData.get("image")).toBe("");
+    });
+
+    it("should skip undefined image in update FormData", () => {
+        const formData = buildEventUpdateFormData(
+            createEventPayload({
+                image: undefined
+            })
+        );
+
+        expect(formData.has("image")).toBe(false);
     });
 
     it("should omit null optional values from FormData", () => {

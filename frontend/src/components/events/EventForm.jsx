@@ -21,11 +21,18 @@ import TextArea from "../ui/TextArea";
    - accessible invalid field states
    - validation error display
    - conditional field rendering
+   - started event field restrictions
+
+   Notes:
+   - shared by create and edit flows
+   - started events may lock specific fields during editing
 ================================================== */
 
 export default function EventForm({
     values,
     fieldErrors,
+
+    isStartDateTimeDisabled = false,
 
     submitLabel,
     isSubmitting,
@@ -289,6 +296,7 @@ export default function EventForm({
                             onChange={onFieldChange}
                             error={fieldErrors.startDateTime}
                             aria-describedby={errorId}
+                            disabled={isStartDateTimeDisabled}
                         />
                     )}
                 </FormField>

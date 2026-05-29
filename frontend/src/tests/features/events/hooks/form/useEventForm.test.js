@@ -19,7 +19,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../../../features/shared/con
    - image changes
    - image removal
    - form helpers
-   - validation options
+   - configurable validation options
    - validation errors
    - successful submit
    - submit error feedback
@@ -27,6 +27,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../../../features/shared/con
    Notes:
    - uses shared default event form values
    - submit behavior is injected by caller
+   - event-specific edit rules are provided through validation options
 ================================================== */
 
 describe("useEventForm", () => {
@@ -356,17 +357,17 @@ describe("useEventForm", () => {
         expect(result.current.submitState.isSubmitting).toBe(false);
     });
 
-    it("should pass validation options to event validation", async () => {
+    it("should pass configurable validation options to event validation", async () => {
         const onSubmitValid = vi.fn();
 
         const { result } = setupHook({
             initialValues: createValidValues({
                 startDateTime: "2026-05-19T10:00",
-                endDateTime: "2026-05-19T12:00"
+                endDateTime: "2026-05-21T12:00"
             }),
             onSubmitValid,
             validationOptions: {
-                allowPastDates: true
+                allowPastStartDateTime: true
             }
         });
 

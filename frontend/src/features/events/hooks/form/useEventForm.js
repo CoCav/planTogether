@@ -136,6 +136,7 @@ export default function useEventForm({
        SUBMIT HANDLER
     ============================= */
 
+    // Validate form values before submission
     const handleSubmit = async (event) => {
         event.preventDefault();
 

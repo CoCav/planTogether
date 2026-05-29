@@ -17,6 +17,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../features/shared/constants
    - image preview rendering
    - accessible image upload controls
    - conditional fields
+   - started event field restrictions
    - submit and cancel actions
    - validation error display
    - accessible form field descriptions
@@ -100,6 +101,20 @@ describe("EventForm", () => {
 
         expect(screen.getByLabelText(/start date time/i)).toHaveAttribute("type", "datetime-local");
         expect(screen.getByLabelText(/end date time/i)).toHaveAttribute("type", "datetime-local");
+    });
+
+    it("keeps start datetime enabled by default", () => {
+        renderComponent();
+
+        expect(screen.getByLabelText(/start date time/i)).toBeEnabled();
+    });
+
+    it("disables start datetime when start datetime is locked", () => {
+        renderComponent({
+            isStartDateTimeDisabled: true
+        });
+
+        expect(screen.getByLabelText(/start date time/i)).toBeDisabled();
     });
 
     it("calls onFieldChange when editing a field", () => {

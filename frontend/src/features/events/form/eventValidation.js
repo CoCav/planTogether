@@ -8,9 +8,10 @@ import { EVENT_MODES } from "../../shared/constants/eventModes";
 
    Handles:
    - required event fields
-   - event mode rules
-   - start/end datetime logic
-   - registration deadline logic
+   - event mode and location rules
+   - start/end datetime validation
+   - selective edit datetime overrides
+   - registration deadline validation
    - participant limit validation
    - event image validation
 
@@ -18,6 +19,7 @@ import { EVENT_MODES } from "../../shared/constants/eventModes";
    - aligned with backend eventValidator and eventDataBuilder
    - event forms use datetime-local values
    - online events do not require location
+   - edit flows may selectively allow existing past start dates
 ================================================== */
 
 /* =============================
@@ -33,19 +35,19 @@ const isPositiveInteger = (value) => {
     return Number.isInteger(Number(value)) && Number(value) >= 1;
 };
 
-// Checks if a value is a valid date
+// Checks if a value can be parsed as a valid date
 const isValidDate = (value) => {
     if (!value) return false;
 
     return !Number.isNaN(new Date(value).getTime());
 };
 
-// Checks if a mode value is valid
+// Checks if a mode value is supported
 const isValidEventMode = (mode) => {
     return [EVENT_MODES.ONLINE, EVENT_MODES.IN_PERSON].includes(mode);
 };
 
-// Checks if a date is in the past
+// Checks if a date is before the current time
 const isPastDate = (date) => {
     return date.getTime() < Date.now();
 };
@@ -72,10 +74,12 @@ export const validateEventForm = (
     options = {}
 ) => {
 
-    // Validation behavior overrides used by edit/update flows
+    // Validation overrides used by edit flows.
+    // Allows specific datetime rules to be relaxed independently.
     const {
         allowPartial = false,
-        allowPastDates = false
+        allowPastStartDateTime = false,
+        allowPastEndDateTime = false
     } = options;
 
     const errors = {};
@@ -149,19 +153,18 @@ export const validateEventForm = (
         }
     }
 
-    // Parsed start datetime used for comparisons
+    // Parsed datetime values used for comparisons
     const start = isValidDate(startDateTime) ? new Date(startDateTime) : null;
-
-    // Parsed end datetime used for comparisons
     const end = isValidDate(endDateTime) ? new Date(endDateTime) : null;
 
-    // Edit event forms may contain already-started events
-    if (!allowPastDates && start && isPastDate(start)) {
+    // Already-started events may keep their existing start datetime when editing
+    if (!allowPastStartDateTime && start && isPastDate(start)) {
         errors.startDateTime =
             "Start date and time cannot be in the past";
     }
 
-    if (!allowPastDates && end && isPastDate(end)) {
+    // End datetime validation stays independent from start datetime overrides
+    if (!allowPastEndDateTime && end && isPastDate(end)) {
         errors.endDateTime =
             "End date and time cannot be in the past";
     }
@@ -181,13 +184,17 @@ export const validateEventForm = (
             "Max participants must be a positive integer";
     }
 
-    // Registration deadline may be auto-generated or custom
     if (registrationDeadline) {
-        if (!isValidDate(registrationDeadline)) {
+        // Parsed registration deadline used for date comparisons
+        const deadline = isValidDate(registrationDeadline)
+            ? new Date(registrationDeadline)
+            : null;
+
+        if (!deadline) {
             errors.registrationDeadline =
                 "Registration deadline must be a valid date";
 
-        } else if (start && new Date(registrationDeadline) >= start) {
+        } else if (start && deadline >= start) {
             errors.registrationDeadline =
                 "Registration deadline must be before event start date";
         }

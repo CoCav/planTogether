@@ -16,7 +16,7 @@ import { createMockImageFile, createMockInvalidFile, createMockOversizedFile } f
    - required event fields
    - event mode and location rules
    - start/end datetime validation
-   - past datetime validation
+   - selective past datetime validation overrides
    - participant limit validation
    - registration deadline validation
    - event image validation
@@ -25,6 +25,7 @@ import { createMockImageFile, createMockInvalidFile, createMockOversizedFile } f
    Notes:
    - uses reusable event payload factories
    - uses reusable upload file mock helpers
+   - edit datetime overrides are tested independently
 ================================================== */
 
 describe("eventValidation", () => {
@@ -173,31 +174,71 @@ describe("eventValidation", () => {
        DATE / TIME
     ============================= */
 
-    it("should allow past start and end datetime when past dates are allowed", () => {
+    it("should allow past start datetime when past start datetime is allowed", () => {
         const errors = validateEventForm({
             ...validForm,
             startDateTime: "2026-05-19T08:00",
-            endDateTime: "2026-05-19T10:00"
+            endDateTime: "2026-05-21T10:00"
         }, {
-            allowPastDates: true
+            allowPastStartDateTime: true
         });
 
         expect(errors.startDateTime).toBeUndefined();
         expect(errors.endDateTime).toBeUndefined();
     });
 
-    it("should still reject end datetime before start datetime when past dates are allowed", () => {
+    it("should still reject past end datetime when only past start datetime is allowed", () => {
+        const errors = validateEventForm({
+            ...validForm,
+            startDateTime: "2026-05-19T08:00",
+            endDateTime: "2026-05-19T10:00"
+        }, {
+            allowPastStartDateTime: true
+        });
+
+        expect(errors.startDateTime).toBeUndefined();
+        expect(errors.endDateTime).toBe("End date and time cannot be in the past");
+    });
+
+    it("should allow past end datetime when past end datetime is allowed", () => {
+        const errors = validateEventForm({
+            ...validForm,
+            startDateTime: "2026-05-19T08:00",
+            endDateTime: "2026-05-19T10:00"
+        }, {
+            allowPastStartDateTime: true,
+            allowPastEndDateTime: true
+        });
+
+        expect(errors.startDateTime).toBeUndefined();
+        expect(errors.endDateTime).toBeUndefined();
+    });
+
+    it("should still reject past start datetime when only past end datetime is allowed", () => {
+        const errors = validateEventForm({
+            ...validForm,
+            startDateTime: "2026-05-19T08:00",
+            endDateTime: "2026-05-19T10:00"
+        }, {
+            allowPastEndDateTime: true
+        });
+
+        expect(errors.startDateTime).toBe("Start date and time cannot be in the past");
+
+        expect(errors.endDateTime).toBeUndefined();
+    });
+
+    it("should still reject end datetime before start datetime when both past datetime overrides are enabled", () => {
         const errors = validateEventForm({
             ...validForm,
             startDateTime: "2026-05-19T10:00",
             endDateTime: "2026-05-19T08:00"
         }, {
-            allowPastDates: true
+            allowPastStartDateTime: true,
+            allowPastEndDateTime: true
         });
 
-        expect(errors.endDateTime).toBe(
-            "End date and time must be after start date and time"
-        );
+        expect(errors.endDateTime).toBe("End date and time must be after start date and time");
     });
 
     it("should reject invalid start datetime", () => {

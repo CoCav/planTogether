@@ -23,6 +23,7 @@ import PageLoader from "../components/ui/PageLoader";
    - protected event form access
    - event form loading
    - edit event form orchestration
+   - started event start date protection
    - update event submission
    - redirect after successful update
    - accessible form section
@@ -30,12 +31,12 @@ import PageLoader from "../components/ui/PageLoader";
    Notes:
    - frontend permissions improve UX only
    - backend authorization remains the source of truth
+   - started events keep their original start datetime locked in the edit form
 ================================================== */
 
 export default function EditEventPage() {
     const { eventId } = useParams();
     const navigate = useNavigate();
-
 
     /* =============================
        ACCESS STATE
@@ -49,6 +50,27 @@ export default function EditEventPage() {
 
     const [isLoading, setIsLoading] = useState(true);
 
+    /* =============================
+       DATE LOCK STATE
+    ============================= */
+
+    const [isStartDateTimeLocked, setIsStartDateTimeLocked] = useState(false);
+
+    /* =============================
+       HELPERS
+    ============================= */
+
+    const isPastOrStartedDateTime = (dateTime) => {
+        const date = dateTime
+            ? new Date(dateTime)
+            : null;
+
+        return (
+            Boolean(date) &&
+            !Number.isNaN(date.getTime()) &&
+            date.getTime() <= Date.now()
+        );
+    };
 
     /* =============================
        SUBMIT HANDLER
@@ -65,7 +87,6 @@ export default function EditEventPage() {
         });
     };
 
-
     /* =============================
        FORM STATE
     ============================= */
@@ -81,7 +102,7 @@ export default function EditEventPage() {
         onSubmitValid: handleUpdateEvent,
         submitErrorMessage: "Unable to update event",
         validationOptions: {
-            allowPastDates: true
+            allowPastStartDateTime: isStartDateTimeLocked
         }
     });
 
@@ -96,7 +117,6 @@ export default function EditEventPage() {
         handleRemoveImage,
         handleSubmit
     } = formActions;
-
 
     /* =============================
        EVENT LOADING
@@ -119,11 +139,19 @@ export default function EditEventPage() {
             const response = await getEventById(eventId);
             const event = response.event;
 
+            const eventFormValues = createEventFormValuesFromEvent(event);
+
+            // Lock start datetime when the existing event already started
+            setIsStartDateTimeLocked(
+                isPastOrStartedDateTime(eventFormValues.startDateTime)
+            );
+
             // Allow rendering of the protected edit form
             setCanAccessEditForm(true);
 
             // Populate form with existing event values
-            setValues(createEventFormValuesFromEvent(event));
+            setValues(eventFormValues);
+
         } catch (error) {
             console.error("Error loading event:", error);
 
@@ -137,7 +165,6 @@ export default function EditEventPage() {
         setValues
     ]);
 
-
     /* =============================
        INITIAL EVENT LOADING
     ============================= */
@@ -148,7 +175,6 @@ export default function EditEventPage() {
         loadEvent
     ]);
 
-
     /* =============================
        NAVIGATION HANDLERS
     ============================= */
@@ -156,7 +182,6 @@ export default function EditEventPage() {
     const handleCancel = () => {
         navigate(`/events/${eventId}`);
     };
-
 
     /* =============================
        LOADING RENDER
@@ -169,7 +194,6 @@ export default function EditEventPage() {
             </PageLoader>
         );
     }
-
 
     /* =============================
        MAIN RENDER
@@ -197,13 +221,18 @@ export default function EditEventPage() {
                         <EventForm
                             values={values}
                             fieldErrors={fieldErrors}
+
                             submitLabel="Update Event"
                             isSubmitting={isSubmitting}
+
+                            isStartDateTimeDisabled={isStartDateTimeLocked}
                             isOnlineEvent={isOnlineEvent}
                             showCustomDeadline={showCustomDeadline}
+
                             onFieldChange={handleFieldChange}
                             onImageChange={handleImageChange}
                             onRemoveImage={handleRemoveImage}
+
                             onSubmit={handleSubmit}
                             onCancel={handleCancel}
                         />

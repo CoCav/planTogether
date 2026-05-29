@@ -18,6 +18,7 @@ import EditEventPage from "../../pages/EditEventPage";
    - existing image preview
    - event update FormData payload and nullable field clearing
    - image update payload
+   - started event start date lock
    - validation feedback
    - API error feedback
    - cancel navigation
@@ -25,20 +26,13 @@ import EditEventPage from "../../pages/EditEventPage";
    Notes:
    - uses real EventForm and useEventForm behavior
    - mocks event loading, event update API and navigation
+   - started events lock their original start datetime in the edit form
 ================================================== */
-
-/* =============================
-   MOCK DATA
-============================= */
 
 const mockNavigate = vi.fn();
 const mockGetCurrentUserEventAccess = vi.fn();
 const mockGetEventById = vi.fn();
 const mockUpdateEvent = vi.fn();
-
-/* =============================
-   MOCKS
-============================= */
 
 vi.mock("react-router-dom", async () => {
     const actual = await vi.importActual("react-router-dom");
@@ -58,9 +52,14 @@ vi.mock("../../api/events/eventApi", () => ({
     updateEvent: (...args) => mockUpdateEvent(...args)
 }));
 
-/* =============================
-   TEST HELPERS
-============================= */
+const createDateTime = (daysOffset, hours = 10) => {
+    const date = new Date();
+
+    date.setDate(date.getDate() + daysOffset);
+    date.setHours(hours, 0, 0, 0);
+
+    return date.toISOString();
+};
 
 const mockEventResponse = {
     event: {
@@ -71,10 +70,10 @@ const mockEventResponse = {
         theme: "Tech",
         mode: "in_person",
         location: "Montreal",
-        startDateTime: "2026-12-20T10:00:00.000Z",
-        endDateTime: "2026-12-20T12:00:00.000Z",
+        startDateTime: createDateTime(30, 10),
+        endDateTime: createDateTime(30, 12),
         maxParticipants: 20,
-        registrationDeadline: "2026-12-19T12:00:00.000Z",
+        registrationDeadline: createDateTime(29),
         image: "/uploads/events/event-current.png"
     }
 };
@@ -92,11 +91,6 @@ const getSubmittedFormData = () => {
 };
 
 describe("EditEventPage", () => {
-
-    /* =============================
-       TEST SETUP
-    ============================= */
-
     beforeEach(() => {
         vi.clearAllMocks();
 
@@ -115,10 +109,6 @@ describe("EditEventPage", () => {
         globalThis.URL.revokeObjectURL = vi.fn();
     });
 
-    /* =============================
-       LOADING
-    ============================= */
-
     it("renders loading state before event is loaded", () => {
         mockGetCurrentUserEventAccess.mockReturnValue(
             new Promise(() => { })
@@ -128,11 +118,6 @@ describe("EditEventPage", () => {
 
         expect(screen.getByText(/loading event form/i)).toBeInTheDocument();
     });
-
-
-    /* =============================
-       ACCESS GUARD
-    ============================= */
 
     it("loads current user event access before loading event details", async () => {
         renderPage();
@@ -165,10 +150,6 @@ describe("EditEventPage", () => {
         expect(mockGetEventById).not.toHaveBeenCalled();
     });
 
-    /* =============================
-       FORM HYDRATION
-    ============================= */
-
     it("loads event and hydrates form values", async () => {
         renderPage();
 
@@ -177,11 +158,34 @@ describe("EditEventPage", () => {
         expect(screen.getByDisplayValue("Meetup")).toBeInTheDocument();
         expect(screen.getByDisplayValue("Tech")).toBeInTheDocument();
         expect(screen.getByDisplayValue("Montreal")).toBeInTheDocument();
-        expect(screen.getByDisplayValue("2026-12-20T05:00")).toBeInTheDocument();
-        expect(screen.getByDisplayValue("2026-12-20T07:00")).toBeInTheDocument();
-        expect(screen.getByDisplayValue("2026-12-19T07:00")).toBeInTheDocument();
 
         expect(mockGetEventById).toHaveBeenCalledWith("42");
+    });
+
+    it("keeps start datetime enabled for upcoming events", async () => {
+        renderPage();
+
+        expect(await screen.findByDisplayValue("Original Event")).toBeInTheDocument();
+
+        expect(screen.getByLabelText(/start date time/i)).toBeEnabled();
+    });
+
+    it("disables start datetime when loaded event has already started", async () => {
+        mockGetEventById.mockResolvedValue({
+            event: {
+                ...mockEventResponse.event,
+                startDateTime: createDateTime(-1),
+                endDateTime: createDateTime(1),
+                registrationDeadline: null
+            }
+        });
+
+        renderPage();
+
+        expect(await screen.findByDisplayValue("Original Event")).toBeInTheDocument();
+
+        expect(screen.getByLabelText(/start date time/i)).toBeDisabled();
+        expect(screen.getByLabelText(/end date time/i)).toBeEnabled();
     });
 
     it("renders accessible edit event form section", async () => {
@@ -204,10 +208,6 @@ describe("EditEventPage", () => {
         expect(screen.getByText(/existing image/i)).toBeInTheDocument();
         expect(screen.getByText(/uploaded previously/i)).toBeInTheDocument();
     });
-
-    /* =============================
-       UPDATE FLOW
-    ============================= */
 
     it("updates event with FormData payload", async () => {
         const user = userEvent.setup();
@@ -238,8 +238,6 @@ describe("EditEventPage", () => {
         expect(formData.get("theme")).toBe("Tech");
         expect(formData.get("mode")).toBe("in_person");
         expect(formData.get("location")).toBe("Montreal");
-        expect(formData.get("startDateTime")).toBe("2026-12-20T05:00");
-        expect(formData.get("endDateTime")).toBe("2026-12-20T07:00");
 
         expect(mockNavigate).toHaveBeenCalledWith("/events/42", {
             replace: true
@@ -282,10 +280,7 @@ describe("EditEventPage", () => {
 
         await screen.findByDisplayValue("Original Event");
 
-        await user.upload(
-            screen.getByLabelText(/choose file/i),
-            image
-        );
+        await user.upload(screen.getByLabelText(/choose file/i), image);
 
         await user.click(screen.getByRole("button", {
             name: /update event/i
@@ -328,10 +323,7 @@ describe("EditEventPage", () => {
 
         await screen.findByDisplayValue("Original Event");
 
-        await user.selectOptions(
-            screen.getByLabelText(/^mode$/i),
-            "online"
-        );
+        await user.selectOptions(screen.getByLabelText(/^mode$/i), "online");
 
         expect(screen.queryByLabelText(/^location$/i)).not.toBeInTheDocument();
 
@@ -367,9 +359,41 @@ describe("EditEventPage", () => {
         expect(mockUpdateEvent).not.toHaveBeenCalled();
     });
 
-    /* =============================
-       ERROR FEEDBACK
-    ============================= */
+    it("updates started event while keeping original start datetime locked", async () => {
+        const user = userEvent.setup();
+
+        mockGetEventById.mockResolvedValue({
+            event: {
+                ...mockEventResponse.event,
+                startDateTime: createDateTime(-1),
+                endDateTime: createDateTime(1),
+                registrationDeadline: null
+            }
+        });
+
+        renderPage();
+
+        await screen.findByDisplayValue("Original Event");
+
+        expect(screen.getByLabelText(/start date time/i)).toBeDisabled();
+
+        await user.clear(screen.getByLabelText(/^title$/i));
+        await user.type(screen.getByLabelText(/^title$/i), "Updated Started Event");
+
+        await user.click(screen.getByRole("button", {
+            name: /update event/i
+        }));
+
+        await waitFor(() => {
+            expect(mockUpdateEvent).toHaveBeenCalledTimes(1);
+        });
+
+        const formData = getSubmittedFormData();
+
+        expect(formData.get("title")).toBe("Updated Started Event");
+        expect(formData.get("startDateTime")).toBeTruthy();
+        expect(formData.get("endDateTime")).toBeTruthy();
+    });
 
     it("displays error when event loading fails", async () => {
         mockGetEventById.mockRejectedValue(new Error("API error"));
@@ -398,10 +422,6 @@ describe("EditEventPage", () => {
 
         expect(mockNavigate).not.toHaveBeenCalled();
     });
-
-    /* =============================
-       NAVIGATION
-    ============================= */
 
     it("navigates back to event detail when cancelling", async () => {
         const user = userEvent.setup();

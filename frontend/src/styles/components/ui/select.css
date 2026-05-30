@@ -39,7 +39,7 @@
 
     pointer-events: none;
 
-    font-size: 15px;
+    font-size: var(--font-size-sm);
     line-height: 1;
 
     transition:

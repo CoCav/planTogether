@@ -109,8 +109,8 @@
 }
 
 .btn-outline-danger:hover:not(:disabled) {
-    background: #fee2e2;
-    border-color: #fca5a5;
+    background: var(--color-danger-subtle);
+    border-color: var(--color-danger-subtle-border);
 }
 
 /* =========================================

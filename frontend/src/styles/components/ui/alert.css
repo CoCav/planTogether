@@ -22,9 +22,9 @@
 ========================================= */
 
 .alert-info {
-    background: #eff6ff;
-    color: #1d4ed8;
-    border-color: #bfdbfe;
+    background: var(--color-info-background);
+    color: var(--color-info-text);
+    border-color: var(--color-info-border);
 }
 
 /* =========================================
@@ -32,17 +32,18 @@
 ========================================= */
 
 .alert-success {
-    background: #ecfdf5;
-    color: #15803d;
-    border-color: #bbf7d0;
+    background: var(--color-success-background);
+    color: var(--color-success-text);
+    border-color: var(--color-success-border);
 }
+
 
 /* =========================================
    DANGER
 ========================================= */
 
 .alert-danger {
-    background: #fef2f2;
-    color: #b91c1c;
-    border-color: #fecaca;
+    background: var(--color-danger-background);
+    color: var(--color-danger-text);
+    border-color: var(--color-danger-border);
 }

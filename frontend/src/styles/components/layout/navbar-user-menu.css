@@ -17,13 +17,13 @@
 
 .navbar-user-trigger {
     gap: var(--space-2);
-    border: 1px solid #c7d2fe;
+    border: 1px solid var(--color-primary-border);
     background: var(--color-primary-subtle);
     color: var(--color-primary);
 }
 
 .navbar-user-trigger:hover:not(:disabled) {
-    border-color: #a5b4fc;
+    border-color: var(--color-primary-border-hover);
     background: var(--color-primary-subtle-hover);
     color: var(--color-primary-hover);
 }
@@ -102,7 +102,7 @@
     display: block;
     width: 100%;
 
-    padding: 10px 12px;
+    padding: var(--space-2) var(--space-3);
 
     border: none;
     border-radius: var(--radius-sm);
@@ -115,7 +115,7 @@
 }
 
 .navbar-dropdown-item:hover {
-    background: #f3f4f6;
+    background: var(--color-surface-muted);
 }
 
 .navbar-dropdown-item:focus-visible {

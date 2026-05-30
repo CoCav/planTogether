@@ -14,8 +14,8 @@
 ![Backend Tests](https://img.shields.io/badge/backend-624%20passing-brightgreen)
 ![Backend Coverage](https://img.shields.io/badge/backend%20coverage-99.13%25%20statements%20%7C%2094.14%25%20branches-brightgreen)
 
-![Frontend Tests](https://img.shields.io/badge/frontend-1106%20passing-brightgreen)
-![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-97.64%25%20statements%20%7C%2094.51%25%20branches-brightgreen)
+![Frontend Tests](https://img.shields.io/badge/frontend-1114%20passing-brightgreen)
+![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-97.65%25%20statements%20%7C%2094.48%25%20branches-brightgreen)
 
 ![Backend CI](https://github.com/CoCav/planTogether/actions/workflows/backend-ci.yml/badge.svg)
 ![Frontend CI](https://github.com/CoCav/planTogether/actions/workflows/frontend-ci.yml/badge.svg)
@@ -39,7 +39,7 @@ The application focuses on **clean architecture, scalability, security, API cons
 
 ## 🎯 Key Highlights
 
-- 🧪 **1730 automated tests across backend and frontend** (Jest + Supertest + Vitest + React Testing Library)
+- 🧪 **1738 automated tests across backend and frontend** (Jest + Supertest + Vitest + React Testing Library)
 - 📊 **High automated test coverage** (~99% backend / ~98% frontend)
 - 🔁 **Separate backend and frontend CI workflows using GitHub Actions**
 - 🔐 **Secure authentication and role-based access control (RBAC)**
@@ -384,14 +384,14 @@ Testing strategies are intentionally separated:
 - Event image lifecycle handling aligned across frontend and backend
 - Automatic organizer assignment upon event creation
 - Strong frontend and backend validation
-- Date consistency rules and protected event restrictions
+- Date consistency rules, started-event editing protection, and protected event restrictions
 - Transaction-based backend operations for critical workflows
 - Centralized filtering, pagination, sorting, and listing behavior
 - URL-synchronized event filtering and active views
 - Optimized participant count and query behavior
 - Ongoing, upcoming, all, and archived event views
 - Centralized event status handling and status badges
-- Started-event restrictions aligned across frontend and backend
+- Started-event business rules aligned across frontend and backend
 
 ### 👥 Event Participation
 
@@ -517,6 +517,8 @@ This architecture supports:
 - reusable testing helpers and factories
 - protected routes and role-aware access guards
 - reusable listing and synchronization architecture
+- selective create/edit datetime validation workflows
+- started-event editing protections
 
 Together, this structure helps maintain consistent frontend behavior, predictable state management, reusable business logic, and scalable long-term frontend development.
 
@@ -545,8 +547,8 @@ npm run test:run
 ### 📊 Results
 
 - Backend: 624 tests (78 test suites)
-- Frontend: 1106 tests (123 test files)
-- Total: 1730 automated tests
+- Frontend: 1114 tests (123 test files)
+- Total: 1738 automated tests
 - ✅ Backend and frontend testing architectures fully integrated
 - ✅ High automated coverage across backend and frontend layers
 
@@ -589,7 +591,8 @@ npm run test:run
 - ARIA validation and accessible interaction flows
 - Ongoing event view behavior
 - Event status synchronization and badge rendering
-- Started-event restrictions and permission-aware actions
+- Started-event editing restrictions and permission-aware actions
+- Selective create/edit datetime validation behavior
 
 ### 🔁 Test Strategy
 
@@ -686,6 +689,9 @@ These mechanisms help ensure secure data handling, predictable application behav
 - Added centralized event status badge system
 - Added status-aware event actions and restrictions
 - Aligned started-event deletion behavior with backend authorization rules
+- Added selective create/edit datetime validation behavior
+- Added started-event start datetime locking during editing
+- Added started-event editing support while preserving original start dates
 - Expanded frontend testing coverage across routes, features, hooks, APIs, and query synchronization flows
 - Added dedicated frontend testing documentation (`frontend/docs/testing.md`)
 
@@ -705,14 +711,15 @@ These mechanisms help ensure secure data handling, predictable application behav
 ### 🧪 Testing
 
 - Expanded backend testing architecture to 624 tests across 78 test suites
-- Expanded frontend testing architecture to 1106 tests across 123 test files
-- Reached 1730 automated tests across the fullstack projects
+- Expanded frontend testing architecture to 1114 tests across 123 test files
+- Reached 1738 automated tests across the fullstack projects
 - Added separate backend and frontend CI workflows using GitHub Actions
 - Added isolated PostgreSQL test services for backend integration testing
 - Added coverage for ongoing event workflows
 - Added coverage for event status badge rendering
-- Added coverage for started-event restrictions and permission-aware actions
 - Added coverage for event image preservation, replacement, removal, and authenticated user event image metadata
+- Added coverage for started-event business rules and permission-aware actions
+- Added coverage for selective create/edit datetime validation behavior
 - Improved reusable frontend and backend factories, mocks, helpers, and render utilities
 - Expanded testing coverage across permissions, uploads, filtering, validation, synchronization, routing, and business rules
 
@@ -730,7 +737,7 @@ These mechanisms help ensure secure data handling, predictable application behav
 | Backend API | ✅ Stable and well-tested |
 | Frontend Application | ✅ Standardized, role-aware, and accessibility-focused |
 | Backend Testing & CI | ✅ 624 tests across 78 test suites |
-| Frontend Testing & CI | ✅ 1106 tests across 123 test files |
+| Frontend Testing & CI | ✅ 1114 tests across 123 test files |
 | Documentation | ✅ Backend and frontend documentation available |
 | UX Improvements | 🚧 Ongoing |
 
@@ -805,6 +812,8 @@ Through this project, I strengthened my fullstack development skills and gained 
 - Improving frontend maintainability through reusable and scalable frontend architecture patterns
 - Designing status-aware and permission-aware UI workflows
 - Distinguishing unchanged, replaced, and removed image states in form workflows
+- Designing selective create/edit validation workflows
+- Managing started-event editing restrictions without impacting reusable form logic
 
 ### 🧪 Testing & Quality
 

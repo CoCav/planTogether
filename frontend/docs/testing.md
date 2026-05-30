@@ -3,8 +3,8 @@
 ![Vitest](https://img.shields.io/badge/Test-Vitest-6E9F18)
 ![RTL](https://img.shields.io/badge/Test-React%20Testing%20Library-E33332)
 ![Test Files](https://img.shields.io/badge/test%20files-123%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-1106%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-97.64%25%20statements%20%7C%2094.51%25%20branches-brightgreen)
+![Tests](https://img.shields.io/badge/tests-1114%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-97.65%25%20statements%20%7C%2094.48%25%20branches-brightgreen)
 
 This document describes the testing architecture and overall testing strategy used in the PlanTogether frontend.
 
@@ -41,18 +41,19 @@ The frontend testing architecture is designed to validate:
 - semantic structure, ARIA validation, and accessible interaction testing
 - ongoing event view behavior
 - event status synchronization and status badges
-- started-event restrictions and permission-aware actions
 - event image preservation, replacement, and removal behavior
 - authenticated user event image metadata handling
+- started-event editing restrictions
+- selective create/edit datetime validation behavior
 
 The current frontend test suite includes:
 
 - **123 passing test files**
-- **1106 passing tests**
-- **97.64% statement coverage**
-- **94.51% branch coverage**
-- **94.6% function coverage**
-- **97.87% line coverage**
+- **1114 passing tests**
+- **97.65% statement coverage**
+- **94.48% branch coverage**
+- **94.61% function coverage**
+- **97.88% line coverage**
 
 The combination of integration-style frontend testing, isolated business-logic testing, route testing, and reusable utility testing helps ensure frontend reliability, UI consistency, predictable behavior, and scalable long-term frontend development.
 
@@ -182,7 +183,8 @@ Covered areas include:
 - accessible form validation behavior
 - query synchronization and accessible navigation flows
 - ongoing event view behavior
-- started-event restriction logic
+- started-event editing restrictions
+- selective create/edit datetime validation behavior
 - event status badge configuration
 - event image preservation, replacement, and removal flows
 
@@ -234,7 +236,8 @@ Covered areas include:
 - loading states during auth initialization
 - authenticated context behavior
 - event access permission flows
-- started-event deletion restrictions
+- started-event deletion protection
+- started-event edit access and start datetime lock behavior
 
 The route tests use mocked auth state and router utilities to validate navigation behavior in isolation.
 
@@ -418,6 +421,8 @@ The frontend testing architecture aims to provide:
 - consistent semantic and accessibility-focused component behavior
 - reliable event status and permission validation
 - reliable event image lifecycle handling
+- reliable create/edit datetime validation
+- reliable started-event editing protection
 
 These goals support long-term frontend maintainability, safer feature development, predictable UI behavior, and scalable frontend architecture evolution.
 

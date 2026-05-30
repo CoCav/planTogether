@@ -10,8 +10,8 @@ PlanTogether is a collaborative event management platform where users can create
 ![Vitest](https://img.shields.io/badge/Test-Vitest-6E9F18)
 ![RTL](https://img.shields.io/badge/Test-React%20Testing%20Library-E33332)
 ![Test Files](https://img.shields.io/badge/test%20files-123%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-1106%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-97.64%25%20statements%20%7C%2094.51%25%20branches-brightgreen)
+![Tests](https://img.shields.io/badge/tests-1114%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-97.65%25%20statements%20%7C%2094.48%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -48,6 +48,7 @@ It allows users to:
 - Create, edit, and delete events
 - Event status-aware actions and restrictions
 - Started-event deletion protection aligned with backend authorization rules
+- Started-event editing protection aligned with frontend validation rules
 - Manage profile information and passwords
 - Upload avatars and event images
 - Persist authenticated sessions with a "Remember me" feature
@@ -274,7 +275,8 @@ Frontend behavior includes:
 - Event status awareness (`upcoming`, `ongoing`, `ended`)
 - Status badge display across event listings and event details
 - Hiding restricted actions when events have already started
-- Preventing past start dates
+- Preventing past start dates during event creation
+- Preserving and locking started event start dates during editing
 - Ensuring end dates occur after start dates
 - Validating uploaded image types and sizes
 - Event image preservation when editing without image changes
@@ -451,6 +453,7 @@ The frontend uses centralized event access checks to:
 - prevent unauthorized users from accessing edit pages
 - conditionally render edit and delete actions
 - hide deletion actions for events that have already started
+- lock started event start date fields during editing
 - synchronize frontend permissions with backend authorization rules
 - preserve consistent role-aware UI behavior
 
@@ -594,7 +597,8 @@ The event layer handles:
 - event payload normalization
 - dynamic event status behavior
 - ongoing event handling
-- started-event restriction handling
+- started-event editing restrictions
+- selective create/edit datetime validation
 - event image lifecycle handling
 
 ### 👥 Membership Logic
@@ -735,14 +739,14 @@ npx vitest run --coverage
 ### 📊 Testing Results
 
 - ✅ 123 passing test files
-- ✅ 1106 passing tests
+- ✅ 1114 passing tests
 - ✅ All tests passing
 
 **Coverage:**
-- 97.64% statements coverage
-- 94.51% branch coverage
-- 94.6% function coverage
-- 97.87% line coverage
+- 97.65% statements coverage
+- 94.48% branch coverage
+- 94.61% function coverage
+- 97.88% line coverage
 
 ### 📦 Tested Areas
 
@@ -761,7 +765,8 @@ The frontend test suite covers:
 - accessible navigation and interaction flows
 - ongoing event view behavior
 - status badge rendering
-- started-event restrictions
+- started-event editing restrictions
+- selective create/edit datetime validation behavior
 - event status synchronization
 - event image preservation, replacement, and removal behavior
 
@@ -817,10 +822,9 @@ The application will be available at:
 
 ### 🔧 Frontend Features & UX
 
-- Shared event listing architecture across public and authenticated pages
-- Role-aware event access guards
-- Centralized authentication redirect and route restoration flows
-- Reusable loading, error, and empty-state UI patterns
+- Added started event edit protection for start date and time fields
+- Added selective create/edit datetime validation behavior
+- Added started event editing support while preserving original start dates
 - Accessibility-focused UI architecture with semantic HTML and ARIA support
 - Added ongoing event view support and default event listing behavior
 - Added centralized event status badge system
@@ -839,13 +843,12 @@ The application will be available at:
 
 ### 🧪 Frontend Testing
 
-- Query synchronization and listing architecture testing
-- Role-aware access guard and permission testing
-- Expanded listing architecture and filtering tests
+- Added coverage for started event edit flows
+- Added coverage for selective create/edit datetime validation
 - Added accessibility-oriented component and interaction testing
 - Added coverage for ongoing event views
 - Added coverage for status badge rendering
-- Added coverage for started-event restrictions
+- Added coverage for started-event editing restrictions
 - Added coverage for event image preservation, replacement, and removal flows
 - Added coverage for authenticated user event image metadata handling
 
@@ -857,12 +860,12 @@ The application will be available at:
 |---|---|
 | Frontend UI / Pages | ✅ Standardized, role-aware, and accessibility-focused |
 | Reusable Components | ✅ Standardized, reusable, and accessibility-focused |
-| Frontend Business Logic | ✅ Modular, reusable, and fully tested |
+| Frontend Business Logic | ✅ Modular, role-aware, validation-driven, and fully tested |
 | Routing & Access Control | ✅ Centralized, role-aware, and fully tested |
 | API Communication Layer | ✅ Centralized Axios architecture and normalized API handling |
 | File Upload System | ✅ Avatar and event image upload, replacement, and removal supported |
-| Testing | ✅ 1106 tests across 123 test files |
-| Coverage | ✅ 97.64% statements / 94.51% branches / 94.6% functions / 97.87% lines |
+| Testing | ✅ 1114 tests across 123 test files |
+| Coverage | ✅ 97.65% statements / 94.48% branches / 94.61% functions / 97.88% lines |
 | UX Improvements | 🚧 Ongoing |
 
 ---

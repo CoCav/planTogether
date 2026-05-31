@@ -10,8 +10,8 @@ PlanTogether is a collaborative event management platform where users can create
 ![Vitest](https://img.shields.io/badge/Test-Vitest-6E9F18)
 ![RTL](https://img.shields.io/badge/Test-React%20Testing%20Library-E33332)
 ![Test Files](https://img.shields.io/badge/test%20files-123%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-1114%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-97.65%25%20statements%20%7C%2094.48%25%20branches-brightgreen)
+![Tests](https://img.shields.io/badge/tests-1117%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-97.65%25%20statements%20%7C%2094.51%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -221,6 +221,8 @@ frontend
 
 - **Styles** are separated into global styles, layout styles, page styles, and component styles to improve maintainability and UI consistency.
 
+- **Shared UI components and page layouts** follow consistent responsive patterns and accessibility conventions.
+
 - **Tests** mirror the frontend architecture with reusable factories, mocks, render helpers, and domain-based test organization.
 
 This architecture separates UI rendering, frontend behavior, routing, API communication, styling, and testing concerns into clear and maintainable frontend domains.
@@ -252,6 +254,7 @@ The frontend also emphasizes semantic structure, reusable accessible UI patterns
 - Change passwords with validation
 - Upload and preview avatars
 - Drag-and-drop avatar upload support
+- Delete account with ownership transfer safeguards
 - Reusable profile form architecture
 - Shared validation and upload handling behavior
 - Automatic authenticated user refresh after updates
@@ -285,10 +288,10 @@ Frontend behavior includes:
 ### 👥 Event Memberships
 
 - Join and leave events
+- Transfer event ownership
 - Promote participants
 - Demote co-organizers
 - Remove members
-- Transfer event ownership
 - Role-aware membership actions
 - Membership permission and access helpers
 
@@ -380,8 +383,7 @@ participant
 Unauthenticated visitors can:
 
 - Browse public event information
-- Access public user profiles
-- Access public event and user profile pages
+- Access public event pages
 - Receive login prompts for protected actions
 
 The UI dynamically adapts based on the user's permissions and authentication state.
@@ -739,13 +741,13 @@ npx vitest run --coverage
 ### 📊 Testing Results
 
 - ✅ 123 passing test files
-- ✅ 1114 passing tests
+- ✅ 1117 passing tests
 - ✅ All tests passing
 
-**Coverage:**
+Coverage:
 - 97.65% statements coverage
-- 94.48% branch coverage
-- 94.61% function coverage
+- 94.51% branch coverage
+- 94.64% function coverage
 - 97.88% line coverage
 
 ### 📦 Tested Areas
@@ -769,6 +771,8 @@ The frontend test suite covers:
 - selective create/edit datetime validation behavior
 - event status synchronization
 - event image preservation, replacement, and removal behavior
+- account deletion workflows
+- ownership transfer workflows
 
 ### 🔁 Testing Strategy
 
@@ -822,35 +826,30 @@ The application will be available at:
 
 ### 🔧 Frontend Features & UX
 
-- Added started event edit protection for start date and time fields
-- Added selective create/edit datetime validation behavior
-- Added started event editing support while preserving original start dates
-- Accessibility-focused UI architecture with semantic HTML and ARIA support
-- Added ongoing event view support and default event listing behavior
-- Added centralized event status badge system
-- Added status-aware event actions and restrictions
-- Aligned started-event deletion behavior with backend authorization rules
-- Added event image lifecycle handling for preservation, replacement, and removal
-- Fixed My Events image rendering using authenticated user event image metadata
+- Added reusable UserAvatar component architecture
+- Added account deletion flow with ownership transfer safeguards
+- Added event ownership transfer management UI
+- Standardized event status and role badge rendering
+- Standardized responsive layouts across pages and reusable components
+- Improved mobile navigation experience
+- Simplified event action visibility through centralized status badges
+- Improved accessibility and semantic structure across shared UI components
 
 ### 🔌 Frontend Architecture
 
-- Feature-oriented frontend architecture and reusable business logic
-- Reusable event listing hooks and centralized listing state management
-- Centralized protected route and access guard architecture
-- Centralized event status configuration and badge rendering
-- Shared ongoing event view configuration and filtering behavior
+- Standardized shared UI component architecture
+- Standardized page-level layout architecture
+- Centralized role and status badge system
+- Improved responsive styling architecture
+- Expanded reusable testing helpers and component coverage
 
 ### 🧪 Frontend Testing
 
-- Added coverage for started event edit flows
-- Added coverage for selective create/edit datetime validation
-- Added accessibility-oriented component and interaction testing
-- Added coverage for ongoing event views
+- Added coverage for ownership transfer workflows
+- Added coverage for account deletion flows
 - Added coverage for status badge rendering
-- Added coverage for started-event editing restrictions
-- Added coverage for event image preservation, replacement, and removal flows
-- Added coverage for authenticated user event image metadata handling
+- Expanded page, component, and accessibility coverage
+- Expanded page and component integration coverage
 
 ---
 
@@ -864,9 +863,9 @@ The application will be available at:
 | Routing & Access Control | ✅ Centralized, role-aware, and fully tested |
 | API Communication Layer | ✅ Centralized Axios architecture and normalized API handling |
 | File Upload System | ✅ Avatar and event image upload, replacement, and removal supported |
-| Testing | ✅ 1114 tests across 123 test files |
-| Coverage | ✅ 97.65% statements / 94.48% branches / 94.61% functions / 97.88% lines |
-| UX Improvements | 🚧 Ongoing |
+| Testing | ✅ 1117 tests across 123 test files |
+| Coverage | ✅ 97.65% statements / 94.51% branches / 94.64% functions / 97.88% lines |
+| UX Improvements | ✅ Responsive and accessibility improvements completed |
 
 ---
 
@@ -875,13 +874,11 @@ The application will be available at:
 ### 🚀 Frontend Features & UX
 
 - Notifications and reminder features
-- Improved mobile responsiveness across devices
 - Continued accessibility improvements and broader keyboard interaction coverage
 - Enhanced UI feedback (toasts, async feedback, contextual states)
 - Expanded role-aware event management interactions
 - Improved dashboard and event management flows
-- Additional reusable UI component extraction
-- Continued frontend styling consistency improvements
+- Public user profile pages
 
 ### 🧪 Frontend Testing
 

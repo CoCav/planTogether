@@ -16,7 +16,6 @@ import { createEventListingFilters } from "../../factories/shared/eventListingFi
    - filter visibility toggle
    - hidden and visible form states
    - accessible form labels and descriptions
-   - accessible live results count
    - text filter changes
    - mode filter changes
    - date filter controls
@@ -59,7 +58,6 @@ describe("EventsFilterCard", () => {
                 onFilterChange={vi.fn()}
                 onFilterSubmit={vi.fn((e) => e.preventDefault())}
                 onSortChange={vi.fn()}
-                resultsCount={42}
                 onResetFilters={vi.fn()}
                 {...props}
             />
@@ -78,25 +76,6 @@ describe("EventsFilterCard", () => {
         expect(screen.getByRole("button", {
             name: /show filters/i
         })).toBeInTheDocument();
-    });
-
-    it("renders results count", () => {
-        renderFilterCard({
-            resultsCount: 42
-        });
-
-        expect(screen.getByText(/42 events found/i)).toBeInTheDocument();
-    });
-
-    it("announces results count politely", () => {
-        renderFilterCard({
-            resultsCount: 42
-        });
-
-        expect(screen.getByText(/42 events found/i)).toHaveAttribute(
-            "aria-live",
-            "polite"
-        );
     });
 
     it("calls onToggleFilters when toggle button is clicked", () => {

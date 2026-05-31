@@ -29,6 +29,7 @@ import {
    - membership section and ownership transfer integration
    - event action integration
    - event status badge display
+   - event availability badges
    - authenticated and guest states
    - started and past event restrictions
 
@@ -135,13 +136,10 @@ vi.mock("../../components/events/EventDetailsSummary", () => ({
 vi.mock("../../components/events/EventDetailsActions", () => ({
     default: ({
         eventId,
-        isPast,
         canJoin,
         canLeave,
         canEdit,
         canDelete,
-        showEventFullButton,
-        showRegistrationClosedButton,
         showLoginPrompt,
         onJoin,
         onLeave,
@@ -149,23 +147,9 @@ vi.mock("../../components/events/EventDetailsActions", () => ({
         onDelete
     }) => (
         <div data-testid="event-details-actions">
-            {isPast && <span>Ended</span>}
-
-            {showEventFullButton && (
-                <button type="button" disabled>
-                    Event full
-                </button>
-            )}
-
             {canJoin && (
                 <button type="button" onClick={() => onJoin(eventId)}>
                     Join the event
-                </button>
-            )}
-
-            {showRegistrationClosedButton && (
-                <button type="button" disabled>
-                    Registration closed
                 </button>
             )}
 
@@ -750,7 +734,7 @@ describe("EventDetailsPage", () => {
        EVENT STATUS
     ============================= */
 
-    it("should show ended state for past event", async () => {
+    it("should display ended status badge for past event", async () => {
         setupApi({
             event: createEvent({
                 ...mockEvent,
@@ -766,7 +750,7 @@ describe("EventDetailsPage", () => {
 
         renderPage();
 
-        expect(await screen.findByText(/^ended$/i)).toBeInTheDocument();
+        expect(await screen.findByText("Ended")).toBeInTheDocument();
         expect(screen.queryByText("Upcoming")).not.toBeInTheDocument();
         expect(screen.queryByText("Ongoing")).not.toBeInTheDocument();
 
@@ -790,11 +774,7 @@ describe("EventDetailsPage", () => {
 
         renderPage();
 
-        const fullButton = await screen.findByRole("button", {
-            name: /event full/i
-        });
-
-        expect(fullButton).toBeDisabled();
+        expect(await screen.findByText("Event full")).toBeInTheDocument();
 
         expect(screen.queryByRole("button", {
             name: /join the event/i
@@ -826,6 +806,19 @@ describe("EventDetailsPage", () => {
 
         expect(await screen.findByText("Ongoing")).toBeInTheDocument();
 
+    });
+
+    it("should display registration closed badge", async () => {
+        setupApi({
+            event: createEvent({
+                ...mockEvent,
+                registrationDeadline: "2020-01-01T00:00:00.000Z"
+            })
+        });
+
+        renderPage();
+
+        expect(await screen.findByText("Registration closed")).toBeInTheDocument();
     });
 
     /* =============================

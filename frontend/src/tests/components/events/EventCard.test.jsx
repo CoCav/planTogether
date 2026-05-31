@@ -22,7 +22,8 @@ import { createEvent } from "../../factories/events/eventFactory";
    - join and leave action visibility
    - guest login prompt
    - past event state
-   - participant limit state
+   - event state badge display
+   - registration closed state
    - join and leave callbacks
    - accessible image links
    - accessible event labels
@@ -336,7 +337,7 @@ describe("EventCard", () => {
        EVENT FULL STATE
     ============================= */
 
-    it("should show full state when event has reached participant limit", () => {
+    it("should display event full badge when event has reached participant limit", () => {
         renderCard({
             event: {
                 maxParticipants: 3,
@@ -344,14 +345,11 @@ describe("EventCard", () => {
             }
         });
 
-        expect(screen.getByRole("button", {
-            name: /event full/i
-        })).toBeDisabled();
-
+        expect(screen.getByText("Event full")).toHaveClass("badge-danger");
         expect(screen.getByText("3 / 3").closest("li")).toHaveClass("text-danger");
     });
 
-    it("should show leave action without full state for participants already in the event", () => {
+    it("should show leave action and full badge for participants already in a full event", () => {
         renderCard({
             role: EVENT_ROLES.PARTICIPANT,
             event: {
@@ -364,9 +362,21 @@ describe("EventCard", () => {
             name: /leave the event/i
         })).toBeInTheDocument();
 
-        expect(screen.queryByRole("button", {
-            name: /event full/i
-        })).not.toBeInTheDocument();
+        expect(screen.getByText("Event full")).toHaveClass("badge-danger");
+    });
+
+    /* =============================
+       REGISTRATION CLOSED STATE
+    ============================= */
+
+    it("should display registration closed badge when registration deadline has passed", () => {
+        renderCard({
+            event: {
+                registrationDeadline: "2000-01-01T00:00:00.000Z"
+            }
+        });
+
+        expect(screen.getByText("Registration closed")).toHaveClass("badge-muted");
     });
 
     /* =============================

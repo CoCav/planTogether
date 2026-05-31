@@ -90,3 +90,13 @@
         grid-template-columns: 1fr;
     }
 }
+
+@media (max-width: 480px) {
+    .home-hero-actions {
+        width: 100%;
+    }
+
+    .home-hero-actions .btn {
+        flex: 1;
+    }
+}

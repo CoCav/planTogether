@@ -9,7 +9,7 @@ import { createAuthenticatedUser } from "../../../../factories/users/userFactory
 
 /* ==================================================
    USE EVENT STATUS TESTS
-   Tests event availability and UI status helpers
+   Tests event availability and join status helpers
 
    Handles:
    - past event detection
@@ -121,9 +121,6 @@ describe("useEventStatus", () => {
         });
 
         expect(result.isEventFull).toBe(true);
-
-        expect(result.showEventFullButton).toBe(true);
-
         expect(result.joinDisabledReason).toBe("Event full");
     });
 
@@ -138,8 +135,6 @@ describe("useEventStatus", () => {
         });
 
         expect(result.isEventFull).toBe(false);
-
-        expect(result.showEventFullButton).toBe(false);
     });
 
     it("should detect closed registration", () => {
@@ -152,13 +147,10 @@ describe("useEventStatus", () => {
         });
 
         expect(result.isRegistrationClosed).toBe(true);
-
-        expect(result.showRegistrationClosedButton).toBe(true);
-
         expect(result.joinDisabledReason).toBe("Registration closed");
     });
 
-    it("should not show registration closed button for members", () => {
+    it("should not disable join for members when registration is closed", () => {
         const result = useEventStatus({
             user,
             event: createEvent({
@@ -169,9 +161,6 @@ describe("useEventStatus", () => {
         });
 
         expect(result.isRegistrationClosed).toBe(true);
-
-        expect(result.showRegistrationClosedButton).toBe(false);
-
         expect(result.joinDisabledReason).toBeNull();
     });
 
@@ -186,7 +175,6 @@ describe("useEventStatus", () => {
         });
 
         expect(result.showLoginPrompt).toBe(true);
-
         expect(result.joinDisabledReason).toBeNull();
     });
 
@@ -201,11 +189,10 @@ describe("useEventStatus", () => {
         });
 
         expect(result.showLoginPrompt).toBe(false);
-
-        expect(result.showEventFullButton).toBe(true);
+        expect(result.isEventFull).toBe(true);
     });
 
-    it("should not show availability buttons for past events", () => {
+    it("should not show login prompt for past events", () => {
         const result = useEventStatus({
             user: null,
             event: createEvent({
@@ -215,9 +202,5 @@ describe("useEventStatus", () => {
         });
 
         expect(result.showLoginPrompt).toBe(false);
-
-        expect(result.showEventFullButton).toBe(false);
-
-        expect(result.showRegistrationClosedButton).toBe(false);
     });
 });

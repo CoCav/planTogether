@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../features/auth/hooks/useAuth";
@@ -15,6 +16,7 @@ import NavbarUserMenu from "./NavbarUserMenu";
    - primary navigation links
    - authentication navigation
    - authenticated user menu
+   - mobile navigation menu
    - accessible main navigation
    - accessible authenticated navigation
 ================================================== */
@@ -23,6 +25,12 @@ export default function Navbar() {
     const { user, logout } = useAuth();
 
     const navigate = useNavigate();
+
+    /* =========================
+       MENU STATE
+    ========================= */
+
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     /* =========================
        DISPLAY DATA
@@ -38,11 +46,26 @@ export default function Navbar() {
         `navbar-link link-animated-underline link-hover-primary ${isActive ? "active" : ""}`.trim();
 
     /* =========================
-       HANDLERS
+       MENU HANDLERS
+    ========================= */
+
+    const closeMobileMenu = () => {
+        setIsMobileMenuOpen(false);
+    };
+
+    const toggleMobileMenu = () => {
+        setIsMobileMenuOpen((current) => !current);
+    };
+
+    /* =========================
+       AUTH HANDLERS
     ========================= */
 
     const handleUserLogout = async () => {
+        closeMobileMenu();
+
         await logout();
+
         navigate("/");
     };
 
@@ -54,46 +77,102 @@ export default function Navbar() {
                     BRAND
                 ========================= */}
 
-                <Link to="/" className="navbar-brand">PlanTogether</Link>
+                <Link to="/" className="navbar-brand" onClick={closeMobileMenu}>
+                    PlanTogether
+                </Link>
 
                 {/* =========================
-                    MAIN NAVIGATION
+                    MOBILE MENU BUTTON
                 ========================= */}
 
-                <nav className="navbar-links" aria-label="Main navigation">
-                    <NavLink to="/events" end className={navLinkClassName}>
-                        Events
-                    </NavLink>
+                <button
+                    type="button"
+                    className="btn btn-outline navbar-mobile-toggle"
+                    onClick={toggleMobileMenu}
+                    aria-expanded={isMobileMenuOpen}
+                    aria-controls="navbar-mobile-menu"
+                    aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+                >
+                    {isMobileMenuOpen ? "✕" : "☰"}
+                </button>
 
-                    {user && (
-                        <NavLink to="/events/create" className={navLinkClassName}>
-                            Create event
+                {/* =========================
+                    NAVIGATION CONTENT
+                ========================= */}
+
+                <div id="navbar-mobile-menu" className={`navbar-menu ${isMobileMenuOpen ? "is-open" : ""}`}>
+                    <nav className="navbar-links" aria-label="Main navigation">
+                        <NavLink
+                            to="/events"
+                            end
+                            className={navLinkClassName}
+                            onClick={closeMobileMenu}
+                        >
+                            Events
                         </NavLink>
-                    )}
-                </nav>
 
-                {/* =========================
-                    AUTHENTICATION ACTIONS
-                ========================= */}
-
-                <div className="navbar-actions">
-                    {user ? (
-                        <NavbarUserMenu
-                            user={user}
-                            avatar={avatar}
-                            onLogout={handleUserLogout}
-                        />
-                    ) : (
-                        <div className="navbar-auth-group">
-                            <NavLink to="/login" className={navLinkClassName}>
-                                Login
+                        {user && (
+                            <NavLink
+                                to="/events/create"
+                                className={navLinkClassName}
+                                onClick={closeMobileMenu}
+                            >
+                                Create event
                             </NavLink>
+                        )}
+                    </nav>
 
-                            <Link to="/register" className="btn btn-primary">
-                                Register
-                            </Link>
-                        </div>
-                    )}
+                    <div className="navbar-mobile-divider" aria-hidden="true" />
+
+                    <div className="navbar-actions">
+                        {user ? (
+                            <>
+                                <div className="navbar-user-desktop">
+                                    <NavbarUserMenu
+                                        user={user}
+                                        avatar={avatar}
+                                        onLogout={handleUserLogout}
+                                    />
+                                </div>
+
+                                <div className="navbar-mobile-account-links">
+                                    <NavLink to="/my-events" className={navLinkClassName} onClick={closeMobileMenu}>
+                                        My Events
+                                    </NavLink>
+
+                                    <NavLink to="/profile" className={navLinkClassName} onClick={closeMobileMenu}>
+                                        Profile
+                                    </NavLink>
+
+                                    <button
+                                        type="button"
+                                        className="navbar-link navbar-logout-link link-animated-underline"
+                                        onClick={handleUserLogout}
+                                    >
+                                        Logout
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="navbar-auth-group">
+                                <NavLink
+                                    to="/login"
+                                    className={navLinkClassName}
+                                    onClick={closeMobileMenu}
+                                >
+                                    Login
+                                </NavLink>
+
+                                <NavLink
+                                    to="/register"
+                                    className={navLinkClassName}
+                                    onClick={closeMobileMenu}
+                                >
+                                    Register
+                                </NavLink>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
             </div>

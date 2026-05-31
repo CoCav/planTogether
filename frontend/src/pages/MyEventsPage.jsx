@@ -281,16 +281,10 @@ export default function MyEventsPage() {
                 <EventsFilterCard
                     filters={filters}
                     showFilters={showFilters}
-
                     sortLabels={sortLabels}
-
-                    resultsCount={pagination.totalEvents}
-
                     onToggleFilters={() => setShowFilters((prev) => !prev)}
-
                     onFilterChange={handleFilterChange}
                     onFilterSubmit={handleFilterSubmit}
-
                     onSortChange={handleSortChange}
                     onResetFilters={handleResetFilters}
                 />

@@ -174,7 +174,6 @@ describe("EventsPage", () => {
         renderPage();
 
         expect(await screen.findByText("(12)")).toBeInTheDocument();
-        expect(screen.getByText(/12 events found/i)).toBeInTheDocument();
     });
 
     it("displays empty state when no events are returned", async () => {

@@ -43,6 +43,7 @@
     /* Status */
     --color-success: #16a34a;
     --color-danger: #dc2626;
+    --color-danger-hover: #b91c1c;
 
     /* Feedback */
     --color-info-text: #1d4ed8;

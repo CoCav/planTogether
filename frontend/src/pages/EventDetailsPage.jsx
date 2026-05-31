@@ -40,6 +40,7 @@ import PageLoader from "../components/ui/PageLoader";
    - ownership transfer orchestration
    - join / leave event actions
    - event deletion
+   - event availability badges
    - started and past event restrictions
    - staff and participant management
    - display-ready event data
@@ -113,9 +114,7 @@ export default function EventDetailsPage() {
         isEventFull,
         isRegistrationClosed,
 
-        showEventFullButton,
-        showLoginPrompt,
-        showRegistrationClosedButton
+        showLoginPrompt
     } = useEventStatus({
         user,
         event,
@@ -279,29 +278,29 @@ export default function EventDetailsPage() {
                                 {eventDisplayData.title}
                             </h2>
 
-                            {!isPast && <Badge status={eventDisplayData.status} />}
+                            <Badge status={eventDisplayData.status} />
+
+                            {isEventFull && (
+                                <Badge variant="danger" label="Event full" />
+                            )}
+
+                            {isRegistrationClosed && (
+                                <Badge variant="muted" label="Registration closed" />
+                            )}
                         </div>
 
                         <EventDetailsActions
                             eventId={event.id}
 
-                            status={eventDisplayData.status}
-                            isPast={isPast}
-
                             canJoin={canJoin}
                             canLeave={canLeave}
-
                             canEdit={canEdit}
                             canDelete={canDelete}
-
-                            showEventFullButton={showEventFullButton}
-                            showRegistrationClosedButton={showRegistrationClosedButton}
 
                             showLoginPrompt={showLoginPrompt}
 
                             onJoin={handleJoinEvent}
                             onLeave={handleLeaveEvent}
-
                             onEdit={() => navigate(`/events/${event.id}/edit`)}
                             onDelete={handleDeleteEvent}
                         />

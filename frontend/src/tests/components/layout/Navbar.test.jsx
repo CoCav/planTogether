@@ -18,6 +18,9 @@ import Navbar from "../../../components/layout/Navbar";
    - accessible main navigation
    - user menu integration
    - logout redirect flow
+   - mobile navigation menu
+   - mobile authenticated navigation
+   - mobile logout flow
 
    Notes:
    - mocks authenticated user state
@@ -161,7 +164,92 @@ describe("Navbar", () => {
 
         renderNavbar();
 
-        await user.click(screen.getByRole("button", { name: "Logout" }));
+        const desktopLogoutButton = screen
+            .getByTestId("navbar-user-menu")
+            .querySelector("button");
+
+        await user.click(desktopLogoutButton);
+
+        await waitFor(() => {
+            expect(mockLogout).toHaveBeenCalledTimes(1);
+            expect(mockNavigate).toHaveBeenCalledWith("/");
+        });
+    });
+
+    /* =============================
+       MOBILE MENU
+    ============================= */
+
+    it("should toggle mobile navigation menu", async () => {
+        const user = userEvent.setup();
+
+        renderNavbar();
+
+        const toggleButton = screen.getByRole("button", {
+            name: /open navigation menu/i
+        });
+
+        await user.click(toggleButton);
+
+        expect(toggleButton).toHaveAttribute("aria-expanded", "true");
+
+        expect(document.getElementById("navbar-mobile-menu")).toHaveClass("is-open");
+    });
+
+    it("should close mobile navigation menu", async () => {
+        const user = userEvent.setup();
+
+        renderNavbar();
+
+        const toggleButton = screen.getByRole("button", {
+            name: /open navigation menu/i
+        });
+
+        await user.click(toggleButton);
+
+        await user.click(screen.getByRole("button", {
+            name: /close navigation menu/i
+        }));
+
+        expect(document.getElementById("navbar-mobile-menu")).not.toHaveClass("is-open");
+    });
+
+    it("should render mobile authenticated navigation links", () => {
+        mockUser = {
+            name: "John",
+            avatar: null
+        };
+
+        renderNavbar();
+
+        expect(screen.getByRole("link", {
+            name: "My Events"
+        })).toBeInTheDocument();
+
+        expect(screen.getByRole("link", {
+            name: "Profile"
+        })).toBeInTheDocument();
+    });
+
+    it("should logout from mobile navigation", async () => {
+        const user = userEvent.setup();
+
+        mockUser = {
+            name: "John",
+            avatar: null
+        };
+
+        renderNavbar();
+
+        await user.click(screen.getByRole("button", {
+            name: /open navigation menu/i
+        }));
+
+        const logoutButtons = screen.getAllByRole("button", {
+            name: "Logout"
+        });
+
+        await user.click(logoutButtons[1]);
 
         await waitFor(() => {
             expect(mockLogout).toHaveBeenCalledTimes(1);

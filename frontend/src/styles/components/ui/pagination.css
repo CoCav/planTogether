@@ -27,3 +27,23 @@
 
     font-size: var(--font-size-sm);
 }
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 480px) {
+    .pagination {
+        width: 100%;
+    }
+
+    .pagination .btn {
+        flex: 1;
+    }
+
+    .pagination-info {
+        width: 100%;
+        text-align: center;
+        order: -1;
+    }
+}

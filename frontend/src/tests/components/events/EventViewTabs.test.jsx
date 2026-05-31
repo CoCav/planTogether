@@ -19,6 +19,7 @@ import {
    - view tab rendering
    - active tab state
    - decorative tab icons
+   - mobile scroll wrapper
    - accessible tab navigation
    - view change callback
 ================================================== */
@@ -60,6 +61,12 @@ describe("EventViewTabs", () => {
         expect(screen.getByRole("tablist", {
             name: "Event views"
         })).toBeInTheDocument();
+    });
+
+    it("should render horizontal scroll wrapper", () => {
+        renderEventViewTabs();
+
+        expect(document.querySelector(".event-view-tabs-scroll")).toBeInTheDocument();
     });
 
     it("should render all view tabs", () => {

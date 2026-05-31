@@ -99,7 +99,8 @@
 ========================================= */
 
 .navbar-dropdown-item {
-    display: block;
+    display: flex;
+    align-items: center;
     width: 100%;
 
     padding: var(--space-2) var(--space-3);

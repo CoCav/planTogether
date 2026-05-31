@@ -50,3 +50,7 @@
 .select-wrapper:focus-within .select-icon {
     transform: translateY(-50%) rotate(180deg);
 }
+
+.select:disabled + .select-icon {
+    opacity: 0.6;
+}

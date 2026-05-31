@@ -28,18 +28,12 @@
     flex-wrap: wrap;
 }
 
-.events-filter-results-count {
-    margin-top: var(--space-2);
-    color: var(--color-text-muted);
-    font-size: var(--font-size-sm);
-}
-
 /* =========================================
    FORM
 ========================================= */
 
 .events-filter-form {
-    margin-top: var(--space-4);
+    margin-top: var(--space-5);
 }
 
 .events-filter-grid {
@@ -53,4 +47,20 @@
     gap: var(--space-2);
     flex-wrap: wrap;
     margin-top: var(--space-4);
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+    .events-filter-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .events-filter-actions .btn {
+        flex: 1;
+    }
 }

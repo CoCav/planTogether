@@ -16,14 +16,12 @@ import Select from "../ui/Select";
    - sorting controls
    - accessible filter visibility toggle
    - accessible form field descriptions
-   - accessible live results count
 ================================================== */
 
 export default function EventsFilterCard({
     filters,
     showFilters,
     sortLabels,
-    resultsCount,
     onToggleFilters,
     onFilterChange,
     onFilterSubmit,
@@ -55,10 +53,6 @@ export default function EventsFilterCard({
                     <p className="section-subtitle">
                         Refine events by search, creator, category,
                         location, date, or sorting.
-                    </p>
-
-                    <p className="events-filter-results-count" aria-live="polite" >
-                        {resultsCount} events found
                     </p>
                 </div>
 

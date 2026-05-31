@@ -20,8 +20,7 @@ import Badge from "../ui/Badge";
 
    Handles:
    - event preview content
-   - role and type badges
-   - event status display
+   - role, type, status and state badges
    - event metadata display
    - membership action visibility
    - image fallback handling
@@ -29,7 +28,8 @@ import Badge from "../ui/Badge";
    - accessible event labels
 
    Notes:
-   - supports role and status badge display
+   - event statuses and business states are displayed as badges
+   - membership actions are delegated to EventCardActions
 ================================================== */
 
 export default function EventCard({ event, user, role = null, onJoin, onLeave }) {
@@ -42,9 +42,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
         isPast,
         isEventFull,
         isRegistrationClosed,
-        showEventFullButton,
-        showLoginPrompt,
-        showRegistrationClosedButton
+        showLoginPrompt
     } = useEventStatus({
         user,
         event,
@@ -96,8 +94,14 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
 
                         <div className="event-card-badges" aria-label="Event labels">
 
-                            {!isPast && (
-                                <Badge status={eventDisplayData.status} />
+                            <Badge status={eventDisplayData.status} />
+
+                            {isEventFull && (
+                                <Badge variant="danger" label="Event full" />
+                            )}
+
+                            {isRegistrationClosed && (
+                                <Badge variant="muted" label="Registration closed" />
                             )}
 
                             {eventDisplayData.type && (
@@ -118,16 +122,10 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                     <EventCardActions
                         eventId={event.id}
 
-                        status={eventDisplayData.status}
-                        isPast={isPast}
-
                         canLeave={canLeave}
                         showJoinButton={showJoinButton}
-
-                        showEventFullButton={showEventFullButton}
-                        showRegistrationClosedButton={showRegistrationClosedButton}
-
                         showLoginPrompt={showLoginPrompt}
+
                         onJoin={onJoin}
                         onLeave={onLeave}
                     />

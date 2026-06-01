@@ -2,8 +2,7 @@
    USER INTEGRATION - PUBLIC USER EVENTS TESTS
 
    Tests:
-   - authenticated public active events retrieval
-   - authentication protection
+   - public active events retrieval
    - invalid user ID validation
    - nonexistent user handling
    - created events retrieval
@@ -16,13 +15,11 @@
    - created and joined active events are separated correctly
    - inactive memberships are excluded from public joined events
    - created events are not duplicated in joined events
-   - authentication and validators protect the route
+   - validators protect the route
 ================================================== */
 
 const request = require("supertest");
 const app = require("../../../../src/app");
-
-const { User } = require("../../../../src/models");
 
 const { initDB, resetDB, closeDB } = require("../../../helpers/database/dbTestHelper");
 
@@ -41,11 +38,6 @@ describe("Get Public User Events API", () => {
     ============================= */
 
     it("should retrieve public user events", async () => {
-        const viewerAuth = await registerAndGetToken({
-            name: "Viewer",
-            email: `viewer${Date.now()}@test.com`
-        });
-
         const targetUserAuth = await registerAndGetToken({
             name: "Target User",
             email: `target${Date.now()}@test.com`
@@ -55,9 +47,7 @@ describe("Get Public User Events API", () => {
             title: "Created Event"
         });
 
-        const res = await request(app)
-            .get(`/api/users/${targetUserAuth.user.userId}/events`)
-            .set(viewerAuth.headers);
+        const res = await request(app).get(`/api/users/${targetUserAuth.user.userId}/events`);
 
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty("message", "Public user events retrieved successfully");
@@ -69,11 +59,6 @@ describe("Get Public User Events API", () => {
     });
 
     it("should retrieve created public user events", async () => {
-        const viewerAuth = await registerAndGetToken({
-            name: "Viewer",
-            email: `createdviewer${Date.now()}@test.com`
-        });
-
         const targetUserAuth = await registerAndGetToken({
             name: "Creator",
             email: `createdtarget${Date.now()}@test.com`
@@ -83,9 +68,7 @@ describe("Get Public User Events API", () => {
             title: "Created Public Event"
         });
 
-        const res = await request(app)
-            .get(`/api/users/${targetUserAuth.user.userId}/events`)
-            .set(viewerAuth.headers);
+        const res = await request(app).get(`/api/users/${targetUserAuth.user.userId}/events`);
 
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty("message", "Public user events retrieved successfully");
@@ -96,11 +79,6 @@ describe("Get Public User Events API", () => {
     });
 
     it("should retrieve joined public user events", async () => {
-        const viewerAuth = await registerAndGetToken({
-            name: "Viewer",
-            email: `joinedviewer${Date.now()}@test.com`
-        });
-
         const targetUserAuth = await registerAndGetToken({
             name: "Participant",
             email: `joinedtarget${Date.now()}@test.com`
@@ -117,9 +95,7 @@ describe("Get Public User Events API", () => {
 
         await joinEvent(eventRes.body.event.id, targetUserAuth.headers);
 
-        const res = await request(app)
-            .get(`/api/users/${targetUserAuth.user.userId}/events`)
-            .set(viewerAuth.headers);
+        const res = await request(app).get(`/api/users/${targetUserAuth.user.userId}/events`);
 
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty("message", "Public user events retrieved successfully");
@@ -130,11 +106,6 @@ describe("Get Public User Events API", () => {
     });
 
     it("should exclude inactive memberships from joined public user events", async () => {
-        const viewerAuth = await registerAndGetToken({
-            name: "Viewer",
-            email: `inactiveviewer${Date.now()}@test.com`
-        });
-
         const targetUserAuth = await registerAndGetToken({
             name: "Inactive Participant",
             email: `inactiveparticipant${Date.now()}@test.com`
@@ -155,9 +126,7 @@ describe("Get Public User Events API", () => {
             .delete(`/api/events/${eventRes.body.event.id}/members/leave`)
             .set(targetUserAuth.headers);
 
-        const res = await request(app)
-            .get(`/api/users/${targetUserAuth.user.userId}/events`)
-            .set(viewerAuth.headers);
+        const res = await request(app).get(`/api/users/${targetUserAuth.user.userId}/events`);
 
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty("message", "Public user events retrieved successfully");
@@ -168,11 +137,6 @@ describe("Get Public User Events API", () => {
     });
 
     it("should not duplicate created events in joined events", async () => {
-        const viewerAuth = await registerAndGetToken({
-            name: "Viewer",
-            email: `duplicateviewer${Date.now()}@test.com`
-        });
-
         const targetUserAuth = await registerAndGetToken({
             name: "Target User",
             email: `duplicatetarget${Date.now()}@test.com`
@@ -182,9 +146,7 @@ describe("Get Public User Events API", () => {
             title: "Non Duplicated Event"
         });
 
-        const res = await request(app)
-            .get(`/api/users/${targetUserAuth.user.userId}/events`)
-            .set(viewerAuth.headers);
+        const res = await request(app).get(`/api/users/${targetUserAuth.user.userId}/events`);
 
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty("message", "Public user events retrieved successfully");
@@ -199,34 +161,11 @@ describe("Get Public User Events API", () => {
     });
 
     /* =============================
-       AUTHENTICATION ERRORS
-    ============================= */
-
-    it("should reject unauthenticated request", async () => {
-        const targetUser = await User.create({
-            name: "Target User",
-            email: `unauth${Date.now()}@test.com`,
-            password: "Password123"
-        });
-
-        const res = await request(app).get(`/api/users/${targetUser.id}/events`);
-
-        expect(res.statusCode).toBe(401);
-    });
-
-    /* =============================
        VALIDATION ERRORS
     ============================= */
 
     it("should reject invalid user ID", async () => {
-        const viewerAuth = await registerAndGetToken({
-            name: "Viewer",
-            email: `invalidviewer${Date.now()}@test.com`
-        });
-
-        const res = await request(app)
-            .get("/api/users/abc/events")
-            .set(viewerAuth.headers);
+        const res = await request(app).get("/api/users/abc/events");
 
         expect(res.statusCode).toBe(400);
     });
@@ -236,14 +175,7 @@ describe("Get Public User Events API", () => {
     ============================= */
 
     it("should return 404 if user does not exist", async () => {
-        const viewerAuth = await registerAndGetToken({
-            name: "Viewer",
-            email: `missingviewer${Date.now()}@test.com`
-        });
-
-        const res = await request(app)
-            .get("/api/users/999999/events")
-            .set(viewerAuth.headers);
+        const res = await request(app).get("/api/users/999999/events");
 
         expect(res.statusCode).toBe(404);
     });

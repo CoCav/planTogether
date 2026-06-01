@@ -43,7 +43,7 @@ const { getPaginationOptions } = require("../utils/pagination");
    - grouped participant count queries exclude soft-deleted memberships
    - critical profile update flow uses Sequelize transactions
    - public profiles never expose id, email, password or dates
-   - joined events exclude events created by the same user
+   - public joined event stats and lists exclude organizer memberships
    - EventUserRole includes events with alias "event"
    - event roles are centralized through shared constants
    - uses shared HTTP error and normalization utilities
@@ -364,7 +364,10 @@ const getPublicUserProfileByID = async (userId) => {
     const joinedEventsCount = await EventUserRole.count({
         where: {
             userId,
-            deletedAt: null
+            deletedAt: null,
+            role: {
+                [Op.ne]: EVENT_ROLES.ORGANIZER
+            }
         }
     });
 
@@ -387,30 +390,64 @@ const getPublicUserEventsByID = async (userId) => {
 
     const createdEvents = await Event.findAll({
         where: { creatorId: userId },
+        include: [
+            buildEventCreatorInclude(User)
+        ],
         order: [["startDateTime", "ASC"]]
     });
 
-    const joinedEventsRaw = await EventUserRole.findAll({
+    const joinedMemberships = await EventUserRole.findAll({
         where: {
             userId,
-            deletedAt: null
+            deletedAt: null,
+            role: {
+                [Op.ne]: EVENT_ROLES.ORGANIZER
+            }
         },
         include: [
             {
                 model: Event,
-                as: "event"
+                as: "event",
+                include: [
+                    buildEventCreatorInclude(User)
+                ]
             }
         ]
     });
 
-    // Remove events created by the same user to avoid duplicates
-    const joinedEvents = joinedEventsRaw
-        .map((membership) => membership.event)
-        .filter((event) => event.creatorId !== userId);
+    const joinedEvents = joinedMemberships.map(
+        (membership) => membership.event
+    );
+
+    const eventIds = [
+        ...createdEvents.map((event) => event.id),
+        ...joinedEvents.map((event) => event.id)
+    ];
+
+    const participantCountByEventId =
+        await countActiveParticipantsByEventIds(
+            EventUserRole,
+            sequelize,
+            eventIds
+        );
+
+    const enrichEvent = (event) => {
+        const data = event.toJSON();
+
+        const eventWithParticipants = {
+            ...data,
+            participantCount: participantCountByEventId[data.id] || 0
+        };
+
+        return {
+            ...eventWithParticipants,
+            status: getEventStatus(eventWithParticipants)
+        };
+    };
 
     return {
-        createdEvents,
-        joinedEvents
+        createdEvents: createdEvents.map(enrichEvent),
+        joinedEvents: joinedEvents.map(enrichEvent)
     };
 };
 

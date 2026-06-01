@@ -12,7 +12,7 @@
    Ensures:
    - only public user fields are selected
    - user statistics are computed correctly
-   - joined event stats only count active memberships
+   - joined event stats only count active non-organizer memberships
    - null avatars are handled safely
    - missing users and database errors are handled safely
 ================================================== */
@@ -29,11 +29,15 @@ jest.mock("../../../../../src/models/relations/eventUserRoleModel", () => ({
     count: jest.fn()
 }));
 
+const { Op } = require("sequelize");
+
 const User = require("../../../../../src/models/userModel");
 const Event = require("../../../../../src/models/eventModel");
 const EventUserRole = require("../../../../../src/models/relations/eventUserRoleModel");
 
 const userService = require("../../../../../src/services/userService");
+
+const { EVENT_ROLES } = require("../../../../../src/constants/eventRoles");
 
 const { createMockUser } = require("../../../../factories/userFactory");
 
@@ -97,13 +101,39 @@ describe("userService - getPublicUserProfileByID", () => {
         expect(EventUserRole.count).toHaveBeenCalledWith({
             where: {
                 userId: 1,
-                deletedAt: null
+                deletedAt: null,
+                role: {
+                    [Op.ne]: EVENT_ROLES.ORGANIZER
+                }
             }
         });
 
         expect(result.stats).toEqual({
             createdEventsCount: 2,
             joinedEventsCount: 4
+        });
+    });
+
+    it("should exclude organizer memberships from joined event stats", async () => {
+        const user = createMockUser({
+            name: "John",
+            avatar: null
+        });
+
+        User.findByPk.mockResolvedValue(user);
+        Event.count.mockResolvedValue(2);
+        EventUserRole.count.mockResolvedValue(3);
+
+        await userService.getPublicUserProfileByID(1);
+
+        expect(EventUserRole.count).toHaveBeenCalledWith({
+            where: {
+                userId: 1,
+                deletedAt: null,
+                role: {
+                    [Op.ne]: EVENT_ROLES.ORGANIZER
+                }
+            }
         });
     });
 

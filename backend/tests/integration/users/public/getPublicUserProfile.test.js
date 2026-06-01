@@ -2,8 +2,7 @@
    USER INTEGRATION - PUBLIC USER PROFILE TESTS
 
    Tests:
-   - authenticated public profile retrieval
-   - authentication protection
+   - public profile retrieval
    - invalid user ID validation
    - nonexistent user handling
    - sensitive data protection
@@ -14,7 +13,7 @@
    - private user fields are never exposed
    - public stats only count active memberships
    - public stats are included in the response
-   - authentication and validators protect the route
+   - validators protect the route
 =================================================== */
 
 const request = require("supertest");
@@ -38,12 +37,7 @@ describe("Get Public User Profile API", () => {
        PUBLIC PROFILE RETRIEVAL SUCCESS
     =================================== */
 
-    it("should get public user profile when authenticated", async () => {
-        const viewerAuth = await registerAndGetToken({
-            name: "Viewer",
-            email: `viewer${Date.now()}@test.com`
-        });
-
+    it("should get public user profile", async () => {
         const targetUser = await User.create({
             name: "Target User",
             email: `target${Date.now()}@test.com`,
@@ -51,9 +45,7 @@ describe("Get Public User Profile API", () => {
             avatar: "/uploads/avatars/test.png"
         });
 
-        const res = await request(app)
-            .get(`/api/users/${targetUser.id}`)
-            .set(viewerAuth.headers);
+        const res = await request(app).get(`/api/users/${targetUser.id}`);
 
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty("message", "Public user profile retrieved successfully");
@@ -67,11 +59,6 @@ describe("Get Public User Profile API", () => {
     });
 
     it("should include public user stats", async () => {
-        const viewerAuth = await registerAndGetToken({
-            name: "Viewer",
-            email: `viewerstats${Date.now()}@test.com`
-        });
-
         const targetUserAuth = await registerAndGetToken({
             name: "Target User",
             email: `targetstats${Date.now()}@test.com`
@@ -90,23 +77,16 @@ describe("Get Public User Profile API", () => {
 
         await joinEvent(joinedEventRes.body.event.id, targetUserAuth.headers);
 
-        const res = await request(app)
-            .get(`/api/users/${targetUserAuth.user.userId}`)
-            .set(viewerAuth.headers);
+        const res = await request(app).get(`/api/users/${targetUserAuth.user.userId}`);
 
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty("message", "Public user profile retrieved successfully");
 
         expect(res.body.stats).toHaveProperty("createdEventsCount", 1);
-        expect(res.body.stats).toHaveProperty("joinedEventsCount", 2);
+        expect(res.body.stats).toHaveProperty("joinedEventsCount", 1);
     });
 
     it("should exclude inactive memberships from public user stats", async () => {
-        const viewerAuth = await registerAndGetToken({
-            name: "Viewer",
-            email: `inactiveprofileviewer${Date.now()}@test.com`
-        });
-
         const targetUserAuth = await registerAndGetToken({
             name: "Inactive Stats User",
             email: `inactivestats${Date.now()}@test.com`
@@ -127,9 +107,7 @@ describe("Get Public User Profile API", () => {
             .delete(`/api/events/${eventRes.body.event.id}/members/leave`)
             .set(targetUserAuth.headers);
 
-        const res = await request(app)
-            .get(`/api/users/${targetUserAuth.user.userId}`)
-            .set(viewerAuth.headers);
+        const res = await request(app).get(`/api/users/${targetUserAuth.user.userId}`);
 
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty("message", "Public user profile retrieved successfully");
@@ -142,11 +120,6 @@ describe("Get Public User Profile API", () => {
     ============================= */
 
     it("should never expose sensitive user fields publicly", async () => {
-        const viewerAuth = await registerAndGetToken({
-            name: "Viewer",
-            email: `sensitiveviewer${Date.now()}@test.com`
-        });
-
         const targetUser = await User.create({
             name: "Sensitive User",
             email: `sensitive${Date.now()}@test.com`,
@@ -154,9 +127,7 @@ describe("Get Public User Profile API", () => {
             avatar: "/uploads/avatars/test.png"
         });
 
-        const res = await request(app)
-            .get(`/api/users/${targetUser.id}`)
-            .set(viewerAuth.headers);
+        const res = await request(app).get(`/api/users/${targetUser.id}`);
 
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty("message", "Public user profile retrieved successfully");
@@ -169,35 +140,11 @@ describe("Get Public User Profile API", () => {
     });
 
     /* =============================
-       AUTHENTICATION ERRORS
-    ============================= */
-
-    it("should reject unauthenticated request", async () => {
-        const targetUser = await User.create({
-            name: "Test User",
-            email: `test${Date.now()}@test.com`,
-            password: "Password123"
-        });
-
-        const res = await request(app)
-            .get(`/api/users/${targetUser.id}`);
-
-        expect(res.statusCode).toBe(401);
-    });
-
-    /* =============================
        VALIDATION ERRORS
     ============================= */
 
     it("should reject invalid user ID", async () => {
-        const viewerAuth = await registerAndGetToken({
-            name: "Viewer",
-            email: `invalidviewer${Date.now()}@test.com`
-        });
-
-        const res = await request(app)
-            .get("/api/users/abc")
-            .set(viewerAuth.headers);
+        const res = await request(app).get("/api/users/abc");
 
         expect(res.statusCode).toBe(400);
     });
@@ -207,14 +154,7 @@ describe("Get Public User Profile API", () => {
     ============================= */
 
     it("should return 404 if user does not exist", async () => {
-        const viewerAuth = await registerAndGetToken({
-            name: "Viewer",
-            email: `missingviewer${Date.now()}@test.com`
-        });
-
-        const res = await request(app)
-            .get("/api/users/999999")
-            .set(viewerAuth.headers);
+        const res = await request(app).get("/api/users/999999");
 
         expect(res.statusCode).toBe(404);
     });

@@ -23,7 +23,7 @@ const handleValidationErrors = require("../middlewares/errors/handleValidationEr
 
    Notes:
    - /me routes use authenticated userId from JWT
-   - /:id routes use public user ID route params
+   - /:id routes are public and use user ID route params
    - public profile responses hide sensitive user fields
 ================================================== */
 
@@ -67,9 +67,9 @@ router.delete("/me", authenticateToken, userController.deleteCurrentUser);
 ============================= */
 
 // Get public user profile
-router.get("/:id", authenticateToken, userIdParamValidator, handleValidationErrors, userController.getPublicUserProfile);
+router.get("/:id", userIdParamValidator, handleValidationErrors, userController.getPublicUserProfile);
 
 // Get public user events
-router.get("/:id/events", authenticateToken, userIdParamValidator, handleValidationErrors, userController.getPublicUserEvents);
+router.get("/:id/events", userIdParamValidator, handleValidationErrors, userController.getPublicUserEvents);
 
 module.exports = router;

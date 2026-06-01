@@ -28,6 +28,7 @@ import { createEvent } from "../../factories/events/eventFactory";
    - accessible image links
    - accessible event labels
    - decorative icon accessibility
+   - public profile navigation
 
    Notes:
    - uses reusable event render helper
@@ -229,6 +230,20 @@ describe("EventCard", () => {
         });
 
         expect(screen.getByText("Ongoing")).toHaveClass("badge-ongoing");
+    });
+
+    it("should link organizer badge to the public user profile", () => {
+        renderCard({
+            role: null,
+            event: {
+                creatorId: 42,
+                creatorName: "Alice"
+            }
+        });
+
+        expect(screen.getByRole("link", {
+            name: /alice/i
+        })).toHaveAttribute("href", "/users/42");
     });
 
     /* =============================

@@ -10,8 +10,10 @@ import RegisterPage from "../pages/RegisterPage";
 import EventsPage from "../pages/EventsPage";
 import EventDetailsPage from "../pages/EventDetailsPage";
 
-import MyProfilePage from "../pages/MyProfilePage";
-import MyEventsPage from "../pages/MyEventsPage";
+import MyProfilePage from "../pages/users/authenticated/MyProfilePage";
+import MyEventsPage from "../pages/users/authenticated/MyEventsPage";
+
+import PublicUserPage from "../pages/users/public/PublicUserPage";
 
 import CreateEventPage from "../pages/CreateEventPage";
 import EditEventPage from "../pages/EditEventPage";
@@ -56,6 +58,11 @@ export default function AppRouter() {
             <Route
                 path="/events/:eventId"
                 element={<EventDetailsPage />}
+            />
+
+            <Route
+                path="/users/:userId"
+                element={<PublicUserPage />}
             />
 
             {/* =============================

@@ -52,11 +52,11 @@ vi.mock("../../pages/EventDetailsPage", () => ({
     default: () => <div>Event Details Page</div>
 }));
 
-vi.mock("../../pages/MyProfilePage", () => ({
+vi.mock("../../pages/users/authenticated/MyProfilePage", () => ({
     default: () => <div>My Profile Page</div>
 }));
 
-vi.mock("../../pages/MyEventsPage", () => ({
+vi.mock("../../pages/users/authenticated/MyEventsPage.jsx", () => ({
     default: () => <div>My Events Page</div>
 }));
 

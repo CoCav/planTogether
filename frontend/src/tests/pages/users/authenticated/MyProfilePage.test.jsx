@@ -2,11 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import MyProfilePage from "../../pages/MyProfilePage";
+import MyProfilePage from "../../../../pages/users/authenticated/MyProfilePage";
 
-import useMyProfileForm from "../../features/users/authenticated/hooks/form/useMyProfileForm";
-import useMyPasswordForm from "../../features/users/authenticated/hooks/form/useMyPasswordForm";
-import useDeleteAccount from "../../features/users/authenticated/hooks/useDeleteAccount";
+import useMyProfileForm from "../../../../features/users/authenticated/hooks/form/useMyProfileForm";
+import useMyPasswordForm from "../../../../features/users/authenticated/hooks/form/useMyPasswordForm";
+import useDeleteAccount from "../../../../features/users/authenticated/hooks/useDeleteAccount";
 
 /* ==================================================
    MY PROFILE PAGE TESTS
@@ -65,23 +65,23 @@ const mockDeleteAccountActions = {
    MOCKS
 ============================= */
 
-vi.mock("../../features/auth/hooks/useAuth", () => ({
+vi.mock("../../../../features/auth/hooks/useAuth", () => ({
     useAuth: () => mockAuthState
 }));
 
-vi.mock("../../features/users/authenticated/hooks/form/useMyProfileForm", () => ({
+vi.mock("../../../../features/users/authenticated/hooks/form/useMyProfileForm", () => ({
     default: vi.fn(() => mockProfileHookState)
 }));
 
-vi.mock("../../features/users/authenticated/hooks/form/useMyPasswordForm", () => ({
+vi.mock("../../../../features/users/authenticated/hooks/form/useMyPasswordForm", () => ({
     default: vi.fn(() => mockPasswordHookState)
 }));
 
-vi.mock("../../features/users/authenticated/hooks/useDeleteAccount", () => ({
+vi.mock("../../../../features/users/authenticated/hooks/useDeleteAccount", () => ({
     default: vi.fn(() => mockDeleteAccountHookState)
 }));
 
-vi.mock("../../components/users/UserForm", () => ({
+vi.mock("../../../../components/users/UserForm", () => ({
     default: ({
         values,
         fieldErrors,
@@ -122,7 +122,7 @@ vi.mock("../../components/users/UserForm", () => ({
     )
 }));
 
-vi.mock("../../components/users/UserPasswordForm", () => ({
+vi.mock("../../../../components/users/UserPasswordForm", () => ({
     default: ({
         values,
         fieldErrors,
@@ -160,7 +160,7 @@ vi.mock("../../components/users/UserPasswordForm", () => ({
     )
 }));
 
-vi.mock("../../components/users/DeleteAccountSection", () => ({
+vi.mock("../../../../components/users/DeleteAccountSection", () => ({
     default: ({
         isDeleting,
         onDeleteAccount

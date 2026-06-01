@@ -24,6 +24,7 @@ import Badge from "../ui/Badge";
    - event metadata display
    - membership action visibility
    - image fallback handling
+   - public profile navigation
    - accessible image links
    - accessible event labels
 
@@ -109,7 +110,16 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                             )}
 
                             {shouldShowOrganizerInline && event.creatorName && (
-                                <Badge variant="organizer" label={`👑 ${event.creatorName}`} />
+                                event.creatorId ? (
+                                    <Link
+                                        to={`/users/${event.creatorId}`}
+                                        className="link-hover-primary"
+                                    >
+                                        <Badge variant="organizer" label={`👑 ${event.creatorName}`} />
+                                    </Link>
+                                ) : (
+                                    <Badge variant="organizer" label={`👑 ${event.creatorName}`} />
+                                )
                             )}
 
                             {user && role && (

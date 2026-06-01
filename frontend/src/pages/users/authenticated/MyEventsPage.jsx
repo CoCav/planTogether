@@ -2,28 +2,28 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import { useAuth } from "../features/auth/hooks/useAuth";
+import { useAuth } from "../../../features/auth/hooks/useAuth";
 
-import { getUserEventEmptyState } from "../features/users/userEmptyStates";
-import { getInitialMyEventFiltersFromUrl } from "../features/users/authenticated/myEventQueryParams";
-import { getMyEventViewContent, MY_EVENT_VIEWS } from "../features/users/authenticated/myEventViewConfig";
-import useMyEventFilters from "../features/users/authenticated/hooks/useMyEventFilters";
-import useMyEventListingData from "../features/users/authenticated/hooks/useMyEventListingData";
-import useMyEventListingState from "../features/users/authenticated/hooks/useMyEventListingState";
+import { getUserEventEmptyState } from "../../../features/users/userEmptyStates";
+import { getInitialMyEventFiltersFromUrl } from "../../../features/users/authenticated/myEventQueryParams";
+import { getMyEventViewContent, MY_EVENT_VIEWS } from "../../../features/users/authenticated/myEventViewConfig";
+import useMyEventFilters from "../../../features/users/authenticated/hooks/useMyEventFilters";
+import useMyEventListingData from "../../../features/users/authenticated/hooks/useMyEventListingData";
+import useMyEventListingState from "../../../features/users/authenticated/hooks/useMyEventListingState";
 
-import useMembershipActions from "../features/eventMemberships/hooks/useMembershipActions";
+import useMembershipActions from "../../../features/eventMemberships/hooks/useMembershipActions";
 
-import usePagination from "../hooks/usePagination";
+import usePagination from "../../../hooks/usePagination";
 
-import EventCard from "../components/events/EventCard";
-import EventsFilterCard from "../components/events/EventsFilterCard";
-import EventsToolbar from "../components/events/EventsToolbar";
+import EventCard from "../../../components/events/EventCard";
+import EventsFilterCard from "../../../components/events/EventsFilterCard";
+import EventsToolbar from "../../../components/events/EventsToolbar";
 
-import Alert from "../components/ui/Alert";
-import EmptyState from "../components/ui/EmptyState";
-import LoadingState from "../components/ui/LoadingState";
-import PageLoader from "../components/ui/PageLoader";
-import Pagination from "../components/ui/Pagination";
+import Alert from "../../../components/ui/Alert";
+import EmptyState from "../../../components/ui/EmptyState";
+import LoadingState from "../../../components/ui/LoadingState";
+import PageLoader from "../../../components/ui/PageLoader";
+import Pagination from "../../../components/ui/Pagination";
 
 /* ==================================================
    MY EVENTS PAGE

@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 import Alert from "../ui/Alert";
 import Badge from "../ui/Badge";
 import EmptyState from "../ui/EmptyState";
@@ -11,6 +13,7 @@ import EmptyState from "../ui/EmptyState";
    - optional contextual message
    - empty member state
    - member rows
+   - public profile navigation
    - optional member actions
    - accessible section and list semantics
 ================================================== */
@@ -54,9 +57,12 @@ export default function EventMembersSection({
                     {members.map((person) => (
                         <div key={person.id} className="member-row" role="listitem">
                             <div className="member-info">
-                                <span className="member-name">
+                                <Link
+                                    to={`/users/${person.id}`}
+                                    className="member-name link-hover-primary"
+                                >
                                     {person.name}
-                                </span>
+                                </Link>
 
                                 <Badge role={person.role} />
                             </div>

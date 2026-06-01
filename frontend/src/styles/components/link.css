@@ -56,6 +56,7 @@
     transition: color var(--transition-fast);
 }
 
-.link-hover-primary:hover {
+.link-hover-primary:hover,
+.link-hover-primary:focus-visible {
     color: var(--color-primary);
 }

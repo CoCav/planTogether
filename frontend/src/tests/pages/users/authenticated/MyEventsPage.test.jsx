@@ -3,12 +3,12 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, useLocation } from "react-router-dom";
 
-import MyEventsPage from "../../pages/MyEventsPage";
+import MyEventsPage from "../../../../pages/users/authenticated/MyEventsPage";
 
-import { EVENT_ROLES } from "../../features/shared/constants/eventRoles";
-import { EVENT_STATUS } from "../../features/shared/constants/eventStatus";
+import { EVENT_ROLES } from "../../../../features/shared/constants/eventRoles";
+import { EVENT_STATUS } from "../../../../features/shared/constants/eventStatus";
 
-import { getCurrentUserEvents } from "../../api/users/userApi";
+import { getCurrentUserEvents } from "../../../../api/users/userApi";
 
 /* ==================================================
    MY EVENTS PAGE TESTS
@@ -47,21 +47,21 @@ let mockAuthState = {
    MOCKS
 ============================= */
 
-vi.mock("../../features/auth/hooks/useAuth", () => ({
+vi.mock("../../../../features/auth/hooks/useAuth", () => ({
     useAuth: () => mockAuthState
 }));
 
-vi.mock("../../api/users/userApi", () => ({
+vi.mock("../../../../api/users/userApi", () => ({
     getCurrentUserEvents: vi.fn()
 }));
 
-vi.mock("../../features/eventMemberships/hooks/useMembershipActions", () => ({
+vi.mock("../../../../features/eventMemberships/hooks/useMembershipActions", () => ({
     default: () => ({
         handleLeaveEvent: mockHandleLeaveEvent
     })
 }));
 
-vi.mock("../../components/events/EventCard", () => ({
+vi.mock("../../../../components/events/EventCard", () => ({
     default: ({ event, role, onLeave }) => (
         <article>
             <h3>{event.title}</h3>

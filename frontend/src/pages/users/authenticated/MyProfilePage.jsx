@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 
-import { useAuth } from "../features/auth/hooks/useAuth";
+import { useAuth } from "../../../features/auth/hooks/useAuth";
 
-import useMyProfileForm from "../features/users/authenticated/hooks/form/useMyProfileForm";
-import useMyPasswordForm from "../features/users/authenticated/hooks/form/useMyPasswordForm";
-import useDeleteAccount from "../features/users/authenticated/hooks/useDeleteAccount";
+import useMyProfileForm from "../../../features/users/authenticated/hooks/form/useMyProfileForm";
+import useMyPasswordForm from "../../../features/users/authenticated/hooks/form/useMyPasswordForm";
+import useDeleteAccount from "../../../features/users/authenticated/hooks/useDeleteAccount";
 
-import UserForm from "../components/users/UserForm";
-import UserPasswordForm from "../components/users/UserPasswordForm";
-import DeleteAccountSection from "../components/users/DeleteAccountSection";
+import UserForm from "../../../components/users/UserForm";
+import UserPasswordForm from "../../../components/users/UserPasswordForm";
+import DeleteAccountSection from "../../../components/users/DeleteAccountSection";
 
-import Alert from "../components/ui/Alert";
-import Card from "../components/ui/Card";
-import PageLoader from "../components/ui/PageLoader";
+import Alert from "../../../components/ui/Alert";
+import Card from "../../../components/ui/Card";
+import PageLoader from "../../../components/ui/PageLoader";
 
 /* ==================================================
    MY PROFILE PAGE

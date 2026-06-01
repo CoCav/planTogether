@@ -1,3 +1,4 @@
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
@@ -15,13 +16,10 @@ import { createOrganizerMember, createParticipantMember } from "../../factories/
    - contextual header message
    - empty member state
    - member rows
+   - public profile navigation
    - optional member actions
    - accessible section semantics
    - accessible list semantics
-
-   Notes:
-   - focuses on EventMembersSection behavior only
-   - uses renderActions to test optional actions
 ================================================== */
 
 describe("EventMembersSection", () => {
@@ -62,10 +60,12 @@ describe("EventMembersSection", () => {
 
     const renderEventMembersSection = (props = {}) => {
         return render(
-            <EventMembersSection
-                {...baseProps}
-                {...props}
-            />
+            <MemoryRouter>
+                <EventMembersSection
+                    {...baseProps}
+                    {...props}
+                />
+            </MemoryRouter>
         );
     };
 
@@ -167,6 +167,18 @@ describe("EventMembersSection", () => {
         expect(screen.getByRole("list")).toBeInTheDocument();
 
         expect(screen.getAllByRole("listitem")).toHaveLength(2);
+    });
+
+    it("should link members to their public profile pages", () => {
+        renderEventMembersSection();
+
+        expect(screen.getByRole("link", {
+            name: "Alice"
+        })).toHaveAttribute("href", "/users/1");
+
+        expect(screen.getByRole("link", {
+            name: "Bob"
+        })).toHaveAttribute("href", "/users/2");
     });
 
     /* =============================

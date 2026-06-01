@@ -14,7 +14,7 @@
 ![Backend Tests](https://img.shields.io/badge/backend-624%20passing-brightgreen)
 ![Backend Coverage](https://img.shields.io/badge/backend%20coverage-99.13%25%20statements%20%7C%2094.14%25%20branches-brightgreen)
 
-![Frontend Tests](https://img.shields.io/badge/frontend-1117%20passing-brightgreen)
+![Frontend Tests](https://img.shields.io/badge/frontend-1119%20passing-brightgreen)
 ![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-97.65%25%20statements%20%7C%2094.51%25%20branches-brightgreen)
 
 ![Backend CI](https://github.com/CoCav/planTogether/actions/workflows/backend-ci.yml/badge.svg)
@@ -39,7 +39,7 @@ The application focuses on **clean architecture, scalability, security, API cons
 
 ## 🎯 Key Highlights
 
-- 🧪 **1741 automated tests across backend and frontend** (Jest + Supertest + Vitest + React Testing Library)
+- 🧪 **1743 automated tests across backend and frontend** (Jest + Supertest + Vitest + React Testing Library)
 - 📊 **High automated test coverage** (~99% backend / ~98% frontend)
 - 🔁 **Separate backend and frontend CI workflows using GitHub Actions**
 - 🔐 **Secure authentication and role-based access control (RBAC)**
@@ -550,8 +550,8 @@ npm run test:run
 ### 📊 Results
 
 - Backend: 624 tests (78 test suites)
-- Frontend: 1117 tests (123 test files)
-- Total: 1741 automated tests
+- Frontend: 1119 tests (123 test files)
+- Total: 1743 automated tests
 - ✅ Backend and frontend testing architectures fully integrated
 - ✅ High automated coverage across backend and frontend layers
 
@@ -713,8 +713,8 @@ These mechanisms help ensure secure data handling, predictable application behav
 
 ### 🧪 Testing
 
-- Expanded frontend testing architecture to 1117 tests across 123 test files
-- Reached 1741 automated tests across the fullstack projects
+- Expanded frontend testing architecture to 1119 tests across 123 test files
+- Reached 1743 automated tests across the fullstack projects
 - Added separate backend and frontend CI workflows using GitHub Actions
 - Added isolated PostgreSQL test services for backend integration testing
 - Added coverage for ongoing event workflows
@@ -730,7 +730,7 @@ These mechanisms help ensure secure data handling, predictable application behav
 ## 📌 Project Status
 
 | Area | Status |
-|---|---|
+|------|--------|
 | Backend Architecture | ✅ Modular, scalable & production-oriented |
 | Frontend Architecture | ✅ Feature-oriented, scalable, and accessibility-focused |
 | Authentication & RBAC | ✅ Complete |
@@ -739,7 +739,7 @@ These mechanisms help ensure secure data handling, predictable application behav
 | Backend API | ✅ Stable and well-tested |
 | Frontend Application | ✅ Standardized, role-aware, and accessibility-focused |
 | Backend Testing & CI | ✅ 624 tests across 78 test suites |
-| Frontend Testing & CI | ✅ 1117 tests across 123 test files |
+| Frontend Testing & CI | ✅ 1119 tests across 123 test files |
 | Documentation | ✅ Backend and frontend documentation available |
 | UX Improvements | 🚧 Ongoing |
 

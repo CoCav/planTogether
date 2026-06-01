@@ -1012,7 +1012,7 @@ GET    /
 ## 📌 Project Status
 
 | Area | Status |
-|---|---|
+|------|--------|
 | Backend API | ✅ Stable, scalable, and production-oriented |
 | Architecture | ✅ Modular, scalable, and layered |
 | Authentication & Users | ✅ JWT authentication, profile management, password updates, and secure account deletion |

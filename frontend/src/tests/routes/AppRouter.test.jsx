@@ -173,6 +173,17 @@ describe("AppRouter", () => {
         expect(screen.getByText("Login Page")).toBeInTheDocument();
     });
 
+    it("should redirect profile route to login when unauthenticated", () => {
+        mockUseAuth.mockReturnValue({
+            user: null,
+            loading: false
+        });
+
+        renderWithRouter("/profile");
+
+        expect(screen.getByText("Login Page")).toBeInTheDocument();
+    });
+
     it("should redirect create event route to login when unauthenticated", () => {
         mockUseAuth.mockReturnValue({
             user: null,
@@ -180,6 +191,17 @@ describe("AppRouter", () => {
         });
 
         renderWithRouter("/events/create");
+
+        expect(screen.getByText("Login Page")).toBeInTheDocument();
+    });
+
+    it("should redirect edit event route to login when unauthenticated", () => {
+        mockUseAuth.mockReturnValue({
+            user: null,
+            loading: false
+        });
+
+        renderWithRouter("/events/1/edit");
 
         expect(screen.getByText("Login Page")).toBeInTheDocument();
     });

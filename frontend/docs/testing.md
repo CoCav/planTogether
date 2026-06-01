@@ -3,7 +3,7 @@
 ![Vitest](https://img.shields.io/badge/Test-Vitest-6E9F18)
 ![RTL](https://img.shields.io/badge/Test-React%20Testing%20Library-E33332)
 ![Test Files](https://img.shields.io/badge/test%20files-123%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-1117%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-1119%20passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-97.65%25%20statements%20%7C%2094.51%25%20branches-brightgreen)
 
 This document describes the testing architecture and overall testing strategy used in the PlanTogether frontend.
@@ -52,7 +52,7 @@ The frontend testing architecture is designed to validate:
 The current frontend test suite includes:
 
 - **123 passing test files**
-- **1117 passing tests**
+- **1119 passing tests**
 - **97.65% statement coverage**
 - **94.51% branch coverage**
 - **94.64% function coverage**

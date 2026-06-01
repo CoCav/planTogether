@@ -10,7 +10,7 @@ PlanTogether is a collaborative event management platform where users can create
 ![Vitest](https://img.shields.io/badge/Test-Vitest-6E9F18)
 ![RTL](https://img.shields.io/badge/Test-React%20Testing%20Library-E33332)
 ![Test Files](https://img.shields.io/badge/test%20files-123%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-1117%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-1119%20passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-97.65%25%20statements%20%7C%2094.51%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
@@ -741,7 +741,7 @@ npx vitest run --coverage
 ### 📊 Testing Results
 
 - ✅ 123 passing test files
-- ✅ 1117 passing tests
+- ✅ 1119 passing tests
 - ✅ All tests passing
 
 Coverage:
@@ -834,6 +834,7 @@ The application will be available at:
 - Improved mobile navigation experience
 - Simplified event action visibility through centralized status badges
 - Improved accessibility and semantic structure across shared UI components
+- Restored protected dashboard access and login redirect restoration
 
 ### 🔌 Frontend Architecture
 
@@ -856,14 +857,14 @@ The application will be available at:
 ## 📌 Project Status
 
 | Area | Status |
-|---|---|
+|------|--------|
 | Frontend UI / Pages | ✅ Standardized, role-aware, and accessibility-focused |
 | Reusable Components | ✅ Standardized, reusable, and accessibility-focused |
 | Frontend Business Logic | ✅ Modular, role-aware, validation-driven, and fully tested |
 | Routing & Access Control | ✅ Centralized, role-aware, and fully tested |
 | API Communication Layer | ✅ Centralized Axios architecture and normalized API handling |
 | File Upload System | ✅ Avatar and event image upload, replacement, and removal supported |
-| Testing | ✅ 1117 tests across 123 test files |
+| Testing | ✅ 1119 tests across 123 test files |
 | Coverage | ✅ 97.65% statements / 94.51% branches / 94.64% functions / 97.88% lines |
 | UX Improvements | ✅ Responsive and accessibility improvements completed |
 

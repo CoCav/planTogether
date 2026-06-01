@@ -11,8 +11,8 @@
 
 ![Auth](https://img.shields.io/badge/Auth-JWT-yellow)
 
-![Backend Tests](https://img.shields.io/badge/backend-624%20passing-brightgreen)
-![Backend Coverage](https://img.shields.io/badge/backend%20coverage-99.13%25%20statements%20%7C%2094.14%25%20branches-brightgreen)
+![Backend Tests](https://img.shields.io/badge/backend-623%20passing-brightgreen)
+![Backend Coverage](https://img.shields.io/badge/backend%20coverage-99.13%25%20statements%20%7C%2094.16%25%20branches-brightgreen)
 
 ![Frontend Tests](https://img.shields.io/badge/frontend-1119%20passing-brightgreen)
 ![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-97.65%25%20statements%20%7C%2094.51%25%20branches-brightgreen)
@@ -39,7 +39,7 @@ The application focuses on **clean architecture, scalability, security, API cons
 
 ## 🎯 Key Highlights
 
-- 🧪 **1743 automated tests across backend and frontend** (Jest + Supertest + Vitest + React Testing Library)
+- 🧪 **1742 automated tests across backend and frontend** (Jest + Supertest + Vitest + React Testing Library)
 - 📊 **High automated test coverage** (~99% backend / ~98% frontend)
 - 🔁 **Separate backend and frontend CI workflows using GitHub Actions**
 - 🔐 **Secure authentication and role-based access control (RBAC)**
@@ -70,6 +70,7 @@ Users can:
 - Manage their profile and authentication securely
 - Interact with status-aware event workflows (`ongoing`, `upcoming`, `ended`)
 - Benefit from permission-aware actions aligned across frontend and backend
+- View public user profiles and public user event activity
 
 The platform is designed to provide a smooth and intuitive user experience through contextual and permission-aware frontend interactions, protected frontend flows, centralized backend permission management, transaction-safe backend workflows, and consistent API-driven interactions.
 
@@ -399,6 +400,7 @@ Testing strategies are intentionally separated:
 - Prevent duplicate participation
 - Retrieve event members and organizers
 - Manage personalized event dashboards with active and historical views
+- View public user profiles with organized and joined event history
 - Membership restoration and soft-delete lifecycle handling
 - Organizer ownership transfer workflows
 - Role-aware membership actions and protected event interactions
@@ -549,9 +551,9 @@ npm run test:run
 
 ### 📊 Results
 
-- Backend: 624 tests (78 test suites)
+- Backend: 623 tests (78 test suites)
 - Frontend: 1119 tests (123 test files)
-- Total: 1743 automated tests
+- Total: 1742 automated tests
 - ✅ Backend and frontend testing architectures fully integrated
 - ✅ High automated coverage across backend and frontend layers
 
@@ -709,12 +711,15 @@ These mechanisms help ensure secure data handling, predictable application behav
 - Added started-event deletion restrictions
 - Added reusable started-event business-rule helpers
 - Extended event access permission resolution
+- Added public user profile and public user event endpoints
+- Added public user event enrichment with participant counts and computed status
+- Improved public user statistics by excluding organizer memberships from joined event counts
 - Added dedicated backend testing documentation (`backend/docs/testing.md`)
 
 ### 🧪 Testing
 
 - Expanded frontend testing architecture to 1119 tests across 123 test files
-- Reached 1743 automated tests across the fullstack projects
+- Reached 1742 automated tests across the fullstack projects
 - Added separate backend and frontend CI workflows using GitHub Actions
 - Added isolated PostgreSQL test services for backend integration testing
 - Added coverage for ongoing event workflows
@@ -722,6 +727,7 @@ These mechanisms help ensure secure data handling, predictable application behav
 - Added coverage for event image preservation, replacement, removal, and authenticated user event image metadata
 - Added coverage for started-event business rules and permission-aware actions
 - Added coverage for selective create/edit datetime validation behavior
+- Added coverage for public user profile and public user event workflows
 - Improved reusable frontend and backend factories, mocks, helpers, and render utilities
 - Expanded testing coverage across permissions, uploads, filtering, validation, synchronization, routing, and business rules
 
@@ -738,7 +744,7 @@ These mechanisms help ensure secure data handling, predictable application behav
 | Database & Transactions | ✅ Optimized and transaction-safe |
 | Backend API | ✅ Stable and well-tested |
 | Frontend Application | ✅ Standardized, role-aware, and accessibility-focused |
-| Backend Testing & CI | ✅ 624 tests across 78 test suites |
+| Backend Testing & CI | ✅ 623 tests across 78 test suites |
 | Frontend Testing & CI | ✅ 1119 tests across 123 test files |
 | Documentation | ✅ Backend and frontend documentation available |
 | UX Improvements | 🚧 Ongoing |

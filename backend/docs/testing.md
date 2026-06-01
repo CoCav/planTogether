@@ -3,8 +3,8 @@
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
 ![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
 ![Test Suites](https://img.shields.io/badge/test%20suites-78%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-624%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-99.13%25%20statements%20%7C%2094.14%25%20branches-brightgreen)
+![Tests](https://img.shields.io/badge/tests-623%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-99.13%25%20statements%20%7C%2094.16%25%20branches-brightgreen)
 
 This document describes the testing architecture and overall testing strategy used in the PlanTogether backend.
 
@@ -42,11 +42,11 @@ The testing architecture is designed to validate:
 
 The current backend test suite includes:
 
-- **624 passing tests**
+- **623 passing tests**
 - **99.13% statement coverage**
-- **94.14% branch coverage**
+- **94.16% branch coverage**
 - **100% function coverage**
-- **99.19% line coverage**
+- **99.20% line coverage**
 
 The combination of integration and unit testing helps ensure backend reliability, maintainability, security, query consistency, transaction safety, and safer long-term backend stability across the application.
 
@@ -137,6 +137,8 @@ Covered areas include:
 - authentication rate limiting
 - user profile, password, and account deletion flows
 - public and authenticated user routes
+- public user profile and event retrieval
+- public user statistics and membership filtering
 - event CRUD operations
 - current user event access endpoint
 - event filtering, sorting, pagination, and query behavior
@@ -201,6 +203,7 @@ Unit tests are used to verify:
 - configuration and security behavior
 - error propagation
 - reusable helper and formatter behavior
+- public user statistics and event enrichment behavior
 
 Dependencies are mocked when necessary to isolate the module under test and keep unit tests fast, focused, and deterministic.
 

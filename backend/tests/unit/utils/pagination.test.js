@@ -8,14 +8,18 @@
    - invalid number fallback
    - sort field allowlist
    - order direction normalization
+   - grouped and non-grouped count normalization
+   - total page calculation
 
    Ensures:
    - pagination values are safe and predictable
    - invalid query values fallback correctly
    - sorting only accepts allowed fields
+   - grouped Sequelize counts are normalized safely
+   - total pages are calculated consistently
 ================================================== */
 
-const { getPaginationOptions } = require("../../../src/utils/pagination");
+const { getPaginationOptions, getTotalCount, getTotalPages } = require("../../../src/utils/pagination");
 
 describe("pagination utils", () => {
 
@@ -137,5 +141,33 @@ describe("pagination utils", () => {
         );
 
         expect(result.orderDirection).toBe("DESC");
+    });
+
+    /* =============================
+       COUNT HELPERS
+    ============================= */
+
+    it("should return numeric count as total count", () => {
+        expect(getTotalCount(5)).toBe(5);
+    });
+
+    it("should return grouped count array length as total count", () => {
+        expect(getTotalCount([
+            { count: 1 },
+            { count: 1 },
+            { count: 1 }
+        ])).toBe(3);
+    });
+
+    /* =============================
+       PAGE HELPERS
+    ============================= */
+
+    it("should calculate total pages", () => {
+        expect(getTotalPages(5, 2)).toBe(3);
+    });
+
+    it("should return 0 total pages when there are no items", () => {
+        expect(getTotalPages(0, 10)).toBe(0);
     });
 });

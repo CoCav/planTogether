@@ -414,6 +414,9 @@ describe("Get All Events API", () => {
 
         expect(res.body).toHaveProperty("totalEvents");
         expect(res.body).toHaveProperty("totalPages");
+
+        expect(res.body.totalEvents).toBe(3);
+        expect(res.body.totalPages).toBe(2);
     });
 
     it("should sort events by title ascending", async () => {

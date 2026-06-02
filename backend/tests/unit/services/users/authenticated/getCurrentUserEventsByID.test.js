@@ -29,7 +29,15 @@ jest.mock("../../../../../src/models/userModel", () => ({
     findByPk: jest.fn()
 }));
 
-jest.mock("../../../../../src/utils/pagination");
+jest.mock("../../../../../src/utils/pagination", () => ({
+    getPaginationOptions: jest.fn(),
+    getTotalCount: jest.fn((count) =>
+        Array.isArray(count) ? count.length : count
+    ),
+    getTotalPages: jest.fn((totalItems, pageSize) =>
+        Math.ceil(totalItems / pageSize)
+    )
+}));
 
 jest.mock("../../../../../src/utils/events/eventStatus");
 
@@ -58,7 +66,7 @@ const {
     countActiveParticipantsByEventIds
 } = require("../../../../../src/utils/events/eventQueryBuilder");
 
-const { getPaginationOptions } = require("../../../../../src/utils/pagination");
+const { getPaginationOptions, getTotalCount, getTotalPages } = require("../../../../../src/utils/pagination");
 
 describe("userService - getCurrentUserEventsByID", () => {
 
@@ -354,6 +362,31 @@ describe("userService - getCurrentUserEventsByID", () => {
         const result = await userService.getCurrentUserEventsByID(1, {});
 
         expect(result.events[0].event.participantCount).toBe(0);
+    });
+
+    /* =============================
+       PAGINATION
+    ============================= */
+
+    it("should normalize grouped count results", async () => {
+        User.findByPk.mockResolvedValue({ id: 1 });
+
+        EventUserRole.findAndCountAll.mockResolvedValue({
+            count: [
+                { count: 1 },
+                { count: 1 }
+            ],
+            rows: []
+        });
+
+        await userService.getCurrentUserEventsByID(1, {});
+
+        expect(getTotalCount).toHaveBeenCalledWith([
+            { count: 1 },
+            { count: 1 }
+        ]);
+
+        expect(getTotalPages).toHaveBeenCalledWith(2, 10);
     });
 
     /* =============================

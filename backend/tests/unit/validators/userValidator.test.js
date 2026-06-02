@@ -6,12 +6,14 @@
    - status and mode allowlists
    - current user profile update validation
    - current user password update validation
+   - public user events query validation
    - public user ID param validation
 
    Ensures:
    - current user query params are validated before service logic
    - current user payloads are validated before controller logic
    - current user password policy is enforced
+   - public user event query params are validated before service logic
    - public user routes only receive valid positive integer IDs
    - invalid route params are rejected before service lookup
 ================================================== */
@@ -20,6 +22,7 @@ const {
     getCurrentUserEventsValidator,
     updateCurrentUserProfileValidator,
     changeCurrentUserPasswordValidator,
+    getPublicUserEventsValidator,
     userIdParamValidator
 } = require("../../../src/validators/userValidator");
 
@@ -228,6 +231,123 @@ describe("userValidator", () => {
             });
 
             expect(result.isEmpty()).toBe(false);
+        });
+    });
+
+    /* =============================
+       PUBLIC USER EVENTS QUERY VALIDATION
+    ============================= */
+
+    describe("getPublicUserEventsValidator", () => {
+
+        it("should pass with valid query params", async () => {
+            const result = await runValidation(
+                getPublicUserEventsValidator,
+                {
+                    query: {
+                        view: "created",
+                        status: EVENT_STATUS.UPCOMING,
+                        mode: EVENT_MODES.ONLINE,
+                        page: "1",
+                        pageSize: "10",
+                        sortBy: "startDateTime",
+                        order: "asc"
+                    }
+                }
+            );
+
+            expect(result.isEmpty()).toBe(true);
+        });
+
+        it("should allow joined view", async () => {
+            const result = await runValidation(
+                getPublicUserEventsValidator,
+                {
+                    query: {
+                        view: "joined"
+                    }
+                }
+            );
+
+            expect(result.isEmpty()).toBe(true);
+        });
+
+        it("should fail with invalid view", async () => {
+            const result = await runValidation(
+                getPublicUserEventsValidator,
+                {
+                    query: {
+                        view: "invalid"
+                    }
+                }
+            );
+
+            expect(result.array()[0].msg).toMatch(/view must be one of/i);
+        });
+
+        it("should fail with invalid status", async () => {
+            const result = await runValidation(
+                getPublicUserEventsValidator,
+                {
+                    query: {
+                        status: "cancelled"
+                    }
+                }
+            );
+
+            expect(result.array()[0].msg).toMatch(/status must be upcoming/i);
+        });
+
+        it("should fail with invalid page", async () => {
+            const result = await runValidation(
+                getPublicUserEventsValidator,
+                {
+                    query: {
+                        page: "0"
+                    }
+                }
+            );
+
+            expect(result.array()[0].msg).toMatch(/page must be a positive integer/i);
+        });
+
+        it("should fail with invalid pageSize", async () => {
+            const result = await runValidation(
+                getPublicUserEventsValidator,
+                {
+                    query: {
+                        pageSize: "500"
+                    }
+                }
+            );
+
+            expect(result.array()[0].msg).toMatch(/page size must be between 1 and 100/i);
+        });
+
+        it("should fail with invalid sortBy", async () => {
+            const result = await runValidation(
+                getPublicUserEventsValidator,
+                {
+                    query: {
+                        sortBy: "creatorId"
+                    }
+                }
+            );
+
+            expect(result.array()[0].msg).toMatch(/sort field must be one of/i);
+        });
+
+        it("should fail with invalid order", async () => {
+            const result = await runValidation(
+                getPublicUserEventsValidator,
+                {
+                    query: {
+                        order: "invalid"
+                    }
+                }
+            );
+
+            expect(result.array()[0].msg).toMatch(/order must be asc or desc/i);
         });
     });
 

@@ -6,7 +6,14 @@ const userController = require("../controllers/userController");
 const { authenticateToken } = require("../middlewares/auth/authenticateToken");
 const { uploadAvatar } = require("../middlewares/uploadFiles");
 
-const { userIdParamValidator, getCurrentUserEventsValidator, updateCurrentUserProfileValidator, changeCurrentUserPasswordValidator } = require("../validators/userValidator");
+const {
+    userIdParamValidator,
+    getCurrentUserEventsValidator,
+    getPublicUserEventsValidator,
+    updateCurrentUserProfileValidator,
+    changeCurrentUserPasswordValidator
+} = require("../validators/userValidator");
+
 const handleValidationErrors = require("../middlewares/errors/handleValidationErrors");
 
 /* ==================================================
@@ -19,11 +26,12 @@ const handleValidationErrors = require("../middlewares/errors/handleValidationEr
    - authenticated current user password update
    - authenticated current user account deletion
    - public user profile retrieval
-   - public user events retrieval
+   - public user events retrieval with filters and pagination
 
    Notes:
    - /me routes use authenticated userId from JWT
    - /:id routes are public and use user ID route params
+   - /:id/events validates public listing filters and pagination
    - public profile responses hide sensitive user fields
 ================================================== */
 
@@ -40,7 +48,10 @@ router.get("/me/events",
 );
 
 // Get current user profile
-router.get("/me", authenticateToken, userController.getCurrentUserProfile);
+router.get("/me",
+    authenticateToken,
+    userController.getCurrentUserProfile
+);
 
 // Update current user profile
 router.put("/me",
@@ -60,16 +71,28 @@ router.put("/me/password",
 );
 
 // Delete current user account
-router.delete("/me", authenticateToken, userController.deleteCurrentUser);
+router.delete("/me",
+    authenticateToken,
+    userController.deleteCurrentUser
+);
 
 /* =============================
    PUBLIC USER
 ============================= */
 
 // Get public user profile
-router.get("/:id", userIdParamValidator, handleValidationErrors, userController.getPublicUserProfile);
+router.get("/:id",
+    userIdParamValidator,
+    handleValidationErrors,
+    userController.getPublicUserProfile
+);
 
-// Get public user events
-router.get("/:id/events", userIdParamValidator, handleValidationErrors, userController.getPublicUserEvents);
+// Get paginated public events of a user
+router.get("/:id/events",
+    userIdParamValidator,
+    getPublicUserEventsValidator,
+    handleValidationErrors,
+    userController.getPublicUserEvents
+);
 
 module.exports = router;

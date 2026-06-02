@@ -12,13 +12,16 @@ const { VALID_EVENT_STATUS } = require("../constants/eventStatus");
    - authenticated current user profile update validation
    - authenticated current user password update validation
    - authenticated current user events query validation
+   - public user events query validation
    - public user ID param validation
 
    Notes:
    - handleValidationErrors must run after these validators
    - /me routes use JWT userId and do not need param validation
    - /:id routes validate public user IDs
+   - /:id/events supports public event listing filters and pagination
 ================================================== */
+
 /* =============================
    AUTHENTICATED USER
 ============================= */
@@ -142,6 +145,82 @@ const changeCurrentUserPasswordValidator = [
    PUBLIC USER
 ============================= */
 
+// Validate public user events query params
+const getPublicUserEventsValidator = [
+    query("view")
+        .optional()
+        .isIn(["created", "joined"])
+        .withMessage("View must be one of: created, joined"),
+
+    query("status")
+        .optional()
+        .isIn(VALID_EVENT_STATUS)
+        .withMessage("Status must be upcoming, ongoing or past"),
+
+    query("creator")
+        .optional()
+        .trim(),
+
+    query("mode")
+        .optional()
+        .isIn(VALID_EVENT_MODES)
+        .withMessage("Mode must be online or in_person"),
+
+    query("type")
+        .optional()
+        .trim(),
+
+    query("theme")
+        .optional()
+        .trim(),
+
+    query("location")
+        .optional()
+        .trim(),
+
+    query("search")
+        .optional()
+        .trim(),
+
+    query("date")
+        .optional()
+        .isISO8601()
+        .withMessage("Date must be a valid ISO8601 date"),
+
+    query("startDate")
+        .optional()
+        .isISO8601()
+        .withMessage("Start date must be a valid ISO8601 date"),
+
+    query("endDate")
+        .optional()
+        .isISO8601()
+        .withMessage("End date must be a valid ISO8601 date"),
+
+    query("page")
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage("Page must be a positive integer")
+        .toInt(),
+
+    query("pageSize")
+        .optional()
+        .isInt({ min: 1, max: 100 })
+        .withMessage("Page size must be between 1 and 100")
+        .toInt(),
+
+    query("sortBy")
+        .optional()
+        .isIn(["startDateTime", "title", "createdAt"])
+        .withMessage("Sort field must be one of: startDateTime, title, createdAt"),
+
+    query("order")
+        .optional()
+        .toLowerCase()
+        .isIn(["asc", "desc"])
+        .withMessage("Order must be asc or desc")
+];
+
 // Validate public user ID route param
 const userIdParamValidator = [
     param("id")
@@ -149,4 +228,11 @@ const userIdParamValidator = [
         .toInt()
 ];
 
-module.exports = { getCurrentUserEventsValidator, updateCurrentUserProfileValidator, changeCurrentUserPasswordValidator, userIdParamValidator };
+
+module.exports = {
+    getCurrentUserEventsValidator,
+    updateCurrentUserProfileValidator,
+    changeCurrentUserPasswordValidator,
+    getPublicUserEventsValidator,
+    userIdParamValidator,
+};

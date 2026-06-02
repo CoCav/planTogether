@@ -35,7 +35,13 @@ jest.mock("../../../../src/utils/events/eventStatus", () => ({
 }));
 
 jest.mock("../../../../src/utils/pagination", () => ({
-    getPaginationOptions: jest.fn()
+    getPaginationOptions: jest.fn(),
+    getTotalCount: jest.fn((count) =>
+        Array.isArray(count) ? count.length : count
+    ),
+    getTotalPages: jest.fn((totalItems, pageSize) =>
+        Math.ceil(totalItems / pageSize)
+    )
 }));
 
 const Event = require("../../../../src/models/eventModel");
@@ -54,7 +60,7 @@ const {
     buildParticipantCountAttribute
 } = require("../../../../src/utils/events/eventQueryBuilder");
 
-const { getPaginationOptions } = require("../../../../src/utils/pagination");
+const { getPaginationOptions, getTotalCount, getTotalPages } = require("../../../../src/utils/pagination");
 
 const { createMockEventModel } = require("../../../factories/eventFactory");
 
@@ -281,6 +287,14 @@ describe("eventService - getAllEvents", () => {
         });
 
         const result = await eventService.getAllEvents({});
+
+        expect(getTotalCount).toHaveBeenCalledWith([
+            { count: 1 },
+            { count: 1 },
+            { count: 1 }
+        ]);
+
+        expect(getTotalPages).toHaveBeenCalledWith(3, 5);
 
         expect(result.totalEvents).toBe(3);
         expect(result.totalPages).toBe(1);

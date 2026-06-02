@@ -12,12 +12,13 @@ const { formatAuthenticatedUser } = require("../utils/formatting/userFormatter")
    - authenticated password update
    - authenticated account deletion
    - public user profile retrieval
-   - public user events retrieval
+   - public user events retrieval with filters and pagination
    - API response formatting
 
    Notes:
    - current user routes use req.user.userId
    - public routes use req.params.id
+   - public user event listings use req.query filters
    - sensitive public user fields are filtered in userService
    - user response payloads are centralized through shared formatter utilities
    - successful responses include success, message and top-level payload fields when needed
@@ -150,10 +151,10 @@ const getPublicUserProfile = async (req, res, next) => {
     }
 };
 
-// Get public events created and joined by a user
+// Get paginated public events created or joined by a user
 const getPublicUserEvents = async (req, res, next) => {
     try {
-        const events = await userService.getPublicUserEventsByID(req.params.id);
+        const events = await userService.getPublicUserEventsByID(req.params.id, req.query);
 
         return res.status(200).json({
             success: true,

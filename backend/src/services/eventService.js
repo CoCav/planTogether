@@ -26,7 +26,7 @@ const {
 } = require("../utils/events/eventStatus");
 
 const { deleteUploadedFile } = require("../utils/files/uploadedFileStorage");
-const { getPaginationOptions } = require("../utils/pagination");
+const { getPaginationOptions, getTotalCount, getTotalPages } = require("../utils/pagination");
 
 /* ==================================================
    EVENT SERVICE
@@ -137,13 +137,13 @@ const getAllEvents = async (query = {}) => {
         subQuery: false
     });
 
-    const totalEvents = Array.isArray(count) ? count.length : count;
+    const totalEvents = getTotalCount(count);
 
     return {
         page,
         pageSize,
         totalEvents,
-        totalPages: Math.ceil(totalEvents / pageSize),
+        totalPages: getTotalPages(totalEvents, pageSize),
 
         events: rows.map((event) => ({
             ...event.toJSON(),

@@ -33,10 +33,20 @@ const handleValidationErrors = require("../middlewares/errors/handleValidationEr
 ============================= */
 
 // Join an event
-router.post("/:eventId/members/join", authenticateToken, eventIdParamValidator, handleValidationErrors, eventMembershipController.joinEvent);
+router.post("/:eventId/members/join",
+    authenticateToken,
+    eventIdParamValidator,
+    handleValidationErrors,
+    eventMembershipController.joinEvent
+);
 
 // Leave an event
-router.delete("/:eventId/members/leave", authenticateToken, eventIdParamValidator, handleValidationErrors, eventMembershipController.leaveEvent);
+router.delete("/:eventId/members/leave",
+    authenticateToken,
+    eventIdParamValidator,
+    handleValidationErrors,
+    eventMembershipController.leaveEvent
+);
 
 
 /* ==================================================
@@ -44,10 +54,18 @@ router.delete("/:eventId/members/leave", authenticateToken, eventIdParamValidato
 ================================================== */
 
 // Get all members of an event
-router.get("/:eventId/members", eventIdParamValidator, handleValidationErrors, eventMembershipController.getEventMembers);
+router.get("/:eventId/members",
+    eventIdParamValidator,
+    handleValidationErrors,
+    eventMembershipController.getEventMembers
+);
 
 // Get all organizers and co-organizers of an event
-router.get("/:eventId/staff", eventIdParamValidator, handleValidationErrors, eventMembershipController.getEventStaff);
+router.get("/:eventId/staff",
+    eventIdParamValidator,
+    handleValidationErrors,
+    eventMembershipController.getEventStaff
+);
 
 
 /* =============================

@@ -7,7 +7,7 @@
    - authenticated current user password update
    - authenticated current user account deletion
    - public user profile retrieval
-   - public user events retrieval
+   - public user events retrieval with filters and pagination
 
    Ensures:
    - user controller calls userService correctly
@@ -347,20 +347,39 @@ describe("userController", () => {
     ============================= */
 
     describe("getPublicUserEvents", () => {
-        it("should return public user events", async () => {
-            const { req, res, next } = createUserControllerMocks();
+        it("should return paginated public user events", async () => {
+            const { req, res, next } = createUserControllerMocks({
+                params: {
+                    id: 1
+                },
+                query: {
+                    view: "joined",
+                    page: "2"
+                }
+            });
 
             const mockEvents = {
-                createdEvents: [],
-                joinedEvents: []
+                view: "joined",
+                page: 2,
+                pageSize: 10,
+                totalEvents: 5,
+                totalPages: 1,
+                events: [
+                    { id: 1, title: "Joined Event" }
+                ]
             };
 
             userService.getPublicUserEventsByID.mockResolvedValue(mockEvents);
 
             await userController.getPublicUserEvents(req, res, next);
 
-            expect(userService.getPublicUserEventsByID).toHaveBeenCalledWith(1);
+            expect(userService.getPublicUserEventsByID).toHaveBeenCalledWith(1, {
+                view: "joined",
+                page: "2"
+            });
+
             expect(res.status).toHaveBeenCalledWith(200);
+
             expect(res.json).toHaveBeenCalledWith({
                 success: true,
                 message: "Public user events retrieved successfully",

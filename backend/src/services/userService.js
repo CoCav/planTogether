@@ -20,10 +20,13 @@ const {
 } = require("../utils/events/eventQueryBuilder");
 
 const { getEventStatus } = require("../utils/events/eventStatus");
+
+const { getPublicCreatedEvents, getPublicJoinedEvents } = require("../utils/users/publicUserEventQueryBuilder");
+
 const { deleteUploadedFile } = require("../utils/files/uploadedFileStorage");
 
 const { normalizeEmail } = require("../utils/normalize");
-const { getPaginationOptions } = require("../utils/pagination");
+const { getPaginationOptions, getTotalCount, getTotalPages } = require("../utils/pagination");
 
 /* ==================================================
    USER SERVICE
@@ -177,13 +180,13 @@ const getCurrentUserEventsByID = async (userId, query = {}) => {
         };
     });
 
-    const totalEvents = Array.isArray(count) ? count.length : count;
+    const totalEvents = getTotalCount(count);
 
     return {
         page,
         pageSize,
         totalEvents,
-        totalPages: Math.ceil(totalEvents / pageSize),
+        totalPages: getTotalPages(totalEvents, pageSize),
         events
     };
 };
@@ -380,49 +383,105 @@ const getPublicUserProfileByID = async (userId) => {
     };
 };
 
-// Get public events created and joined by a user
-const getPublicUserEventsByID = async (userId) => {
+// Get paginated public events created or joined by a user
+const getPublicUserEventsByID = async (userId, query = {}) => {
+
+    /* =========================
+       USER VALIDATION
+    ========================= */
+
     const user = await User.findByPk(userId);
 
     if (!user) {
         throwHttpError(404, "User not found");
     }
 
-    const createdEvents = await Event.findAll({
-        where: { creatorId: userId },
-        include: [
-            buildEventCreatorInclude(User)
-        ],
-        order: [["startDateTime", "ASC"]]
-    });
+    /* =========================
+       VIEW RESOLUTION
+    ========================= */
 
-    const joinedMemberships = await EventUserRole.findAll({
-        where: {
-            userId,
-            deletedAt: null,
-            role: {
-                [Op.ne]: EVENT_ROLES.ORGANIZER
-            }
-        },
-        include: [
-            {
-                model: Event,
-                as: "event",
-                include: [
-                    buildEventCreatorInclude(User)
-                ]
-            }
-        ]
-    });
+    const {
+        view = "created",
+        creator,
+        ...eventQuery
+    } = query;
 
-    const joinedEvents = joinedMemberships.map(
-        (membership) => membership.event
+    /* =========================
+       EVENT FILTERS
+    ========================= */
+
+    const eventFilter = {};
+
+    buildEventWhereConditions(eventFilter, eventQuery);
+
+    /* =========================
+       PAGINATION
+    ========================= */
+
+    const paginationQuery = {
+        ...query,
+        sortBy: query.sortBy || "startDateTime",
+        order: query.order || "asc"
+    };
+
+    const {
+        page,
+        pageSize,
+        limit,
+        offset,
+        orderField,
+        orderDirection
+    } = getPaginationOptions(
+        paginationQuery,
+        ["startDateTime", "title", "createdAt"],
+        "startDateTime",
+        "ASC"
     );
 
-    const eventIds = [
-        ...createdEvents.map((event) => event.id),
-        ...joinedEvents.map((event) => event.id)
-    ];
+    /* =========================
+       QUERY DATABASE
+    ========================= */
+
+    const result = view === "joined"
+        ? await getPublicJoinedEvents({
+            Event,
+            User,
+            EventUserRole,
+            EVENT_ROLES,
+            Op,
+            userId,
+            eventFilter,
+            creator,
+            pagination: {
+                limit,
+                offset,
+                orderField,
+                orderDirection
+            },
+            buildEventCreatorInclude
+        })
+        : await getPublicCreatedEvents({
+            Event,
+            User,
+            userId,
+            eventFilter,
+            creator,
+            pagination: {
+                limit,
+                offset,
+                orderField,
+                orderDirection
+            },
+            buildEventCreatorInclude
+        });
+
+    const { count, rows } = result;
+
+    /* =========================
+       PARTICIPANT COUNTS
+    ========================= */
+
+    const eventIds = rows.map((event) => event.id);
 
     const participantCountByEventId =
         await countActiveParticipantsByEventIds(
@@ -431,7 +490,11 @@ const getPublicUserEventsByID = async (userId) => {
             eventIds
         );
 
-    const enrichEvent = (event) => {
+    /* =========================
+       DATA ENRICHMENT
+    ========================= */
+
+    const events = rows.map((event) => {
         const data = event.toJSON();
 
         const eventWithParticipants = {
@@ -443,11 +506,21 @@ const getPublicUserEventsByID = async (userId) => {
             ...eventWithParticipants,
             status: getEventStatus(eventWithParticipants)
         };
-    };
+    });
+
+    /* =========================
+       RESPONSE
+    ========================= */
+
+    const totalEvents = getTotalCount(count);
 
     return {
-        createdEvents: createdEvents.map(enrichEvent),
-        joinedEvents: joinedEvents.map(enrichEvent)
+        view,
+        page,
+        pageSize,
+        totalEvents,
+        totalPages: getTotalPages(totalEvents, pageSize),
+        events
     };
 };
 

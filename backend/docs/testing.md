@@ -2,9 +2,9 @@
 
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
 ![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
-![Test Suites](https://img.shields.io/badge/test%20suites-78%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-623%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-99.13%25%20statements%20%7C%2094.16%25%20branches-brightgreen)
+![Test Suites](https://img.shields.io/badge/test%20suites-79%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-650%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-99.14%25%20statements%20%7C%2094.65%25%20branches-brightgreen)
 
 This document describes the testing architecture and overall testing strategy used in the PlanTogether backend.
 
@@ -42,11 +42,11 @@ The testing architecture is designed to validate:
 
 The current backend test suite includes:
 
-- **623 passing tests**
-- **99.13% statement coverage**
-- **94.16% branch coverage**
+- **650 passing tests**
+- **99.14% statement coverage**
+- **94.65% branch coverage**
 - **100% function coverage**
-- **99.20% line coverage**
+- **99.21% line coverage**
 
 The combination of integration and unit testing helps ensure backend reliability, maintainability, security, query consistency, transaction safety, and safer long-term backend stability across the application.
 
@@ -186,7 +186,7 @@ Covered modules include:
 - shared constants and business values (`EVENT_ROLES`, `EVENT_STATUS`, `EVENT_MODES`)
 - event status and started-event helpers
 - security-related helpers and policies
-- query builders and query utility helpers
+- query builders, pagination, and query utilities
 
 Unit tests are used to verify:
 

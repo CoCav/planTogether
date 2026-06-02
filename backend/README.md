@@ -13,9 +13,9 @@ PlanTogether is a collaborative event management platform where users can create
 
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
 ![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
-![Test Suites](https://img.shields.io/badge/test%20suites-78%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-623%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-99.13%25%20statements%20%7C%2094.16%25%20branches-brightgreen)
+![Test Suites](https://img.shields.io/badge/test%20suites-79%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-650%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-99.14%25%20statements%20%7C%2094.65%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -62,7 +62,7 @@ Clients can:
 - retrieve authenticated and public user data
 - upload and manage avatars and event images
 - filter, search, sort, and paginate events efficiently
-- retrieve creator-specific and participation-based event listings
+- retrieve created and joined event listings
 
 The backend centralizes validation, authorization, and business logic to ensure:
 
@@ -176,6 +176,7 @@ backend/
 │   │   ├── events/
 │   │   ├── files/
 │   │   ├── formatting/
+│   │   ├── users/
 │   │   ├── normalize.js
 │   │   └── pagination.js
 │   │
@@ -249,7 +250,7 @@ The API provides a complete set of endpoints for managing users, events, members
 - Logout endpoint
 - Authenticated user profile retrieval
 - Public user profile retrieval
-- Public user event retrieval
+- Public user event listings with filtering, sorting, pagination, and created/joined views
 - Public user statistics distinguish organized events from joined events
 - Joined event statistics exclude organizer memberships
 - Authenticated profile update
@@ -303,8 +304,6 @@ Users interact with events through a membership system that associates users wit
 - Leave an event
 - View event members
 - View event organizers and staff
-- Retrieve authenticated user event listings
-- Retrieve public user event listings
 - Automatic membership restoration after rejoining an event
 - Soft-delete membership lifecycle management
 
@@ -427,7 +426,7 @@ Organizers and co_organizers can:
 
 The API supports advanced filtering using query parameters.
 
-Filtering is powered by a reusable query system, ensuring consistent results across public and authenticated event listings.
+Filtering is powered by a reusable query system, ensuring consistent results across public and authenticated event listings. The same filtering, sorting, and pagination system is shared across public event listings, authenticated user event listings, and public user event listings.
 
 Supported filters:
 
@@ -501,15 +500,15 @@ npm run test:coverage
 
 ### 📊 Testing Results
 
-- ✅ 78 passing test suites
-- ✅ 623 passing tests
+- ✅ 79 passing test suites
+- ✅ 650 passing tests
 - ✅ All tests passing
 
 **Coverage**:
-- 99.13% statements
-- 94.16% branches
+- 99.14% statements
+- 94.65% branches
 - 100% functions
-- 99.20% lines
+- 99.21% lines
 
 ✅ High coverage across authentication, authorization, filtering, uploads, soft-delete flows, ownership transfer, transactions, query optimization, and full API flows.
 
@@ -913,10 +912,10 @@ PUT    /api/users/me                   (authenticated, supports avatar upload vi
 PUT    /api/users/me/password          (authenticated)
 DELETE /api/users/me                   (authenticated)
 
-GET    /api/users/me/events            (authenticated user events)
+GET    /api/users/me/events            (authenticated user events with filtering, sorting, and pagination)
 
 GET    /api/users/:id                  (public user profile)
-GET    /api/users/:id/events           (public user events)
+GET    /api/users/:id/events           (public user events with filtering, sorting, and pagination)
 ```
 
 ### 📅 Events
@@ -960,56 +959,24 @@ GET    /
 
 ### 🏗️ Architecture & Organization
 
-- Reorganized the backend into dedicated layers for authentication, authorization, error handling, configuration, constants, and reusable utilities
-- Centralized shared business constants (`EVENT_ROLES`, `EVENT_MODES`, `EVENT_STATUS`)
-- Introduced reusable normalization, query-builder, and HTTP error utilities
-- Standardized JSON API response structures across endpoints
-- Added centralized structured logging with Pino
+- Added reusable public user event query builders for created and joined event listings
+- Centralized pagination count and total page helpers
+- Expanded shared filtering, sorting, and pagination utilities
 
-### 🔐 Security & Validation
+### 👤 Users & Event Listings
 
-- Added Helmet security protections and configurable authentication rate limiting
-- Centralized password, upload, and CORS security policies
-- Strengthened upload security with MIME type, extension, file size validation, cleanup, and path normalization protections
-- Improved centralized validation and error-handling middleware
-- Added global error handling through `errorHandler`
-
-### 📅 Events & Membership System
-
-- Added public user profile and event retrieval endpoints
-- Added public user event enrichment with participant counts and computed status
+- Added public user event listings with filtering, sorting, and pagination support
+- Added created and joined views for public user event listings
+- Added public user event participant count and status enrichment
 - Improved public user statistics by excluding organizer memberships from joined event counts
-- Added organizer ownership transfer flows
-- Added soft-delete membership and account deletion lifecycle handling
-- Refined layered role-based authorization and membership protection rules
-- Added Sequelize transactions for transaction-safe workflows
-- Improved registration deadline handling for create and update workflows
-- Added started-event deletion restrictions across authorization and business-rule layers
-- Added reusable hasEventStarted and assertEventNotStarted helpers
-- Extended event status support with ongoing event handling
-- Improved frontend permission alignment through event access rules
-- Improved event image lifecycle handling for preservation, replacement, and removal
-- Ensured authenticated user event listings include event image metadata
-
-### 🗄️ Database & Performance
-
-- Added database indexes for optimized query performance
-- Standardized Sequelize association aliases and relationship consistency
-- Optimized participant count queries to avoid inefficient N+1 database queries
-- Improved filtering, pagination, and sorting consistency
-- Expanded reusable query-builder utilities for scalable filtering logic
+- Improved consistency between public and authenticated event listing workflows
 
 ### 🧪 Testing
 
-- Standardized the testing architecture for improved maintainability
-- Expanded unit and integration test coverage across all backend layers
-- Added coverage for configuration, constants, security policies, soft-delete flows, ownership transfer, account deletion, and query optimization
-- Added automated GitHub Actions continuous integration testing
-- Reached 78 passing test suites and 623 passing tests
-- Achieved high coverage across authentication, authorization, filtering, uploads, validation, business rules, and API flows
-- Expanded coverage for registration deadline flows and authentication rate limiting
-- Expanded coverage for started-event restrictions and event access permissions
-- Expanded coverage for event image preservation, replacement, removal, and current user event image metadata
+- Added unit tests for pagination helpers and public user event query builders
+- Expanded controller, service, validator, and integration test coverage for public user event listings
+- Reached 79 passing test suites and 650 passing tests
+- Achieved 99.14% statement coverage, 94.65% branch coverage, 100% function coverage, and 99.21% line coverage
 
 ---
 
@@ -1027,8 +994,8 @@ GET    /
 | Logging | ✅ Centralized structured logging with Pino |
 | Database | ✅ PostgreSQL + Sequelize with transactions, indexes, and optimized queries |
 | API Consistency | ✅ Standardized JSON responses and centralized error handling |
-| Testing | ✅ 623 tests across 78 test suites |
-| Coverage | ✅ 99.13% statements / 94.16% branches / 100% functions / 99.20% lines |
+| Testing | ✅ 650 tests across 79 test suites |
+| Coverage | ✅ 99.14% statements / 94.65% branches / 100% functions / 99.21% lines |
 | Continuous Integration | ✅ Automated GitHub Actions backend testing |
 | Frontend Integration | 🔗 Connected and functional |
 

@@ -9,9 +9,9 @@ PlanTogether is a collaborative event management platform where users can create
 
 ![Vitest](https://img.shields.io/badge/Test-Vitest-6E9F18)
 ![RTL](https://img.shields.io/badge/Test-React%20Testing%20Library-E33332)
-![Test Files](https://img.shields.io/badge/test%20files-123%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-1119%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-97.65%25%20statements%20%7C%2094.51%25%20branches-brightgreen)
+![Test Files](https://img.shields.io/badge/test%20files-126%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-1182%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-97.77%25%20statements%20%7C%2094.72%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -53,6 +53,7 @@ It allows users to:
 - Upload avatars and event images
 - Persist authenticated sessions with a "Remember me" feature
 - Access personalized dashboards for created and joined events
+- Browse public user profiles and public user event listings
 - Navigate through protected frontend routes and access guards
 
 The application is designed around reusable frontend workflows, centralized state and query synchronization, protected routing, and consistent role-aware user interactions across core features.
@@ -258,6 +259,8 @@ The frontend also emphasizes semantic structure, reusable accessible UI patterns
 - Reusable profile form architecture
 - Shared validation and upload handling behavior
 - Automatic authenticated user refresh after updates
+- Public user profile pages with created/joined event listings
+- Public user event pagination and view synchronization
 - Contextual validation and error feedback
 
 ### 📅 Event Management
@@ -348,6 +351,7 @@ Filtering behavior includes:
 - Config-driven event views (`Ongoing`, `Upcoming`, `All`, `Archives` / `Created`, `Created History`, `Joined`, `Joined History`)
 - Shared view configuration architecture
 - Reusable query parameter synchronization helpers
+- Clean URL generation that omits fallback views, first pages, and default sorting values
 
 ### 🎭 Role System
 
@@ -383,6 +387,7 @@ participant
 Unauthenticated visitors can:
 
 - Browse public event information
+- Browse public user profiles
 - Access public event pages
 - Receive login prompts for protected actions
 
@@ -619,7 +624,7 @@ The membership layer handles:
 The user layer separates:
 
 - authenticated user behavior
-- public user behavior
+- public user profile and event listing behavior
 - profile normalization
 - event dashboard logic
 - contextual empty states
@@ -740,15 +745,15 @@ npx vitest run --coverage
 
 ### 📊 Testing Results
 
-- ✅ 123 passing test files
-- ✅ 1119 passing tests
+- ✅ 126 passing test files
+- ✅ 1182 passing tests
 - ✅ All tests passing
 
 Coverage:
-- 97.65% statements coverage
-- 94.51% branch coverage
-- 94.64% function coverage
-- 97.88% line coverage
+- 97.77% statements coverage
+- 94.72% branch coverage
+- 94.87% function coverage
+- 98% line coverage
 
 ### 📦 Tested Areas
 
@@ -773,6 +778,8 @@ The frontend test suite covers:
 - event image preservation, replacement, and removal behavior
 - account deletion workflows
 - ownership transfer workflows
+- public user profile and public user event listing workflows
+- clean URL synchronization across event listing pages
 
 ### 🔁 Testing Strategy
 
@@ -826,13 +833,11 @@ The application will be available at:
 
 ### 🔧 Frontend Features & UX
 
+- Added public user profile pages with created and joined event listings
+- Added paginated public user event listings with URL-synchronized views
+- Improved clean URL behavior across public, authenticated, and public user event listings
 - Added reusable UserAvatar component architecture
-- Added account deletion flow with ownership transfer safeguards
-- Added event ownership transfer management UI
 - Standardized event status and role badge rendering
-- Standardized responsive layouts across pages and reusable components
-- Improved mobile navigation experience
-- Simplified event action visibility through centralized status badges
 - Improved accessibility and semantic structure across shared UI components
 - Restored protected dashboard access and login redirect restoration
 
@@ -846,11 +851,11 @@ The application will be available at:
 
 ### 🧪 Frontend Testing
 
-- Added coverage for ownership transfer workflows
-- Added coverage for account deletion flows
-- Added coverage for status badge rendering
-- Expanded page, component, and accessibility coverage
-- Expanded page and component integration coverage
+- Reached 1182 passing tests across 126 test files
+- Added coverage for public user profile and public user event listing workflows
+- Added coverage for clean URL synchronization across event listing pages
+- Added coverage for paginated public user event state, query params, and normalizers
+- Expanded page, hook, component, and accessibility coverage
 
 ---
 
@@ -864,8 +869,8 @@ The application will be available at:
 | Routing & Access Control | ✅ Centralized, role-aware, and fully tested |
 | API Communication Layer | ✅ Centralized Axios architecture and normalized API handling |
 | File Upload System | ✅ Avatar and event image upload, replacement, and removal supported |
-| Testing | ✅ 1119 tests across 123 test files |
-| Coverage | ✅ 97.65% statements / 94.51% branches / 94.64% functions / 97.88% lines |
+| Testing | ✅ 1182 tests across 126 test files |
+| Coverage | ✅ 97.77% statements / 94.72% branches / 94.87% functions / 98% lines |
 | UX Improvements | ✅ Responsive and accessibility improvements completed |
 
 ---
@@ -879,7 +884,6 @@ The application will be available at:
 - Enhanced UI feedback (toasts, async feedback, contextual states)
 - Expanded role-aware event management interactions
 - Improved dashboard and event management flows
-- Public user profile pages
 
 ### 🧪 Frontend Testing
 

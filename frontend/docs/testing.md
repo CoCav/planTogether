@@ -2,9 +2,9 @@
 
 ![Vitest](https://img.shields.io/badge/Test-Vitest-6E9F18)
 ![RTL](https://img.shields.io/badge/Test-React%20Testing%20Library-E33332)
-![Test Files](https://img.shields.io/badge/test%20files-123%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-1119%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-97.65%25%20statements%20%7C%2094.51%25%20branches-brightgreen)
+![Test Files](https://img.shields.io/badge/test%20files-126%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-1182%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-97.77%25%20statements%20%7C%2094.72%25%20branches-brightgreen)
 
 This document describes the testing architecture and overall testing strategy used in the PlanTogether frontend.
 
@@ -34,6 +34,9 @@ The frontend testing architecture is designed to validate:
 - event and membership workflows and permissions
 - role-based permissions and frontend access guards
 - public and authenticated user behavior
+- public user profile and public user event listing workflows
+- public user profile routing and navigation behavior
+- clean URL synchronization across event listing pages
 - reusable hooks and frontend state management
 - page rendering and routing behavior
 - shared frontend utilities and formatting helpers
@@ -51,12 +54,12 @@ The frontend testing architecture is designed to validate:
 
 The current frontend test suite includes:
 
-- **123 passing test files**
-- **1119 passing tests**
-- **97.65% statement coverage**
-- **94.51% branch coverage**
-- **94.64% function coverage**
-- **97.88% line coverage**
+- **126 passing test files**
+- **1182 passing tests**
+- **97.77% statement coverage**
+- **94.72% branch coverage**
+- **94.87% function coverage**
+- **98% line coverage**
 
 The combination of integration-style frontend testing, isolated business-logic testing, route testing, and reusable utility testing helps ensure frontend reliability, UI consistency, predictable behavior, and scalable long-term frontend development.
 
@@ -180,6 +183,9 @@ Covered areas include:
 - membership validation, permissions, actions, and management behavior
 - authenticated user event filters, views, URL query synchronization, and normalizers
 - public user filters, views, URL query synchronization, normalizers, and event data
+- public user profile loading and normalization
+- public user event pagination and view synchronization
+- clean URL generation for event listing pages
 - shared frontend constants, upload rules, password rules, and listing helpers
 - reusable listing state management and query synchronization
 - pagination hook behavior
@@ -194,6 +200,19 @@ Covered areas include:
 - account deletion safeguards and ownership transfer requirements
 
 These tests help keep frontend business logic predictable, scalable, maintainable, and easier to evolve over time.
+
+### 📄 Public User Testing
+
+Covered areas include:
+
+- public user profile normalization
+- public user event normalization
+- public user event query synchronization
+- public user listing state management
+- public user page rendering
+- public user pagination behavior
+- public user view switching behavior
+- public user clean URL generation
 
 ---
 
@@ -244,6 +263,7 @@ Covered areas include:
 - started-event deletion protection
 - started-event edit access and start datetime lock behavior
 - protected ownership transfer flows
+- public user profile page routing
 
 The route tests use mocked auth state and router utilities to validate navigation behavior in isolation.
 
@@ -266,6 +286,7 @@ Covered areas include:
 - query parameter synchronization helpers
 - event listing normalization helpers
 - event status helpers
+- clean query parameter generation helpers
 
 These tests help keep shared helpers stable across components, pages, and feature logic.
 
@@ -444,7 +465,7 @@ Potential future testing improvements include:
 - expanded interaction testing for role-based event management flows
 - further refinement of reusable factories, mocks, and helpers
 - improved reusable render helpers and test providers
-- deeper coverage for complex listing and query synchronization flows
+- deeper coverage for advanced listing edge cases and navigation flows
 - continued frontend testing architecture improvements and standardization
 
 ---

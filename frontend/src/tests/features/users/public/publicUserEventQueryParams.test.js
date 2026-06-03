@@ -21,6 +21,7 @@ import { createPublicUserEventFilters } from "../../../factories/users/public/pu
    - filter parsing
    - URL param generation
    - fallback view omission
+   - clean URL generation
 
    Notes:
    - uses reusable public user event filter factories
@@ -177,5 +178,53 @@ describe("publicUserEventQueryParams", () => {
         });
 
         expect(params.has("view")).toBe(false);
+    });
+
+    /* =============================
+       CLEAN URLS
+    ============================= */
+
+    it("should omit default sorting values from URL params", () => {
+        const params = buildPublicUserEventSearchParams({
+            filters: createPublicUserEventFilters({
+                search: "music",
+                sortBy: "startDateTime",
+                order: "asc"
+            }),
+            view: "created"
+        });
+
+        expect(params.get("search")).toBe("music");
+
+        expect(params.has("sortBy")).toBe(false);
+        expect(params.has("order")).toBe(false);
+    });
+
+    it("should keep non-default sorting values in URL params", () => {
+        const params = buildPublicUserEventSearchParams({
+            filters: createPublicUserEventFilters({
+                sortBy: "title",
+                order: "desc"
+            }),
+            view: "created"
+        });
+
+        expect(params.get("sortBy")).toBe("title");
+        expect(params.get("order")).toBe("desc");
+    });
+
+    it("should omit default sorting values for joined view", () => {
+        const params = buildPublicUserEventSearchParams({
+            filters: createPublicUserEventFilters({
+                sortBy: "startDateTime",
+                order: "asc"
+            }),
+            view: "joined"
+        });
+
+        expect(params.get("view")).toBe("joined");
+
+        expect(params.has("sortBy")).toBe(false);
+        expect(params.has("order")).toBe(false);
     });
 });

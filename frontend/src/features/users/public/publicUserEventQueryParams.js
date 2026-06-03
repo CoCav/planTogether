@@ -49,13 +49,22 @@ export const getInitialPublicUserEventFiltersFromUrl = (searchParams) => {
 };
 
 // Builds URL params from public user event filters, page and view
-export const buildPublicUserEventSearchParams = ({ filters = {}, page = 1, view = "created", fallbackView = "created" }) => {
+export const buildPublicUserEventSearchParams = ({
+    filters = {},
+    page = 1,
+    view = "created",
+    fallbackView = "created",
+    defaultSortBy = "startDateTime",
+    defaultOrder = "asc"
+}) => {
     const params = new URLSearchParams();
 
+    // Omit fallback view to keep URLs clean
     if (view !== fallbackView) {
         params.set("view", view);
     }
 
+    // Omit first page from URL to keep URLs clean
     if (page > 1) {
         params.set(EVENT_PAGE_QUERY_KEY, String(page));
     }
@@ -63,9 +72,21 @@ export const buildPublicUserEventSearchParams = ({ filters = {}, page = 1, view 
     PUBLIC_USER_EVENT_FILTER_QUERY_KEYS.forEach((key) => {
         const value = filters[key];
 
-        if (String(value ?? "").trim() !== "") {
-            params.set(key, value);
+        // Skip empty filter values
+        if (String(value ?? "").trim() === "") {
+            return;
         }
+
+        // Skip default sorting values for the active view
+        if (key === "sortBy" && value === defaultSortBy) {
+            return;
+        }
+
+        if (key === "order" && value === defaultOrder) {
+            return;
+        }
+
+        params.set(key, value);
     });
 
     return params;

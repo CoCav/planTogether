@@ -32,6 +32,7 @@ import {
    - shared page parsing
    - filter parsing
    - URLSearchParams building
+   - clean URL generation
 
    Notes:
    - uses reusable event filter factories
@@ -233,5 +234,55 @@ describe("eventQueryParams", () => {
         });
 
         expect(params.get(EVENT_VIEW_QUERY_KEY)).toBe(EVENT_STATUS.UPCOMING);
+    });
+
+    /* =============================
+       CLEAN URLS
+    ============================= */
+
+    it("should omit default ongoing sorting values from URL params", () => {
+        const params = buildEventSearchParams({
+            filters: createEventFilters({
+                search: "music",
+                sortBy: "startDateTime",
+                order: "asc"
+            }),
+            view: EVENT_STATUS.ONGOING
+        });
+
+        expect(params.get("search")).toBe("music");
+
+        expect(params.has("sortBy")).toBe(false);
+        expect(params.has("order")).toBe(false);
+    });
+
+    it("should omit default past sorting values from URL params", () => {
+        const params = buildEventSearchParams({
+            filters: createEventFilters({
+                sortBy: "startDateTime",
+                order: "desc"
+            }),
+            view: EVENT_STATUS.PAST,
+            defaultSortBy: "startDateTime",
+            defaultOrder: "desc"
+        });
+
+        expect(params.get(EVENT_VIEW_QUERY_KEY)).toBe(EVENT_STATUS.PAST);
+
+        expect(params.has("sortBy")).toBe(false);
+        expect(params.has("order")).toBe(false);
+    });
+
+    it("should keep non-default sorting values in URL params", () => {
+        const params = buildEventSearchParams({
+            filters: createEventFilters({
+                sortBy: "title",
+                order: "desc"
+            }),
+            view: EVENT_STATUS.ONGOING
+        });
+
+        expect(params.get("sortBy")).toBe("title");
+        expect(params.get("order")).toBe("desc");
     });
 });

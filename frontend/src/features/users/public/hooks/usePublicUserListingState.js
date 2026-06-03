@@ -108,14 +108,21 @@ export default function usePublicUserListingState({
        URL HELPERS
     ============================= */
 
-    // Syncs filters, page and view with URL search params
     const syncUrl = useCallback((nextFilters, nextPage, nextView) => {
+
+        // Resolve view defaults before generating URL params
+        const nextViewContent = getPublicUserEventViewContent(nextView);
+
         setSearchParams(
             buildPublicUserEventSearchParams({
                 filters: nextFilters,
                 page: nextPage,
                 view: nextView,
-                fallbackView
+                fallbackView,
+
+                // Allows default sorting values to be omitted from the URL
+                defaultSortBy: nextViewContent.defaultSortBy,
+                defaultOrder: nextViewContent.defaultOrder
             })
         );
     }, [

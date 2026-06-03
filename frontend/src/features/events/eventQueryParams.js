@@ -57,14 +57,23 @@ export const getInitialEventFiltersFromUrl = (searchParams) => {
 };
 
 // Builds URL params from public event filters
-export const buildEventSearchParams = ({ filters = {}, page = 1, view = EVENT_STATUS.ONGOING, fallbackView = EVENT_STATUS.ONGOING }) => {
+export const buildEventSearchParams = ({
+    filters = {},
+    page = 1,
+    view = EVENT_STATUS.ONGOING,
+    fallbackView = EVENT_STATUS.ONGOING,
+    defaultSortBy = "startDateTime",
+    defaultOrder = "asc"
+}) => {
 
     const params = new URLSearchParams();
 
+    // Omit fallback view to keep URLs clean
     if (view !== fallbackView) {
         params.set(EVENT_VIEW_QUERY_KEY, view);
     }
 
+    // Omit first page from URL
     if (page > 1) {
         params.set(EVENT_PAGE_QUERY_KEY, String(page));
     }
@@ -72,9 +81,21 @@ export const buildEventSearchParams = ({ filters = {}, page = 1, view = EVENT_ST
     PUBLIC_EVENT_FILTER_QUERY_KEYS.forEach((key) => {
         const value = filters[key];
 
-        if (String(value ?? "").trim() !== "") {
-            params.set(key, value);
+        // Skip empty filter values
+        if (String(value ?? "").trim() === "") {
+            return;
         }
+
+        // Skip default sorting values for the active view
+        if (key === "sortBy" && value === defaultSortBy) {
+            return;
+        }
+
+        if (key === "order" && value === defaultOrder) {
+            return;
+        }
+
+        params.set(key, value);
     });
 
     return params;

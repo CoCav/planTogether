@@ -29,6 +29,7 @@ import {
    - current user filter parsing
    - URLSearchParams building
    - empty filter exclusion
+   - clean URL generation
 
    Notes:
    - uses reusable current user event filter factories
@@ -190,5 +191,55 @@ describe("myEventQueryParams", () => {
         expect(params.has("search")).toBe(false);
         expect(params.has("type")).toBe(false);
         expect(params.has("mode")).toBe(false);
+    });
+
+    /* =============================
+       CLEAN URLS
+    ============================= */
+
+    it("should omit default created sorting values from URL params", () => {
+        const params = buildMyEventSearchParams({
+            filters: createMyEventFilters({
+                search: "music",
+                sortBy: "startDateTime",
+                order: "asc"
+            }),
+            view: "created"
+        });
+
+        expect(params.get("search")).toBe("music");
+
+        expect(params.has("sortBy")).toBe(false);
+        expect(params.has("order")).toBe(false);
+    });
+
+    it("should omit default history sorting values from URL params", () => {
+        const params = buildMyEventSearchParams({
+            filters: createMyEventFilters({
+                sortBy: "startDateTime",
+                order: "desc"
+            }),
+            view: "createdHistory",
+            defaultSortBy: "startDateTime",
+            defaultOrder: "desc"
+        });
+
+        expect(params.get(EVENT_VIEW_QUERY_KEY)).toBe("createdHistory");
+
+        expect(params.has("sortBy")).toBe(false);
+        expect(params.has("order")).toBe(false);
+    });
+
+    it("should keep non-default sorting values in URL params", () => {
+        const params = buildMyEventSearchParams({
+            filters: createMyEventFilters({
+                sortBy: "title",
+                order: "desc"
+            }),
+            view: "created"
+        });
+
+        expect(params.get("sortBy")).toBe("title");
+        expect(params.get("order")).toBe("desc");
     });
 });

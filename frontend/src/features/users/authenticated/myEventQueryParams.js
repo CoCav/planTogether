@@ -44,15 +44,19 @@ export const buildMyEventSearchParams = ({
     filters = {},
     page = 1,
     view = "created",
-    fallbackView = "created"
+    fallbackView = "created",
+    defaultSortBy = "startDateTime",
+    defaultOrder = "asc"
 }) => {
 
     const params = new URLSearchParams();
 
+    // Omit fallback view to keep URLs clean
     if (view !== fallbackView) {
         params.set(EVENT_VIEW_QUERY_KEY, view);
     }
 
+    // Omit first page from URL
     if (page > 1) {
         params.set(EVENT_PAGE_QUERY_KEY, String(page));
     }
@@ -60,9 +64,21 @@ export const buildMyEventSearchParams = ({
     MY_EVENT_FILTER_QUERY_KEYS.forEach((key) => {
         const value = filters[key];
 
-        if (String(value ?? "").trim() !== "") {
-            params.set(key, value);
+        // Skip empty filter values
+        if (String(value ?? "").trim() === "") {
+            return;
         }
+
+        // Skip default sorting values for the active view
+        if (key === "sortBy" && value === defaultSortBy) {
+            return;
+        }
+
+        if (key === "order" && value === defaultOrder) {
+            return;
+        }
+
+        params.set(key, value);
     });
 
     return params;

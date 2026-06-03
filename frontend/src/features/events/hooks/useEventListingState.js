@@ -79,16 +79,24 @@ export default function useEventListingState({ searchParams, setSearchParams, fa
 
     // Syncs filters, page and view with URL search params
     const syncUrl = useCallback((nextFilters, nextPage, nextView) => {
+        const nextViewContent = getEventViewContent(nextView);
 
         setSearchParams(
             buildEventSearchParams({
                 filters: nextFilters,
                 page: nextPage,
-                view: nextView
+                view: nextView,
+                fallbackView,
+
+                // Allows default sorting values to be omitted from the URL
+                defaultSortBy: nextViewContent.defaultSortBy,
+                defaultOrder: nextViewContent.defaultOrder
             })
         );
-
-    }, [setSearchParams]);
+    }, [
+        fallbackView,
+        setSearchParams
+    ]);
 
     /* =============================
        PAGINATION HELPERS

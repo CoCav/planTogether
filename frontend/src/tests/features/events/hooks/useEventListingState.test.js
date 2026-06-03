@@ -16,6 +16,7 @@ import { EVENT_STATUS } from "../../../../features/shared/constants/eventStatus"
    - loading state
    - pagination reset
    - URL synchronization
+   - clean URL synchronization
    - view-based filter cleanup
 
    Notes:
@@ -123,6 +124,71 @@ describe("useEventListingState", () => {
         expect(nextParams.get("type")).toBe("workshop");
         expect(nextParams.get("page")).toBe("2");
         expect(nextParams.get("view")).toBe(EVENT_STATUS.UPCOMING);
+    });
+
+    it("omits default sorting values from URL search params", () => {
+        const { result, setSearchParams } = renderUseEventListingState();
+
+        act(() => {
+            result.current.syncUrl(
+                {
+                    search: "react",
+                    sortBy: "startDateTime",
+                    order: "asc"
+                },
+                1,
+                EVENT_STATUS.ONGOING
+            );
+        });
+
+        const nextParams = setSearchParams.mock.calls[0][0];
+
+        expect(nextParams.get("search")).toBe("react");
+        expect(nextParams.has("sortBy")).toBe(false);
+        expect(nextParams.has("order")).toBe(false);
+        expect(nextParams.has("page")).toBe(false);
+        expect(nextParams.has("view")).toBe(false);
+    });
+
+    it("keeps non-default sorting values in URL search params", () => {
+        const { result, setSearchParams } = renderUseEventListingState();
+
+        act(() => {
+            result.current.syncUrl(
+                {
+                    sortBy: "title",
+                    order: "desc"
+                },
+                1,
+                EVENT_STATUS.ONGOING
+            );
+        });
+
+        const nextParams = setSearchParams.mock.calls[0][0];
+
+        expect(nextParams.get("sortBy")).toBe("title");
+        expect(nextParams.get("order")).toBe("desc");
+    });
+
+    it("omits default sorting values for archive view", () => {
+        const { result, setSearchParams } = renderUseEventListingState();
+
+        act(() => {
+            result.current.syncUrl(
+                {
+                    sortBy: "startDateTime",
+                    order: "desc"
+                },
+                1,
+                EVENT_STATUS.PAST
+            );
+        });
+
+        const nextParams = setSearchParams.mock.calls[0][0];
+
+        expect(nextParams.get("view")).toBe(EVENT_STATUS.PAST);
+        expect(nextParams.has("sortBy")).toBe(false);
+        expect(nextParams.has("order")).toBe(false);
     });
 
     /* =============================

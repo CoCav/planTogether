@@ -15,6 +15,7 @@ import usePublicUserListingState from "../../../../../features/users/public/hook
    - filter state updates and reset
    - pagination state updates and reset
    - URL synchronization
+   - clean URL synchronization
    - view content resolution
 ================================================== */
 
@@ -275,7 +276,7 @@ describe("usePublicUserListingState", () => {
         expect(params.get("search")).toBe("react");
         expect(params.get("status")).toBe(null);
         expect(params.get("sortBy")).toBe("title");
-        expect(params.get("order")).toBe("asc");
+        expect(params.has("order")).toBe(false);
         expect(params.get("page")).toBe("2");
         expect(params.get("view")).toBe("joined");
     });
@@ -299,5 +300,82 @@ describe("usePublicUserListingState", () => {
 
         expect(params.get("view")).toBe(null);
         expect(params.get("page")).toBe(null);
+    });
+
+    it("should omit default sorting values from URL search params", () => {
+        const setSearchParams = vi.fn();
+
+        const { result } = renderUsePublicUserListingState({
+            setSearchParams
+        });
+
+        act(() => {
+            result.current.syncUrl(
+                {
+                    search: "react",
+                    sortBy: "startDateTime",
+                    order: "asc"
+                },
+                1,
+                "created"
+            );
+        });
+
+        const params = setSearchParams.mock.calls[0][0];
+
+        expect(params.get("search")).toBe("react");
+
+        expect(params.has("sortBy")).toBe(false);
+        expect(params.has("order")).toBe(false);
+    });
+
+    it("should keep non-default sorting values in URL search params", () => {
+        const setSearchParams = vi.fn();
+
+        const { result } = renderUsePublicUserListingState({
+            setSearchParams
+        });
+
+        act(() => {
+            result.current.syncUrl(
+                {
+                    sortBy: "title",
+                    order: "desc"
+                },
+                1,
+                "created"
+            );
+        });
+
+        const params = setSearchParams.mock.calls[0][0];
+
+        expect(params.get("sortBy")).toBe("title");
+        expect(params.get("order")).toBe("desc");
+    });
+
+    it("should omit default sorting values for joined view", () => {
+        const setSearchParams = vi.fn();
+
+        const { result } = renderUsePublicUserListingState({
+            setSearchParams
+        });
+
+        act(() => {
+            result.current.syncUrl(
+                {
+                    sortBy: "startDateTime",
+                    order: "asc"
+                },
+                1,
+                "joined"
+            );
+        });
+
+        const params = setSearchParams.mock.calls[0][0];
+
+        expect(params.get("view")).toBe("joined");
+
+        expect(params.has("sortBy")).toBe(false);
+        expect(params.has("order")).toBe(false);
     });
 });

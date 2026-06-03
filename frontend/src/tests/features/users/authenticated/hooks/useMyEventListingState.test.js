@@ -14,6 +14,7 @@ import useMyEventListingState from "../../../../../features/users/authenticated/
    - loading state
    - pagination reset
    - URL synchronization
+   - clean URL synchronization
    - view-based filter cleanup
 
    Notes:
@@ -141,6 +142,69 @@ describe("useMyEventListingState", () => {
         expect(nextParams.has("view")).toBe(false);
         expect(nextParams.has("page")).toBe(false);
         expect(nextParams.get("search")).toBe("react");
+    });
+
+    it("omits default sorting values from URL search params", () => {
+        const { result, setSearchParams } = renderUseMyEventListingState();
+
+        act(() => {
+            result.current.syncUrl(
+                {
+                    search: "react",
+                    sortBy: "startDateTime",
+                    order: "asc"
+                },
+                1,
+                "created"
+            );
+        });
+
+        const nextParams = setSearchParams.mock.calls[0][0];
+
+        expect(nextParams.get("search")).toBe("react");
+        expect(nextParams.has("sortBy")).toBe(false);
+        expect(nextParams.has("order")).toBe(false);
+    });
+
+    it("keeps non-default sorting values in URL search params", () => {
+        const { result, setSearchParams } = renderUseMyEventListingState();
+
+        act(() => {
+            result.current.syncUrl(
+                {
+                    sortBy: "title",
+                    order: "desc"
+                },
+                1,
+                "created"
+            );
+        });
+
+        const nextParams = setSearchParams.mock.calls[0][0];
+
+        expect(nextParams.get("sortBy")).toBe("title");
+        expect(nextParams.get("order")).toBe("desc");
+    });
+
+    it("omits default sorting values for history views", () => {
+        const { result, setSearchParams } = renderUseMyEventListingState();
+
+        act(() => {
+            result.current.syncUrl(
+                {
+                    sortBy: "startDateTime",
+                    order: "desc"
+                },
+                1,
+                "createdHistory"
+            );
+        });
+
+        const nextParams = setSearchParams.mock.calls[0][0];
+
+        expect(nextParams.get("view")).toBe("createdHistory");
+        expect(nextParams.has("sortBy")).toBe(false);
+        expect(nextParams.has("order")).toBe(false);
     });
 
     /* =============================

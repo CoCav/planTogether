@@ -7,12 +7,16 @@ import EventViewTabs from "./EventViewTabs";
 
    Handles:
    - results title and subtitle
-   - results count
+   - optional results count
    - pagination info
    - view tabs
    - quick date filters
    - accessible live results metadata
    - quick filter button group
+
+   Notes:
+   - result count is only displayed when available
+   - supports pages with and without quick actions
 ================================================== */
 
 export default function EventsResultsToolbar({
@@ -44,9 +48,11 @@ export default function EventsResultsToolbar({
                     <h2 id={titleId} className="section-title">
                         {title}
 
-                        <span className="events-results-count" aria-live="polite">
-                            ({totalEvents})
-                        </span>
+                        {totalEvents !== null && totalEvents !== undefined && (
+                            <span className="events-results-count" aria-live="polite">
+                                ({totalEvents})
+                            </span>
+                        )}
                     </h2>
 
                     <p className="section-subtitle">{subtitle} </p>

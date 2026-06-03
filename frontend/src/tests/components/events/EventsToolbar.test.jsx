@@ -17,7 +17,8 @@ import {
 
    Handles:
    - results title and subtitle rendering
-   - total event count display
+   - optional total event count display
+   - missing count fallback behavior
    - accessible live results metadata
    - pagination info display
    - view tab integration
@@ -99,6 +100,14 @@ describe("EventsToolbar", () => {
 
         expect(screen.getByText("(12)")).toBeInTheDocument();
         expect(screen.getByText("Discover upcoming events and plan ahead.")).toBeInTheDocument();
+    });
+
+    it("should not render results count when totalEvents is missing", () => {
+        const { container } = renderEventsToolbar({
+            totalEvents: null
+        });
+
+        expect(container.querySelector(".events-results-count")).not.toBeInTheDocument();
     });
 
     it("should apply accessible title id to heading", () => {

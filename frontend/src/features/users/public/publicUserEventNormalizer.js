@@ -1,5 +1,3 @@
-import { getApiPayload } from "../../../api/apiResponse";
-
 import { normalizeEvents } from "../../events/eventNormalizer";
 
 /* ==================================================
@@ -7,26 +5,31 @@ import { normalizeEvents } from "../../events/eventNormalizer";
    Converts public user event payloads into frontend-friendly data
 
    Handles:
-   - public user events from GET /users/:id/events
+   - paginated public user events from GET /users/:id/events
+   - public user event pagination metadata
 
    Notes:
-   - aligned with public user event payloads
+   - aligned with view-based public user event payloads
 ================================================== */
 
 /* =============================
    PUBLIC USER EVENTS
 ============================= */
 
-// Normalizes public user event payload
+// Normalizes public user paginated event payload
 export const normalizePublicUserEvents = (payload = {}) => ({
-    createdEvents: normalizeEvents(payload.createdEvents),
-    joinedEvents: normalizeEvents(payload.joinedEvents),
+    view: payload.view ?? "created",
+    page: Number(payload.page ?? 1),
+    pageSize: Number(payload.pageSize ?? 4),
+    totalEvents: Number(payload.totalEvents ?? 0),
+    totalPages: Number(payload.totalPages ?? 1),
+    events: normalizeEvents(payload.events),
+
     message: payload.message ?? "",
     success: payload.success ?? false
 });
 
-// Extracts and normalizes public user created/joined events
-export const getNormalizedPublicUserEvents = (payload = {}) => ({
-    createdEvents: normalizeEvents(getApiPayload(payload, "createdEvents")),
-    joinedEvents: normalizeEvents(getApiPayload(payload, "joinedEvents"))
-});
+// Extracts and normalizes public user events from GET /users/:id/events
+export const getNormalizedPublicUserEvents = (payload = {}) => {
+    return normalizePublicUserEvents(payload);
+};

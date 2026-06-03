@@ -1,12 +1,15 @@
-import { useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useCallback, useEffect, useRef } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 
 import usePublicUserListingData from "../../../features/users/public/hooks/usePublicUserListingData";
+import usePublicUserListingState from "../../../features/users/public/hooks/usePublicUserListingState";
 
-import { PUBLIC_USER_EVENT_VIEWS } from "../../../features/users/public/publicUserEventViewConfig";
+import { getPublicUserEventViewContent, PUBLIC_USER_EVENT_VIEWS } from "../../../features/users/public/publicUserEventViewConfig";
+
+import usePagination from "../../../hooks/usePagination";
 
 import EventCard from "../../../components/events/EventCard";
-import EventViewTabs from "../../../components/events/EventViewTabs";
+import EventsToolbar from "../../../components/events/EventsToolbar";
 
 import UserAvatar from "../../../components/users/UserAvatar";
 import { getAvatar } from "../../../utils/uploadedFiles";
@@ -14,51 +17,169 @@ import { getAvatar } from "../../../utils/uploadedFiles";
 import Alert from "../../../components/ui/Alert";
 import Card from "../../../components/ui/Card";
 import EmptyState from "../../../components/ui/EmptyState";
+import LoadingState from "../../../components/ui/LoadingState";
 import PageLoader from "../../../components/ui/PageLoader";
+import Pagination from "../../../components/ui/Pagination";
 
 /* ==================================================
    PUBLIC USER PAGE
-   Displays a public user profile and public event lists
+   Displays a public user's profile and event listings
 
    Handles:
    - public profile display
-   - public created/joined event views
+   - created and joined public event views
+   - URL-synchronized view and pagination
+   - paginated public user event loading
+   - public event listing metadata
    - loading, error and empty states
 ================================================== */
 
 export default function PublicUserPage() {
     const { userId } = useParams();
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    /* =============================
+       PAGE STATE
+    ============================= */
+
+    const {
+        feedback,
+        view,
+        filtersState,
+        loadingState,
+        paginationState,
+        syncUrl,
+        resetPage
+    } = usePublicUserListingState({
+        searchParams,
+        setSearchParams
+    });
+
+    // Feedback messages and error handling
+    const { error, setError } = feedback;
+
+    // Active listing view and view content
+    const { activeView, setActiveView, initialView, viewContent } = view;
+
+    // Public user event filters
+    const { filters, setFilters, initialFilters } = filtersState;
+
+    // Initial and refresh loading states
+    const { initialLoading, setInitialLoading, isLoading, setIsLoading } = loadingState;
+
+    // Pagination data and setters
+    const { pagination, setPagination, initialPage } = paginationState;
+
+    /* =============================
+       PUBLIC USER DATA
+    ============================= */
 
     const {
         profile,
-        visibleEvents,
-
+        events,
+        loadInitialData,
+        refreshEvents
+    } = usePublicUserListingData({
+        userId,
+        filters,
         activeView,
-        setActiveView,
-
         viewContent,
-
-        initialLoading,
-
-        error,
-
-        loadData
-    } = usePublicUserListingData(userId);
+        pagination,
+        setPagination,
+        setInitialLoading,
+        setIsLoading,
+        setError
+    });
 
     const avatar = getAvatar(profile.user.avatar);
+
+    /* =============================
+       DATA LOADING / URL SYNC
+    ============================= */
+
+    const loadDataAndSyncUrl = useCallback(async (
+        nextFilters,
+        nextPage = 1,
+        nextView = activeView
+    ) => {
+        syncUrl(nextFilters, nextPage, nextView);
+
+        await refreshEvents({
+            filters: nextFilters,
+            page: nextPage,
+            view: nextView
+        });
+    }, [
+        activeView,
+        refreshEvents,
+        syncUrl
+    ]);
+
+    /* =============================
+       PAGINATION CONTROLS
+    ============================= */
+
+    const { goToPreviousPage, goToNextPage } = usePagination({
+        page: pagination.page,
+        totalPages: pagination.totalPages,
+        onPageChange: (nextPage) => loadDataAndSyncUrl(
+            filters,
+            nextPage,
+            activeView
+        )
+    });
+
+    /* =============================
+       VIEW SWITCHING
+    ============================= */
+
+    const handleViewChange = async (nextView) => {
+        const nextViewContent = getPublicUserEventViewContent(nextView);
+
+        const nextFilters = {
+            ...filters,
+            sortBy: nextViewContent.defaultSortBy,
+            order: nextViewContent.defaultOrder
+        };
+
+        setActiveView(nextView);
+        setFilters(nextFilters);
+        resetPage();
+
+        await loadDataAndSyncUrl(nextFilters, 1, nextView);
+    };
 
     /* =============================
        INITIAL DATA LOADING
     ============================= */
 
+    const hasLoadedRef = useRef(false);
+
     useEffect(() => {
-        loadData();
+        if (hasLoadedRef.current) return;
+
+        hasLoadedRef.current = true;
+
+        loadInitialData({
+            filters: initialFilters,
+            page: initialPage,
+            view: initialView
+        });
     }, [
-        loadData
+        loadInitialData,
+        initialFilters,
+        initialPage,
+        initialView
     ]);
 
     /* =============================
-       LOADING STATE
+       DISPLAY STATE
+    ============================= */
+
+    const showPaginationInfo = pagination.totalPages > 1;
+
+    /* =============================
+       INITIAL LOADING STATE
     ============================= */
 
     if (initialLoading) {
@@ -113,16 +234,12 @@ export default function PublicUserPage() {
 
                     <div className="user-profile-stats">
                         <p>
-                            <strong>
-                                {profile.stats.createdEventsCount}
-                            </strong>{" "}
+                            <strong>{profile.stats.createdEventsCount}</strong>{" "}
                             created events
                         </p>
 
                         <p>
-                            <strong>
-                                {profile.stats.joinedEventsCount}
-                            </strong>{" "}
+                            <strong>{profile.stats.joinedEventsCount}</strong>{" "}
                             joined events
                         </p>
                     </div>
@@ -130,42 +247,37 @@ export default function PublicUserPage() {
             </Card>
 
             <section className="events-results-controls" aria-labelledby="public-user-events-title">
-                <div className="events-results-header">
-                    <div className="events-results-meta">
-                        <div>
-                            <h2 id="public-user-events-title" className="section-title">
-                                {viewContent.title}
+                <EventsToolbar
+                    titleId="public-user-events-title"
+                    title={viewContent.title}
+                    subtitle={viewContent.subtitle}
 
-                                <span className="events-results-count">
-                                    ({visibleEvents.length})
-                                </span>
-                            </h2>
+                    totalEvents={pagination.totalEvents}
+                    page={pagination.page}
+                    totalPages={pagination.totalPages}
+                    showPaginationInfo={showPaginationInfo}
 
-                            <p className="section-subtitle">
-                                {viewContent.subtitle}
-                            </p>
-                        </div>
-                    </div>
+                    views={PUBLIC_USER_EVENT_VIEWS}
+                    activeView={activeView}
+                    onViewChange={handleViewChange}
 
-                    <div className="events-view-controls">
-                        <EventViewTabs
-                            views={PUBLIC_USER_EVENT_VIEWS}
-                            activeView={activeView}
-                            onChange={setActiveView}
-                        />
-                    </div>
-                </div>
+                    showQuickActions={false}
+                />
             </section>
 
             <section className="events-results-section" aria-labelledby="public-user-events-title">
-                {visibleEvents.length === 0 ? (
+                {isLoading ? (
+                    <LoadingState>
+                        Refreshing public events...
+                    </LoadingState>
+                ) : events.length === 0 ? (
                     <EmptyState
                         title={viewContent.empty}
                         description="Try browsing another public user event section."
                     />
                 ) : (
                     <div className="events-grid">
-                        {visibleEvents.map((event) => (
+                        {events.map((event) => (
                             <EventCard
                                 key={event.id}
                                 event={event}
@@ -174,6 +286,14 @@ export default function PublicUserPage() {
                     </div>
                 )}
             </section>
+
+            <Pagination
+                page={pagination.page}
+                totalPages={pagination.totalPages}
+                onPrevious={goToPreviousPage}
+                onNext={goToNextPage}
+                label="Public user events pagination"
+            />
         </main>
     );
 }

@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
     buildPublicUserEventSearchParams,
     getInitialPublicUserEventFiltersFromUrl,
-    getInitialPublicUserEventPageFromUrl
+    getInitialPublicUserEventPageFromUrl,
+    getInitialPublicUserEventViewFromUrl
 } from "../../../../features/users/public/publicUserEventQueryParams";
 
 import { EVENT_PAGE_QUERY_KEY } from "../../../../features/shared/eventListingQueryKeys";
@@ -15,15 +16,48 @@ import { createPublicUserEventFilters } from "../../../factories/users/public/pu
    Tests public user event URL query synchronization
 
    Handles:
+   - view parsing
    - page parsing
    - filter parsing
    - URL param generation
+   - fallback view omission
 
    Notes:
    - uses reusable public user event filter factories
 ================================================== */
 
 describe("publicUserEventQueryParams", () => {
+
+    /* =============================
+       TEST DATA
+    ============================= */
+
+    const views = [
+        { key: "created" },
+        { key: "joined" }
+    ];
+
+    /* =============================
+       VIEW PARSING
+    ============================= */
+
+    it("should return view from URL when valid", () => {
+        const searchParams = new URLSearchParams("view=joined");
+
+        expect(getInitialPublicUserEventViewFromUrl(searchParams, views)).toBe("joined");
+    });
+
+    it("should return fallback view when URL view is invalid", () => {
+        const searchParams = new URLSearchParams("view=invalid");
+
+        expect(getInitialPublicUserEventViewFromUrl(searchParams, views)).toBe("created");
+    });
+
+    it("should support custom fallback view", () => {
+        const searchParams = new URLSearchParams("view=invalid");
+
+        expect(getInitialPublicUserEventViewFromUrl(searchParams, views, "joined")).toBe("joined");
+    });
 
     /* =============================
        PAGE PARSING
@@ -91,7 +125,7 @@ describe("publicUserEventQueryParams", () => {
        PARAMS BUILDING
     ============================= */
 
-    it("should build URL params from filters and page", () => {
+    it("should build URL params from filters, page and view", () => {
         const params = buildPublicUserEventSearchParams({
             filters: createPublicUserEventFilters({
                 search: "music",
@@ -100,7 +134,8 @@ describe("publicUserEventQueryParams", () => {
                 order: "desc"
             }),
 
-            page: 2
+            page: 2,
+            view: "joined"
         });
 
         expect(params.get(EVENT_PAGE_QUERY_KEY)).toBe("2");
@@ -108,6 +143,7 @@ describe("publicUserEventQueryParams", () => {
         expect(params.get("mode")).toBe("online");
         expect(params.get("sortBy")).toBe("title");
         expect(params.get("order")).toBe("desc");
+        expect(params.get("view")).toBe("joined");
 
         expect(params.has("type")).toBe(false);
     });
@@ -119,5 +155,27 @@ describe("publicUserEventQueryParams", () => {
         });
 
         expect(params.has(EVENT_PAGE_QUERY_KEY)).toBe(false);
+    });
+
+    it("should not include fallback view in URL params", () => {
+        const params = buildPublicUserEventSearchParams({
+            filters: createPublicUserEventFilters(),
+            page: 1,
+            view: "created",
+            fallbackView: "created"
+        });
+
+        expect(params.has("view")).toBe(false);
+    });
+
+    it("should omit fallback view when custom fallback view is used", () => {
+        const params = buildPublicUserEventSearchParams({
+            filters: createPublicUserEventFilters(),
+            page: 1,
+            view: "joined",
+            fallbackView: "joined"
+        });
+
+        expect(params.has("view")).toBe(false);
     });
 });

@@ -14,13 +14,14 @@ import { createEvent } from "../../../factories/events/eventFactory";
    Tests public user event payload normalization
 
    Handles:
-   - public user created events
-   - public user joined events
-   - API payload extraction
+   - paginated public user events
+   - public user event listing metadata
+   - normalized event lists
    - fallback values
 
    Notes:
    - uses reusable event test factories
+   - aligned with GET /users/:id/events
 ================================================== */
 
 describe("publicUserEventNormalizer", () => {
@@ -29,45 +30,37 @@ describe("publicUserEventNormalizer", () => {
        PUBLIC USER EVENTS
     ============================= */
 
-    it("should normalize public user event payload", () => {
+    it("should normalize paginated public user event payload", () => {
         const result = normalizePublicUserEvents({
-            createdEvents: [
+            view: "joined",
+            page: 2,
+            pageSize: 4,
+            totalEvents: 5,
+            totalPages: 2,
+            events: [
                 createEvent({
                     id: 1,
-                    title: "Created Event",
+                    title: "Joined Event",
                     status: EVENT_STATUS.UPCOMING
                 })
             ],
-
-            joinedEvents: [
-                createEvent({
-                    id: 2,
-                    title: "Joined Event",
-                    status: EVENT_STATUS.PAST
-                })
-            ],
-
             message: "Public user events retrieved",
             success: true
         });
 
         expect(result).toEqual({
-            createdEvents: [
+            view: "joined",
+            page: 2,
+            pageSize: 4,
+            totalEvents: 5,
+            totalPages: 2,
+            events: [
                 expect.objectContaining({
                     id: 1,
-                    title: "Created Event",
+                    title: "Joined Event",
                     status: EVENT_STATUS.UPCOMING
                 })
             ],
-
-            joinedEvents: [
-                expect.objectContaining({
-                    id: 2,
-                    title: "Joined Event",
-                    status: EVENT_STATUS.PAST
-                })
-            ],
-
             message: "Public user events retrieved",
             success: true
         });
@@ -75,52 +68,73 @@ describe("publicUserEventNormalizer", () => {
 
     it("should return fallback values when payload is empty", () => {
         expect(normalizePublicUserEvents()).toEqual({
-            createdEvents: [],
-            joinedEvents: [],
+            view: "created",
+            page: 1,
+            pageSize: 4,
+            totalEvents: 0,
+            totalPages: 1,
+            events: [],
             message: "",
             success: false
         });
     });
 
+    it("should convert pagination metadata to numbers", () => {
+        const result = normalizePublicUserEvents({
+            page: "2",
+            pageSize: "8",
+            totalEvents: "12",
+            totalPages: "3",
+            events: []
+        });
+
+        expect(result).toEqual(
+            expect.objectContaining({
+                page: 2,
+                pageSize: 8,
+                totalEvents: 12,
+                totalPages: 3
+            })
+        );
+    });
+
     /* =============================
-       API PAYLOAD EXTRACTION
+       API PAYLOAD NORMALIZATION
     ============================= */
 
-    it("should extract and normalize public user events from API payload", () => {
+    it("should normalize public user events from API payload", () => {
         const payload = {
-            data: {
-                createdEvents: [
-                    createEvent({
-                        id: 1,
-                        title: "Created Event"
-                    })
-                ],
-
-                joinedEvents: [
-                    createEvent({
-                        id: 2,
-                        title: "Joined Event"
-                    })
-                ]
-            }
+            view: "created",
+            page: 1,
+            pageSize: 4,
+            totalEvents: 1,
+            totalPages: 1,
+            events: [
+                createEvent({
+                    id: 1,
+                    title: "Created Event"
+                })
+            ],
+            message: "Public user events retrieved",
+            success: true
         };
 
         const result = getNormalizedPublicUserEvents(payload);
 
         expect(result).toEqual({
-            createdEvents: [
+            view: "created",
+            page: 1,
+            pageSize: 4,
+            totalEvents: 1,
+            totalPages: 1,
+            events: [
                 expect.objectContaining({
                     id: 1,
                     title: "Created Event"
                 })
             ],
-
-            joinedEvents: [
-                expect.objectContaining({
-                    id: 2,
-                    title: "Joined Event"
-                })
-            ]
+            message: "Public user events retrieved",
+            success: true
         });
     });
 });

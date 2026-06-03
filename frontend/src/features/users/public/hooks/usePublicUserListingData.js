@@ -1,24 +1,48 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { getPublicUserProfile, getPublicUserEvents } from "../../../../api/users/userApi";
 
 import { getNormalizedPublicUserProfile } from "../publicUserNormalizer";
 import { getNormalizedPublicUserEvents } from "../publicUserEventNormalizer";
-import { getPublicUserEventViewContent } from "../publicUserEventViewConfig";
 
 /* ==================================================
    USE PUBLIC USER LISTING DATA
    Handles public user profile and event listing data loading
 
    Handles:
-   - public user profile loading
-   - public created/joined event loading
+   - initial public user profile loading
+   - public event listing loading
+   - view-based event listing requests
+   - empty filter cleanup before API requests
    - public user payload normalization
-   - active event view state
-   - visible event resolution
+   - paginated event payload normalization
+   - pagination state updates
 ================================================== */
 
-export default function usePublicUserListingData(userId) {
+/* =============================
+   HELPERS
+============================= */
+
+// Removes empty filter values before API requests
+const removeEmptyFilters = (filters = {}) => {
+    return Object.fromEntries(
+        Object.entries(filters).filter(([, value]) => {
+            return String(value ?? "").trim() !== "";
+        })
+    );
+};
+
+export default function usePublicUserListingData({
+    userId,
+    filters,
+    activeView,
+    viewContent,
+    pagination,
+    setPagination,
+    setInitialLoading,
+    setIsLoading,
+    setError
+}) {
 
     /* =============================
        STATE
@@ -35,34 +59,90 @@ export default function usePublicUserListingData(userId) {
         }
     });
 
-    const [events, setEvents] = useState({
-        createdEvents: [],
-        joinedEvents: []
-    });
-
-    const [activeView, setActiveView] = useState("created");
-
-    const [initialLoading, setInitialLoading] = useState(true);
-    const [isLoading, setIsLoading] = useState(false);
-
-    const [error, setError] = useState("");
+    const [events, setEvents] = useState([]);
 
     /* =============================
-       DATA LOADING
+       PROFILE LOADING
     ============================= */
 
-    const loadData = useCallback(async () => {
+    // Loads public user profile and statistics
+    const loadProfile = useCallback(async () => {
+        const profilePayload = await getPublicUserProfile(userId);
+
+        setProfile(getNormalizedPublicUserProfile(profilePayload));
+    }, [
+        userId
+    ]);
+
+    /* =============================
+       EVENT LOADING
+    ============================= */
+
+    // Loads paginated public user events for the selected view
+    const loadEvents = useCallback(async ({
+        filters: nextFilters = filters,
+        page: nextPage = pagination.page,
+        view: nextView = activeView
+    } = {}) => {
+
+        /* =============================
+           API PARAMS
+        ============================= */
+
+        const params = {
+            ...removeEmptyFilters(nextFilters),
+            view: nextView,
+            page: nextPage,
+            pageSize: pagination.pageSize,
+            sortBy: viewContent.defaultSortBy,
+            order: viewContent.defaultOrder
+        };
+
+        /* =============================
+           EVENT FETCHING
+        ============================= */
+
+        const eventsPayload = await getPublicUserEvents(userId, params);
+
+        const normalizedEvents = getNormalizedPublicUserEvents(eventsPayload);
+
+        setEvents(normalizedEvents.events);
+
+        /* =============================
+           PAGINATION UPDATE
+        ============================= */
+
+        setPagination((prev) => ({
+            ...prev,
+            page: normalizedEvents.page,
+            pageSize: normalizedEvents.pageSize,
+            totalEvents: normalizedEvents.totalEvents,
+            totalPages: normalizedEvents.totalPages
+        }));
+    }, [
+        userId,
+        filters,
+        activeView,
+        viewContent,
+        pagination.page,
+        pagination.pageSize,
+        setPagination
+    ]);
+
+    /* =============================
+       INITIAL DATA LOADING
+    ============================= */
+
+    // Loads profile and first event listing together on initial page load
+    const loadInitialData = useCallback(async (options = {}) => {
         try {
             setError("");
             setIsLoading(true);
 
-            const [profilePayload, eventsPayload] = await Promise.all([
-                getPublicUserProfile(userId),
-                getPublicUserEvents(userId)
+            await Promise.all([
+                loadProfile(),
+                loadEvents(options)
             ]);
-
-            setProfile(getNormalizedPublicUserProfile(profilePayload));
-            setEvents(getNormalizedPublicUserEvents(eventsPayload));
 
         } catch (error) {
             console.error("Error loading public user:", error);
@@ -73,41 +153,44 @@ export default function usePublicUserListingData(userId) {
             setIsLoading(false);
             setInitialLoading(false);
         }
-    }, [userId]);
+    }, [
+        loadProfile,
+        loadEvents,
+        setError,
+        setIsLoading,
+        setInitialLoading
+    ]);
 
     /* =============================
-       VIEW RESOLUTION
+       EVENT REFRESH
     ============================= */
 
-    const viewContent = useMemo(
-        () => getPublicUserEventViewContent(activeView),
-        [activeView]
-    );
+    // Refreshes only the event listing after view or pagination changes
+    const refreshEvents = useCallback(async (options = {}) => {
+        try {
+            setError("");
+            setIsLoading(true);
 
-    const visibleEvents = useMemo(() => {
-        return activeView === "joined"
-            ? events.joinedEvents
-            : events.createdEvents;
+            await loadEvents(options);
+
+        } catch (error) {
+            console.error("Error loading public user events:", error);
+
+            setError("❌ Failed to load public user events");
+
+        } finally {
+            setIsLoading(false);
+        }
     }, [
-        activeView,
-        events
+        loadEvents,
+        setError,
+        setIsLoading
     ]);
 
     return {
         profile,
         events,
-        visibleEvents,
-
-        activeView,
-        setActiveView,
-        viewContent,
-
-        initialLoading,
-        isLoading,
-
-        error,
-        setError,
-
-        loadData
+        loadInitialData,
+        refreshEvents
     };
 }

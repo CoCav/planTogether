@@ -7,14 +7,24 @@ import { getDefaultPublicUserEventFilters, PUBLIC_USER_EVENT_FILTER_QUERY_KEYS }
    Handles URL ↔ public user event filters synchronization
 
    Handles:
+   - parsing public user event view from URL
    - parsing public user event filters from URL
    - parsing public user event pagination
    - building URL params from public user event state
 
    Notes:
    - aligned with GET /users/:id/events
-   - current user event views belong to userEventQueryParams
+   - public user event views support created and joined listings
 ================================================== */
+
+// Gets initial public user event view from URL params
+export const getInitialPublicUserEventViewFromUrl = (searchParams, views, fallbackView = "created") => {
+    const view = searchParams.get("view");
+
+    return views.some((item) => item.key === view)
+        ? view
+        : fallbackView;
+};
 
 // Gets the initial public user event page from URL params
 export const getInitialPublicUserEventPageFromUrl = (searchParams) => {
@@ -38,13 +48,13 @@ export const getInitialPublicUserEventFiltersFromUrl = (searchParams) => {
     return filters;
 };
 
-// Builds URL params from public user event filters
-export const buildPublicUserEventSearchParams = ({
-    filters = {},
-    page = 1
-}) => {
-
+// Builds URL params from public user event filters, page and view
+export const buildPublicUserEventSearchParams = ({ filters = {}, page = 1, view = "created", fallbackView = "created" }) => {
     const params = new URLSearchParams();
+
+    if (view !== fallbackView) {
+        params.set("view", view);
+    }
 
     if (page > 1) {
         params.set(EVENT_PAGE_QUERY_KEY, String(page));

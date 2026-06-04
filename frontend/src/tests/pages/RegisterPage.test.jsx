@@ -1,4 +1,4 @@
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -16,8 +16,10 @@ import RegisterPage from "../../pages/RegisterPage";
    - avatar upload and removal
    - successful registration flow
    - automatic login after registration
-   - redirect after successful registration
+   - protected route redirect restoration
+   - stale pagination cleanup after registration
    - register error feedback
+   - login navigation state forwarding
 
    Notes:
    - mocks auth context login action
@@ -32,6 +34,7 @@ import RegisterPage from "../../pages/RegisterPage";
 const mockNavigate = vi.fn();
 const mockLogin = vi.fn();
 const mockRegisterUser = vi.fn();
+let mockLocationState = null;
 
 /* =============================
    MOCKS
@@ -42,7 +45,10 @@ vi.mock("react-router-dom", async () => {
 
     return {
         ...actual,
-        useNavigate: () => mockNavigate
+        useNavigate: () => mockNavigate,
+        useLocation: () => ({
+            state: mockLocationState
+        })
     };
 });
 
@@ -59,13 +65,6 @@ vi.mock("../../api/auth/authApi", () => ({
 /* =============================
    TEST HELPERS
 ============================= */
-
-const renderPage = () =>
-    render(
-        <MemoryRouter>
-            <RegisterPage />
-        </MemoryRouter>
-    );
 
 const fillRegisterForm = async (user, {
     name = "John Doe",
@@ -93,6 +92,34 @@ const selectAvatar = async (
     return file;
 };
 
+const LoginLocationStateProbe = () => {
+    const location = useLocation();
+
+    return (
+        <div>
+            Login Page - from {location.state?.from?.pathname}
+            {location.state?.from?.search}
+        </div>
+    );
+};
+
+const renderPage = () =>
+    render(
+        <MemoryRouter>
+            <RegisterPage />
+        </MemoryRouter>
+    );
+
+const renderPageWithLoginRoute = () =>
+    render(
+        <MemoryRouter initialEntries={["/register"]}>
+            <Routes>
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/login" element={<LoginLocationStateProbe />} />
+            </Routes>
+        </MemoryRouter>
+    );
+
 describe("RegisterPage", () => {
 
     /* =============================
@@ -107,6 +134,8 @@ describe("RegisterPage", () => {
         );
 
         globalThis.URL.revokeObjectURL = vi.fn();
+
+        mockLocationState = null;
     });
 
     /* =============================
@@ -210,12 +239,7 @@ describe("RegisterPage", () => {
 
         await selectAvatar(user);
 
-        expect(
-            screen.getByAltText("Avatar preview")
-        ).toHaveAttribute(
-            "src",
-            "blob:avatar-preview"
-        );
+        expect(screen.getByAltText("Avatar preview")).toHaveAttribute("src", "blob:avatar-preview");
 
         expect(screen.getByText("avatar.png")).toBeInTheDocument();
 
@@ -308,7 +332,66 @@ describe("RegisterPage", () => {
         expect(formData.get("avatar")).toBeNull();
 
         expect(mockLogin).toHaveBeenCalledWith("fake-token");
-        expect(mockNavigate).toHaveBeenCalledWith("/events");
+        expect(mockNavigate).toHaveBeenCalledWith("/events", {
+            replace: true
+        });
+    });
+
+    it("removes stale pagination when redirecting after registration", async () => {
+        const user = userEvent.setup();
+
+        mockLocationState = {
+            from: {
+                pathname: "/my-events",
+                search: "?view=joined&page=2"
+            }
+        };
+
+        mockRegisterUser.mockResolvedValue({
+            token: "fake-token"
+        });
+
+        mockLogin.mockResolvedValue();
+
+        renderPage();
+
+        await fillRegisterForm(user);
+
+        await user.click(screen.getByRole("button", {
+            name: "Register"
+        }));
+
+        await waitFor(() => {
+            expect(mockNavigate).toHaveBeenCalledWith("/my-events?view=joined", {
+                replace: true
+            });
+        });
+    });
+
+    it("redirects to events page by default after registration", async () => {
+        const user = userEvent.setup();
+
+        mockLocationState = null;
+
+        mockRegisterUser.mockResolvedValue({
+            token: "fake-token"
+        });
+
+        mockLogin.mockResolvedValue();
+
+        renderPage();
+
+        await fillRegisterForm(user);
+
+        await user.click(screen.getByRole("button", {
+            name: "Register"
+        }));
+
+        await waitFor(() => {
+            expect(mockNavigate).toHaveBeenCalledWith("/events", {
+                replace: true
+            });
+        });
     });
 
     it("registers successfully with avatar", async () => {
@@ -343,7 +426,9 @@ describe("RegisterPage", () => {
         expect(formData.get("avatar")).toBe(avatar);
 
         expect(mockLogin).toHaveBeenCalledWith("fake-token");
-        expect(mockNavigate).toHaveBeenCalledWith("/events");
+        expect(mockNavigate).toHaveBeenCalledWith("/events", {
+            replace: true
+        });
     });
 
     it("shows loading state while submitting", async () => {
@@ -372,6 +457,29 @@ describe("RegisterPage", () => {
         resolveRequest({
             token: "fake-token"
         });
+    });
+
+    /* =============================
+       LOGIN NAVIGATION
+    ============================= */
+
+    it("forwards protected route state when navigating to login", async () => {
+        const user = userEvent.setup();
+
+        mockLocationState = {
+            from: {
+                pathname: "/my-events",
+                search: "?view=joined&page=2"
+            }
+        };
+
+        renderPageWithLoginRoute();
+
+        await user.click(screen.getByRole("link", {
+            name: "Login"
+        }));
+
+        expect(screen.getByText("Login Page - from /my-events?view=joined&page=2")).toBeInTheDocument();
     });
 
     /* =============================

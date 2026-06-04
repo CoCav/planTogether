@@ -17,6 +17,7 @@ import Input from "../ui/Input";
    - login form submission
    - account navigation footer
    - accessible form field associations
+   - registration redirect state forwarding
 ================================================== */
 
 export default function LoginForm({
@@ -28,6 +29,8 @@ export default function LoginForm({
 
     showPassword,
     rememberMe,
+
+    registerState,
 
     onFieldChange,
     onRememberMeChange,
@@ -104,7 +107,11 @@ export default function LoginForm({
             <p className="account-footer text-muted">
                 Don’t have an account?{" "}
 
-                <Link to="/register" className="link-inline">
+                <Link
+                    to="/register"
+                    state={registerState}
+                    className="link-inline"
+                >
                     Register
                 </Link>
             </p>

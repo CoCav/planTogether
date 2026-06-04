@@ -1,9 +1,11 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../features/auth/hooks/useAuth";
 import { registerUser } from "../api/auth/authApi";
 
 import { buildRegisterFormData } from "../features/auth/registerPayloadBuilder";
+import { getRegisterRedirectPath } from "../features/auth/authRedirects";
+
 import useRegisterForm from "../features/auth/hooks/useRegisterForm";
 
 import UserForm from "../components/users/UserForm";
@@ -28,7 +30,23 @@ import Card from "../components/ui/Card";
 export default function RegisterPage() {
     const { login } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
+    /* =============================
+       REDIRECT STATE
+    ============================= */
+
+    // Restores protected route after registration while removing stale pagination
+    const redirectPath = getRegisterRedirectPath(location.state?.from);
+
+    /* =============================
+       LOGIN NAVIGATION
+    ============================= */
+
+    // Preserves attempted protected route when switching to login
+    const loginState = location.state?.from
+        ? { from: location.state.from }
+        : undefined;
 
     /* =============================
        SUBMIT HANDLER
@@ -43,8 +61,8 @@ export default function RegisterPage() {
         // Logs the user in immediately after account creation
         await login(token);
 
-        // Redirects authenticated user to event listings
-        navigate("/events");
+        // Redirects user to original route or fallback event listings
+        navigate(redirectPath, { replace: true });
     };
 
 
@@ -122,7 +140,11 @@ export default function RegisterPage() {
                         formFooter={
                             <p className="account-footer text-muted">
                                 Already have an account?{" "}
-                                <Link to="/login" className="link-inline">
+                                <Link
+                                    to="/login"
+                                    state={loginState}
+                                    className="link-inline"
+                                >
                                     Login
                                 </Link>
                             </p>

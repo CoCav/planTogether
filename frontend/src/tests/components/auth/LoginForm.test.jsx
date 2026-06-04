@@ -15,6 +15,7 @@ import LoginForm from "../../../components/auth/LoginForm";
    - password visibility toggle
    - form submission
    - register navigation link
+   - registration redirect state forwarding
    - validation error display
    - accessible form field descriptions
 ================================================== */

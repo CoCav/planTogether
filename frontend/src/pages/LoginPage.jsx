@@ -4,6 +4,8 @@ import { useAuth } from "../features/auth/hooks/useAuth";
 
 import { loginUser } from "../api/auth/authApi";
 
+import { getLoginRedirectPath } from "../features/auth/authRedirects";
+
 import useLoginForm from "../features/auth/hooks/useLoginForm";
 
 import LoginForm from "../components/auth/LoginForm";
@@ -34,9 +36,17 @@ export default function LoginPage() {
        REDIRECT STATE
     ============================= */
 
-    // Falls back to event listings when no protected route is provided
-    const from = location.state?.from?.pathname || "/events";
+    // Restores protected route path and query params after login
+    const redirectPath = getLoginRedirectPath(location.state?.from);
 
+    /* =============================
+       REGISTER NAVIGATION
+    ============================= */
+
+    // Preserves attempted protected route when switching to registration
+    const registerState = location.state?.from
+        ? { from: location.state.from }
+        : undefined;
 
     /* =============================
        SUBMIT HANDLER
@@ -52,7 +62,7 @@ export default function LoginPage() {
         await login(token, rememberMe);
 
         // Redirects user to original route or fallback event listings
-        navigate(from, { replace: true });
+        navigate(redirectPath, { replace: true });
     };
 
 
@@ -120,6 +130,8 @@ export default function LoginPage() {
 
                         showPassword={showPassword}
                         rememberMe={rememberMe}
+
+                        registerState={registerState}
 
                         onFieldChange={handleFieldChange}
                         onRememberMeChange={handleRememberMeChange}

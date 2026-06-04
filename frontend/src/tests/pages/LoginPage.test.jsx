@@ -1,4 +1,4 @@
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -16,6 +16,8 @@ import LoginPage from "../../pages/LoginPage";
    - remember me preference
    - successful login flow
    - redirect after successful login
+   - protected route query param preservation
+   - register navigation state forwarding
    - login error feedback
 
    Notes:
@@ -69,6 +71,26 @@ vi.mock("../../api/auth/authApi", () => ({
    TEST HELPERS
 ============================= */
 
+const fillLoginForm = async (user, {
+    email = "test@test.com",
+    password = "Password123"
+} = {}) => {
+
+    await user.type(screen.getByLabelText("Email"), email);
+    await user.type(screen.getByLabelText(/^password$/i), password);
+};
+
+const RegisterLocationStateProbe = () => {
+    const location = useLocation();
+
+    return (
+        <div>
+            Register Page - from {location.state?.from?.pathname}
+            {location.state?.from?.search}
+        </div>
+    );
+};
+
 const renderPage = () =>
     render(
         <MemoryRouter>
@@ -76,14 +98,15 @@ const renderPage = () =>
         </MemoryRouter>
     );
 
-const fillLoginForm = async (user, {
-    email = "test@test.com",
-    password = "Password123"
-} = {}
-) => {
-    await user.type(screen.getByLabelText("Email"), email);
-    await user.type(screen.getByLabelText(/^password$/i), password);
-};
+const renderPageWithRegisterRoute = () =>
+    render(
+        <MemoryRouter initialEntries={["/login"]}>
+            <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterLocationStateProbe />} />
+            </Routes>
+        </MemoryRouter>
+    );
 
 describe("LoginPage", () => {
 
@@ -265,6 +288,37 @@ describe("LoginPage", () => {
         });
     });
 
+    it("preserves query params when redirecting after login", async () => {
+        const user = userEvent.setup();
+
+        mockLocationState = {
+            from: {
+                pathname: "/my-events",
+                search: "?view=joined&page=2"
+            }
+        };
+
+        mockLoginUser.mockResolvedValue({
+            token: "fake-token"
+        });
+
+        mockLogin.mockResolvedValue();
+
+        renderPage();
+
+        await fillLoginForm(user);
+
+        await user.click(screen.getByRole("button", {
+            name: "Login"
+        }));
+
+        await waitFor(() => {
+            expect(mockNavigate).toHaveBeenCalledWith("/my-events?view=joined&page=2", {
+                replace: true
+            });
+        });
+    });
+
     it("redirects to events page by default after login", async () => {
         const user = userEvent.setup();
 
@@ -317,6 +371,29 @@ describe("LoginPage", () => {
         resolveRequest({
             token: "fake-token"
         });
+    });
+
+    /* =============================
+       REGISTER NAVIGATION
+    ============================= */
+
+    it("forwards protected route state when navigating to register", async () => {
+        const user = userEvent.setup();
+
+        mockLocationState = {
+            from: {
+                pathname: "/my-events",
+                search: "?view=joined&page=2"
+            }
+        };
+
+        renderPageWithRegisterRoute();
+
+        await user.click(screen.getByRole("link", {
+            name: "Register"
+        }));
+
+        expect(screen.getByText("Register Page - from /my-events?view=joined&page=2")).toBeInTheDocument();
     });
 
     /* =============================

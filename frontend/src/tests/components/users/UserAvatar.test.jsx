@@ -33,7 +33,7 @@ describe("UserAvatar", () => {
 
         expect(avatar).toBeInTheDocument();
         expect(avatar).toHaveAttribute("src", "/avatar.png");
-        expect(avatar).toHaveClass("navbar-avatar");
+        expect(avatar).toHaveClass("user-avatar", "navbar-avatar");
     });
 
     it("renders fallback alt text when user name is missing", () => {
@@ -57,5 +57,16 @@ describe("UserAvatar", () => {
         );
 
         expect(screen.getByTestId("user-avatar")).toHaveAttribute("loading", "lazy");
+    });
+
+    it("renders base avatar class when no custom class is provided", () => {
+        render(
+            <UserAvatar
+                src="/avatar.png"
+                name="John"
+            />
+        );
+
+        expect(screen.getByAltText("John avatar")).toHaveClass("user-avatar");
     });
 });

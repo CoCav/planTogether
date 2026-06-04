@@ -1,0 +1,43 @@
+/* ==================================================
+   USER AVATAR
+   Reusable user avatar display
+================================================== */
+
+/* =========================================
+   BASE
+========================================= */
+
+.user-avatar {
+    display: block;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    object-fit: cover;
+    border-radius: 50%;
+    background: var(--color-surface-muted);
+    border: 1px solid var(--color-border);
+}
+
+/* =========================================
+   SIZES
+========================================= */
+
+.user-avatar-sm {
+    width: 32px;
+    height: 32px;
+}
+
+.user-avatar-md {
+    width: 48px;
+    height: 48px;
+}
+
+.user-avatar-lg {
+    width: 96px;
+    height: 96px;
+}
+
+.user-avatar-xl {
+    width: 128px;
+    height: 128px;
+}

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 
@@ -22,6 +22,7 @@ import { getPublicUserProfile, getPublicUserEvents } from "../../../../api/users
    - URL synchronization
    - error state
    - accessible profile and listing sections
+   - public profile statistics semantics
 
    Notes:
    - mocks public user API
@@ -47,8 +48,12 @@ vi.mock("../../../../components/events/EventCard", () => ({
 }));
 
 vi.mock("../../../../components/users/UserAvatar", () => ({
-    default: ({ src, name, className }) => (
-        <img src={src} alt={`${name} avatar`} className={className} />
+    default: ({ src, name, className = "" }) => (
+        <img
+            src={src}
+            alt={`${name} avatar`}
+            className={`user-avatar ${className}`.trim()}
+        />
     )
 }));
 
@@ -183,7 +188,10 @@ describe("PublicUserPage", () => {
             name: "Sakura"
         })).toBeInTheDocument();
 
-        expect(screen.getByAltText("Sakura avatar")).toHaveAttribute("src", "/uploads/avatars/sakura.png");
+        const avatar = screen.getByAltText("Sakura avatar");
+
+        expect(avatar).toHaveAttribute("src", "/uploads/avatars/sakura.png");
+        expect(avatar).toHaveClass("user-avatar", "public-user-profile-avatar");
 
         expect(screen.getByText("17")).toBeInTheDocument();
         expect(screen.getByText("created events")).toBeInTheDocument();
@@ -426,6 +434,14 @@ describe("PublicUserPage", () => {
                 name: /created events/i
             })
         ).toBeInTheDocument();
+
+        const statsList = screen.getByRole("list", {
+            name: /public user statistics/i
+        });
+
+        expect(statsList).toBeInTheDocument();
+
+        expect(within(statsList).getAllByRole("listitem")).toHaveLength(2);
     });
 
     /* =============================

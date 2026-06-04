@@ -72,3 +72,13 @@
         flex: 1;
     }
 }
+
+@media (max-width: 640px) {
+    .events-results-page-info {
+        margin-top: var(--space-1);
+    }
+
+    .events-view-controls {
+        margin-top: var(--space-3);
+    }
+}

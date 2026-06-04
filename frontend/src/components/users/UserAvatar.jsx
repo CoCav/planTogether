@@ -5,7 +5,7 @@
    Handles:
    - avatar image rendering
    - accessible avatar alternative text
-   - fallback avatar display
+   - fallback alt text resolution
    - forwarded image props
 ================================================== */
 
@@ -26,7 +26,7 @@ export default function UserAvatar({ src, name, className = "", ...props }) {
         <img
             src={src}
             alt={avatarAlt}
-            className={className}
+            className={`user-avatar ${className}`.trim()}
             {...props}
         />
     );

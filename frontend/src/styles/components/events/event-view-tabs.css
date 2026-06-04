@@ -104,3 +104,14 @@
         flex-shrink: 0;
     }
 }
+
+@media (max-width: 640px) {
+    .event-view-tabs {
+        width: 100%;
+    }
+
+    .event-view-tab {
+        flex: 1;
+        justify-content: center;
+    }
+}

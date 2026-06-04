@@ -210,41 +210,39 @@ export default function PublicUserPage() {
 
             {error && <Alert type="danger">{error}</Alert>}
 
-            <Card>
-                <section aria-labelledby="public-user-profile-title">
-                    <header className="section-header">
-                        <div className="user-profile-header">
-                            <UserAvatar
-                                src={avatar}
-                                name={profile.user.name}
-                                className="user-profile-avatar"
-                            />
+            <section className="public-user-profile-section" aria-labelledby="public-user-profile-title">
+                <Card>
+                    <div className="public-user-profile-content">
+                        <UserAvatar
+                            src={avatar}
+                            name={profile.user.name}
+                            className="public-user-profile-avatar"
+                        />
 
-                            <div>
-                                <h2 id="public-user-profile-title" className="section-title">
-                                    {profile.user.name}
-                                </h2>
+                        <div className="public-user-profile-info">
+                            <h2 id="public-user-profile-title" className="section-title">
+                                {profile.user.name}
+                            </h2>
 
-                                <p className="section-subtitle">
-                                    Public user profile.
-                                </p>
-                            </div>
+                            <p className="section-subtitle">
+                                Public user profile.
+                            </p>
+
+                            <ul className="public-user-profile-stats" aria-label="Public user statistics">
+                                <li className="public-user-profile-stat">
+                                    <strong>{profile.stats.createdEventsCount}</strong>{" "}
+                                    created events
+                                </li>
+
+                                <li className="public-user-profile-stat">
+                                    <strong>{profile.stats.joinedEventsCount}</strong>{" "}
+                                    joined events
+                                </li>
+                            </ul>
                         </div>
-                    </header>
-
-                    <div className="user-profile-stats">
-                        <p>
-                            <strong>{profile.stats.createdEventsCount}</strong>{" "}
-                            created events
-                        </p>
-
-                        <p>
-                            <strong>{profile.stats.joinedEventsCount}</strong>{" "}
-                            joined events
-                        </p>
                     </div>
-                </section>
-            </Card>
+                </Card>
+            </section>
 
             <section className="events-results-controls" aria-labelledby="public-user-events-title">
                 <EventsToolbar

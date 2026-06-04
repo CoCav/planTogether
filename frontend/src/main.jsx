@@ -15,6 +15,7 @@ import "./styles/pages/event-form-page.css";
 import "./styles/pages/event-listing-page.css";
 import "./styles/pages/home-page.css";
 import "./styles/pages/my-profile-page.css";
+import "./styles/pages/public-user-page.css";
 
 import "./styles/components/auth/login-form.css";
 
@@ -32,6 +33,7 @@ import "./styles/components/events/events-toolbar.css";
 import "./styles/components/users/delete-account-section.css";
 import "./styles/components/users/password-field.css";
 import "./styles/components/users/password-requirements.css";
+import "./styles/components/users/user-avatar.css";
 import "./styles/components/users/user-form.css";
 
 import "./styles/components/layout/footer.css";

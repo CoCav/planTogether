@@ -14,8 +14,8 @@
 ![Backend Tests](https://img.shields.io/badge/backend-650%20passing-brightgreen)
 ![Backend Coverage](https://img.shields.io/badge/backend%20coverage-99.14%25%20statements%20%7C%2094.65%25%20branches-brightgreen)
 
-![Frontend Tests](https://img.shields.io/badge/frontend-1119%20passing-brightgreen)
-![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-97.65%25%20statements%20%7C%2094.51%25%20branches-brightgreen)
+![Frontend Tests](https://img.shields.io/badge/frontend-1182%20passing-brightgreen)
+![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-97.77%25%20statements%20%7C%2094.72%25%20branches-brightgreen)
 
 ![Backend CI](https://github.com/CoCav/planTogether/actions/workflows/backend-ci.yml/badge.svg)
 ![Frontend CI](https://github.com/CoCav/planTogether/actions/workflows/frontend-ci.yml/badge.svg)
@@ -39,7 +39,7 @@ The application focuses on **clean architecture, scalability, security, API cons
 
 ## 🎯 Key Highlights
 
-- 🧪 **1769 automated tests across backend and frontend** (Jest + Supertest + Vitest + React Testing Library)
+- 🧪 **1832 automated tests across backend and frontend** (Jest + Supertest + Vitest + React Testing Library)
 - 📊 **High automated test coverage** (~99% backend / ~98% frontend)
 - 🔁 **Separate backend and frontend CI workflows using GitHub Actions**
 - 🔐 **Secure authentication and role-based access control (RBAC)**
@@ -48,6 +48,8 @@ The application focuses on **clean architecture, scalability, security, API cons
 - 🗄️ **Optimized backend query architecture** (filtering, pagination, indexes, participant counts, reusable query helpers)
 - 🔍 **Advanced event filtering and listing architecture** (search, creator, date range, sorting, pagination, synchronized views)
 - 🔗 **URL-synchronized filters, pagination, and active views**
+- 👤 **Public user profiles with created and joined event activity**
+- 🧹 **Clean URL synchronization that omits fallback views, first pages, and default sorting values**
 - 🖼️ **Secure image upload system** with validation, preview, drag-and-drop, preservation, replacement, removal, cleanup, and upload protection
 - ⚛️ **Modern React frontend with protected routes, accessibility-focused** UI patterns, reusable frontend workflows, and role-aware interactions
 - 🛡️ **Centralized validation, security, error handling, and API consistency** across backend and frontend layers
@@ -79,6 +81,7 @@ Additional frontend capabilities include:
 - URL-synchronized filters, pagination, and active views
 - protected frontend routes and role-aware access guards
 - reusable filtering, listing, and query synchronization workflows
+- clean URL generation for synchronized event listings
 - upload previews and drag-and-drop interactions
 - contextual loading and empty-state behavior
 
@@ -552,8 +555,8 @@ npm run test:run
 ### 📊 Results
 
 - Backend: 650 tests (79 test suites)
-- Frontend: 1119 tests (123 test files)
-- Total: 1769 automated tests
+- Frontend: 1182 tests (126 test files)
+- Total: 1832 automated tests
 - ✅ Backend and frontend testing architectures fully integrated
 - ✅ High automated coverage across backend and frontend layers
 
@@ -587,6 +590,8 @@ npm run test:run
 - Hooks and reusable state management
 - Event filtering, pagination, and query synchronization
 - Event listing architecture and active views
+- Public user profile and public user event listing workflows
+- Clean URL synchronization across event listing pages
 - Upload interactions and validation behavior
 - Event image preservation, replacement, and removal behavior
 - Authenticated user event image metadata handling
@@ -687,6 +692,9 @@ These mechanisms help ensure secure data handling, predictable application behav
 ### ⚛️ Frontend
 
 - Implemented reusable event listing architecture with URL-synchronized filters, pagination, and active views
+- Added public user profiles with created and joined event listings
+- Added paginated public user event views with URL synchronization
+- Improved clean URL behavior by omitting fallback views, first pages, and default sorting values
 - Added ongoing event views, centralized event status handling, and status-aware UI behavior
 - Improved event image lifecycle handling and authenticated user event image support
 - Added selective create/edit datetime validation workflows and started-event editing protections
@@ -703,9 +711,9 @@ These mechanisms help ensure secure data handling, predictable application behav
 
 ### 🧪 Testing
 
-- Reached 1769 automated tests across backend and frontend
+- Reached 1832 automated tests across backend and frontend
 - Expanded coverage across filtering, pagination, permissions, uploads, validation, synchronization, routing, and business rules
-- Added coverage for public user profiles and public user event listings
+- Added coverage for public user profiles, public user event listings, and clean URL synchronization
 - Added coverage for event status workflows, image lifecycle handling, and started-event restrictions
 - Improved reusable factories, mocks, helpers, and render utilities
 - Maintained high automated coverage across both backend and frontend layers
@@ -724,7 +732,7 @@ These mechanisms help ensure secure data handling, predictable application behav
 | Backend API | ✅ Stable and well-tested |
 | Frontend Application | ✅ Standardized, role-aware, and accessibility-focused |
 | Backend Testing & CI | ✅ 650 tests across 79 test suites |
-| Frontend Testing & CI | ✅ 1119 tests across 123 test files |
+| Frontend Testing & CI | ✅ 1182 tests across 126 test files |
 | Documentation | ✅ Backend and frontend documentation available |
 | UX Improvements | 🚧 Ongoing |
 

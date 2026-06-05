@@ -13,9 +13,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../features/shared/constants
 
    Handles:
    - event field rendering
-   - image upload interactions
-   - image preview rendering
-   - accessible image upload controls
+   - shared image upload field rendering
    - conditional fields
    - started event field restrictions
    - submit and cancel actions
@@ -24,16 +22,11 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../features/shared/constants
    - accessible invalid field states
 ================================================== */
 
-
 describe("EventForm", () => {
 
     /* =============================
        TEST DATA
     ============================= */
-
-    const validImage = new File(["event image"], "event.png", {
-        type: "image/png"
-    });
 
     const defaultProps = {
         values: createDefaultEventFormValues(),
@@ -76,9 +69,6 @@ describe("EventForm", () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-
-        globalThis.URL.createObjectURL = vi.fn(() => "blob:event-preview");
-        globalThis.URL.revokeObjectURL = vi.fn();
     });
 
     /* =============================
@@ -134,105 +124,12 @@ describe("EventForm", () => {
        IMAGE UPLOAD
     ============================= */
 
-    it("renders event image upload controls", () => {
+    it("renders shared event image upload field", () => {
         renderComponent();
 
         expect(screen.getByText(/drag & drop an image here/i)).toBeInTheDocument();
-        expect(screen.getByText(/max 3mb.*jpg.*png.*webp.*gif/i)).toBeInTheDocument();
-        expect(screen.getByText(/choose file/i)).toBeInTheDocument();
 
-        expect(screen.getByLabelText(/choose file/i)).toHaveAttribute(
-            "accept",
-            "image/jpeg,image/png,image/webp,image/gif"
-        );
-    });
-
-    it("calls onImageChange when selecting an event image", () => {
-        renderComponent();
-
-        fireEvent.change(screen.getByLabelText(/choose file/i), {
-            target: {
-                files: [validImage]
-            }
-        });
-
-        expect(defaultProps.onImageChange).toHaveBeenCalledTimes(1);
-    });
-
-    it("calls onImageChange when dropping an event image", () => {
-        renderComponent();
-
-        fireEvent.drop(
-            screen.getByText(/drag & drop an image here/i).closest(".event-form-upload"),
-            {
-                dataTransfer: {
-                    files: [validImage]
-                }
-            }
-        );
-
-        expect(defaultProps.onImageChange).toHaveBeenCalledTimes(1);
-    });
-
-    it("applies drag active class while dragging over upload area", () => {
-        renderComponent();
-
-        const uploadPanel = screen
-            .getByText(/drag & drop an image here/i)
-            .closest(".event-form-upload");
-
-        fireEvent.dragEnter(uploadPanel);
-
-        expect(uploadPanel).toHaveClass("drag-active");
-
-        fireEvent.dragLeave(uploadPanel);
-
-        expect(uploadPanel).not.toHaveClass("drag-active");
-    });
-
-    /* =============================
-       IMAGE PREVIEW
-    ============================= */
-
-    it("shows selected event image preview card", () => {
-        renderComponent({
-            values: {
-                image: validImage
-            }
-        });
-
-        expect(URL.createObjectURL).toHaveBeenCalledWith(validImage);
-
-        expect(screen.getByAltText("Event preview")).toHaveAttribute("src", "blob:event-preview");
-
-        expect(screen.getByText("event.png")).toBeInTheDocument();
-        expect(screen.getByText(/kb/i)).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /remove/i })).toBeInTheDocument();
-    });
-
-    it("shows current event image preview when editing existing image", () => {
-        renderComponent({
-            values: {
-                currentImage: "/uploads/events/event-current.png"
-            }
-        });
-
-        expect(screen.getByAltText("Event preview")).toBeInTheDocument();
-        expect(screen.getByText(/existing image/i)).toBeInTheDocument();
-        expect(screen.getByText(/uploaded previously/i)).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /remove/i })).toBeInTheDocument();
-    });
-
-    it("calls onRemoveImage when clicking remove", () => {
-        renderComponent({
-            values: {
-                image: validImage
-            }
-        });
-
-        fireEvent.click(screen.getByRole("button", { name: /remove/i }));
-
-        expect(defaultProps.onRemoveImage).toHaveBeenCalledTimes(1);
+        expect(screen.getByLabelText(/event image upload area/i)).toBeInTheDocument();
     });
 
     /* =============================

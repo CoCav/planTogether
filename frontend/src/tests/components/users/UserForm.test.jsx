@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import UserForm from "../../../components/users/UserForm";
@@ -9,11 +9,9 @@ import UserForm from "../../../components/users/UserForm";
    Tests shared user form rendering and interactions
 
    Handles:
-   - avatar upload rendering
+   - shared avatar upload field rendering
    - user field rendering
    - accessible field descriptions
-   - avatar file selection
-   - avatar removal
    - optional avatar visibility
    - custom form content rendering
    - form footer rendering
@@ -77,22 +75,6 @@ describe("UserForm", () => {
         expect(screen.getByLabelText("Email")).toBeInTheDocument();
     });
 
-    it("renders avatar upload by default", () => {
-        renderUserForm();
-
-        expect(screen.getByText("Drag & drop an avatar here")).toBeInTheDocument();
-        expect(screen.getByLabelText("Avatar (optional)")).toBeInTheDocument();
-    });
-
-    it("hides avatar upload when showAvatar is false", () => {
-        renderUserForm({
-            showAvatar: false
-        });
-
-        expect(screen.queryByText("Drag & drop an avatar here")).not.toBeInTheDocument();
-        expect(screen.queryByLabelText("Avatar (optional)")).not.toBeInTheDocument();
-    });
-
     it("renders custom children inside the form grid", () => {
         renderUserForm({
             children: <div data-testid="custom-field">Custom field</div>
@@ -140,103 +122,23 @@ describe("UserForm", () => {
     });
 
     /* =============================
-       AVATAR INTERACTIONS
+       AVATAR UPLOAD
     ============================= */
 
-    it("calls onAvatarChange when selecting an avatar file", async () => {
-        const user = userEvent.setup();
-        const onAvatarChange = vi.fn();
-
-        const file = new File(["avatar"], "avatar.png", {
-            type: "image/png"
-        });
-
-        renderUserForm({
-            onAvatarChange
-        });
-
-        await user.upload(screen.getByLabelText("Avatar (optional)"), file);
-
-        expect(onAvatarChange).toHaveBeenCalled();
-    });
-
-    it("applies drag active class while dragging over avatar upload", () => {
+    it("renders shared avatar upload field", () => {
         renderUserForm();
 
-        const uploadArea = screen.getByLabelText("Avatar upload area");
-
-        fireEvent.dragEnter(uploadArea);
-
-        expect(uploadArea).toHaveClass("drag-active");
-
-        fireEvent.dragLeave(uploadArea);
-
-        expect(uploadArea).not.toHaveClass("drag-active");
+        expect(screen.getByText("Drag & drop an avatar here")).toBeInTheDocument();
+        expect(screen.getByLabelText("Avatar upload area")).toBeInTheDocument();
     });
 
-    it("calls onAvatarChange when dropping an avatar file", () => {
-        const onAvatarChange = vi.fn();
-
-        const file = new File(["avatar"], "avatar.png", {
-            type: "image/png"
-        });
-
+    it("hides avatar upload when showAvatar is false", () => {
         renderUserForm({
-            onAvatarChange
+            showAvatar: false
         });
 
-        fireEvent.drop(screen.getByLabelText("Avatar upload area"), {
-            dataTransfer: {
-                files: [file]
-            }
-        });
-
-        expect(onAvatarChange).toHaveBeenCalled();
-    });
-
-    it("displays selected avatar preview", () => {
-        const avatar = new File(["avatar"], "avatar.png", {
-            type: "image/png"
-        });
-
-        renderUserForm({
-            values: {
-                avatar
-            }
-        });
-
-        expect(screen.getByAltText("Avatar preview")).toBeInTheDocument();
-        expect(screen.getByText("avatar.png")).toBeInTheDocument();
-    });
-
-    it("displays existing avatar preview", () => {
-        renderUserForm({
-            values: {
-                currentAvatar: "/uploads/users/avatar.png"
-            }
-        });
-
-        expect(screen.getByAltText("Avatar preview")).toBeInTheDocument();
-        expect(screen.getByText("Existing avatar")).toBeInTheDocument();
-        expect(screen.getByText("Uploaded previously")).toBeInTheDocument();
-    });
-
-    it("calls onRemoveAvatar when removing an avatar", async () => {
-        const user = userEvent.setup();
-        const onRemoveAvatar = vi.fn();
-
-        renderUserForm({
-            values: {
-                currentAvatar: "/uploads/users/avatar.png"
-            },
-            onRemoveAvatar
-        });
-
-        await user.click(screen.getByRole("button", {
-            name: "Remove avatar"
-        }));
-
-        expect(onRemoveAvatar).toHaveBeenCalledTimes(1);
+        expect(screen.queryByText("Drag & drop an avatar here")).not.toBeInTheDocument();
+        expect(screen.queryByLabelText("Avatar upload area")).not.toBeInTheDocument();
     });
 
     /* =============================

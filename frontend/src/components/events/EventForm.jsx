@@ -1,4 +1,4 @@
-import useFileUploadPreview from "../../hooks/useFileUploadPreview";
+import FileUploadPreviewField from "../forms/FileUploadPreviewField";
 
 import { getEventImage } from "../../utils/uploadedFiles";
 
@@ -14,9 +14,7 @@ import TextArea from "../ui/TextArea";
 
    Handles:
    - event field rendering
-   - event image upload and preview
-   - drag and drop interactions
-   - accessible image upload interactions
+   - event image upload rendering
    - accessible form field descriptions
    - accessible invalid field states
    - validation error display
@@ -48,30 +46,6 @@ export default function EventForm({
     onCancel
 }) {
 
-    /* =============================
-       FILE UPLOAD STATE
-    ============================= */
-
-    const {
-        isDragging,
-        setIsDragging,
-        preview,
-        hasFile: hasImage,
-        handleDrop
-    } = useFileUploadPreview({
-        file: values.image,
-        currentFile: values.currentImage,
-        fieldName: "image",
-        allowedPreviewTypes: [
-            "image/jpeg",
-            "image/png",
-            "image/webp",
-            "image/gif"
-        ],
-        getCurrentFileUrl: getEventImage,
-        onFileChange: onImageChange
-    });
-
     return (
         <form onSubmit={onSubmit} className="form-layout">
 
@@ -80,99 +54,36 @@ export default function EventForm({
             ============================= */}
 
             <div className="event-form-image">
-                <FormField label="Event image (optional)" htmlFor="event-image" error={fieldErrors.image}>
-                    {(errorId) => (
-                        <div
-                            className={`event-form-upload ${isDragging ? "drag-active" : ""}`}
-                            aria-label="Event image upload area"
+                <FileUploadPreviewField
+                    label="Event image (optional)"
+                    inputId="event-image"
+                    fieldName="image"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
 
-                            onDragEnter={(event) => {
-                                event.preventDefault();
-                                setIsDragging(true);
-                            }}
-                            onDragOver={(event) => {
-                                event.preventDefault();
-                                setIsDragging(true);
-                            }}
-                            onDragLeave={(event) => {
-                                event.preventDefault();
-                                setIsDragging(false);
-                            }}
-                            onDrop={handleDrop}
-                        >
-                            <div className="event-form-upload-header">
-                                <div className="event-form-upload-text">
-                                    <span className="event-form-upload-title">
-                                        Drag & drop an image here
-                                    </span>
+                    file={values.image}
+                    currentFile={values.currentImage}
+                    error={fieldErrors.image}
 
-                                    <span className="event-form-upload-hint">
-                                        Max 3MB • JPG, PNG, WEBP or GIF
-                                    </span>
-                                </div>
+                    uploadAreaLabel="Event image upload area"
+                    title="Drag & drop an image here"
+                    hint="Max 3MB • JPG, PNG, WEBP or GIF"
 
-                                <label className="btn btn-outline">
-                                    Choose file
+                    previewAlt="Event preview"
+                    existingFileLabel="Existing image"
+                    removeLabel="Remove event image"
 
-                                    <input
-                                        id="event-image"
-                                        type="file"
-                                        name="image"
-                                        accept="image/jpeg,image/png,image/webp,image/gif"
-                                        onChange={onImageChange}
-                                        className="event-form-upload-input"
-                                        aria-describedby={errorId}
-                                    />
-                                </label>
-                            </div>
+                    allowedPreviewTypes={[
+                        "image/jpeg",
+                        "image/png",
+                        "image/webp",
+                        "image/gif"
+                    ]}
+                    getCurrentFileUrl={getEventImage}
 
-                            {preview && (
-                                <div className="event-form-preview">
-                                    <img
-                                        src={preview}
-                                        alt="Event preview"
-                                        className="event-form-preview-image"
-                                    />
+                    onFileChange={onImageChange}
+                    onRemoveFile={onRemoveImage}
+                />
 
-                                    <div className="event-form-preview-info">
-                                        {values.image ? (
-                                            <>
-                                                <span className="event-form-preview-name">
-                                                    {values.image.name}
-                                                </span>
-
-                                                <span className="event-form-preview-size">
-                                                    {(values.image.size / 1024).toFixed(1)} KB
-                                                </span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <span className="event-form-preview-name">
-                                                    Existing image
-                                                </span>
-
-                                                <span className="event-form-preview-size">
-                                                    Uploaded previously
-                                                </span>
-                                            </>
-                                        )}
-                                    </div>
-
-                                    {hasImage && (
-                                        <button
-                                            type="button"
-                                            className="btn btn-outline-danger event-form-preview-remove"
-                                            onClick={onRemoveImage}
-                                            aria-label="Remove event image"
-                                        >
-                                            Remove
-                                        </button>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </FormField>
             </div>
 
             {/* =============================

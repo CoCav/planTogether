@@ -25,7 +25,6 @@ import "./styles/components/events/event-card-actions.css";
 import "./styles/components/events/event-card.css";
 import "./styles/components/events/event-details-actions.css";
 import "./styles/components/events/event-details-summary.css";
-import "./styles/components/events/event-form.css";
 import "./styles/components/events/event-view-tabs.css";
 import "./styles/components/events/events-filter-card.css";
 import "./styles/components/events/events-toolbar.css";
@@ -34,7 +33,8 @@ import "./styles/components/users/delete-account-section.css";
 import "./styles/components/users/password-field.css";
 import "./styles/components/users/password-requirements.css";
 import "./styles/components/users/user-avatar.css";
-import "./styles/components/users/user-form.css";
+
+import "./styles/components/forms/file-upload-preview-field..css";
 
 import "./styles/components/layout/footer.css";
 import "./styles/components/layout/navbar.css";

@@ -1,25 +1,26 @@
 /* ==================================================
-   USER FORM
-   Shared user form layout for register and profile flows
+   FILE UPLOAD PREVIEW FIELD
+   Shared form upload field with drag and drop preview
 
    Used by:
-   - RegisterPage
-   - MyProfilePage
+   - UserForm
+   - EventForm
 ================================================== */
 
 /* =========================================
-   AVATAR
+   FIELD
 ========================================= */
 
-.user-form-avatar {
+.file-upload-preview-field {
     max-width: 100%;
+    margin-bottom: var(--space-5);
 }
 
 /* =========================================
-   UPLOAD
+   DROPZONE
 ========================================= */
 
-.user-form-upload {
+.file-upload-preview-dropzone {
     padding: var(--space-4);
 
     background: var(--color-surface);
@@ -32,16 +33,20 @@
         background-color var(--transition-fast);
 }
 
-.user-form-upload:hover {
+.file-upload-preview-dropzone:hover {
     border-color: var(--color-primary);
 }
 
-.user-form-upload.drag-active {
+.file-upload-preview-dropzone.drag-active {
     border-color: var(--color-primary);
     background: var(--color-primary-subtle);
 }
 
-.user-form-upload-header {
+/* =========================================
+   HEADER
+========================================= */
+
+.file-upload-preview-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -50,23 +55,23 @@
     margin-bottom: var(--space-3);
 }
 
-.user-form-upload-text {
+.file-upload-preview-text {
     display: flex;
     flex-direction: column;
 }
 
-.user-form-upload-title {
+.file-upload-preview-title {
     font-size: var(--font-size-sm);
     font-weight: 600;
 }
 
-.user-form-upload-hint,
-.user-form-preview-size {
+.file-upload-preview-hint,
+.file-upload-preview-size {
     color: var(--color-text-muted);
     font-size: var(--font-size-xs);
 }
 
-.user-form-upload-input {
+.file-upload-preview-input {
     display: none;
 }
 
@@ -74,9 +79,9 @@
    PREVIEW
 ========================================= */
 
-.user-form-preview {
+.file-upload-preview {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--space-3);
 
     padding-top: var(--space-3);
@@ -84,16 +89,16 @@
     border-top: 1px solid var(--color-border);
 }
 
-.user-form-preview-image {
-    width: 56px;
-    height: 56px;
+.file-upload-preview-image {
+    width: 120px;
+    height: 80px;
 
-    border-radius: 50%;
+    border-radius: var(--radius-md);
 
     object-fit: cover;
 }
 
-.user-form-preview-info {
+.file-upload-preview-info {
     display: flex;
     flex: 1;
     flex-direction: column;
@@ -102,13 +107,24 @@
     min-width: 0;
 }
 
-.user-form-preview-name {
+.file-upload-preview-name {
     font-size: var(--font-size-sm);
     font-weight: 600;
 }
 
-.user-form-preview-remove {
+.file-upload-preview-remove {
     flex-shrink: 0;
+}
+
+/* =========================================
+   AVATAR VARIANT
+========================================= */
+
+.file-upload-preview-field:has(#user-avatar) .file-upload-preview-image {
+    width: 56px;
+    height: 56px;
+
+    border-radius: 50%;
 }
 
 /* =========================================
@@ -116,10 +132,15 @@
 ========================================= */
 
 @media (max-width: 768px) {
-
-    .user-form-upload-header,
-    .user-form-preview {
+    .file-upload-preview-header,
+    .file-upload-preview {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .file-upload-preview-field:has(#event-image) .file-upload-preview-image {
+        width: 100%;
+        height: auto;
+        max-height: 220px;
     }
 }

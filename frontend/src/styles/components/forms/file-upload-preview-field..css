@@ -117,10 +117,10 @@
 }
 
 /* =========================================
-   AVATAR VARIANT
+   VARIANTS
 ========================================= */
 
-.file-upload-preview-field:has(#user-avatar) .file-upload-preview-image {
+.file-upload-preview-field.avatar .file-upload-preview-image {
     width: 56px;
     height: 56px;
 
@@ -138,7 +138,7 @@
         align-items: flex-start;
     }
 
-    .file-upload-preview-field:has(#event-image) .file-upload-preview-image {
+    .file-upload-preview-field.event .file-upload-preview-image {
         width: 100%;
         height: auto;
         max-height: 220px;

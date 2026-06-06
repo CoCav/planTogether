@@ -47,6 +47,8 @@ export default function UserForm({
         <form onSubmit={onSubmit} className="form-layout">
             {showAvatar && (
                 <FileUploadPreviewField
+                    variant="avatar"
+
                     label="Avatar (optional)"
                     inputId="user-avatar"
                     fieldName="avatar"

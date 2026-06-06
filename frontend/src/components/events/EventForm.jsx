@@ -55,6 +55,8 @@ export default function EventForm({
 
             <div className="event-form-image">
                 <FileUploadPreviewField
+                    variant="event"
+
                     label="Event image (optional)"
                     inputId="event-image"
                     fieldName="image"
@@ -83,7 +85,6 @@ export default function EventForm({
                     onFileChange={onImageChange}
                     onRemoveFile={onRemoveImage}
                 />
-
             </div>
 
             {/* =============================

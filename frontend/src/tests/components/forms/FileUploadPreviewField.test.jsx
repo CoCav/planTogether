@@ -10,6 +10,7 @@ import FileUploadPreviewField from "../../../components/forms/FileUploadPreviewF
 
    Handles:
    - file input rendering
+   - upload variant class rendering
    - selected file preview display
    - existing file preview display
    - drag and drop interactions
@@ -90,6 +91,24 @@ describe("FileUploadPreviewField", () => {
             "accept",
             "image/jpeg,image/png,image/webp,image/gif"
         );
+    });
+
+    it("renders default variant class when no variant is provided", () => {
+        renderComponent();
+
+        expect(
+            screen.getByLabelText("Image upload area").closest(".file-upload-preview-field")
+        ).toHaveClass("file-upload-preview-field", "default");
+    });
+
+    it("renders custom variant class when provided", () => {
+        renderComponent({
+            variant: "event"
+        });
+
+        expect(
+            screen.getByLabelText("Image upload area").closest(".file-upload-preview-field")
+        ).toHaveClass("file-upload-preview-field", "event");
     });
 
     /* =============================

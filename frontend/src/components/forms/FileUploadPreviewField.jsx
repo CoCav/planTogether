@@ -20,6 +20,8 @@ import FormField from "../ui/FormField";
 ================================================== */
 
 export default function FileUploadPreviewField({
+    variant = "default",
+
     label,
     inputId,
     fieldName,
@@ -75,7 +77,7 @@ export default function FileUploadPreviewField({
     ============================= */
 
     return (
-        <div className="file-upload-preview-field">
+        <div className={`file-upload-preview-field ${variant}`.trim()}>
             <FormField label={label} htmlFor={inputId} error={error}>
                 {(errorId) => (
                     <div

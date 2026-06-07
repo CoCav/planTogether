@@ -1,3 +1,5 @@
+import { UploadCloud } from "lucide-react";
+
 import useFileUploadPreview from "../../hooks/useFileUploadPreview";
 
 import FormField from "../ui/FormField";
@@ -13,6 +15,7 @@ import FormField from "../ui/FormField";
    - drag and drop interactions
    - file removal action
    - accessible helper and error descriptions
+   - decorative upload icon rendering
 
    Notes:
    - reusable for avatar and event image uploads
@@ -80,54 +83,57 @@ export default function FileUploadPreviewField({
         <div className={`file-upload-preview-field ${variant}`.trim()}>
             <FormField label={label} htmlFor={inputId} error={error}>
                 {(errorId) => (
-                    <div
-                        className={`file-upload-preview-dropzone ${isDragging ? "drag-active" : ""}`.trim()}
-                        aria-label={uploadAreaLabel}
+                    <>
+                        <div
+                            className={`file-upload-preview-dropzone ${isDragging ? "drag-active" : ""}`.trim()}
+                            aria-label={uploadAreaLabel}
+                            onDragEnter={(event) => {
+                                event.preventDefault();
+                                setIsDragging(true);
+                            }}
+                            onDragOver={(event) => {
+                                event.preventDefault();
+                                setIsDragging(true);
+                            }}
+                            onDragLeave={(event) => {
+                                event.preventDefault();
+                                setIsDragging(false);
+                            }}
+                            onDrop={handleDrop}
+                        >
+                            <div className="file-upload-preview-header">
+                                <div className="file-upload-preview-text">
+                                    <UploadCloud
+                                        className="file-upload-preview-icon"
+                                        aria-hidden="true"
+                                    />
 
-                        onDragEnter={(event) => {
-                            event.preventDefault();
-                            setIsDragging(true);
-                        }}
+                                    <span className="file-upload-preview-title">
+                                        {title}
+                                    </span>
 
-                        onDragOver={(event) => {
-                            event.preventDefault();
-                            setIsDragging(true);
-                        }}
+                                    <span id={hintId} className="file-upload-preview-hint">
+                                        {hint}
+                                    </span>
+                                </div>
 
-                        onDragLeave={(event) => {
-                            event.preventDefault();
-                            setIsDragging(false);
-                        }}
+                                <label className="btn btn-outline">
+                                    Choose file
 
-                        onDrop={handleDrop}
-                    >
-                        <div className="file-upload-preview-header">
-                            <div className="file-upload-preview-text">
-                                <span className="file-upload-preview-title">
-                                    {title}
-                                </span>
-
-                                <span id={hintId} className="file-upload-preview-hint">
-                                    {hint}
-                                </span>
+                                    <input
+                                        id={inputId}
+                                        type="file"
+                                        name={fieldName}
+                                        accept={accept}
+                                        onChange={onFileChange}
+                                        className="file-upload-preview-input"
+                                        aria-describedby={errorId
+                                            ? `${hintId} ${errorId}`
+                                            : hintId
+                                        }
+                                    />
+                                </label>
                             </div>
-
-                            <label className="btn btn-outline">
-                                Choose file
-
-                                <input
-                                    id={inputId}
-                                    type="file"
-                                    name={fieldName}
-                                    accept={accept}
-                                    onChange={onFileChange}
-                                    className="file-upload-preview-input"
-                                    aria-describedby={errorId
-                                        ? `${hintId} ${errorId}`
-                                        : hintId
-                                    }
-                                />
-                            </label>
                         </div>
 
                         {preview && (
@@ -174,7 +180,7 @@ export default function FileUploadPreviewField({
                                 )}
                             </div>
                         )}
-                    </div>
+                    </>
                 )}
             </FormField>
         </div>

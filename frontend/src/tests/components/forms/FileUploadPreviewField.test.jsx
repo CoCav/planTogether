@@ -10,6 +10,7 @@ import FileUploadPreviewField from "../../../components/forms/FileUploadPreviewF
 
    Handles:
    - file input rendering
+   - decorative upload icon rendering
    - upload variant class rendering
    - selected file preview display
    - existing file preview display
@@ -152,6 +153,27 @@ describe("FileUploadPreviewField", () => {
         expect(screen.getByAltText("Image preview")).toHaveAttribute("src", "/uploads/existing.png");
         expect(screen.getByText("Existing image")).toBeInTheDocument();
         expect(screen.getByText("Uploaded previously")).toBeInTheDocument();
+    });
+
+    it("renders preview outside the upload dropzone", () => {
+        renderComponent({
+            file: validFile
+        });
+
+        const preview = screen.getByAltText("Image preview").closest(".file-upload-preview");
+        const dropzone = screen.getByLabelText("Image upload area");
+
+        expect(preview).not.toBeNull();
+        expect(dropzone).not.toContainElement(preview);
+    });
+
+    it("renders decorative upload icon", () => {
+        renderComponent();
+
+        const uploadIcon = document.querySelector(".file-upload-preview-icon");
+
+        expect(uploadIcon).toBeInTheDocument();
+        expect(uploadIcon).toHaveAttribute("aria-hidden", "true");
     });
 
     /* =============================

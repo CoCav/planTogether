@@ -170,12 +170,10 @@
 ========================================= */
 
 @media (max-width: 768px) {
-    @media (max-width: 768px) {
-        .file-upload-preview-field.event .file-upload-preview-image {
-            width: 100%;
-            height: auto;
-            max-height: 220px;
-        }
+    .file-upload-preview-field.event .file-upload-preview-image {
+        width: 100%;
+        height: auto;
+        max-height: 220px;
     }
 }
 

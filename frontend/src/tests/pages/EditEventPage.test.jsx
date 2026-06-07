@@ -269,7 +269,7 @@ describe("EditEventPage", () => {
         expect(formData.get("registrationDeadline")).toBe("");
     });
 
-    it("updates event with selected image", async () => {
+    it("updates event with selected image after removing existing image", async () => {
         const user = userEvent.setup();
 
         const image = new File(["img"], "new-event.png", {
@@ -280,7 +280,11 @@ describe("EditEventPage", () => {
 
         await screen.findByDisplayValue("Original Event");
 
-        await user.upload(screen.getByLabelText(/choose file/i), image);
+        await user.click(screen.getByRole("button", {
+            name: /remove event image/i
+        }));
+
+        await user.upload(screen.getByLabelText("Event image (optional)"), image);
 
         await user.click(screen.getByRole("button", {
             name: /update event/i

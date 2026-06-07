@@ -9,6 +9,7 @@ import FileUploadPreviewField from "../../../components/forms/FileUploadPreviewF
    Tests reusable file upload field behavior
 
    Handles:
+   - conditional dropzone and preview rendering
    - file input rendering
    - decorative upload icon rendering
    - upload variant class rendering
@@ -112,6 +113,14 @@ describe("FileUploadPreviewField", () => {
         ).toHaveClass("file-upload-preview-field", "event");
     });
 
+    it("renders upload dropzone when no preview is available", () => {
+        renderComponent();
+
+        expect(screen.getByLabelText("Image upload area")).toBeInTheDocument();
+        expect(screen.queryByAltText("Image preview")).not.toBeInTheDocument();
+    });
+
+
     /* =============================
        FILE SELECTION
     ============================= */
@@ -133,7 +142,7 @@ describe("FileUploadPreviewField", () => {
        FILE PREVIEW
     ============================= */
 
-    it("shows selected file preview", () => {
+    it("renders selected file preview", () => {
         renderComponent({
             file: validFile
         });
@@ -144,7 +153,7 @@ describe("FileUploadPreviewField", () => {
         expect(screen.getByText(/kb/i)).toBeInTheDocument();
     });
 
-    it("shows existing file preview", () => {
+    it("renders existing file preview", () => {
         renderComponent({
             currentFile: "existing.png"
         });
@@ -155,16 +164,22 @@ describe("FileUploadPreviewField", () => {
         expect(screen.getByText("Uploaded previously")).toBeInTheDocument();
     });
 
-    it("renders preview outside the upload dropzone", () => {
+    it("hides upload dropzone when selected file preview is available", () => {
         renderComponent({
             file: validFile
         });
 
-        const preview = screen.getByAltText("Image preview").closest(".file-upload-preview");
-        const dropzone = screen.getByLabelText("Image upload area");
+        expect(screen.getByAltText("Image preview")).toBeInTheDocument();
+        expect(screen.queryByLabelText("Image upload area")).not.toBeInTheDocument();
+    });
 
-        expect(preview).not.toBeNull();
-        expect(dropzone).not.toContainElement(preview);
+    it("hides upload dropzone when existing file preview is available", () => {
+        renderComponent({
+            currentFile: "existing.png"
+        });
+
+        expect(screen.getByAltText("Image preview")).toBeInTheDocument();
+        expect(screen.queryByLabelText("Image upload area")).not.toBeInTheDocument();
     });
 
     it("renders decorative upload icon", () => {

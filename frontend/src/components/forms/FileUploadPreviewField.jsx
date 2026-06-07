@@ -9,9 +9,10 @@ import FormField from "../ui/FormField";
    Reusable file upload field with preview support
 
    Handles:
-   - file input rendering
+   - file input rendering when no preview is available
    - selected file preview display
    - existing file preview resolution
+   - conditional dropzone / preview rendering
    - drag and drop interactions
    - file removal action
    - accessible helper and error descriptions
@@ -84,57 +85,66 @@ export default function FileUploadPreviewField({
             <FormField label={label} htmlFor={inputId} error={error}>
                 {(errorId) => (
                     <>
-                        <div
-                            className={`file-upload-preview-dropzone ${isDragging ? "drag-active" : ""}`.trim()}
-                            aria-label={uploadAreaLabel}
-                            onDragEnter={(event) => {
-                                event.preventDefault();
-                                setIsDragging(true);
-                            }}
-                            onDragOver={(event) => {
-                                event.preventDefault();
-                                setIsDragging(true);
-                            }}
-                            onDragLeave={(event) => {
-                                event.preventDefault();
-                                setIsDragging(false);
-                            }}
-                            onDrop={handleDrop}
-                        >
-                            <div className="file-upload-preview-header">
-                                <div className="file-upload-preview-text">
-                                    <UploadCloud
-                                        className="file-upload-preview-icon"
-                                        aria-hidden="true"
-                                    />
+                        {!preview && (
+                            <div
+                                className={`file-upload-preview-dropzone ${isDragging ? "drag-active" : ""}`.trim()}
+                                aria-label={uploadAreaLabel}
 
-                                    <span className="file-upload-preview-title">
-                                        {title}
-                                    </span>
+                                onDragEnter={(event) => {
+                                    event.preventDefault();
+                                    setIsDragging(true);
+                                }}
 
-                                    <span id={hintId} className="file-upload-preview-hint">
-                                        {hint}
-                                    </span>
+                                onDragOver={(event) => {
+                                    event.preventDefault();
+                                    setIsDragging(true);
+                                }}
+
+                                onDragLeave={(event) => {
+                                    event.preventDefault();
+                                    setIsDragging(false);
+                                }}
+
+                                onDrop={handleDrop}
+                            >
+                                <div className="file-upload-preview-header">
+                                    <div className="file-upload-preview-text">
+                                        <UploadCloud
+                                            className="file-upload-preview-icon"
+                                            aria-hidden="true"
+                                        />
+
+                                        <span className="file-upload-preview-title">
+                                            {title}
+                                        </span>
+
+                                        <span
+                                            id={hintId}
+                                            className="file-upload-preview-hint"
+                                        >
+                                            {hint}
+                                        </span>
+                                    </div>
+
+                                    <label className="btn btn-outline">
+                                        Choose file
+
+                                        <input
+                                            id={inputId}
+                                            type="file"
+                                            name={fieldName}
+                                            accept={accept}
+                                            onChange={onFileChange}
+                                            className="file-upload-preview-input"
+                                            aria-describedby={errorId
+                                                ? `${hintId} ${errorId}`
+                                                : hintId
+                                            }
+                                        />
+                                    </label>
                                 </div>
-
-                                <label className="btn btn-outline">
-                                    Choose file
-
-                                    <input
-                                        id={inputId}
-                                        type="file"
-                                        name={fieldName}
-                                        accept={accept}
-                                        onChange={onFileChange}
-                                        className="file-upload-preview-input"
-                                        aria-describedby={errorId
-                                            ? `${hintId} ${errorId}`
-                                            : hintId
-                                        }
-                                    />
-                                </label>
                             </div>
-                        </div>
+                        )}
 
                         {preview && (
                             <div className="file-upload-preview">

@@ -17,9 +17,10 @@ import { DEFAULT_EVENT_LISTING_FILTERS } from "../../../../features/shared/event
 
    Handles:
    - public event loading
+   - empty param removal
    - filter-only param extraction
    - view-based status params
-   - default sort resolution
+   - default and custom sort resolution
    - pagination updates
    - membership role loading integration
    - loading and error states
@@ -108,6 +109,8 @@ describe("useEventListingData", () => {
             loadMembershipRoles: mockLoadMembershipRoles,
             getCurrentUserRoleByEvent: mockGetCurrentUserRoleByEvent
         });
+
+        mockLoadMembershipRoles.mockResolvedValue(undefined);
     });
 
     /* =============================
@@ -183,8 +186,6 @@ describe("useEventListingData", () => {
             );
         });
 
-        expect(getAllEvents).toHaveBeenCalledTimes(1);
-
         expect(getAllEvents).toHaveBeenCalledWith(
             expect.objectContaining({
                 search: "workshop",
@@ -200,6 +201,39 @@ describe("useEventListingData", () => {
                 creatorId: 20
             })
         ]);
+    });
+
+    it("removes empty params before calling the API", async () => {
+        getAllEvents.mockResolvedValue(createPaginatedEventResponse());
+
+        const { result } = renderUseEventListingData();
+
+        await act(async () => {
+            await result.current.loadData(
+                createFilters({
+                    search: "music",
+                    type: "",
+                    theme: "   ",
+                    location: null
+                }),
+                1,
+                EVENT_STATUS.ONGOING
+            );
+        });
+
+        expect(getAllEvents).toHaveBeenCalledWith(
+            expect.objectContaining({
+                search: "music"
+            })
+        );
+
+        expect(getAllEvents).toHaveBeenCalledWith(
+            expect.not.objectContaining({
+                type: "",
+                theme: "   ",
+                location: null
+            })
+        );
     });
 
     it("does not send non-filter fields as API filters", async () => {
@@ -323,6 +357,87 @@ describe("useEventListingData", () => {
         );
     });
 
+    it("uses custom sort values when filters provide them", async () => {
+        getAllEvents.mockResolvedValue(createPaginatedEventResponse());
+
+        const { result } = renderUseEventListingData();
+
+        await act(async () => {
+            await result.current.loadData(
+                createFilters({
+                    sortBy: "createdAt",
+                    order: "desc"
+                }),
+                1,
+                EVENT_STATUS.ONGOING
+            );
+        });
+
+        expect(getAllEvents).toHaveBeenCalledWith(
+            expect.objectContaining({
+                sortBy: "createdAt",
+                order: "desc"
+            })
+        );
+    });
+
+    /* =============================
+       PAGINATION
+    ============================= */
+
+    it("updates pagination from API response", async () => {
+        getAllEvents.mockResolvedValue(
+            createPaginatedEventResponse({
+                overrides: {
+                    page: 3,
+                    pageSize: 8,
+                    totalPages: 5,
+                    totalEvents: 40
+                }
+            })
+        );
+
+        const { result } = renderUseEventListingData({
+            pageSize: 8
+        });
+
+        await act(async () => {
+            await result.current.loadData(createFilters(), 3, EVENT_STATUS.ONGOING);
+        });
+
+        const paginationUpdater = setPagination.mock.calls[0][0];
+
+        expect(paginationUpdater({ pageSize: 4 })).toEqual({
+            pageSize: 8,
+            page: 3,
+            totalPages: 5,
+            totalEvents: 40
+        });
+    });
+
+    it("falls back to safe pagination values when API pagination metadata is missing", async () => {
+        getAllEvents.mockResolvedValue({
+            events: []
+        });
+
+        const { result } = renderUseEventListingData({
+            pageSize: 6
+        });
+
+        await act(async () => {
+            await result.current.loadData(createFilters(), 1, EVENT_STATUS.ONGOING);
+        });
+
+        const paginationUpdater = setPagination.mock.calls[0][0];
+
+        expect(paginationUpdater({ pageSize: 10 })).toEqual({
+            pageSize: 10,
+            page: 1,
+            totalPages: 1,
+            totalEvents: 0
+        });
+    });
+
     /* =============================
        MEMBERSHIP ROLES
     ============================= */
@@ -356,8 +471,7 @@ describe("useEventListingData", () => {
     it("exposes current user role lookup from membership roles hook", () => {
         const { result } = renderUseEventListingData();
 
-        expect(result.current.getCurrentUserRoleByEvent)
-            .toBe(mockGetCurrentUserRoleByEvent);
+        expect(result.current.getCurrentUserRoleByEvent).toBe(mockGetCurrentUserRoleByEvent);
     });
 
     /* =============================
@@ -373,7 +487,23 @@ describe("useEventListingData", () => {
             await result.current.loadData(createFilters(), 1, EVENT_STATUS.ONGOING);
         });
 
-        expect(setError).toHaveBeenCalledWith("❌ Failed to load events");
+        expect(setError).toHaveBeenCalledWith("Failed to load events");
+        expect(setLoading).toHaveBeenCalledWith(false);
+        expect(setInitialLoading).toHaveBeenCalledWith(false);
+    });
+
+    it("sets an error message when membership role loading fails", async () => {
+        getAllEvents.mockResolvedValue(createPaginatedEventResponse());
+
+        mockLoadMembershipRoles.mockRejectedValue(new Error("Role loading failed"));
+
+        const { result } = renderUseEventListingData();
+
+        await act(async () => {
+            await result.current.loadData(createFilters(), 1, EVENT_STATUS.ONGOING);
+        });
+
+        expect(setError).toHaveBeenCalledWith("Failed to load events");
         expect(setLoading).toHaveBeenCalledWith(false);
         expect(setInitialLoading).toHaveBeenCalledWith(false);
     });

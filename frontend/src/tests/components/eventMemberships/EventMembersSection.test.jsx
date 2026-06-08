@@ -13,7 +13,6 @@ import { createOrganizerMember, createParticipantMember } from "../../factories/
    Handles:
    - section heading
    - optional subtitle
-   - contextual header message
    - empty member state
    - member rows
    - public profile navigation
@@ -50,7 +49,6 @@ describe("EventMembersSection", () => {
         members,
         emptyMessage: "No participants yet.",
         showActions: true,
-        headerMessage: null,
         renderActions
     };
 
@@ -112,21 +110,6 @@ describe("EventMembersSection", () => {
     });
 
     /* =============================
-       HEADER MESSAGE
-    ============================= */
-
-    it("should render contextual header message", () => {
-        renderEventMembersSection({
-            headerMessage:
-                "🔐 Login to join this event and interact with participants."
-        });
-
-        expect(screen.getByText(
-            "🔐 Login to join this event and interact with participants."
-        )).toBeInTheDocument();
-    });
-
-    /* =============================
        EMPTY STATE
     ============================= */
 
@@ -157,8 +140,8 @@ describe("EventMembersSection", () => {
         expect(screen.getByText("Alice")).toBeInTheDocument();
         expect(screen.getByText("Bob")).toBeInTheDocument();
 
-        expect(screen.getByText(/organizer/i)).toBeInTheDocument();
-        expect(screen.getByText(/👤 participant/i)).toBeInTheDocument();
+        expect(screen.getByText("Organizer")).toBeInTheDocument();
+        expect(screen.getByText("Participant")).toBeInTheDocument();
     });
 
     it("should render members as an accessible list", () => {

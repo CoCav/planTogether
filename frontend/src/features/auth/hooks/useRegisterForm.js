@@ -34,13 +34,11 @@ export default function useRegisterForm({
     const [values, setValues] = useState(initialValues);
     const [fieldErrors, setFieldErrors] = useState({});
 
-
     /* =============================
        FEEDBACK STATE
     ============================= */
 
     const [error, setError] = useState("");
-
 
     /* =============================
        SUBMIT STATE
@@ -48,13 +46,11 @@ export default function useRegisterForm({
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-
     /* =============================
        PASSWORD STATE
     ============================= */
 
     const [showPassword, setShowPassword] = useState(false);
-
 
     /* =============================
        FIELD HANDLERS
@@ -74,7 +70,6 @@ export default function useRegisterForm({
             [name]: undefined
         }));
     };
-
 
     /* =============================
        AVATAR HANDLERS
@@ -108,7 +103,6 @@ export default function useRegisterForm({
         }));
     };
 
-
     /* =============================
        PASSWORD VISIBILITY
     ============================= */
@@ -116,7 +110,6 @@ export default function useRegisterForm({
     const handleTogglePassword = () => {
         setShowPassword((prev) => !prev);
     };
-
 
     /* =============================
        SUBMIT HANDLER

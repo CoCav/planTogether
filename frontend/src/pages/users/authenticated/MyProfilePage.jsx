@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Save } from "lucide-react";
 
 import { useAuth } from "../../../features/auth/hooks/useAuth";
 
@@ -25,6 +26,7 @@ import PageLoader from "../../../components/ui/PageLoader";
    - account deletion orchestration
    - feedback messages
    - accessible profile sections
+   - decorative submit icon
 ================================================== */
 
 export default function MyProfilePage() {
@@ -93,7 +95,9 @@ export default function MyProfilePage() {
 
     }, [
         message,
-        error
+        error,
+        setMessage,
+        setError
     ]);
 
     /* =============================
@@ -147,6 +151,7 @@ export default function MyProfilePage() {
                             fieldErrors={profileFormState.fieldErrors}
 
                             submitLabel="Update Profile"
+                            submitIcon={<Save aria-hidden="true" />}
                             isSubmitting={profileSubmitState.isSubmitting}
 
                             showAvatar
@@ -181,8 +186,9 @@ export default function MyProfilePage() {
                             showPasswords={passwordState.showPasswords}
 
                             onFieldChange={passwordFormActions.handleFieldChange}
-                            onSubmit={passwordFormActions.handleSubmit}
                             onTogglePassword={passwordFormActions.handleTogglePassword}
+
+                            onSubmit={passwordFormActions.handleSubmit}
                         />
                     </section>
                 </Card>

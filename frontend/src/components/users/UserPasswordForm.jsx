@@ -1,3 +1,5 @@
+import { LockKeyhole } from "lucide-react";
+
 import PasswordField from "./PasswordField";
 import PasswordRequirements from "./PasswordRequirements";
 
@@ -14,6 +16,7 @@ import Button from "../ui/Button";
    - password requirements display
    - password visibility toggles
    - password update submission
+   - decorative submit icon
 ================================================== */
 
 export default function UserPasswordForm({
@@ -101,6 +104,7 @@ export default function UserPasswordForm({
 
             <div className="form-actions">
                 <Button type="submit" loading={isSubmitting}>
+                    <LockKeyhole aria-hidden="true" />
                     {submitLabel}
                 </Button>
             </div>

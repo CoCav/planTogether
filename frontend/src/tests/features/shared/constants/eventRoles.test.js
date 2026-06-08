@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { Crown, ShieldCheck, User } from "lucide-react";
 
 import { EVENT_ROLES, VALID_EVENT_ROLES, EVENT_ROLE_UI } from "../../../../features/shared/constants/eventRoles";
 
@@ -11,6 +12,7 @@ import { EVENT_ROLES, VALID_EVENT_ROLES, EVENT_ROLE_UI } from "../../../../featu
    - valid event role allowlist
    - role UI labels
    - role badge variants
+   - role decorative icons
 ================================================== */
 
 describe("eventRoles", () => {
@@ -41,22 +43,25 @@ describe("eventRoles", () => {
 
     it("should expose organizer UI configuration", () => {
         expect(EVENT_ROLE_UI[EVENT_ROLES.ORGANIZER]).toEqual({
-            label: "👑 Organizer",
-            badgeVariant: "organizer"
+            label: "Organizer",
+            badgeVariant: "organizer",
+            icon: Crown
         });
     });
 
     it("should expose co-organizer UI configuration", () => {
         expect(EVENT_ROLE_UI[EVENT_ROLES.CO_ORGANIZER]).toEqual({
-            label: "🛡️ Co-organizer",
-            badgeVariant: "co-organizer"
+            label: "Co-organizer",
+            badgeVariant: "co-organizer",
+            icon: ShieldCheck
         });
     });
 
     it("should expose participant UI configuration", () => {
         expect(EVENT_ROLE_UI[EVENT_ROLES.PARTICIPANT]).toEqual({
-            label: "👤 Participant",
-            badgeVariant: "participant"
+            label: "Participant",
+            badgeVariant: "participant",
+            icon: User
         });
     });
 });

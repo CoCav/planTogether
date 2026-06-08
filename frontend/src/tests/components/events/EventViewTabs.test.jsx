@@ -18,7 +18,6 @@ import {
    Handles:
    - view tab rendering
    - active tab state
-   - decorative tab icons
    - mobile scroll wrapper
    - accessible tab navigation
    - view change callback
@@ -77,20 +76,10 @@ describe("EventViewTabs", () => {
         expect(screen.getByRole("tab", { name: /archives/i })).toBeInTheDocument();
     });
 
-    it("should render tab icons", () => {
-        renderEventViewTabs();
-
-        expect(screen.getByText("📋")).toBeInTheDocument();
-        expect(screen.getByText("📅")).toBeInTheDocument();
-        expect(screen.getByText("🗂️")).toBeInTheDocument();
-    });
-
     it("should hide decorative tab icons from assistive technologies", () => {
         renderEventViewTabs();
 
-        const icons = document.querySelectorAll(
-            ".event-view-tab-icon[aria-hidden='true']"
-        );
+        const icons = document.querySelectorAll(".event-view-tab-icon[aria-hidden='true']");
 
         expect(icons).toHaveLength(3);
     });

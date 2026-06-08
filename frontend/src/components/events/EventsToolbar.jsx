@@ -1,3 +1,5 @@
+import { CalendarDays, CalendarRange } from "lucide-react";
+
 import Button from "../ui/Button";
 import EventViewTabs from "./EventViewTabs";
 
@@ -11,8 +13,9 @@ import EventViewTabs from "./EventViewTabs";
    - pagination info
    - view tabs
    - quick date filters
-   - accessible live results metadata
    - quick filter button group
+   - accessible live results metadata
+   - decorative quick filter icons
 
    Notes:
    - result count is only displayed when available
@@ -82,6 +85,7 @@ export default function EventsResultsToolbar({
                             variant={filters.date ? "filter-active" : "outline-primary"}
                             onClick={onTodayFilter}
                         >
+                            <CalendarDays aria-hidden="true" />
                             Today
                         </Button>
 
@@ -90,6 +94,7 @@ export default function EventsResultsToolbar({
                             variant={isCurrentWeekendFilterActive(filters) ? "filter-active" : "outline-primary"}
                             onClick={onWeekendFilter}
                         >
+                            <CalendarRange aria-hidden="true" />
                             This Weekend
                         </Button>
                     </div>

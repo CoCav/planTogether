@@ -18,7 +18,7 @@ import { createEvent } from "../../factories/events/eventFactory";
    - date and time display
    - registration deadline display
    - optional field visibility
-   - decorative icon accessibility
+   - decorative summary icon accessibility
 
    Notes:
    - focuses on metadata rendering
@@ -77,13 +77,10 @@ describe("EventDetailsSummary", () => {
     it("should hide decorative icons from assistive technologies", () => {
         renderEventDetailsSummary();
 
-        const icons = document.querySelectorAll(
-            ".event-details-summary-label span[aria-hidden='true']"
-        );
+        const icons = document.querySelectorAll(".event-details-summary-label svg[aria-hidden='true']");
 
         expect(icons).toHaveLength(8);
     });
-
     /* =============================
        OPTIONAL FIELDS
     ============================= */

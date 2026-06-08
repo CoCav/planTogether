@@ -13,6 +13,7 @@ import DeleteAccountSection from "../../../components/users/DeleteAccountSection
    - delete account action callback
    - disabled delete state while submitting
    - accessible section semantics
+   - decorative trash icon
 ================================================== */
 
 describe("DeleteAccountSection", () => {
@@ -51,7 +52,7 @@ describe("DeleteAccountSection", () => {
         })).toBeInTheDocument();
 
         expect(screen.getByText(
-            "Permanently delete your account and remove access to your profile."
+            "Permanently delete your account and associated data."
         )).toBeInTheDocument();
     });
 
@@ -133,5 +134,13 @@ describe("DeleteAccountSection", () => {
         }));
 
         expect(onDeleteAccount).not.toHaveBeenCalled();
+    });
+
+    it("should hide decorative trash icon from assistive technologies", () => {
+        renderDeleteAccountSection();
+
+        const icon = document.querySelector(".danger-zone svg[aria-hidden='true']");
+
+        expect(icon).toBeInTheDocument();
     });
 });

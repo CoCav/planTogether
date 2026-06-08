@@ -17,6 +17,7 @@ import NavbarUserMenu from "../../../components/layout/NavbarUserMenu";
    - profile and events menu links
    - logout action
    - outside click closing
+   - decorative dropdown icon
 
    Notes:
    - uses MemoryRouter for dropdown links

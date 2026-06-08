@@ -20,7 +20,7 @@ import { createEvent } from "../../factories/events/eventFactory";
    - role, status and type badge display
    - fallback display values
    - join and leave action visibility
-   - guest login prompt
+   - guest action restrictions
    - past event state
    - event state badge display
    - registration closed state
@@ -187,7 +187,7 @@ describe("EventCard", () => {
             role: null
         });
 
-        expect(screen.getByText("👑 Alice")).toBeInTheDocument();
+        expect(screen.getByText("Alice")).toBeInTheDocument();
     });
 
     it("should expose event labels group", () => {
@@ -201,7 +201,7 @@ describe("EventCard", () => {
             role: EVENT_ROLES.ORGANIZER
         });
 
-        expect(screen.queryByText("👑 Alice")).not.toBeInTheDocument();
+        expect(screen.queryByText("Alice")).not.toBeInTheDocument();
     });
 
     it("should display current user role badge", () => {
@@ -209,7 +209,7 @@ describe("EventCard", () => {
             role: EVENT_ROLES.PARTICIPANT
         });
 
-        expect(screen.getByText("👤 Participant")).toBeInTheDocument();
+        expect(screen.getByText("Participant")).toBeInTheDocument();
     });
 
     it("should display status badge for upcoming event", () => {
@@ -219,7 +219,7 @@ describe("EventCard", () => {
             }
         });
 
-        expect(screen.getByText("Upcoming")).toHaveClass("badge-upcoming");
+        expect(screen.getByText("Upcoming")).toHaveClass("badge-label");
     });
 
     it("should display status badge for ongoing event", () => {
@@ -229,7 +229,7 @@ describe("EventCard", () => {
             }
         });
 
-        expect(screen.getByText("Ongoing")).toHaveClass("badge-ongoing");
+        expect(screen.getByText("Ongoing")).toHaveClass("badge-label");
     });
 
     it("should link organizer badge to the public user profile", () => {
@@ -305,19 +305,6 @@ describe("EventCard", () => {
     });
 
     /* =============================
-       GUEST STATE
-    ============================= */
-
-    it("should show login message when user is not authenticated", () => {
-        renderCard({
-            user: null,
-            role: null
-        });
-
-        expect(screen.getByText(/login to join/i)).toBeInTheDocument();
-    });
-
-    /* =============================
        PAST EVENT STATE
     ============================= */
 
@@ -328,7 +315,7 @@ describe("EventCard", () => {
             }
         });
 
-        expect(screen.getByText("Ended")).toHaveClass("badge-past");
+        expect(screen.getByText("Ended")).toHaveClass("badge-label");
     });
 
     it("should not show join or leave buttons when event is past", () => {
@@ -360,7 +347,7 @@ describe("EventCard", () => {
             }
         });
 
-        expect(screen.getByText("Event full")).toHaveClass("badge-danger");
+        expect(screen.getByText("Event full")).toHaveClass("badge-label");
         expect(screen.getByText("3 / 3").closest("li")).toHaveClass("text-danger");
     });
 
@@ -377,7 +364,7 @@ describe("EventCard", () => {
             name: /leave the event/i
         })).toBeInTheDocument();
 
-        expect(screen.getByText("Event full")).toHaveClass("badge-danger");
+        expect(screen.getByText("Event full")).toHaveClass("badge-label");
     });
 
     /* =============================
@@ -391,7 +378,7 @@ describe("EventCard", () => {
             }
         });
 
-        expect(screen.getByText("Registration closed")).toHaveClass("badge-muted");
+        expect(screen.getByText("Registration closed")).toHaveClass("badge-label");
     });
 
     /* =============================

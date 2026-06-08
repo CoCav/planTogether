@@ -65,6 +65,15 @@ describe("PasswordRequirements", () => {
         expect(screen.getAllByRole("listitem")).toHaveLength(4);
     });
 
+    it("hides requirement icons from assistive technologies", () => {
+        renderPasswordRequirements();
+
+        const icons = document.querySelectorAll(
+            ".password-rule-icon[aria-hidden='true']"
+        );
+
+        expect(icons).toHaveLength(4);
+    });
 
     /* =============================
        VALID STATE

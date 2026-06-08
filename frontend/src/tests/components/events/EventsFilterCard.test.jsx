@@ -23,6 +23,7 @@ import { createEventListingFilters } from "../../factories/shared/eventListingFi
    - sort changes
    - filter submission
    - filter reset
+   - decorative filter and action icons
 
    Notes:
    - uses reusable filter props

@@ -20,6 +20,7 @@ import { EVENT_ROLES } from "../../features/shared/constants/eventRoles";
    - event role forwarding
    - membership action integration
    - accessible homepage sections
+   - decorative hero and feature icons
 
    Notes:
    - mocks authenticated user state
@@ -298,10 +299,16 @@ describe("HomePage", () => {
     it("renders accessible homepage sections", () => {
         renderPage();
 
-        expect(screen.getByLabelText("Organize, join, and manage events with ease")).toHaveClass("home-hero");
+        expect(screen.getByRole("region", {
+            name: "Organize, join, and manage events with ease"
+        })).toHaveClass("home-hero");
 
-        expect(screen.getByLabelText("Why PlanTogether?")).toHaveClass("home-section");
+        expect(screen.getByRole("region", {
+            name: "Why PlanTogether?"
+        })).toHaveClass("home-section");
 
-        expect(screen.getByLabelText("Latest Events")).toHaveClass("home-section");
+        expect(screen.getByRole("region", {
+            name: "Latest Events"
+        })).toHaveClass("home-section");
     });
 });

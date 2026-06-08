@@ -1,3 +1,5 @@
+import { LogOut, UserPlus } from "lucide-react";
+
 import Button from "../ui/Button";
 
 /* ==================================================
@@ -7,7 +9,7 @@ import Button from "../ui/Button";
    Handles:
    - join action
    - leave action
-   - login prompt
+   - decorative action icons
 
    Notes:
    - event statuses, roles and business states are displayed as badges in EventCard
@@ -18,7 +20,6 @@ export default function EventCardActions({
 
     canLeave,
     showJoinButton,
-    showLoginPrompt,
 
     onJoin,
     onLeave
@@ -32,6 +33,7 @@ export default function EventCardActions({
                     variant="outline-danger"
                     onClick={() => onLeave?.(eventId)}
                 >
+                    <LogOut aria-hidden="true" />
                     Leave the event
                 </Button>
             )}
@@ -42,12 +44,9 @@ export default function EventCardActions({
                     variant="outline-primary"
                     onClick={() => onJoin?.(eventId)}
                 >
+                    <UserPlus aria-hidden="true" />
                     Join the event
                 </Button>
-            )}
-
-            {showLoginPrompt && (
-                <p className="event-login-prompt">Login to join</p>
             )}
         </div>
     );

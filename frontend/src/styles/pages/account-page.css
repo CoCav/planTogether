@@ -26,10 +26,16 @@
 }
 
 /* =========================================
-   ACCOUNT FOOTER
+   ACCOUNT FOOTER LINK
 ========================================= */
 
-.account-footer {
-    margin-top: var(--space-2);
-    font-size: var(--font-size-sm);
+.account-footer-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.account-footer-link svg {
+    width: 14px;
+    height: 14px;
 }

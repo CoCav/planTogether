@@ -20,6 +20,7 @@ import { createAuthenticatedUser } from "../../factories/users/userFactory";
    - demote action callback
    - remove action callback
    - authenticated action visibility
+   - decorative action icons
 
    Notes:
    - mocks EventMembersSection to focus on section configuration

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { CalendarPlus, Search, ShieldCheck, Sparkles, Users } from "lucide-react";
 
 import { useAuth } from "../features/auth/hooks/useAuth";
 
@@ -24,6 +25,7 @@ import LoadingState from "../components/ui/LoadingState";
    - authenticated user event roles
    - join and leave event actions
    - loading, empty and error states
+   - decorative card icons
 ================================================== */
 
 export default function HomePage() {
@@ -89,6 +91,7 @@ export default function HomePage() {
             <section className="home-hero" aria-labelledby="home-hero-title">
                 <div className="home-hero-top-row">
                     <p className="home-hero-label">
+                        <Sparkles aria-hidden="true" />
                         Plan events together
                     </p>
                 </div>
@@ -137,10 +140,16 @@ export default function HomePage() {
 
                 <div className="home-features-grid">
 
-                    <Card className="card-interactive">
-                        <h3 className="home-feature-title">
-                            Create and manage events
-                        </h3>
+                    <Card className="card-interactive home-feature-card">
+                        <div className="home-feature-header">
+                            <div className="home-feature-icon" aria-hidden="true">
+                                <CalendarPlus />
+                            </div>
+
+                            <h3 className="home-feature-title">
+                                Create and manage events
+                            </h3>
+                        </div>
 
                         <p className="home-feature-text">
                             Set up events quickly with title,
@@ -148,10 +157,15 @@ export default function HomePage() {
                         </p>
                     </Card>
 
-                    <Card className="card-interactive">
-                        <h3 className="home-feature-title">
-                            Join communities easily
-                        </h3>
+                    <Card className="card-interactive home-feature-card">
+                        <div className="home-feature-header">
+                            <div className="home-feature-icon" aria-hidden="true">
+                                <Users />
+                            </div>
+                            <h3 className="home-feature-title">
+                                Join communities easily
+                            </h3>
+                        </div>
 
                         <p className="home-feature-text">
                             Browse events, join what interests you,
@@ -159,10 +173,16 @@ export default function HomePage() {
                         </p>
                     </Card>
 
-                    <Card className="card-interactive">
-                        <h3 className="home-feature-title">
-                            Role-based collaboration
-                        </h3>
+                    <Card className="card-interactive home-feature-card">
+                        <div className="home-feature-header">
+                            <div className="home-feature-icon" aria-hidden="true">
+                                <ShieldCheck />
+                            </div>
+
+                            <h3 className="home-feature-title">
+                                Role-based collaboration
+                            </h3>
+                        </div>
 
                         <p className="home-feature-text">
                             Organizers, co-organizers,
@@ -170,10 +190,16 @@ export default function HomePage() {
                         </p>
                     </Card>
 
-                    <Card className="card-interactive">
-                        <h3 className="home-feature-title">
-                            Smart filtering
-                        </h3>
+                    <Card className="card-interactive home-feature-card">
+                        <div className="home-feature-header">
+                            <div className="home-feature-icon" aria-hidden="true">
+                                <Search />
+                            </div>
+
+                            <h3 className="home-feature-title">
+                                Smart filtering
+                            </h3>
+                        </div>
 
                         <p className="home-feature-text">
                             Search by title, description,

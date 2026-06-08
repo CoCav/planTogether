@@ -132,7 +132,7 @@ export default function useEventListingData({
         } catch (error) {
             console.error("Error loading events:", error);
 
-            setError("❌ Failed to load events");
+            setError("Failed to load events");
 
         } finally {
             setLoading(false);

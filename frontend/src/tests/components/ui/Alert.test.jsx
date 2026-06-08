@@ -10,9 +10,11 @@ import Alert from "../../../components/ui/Alert";
    Handles:
    - default info alert rendering
    - success and danger variants
+   - default variant icons
    - accessibility roles
    - custom class support
    - custom role override
+   - decorative icon accessibility
 ================================================== */
 
 describe("Alert", () => {
@@ -36,9 +38,7 @@ describe("Alert", () => {
     it("should render info alert by default", () => {
         renderAlert();
 
-        const alert = screen.getByText("Alert message");
-
-        expect(alert).toHaveClass("alert", "alert-info");
+        expect(screen.getByRole("status")).toHaveClass("alert", "alert-info");
     });
 
     it("should render success alert variant", () => {
@@ -47,7 +47,7 @@ describe("Alert", () => {
             children: "Success message"
         });
 
-        expect(screen.getByText("Success message")).toHaveClass("alert-success");
+        expect(screen.getByRole("status")).toHaveClass("alert-success");
     });
 
     it("should render danger alert variant", () => {
@@ -56,7 +56,22 @@ describe("Alert", () => {
             children: "Error message"
         });
 
-        expect(screen.getByText("Error message")).toHaveClass("alert-danger");
+        expect(screen.getByRole("alert")).toHaveClass("alert-danger");
+    });
+
+    /* =============================
+       ICONS
+    ============================= */
+
+    it("should render decorative variant icon", () => {
+        const { container } = renderAlert();
+
+        const icon = container.querySelector(
+            ".alert-icon"
+        );
+
+        expect(icon).toBeInTheDocument();
+        expect(icon).toHaveAttribute("aria-hidden", "true");
     });
 
     /* =============================
@@ -66,7 +81,7 @@ describe("Alert", () => {
     it("should use status role for non-danger alerts", () => {
         renderAlert();
 
-        expect(screen.getByText("Alert message")).toHaveAttribute("role", "status");
+        expect(screen.getByRole("status")).toBeInTheDocument();
     });
 
     it("should use alert role for danger alerts", () => {
@@ -75,7 +90,7 @@ describe("Alert", () => {
             children: "Error message"
         });
 
-        expect(screen.getByText("Error message")).toHaveAttribute("role", "alert");
+        expect(screen.getByRole("alert")).toBeInTheDocument();
     });
 
     it("should support custom role override", () => {
@@ -83,7 +98,7 @@ describe("Alert", () => {
             role: "note"
         });
 
-        expect(screen.getByText("Alert message")).toHaveAttribute("role", "note");
+        expect(screen.getByRole("note")).toBeInTheDocument();
     });
 
     /* =============================
@@ -95,6 +110,6 @@ describe("Alert", () => {
             className: "custom-alert"
         });
 
-        expect(screen.getByText("Alert message")).toHaveClass("custom-alert");
+        expect(screen.getByRole("status")).toHaveClass("custom-alert");
     });
 });

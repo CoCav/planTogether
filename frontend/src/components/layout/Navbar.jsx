@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 
 import { useAuth } from "../../features/auth/hooks/useAuth";
 
@@ -17,8 +18,8 @@ import NavbarUserMenu from "./NavbarUserMenu";
    - authentication navigation
    - authenticated user menu
    - mobile navigation menu
-   - accessible main navigation
-   - accessible authenticated navigation
+   - accessible mobile navigation toggle
+   - decorative mobile menu icon
 ================================================== */
 
 export default function Navbar() {
@@ -93,7 +94,11 @@ export default function Navbar() {
                     aria-controls="navbar-mobile-menu"
                     aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
                 >
-                    {isMobileMenuOpen ? "✕" : "☰"}
+                    {isMobileMenuOpen ? (
+                        <X aria-hidden="true" />
+                    ) : (
+                        <Menu aria-hidden="true" />
+                    )}
                 </button>
 
                 {/* =========================

@@ -24,6 +24,7 @@ export default function UserForm({
     fieldErrors,
 
     submitLabel,
+    submitIcon = null,
     isSubmitting,
 
     showAvatar,
@@ -115,6 +116,7 @@ export default function UserForm({
 
             <div className="form-actions">
                 <Button type="submit" loading={isSubmitting}>
+                    {submitIcon}
                     {submitLabel}
                 </Button>
             </div>

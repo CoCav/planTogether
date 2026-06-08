@@ -1,3 +1,5 @@
+import { Crown, ShieldMinus, UserX } from "lucide-react";
+
 import { formatBe, formatCount } from "../../utils/formatters";
 
 import EventMembersSection from "./EventMembersSection";
@@ -15,6 +17,7 @@ import Card from "../ui/Card";
    - demote action
    - remove action
    - staff empty state
+   - decorative action icons
 ================================================== */
 
 export default function EventStaffSection({
@@ -48,6 +51,7 @@ export default function EventStaffSection({
                                 variant="outline"
                                 onClick={() => onTransferOwnership(person.id)}
                             >
+                                <Crown aria-hidden="true" />
                                 Transfer ownership
                             </Button>
                         )}
@@ -58,6 +62,7 @@ export default function EventStaffSection({
                                 variant="outline"
                                 onClick={() => onDemote(person.id)}
                             >
+                                <ShieldMinus aria-hidden="true" />
                                 Demote
                             </Button>
                         )}
@@ -68,6 +73,7 @@ export default function EventStaffSection({
                                 variant="danger"
                                 onClick={() => onRemove(person.id)}
                             >
+                                <UserX aria-hidden="true" />
                                 Remove
                             </Button>
                         )}

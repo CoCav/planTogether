@@ -6,6 +6,7 @@
    - visual variants
    - disabled state
    - loading state
+   - icon and text children
    - accessible busy state
    - forwarded button props
 ================================================== */

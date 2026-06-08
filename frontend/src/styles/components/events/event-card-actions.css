@@ -25,6 +25,24 @@
     font-weight: 500;
 }
 
+.event-login-prompt {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+
+    color: var(--color-text-muted);
+
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+}
+
+.event-login-prompt svg {
+    width: 14px;
+    height: 14px;
+
+    flex-shrink: 0;
+}
+
 /* =========================================
    RESPONSIVE
 ========================================= */

@@ -10,9 +10,9 @@ import EventCardActions from "../../../components/events/EventCardActions";
    Handles:
    - join action visibility
    - leave action visibility
-   - guest login prompt
    - join callback
    - leave callback
+   - decorative action icons
 
    Notes:
    - focuses on action visibility and callbacks
@@ -24,7 +24,6 @@ describe("EventCardActions", () => {
         eventId: 1,
         canLeave: false,
         showJoinButton: false,
-        showLoginPrompt: false,
         onJoin: vi.fn(),
         onLeave: vi.fn()
     };
@@ -37,14 +36,6 @@ describe("EventCardActions", () => {
             />
         );
     };
-
-    it("should display login prompt for guest users", () => {
-        renderEventCardActions({
-            showLoginPrompt: true
-        });
-
-        expect(screen.getByText(/login to join/i)).toBeInTheDocument();
-    });
 
     it("should display join action when allowed", () => {
         renderEventCardActions({

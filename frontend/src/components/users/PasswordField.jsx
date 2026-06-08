@@ -1,3 +1,5 @@
+import { Eye, EyeOff } from "lucide-react";
+
 import Button from "../ui/Button";
 import FormField from "../ui/FormField";
 import Input from "../ui/Input";
@@ -12,6 +14,7 @@ import Input from "../ui/Input";
    - accessible toggle state
    - validation error display
    - optional helper content
+   - decorative toggle icon
 ================================================== */
 
 export default function PasswordField({
@@ -78,7 +81,11 @@ export default function PasswordField({
                             aria-label={visible ? "Hide password" : "Show password"}
                             aria-pressed={visible}
                         >
-                            {visible ? "Hide" : "Show"}
+                            {visible ? (
+                                <EyeOff aria-hidden="true" />
+                            ) : (
+                                <Eye aria-hidden="true" />
+                            )}
                         </Button>
                     </div>
 

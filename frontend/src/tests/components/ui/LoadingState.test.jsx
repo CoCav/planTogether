@@ -10,6 +10,7 @@ import LoadingState from "../../../components/ui/LoadingState";
    Handles:
    - default loading message
    - custom loading message
+   - decorative spinner rendering
    - accessible loading status role
    - polite live region behavior
 ================================================== */
@@ -35,13 +36,24 @@ describe("LoadingState", () => {
     it("should render default loading text", () => {
         render(<LoadingState />);
 
-        expect(screen.getByText("Loading...")).toHaveClass("loading-state");
+        expect(
+            screen.getByText("Loading...").closest(".loading-state")
+        ).toBeInTheDocument();
     });
 
     it("should render custom loading text", () => {
         renderLoadingState("Loading events...");
 
         expect(screen.getByText("Loading events...")).toBeInTheDocument();
+    });
+
+    it("should render decorative spinner", () => {
+        render(<LoadingState />);
+
+        const spinner = document.querySelector(".loading-state-spinner");
+
+        expect(spinner).toBeInTheDocument();
+        expect(spinner).toHaveAttribute("aria-hidden", "true");
     });
 
     /* =============================

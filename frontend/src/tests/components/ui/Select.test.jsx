@@ -55,10 +55,7 @@ describe("Select", () => {
             className: "custom-select"
         });
 
-        expect(container.firstChild).toHaveClass(
-            "select-wrapper",
-            "custom-select"
-        );
+        expect(container.firstChild).toHaveClass("select-wrapper", "custom-select");
     });
 
     /* =============================
@@ -107,5 +104,13 @@ describe("Select", () => {
         renderSelect();
 
         expect(document.querySelector(".select-icon")).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it("should hide decorative icon from assistive technologies", () => {
+        renderSelect();
+
+        expect(document.querySelector(".select-icon")).toHaveAttribute("aria-hidden", "true");
+
+        expect(document.querySelector(".select-icon svg")).toHaveAttribute("aria-hidden", "true");
     });
 });

@@ -1,3 +1,5 @@
+import { Trash2 } from "lucide-react";
+
 import Button from "../ui/Button";
 
 /* ==================================================
@@ -7,8 +9,9 @@ import Button from "../ui/Button";
    Handles:
    - account deletion warning
    - destructive account deletion action
-   - disabled delete state while submitting
+   - loading deletion state
    - accessible warning association for destructive actions
+   - decorative trash icon
 ================================================== */
 
 export default function DeleteAccountSection({
@@ -23,7 +26,7 @@ export default function DeleteAccountSection({
                 </h2>
 
                 <p className="section-subtitle">
-                    Permanently delete your account and remove access to your profile.
+                    Permanently delete your account and associated data.
                 </p>
             </header>
 
@@ -42,6 +45,7 @@ export default function DeleteAccountSection({
                     onClick={onDeleteAccount}
                     aria-describedby="delete-account-warning"
                 >
+                    <Trash2 aria-hidden="true" />
                     {isDeleting ? "Deleting account..." : "Delete Account"}
                 </Button>
             </div>

@@ -18,6 +18,7 @@ import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
    - custom variants and labels
    - children fallback labels
    - custom class support
+   - decorative icon rendering
    - empty state fallback
 ================================================== */
 
@@ -44,7 +45,7 @@ describe("Badge", () => {
             role: EVENT_ROLES.ORGANIZER
         });
 
-        expect(screen.getByText(/organizer/i)).toHaveClass("badge-organizer");
+        expect(screen.getByText(/organizer/i).closest(".badge")).toHaveClass("badge-organizer");
     });
 
     it("should render co-organizer badge", () => {
@@ -52,7 +53,7 @@ describe("Badge", () => {
             role: EVENT_ROLES.CO_ORGANIZER
         });
 
-        expect(screen.getByText(/co-organizer/i)).toHaveClass("badge-co-organizer");
+        expect(screen.getByText(/co-organizer/i).closest(".badge")).toHaveClass("badge-co-organizer");
     });
 
     it("should render participant badge", () => {
@@ -60,7 +61,7 @@ describe("Badge", () => {
             role: EVENT_ROLES.PARTICIPANT
         });
 
-        expect(screen.getByText(/participant/i)).toHaveClass("badge-participant");
+        expect(screen.getByText(/participant/i).closest(".badge")).toHaveClass("badge-participant");
     });
 
     /* =============================
@@ -72,7 +73,7 @@ describe("Badge", () => {
             status: EVENT_STATUS.UPCOMING
         });
 
-        expect(screen.getByText("Upcoming")).toHaveClass("badge-upcoming");
+        expect(screen.getByText("Upcoming").closest(".badge")).toHaveClass("badge-upcoming");
     });
 
     it("should render ongoing status badge", () => {
@@ -80,7 +81,7 @@ describe("Badge", () => {
             status: EVENT_STATUS.ONGOING
         });
 
-        expect(screen.getByText("Ongoing")).toHaveClass("badge-ongoing");
+        expect(screen.getByText("Ongoing").closest(".badge")).toHaveClass("badge-ongoing");
     });
 
     it("should render ended status badge", () => {
@@ -88,7 +89,7 @@ describe("Badge", () => {
             status: EVENT_STATUS.PAST
         });
 
-        expect(screen.getByText("Ended")).toHaveClass("badge-past");
+        expect(screen.getByText("Ended").closest(".badge")).toHaveClass("badge-past");
     });
 
     /* =============================
@@ -101,7 +102,7 @@ describe("Badge", () => {
             label: "Custom Label"
         });
 
-        expect(screen.getByText("Custom Label")).toHaveClass("badge-custom");
+        expect(screen.getByText("Custom Label").closest(".badge")).toHaveClass("badge-custom");
     });
 
     it("should use children as label", () => {
@@ -110,9 +111,7 @@ describe("Badge", () => {
             children: "Child Label"
         });
 
-        expect(
-            screen.getByText("Child Label")
-        ).toHaveClass("badge-info");
+        expect(screen.getByText("Child Label").closest(".badge")).toHaveClass("badge-info");
     });
 
     it("should support custom class name", () => {
@@ -122,7 +121,22 @@ describe("Badge", () => {
             className: "custom-badge"
         });
 
-        expect(screen.getByText("Custom Badge")).toHaveClass("custom-badge");
+        expect(screen.getByText("Custom Badge").closest(".badge")).toHaveClass("custom-badge");
+    });
+
+    /* =============================
+       ICON
+    ============================= */
+
+    it("should render decorative icon when config provides one", () => {
+        renderBadge({
+            role: EVENT_ROLES.ORGANIZER
+        });
+
+        const icon = document.querySelector(".badge-icon");
+
+        expect(icon).toBeInTheDocument();
+        expect(icon).toHaveAttribute("aria-hidden", "true");
     });
 
     /* =============================

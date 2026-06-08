@@ -19,6 +19,7 @@ import useDeleteAccount from "../../../../features/users/authenticated/hooks/use
    - profile form integration
    - password form integration
    - delete account integration
+   - decorative submit icon forwarding
    - hook initialization
 ================================================== */
 
@@ -86,6 +87,7 @@ vi.mock("../../../../components/users/UserForm", () => ({
         values,
         fieldErrors,
         submitLabel,
+        submitIcon,
         isSubmitting,
         showAvatar,
         onFieldChange,
@@ -98,6 +100,7 @@ vi.mock("../../../../components/users/UserForm", () => ({
             <span>Name: {values.name}</span>
             <span>Email: {values.email}</span>
             <span>Profile submit: {submitLabel}</span>
+            <span>Profile has icon: {String(Boolean(submitIcon))}</span>
             <span>Profile submitting: {String(isSubmitting)}</span>
             <span>Show avatar: {String(showAvatar)}</span>
 
@@ -368,6 +371,7 @@ describe("MyProfilePage", () => {
         expect(screen.getByText("Email: alice@test.com")).toBeInTheDocument();
         expect(screen.getByText("Name is required")).toBeInTheDocument();
         expect(screen.getByText("Profile submit: Update Profile")).toBeInTheDocument();
+        expect(screen.getByText("Profile has icon: true")).toBeInTheDocument();
         expect(screen.getByText("Profile submitting: true")).toBeInTheDocument();
         expect(screen.getByText("Show avatar: true")).toBeInTheDocument();
     });

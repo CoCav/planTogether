@@ -17,6 +17,7 @@ import UserPasswordForm from "../../../components/users/UserPasswordForm";
    - password field interactions
    - accessible field descriptions
    - autocomplete attributes
+   - decorative submit icon
    - form submission
    - submit loading state
 ================================================== */
@@ -106,6 +107,14 @@ describe("UserPasswordForm", () => {
         expect(screen.getByRole("button", {
             name: "Save Password"
         })).toBeInTheDocument();
+    });
+
+    it("renders decorative submit icon", () => {
+        renderUserPasswordForm();
+
+        const icon = document.querySelector(".form-actions svg[aria-hidden='true']");
+
+        expect(icon).toBeInTheDocument();
     });
 
     /* =============================

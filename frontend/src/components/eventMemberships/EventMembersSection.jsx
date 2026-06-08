@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 
-import Alert from "../ui/Alert";
 import Badge from "../ui/Badge";
 import EmptyState from "../ui/EmptyState";
 
@@ -24,7 +23,6 @@ export default function EventMembersSection({
     members = [],
     emptyMessage = "No members found.",
     showActions = true,
-    headerMessage = null,
     renderActions
 }) {
 
@@ -45,10 +43,6 @@ export default function EventMembersSection({
                     <p className="section-subtitle">{subtitle}</p>
                 )}
             </div>
-
-            {headerMessage && (
-                <Alert type="info">{headerMessage}</Alert>
-            )}
 
             {members.length === 0 ? (
                 <EmptyState>{emptyMessage}</EmptyState>

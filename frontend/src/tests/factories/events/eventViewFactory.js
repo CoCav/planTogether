@@ -1,3 +1,5 @@
+import { Archive, CalendarCheck, LayoutGrid, Sparkles } from "lucide-react";
+
 import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
 
 /* ==================================================
@@ -10,6 +12,7 @@ import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
    Notes:
    - aligned with public event view config
    - accepts overrides for flexible scenarios
+   - decorative tab icon configuration
 ================================================== */
 
 /* =============================
@@ -20,7 +23,7 @@ import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
 export const createDefaultEventView = (overrides = {}) => ({
     key: "default",
     label: "Events",
-    icon: "📋",
+    icon: LayoutGrid,
     title: "Events",
     subtitle: "",
     empty: "No events found.",
@@ -43,8 +46,8 @@ export const createDefaultEventView = (overrides = {}) => ({
 // Generate all events view content
 export const createAllEventsView = (overrides = {}) => ({
     key: "all",
-    label: "All",
-    icon: "📋",
+    label: "All Events",
+    icon: LayoutGrid,
     title: "All Events",
     subtitle: "Browse all events and refine your search.",
     empty: "No events found.",
@@ -64,7 +67,7 @@ export const createAllEventsView = (overrides = {}) => ({
 export const createOngoingEventsView = (overrides = {}) => ({
     key: EVENT_STATUS.ONGOING,
     label: "Ongoing",
-    icon: "⏳",
+    icon: Sparkles,
     title: "Ongoing Events",
     subtitle: "See events currently happening.",
     empty: "No ongoing events.",
@@ -84,7 +87,7 @@ export const createOngoingEventsView = (overrides = {}) => ({
 export const createUpcomingEventsView = (overrides = {}) => ({
     key: EVENT_STATUS.UPCOMING,
     label: "Upcoming",
-    icon: "📅",
+    icon: CalendarCheck,
     title: "Upcoming Events",
     subtitle: "Discover upcoming events and plan ahead.",
     empty: "No upcoming events.",
@@ -104,7 +107,7 @@ export const createUpcomingEventsView = (overrides = {}) => ({
 export const createPastEventsView = (overrides = {}) => ({
     key: EVENT_STATUS.PAST,
     label: "Archives",
-    icon: "🗂️",
+    icon: Archive,
     title: "Archives",
     subtitle: "Explore past events.",
     empty: "No archived events.",

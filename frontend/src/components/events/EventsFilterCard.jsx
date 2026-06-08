@@ -1,3 +1,5 @@
+import { Search, RotateCcw, SlidersHorizontal } from "lucide-react";
+
 import { EVENT_MODES, getEventModeLabel } from "../../features/shared/constants/eventModes";
 
 import Button from "../ui/Button";
@@ -16,6 +18,7 @@ import Select from "../ui/Select";
    - sorting controls
    - accessible filter visibility toggle
    - accessible form field descriptions
+   - decorative filter and action icons
 ================================================== */
 
 export default function EventsFilterCard({
@@ -63,6 +66,7 @@ export default function EventsFilterCard({
                     aria-expanded={showFilters}
                     aria-controls={formId}
                 >
+                    <SlidersHorizontal aria-hidden="true" />
                     {showFilters ? "Hide filters" : "Show filters"}
                 </Button>
             </header>
@@ -227,6 +231,7 @@ export default function EventsFilterCard({
 
                     <div className="events-filter-actions">
                         <Button type="submit">
+                            <Search aria-hidden="true" />
                             Apply filters
                         </Button>
 
@@ -235,6 +240,7 @@ export default function EventsFilterCard({
                             variant="outline"
                             onClick={onResetFilters}
                         >
+                            <RotateCcw aria-hidden="true" />
                             Reset
                         </Button>
                     </div>

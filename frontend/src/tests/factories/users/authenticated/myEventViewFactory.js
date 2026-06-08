@@ -1,9 +1,12 @@
+import { Archive, FolderOpen, Bookmark } from "lucide-react";
+
 /* ==================================================
    MY EVENT VIEW TEST FACTORY
 
    Handles:
    - current user event view generation
    - current user default view generation
+   - decorative tab icon configuration
 
    Notes:
    - aligned with current user event view config
@@ -14,11 +17,10 @@
    DEFAULT VIEW
 ============================= */
 
-// Generate default current user event view content
 export const createDefaultMyEventView = (overrides = {}) => ({
     key: "created",
     label: "Created",
-    icon: "🛠️",
+    icon: FolderOpen,
     title: "Created Events",
     subtitle: "Events you created as organizer.",
     empty: "You haven’t created any events yet.",
@@ -36,11 +38,10 @@ export const createDefaultMyEventView = (overrides = {}) => ({
    CURRENT USER EVENT VIEWS
 ============================= */
 
-// Generate created events view content
 export const createCreatedEventsView = (overrides = {}) => ({
     key: "created",
     label: "Created",
-    icon: "🛠️",
+    icon: FolderOpen,
     title: "Created Events",
     subtitle: "Events you created as organizer.",
     empty: "You haven’t created any events yet.",
@@ -54,11 +55,10 @@ export const createCreatedEventsView = (overrides = {}) => ({
     ...overrides
 });
 
-// Generate created history view content
 export const createCreatedHistoryView = (overrides = {}) => ({
     key: "createdHistory",
     label: "Created History",
-    icon: "📜",
+    icon: Archive,
     title: "Created History",
     subtitle: "Explore past events you created.",
     empty: "No past created events.",
@@ -72,11 +72,10 @@ export const createCreatedHistoryView = (overrides = {}) => ({
     ...overrides
 });
 
-// Generate joined events view content
 export const createJoinedEventsView = (overrides = {}) => ({
     key: "joined",
     label: "Joined",
-    icon: "🤝",
+    icon: Bookmark,
     title: "Joined Events",
     subtitle: "Events you joined.",
     empty: "You haven’t joined any events yet.",
@@ -90,11 +89,10 @@ export const createJoinedEventsView = (overrides = {}) => ({
     ...overrides
 });
 
-// Generate joined history view content
 export const createJoinedHistoryView = (overrides = {}) => ({
     key: "joinedHistory",
     label: "Joined History",
-    icon: "🗂️",
+    icon: Archive,
     title: "Joined History",
     subtitle: "Explore past events you joined.",
     empty: "No past joined events.",

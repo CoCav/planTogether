@@ -23,6 +23,7 @@ import { getPublicUserProfile, getPublicUserEvents } from "../../../../api/users
    - error state
    - accessible profile and listing sections
    - public profile statistics semantics
+   - decorative profile metadata icons
 
    Notes:
    - mocks public user API

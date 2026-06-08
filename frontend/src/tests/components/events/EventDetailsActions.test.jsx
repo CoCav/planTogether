@@ -12,12 +12,12 @@ import EventDetailsActions from "../../../components/events/EventDetailsActions"
    - leave action visibility
    - edit action visibility
    - delete action visibility
-   - guest login prompt
    - join callback
    - leave callback
    - edit callback
    - delete callback
    - default empty action state
+   - decorative action icons
 
    Notes:
    - focuses on action visibility and callbacks
@@ -36,8 +36,6 @@ describe("EventDetailsActions", () => {
         canLeave: false,
         canEdit: false,
         canDelete: false,
-
-        showLoginPrompt: false,
 
         onJoin: vi.fn(),
         onLeave: vi.fn(),
@@ -60,18 +58,6 @@ describe("EventDetailsActions", () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-    });
-
-    /* =============================
-       GUEST STATE
-    ============================= */
-
-    it("should display login prompt for guest users", () => {
-        renderEventDetailsActions({
-            showLoginPrompt: true
-        });
-
-        expect(screen.getByText(/login to join this event/i)).toBeInTheDocument();
     });
 
     /* =============================

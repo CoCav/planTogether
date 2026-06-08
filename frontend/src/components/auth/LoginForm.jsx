@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 
 import PasswordField from "../users/PasswordField";
 
@@ -18,6 +19,7 @@ import Input from "../ui/Input";
    - account navigation footer
    - accessible form field associations
    - registration redirect state forwarding
+   - decorative register link icon
 ================================================== */
 
 export default function LoginForm({
@@ -110,8 +112,9 @@ export default function LoginForm({
                 <Link
                     to="/register"
                     state={registerState}
-                    className="link-inline"
+                    className="link-inline account-footer-link"
                 >
+                    <ArrowRight aria-hidden="true" />
                     Register
                 </Link>
             </p>

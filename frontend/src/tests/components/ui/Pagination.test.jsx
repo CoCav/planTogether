@@ -14,6 +14,7 @@ import Pagination from "../../../components/ui/Pagination";
    - next button disabled state
    - navigation callbacks
    - accessible pagination landmark
+   - decorative navigation icons
 ================================================== */
 
 describe("Pagination", () => {
@@ -125,5 +126,13 @@ describe("Pagination", () => {
         renderPagination();
 
         expect(screen.getByText("Page 2 of 5")).toHaveAttribute("aria-live", "polite");
+    });
+
+    it("should hide navigation icons from assistive technologies", () => {
+        renderPagination();
+
+        const icons = document.querySelectorAll(".pagination svg[aria-hidden='true']");
+
+        expect(icons).toHaveLength(2);
     });
 });

@@ -2,23 +2,23 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 
 import useRegisterForm from "../../../../features/auth/hooks/useRegisterForm";
-
 import { validateRegisterForm } from "../../../../features/auth/authValidation.js";
 
 /* ==================================================
    USE REGISTER FORM TESTS
-   Tests register form state and interactions
+   Tests register form state, interactions and submit flows
 
    Handles:
    - form state initialization
-   - field updates
-   - avatar updates
-   - avatar removal
+   - field updates and error clearing
+   - avatar updates and removal
+   - avatar error clearing
    - password visibility state
    - validation flow
    - successful submit flow
+   - submit loading state
    - failed submit flow
-   - validation error handling
+   - custom submit error handling
 ================================================== */
 
 vi.mock("../../../../features/auth/authValidation", () => ({
@@ -54,6 +54,10 @@ describe("useRegisterForm", () => {
             })
         );
     };
+
+    /* =============================
+       TEST SETUP
+    ============================= */
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -330,6 +334,29 @@ describe("useRegisterForm", () => {
 
         expect(result.current.feedback.error).toBe(
             submitErrorMessage
+        );
+    });
+
+    it("uses custom submit error message when submission fails", async () => {
+        const customSubmitErrorMessage = "Custom register error";
+
+        const onSubmitValid = vi.fn(() => {
+            throw new Error("Register failed");
+        });
+
+        const { result } = createHook({
+            onSubmitValid,
+            submitErrorMessage: customSubmitErrorMessage
+        });
+
+        await act(async () => {
+            await result.current.formActions.handleSubmit({
+                preventDefault: vi.fn()
+            });
+        });
+
+        expect(result.current.feedback.error).toBe(
+            customSubmitErrorMessage
         );
     });
 

@@ -37,7 +37,21 @@
 }
 
 .public-user-profile-stat {
-    color: var(--color-text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+
+    line-height: 1;
+}
+
+.public-user-profile-stat svg {
+    width: 14px;
+    height: 14px;
+
+    color: var(--color-primary);
+
+    position: relative;
+    top: 1px;
 }
 
 .public-user-profile-stat strong {

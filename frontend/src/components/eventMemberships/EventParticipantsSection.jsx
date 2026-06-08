@@ -1,3 +1,5 @@
+import { Crown, ShieldPlus, UserX } from "lucide-react";
+
 import { formatBe, formatCount } from "../../utils/formatters";
 
 import EventMembersSection from "./EventMembersSection";
@@ -14,8 +16,9 @@ import Card from "../ui/Card";
    - ownership transfer action
    - promote action
    - remove action
-   - guest / past-event message
    - participant empty state
+   - past event empty state
+   - decorative action icons
 ================================================== */
 
 export default function EventParticipantsSection({
@@ -38,8 +41,8 @@ export default function EventParticipantsSection({
     return (
         <Card>
             <EventMembersSection
-                title={formatCount(participantCount, "Attendee")}
-                subtitle={`${formatCount(participantCount, "attendee")} ${formatBe(participantCount)} attending this event.`}
+                title="Event Participants"
+                subtitle={`${formatCount(participantCount, "participant")} ${formatBe(participantCount)} attending this event.`}
                 members={participants}
                 emptyMessage={
                     isPast
@@ -47,13 +50,7 @@ export default function EventParticipantsSection({
                         : "No participants yet."
                 }
                 showActions={Boolean(user)}
-                headerMessage={
-                    !user
-                        ? isPast
-                            ? "This event has ended."
-                            : "🔐 Login to join this event and interact with participants."
-                        : null
-                }
+
                 renderActions={(person) => (
                     <>
                         {canTransferOwnership?.(person) && (
@@ -62,6 +59,7 @@ export default function EventParticipantsSection({
                                 variant="outline"
                                 onClick={() => onTransferOwnership(person.id)}
                             >
+                                <Crown aria-hidden="true" />
                                 Transfer ownership
                             </Button>
                         )}
@@ -72,6 +70,7 @@ export default function EventParticipantsSection({
                                 variant="outline"
                                 onClick={() => onPromote(person.id)}
                             >
+                                <ShieldPlus aria-hidden="true" />
                                 Promote
                             </Button>
                         )}
@@ -82,6 +81,7 @@ export default function EventParticipantsSection({
                                 variant="danger"
                                 onClick={() => onRemove(person.id)}
                             >
+                                <UserX aria-hidden="true" />
                                 Remove
                             </Button>
                         )}

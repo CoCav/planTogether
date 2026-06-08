@@ -64,10 +64,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve uploaded files publicly
 // Example: /uploads/avatars/avatar-123.png
-app.use(
-    "/uploads",
-    express.static(path.join(__dirname, "../uploads"))
-);
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 
 /* =============================

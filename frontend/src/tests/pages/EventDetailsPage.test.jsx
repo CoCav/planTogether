@@ -140,7 +140,6 @@ vi.mock("../../components/events/EventDetailsActions", () => ({
         canLeave,
         canEdit,
         canDelete,
-        showLoginPrompt,
         onJoin,
         onLeave,
         onEdit,
@@ -170,8 +169,6 @@ vi.mock("../../components/events/EventDetailsActions", () => ({
                     Delete Event
                 </button>
             )}
-
-            {showLoginPrompt && <span>Login to join this event.</span>}
         </div>
     )
 }));
@@ -825,7 +822,7 @@ describe("EventDetailsPage", () => {
        AUTH STATE
     ============================= */
 
-    it("should show login prompt for guest on active event", async () => {
+    it("should show guest participation prompt on active event", async () => {
         mockAuthState = {
             user: null,
             loading: false
@@ -833,7 +830,7 @@ describe("EventDetailsPage", () => {
 
         renderPage();
 
-        expect(await screen.findByText(/login to join this event/i)).toBeInTheDocument();
+        expect(await screen.findByText(/Login to join events and manage your participation/i)).toBeInTheDocument();
     });
 
     it("should not show login prompt for authenticated user", async () => {
@@ -841,6 +838,6 @@ describe("EventDetailsPage", () => {
 
         await screen.findByText("Test Event");
 
-        expect(screen.queryByText(/login to join this event/i)).not.toBeInTheDocument();
+        expect(screen.queryByText(/login to join events and manage your participation/i)).not.toBeInTheDocument();
     });
 });

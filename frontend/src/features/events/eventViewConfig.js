@@ -1,3 +1,5 @@
+import { Archive, CalendarCheck, LayoutGrid, Sparkles } from "lucide-react";
+
 import { EVENT_STATUS } from "../shared/constants/eventStatus";
 
 /* ==================================================
@@ -11,6 +13,7 @@ import { EVENT_STATUS } from "../shared/constants/eventStatus";
    - default sorting per view
    - quick filter visibility
    - date filter reset behavior
+   - decorative tab icons
 
    Notes:
    - aligned with GET /events
@@ -20,7 +23,7 @@ import { EVENT_STATUS } from "../shared/constants/eventStatus";
 export const DEFAULT_EVENT_VIEW_CONTENT = {
     key: "default",
     label: "Events",
-    icon: "📋",
+    icon: LayoutGrid,
     title: "Events",
     subtitle: "",
     empty: "No events found.",
@@ -36,37 +39,11 @@ export const DEFAULT_EVENT_VIEW_CONTENT = {
 ============================= */
 
 export const PUBLIC_EVENT_VIEWS = [
-    {
-        key: EVENT_STATUS.ONGOING,
-        label: "Ongoing",
-        icon: "⏳",
-        title: "Ongoing Events",
-        subtitle: "See events currently happening.",
-        empty: "No ongoing events.",
-        status: EVENT_STATUS.ONGOING,
-        defaultSortBy: "startDateTime",
-        defaultOrder: "asc",
-        showQuickActions: true,
-        clearDateFiltersOnEnter: false
-    },
-    {
-        key: EVENT_STATUS.UPCOMING,
-        label: "Upcoming",
-        icon: "📅",
-        title: "Upcoming Events",
-        subtitle: "Discover upcoming events and plan ahead.",
-        empty: "No upcoming events.",
-        status: EVENT_STATUS.UPCOMING,
-        defaultSortBy: "startDateTime",
-        defaultOrder: "asc",
-        showQuickActions: true,
-        clearDateFiltersOnEnter: false
-    },
 
     {
         key: "all",
-        label: "All",
-        icon: "📋",
+        label: "All Events",
+        icon: LayoutGrid,
         title: "All Events",
         subtitle: "Browse all events and refine your search.",
         empty: "No events found.",
@@ -78,9 +55,37 @@ export const PUBLIC_EVENT_VIEWS = [
     },
 
     {
+        key: EVENT_STATUS.ONGOING,
+        label: "Ongoing",
+        icon: Sparkles,
+        title: "Ongoing Events",
+        subtitle: "See events currently happening.",
+        empty: "No ongoing events.",
+        status: EVENT_STATUS.ONGOING,
+        defaultSortBy: "startDateTime",
+        defaultOrder: "asc",
+        showQuickActions: true,
+        clearDateFiltersOnEnter: false
+    },
+
+    {
+        key: EVENT_STATUS.UPCOMING,
+        label: "Upcoming",
+        icon: CalendarCheck,
+        title: "Upcoming Events",
+        subtitle: "Discover upcoming events and plan ahead.",
+        empty: "No upcoming events.",
+        status: EVENT_STATUS.UPCOMING,
+        defaultSortBy: "startDateTime",
+        defaultOrder: "asc",
+        showQuickActions: true,
+        clearDateFiltersOnEnter: false
+    },
+
+    {
         key: EVENT_STATUS.PAST,
         label: "Archives",
-        icon: "🗂️",
+        icon: Archive,
         title: "Archives",
         subtitle: "Explore past events.",
         empty: "No archived events.",

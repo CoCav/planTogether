@@ -25,6 +25,7 @@ import {
    - view content resolution
    - default view fallback
    - public view sorting defaults
+   - decorative tab icon configuration
 
    Notes:
    - uses reusable event view factories
@@ -40,9 +41,9 @@ describe("eventViewConfig", () => {
         expect(PUBLIC_EVENT_VIEWS).toHaveLength(4);
 
         expect(PUBLIC_EVENT_VIEWS.map((view) => view.key)).toEqual([
+            "all",
             EVENT_STATUS.ONGOING,
             EVENT_STATUS.UPCOMING,
-            "all",
             EVENT_STATUS.PAST
         ]);
     });

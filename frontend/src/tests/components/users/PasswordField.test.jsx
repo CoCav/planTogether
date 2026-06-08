@@ -12,6 +12,7 @@ import PasswordField from "../../../components/users/PasswordField";
    - password input rendering
    - password visibility state
    - accessible toggle state
+   - decorative toggle icon
    - single error display
    - multiple error display
    - helper content rendering
@@ -100,7 +101,6 @@ describe("PasswordField", () => {
             name: "Show password"
         });
 
-        expect(toggle).toHaveTextContent("Show");
         expect(toggle).toHaveAttribute("aria-pressed", "false");
     });
 
@@ -113,8 +113,16 @@ describe("PasswordField", () => {
             name: "Hide password"
         });
 
-        expect(toggle).toHaveTextContent("Hide");
         expect(toggle).toHaveAttribute("aria-pressed", "true");
+    });
+
+
+    it("renders decorative toggle icon", () => {
+        renderPasswordField();
+
+        const icon = document.querySelector(".password-field-toggle svg[aria-hidden='true']");
+
+        expect(icon).toBeInTheDocument();
     });
 
     it("calls onToggle when clicking the toggle button", async () => {

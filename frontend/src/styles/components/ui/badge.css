@@ -6,6 +6,7 @@
 .badge {
     display: inline-flex;
     align-items: center;
+    gap: var(--space-1);
 
     padding: var(--space-1) var(--space-2);
 
@@ -13,6 +14,24 @@
 
     font-size: var(--font-size-sm);
     font-weight: 500;
+}
+
+.badge-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 12px;
+    height: 12px;
+}
+
+.badge-icon svg {
+    width: 12px;
+    height: 12px;
+
+    transform: translateY(1px);
 }
 
 /* =========================================

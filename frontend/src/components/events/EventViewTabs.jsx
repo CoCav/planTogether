@@ -5,7 +5,6 @@
    Handles:
    - active tab state
    - accessible tab navigation
-   - decorative tab icons
    - mobile horizontal scrolling
 ================================================== */
 
@@ -15,6 +14,7 @@ export default function EventViewTabs({ views, activeView, onChange }) {
             <div className="event-view-tabs" role="tablist" aria-label="Event views">
                 {views.map((view) => {
                     const isActive = activeView === view.key;
+                    const ViewIcon = view.icon;
 
                     return (
                         <button
@@ -26,9 +26,11 @@ export default function EventViewTabs({ views, activeView, onChange }) {
                             aria-selected={isActive}
                             tabIndex={isActive ? 0 : -1}
                         >
-                            <span className="event-view-tab-icon" aria-hidden="true">
-                                {view.icon}
-                            </span>
+                            {ViewIcon && (
+                                <span className="event-view-tab-icon" aria-hidden="true">
+                                    <ViewIcon />
+                                </span>
+                            )}
 
                             <span>{view.label}</span>
                         </button>

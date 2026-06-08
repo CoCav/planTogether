@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { LogIn } from "lucide-react";
 
 import { useAuth } from "../features/auth/hooks/useAuth";
 import { registerUser } from "../api/auth/authApi";
@@ -25,6 +26,7 @@ import Card from "../components/ui/Card";
    - automatic login after registration
    - redirect after successful registration
    - accessible registration form section
+   - decorative account navigation icon
 ================================================== */
 
 export default function RegisterPage() {
@@ -143,8 +145,9 @@ export default function RegisterPage() {
                                 <Link
                                     to="/login"
                                     state={loginState}
-                                    className="link-inline"
+                                    className="link-inline account-footer-link"
                                 >
+                                    <LogIn aria-hidden="true" />
                                     Login
                                 </Link>
                             </p>
@@ -166,7 +169,7 @@ export default function RegisterPage() {
                                 onChange={handleFieldChange}
                                 onToggle={handleTogglePassword}
                             >
-                                <PasswordRequirements password={values.password} />
+                                <PasswordRequirements id="password-requirements" password={values.password} />
                             </PasswordField>
                         </div>
                     </UserForm>

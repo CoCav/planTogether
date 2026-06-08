@@ -28,11 +28,13 @@ import {
    - participant loading
    - response normalization
    - loading state updates
+   - eventId changes
    - error handling
 
    Notes:
    - mocks API modules
    - mocks normalizers
+   - normalizer logic is tested separately
 ================================================== */
 
 /* =============================
@@ -86,13 +88,19 @@ describe("useEventDetailsData", () => {
        TEST HELPERS
     ============================= */
 
-    const renderUseEventDetailsData = () => {
-        return renderHook(() =>
-            useEventDetailsData({
-                eventId: 1,
-                setError,
-                setLoading
-            })
+    const renderUseEventDetailsData = (eventId = 1) => {
+        return renderHook(
+            ({ nextEventId }) =>
+                useEventDetailsData({
+                    eventId: nextEventId,
+                    setError,
+                    setLoading
+                }),
+            {
+                initialProps: {
+                    nextEventId: eventId
+                }
+            }
         );
     };
 
@@ -156,15 +164,39 @@ describe("useEventDetailsData", () => {
         expect(getEventStaff).toHaveBeenCalledWith(1);
         expect(getEventMembers).toHaveBeenCalledWith(1);
 
-        expect(getNormalizedEvent).toHaveBeenCalled();
+        expect(getNormalizedEvent).toHaveBeenCalledWith({
+            event: mockEvent
+        });
 
-        expect(getNormalizedEventStaff).toHaveBeenCalled();
-        expect(getNormalizedMembers).toHaveBeenCalled();
+        expect(getNormalizedEventStaff).toHaveBeenCalledWith({
+            eventStaff: mockStaff
+        });
+
+        expect(getNormalizedMembers).toHaveBeenCalledWith({
+            members: mockMembers
+        });
 
         expect(result.current.event).toEqual(mockEvent);
 
         expect(result.current.staff).toEqual(mockStaff);
         expect(result.current.members).toEqual(mockMembers);
+    });
+
+    it("uses the latest eventId when loading data after rerender", async () => {
+        const { result, rerender } = renderUseEventDetailsData(1);
+
+        rerender({
+            nextEventId: 2
+        });
+
+        await act(async () => {
+            await result.current.loadData();
+        });
+
+        expect(getEventById).toHaveBeenCalledWith(2);
+
+        expect(getEventStaff).toHaveBeenCalledWith(2);
+        expect(getEventMembers).toHaveBeenCalledWith(2);
     });
 
     /* =============================
@@ -179,7 +211,6 @@ describe("useEventDetailsData", () => {
         });
 
         expect(setLoading).toHaveBeenCalledWith(true);
-
         expect(setLoading).toHaveBeenCalledWith(false);
     });
 
@@ -188,9 +219,7 @@ describe("useEventDetailsData", () => {
     ============================= */
 
     it("sets error state when event loading fails", async () => {
-        getEventById.mockRejectedValue(
-            new Error("API error")
-        );
+        getEventById.mockRejectedValue(new Error("API error"));
 
         const { result } = renderUseEventDetailsData();
 
@@ -199,8 +228,37 @@ describe("useEventDetailsData", () => {
         });
 
         expect(setError).toHaveBeenCalledWith("");
+        expect(setError).toHaveBeenCalledWith("Failed to load event details");
 
-        expect(setError).toHaveBeenCalledWith("❌ Failed to load event details");
+        expect(setLoading).toHaveBeenCalledWith(false);
+    });
+
+    it("sets error state when staff loading fails", async () => {
+        getEventStaff.mockRejectedValue(new Error("Staff API error"));
+
+        const { result } = renderUseEventDetailsData();
+
+        await act(async () => {
+            await result.current.loadData();
+        });
+
+        expect(setError).toHaveBeenCalledWith("");
+        expect(setError).toHaveBeenCalledWith("Failed to load event details");
+
+        expect(setLoading).toHaveBeenCalledWith(false);
+    });
+
+    it("sets error state when member loading fails", async () => {
+        getEventMembers.mockRejectedValue(new Error("Members API error"));
+
+        const { result } = renderUseEventDetailsData();
+
+        await act(async () => {
+            await result.current.loadData();
+        });
+
+        expect(setError).toHaveBeenCalledWith("");
+        expect(setError).toHaveBeenCalledWith("Failed to load event details");
 
         expect(setLoading).toHaveBeenCalledWith(false);
     });

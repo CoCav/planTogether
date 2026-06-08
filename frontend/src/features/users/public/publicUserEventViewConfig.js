@@ -1,3 +1,5 @@
+import { FolderOpen, Bookmark } from "lucide-react";
+
 /* ==================================================
    PUBLIC USER EVENT VIEW CONFIG
    Centralizes public user event tab configuration
@@ -6,6 +8,7 @@
    - tab labels and icons
    - section titles and subtitles
    - default sorting per view
+   - decorative tab icons
 
    Notes:
    - aligned with GET /users/:id/events
@@ -14,7 +17,7 @@
 export const DEFAULT_PUBLIC_USER_EVENT_VIEW_CONTENT = {
     key: "created",
     label: "Created",
-    icon: "🛠️",
+    icon: FolderOpen,
     title: "Created Events",
     subtitle: "Public events created by this user.",
     empty: "No created events found.",
@@ -30,7 +33,7 @@ export const PUBLIC_USER_EVENT_VIEWS = [
     {
         key: "created",
         label: "Created",
-        icon: "🛠️",
+        icon: FolderOpen,
         title: "Created Events",
         subtitle: "Public events created by this user.",
         empty: "No created events found.",
@@ -41,7 +44,7 @@ export const PUBLIC_USER_EVENT_VIEWS = [
     {
         key: "joined",
         label: "Joined",
-        icon: "🤝",
+        icon: Bookmark,
         title: "Joined Events",
         subtitle: "Public events joined by this user.",
         empty: "No joined events found.",

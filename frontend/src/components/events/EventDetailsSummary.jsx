@@ -1,3 +1,5 @@
+import { CalendarDays, Clock3, Hourglass, MapPin, MonitorSmartphone, Shapes, Sparkles, Users } from "lucide-react";
+
 /* ==================================================
    EVENT DETAILS SUMMARY
    Displays key event information in a compact summary
@@ -26,28 +28,32 @@ export default function EventDetailsSummary({
         <dl className="event-details-summary">
             <div className="event-details-summary-item">
                 <dt className="event-details-summary-label">
-                    <span aria-hidden="true">🏷️</span> Type
+                    <Shapes aria-hidden="true" />
+                    Type
                 </dt>
                 <dd className="event-details-summary-value">{type}</dd>
             </div>
 
             <div className="event-details-summary-item">
                 <dt className="event-details-summary-label">
-                    <span aria-hidden="true">🎯</span> Theme
+                    <Sparkles aria-hidden="true" />
+                    Theme
                 </dt>
                 <dd className="event-details-summary-value">{theme}</dd>
             </div>
 
             <div className="event-details-summary-item">
                 <dt className="event-details-summary-label">
-                    <span aria-hidden="true">📍</span> Mode
+                    <MonitorSmartphone aria-hidden="true" />
+                    Mode
                 </dt>
                 <dd className="event-details-summary-value">{mode}</dd>
             </div>
 
             <div className="event-details-summary-item">
                 <dt className="event-details-summary-label">
-                    <span aria-hidden="true">📍</span> Location
+                    <MapPin aria-hidden="true" />
+                    Location
                 </dt>
                 <dd className="event-details-summary-value">{location}</dd>
             </div>
@@ -55,7 +61,8 @@ export default function EventDetailsSummary({
             {capacity && (
                 <div className="event-details-summary-item">
                     <dt className="event-details-summary-label">
-                        <span aria-hidden="true">👥</span> Capacity
+                        <Users aria-hidden="true" />
+                        Capacity
                     </dt>
                     <dd className="event-details-summary-value">{capacity}</dd>
                 </div>
@@ -63,14 +70,16 @@ export default function EventDetailsSummary({
 
             <div className="event-details-summary-item">
                 <dt className="event-details-summary-label">
-                    <span aria-hidden="true">📅</span> Date
+                    <CalendarDays aria-hidden="true" />
+                    Date
                 </dt>
                 <dd className="event-details-summary-value">{date}</dd>
             </div>
 
             <div className="event-details-summary-item">
                 <dt className="event-details-summary-label">
-                    <span aria-hidden="true">🕒</span> Time
+                    <Clock3 aria-hidden="true" />
+                    Time
                 </dt>
                 <dd className="event-details-summary-value">{time}</dd>
             </div>
@@ -78,7 +87,8 @@ export default function EventDetailsSummary({
             {registrationDeadline && (
                 <div className="event-details-summary-item">
                     <dt className="event-details-summary-label">
-                        <span aria-hidden="true">⏳</span> Registration deadline
+                        <Hourglass aria-hidden="true" />
+                        Registration deadline
                     </dt>
                     <dd className="event-details-summary-value">
                         {registrationDeadline}

@@ -27,6 +27,7 @@ import {
    - quick filter button group
    - quick date filter callbacks
    - active quick filter state
+   - decorative quick filter icons
 ================================================== */
 
 describe("EventsToolbar", () => {

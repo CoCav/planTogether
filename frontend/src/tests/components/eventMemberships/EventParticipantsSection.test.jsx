@@ -15,13 +15,12 @@ import { createAuthenticatedUser } from "../../factories/users/userFactory";
    - participant section copy
    - accessible participant section copy
    - active and past empty messages
-   - guest header messages
-   - accessible guest messaging
    - ownership transfer action callback
    - ownership transfer action visibility
    - promote action callback
    - remove action callback
    - authenticated action visibility
+   - decorative action icons
 
    Notes:
    - mocks EventMembersSection to focus on section configuration
@@ -35,14 +34,11 @@ vi.mock("../../../components/eventMemberships/EventMembersSection", () => ({
         members,
         emptyMessage,
         showActions,
-        headerMessage,
         renderActions
     }) => (
         <section data-testid="event-members-section">
             <h2>{title}</h2>
             <p>{subtitle}</p>
-
-            {headerMessage && <p>{headerMessage}</p>}
 
             {members.length === 0 ? (
                 <p>{emptyMessage}</p>
@@ -111,10 +107,10 @@ describe("EventParticipantsSection", () => {
         renderEventParticipantsSection();
 
         expect(screen.getByRole("heading", {
-            name: "1 Attendee"
+            name: "Event Participants"
         })).toBeInTheDocument();
 
-        expect(screen.getByText("1 attendee is attending this event.")).toBeInTheDocument();
+        expect(screen.getByText("1 participant is attending this event.")).toBeInTheDocument();
     });
 
     /* =============================
@@ -138,29 +134,6 @@ describe("EventParticipantsSection", () => {
         });
 
         expect(screen.getByText("No one attended this event.")).toBeInTheDocument();
-    });
-
-    /* =============================
-       GUEST MESSAGES
-    ============================= */
-
-    it("should render guest message for active events", () => {
-        renderEventParticipantsSection({
-            user: null
-        });
-
-        expect(
-            screen.getByText("🔐 Login to join this event and interact with participants.")
-        ).toBeInTheDocument();
-    });
-
-    it("should render ended message for guest on past events", () => {
-        renderEventParticipantsSection({
-            user: null,
-            isPast: true
-        });
-
-        expect(screen.getByText("This event has ended.")).toBeInTheDocument();
     });
 
     /* =============================

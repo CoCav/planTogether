@@ -51,7 +51,7 @@ export default function useEventDetailsData({ eventId, setError, setLoading }) {
         } catch (error) {
 
             console.error("Error loading event details:", error);
-            setError("❌ Failed to load event details");
+            setError("Failed to load event details");
         } finally {
             setLoading(false);
         }

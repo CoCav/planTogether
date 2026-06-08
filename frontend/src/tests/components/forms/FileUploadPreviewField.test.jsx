@@ -11,7 +11,7 @@ import FileUploadPreviewField from "../../../components/forms/FileUploadPreviewF
    Handles:
    - conditional dropzone and preview rendering
    - file input rendering
-   - decorative upload icon rendering
+   - decorative upload and remove icon rendering
    - upload variant class rendering
    - selected file preview display
    - existing file preview display
@@ -194,6 +194,16 @@ describe("FileUploadPreviewField", () => {
     /* =============================
        FILE REMOVAL
     ============================= */
+
+    it("renders decorative remove icon", () => {
+        renderComponent({
+            file: validFile
+        });
+
+        const removeIcon = document.querySelector(".file-upload-preview-remove svg[aria-hidden='true']");
+
+        expect(removeIcon).toBeInTheDocument();
+    });
 
     it("calls onRemoveFile when clicking remove", async () => {
         const user = userEvent.setup();

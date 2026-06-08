@@ -21,6 +21,7 @@ import Navbar from "../../../components/layout/Navbar";
    - mobile navigation menu
    - mobile authenticated navigation
    - mobile logout flow
+   - decorative mobile menu icon
 
    Notes:
    - mocks authenticated user state

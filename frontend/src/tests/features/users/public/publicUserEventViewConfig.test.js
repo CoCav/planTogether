@@ -20,6 +20,7 @@ import {
    - public user event views
    - view content resolution
    - fallback behavior
+   - decorative tab icon configuration
 
    Notes:
    - uses reusable public user event view factories

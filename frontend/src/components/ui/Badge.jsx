@@ -8,10 +8,11 @@ import { EVENT_STATUS_UI } from "../../features/shared/constants/eventStatus";
    Supports:
    - role-based badges
    - status-based badges
-   - custom variant and label
+   - custom variant, label and children
+   - optional decorative icon
 ================================================== */
 
-export default function Badge({ role, status, variant, label, children, className = "" }) {
+export default function Badge({ role, status, variant, label, icon, children, className = "" }) {
 
     /* =========================
        BADGE CONFIGURATION
@@ -27,6 +28,13 @@ export default function Badge({ role, status, variant, label, children, classNam
         roleConfig?.badgeVariant ||
         statusConfig?.badgeVariant ||
         "";
+
+    // Resolves badge icon from explicit prop or shared UI config
+    const BadgeIcon =
+        icon ||
+        roleConfig?.icon ||
+        statusConfig?.icon ||
+        null;
 
     // Resolves badge label from explicit prop, children or shared UI config
     const badgeLabel =
@@ -46,7 +54,15 @@ export default function Badge({ role, status, variant, label, children, classNam
 
     return (
         <span className={`badge badge-${badgeVariant} ${className}`.trim()}>
-            {badgeLabel}
+            {BadgeIcon && (
+                <span className="badge-icon" aria-hidden="true">
+                    <BadgeIcon />
+                </span>
+            )}
+
+            <span className="badge-label">
+                {badgeLabel}
+            </span>
         </span>
     );
 }

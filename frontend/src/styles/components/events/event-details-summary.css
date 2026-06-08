@@ -45,12 +45,26 @@
 ========================================= */
 
 .event-details-summary-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+
     color: var(--color-text-muted);
     font-size: var(--font-size-xs);
 }
 
 .event-details-summary-value {
     font-weight: 600;
+}
+
+.event-details-summary-label svg {
+    width: 14px;
+    height: 14px;
+
+    flex-shrink: 0;
+
+    color: currentColor;
+    opacity: 0.8;
 }
 
 /* =========================================

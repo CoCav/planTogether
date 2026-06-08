@@ -1,3 +1,5 @@
+import { Check, Dot } from "lucide-react";
+
 import { PASSWORD_REQUIREMENTS, PASSWORD_REQUIREMENT_LABELS } from "../../features/shared/security/passwordPolicy";
 
 /* ==================================================
@@ -44,7 +46,6 @@ export default function PasswordRequirements({ id, password = "" }) {
         }
     ];
 
-
     /* =============================
        MAIN RENDER
     ============================= */
@@ -62,7 +63,7 @@ export default function PasswordRequirements({ id, password = "" }) {
                         className={`password-rule ${requirement.isValid ? "is-valid" : ""}`}
                     >
                         <span className="password-rule-icon" aria-hidden="true">
-                            {requirement.isValid ? "✓" : "•"}
+                            {requirement.isValid ? <Check /> : <Dot />}
                         </span>
 
                         {requirement.label}

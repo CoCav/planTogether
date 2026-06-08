@@ -23,6 +23,7 @@ import {
    - view content resolution
    - default view fallback
    - sorting and quick filter defaults
+   - decorative tab icon configuration
 
    Notes:
    - uses reusable current user event view factories

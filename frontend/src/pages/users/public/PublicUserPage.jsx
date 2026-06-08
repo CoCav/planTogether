@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
+import { Bookmark, FolderOpen } from "lucide-react";
 
 import usePublicUserListingData from "../../../features/users/public/hooks/usePublicUserListingData";
 import usePublicUserListingState from "../../../features/users/public/hooks/usePublicUserListingState";
@@ -32,6 +33,7 @@ import Pagination from "../../../components/ui/Pagination";
    - paginated public user event loading
    - public event listing metadata
    - loading, error and empty states
+   - decorative profile metadata icons
 ================================================== */
 
 export default function PublicUserPage() {
@@ -91,7 +93,7 @@ export default function PublicUserPage() {
         setError
     });
 
-    const avatar = getAvatar(profile.user.avatar);
+    const avatar = getAvatar(profile?.user?.avatar);
 
     /* =============================
        DATA LOADING / URL SYNC
@@ -230,11 +232,13 @@ export default function PublicUserPage() {
 
                             <ul className="public-user-profile-stats" aria-label="Public user statistics">
                                 <li className="public-user-profile-stat">
+                                    <FolderOpen aria-hidden="true" />
                                     <strong>{profile.stats.createdEventsCount}</strong>{" "}
                                     created events
                                 </li>
 
                                 <li className="public-user-profile-stat">
+                                    <Bookmark aria-hidden="true" />
                                     <strong>{profile.stats.joinedEventsCount}</strong>{" "}
                                     joined events
                                 </li>

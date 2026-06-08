@@ -64,7 +64,28 @@
 ========================================= */
 
 .event-view-tab-icon {
-    font-size: var(--font-size-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    color: var(--color-primary);
+    opacity: 0.75;
+}
+
+.event-view-tab:hover .event-view-tab-icon {
+    opacity: 1;
+}
+
+.event-view-tab.is-active .event-view-tab-icon {
+    color: currentColor;
+    opacity: 1;
+}
+
+.event-view-tab-icon svg {
+    width: 14px;
+    height: 14px;
 }
 
 /* =========================================

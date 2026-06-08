@@ -33,21 +33,28 @@
     top: 50%;
     right: 14px;
 
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
     transform: translateY(-50%);
 
     color: var(--color-text-muted);
 
     pointer-events: none;
 
-    font-size: var(--font-size-sm);
-    line-height: 1;
-
     transition:
         transform var(--transition-fast),
         color var(--transition-fast);
 }
 
+.select-icon svg {
+    width: 14px;
+    height: 14px;
+}
+
 .select-wrapper:focus-within .select-icon {
+    color: var(--color-primary);
     transform: translateY(-50%) rotate(180deg);
 }
 

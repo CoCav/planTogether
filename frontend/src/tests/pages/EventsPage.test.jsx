@@ -19,9 +19,9 @@ import {
 
 /* ==================================================
    EVENTS PAGE TESTS
-   Tests public event listing page behavior
+   Tests public event listing page orchestration and interactions
 
-   Handles:
+   Covers:
    - initial loading state
    - public event rendering
    - empty state rendering
@@ -31,16 +31,15 @@ import {
    - quick date filters
    - pagination
    - URL synchronization
-   - guest login messaging
+   - guest login alert
    - current user role forwarding
-   - accessible listing sections
-   - accessible listing metadata
+   - accessible page sections
 
    Notes:
    - mocks API modules
    - mocks authenticated user state
    - mocks EventCard for role assertions
-   - uses MemoryRouter for URL query behavior
+   - uses MemoryRouter for route query testing
 ================================================== */
 
 /* =============================
@@ -110,7 +109,7 @@ const renderPage = (initialEntry = "/events") => {
     );
 };
 
-const renderLoadedEmptyEventsPage = async (initialEntry = "/events") => {
+const renderAndWaitForEmptyState = async (initialEntry = "/events") => {
     renderPage(initialEntry);
 
     await waitForEmptyListingState(screen);
@@ -176,8 +175,8 @@ describe("EventsPage", () => {
         expect(await screen.findByText("(12)")).toBeInTheDocument();
     });
 
-    it("displays empty state when no events are returned", async () => {
-        await renderLoadedEmptyEventsPage();
+    it("displays empty state when no events are available", async () => {
+        await renderAndWaitForEmptyState();
 
         expect(screen.getByText(/no ongoing events/i)).toBeInTheDocument();
     });
@@ -200,7 +199,7 @@ describe("EventsPage", () => {
     it("switches to upcoming view", async () => {
         const user = userEvent.setup();
 
-        await renderLoadedEmptyEventsPage();
+        await renderAndWaitForEmptyState();
 
         await user.click(screen.getByRole("tab", { name: /upcoming/i }));
 
@@ -218,7 +217,7 @@ describe("EventsPage", () => {
     it("switches to archives view", async () => {
         const user = userEvent.setup();
 
-        await renderLoadedEmptyEventsPage();
+        await renderAndWaitForEmptyState();
 
         await user.click(screen.getByRole("tab", { name: /archives/i }));
 
@@ -236,7 +235,7 @@ describe("EventsPage", () => {
     it("updates URL when switching view", async () => {
         const user = userEvent.setup();
 
-        await renderLoadedEmptyEventsPage();
+        await renderAndWaitForEmptyState();
 
         await user.click(screen.getByRole("tab", { name: /upcoming/i }));
 
@@ -292,7 +291,7 @@ describe("EventsPage", () => {
     it("hides quick filters when switching to archives view", async () => {
         const user = userEvent.setup();
 
-        await renderLoadedEmptyEventsPage();
+        await renderAndWaitForEmptyState();
 
         await user.click(screen.getByRole("tab", { name: /archives/i }));
 
@@ -318,7 +317,7 @@ describe("EventsPage", () => {
                 })
             );
 
-        await renderLoadedEmptyEventsPage();
+        await renderAndWaitForEmptyState();
 
         await user.click(screen.getByRole("button", { name: /show filters/i }));
         await user.type(screen.getByLabelText(/^search$/i), "music");
@@ -338,7 +337,7 @@ describe("EventsPage", () => {
     it("keeps active view when applying filters", async () => {
         const user = userEvent.setup();
 
-        await renderLoadedEmptyEventsPage();
+        await renderAndWaitForEmptyState();
 
         await user.click(screen.getByRole("tab", { name: /upcoming/i }));
 
@@ -396,7 +395,7 @@ describe("EventsPage", () => {
     it("resets filters", async () => {
         const user = userEvent.setup();
 
-        await renderLoadedEmptyEventsPage();
+        await renderAndWaitForEmptyState();
 
         await user.click(screen.getByRole("button", { name: /show filters/i }));
         await user.type(screen.getByLabelText(/^search$/i), "music");
@@ -426,7 +425,7 @@ describe("EventsPage", () => {
     it("updates URL when applying filters", async () => {
         const user = userEvent.setup();
 
-        await renderLoadedEmptyEventsPage();
+        await renderAndWaitForEmptyState();
 
         await user.click(screen.getByRole("button", { name: /show filters/i }));
         await user.type(screen.getByLabelText(/^search$/i), "music");
@@ -444,7 +443,7 @@ describe("EventsPage", () => {
     it("applies Today quick filter", async () => {
         const user = userEvent.setup();
 
-        await renderLoadedEmptyEventsPage();
+        await renderAndWaitForEmptyState();
 
         await user.click(screen.getByRole("button", { name: /today/i }));
 
@@ -460,7 +459,7 @@ describe("EventsPage", () => {
     it("applies This Weekend quick filter", async () => {
         const user = userEvent.setup();
 
-        await renderLoadedEmptyEventsPage();
+        await renderAndWaitForEmptyState();
 
         await user.click(screen.getByRole("button", { name: /this weekend/i }));
 
@@ -526,7 +525,7 @@ describe("EventsPage", () => {
                 })
             );
 
-        await renderLoadedEmptyEventsPage();
+        await renderAndWaitForEmptyState();
 
         await user.click(screen.getByRole("button", { name: /show filters/i }));
         await user.type(screen.getByLabelText(/^search$/i), "music");
@@ -571,11 +570,24 @@ describe("EventsPage", () => {
     });
 
     /* =============================
+       PAGE ACTIONS
+    ============================= */
+
+
+    it("shows create event link", async () => {
+        await renderAndWaitForEmptyState();
+
+        expect(screen.getByRole("link", {
+            name: /create event/i
+        })).toHaveAttribute("href", "/events/create");
+    });
+
+    /* =============================
        ACCESSIBILITY
     ============================= */
 
     it("renders accessible filter and results sections", async () => {
-        await renderLoadedEmptyEventsPage();
+        await renderAndWaitForEmptyState();
 
         expect(screen.getByRole("region", {
             name: "Event filters"
@@ -600,7 +612,7 @@ describe("EventsPage", () => {
     });
 
     it("does not show login alert when user is authenticated", async () => {
-        await renderLoadedEmptyEventsPage();
+        await renderAndWaitForEmptyState();
 
         expect(screen.queryByText(/login to join events/i)).not.toBeInTheDocument();
     });

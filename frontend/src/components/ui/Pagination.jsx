@@ -1,3 +1,5 @@
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
 import Button from "./Button";
 
 /* ==================================================
@@ -8,6 +10,7 @@ import Button from "./Button";
    - previous / next navigation
    - current page display
    - accessible pagination landmark
+   - decorative navigation icons
 ================================================== */
 
 export default function Pagination({
@@ -34,6 +37,7 @@ export default function Pagination({
                 onClick={onPrevious}
                 disabled={page === 1}
             >
+                <ChevronLeft aria-hidden="true" />
                 Previous
             </Button>
 
@@ -48,6 +52,7 @@ export default function Pagination({
                 disabled={page === totalPages}
             >
                 Next
+                <ChevronRight aria-hidden="true" />
             </Button>
         </nav>
     );

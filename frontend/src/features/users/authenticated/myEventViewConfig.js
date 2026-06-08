@@ -1,3 +1,5 @@
+import { Archive, FolderOpen, Bookmark } from "lucide-react";
+
 /* ==================================================
    MY EVENT VIEW CONFIG
    Centralizes current user event tab configuration
@@ -8,6 +10,7 @@
    - default sorting per view
    - quick filter visibility
    - date filter reset behavior
+   - decorative tab icons
 
    Notes:
    - aligned with GET /users/me/events
@@ -16,7 +19,7 @@
 export const DEFAULT_MY_EVENT_VIEW_CONTENT = {
     key: "created",
     label: "Created",
-    icon: "🛠️",
+    icon: FolderOpen,
     title: "Created Events",
     subtitle: "Events you created as organizer.",
     empty: "You haven’t created any events yet.",
@@ -34,7 +37,7 @@ export const MY_EVENT_VIEWS = [
     {
         key: "created",
         label: "Created",
-        icon: "🛠️",
+        icon: FolderOpen,
         title: "Created Events",
         subtitle: "Events you created as organizer.",
         empty: "You haven’t created any events yet.",
@@ -47,7 +50,7 @@ export const MY_EVENT_VIEWS = [
     {
         key: "createdHistory",
         label: "Created History",
-        icon: "📜",
+        icon: Archive,
         title: "Created History",
         subtitle: "Explore past events you created.",
         empty: "No past created events.",
@@ -60,7 +63,7 @@ export const MY_EVENT_VIEWS = [
     {
         key: "joined",
         label: "Joined",
-        icon: "🤝",
+        icon: Bookmark,
         title: "Joined Events",
         subtitle: "Events you joined.",
         empty: "You haven’t joined any events yet.",
@@ -73,7 +76,7 @@ export const MY_EVENT_VIEWS = [
     {
         key: "joinedHistory",
         label: "Joined History",
-        icon: "🗂️",
+        icon: Archive,
         title: "Joined History",
         subtitle: "Explore past events you joined.",
         empty: "No past joined events.",

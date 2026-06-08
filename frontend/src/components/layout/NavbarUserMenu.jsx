@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
 
 import { useClickOutside } from "../../hooks/useClickOutside";
 
@@ -71,7 +72,7 @@ export default function NavbarUserMenu({ user, avatar, onLogout }) {
                 />
 
                 <span className="navbar-caret" aria-hidden="true">
-                    ▾
+                    <ChevronDown />
                 </span>
             </button>
 

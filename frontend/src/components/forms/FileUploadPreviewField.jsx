@@ -1,4 +1,4 @@
-import { UploadCloud } from "lucide-react";
+import { UploadCloud, X } from "lucide-react";
 
 import useFileUploadPreview from "../../hooks/useFileUploadPreview";
 
@@ -16,7 +16,7 @@ import FormField from "../ui/FormField";
    - drag and drop interactions
    - file removal action
    - accessible helper and error descriptions
-   - decorative upload icon rendering
+   - decorative upload and remove icons rendering
 
    Notes:
    - reusable for avatar and event image uploads
@@ -185,6 +185,7 @@ export default function FileUploadPreviewField({
                                         onClick={onRemoveFile}
                                         aria-label={removeLabel}
                                     >
+                                        <X aria-hidden="true" />
                                         Remove
                                     </button>
                                 )}

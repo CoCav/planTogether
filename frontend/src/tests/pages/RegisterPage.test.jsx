@@ -20,6 +20,7 @@ import RegisterPage from "../../pages/RegisterPage";
    - stale pagination cleanup after registration
    - register error feedback
    - login navigation state forwarding
+   - decorative account navigation icon
 
    Notes:
    - mocks auth context login action
@@ -173,7 +174,9 @@ describe("RegisterPage", () => {
     it("renders the register section with accessible label", () => {
         renderPage();
 
-        expect(screen.getByLabelText("Registration form")).toHaveClass("account-section");
+        expect(screen.getByRole("region", {
+            name: "Registration form"
+        })).toHaveClass("account-section");
     });
 
     /* =============================

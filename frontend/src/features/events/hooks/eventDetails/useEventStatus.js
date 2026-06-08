@@ -9,7 +9,6 @@ import { EVENT_STATUS } from "../../../shared/constants/eventStatus";
    - started event detection
    - participant limit checks
    - registration deadline checks
-   - login prompt visibility
    - join disabled reason resolution
 ================================================== */
 
@@ -48,11 +47,6 @@ export default function useEventStatus({ user, event, isMember = false }) {
        UI VISIBILITY
     ============================= */
 
-    const showLoginPrompt =
-        !user &&
-        !isPast &&
-        !isEventFull;
-
     const joinDisabledReason = (() => {
         if (!user) return null;
         if (isPast) return "Event ended";
@@ -68,7 +62,6 @@ export default function useEventStatus({ user, event, isMember = false }) {
         isStarted,
         isEventFull,
         isRegistrationClosed,
-        showLoginPrompt,
         joinDisabledReason
     };
 }

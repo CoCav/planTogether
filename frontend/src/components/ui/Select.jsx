@@ -1,3 +1,5 @@
+import { ChevronDown } from "lucide-react";
+
 /* ==================================================
    SELECT
    Reusable styled select with custom dropdown icon
@@ -6,7 +8,7 @@
    - base select styling
    - error state
    - accessible invalid state
-   - custom dropdown icon
+   - decorative dropdown icon
 ================================================== */
 
 export default function Select({ className = "", error = false, children, ...props }) {
@@ -36,11 +38,8 @@ export default function Select({ className = "", error = false, children, ...pro
                 {children}
             </select>
 
-            <span
-                className="select-icon"
-                aria-hidden="true"
-            >
-                ▾
+            <span className="select-icon" aria-hidden="true">
+                <ChevronDown aria-hidden="true" />
             </span>
         </div>
     );

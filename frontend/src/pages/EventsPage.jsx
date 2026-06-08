@@ -281,7 +281,19 @@ export default function EventsPage() {
                 <Link to="/events/create" className="btn btn-primary">Create Event</Link>
             </header>
 
-            {!user && <Alert type="info">🔐 Login to join events and manage your participation.</Alert>}
+            {/* =============================
+               GLOBAL EVENT STATE
+            ============================= */}
+
+            {!user && (
+                <Alert type="info">
+                    Login to join events and manage your participation.
+                </Alert>
+            )}
+
+            {/* =============================
+               FEEDBACK MESSAGES
+            ============================= */}
 
             {message && <Alert type="success">{message}</Alert>}
             {error && <Alert type="danger">{error}</Alert>}

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { CalendarDays, Clock3, Crown, Hourglass, MapPin, Users } from "lucide-react";
 
 import { defaultEventImage, getEventImage } from "../../utils/uploadedFiles";
 
@@ -27,6 +28,7 @@ import Badge from "../ui/Badge";
    - public profile navigation
    - accessible image links
    - accessible event labels
+   - decorative badge and metadata icons
 
    Notes:
    - event statuses and business states are displayed as badges
@@ -42,8 +44,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
     const {
         isPast,
         isEventFull,
-        isRegistrationClosed,
-        showLoginPrompt
+        isRegistrationClosed
     } = useEventStatus({
         user,
         event,
@@ -106,7 +107,9 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                             )}
 
                             {eventDisplayData.type && (
-                                <span className="event-card-type-badge">{eventDisplayData.type}</span>
+                                <span className="event-card-type-badge">
+                                    {eventDisplayData.type}
+                                </span>
                             )}
 
                             {shouldShowOrganizerInline && event.creatorName && (
@@ -115,10 +118,18 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                                         to={`/users/${event.creatorId}`}
                                         className="link-hover-primary"
                                     >
-                                        <Badge variant="organizer" label={`👑 ${event.creatorName}`} />
+                                        <Badge
+                                            variant="organizer"
+                                            icon={Crown}
+                                            label={event.creatorName}
+                                        />
                                     </Link>
                                 ) : (
-                                    <Badge variant="organizer" label={`👑 ${event.creatorName}`} />
+                                    <Badge
+                                        variant="organizer"
+                                        icon={Crown}
+                                        label={event.creatorName}
+                                    />
                                 )
                             )}
 
@@ -134,7 +145,6 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
 
                         canLeave={canLeave}
                         showJoinButton={showJoinButton}
-                        showLoginPrompt={showLoginPrompt}
 
                         onJoin={onJoin}
                         onLeave={onLeave}
@@ -173,7 +183,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                     <ul className="event-card-meta-list" aria-label="Event details">
 
                         <li className={isEventFull ? "event-card-meta-item text-danger" : "event-card-meta-item"}>
-                            <span aria-hidden="true">👥</span>
+                            <Users aria-hidden="true" />
 
                             <span>
                                 {eventDisplayData.participantLabel}
@@ -181,7 +191,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                         </li>
 
                         <li className="event-card-meta-item">
-                            <span aria-hidden="true">📅</span>
+                            <CalendarDays aria-hidden="true" />
 
                             <span>
                                 {eventDisplayData.date}
@@ -189,7 +199,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                         </li>
 
                         <li className="event-card-meta-item">
-                            <span aria-hidden="true">🕒</span>
+                            <Clock3 aria-hidden="true" />
 
                             <span>
                                 {eventDisplayData.time}
@@ -198,7 +208,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
 
                         {eventDisplayData.registrationDeadline && (
                             <li className="event-card-meta-item">
-                                <span aria-hidden="true">⏳</span>
+                                <Hourglass aria-hidden="true" />
 
                                 <span>
                                     {eventDisplayData.registrationDeadline}
@@ -207,7 +217,7 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                         )}
 
                         <li className="event-card-meta-item">
-                            <span aria-hidden="true">📍</span>
+                            <MapPin aria-hidden="true" />
 
                             <span>
                                 {eventDisplayData.location}

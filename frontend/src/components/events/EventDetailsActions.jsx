@@ -1,4 +1,5 @@
-import Alert from "../ui/Alert";
+import { LogOut, Pencil, Trash2, UserPlus } from "lucide-react";
+
 import Button from "../ui/Button";
 
 /* ==================================================
@@ -10,7 +11,6 @@ import Button from "../ui/Button";
    - leave action
    - edit action
    - delete action
-   - guest login prompt
 
    Notes:
    - event statuses and business states are displayed as badges in EventDetailsPage
@@ -23,8 +23,6 @@ export default function EventDetailsActions({
     canLeave,
     canEdit,
     canDelete,
-
-    showLoginPrompt,
 
     onJoin,
     onLeave,
@@ -40,6 +38,7 @@ export default function EventDetailsActions({
                     variant="outline-primary"
                     onClick={() => onJoin(eventId)}
                 >
+                    <UserPlus aria-hidden="true" />
                     Join the event
                 </Button>
             )}
@@ -50,6 +49,7 @@ export default function EventDetailsActions({
                     variant="outline-danger"
                     onClick={() => onLeave(eventId)}
                 >
+                    <LogOut aria-hidden="true" />
                     Leave the event
                 </Button>
             )}
@@ -60,6 +60,7 @@ export default function EventDetailsActions({
                     variant="outline"
                     onClick={onEdit}
                 >
+                    <Pencil aria-hidden="true" />
                     Edit Event
                 </Button>
             )}
@@ -70,12 +71,9 @@ export default function EventDetailsActions({
                     variant="danger"
                     onClick={onDelete}
                 >
+                    <Trash2 aria-hidden="true" />
                     Delete Event
                 </Button>
-            )}
-
-            {showLoginPrompt && (
-                <Alert type="info">Login to join this event.</Alert>
             )}
         </div>
     );

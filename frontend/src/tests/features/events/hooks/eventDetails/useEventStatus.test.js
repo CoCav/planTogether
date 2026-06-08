@@ -16,7 +16,7 @@ import { createAuthenticatedUser } from "../../../../factories/users/userFactory
    - started event detection
    - participant limit checks
    - registration deadline checks
-   - guest login prompt
+   - guest join status handling
    - join disabled reasons
 
    Notes:
@@ -48,7 +48,7 @@ describe("useEventStatus", () => {
        EVENT AVAILABILITY
     ============================= */
 
-    it("should detect past events", () => {
+    it("detects past events", () => {
         const result = useEventStatus({
             user,
             event: createEvent({
@@ -62,7 +62,7 @@ describe("useEventStatus", () => {
         expect(result.joinDisabledReason).toBe("Event ended");
     });
 
-    it("should detect started events", () => {
+    it("detects started events", () => {
         const result = useEventStatus({
             user,
             event: createEvent({
@@ -74,7 +74,7 @@ describe("useEventStatus", () => {
         expect(result.isStarted).toBe(true);
     });
 
-    it("should detect event as started when start time is equal to now", () => {
+    it("detects event as started when start time is equal to now", () => {
         const result = useEventStatus({
             user,
             event: createEvent({
@@ -86,7 +86,7 @@ describe("useEventStatus", () => {
         expect(result.isStarted).toBe(true);
     });
 
-    it("should not detect future events as started", () => {
+    it("does not detect future events as started", () => {
         const result = useEventStatus({
             user,
             event: createEvent({
@@ -98,7 +98,7 @@ describe("useEventStatus", () => {
         expect(result.isStarted).toBe(false);
     });
 
-    it("should not detect missing event start date as started", () => {
+    it("does not detect missing event start date as started", () => {
         const result = useEventStatus({
             user,
             event: createEvent({
@@ -110,7 +110,7 @@ describe("useEventStatus", () => {
         expect(result.isStarted).toBe(false);
     });
 
-    it("should detect full events", () => {
+    it("detects full events", () => {
         const result = useEventStatus({
             user,
             event: createEvent({
@@ -124,7 +124,7 @@ describe("useEventStatus", () => {
         expect(result.joinDisabledReason).toBe("Event full");
     });
 
-    it("should not mark event as full when maxParticipants is null", () => {
+    it("does not mark event as full when maxParticipants is null", () => {
         const result = useEventStatus({
             user,
             event: createEvent({
@@ -137,7 +137,20 @@ describe("useEventStatus", () => {
         expect(result.isEventFull).toBe(false);
     });
 
-    it("should detect closed registration", () => {
+    it("does not mark event as full when maxParticipants is empty", () => {
+        const result = useEventStatus({
+            user,
+            event: createEvent({
+                ...baseEvent,
+                participantCount: 999,
+                maxParticipants: ""
+            })
+        });
+
+        expect(result.isEventFull).toBe(false);
+    });
+
+    it("detects closed registration", () => {
         const result = useEventStatus({
             user,
             event: createEvent({
@@ -150,7 +163,7 @@ describe("useEventStatus", () => {
         expect(result.joinDisabledReason).toBe("Registration closed");
     });
 
-    it("should not disable join for members when registration is closed", () => {
+    it("does not disable join for members when registration is closed", () => {
         const result = useEventStatus({
             user,
             event: createEvent({
@@ -165,20 +178,19 @@ describe("useEventStatus", () => {
     });
 
     /* =============================
-       UI VISIBILITY
+       GUEST STATUS
     ============================= */
 
-    it("should show login prompt for guest on available upcoming event", () => {
+    it("does not return a join disabled reason for guests", () => {
         const result = useEventStatus({
             user: null,
             event: baseEvent
         });
 
-        expect(result.showLoginPrompt).toBe(true);
         expect(result.joinDisabledReason).toBeNull();
     });
 
-    it("should not show login prompt when event is full", () => {
+    it("still detects full events for guests", () => {
         const result = useEventStatus({
             user: null,
             event: createEvent({
@@ -188,11 +200,11 @@ describe("useEventStatus", () => {
             })
         });
 
-        expect(result.showLoginPrompt).toBe(false);
         expect(result.isEventFull).toBe(true);
+        expect(result.joinDisabledReason).toBeNull();
     });
 
-    it("should not show login prompt for past events", () => {
+    it("still detects past events for guests without returning disabled reason", () => {
         const result = useEventStatus({
             user: null,
             event: createEvent({
@@ -201,6 +213,7 @@ describe("useEventStatus", () => {
             })
         });
 
-        expect(result.showLoginPrompt).toBe(false);
+        expect(result.isPast).toBe(true);
+        expect(result.joinDisabledReason).toBeNull();
     });
 });

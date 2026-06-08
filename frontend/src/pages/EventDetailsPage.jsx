@@ -113,8 +113,6 @@ export default function EventDetailsPage() {
 
         isEventFull,
         isRegistrationClosed,
-
-        showLoginPrompt
     } = useEventStatus({
         user,
         event,
@@ -267,6 +265,20 @@ export default function EventDetailsPage() {
                 </div>
             </header>
 
+            {/* =============================
+               GLOBAL EVENT STATE
+            ============================= */}
+
+            {!user && (
+                <Alert type="info">
+                    Login to join events and manage your participation.
+                </Alert>
+            )}
+
+            {/* =============================
+               FEEDBACK MESSAGES
+            ============================= */}
+
             {message && <Alert type="success">{message}</Alert>}
             {error && <Alert type="danger">{error}</Alert>}
 
@@ -296,8 +308,6 @@ export default function EventDetailsPage() {
                             canLeave={canLeave}
                             canEdit={canEdit}
                             canDelete={canDelete}
-
-                            showLoginPrompt={showLoginPrompt}
 
                             onJoin={handleJoinEvent}
                             onLeave={handleLeaveEvent}

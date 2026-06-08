@@ -11,6 +11,7 @@ import UserForm from "../../../components/users/UserForm";
    Handles:
    - shared avatar upload field rendering
    - user field rendering
+   - optional submit icon rendering
    - accessible field descriptions
    - optional avatar visibility
    - custom form content rendering
@@ -160,6 +161,14 @@ describe("UserForm", () => {
     /* =============================
        SUBMISSION
     ============================= */
+
+    it("renders optional submit icon", () => {
+        renderUserForm({
+            submitIcon: <span data-testid="submit-icon" aria-hidden="true" />
+        });
+
+        expect(screen.getByTestId("submit-icon")).toBeInTheDocument();
+    });
 
     it("calls onSubmit when submitting the form", async () => {
         const user = userEvent.setup();

@@ -23,7 +23,7 @@ PlanTogether is a collaborative event management platform where users can create
 
 This is the **backend REST API** of PlanTogether, built with **Node.js, Express, PostgreSQL, and Sequelize**.
 
-The API manages authentication, events, memberships, uploads, permissions, validation, and business rules through a modular and scalable architecture designed for maintainability and long-term growth.
+The API manages authentication, events, memberships, uploads, permissions, validation, and business rules through a modular architecture focused on scalability, maintainability, and predictable backend behavior.
 
 Users can create, join, leave, update, and manage events depending on their role:
 
@@ -33,17 +33,16 @@ Users can create, join, leave, update, and manage events depending on their role
 
 The backend architecture emphasizes:
 
-- service-oriented architecture designed for scalability and maintainability
-- layered role-based authorization and permissions
-- centralized validation and security workflows
-- consistent and predictable API responses
-- reusable filtering, formatting, and pagination utilities
-- secure upload and authentication flows
-- transaction-safe workflows for sensitive operations
-- optimized database query strategies
+- service-oriented and layered backend architecture
+- centralized validation, security, permissions, and error handling
+- reusable filtering, pagination, formatting, and query utilities
+- secure authentication, uploads, and protected file handling
+- transaction-safe workflows and optimized query strategies
+- consistent API responses and predictable business logic
 - structured logging with Pino
-- automated CI testing with GitHub Actions
-- extensive unit and integration test coverage
+- automated CI workflows with extensive unit and integration test coverage
+
+The backend is designed to provide secure data handling, scalable event and membership workflows, consistent permission enforcement, and maintainable long-term backend architecture.
 
 ---
 
@@ -51,9 +50,9 @@ The backend architecture emphasizes:
 
 PlanTogether provides a **RESTful API** designed for collaborative event management with **role-based access control**.
 
-The API is built to be consumed by frontend applications or external clients and emphasizes security, consistency, scalability, and maintainability.
+The API is built to support frontend applications and external clients through secure, scalable, and consistent backend workflows.
 
-Clients can:
+Users can:
 
 - authenticate users securely with JWT
 - create, update, and manage collaborative events
@@ -61,32 +60,29 @@ Clients can:
 - manage membership roles and permissions
 - retrieve authenticated and public user data
 - upload and manage avatars and event images
-- filter, search, sort, and paginate events efficiently
-- retrieve created and joined event listings
+- filter, search, sort, and paginate event listings
+- retrieve created and joined event activity
 
-The backend centralizes validation, authorization, and business logic to ensure:
-
-- secure, predictable, and consistent API behavior
-- strong role-based access control
-- reliable data integrity across operations
+The backend centralizes validation, authorization, permissions, and business rules to ensure predictable API behavior and reliable data integrity across sensitive operations.
 
 Additional backend architecture features include:
 
-- scalable query-builder and filtering utilities
-- shared validation and error-handling middleware
+- reusable filtering, pagination, and query-builder utilities
+- shared validation, security, and error-handling middleware
 - Sequelize transactions for sensitive workflows
 - centralized security policies for passwords, uploads, and CORS
 - standardized public and authenticated user formatting helpers
-- optimized database queries and indexing strategies
+- optimized query and indexing strategies
 - structured logging with Pino
-- automated GitHub Actions CI testing
-- extensive unit and integration test coverage
+- automated CI workflows with extensive unit and integration test coverage
+
+The API architecture is designed to provide scalable event and membership management, secure data handling, reusable backend workflows, and consistent long-term maintainability across the application.
 
 ---
 
 ## 🛠️ Tech Stack
 
-The backend is built with scalable and modular technologies focused on performance, security, maintainability, and reliable API behavior.
+The backend is built with modular and scalable technologies focused on performance, security, maintainability, and reliable API behavior.
 
 ### Core Technologies
 
@@ -99,33 +95,31 @@ The backend is built with scalable and modular technologies focused on performan
 
 - **JSON Web Tokens (JWT)** – stateless authentication
 - **bcrypt** – password hashing
-- **Helmet** – secure HTTP headers protection
+- **Helmet** – secure HTTP header protection
 - **express-rate-limit** – authentication rate limiting
 - **Express Validator** – request validation and sanitization
-- **Centralized security policies** – password, upload, and CORS configuration
+- **Centralized security policies** – password, upload, validation, and CORS configuration
 
 ### File Handling
 
 - **Multer** – avatar and event image uploads
-- **Custom upload utilities** – upload security, file cleanup, and path normalization
+- **Custom upload utilities** – upload validation, file cleanup, rollback protection, and path normalization
 
 ### Architecture & Backend Patterns
 
-- **Middleware architecture** – authentication, validation, authorization, upload, and error handling layers
-- **MVC architecture** – modular application structure
-- **Service layer architecture** – centralized business logic abstraction
-- **Soft-delete architecture** – membership and account lifecycle preservation
-- **Centralized constants and utilities** - reusable business rules, formatting, and query helpers
-- **Query optimization utilities** – grouped participant counts and scalable filtering strategies
-- **Sequelize transactions** – critical operation safety and data consistency
+- **Layered backend architecture** – routes, controllers, services, middlewares, validators, and utilities
+- **Service-oriented business logic** – centralized permissions, validation, filtering, and reusable workflows
+- **Soft-delete lifecycle architecture** – membership and account preservation workflows
+- **Reusable query and formatting utilities** – filtering, pagination, participant counts, and normalization helpers
+- **Sequelize transactions** – critical operation safety and database consistency
 - **Pino** – structured centralized logging
 
 ### Testing & Quality Assurance
 
 - **Jest** – unit testing framework
 - **Supertest** – API integration testing
-- **GitHub Actions** – automated continuous integration testing
-- **Comprehensive testing strategy** – validators, services, middlewares, controllers, query utilities, security flows, uploads, and full API integrations
+- **GitHub Actions** – automated continuous integration workflows
+- **Comprehensive testing architecture** – validators, services, middlewares, controllers, security flows, uploads, query utilities, and full API integrations
 
 ---
 
@@ -215,133 +209,108 @@ backend/
 └── README.md
 ```
 
-The `config` layer centralizes environment-based configuration such as database connections, CORS, and reusable security policies.
+### 🧩 Architecture Notes
 
-The `constants` layer stores shared business values such as event roles, event modes and event statuses.
+- **Config** centralizes environment configuration, database connections, CORS handling, logging, and reusable security policies.
 
-The `relations` folder contains linking models used to represent many-to-many relationships between users and events.
+- **Constants** store shared business values such as event roles, modes, and statuses.
 
-The `utils` layer centralizes reusable logic such as:
+- **Middlewares** handle reusable authentication, authorization, validation, uploads, rate limiting, and centralized error-handling workflows.
 
-- pagination, filtering, and query optimization
-- event status computation
-- authentication token generation
-- reusable response formatting
-- file management and upload cleanup
-- normalization utilities
-- reusable HTTP errors
+- **Models** define database structures, Sequelize relations, and linking models used for many-to-many relationships between users and events.
 
-The `middlewares` layer contains reusable authentication, authorization, validation handling, upload handling, rate limiting, and centralized error-handling components.
+- **Routes** define API endpoints and connect request flows to controllers, validation, authentication, and authorization layers.
 
-The testing architecture mirrors the backend structure and separates reusable helpers, factories, unit tests, and full API integration flows to improve maintainability, readability, and testing consistency.
+- **Services** centralize business logic, permissions, transaction-safe workflows, and domain-specific operations.
 
-This structure promotes scalability, testability, reusable business logic, secure API design, soft-delete lifecycle management, transaction-safe database operations, and long-term maintainability.
+- **Utils** centralize reusable backend logic including filtering, pagination, query helpers, event status computation, token generation, response normalization, upload cleanup, and HTTP error helpers.
+
+- **Validators** isolate request validation and reusable input rules for routes, query parameters, uploads, and protected actions.
+
+- **Tests** mirror the backend architecture through reusable helpers, factories, isolated unit testing, and full API integration workflows.
+
+This architecture separates routing, business logic, validation, permissions, database interactions, uploads, and reusable utilities into maintainable backend layers.
+
+The backend also emphasizes reusable business logic, transaction-safe workflows, scalable query handling, soft-delete lifecycle management, and consistent permission-aware behavior across the API.
 
 ---
 
 ## ✨ Features
 
-The API provides a complete set of endpoints for managing users, events, memberships, and permissions through a scalable role-based architecture.
+The API provides a complete set of endpoints for managing users, events, memberships, permissions, uploads, and role-aware interactions through a scalable backend architecture.
 
 ### 👤 User Management
 
-- User registration
-- Login with JWT authentication (stateless, token-based)
-- Logout endpoint
-- Authenticated user profile retrieval
-- Public user profile retrieval
+- User registration and JWT-based authentication
+- Authenticated and public user profile retrieval
 - Public user event listings with filtering, sorting, pagination, and created/joined views
-- Public user statistics distinguish organized events from joined events
-- Joined event statistics exclude organizer memberships
-- Authenticated profile update
-- Avatar upload and replacement (`multipart/form-data`)
-- Automatic old avatar cleanup when replaced
-- Secure password update flow with current password verification
-- Email normalization and password hashing using **bcrypt**
-- Centralized validation and error-handling middleware
-- Secure authenticated account deletion with anonymization
-- Soft-delete account lifecycle preservation
-- Unified JSON responses
+- Public user statistics distinguishing organized and joined event activity
+- Authenticated profile updates and secure password changes
+- Avatar upload, replacement, and automatic cleanup (`multipart/form-data`)
+- Email normalization and password hashing with **bcrypt**
+- Soft-delete account lifecycle preservation and secure account deletion workflows
+- Centralized validation, authentication, and error-handling middleware
+- Unified JSON API responses
 
-Additional security features:
+Additional security features include:
 
 - Helmet HTTP security protections
 - Authentication rate limiting
-- Centralized password policy
-- Centralized CORS configuration
+- Centralized password, upload, and CORS policies
 
 ### 📅 Event Management
 
-- Create events
-- Retrieve all events
-- Retrieve a single event
-- Retrieve current authenticated user event access and permissions for frontend guards
-- Update events *(organizer or co_organizer)*
-- Delete events *(organizer only, before the event starts)*
-- Event image upload, replacement, and removal (`multipart/form-data`)
-- Automatic old event image cleanup when replaced or removed
+- Create, retrieve, update, and delete events
+- Event image upload, replacement, removal, and cleanup (`multipart/form-data`)
 - Organizer ownership transfer between active event members
-
-Additional capabilities:
-
-- Event creator information included in API responses
-- Event image paths included in API responses
-- Strong validation and business rule enforcement
-- Upload validation for supported image types, extensions, and file sizes
-- Sequelize transactions for transaction-safe workflows
-- Optimized database queries and indexing strategies
-- Flexible registration deadline system with predefined and custom deadline support
+- Flexible registration deadline support with predefined and custom deadlines
+- Event creator and image metadata included in API responses
+- Transaction-safe workflows using Sequelize transactions
+- Strong validation, upload protection, and business-rule enforcement
+- Optimized filtering, pagination, participant count, and query behavior
 
 Each event automatically assigns the creator as **organizer**.
 
-### 👥 Event Membership & Roles
+### 👥 Memberships, Roles & Permissions
 
-Users interact with events through a membership system that associates users with events and assigns specific roles.
+Users interact with events through a membership system that assigns event-specific roles:
 
-#### Membership
-
-- Join an event
-- Leave an event
-- View event members
-- View event organizers and staff
-- Automatic membership restoration after rejoining an event
-- Soft-delete membership lifecycle management
-
-#### Roles
-
-Each membership has a role stored in the `EventUserRole` model.
-
-- `organizer`
-- `co_organizer`
-- `participant`
-
-### 🔐 Permissions & Role Hierarchy
+```txt
+organizer
+co_organizer
+participant
+```
 
 The API enforces a strict role hierarchy:
 
-`organizer > co_organizer > participant`
+```txt
+organizer > co_organizer > participant
+```
 
-#### Organizer capabilities
+Role-aware capabilities include:
 
-- Full event management permissions
-- Edit and delete events
-- Promote participants to co_organizers
-- Demote co_organizers
-- Remove participants and co_organizers
+- joining and leaving events
+- membership restoration after rejoining
+- organizer ownership transfer
+- participant and co_organizer management
+- role promotion and demotion workflows
+- protected organizer-only actions
+- soft-delete membership lifecycle handling
 
-#### Co_organizer capabilities
+The backend also protects sensitive operations through centralized authorization and business-rule enforcement.
 
-- Edit events
-- Remove participants from events
+Protected behaviors include:
 
-#### Participant capabilities
+- organizer protection and ownership restrictions
+- started-event deletion restrictions
+- inactive membership protection
+- role hierarchy enforcement
+- permission-aware membership management
+- protection against unauthorized or invalid operations
 
-- Join events
-- Leave events
+### 🔐 Event Access & Frontend Permissions
 
-#### Event access endpoint
-
-Authenticated clients can retrieve the current user's role and action access for a specific event:
+Authenticated clients can retrieve event-specific permissions through:
 
 ```http
 GET /api/events/:eventId/me
@@ -350,141 +319,64 @@ GET /api/events/:eventId/me
 This endpoint returns:
 
 - the current user's event role
-- the computed event status (`upcoming`, `ongoing`, or `past`)
-- action access flags such as `canEdit` and `canDelete`
-- deletion access automatically respects started-event restrictions
+- computed event status (`upcoming`, `ongoing`, `past`)
+- permission flags such as `canEdit` and `canDelete`
+- started-event access restrictions
 
-It is primarily used by frontend route guards and permission-based UI rendering.
+It is primarily used by frontend route guards, permission-aware rendering, and protected frontend event flows.
 
-This allows the frontend to:
-- prevent unauthorized users from accessing edit pages
-- conditionally render edit/delete actions
-- centralize event access checks without duplicating backend authorization logic
-
-The backend remains the source of truth through role authorization middlewares and service-layer business rules.
-
-#### Public access
-
-Unauthenticated users can access public event and public user data in read-only mode.
-
-### 🚫 Protected Actions
-
-The API prevents invalid or unsafe operations:
-
-- Cannot change the role of the organizer
-- Cannot promote another user to organizer
-- Cannot remove the organizer
-- Co_organizers cannot manage other co_organizers
-- Started events cannot be deleted
-- Past events remain protected from restricted actions
-- Invalid memberships and unauthorized actions are blocked consistently
-- Ownership transfer is restricted to active event members
-- Inactive memberships cannot manage or receive protected roles
-- Active organizers cannot delete their account before transferring ownership
-- Protected actions are enforced consistently through centralized authorization and business-rule layers
-
-### 🧠 Authorization System
-
-The backend uses a layered middleware architecture:
-
-- **Authentication**
-  - `authenticateToken` verifies JWT access tokens
-
-- **Authorization**
-  - `authorizeEventRole`
-  - `eventMemberAuthorization`
-
-- **Business rules**
-  - role hierarchy enforcement
-  - organizer protection
-  - membership management restrictions
-  - event state restrictions
-  - started event deletion protection
-  - ownership transfer restrictions
-  - soft-delete membership protection
-  - inactive membership handling
-
-This architecture ensures a clear separation between:
-
-- authentication
-- authorization
-- validation
-- business logic
-
-The authorization system is centralized, reusable, and consistent across all event-related operations.
-
-### 👥 Members & Roles Management
-
-Organizers and co_organizers can:
-
-- View all members of an event
-- View organizers and co_organizers
-- Change a user's role *(organizer only)*
-- Remove a member *(with role restrictions)*
+The backend remains the source of truth through centralized authorization middlewares and service-layer business rules.
 
 ### 🔍 Event Search & Filtering
 
-The API supports advanced filtering using query parameters.
+The API supports advanced filtering, sorting, and pagination through reusable query utilities shared across public events, authenticated user listings, and public user event listings.
 
-Filtering is powered by a reusable query system, ensuring consistent results across public and authenticated event listings. The same filtering, sorting, and pagination system is shared across public event listings, authenticated user event listings, and public user event listings.
+Supported filters include:
 
-Supported filters:
+- keyword search
+- creator filtering
+- event type, theme, mode, and location
+- exact date and date range filtering
+- event status filtering (`upcoming`, `ongoing`, `past`)
 
-- `search` → keyword search in title and description
-- `creator` → filter by creator name
-- `creatorId` → filter by creator ID
-- `type` → filter by event type
-- `theme` → filter by event theme
-- `location` → filter by event location
-- `mode` → online or in-person events
-- `startDate` → filter events starting from a specific date
-- `endDate` → filter events up to a specific date
-- `date` → filter events for an exact day (overrides range)
-- `status` → filter upcoming, ongoing or past events
+Additional filtering capabilities include:
 
-Additional features:
-
-- Pagination support
-- Flexible sorting and ordering
-- Creator filtering across public and authenticated event listings
-- Consistent filtering behavior across public and authenticated endpoints
-- Optimized participant count queries without N+1 database queries
-- Active participant counting excluding soft-deleted memberships
-- Scalable query-builder utilities for filtering logic
+- pagination and sorting support
+- reusable query-builder utilities
+- scalable filtering behavior
+- optimized participant count queries
+- soft-delete-aware participant counting
+- consistent filtering behavior across public and authenticated endpoints
 
 #### Examples
 
 Filter events using keyword and date range:
-
 ```http
 GET /api/events?search=party&type=music&startDate=2026-04-01&endDate=2026-04-30
 ```
 
 Filter events for an exact date:
-
 ```http
 GET /api/events?date=2026-04-16
 ```
 
 Filter events by creator:
-
 ```http
-GET /api/events?creator=Luffy
+GET /api/events?creator=John
 ```
 
 Filter authenticated user events by view and creator:
-
 ```http
-GET /api/users/me/events?view=joined&creator=Luffy&page=2
+GET /api/users/me/events?view=joined&creator=John&page=2
 ```
 
 ---
 
 ## 🧪 Testing
 
-The API includes a comprehensive automated test suite built with **Jest** and **Supertest**, covering both full API flows and isolated internal application logic.
+The API includes a comprehensive automated testing architecture built with **Jest** and **Supertest**, covering both full API workflows and isolated backend modules.
 
-The testing architecture focuses on reliability, maintainability, security, and long-term backend stability.
+The testing strategy focuses on reliability, maintainability, security, database consistency, and long-term reliability.
 
 ### ▶️ Run Tests
 
@@ -510,150 +402,89 @@ npm run test:coverage
 - 100% functions
 - 99.21% lines
 
-✅ High coverage across authentication, authorization, filtering, uploads, soft-delete flows, ownership transfer, transactions, query optimization, and full API flows.
+✅ High automated coverage across authentication, permissions, uploads, filtering, transactions, soft-delete workflows, query optimization, and full API behavior.
 
 ### 🔁 Continuous Integration
 
 The backend test suite runs automatically through GitHub Actions using:
 
-- automated PostgreSQL test services
-- isolated backend test configuration
-- automated test execution on push and pull requests
+- isolated PostgreSQL test services
+- dedicated backend test configuration
+- automated test execution on pushes and pull requests
 - full integration and unit test validation in CI
 
-This helps detect regressions early and ensures consistent backend reliability across development workflows.
+This helps detect regressions early and maintain reliable backend behavior across development workflows.
 
-### 📦 Test Coverage
+### 📦 Test Layers
 
-The project includes two main testing layers:
+The backend testing architecture is separated into two primary layers.
 
-#### 🔗 Integration Tests (API Flows)
+#### 🔗 Integration Tests (API Workflows)
 
-These tests validate the complete request lifecycle:
+Integration tests validate complete request lifecycles using the real Express application, middleware stack, services, database layer, and HTTP responses.
 
 ```txt
 Request → Middleware → Controller → Service → Database → Response
 ```
 
-Integration tests run against the real Express application using Supertest and a dedicated PostgreSQL test database.
+Tests run against a dedicated PostgreSQL test database through Supertest.
 
-📌 Covered areas:
+📌 Covered areas include:
 
-- **Authentication**
-  - Register
-  - Login
-  - Logout
-  - JWT authentication flows
-  - Authentication rate limiting
+- JWT authentication and protected auth workflows
+- authentication rate limiting and security behavior
+- authenticated and public user flows
+- profile updates, password changes, and account deletion
+- avatar and event image upload lifecycle handling
+- event CRUD operations and permission-aware event workflows
+- filtering, sorting, pagination, and query synchronization behavior
+- role-based permissions and authorization flows
+- membership management and ownership transfer workflows
+- event state restrictions and started-event protections
+- soft-delete lifecycle handling and membership restoration
+- validation, edge cases, and protected business rules
+- application-level routes, health checks, and global error handling
 
-- **User**
-  - Authenticated profile retrieval and updates
-  - Public profile retrieval
-  - Password update flows
-  - Avatar upload and replacement
-  - Secure account deletion and anonymization
-  - Soft-delete account lifecycle protection
-  - Authenticated and public user event listings
-  - Validation and protected user flows
+#### 🧩 Unit Tests (Internal Backend Modules)
 
-- **Events**
-  - CRUD operations
-  - Current user event access retrieval
-  - Event image upload, replacement, removal, and cleanup
-  - Filtering, sorting, and pagination
-  - Creator-based filtering
-  - Role-based permissions
-  - Validation and protected actions
-  - Event state restrictions
-  - Started event deletion restrictions
-  - Event access permission resolution
+Unit tests validate isolated backend modules independently of HTTP request flows.
 
-- **Event Membership**
-  - Join and leave events
-  - Event member and organizer listing
-  - Role management and access control
-  - Membership restrictions and edge cases
-  - Ownership transfer flows
-  - Automatic membership restoration
-  - Soft-delete membership lifecycle handling
-  - Inactive membership protection
+📌 Covered modules include:
 
-- **Application**
-  - Health check endpoint (`/api/health`)
-  - Root endpoint
-  - 404 handling
-  - Global error handling
-
-#### 🧩 Unit Tests (Internal Modules)
-
-These tests validate isolated internal application logic independently of HTTP requests.
-
-📌 Covered modules:
-
-- **Controllers**
-  - Request handling
-  - Response formatting
-  - Error propagation
-
-- **Services**
-  - Business logic
-  - Database operations
-  - Rule enforcement
-  - Transaction-based flows
-  - Soft-delete lifecycle handling
-  - Query optimization helpers
-  - Scalable query-builder utilities
-  - Event access resolution
-
-- **Middlewares**
-  - Authentication (`authenticateToken`)
-  - Authorization (`authorizeEventRole`, `eventMemberAuthorization`)
-  - Validation error handling (`handleValidationErrors`)
-  - Upload handling (`uploadFiles`)
-  - Rate limiting (`authRateLimiter`)
-  - Centralized error handling (`errorHandler`)
-
-- **Validators**
-  - Request validation using `express-validator`
-  - Invalid payload handling
-  - Edge cases and security rules
-
-- **Utils**
-  - Authentication token utilities
-  - Event filtering, query-builder, query optimization, and status utilities
-  - Grouped participant count helpers
-  - Event status and started-event helpers
-  - Pagination utilities
-  - User formatting utilities
-  - Uploaded file storage and cleanup
-  - Reusable HTTP error helpers
+- controllers and response handling
+- services and business-rule enforcement
+- transaction-safe workflows and permission resolution
+- reusable query-builder and filtering utilities
+- authentication, authorization, validation, and upload middlewares
+- request validators and security rules
+- pagination, formatting, normalization, and event status utilities
+- uploaded file storage, cleanup, and rollback helpers
+- reusable HTTP error and authentication token helpers
 
 ### 🔁 Testing Strategy
 
-- Integration tests use the real Express application
-- API flows are tested with minimal mocking
-- A dedicated PostgreSQL test database ensures isolation
-- Tests clean up their own data between runs
-- Internal modules are tested independently to improve maintainability and robustness
-- Reusable factories and helpers reduce duplication
-- Validation, permissions, uploads, filtering, and business rules are extensively tested
-- High coverage helps ensure strong reliability across critical backend features
-- Query optimization and soft-delete edge cases are validated through both unit and integration tests
+- Integration tests use the real Express application with minimal mocking
+- A dedicated PostgreSQL test database ensures isolated and deterministic behavior
+- Internal modules are tested independently to improve maintainability and reliability
+- Reusable factories and helpers reduce duplicated test setup
+- Validation, permissions, uploads, filtering, transactions, and business rules are extensively tested
+- Query optimization, soft-delete flows, and permission edge cases are validated through both integration and unit testing
+- High automated coverage helps maintain predictable and reliable long-term backend behavior
 
-For more details about the testing architecture, factories, helpers, database isolation, transaction testing, and mocking strategy, see [`docs/testing.md`](./docs/testing.md).
+For more details about the testing architecture, factories, helpers, database isolation, transaction testing, and mocking strategies, see [`docs/testing.md`](./docs/testing.md).
 
 ---
 
 ## 🔐 Security
 
-The API implements multiple security layers to protect sensitive data, enforce strict access control, and ensure safe and predictable API behavior across all endpoints.
+The API implements multiple security layers to protect sensitive data, enforce strict access control, and ensure secure and predictable behavior across all endpoints.
 
 ### 🔑 Authentication
 
 - JWT-based authentication using Bearer tokens
-- Protected routes require a valid JWT authentication token
+- Protected routes require valid authentication tokens
 - Password updates require current password verification
-- `authRateLimiter` middleware helps protect authentication endpoints against brute-force attacks
+- `authRateLimiter` helps protect authentication endpoints against brute-force attacks
 - Authentication rate limiting is configurable through environment variables
 
 ### 🛡️ Authorization
@@ -674,15 +505,11 @@ Authorization is enforced through reusable middleware and centralized business-r
 
 Additional protections include:
 
-- organizer protection rules
-- membership hierarchy enforcement
-- protected role management operations
-- past event restrictions
-- started event deletion restrictions
-- unauthorized action prevention
-- ownership transfer restrictions
-- inactive membership protection
-- soft-delete membership access protection
+- organizer and ownership protection rules
+- membership hierarchy and role restrictions
+- started-event and past-event protections
+- inactive membership and soft-delete access protection
+- prevention of unauthorized or invalid actions
 
 Unauthenticated users only have read-only access to public resources.
 
@@ -691,18 +518,15 @@ Unauthenticated users only have read-only access to public resources.
 - Request validation using **express-validator**
 - Centralized validation and error handling
 - Sanitization and normalization of incoming data
-- Centralized password policy enforcement
-- Validation of query parameters, route params, and request bodies
-- Validation of filtering, sorting, and pagination inputs
+- Password policy enforcement
+- Validation of query parameters, route params, request bodies, filtering, sorting, and pagination inputs
 
 ### 📁 Upload Security
 
-- MIME type validation
-- File extension validation
-- File size limits
+- MIME type, extension, and file size validation
 - Restricted and normalized upload destinations
-- Secure upload cleanup and path normalization protection
-- Explicit event image removal support with safe cleanup
+- Secure upload cleanup and path normalization
+- Safe image replacement and removal workflows
 
 ### 🔒 Data Protection
 
@@ -710,28 +534,27 @@ Unauthenticated users only have read-only access to public resources.
 - Sensitive fields excluded through Sequelize scopes
 - Email normalization before persistence
 - Safe public user formatting utilities
-- Secure account anonymization during soft-delete flows
-- Consistent JSON API response structures
+- Secure account anonymization during soft-delete workflows
+- Consistent and predictable JSON API responses
 
 ### ⚙️ Additional Security Measures
 
 - Helmet security headers protection
 - Centralized CORS configuration
 - SQL injection protection through Sequelize parameterized queries
-- Query optimization strategies to avoid inefficient N+1 database access patterns
+- Query optimization strategies to avoid inefficient database access patterns
 - Sequelize transactions for critical operations
 - Database indexes for optimized query performance
-- Centralized HTTP error utilities and reusable API error patterns
-- Centralized global error handling through `errorHandler`
-- Environment-based configuration for database, CORS, uploads, logging, and test behavior
+- Centralized HTTP error utilities and global error handling
+- Environment-based configuration for database, uploads, CORS, logging, and test behavior
 
-These mechanisms help ensure secure data handling, reusable security patterns, predictable API behavior, soft-delete lifecycle protection, and strong protection against unauthorized access across the application.
+These mechanisms help ensure secure data handling, reusable security workflows, permission-aware protection, soft-delete lifecycle safety, and reliable long-term API behavior across the application.
 
 ---
 
 ## 📦 API Response Format
 
-The API uses a consistent JSON response structure to ensure predictable frontend integration, centralized error handling, and easier client-side consumption.
+The API uses a consistent JSON response structure to ensure predictable frontend integration, centralized error handling, and reliable client-side consumption.
 
 ### ✅ Success Response
 
@@ -743,7 +566,7 @@ The API uses a consistent JSON response structure to ensure predictable frontend
 }
 ```
 
-Possible success payloads may include:
+Success payloads may include:
 
 - objects
 - arrays
@@ -823,18 +646,18 @@ NODE_ENV=development
 CORS_ORIGIN=http://localhost:5173
 ```
 
-### 🔍 Notes
+### 🔍 Environment Notes
 
 - `JWT_SECRET` → used to sign and verify JWT authentication tokens
 - `NODE_ENV` → defines the current environment (`development`, `production`, `test`)
-- `DB_NAME_TEST` → dedicated database used for automated tests
+- `DB_NAME_TEST` → dedicated database used for automated testing
 - `DB_LOGGING` → enables Sequelize SQL query logging (`true` or `false`)
 - `DB_SSL` → enables SSL for production or cloud-hosted databases
-- `LOG_LEVEL` → configures the Pino logger level (`info`, `debug`, `error`, etc.)
-- `AUTH_RATE_LIMIT_WINDOW_MS` → authentication rate limit window in milliseconds
+- `LOG_LEVEL` → defines the Pino logger level (`info`, `debug`, `error`, etc.)
+- `AUTH_RATE_LIMIT_WINDOW_MS` → authentication rate-limit window duration in milliseconds
 - `AUTH_RATE_LIMIT_MAX` → maximum authentication attempts allowed during the configured window
 - `CORS_ORIGIN` → allowed frontend origins (comma-separated values supported)
-- `UPLOAD_DIR` → configurable upload root directory for avatars and event images
+- `UPLOAD_DIR` → upload root directory for avatars and event images
 
 `.env.example` and `.env.test` files are provided as reference configurations.
 
@@ -842,25 +665,25 @@ CORS_ORIGIN=http://localhost:5173
 
 ## ▶️ Running the API
 
-To start the server:
+Start the production server:
 
 ```bash
 npm start
 ```
 
-For development with automatic reload:
+Start the development server with automatic reload:
 
 ```bash
 npm run dev
 ```
 
-To run the automated test suite:
+Run the automated test suite:
 
 ```bash
 npm test
 ```
 
-To run tests with coverage:
+Run tests with coverage:
 
 ```bash
 npm run test:coverage
@@ -884,7 +707,7 @@ GET /api/health
 
 ## 🔗 API Endpoints
 
-The API exposes the following main endpoints grouped by functional area.
+The API exposes the following endpoint groups.
 
 All endpoints return standardized JSON responses as described in the API Response Format section.
 
@@ -894,7 +717,7 @@ Path parameters use the `:paramName` syntax (e.g. `:eventId`).
 
 ### 🔐 Authentication
 
-Endpoints related to authentication and account access.
+Authentication and account access endpoints.
 
 ```http
 POST   /api/auth/register              (supports avatar upload via multipart/form-data)
@@ -904,7 +727,7 @@ POST   /api/auth/logout                (authenticated)
 
 ### 👤 Users
 
-Endpoints related to authenticated and public user data.
+Authenticated and public user endpoints.
 
 ```http
 GET    /api/users/me
@@ -920,7 +743,7 @@ GET    /api/users/:id/events           (public user events with filtering, sorti
 
 ### 📅 Events
 
-Endpoints for event management and public event access.
+Event management and public event access endpoints.
 
 ```http
 GET    /api/events                     (filtering, sorting, and pagination)
@@ -934,7 +757,7 @@ DELETE /api/events/:eventId            (organizer only, before the event starts)
 
 ### 👥 Event Membership
 
-Endpoints for event participation and role management.
+Event participation and role-management endpoints.
 
 ```http
 POST   /api/events/:eventId/members/join       (authenticated)
@@ -949,32 +772,34 @@ DELETE /api/events/:eventId/members/:userId        (organizer or co_organizer, w
 ```
 
 ### ❤️ Application Health
+
 ```http
 GET    /api/health
 GET    /
 ```
+
 ---
 
 ## 🚀 Recent Improvements
 
 ### 🏗️ Architecture & Organization
 
-- Added reusable public user event query builders for created and joined event listings
-- Centralized pagination count and total page helpers
-- Expanded shared filtering, sorting, and pagination utilities
+- Added reusable public user event query builders for created and joined event views
+- Centralized pagination count and total-page helpers
+- Expanded reusable filtering, sorting, and pagination utilities
+- Improved consistency across public and authenticated event listing workflows
 
 ### 👤 Users & Event Listings
 
 - Added public user event listings with filtering, sorting, and pagination support
-- Added created and joined views for public user event listings
-- Added public user event participant count and status enrichment
+- Added created and joined event views for public user profiles
+- Added participant count and event status enrichment for public user event responses
 - Improved public user statistics by excluding organizer memberships from joined event counts
-- Improved consistency between public and authenticated event listing workflows
 
 ### 🧪 Testing
 
-- Added unit tests for pagination helpers and public user event query builders
-- Expanded controller, service, validator, and integration test coverage for public user event listings
+- Added unit coverage for pagination helpers and public user query builders
+- Expanded controller, service, validator, and integration test coverage
 - Reached 79 passing test suites and 650 passing tests
 - Achieved 99.14% statement coverage, 94.65% branch coverage, 100% function coverage, and 99.21% line coverage
 
@@ -985,19 +810,18 @@ GET    /
 | Area | Status |
 |------|--------|
 | Backend API | ✅ Stable, scalable, and production-oriented |
-| Architecture | ✅ Modular, scalable, and layered |
+| Architecture | ✅ Modular, layered, and maintainable |
 | Authentication & Users | ✅ JWT authentication, profile management, password updates, and secure account deletion |
-| Authorization | ✅ Advanced role-based access control and ownership transfer |
+| Authorization & Permissions | ✅ Role-based access control, protected actions, and ownership transfer |
 | Membership System | ✅ Role management, restoration flows, and soft-delete lifecycle handling |
 | Security | ✅ Helmet, rate limiting, validation, upload protection, and centralized security policies |
-| File Uploads | ✅ Avatar and event image uploads supported |
+| File Uploads | ✅ Avatar and event image upload, replacement, removal, and cleanup workflows |
 | Logging | ✅ Centralized structured logging with Pino |
-| Database | ✅ PostgreSQL + Sequelize with transactions, indexes, and optimized queries |
+| Database | ✅ PostgreSQL + Sequelize with transactions, indexes, and optimized query behavior |
 | API Consistency | ✅ Standardized JSON responses and centralized error handling |
 | Testing | ✅ 650 tests across 79 test suites |
 | Coverage | ✅ 99.14% statements / 94.65% branches / 100% functions / 99.21% lines |
-| Continuous Integration | ✅ Automated GitHub Actions backend testing |
-| Frontend Integration | 🔗 Connected and functional |
+| Continuous Integration | ✅ Automated GitHub Actions testing workflows |
 
 ---
 
@@ -1008,25 +832,25 @@ GET    /
 - Event invitation system (email invitations or shareable links)
 - Email notifications for invitations, reminders, and event updates
 - Public and private event visibility management
-- Membership role history and audit logs
-- Archived events lifecycle and cleanup strategy
-- Improved event participation and moderation workflows
-- Event activity feeds and moderation audit trails
+- Membership role history and moderation audit logs
+- Archived-event lifecycle management and cleanup workflows
+- Expanded event participation and moderation workflows
+- Event activity feeds and moderation tracking
 
 ### 🧠 Backend & Architecture
 
 - Advanced query aggregation and analytics optimization
-- Advanced database performance tuning
+- Additional database performance and indexing improvements
 - API versioning strategy (`/api/v1`)
 - Further business-rule centralization and abstraction
 - Swagger / OpenAPI documentation support
-- Additional reusable filtering, formatting, and query-builder utilities
+- Expanded reusable filtering, formatting, and query-builder utilities
 
 ### 🧪 Testing & Developer Experience
 
-- Additional end-to-end testing flows
+- Additional end-to-end testing workflows
 - Further test deduplication and simplification
-- Extended edge-case coverage
+- Expanded edge-case and regression coverage
 - Expanded backend architecture and testing documentation
 
 ### ⚙️ Infrastructure & Deployment
@@ -1034,7 +858,7 @@ GET    /
 - Docker containerization
 - Cloud deployment (AWS, Render, Fly.io, etc.)
 - Production-ready environment configuration improvements
-- Extended CI/CD pipeline workflows
-- Secure cloud-based production file storage strategy
+- Expanded CI/CD automation workflows
+- Secure cloud-based production file storage strategies
 
 ---

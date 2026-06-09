@@ -249,12 +249,12 @@ export default function MyEventsPage() {
 
     if (initialLoading) {
         return (
-            <PageLoader>
-                Loading your events...
-            </PageLoader>
+            <PageLoader
+                title="Loading your events..."
+                description="Please wait while we fetch your event history."
+            />
         );
     }
-
 
     /* =============================
        MAIN RENDER
@@ -316,9 +316,10 @@ export default function MyEventsPage() {
 
             <section className="events-results-section" aria-labelledby="my-events-results-title">
                 {isLoading ? (
-                    <LoadingState>
-                        Refreshing your events...
-                    </LoadingState>
+                    <LoadingState
+                        title="Refreshing your events..."
+                        description="Fetching the latest results."
+                    />
                 ) : events.length === 0 ? (
                     <EmptyState
                         title={emptyState.title || viewContent.empty}

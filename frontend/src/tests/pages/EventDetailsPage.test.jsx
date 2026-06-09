@@ -21,7 +21,8 @@ import {
    Tests single event details page orchestration
 
    Handles:
-   - loading and empty states
+   - loading states with contextual feedback
+   - empty states
    - page semantic structure
    - event display data rendering
    - image fallback behavior
@@ -278,9 +279,9 @@ describe("EventDetailsPage", () => {
     it("should display loading state initially", () => {
         renderPage();
 
-        expect(
-            screen.getByText(/loading event details/i)
-        ).toBeInTheDocument();
+        expect(screen.getByRole("status")).toHaveTextContent(/loading event details/i);
+
+        expect(screen.getByText(/please wait while we load this event/i)).toBeInTheDocument();
     });
 
     it("should not load data while auth is loading", () => {

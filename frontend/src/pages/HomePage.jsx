@@ -24,7 +24,7 @@ import LoadingState from "../components/ui/LoadingState";
    - latest event loading
    - authenticated user event roles
    - join and leave event actions
-   - loading, empty and error states
+   - latest events loading, empty and error states
    - decorative card icons
 ================================================== */
 
@@ -225,9 +225,10 @@ export default function HomePage() {
                 {error && <Alert type="danger">{error}</Alert>}
 
                 {isLoading ? (
-                    <LoadingState>
-                        Loading events...
-                    </LoadingState>
+                    <LoadingState
+                        title="Loading latest events..."
+                        description="Fetching the newest events on PlanTogether."
+                    />
                 ) : events.length === 0 ? (
                     <EmptyState title="No events yet." />
                 ) : (

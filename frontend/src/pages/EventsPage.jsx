@@ -254,9 +254,10 @@ export default function EventsPage() {
 
     if (initialLoading) {
         return (
-            <PageLoader>
-                Loading events...
-            </PageLoader>
+            <PageLoader
+                title="Loading events..."
+                description="Please wait while we fetch the latest events."
+            />
         );
     }
 
@@ -337,9 +338,10 @@ export default function EventsPage() {
 
             <section className="events-results-section" aria-labelledby="events-results-title">
                 {isLoading ? (
-                    <LoadingState>
-                        Refreshing events...
-                    </LoadingState>
+                    <LoadingState
+                        title="Refreshing events..."
+                        description="Fetching the latest results."
+                    />
                 ) : events.length === 0 ? (
                     <EmptyState
                         title={emptyState.title || viewContent.empty}

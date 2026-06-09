@@ -7,14 +7,13 @@ import LoadingState from "./LoadingState";
    Used for:
    - full-page loading states
    - initial page data loading
+   - loading title and description passthrough
 ================================================== */
 
-export default function PageLoader({ children = "Loading..." }) {
+export default function PageLoader(props) {
     return (
         <div className="container page-section">
-            <LoadingState>
-                {children}
-            </LoadingState>
+            <LoadingState {...props} />
         </div>
     );
 }

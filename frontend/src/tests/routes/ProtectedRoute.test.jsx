@@ -13,7 +13,7 @@ import { createAuthenticatedUser } from "../factories/users/userFactory";
    Handles:
    - authenticated access
    - unauthenticated redirects
-   - auth loading state
+   - auth loading state with contextual feedback
 
    Notes:
    - uses reusable authenticated user factories
@@ -35,7 +35,12 @@ vi.mock("../../features/auth/hooks/useAuth", () => ({
 
 
 vi.mock("../../components/ui/PageLoader", () => ({
-    default: ({ children }) => <div>{children}</div>
+    default: ({ title, description }) => (
+        <div role="status">
+            <p>{title}</p>
+            {description && <p>{description}</p>}
+        </div>
+    )
 }));
 
 /* =============================
@@ -157,6 +162,8 @@ describe("ProtectedRoute", () => {
 
         renderProtectedRoute();
 
-        expect(screen.getByText("Loading...")).toBeInTheDocument();
+        expect(screen.getByRole("status")).toHaveTextContent("Loading session...");
+
+        expect(screen.getByText("Checking your authentication status.")).toBeInTheDocument();
     });
 });

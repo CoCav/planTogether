@@ -186,9 +186,10 @@ export default function PublicUserPage() {
 
     if (initialLoading) {
         return (
-            <PageLoader>
-                Loading public profile...
-            </PageLoader>
+            <PageLoader
+                title="Loading public profile..."
+                description="Please wait while we load this user's public information."
+            />
         );
     }
 
@@ -269,9 +270,10 @@ export default function PublicUserPage() {
 
             <section className="events-results-section" aria-labelledby="public-user-events-title">
                 {isLoading ? (
-                    <LoadingState>
-                        Refreshing public events...
-                    </LoadingState>
+                    <LoadingState
+                        title="Refreshing public events..."
+                        description="Fetching the latest results."
+                    />
                 ) : events.length === 0 ? (
                     <EmptyState
                         title={viewContent.empty}

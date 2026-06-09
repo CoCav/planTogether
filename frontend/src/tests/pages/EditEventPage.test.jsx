@@ -10,7 +10,7 @@ import EditEventPage from "../../pages/EditEventPage";
    Tests event edit page behavior
 
    Handles:
-   - loading state
+   - loading state with contextual feedback
    - event access loading
    - protected edit form access
    - event form hydration
@@ -110,13 +110,13 @@ describe("EditEventPage", () => {
     });
 
     it("renders loading state before event is loaded", () => {
-        mockGetCurrentUserEventAccess.mockReturnValue(
-            new Promise(() => { })
-        );
+        mockGetCurrentUserEventAccess.mockReturnValue(new Promise(() => { }));
 
         renderPage();
 
-        expect(screen.getByText(/loading event form/i)).toBeInTheDocument();
+        expect(screen.getByRole("status")).toHaveTextContent(/loading event form/i);
+
+        expect(screen.getByText(/please wait while we load this event's details/i)).toBeInTheDocument();
     });
 
     it("loads current user event access before loading event details", async () => {

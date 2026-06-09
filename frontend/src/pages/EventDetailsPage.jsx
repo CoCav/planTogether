@@ -222,9 +222,10 @@ export default function EventDetailsPage() {
 
     if (loading) {
         return (
-            <PageLoader>
-                Loading event details...
-            </PageLoader>
+            <PageLoader
+                title="Loading event details..."
+                description="Please wait while we load this event."
+            />
         );
     }
 

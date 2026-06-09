@@ -5,11 +5,12 @@ import LoadingState from "../../../components/ui/LoadingState";
 
 /* ==================================================
    LOADING STATE TESTS
-   Tests loading message rendering and accessibility
+   Tests loading feedback rendering and accessibility
 
    Handles:
-   - default loading message
-   - custom loading message
+   - default loading title
+   - custom loading title
+   - optional loading description
    - decorative spinner rendering
    - accessible loading status role
    - polite live region behavior
@@ -21,11 +22,9 @@ describe("LoadingState", () => {
        TEST HELPERS
     ============================= */
 
-    const renderLoadingState = (children) => {
+    const renderLoadingState = (props = {}) => {
         return render(
-            <LoadingState>
-                {children}
-            </LoadingState>
+            <LoadingState {...props} />
         );
     };
 
@@ -33,7 +32,7 @@ describe("LoadingState", () => {
        RENDERING
     ============================= */
 
-    it("should render default loading text", () => {
+    it("should render default loading title", () => {
         render(<LoadingState />);
 
         expect(
@@ -41,8 +40,10 @@ describe("LoadingState", () => {
         ).toBeInTheDocument();
     });
 
-    it("should render custom loading text", () => {
-        renderLoadingState("Loading events...");
+    it("should render custom loading title", () => {
+        renderLoadingState({
+            title: "Loading events..."
+        });
 
         expect(screen.getByText("Loading events...")).toBeInTheDocument();
     });
@@ -54,6 +55,21 @@ describe("LoadingState", () => {
 
         expect(spinner).toBeInTheDocument();
         expect(spinner).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it("should render optional loading description", () => {
+        renderLoadingState({
+            title: "Loading events...",
+            description: "Fetching the latest results."
+        });
+
+        expect(screen.getByText("Fetching the latest results.")).toBeInTheDocument();
+    });
+
+    it("should not render description when none is provided", () => {
+        renderLoadingState();
+
+        expect(document.querySelector(".loading-state-description")).not.toBeInTheDocument();
     });
 
     /* =============================

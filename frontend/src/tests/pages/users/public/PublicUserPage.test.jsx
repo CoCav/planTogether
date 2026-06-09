@@ -12,7 +12,7 @@ import { getPublicUserProfile, getPublicUserEvents } from "../../../../api/users
    Tests public user profile and event listing page behavior
 
    Handles:
-   - initial loading state
+   - initial and refresh loading states
    - public profile rendering
    - public event rendering
    - empty state rendering
@@ -152,10 +152,12 @@ describe("PublicUserPage", () => {
        INITIAL LOADING / DEFAULT LOAD
     ============================= */
 
-    it("displays loading state initially", () => {
+    it("displays initial loading state", () => {
         renderPage();
 
-        expect(screen.getByText(/loading public profile/i)).toBeInTheDocument();
+        expect(screen.getByRole("status")).toHaveTextContent(/loading public profile/i);
+
+        expect(screen.getByText(/please wait while we load this user's public information/i)).toBeInTheDocument();
     });
 
     it("calls APIs with default created view params", async () => {

@@ -15,7 +15,7 @@ import { getCurrentUserEvents } from "../../../../api/users/userApi";
    Tests current user event listing page behavior
 
    Handles:
-   - initial loading state
+   - initial and refresh loading states
    - current user event loading
    - accessible listing sections
    - accessible listing metadata
@@ -152,10 +152,11 @@ describe("MyEventsPage", () => {
        INITIAL LOADING / DEFAULT LOAD
     ============================= */
 
-    it("displays loading state initially", () => {
+    it("displays initial loading state", () => {
         renderPage();
 
-        expect(screen.getByText(/loading your events/i)).toBeInTheDocument();
+        expect(screen.getByRole("status")).toHaveTextContent(/loading your events/i);
+        expect(screen.getByText(/please wait while we fetch your event history/i)).toBeInTheDocument();
     });
 
     it("calls API with default created view params", async () => {

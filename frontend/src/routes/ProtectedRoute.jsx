@@ -22,9 +22,10 @@ export default function ProtectedRoute({ children }) {
 
     if (!auth || auth.loading) {
         return (
-            <PageLoader>
-                Loading...
-            </PageLoader>
+            <PageLoader
+                title="Loading session..."
+                description="Checking your authentication status."
+            />
         );
     }
 

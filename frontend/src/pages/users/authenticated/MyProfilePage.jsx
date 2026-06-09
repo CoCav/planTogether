@@ -106,9 +106,10 @@ export default function MyProfilePage() {
 
     if (!user) {
         return (
-            <PageLoader>
-                Loading profile...
-            </PageLoader>
+            <PageLoader
+                title="Loading profile..."
+                description="Please wait while we load your account details."
+            />
         );
     }
 

@@ -189,9 +189,10 @@ export default function EditEventPage() {
 
     if (isLoading) {
         return (
-            <PageLoader>
-                Loading event form...
-            </PageLoader>
+            <PageLoader
+                title="Loading event form..."
+                description="Please wait while we load this event's details."
+            />
         );
     }
 

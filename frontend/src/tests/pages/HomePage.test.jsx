@@ -14,7 +14,7 @@ import { EVENT_ROLES } from "../../features/shared/constants/eventRoles";
    - hero section rendering
    - feature section rendering
    - guest and authenticated actions
-   - latest events loading state
+   - latest events loading state with contextual feedback
    - latest events empty state
    - latest events rendering
    - event role forwarding
@@ -195,7 +195,7 @@ describe("HomePage", () => {
         expect(mockLoadData).toHaveBeenCalledTimes(1);
     });
 
-    it("displays loading state while events are loading", () => {
+    it("displays loading state while latest events are loading", () => {
         mockHomeEventsState = {
             ...mockHomeEventsState,
             isLoading: true
@@ -203,7 +203,9 @@ describe("HomePage", () => {
 
         renderPage();
 
-        expect(screen.getByText("Loading events...")).toBeInTheDocument();
+        expect(screen.getByRole("status")).toHaveTextContent(/loading latest events/i);
+
+        expect(screen.getByText(/fetching the newest events on plantogether/i)).toBeInTheDocument();
     });
 
     /* =============================

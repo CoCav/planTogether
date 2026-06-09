@@ -22,7 +22,8 @@ import {
    Tests public event listing page orchestration and interactions
 
    Covers:
-   - initial loading state
+   - initial and refresh loading states
+   - empty states
    - public event rendering
    - empty state rendering
    - API loading params
@@ -134,10 +135,12 @@ describe("EventsPage", () => {
        INITIAL LOADING
     ============================= */
 
-    it("displays loading state initially", () => {
+    it("should display initial loading state", () => {
         renderPage();
 
-        expect(screen.getByText(/loading events/i)).toBeInTheDocument();
+        expect(screen.getByRole("status")).toHaveTextContent(/loading events/i);
+
+        expect(screen.getByText(/please wait while we fetch the latest events/i)).toBeInTheDocument();
     });
 
     /* =============================

@@ -13,7 +13,7 @@ import useDeleteAccount from "../../../../features/users/authenticated/hooks/use
    Tests authenticated user profile settings page
 
    Handles:
-   - loading state
+   - loading state with contextual feedback
    - page rendering
    - accessible profile sections
    - profile form integration
@@ -285,7 +285,8 @@ describe("MyProfilePage", () => {
 
         renderPage();
 
-        expect(screen.getByText("Loading profile...")).toBeInTheDocument();
+        expect(screen.getByRole("status")).toHaveTextContent("Loading profile...");
+        expect(screen.getByText("Please wait while we load your account details.")).toBeInTheDocument();
     });
 
     /* =============================

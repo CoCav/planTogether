@@ -2,9 +2,16 @@
    EVENT MODE CONSTANTS
    Centralizes shared event mode values
 
+   Handles:
+   - shared event mode identifiers
+   - valid event mode lists
+   - display-friendly event mode labels
+   - event mode display helpers
+   - online event mode checks
+
    Notes:
    - mirrors backend event mode constants
-   - used by event validation, forms and UI helpers
+   - used by forms, validation, filters and UI rendering
 ================================================== */
 
 export const EVENT_MODES = {
@@ -31,4 +38,9 @@ export const EVENT_MODE_LABELS = {
 // Resolves a display-friendly event mode label
 export const getEventModeLabel = (mode) => {
     return EVENT_MODE_LABELS[mode] || mode;
+};
+
+// Checks whether an event uses the online mode
+export const isOnlineEventMode = (mode) => {
+    return mode === EVENT_MODES.ONLINE;
 };

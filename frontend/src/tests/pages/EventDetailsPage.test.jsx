@@ -5,7 +5,6 @@ import { MemoryRouter } from "react-router-dom";
 
 import EventDetailsPage from "../../pages/EventDetailsPage";
 
-import { EVENT_ROLES } from "../../features/shared/constants/eventRoles";
 import { EVENT_STATUS } from "../../features/shared/constants/eventStatus";
 
 import { createEvent } from "../factories/events/eventFactory";
@@ -25,6 +24,7 @@ import {
    - empty states
    - page semantic structure
    - event display data rendering
+   - event category tag rendering
    - image fallback behavior
    - accessible event image description
    - membership section and ownership transfer integration
@@ -112,8 +112,6 @@ vi.mock("../../utils/uploadedFiles", () => ({
 
 vi.mock("../../components/events/EventDetailsSummary", () => ({
     default: ({
-        type,
-        theme,
         mode,
         location,
         capacity,
@@ -122,14 +120,22 @@ vi.mock("../../components/events/EventDetailsSummary", () => ({
         registrationDeadline
     }) => (
         <div data-testid="event-details-summary">
-            <span>{type}</span>
-            <span>{theme}</span>
             <span>{mode}</span>
-            <span>{location}</span>
-            {capacity && <span>{capacity}</span>}
+
+            {location && (
+                <span>{location}</span>
+            )}
+
+            {capacity && (
+                <span>{capacity}</span>
+            )}
+
             <span>{date}</span>
             <span>{time}</span>
-            {registrationDeadline && <span>{registrationDeadline}</span>}
+
+            {registrationDeadline && (
+                <span>{registrationDeadline}</span>
+            )}
         </div>
     )
 }));
@@ -363,8 +369,6 @@ describe("EventDetailsPage", () => {
         expect(screen.getByText("Test description")).toBeInTheDocument();
 
         expect(screen.getByTestId("event-details-summary")).toBeInTheDocument();
-        expect(screen.getByText("Meetup")).toBeInTheDocument();
-        expect(screen.getByText("Tech")).toBeInTheDocument();
         expect(screen.getByText("In person")).toBeInTheDocument();
         expect(screen.getByText("Montreal")).toBeInTheDocument();
     });
@@ -383,11 +387,28 @@ describe("EventDetailsPage", () => {
         renderPage();
 
         expect(await screen.findByText("No description provided.")).toBeInTheDocument();
-        expect(screen.getByText("No description provided.")).toBeInTheDocument();
 
         const summary = screen.getByTestId("event-details-summary");
 
-        expect(summary).toHaveTextContent("N/A");
+        expect(summary).toBeInTheDocument();
+    });
+
+    it("should hide location in summary for online events", async () => {
+        setupApi({
+            event: createEvent({
+                ...mockEvent,
+                mode: "online",
+                location: null
+            })
+        });
+
+        renderPage();
+
+        expect(await screen.findByTestId("event-details-summary")).toBeInTheDocument();
+
+        expect(screen.getByText("Online")).toBeInTheDocument();
+
+        expect(screen.queryByText("Montreal")).not.toBeInTheDocument();
     });
 
     it("should pass formatted display data to EventDetailsSummary", async () => {
@@ -405,8 +426,6 @@ describe("EventDetailsPage", () => {
         expect(await screen.findByTestId("event-details-summary")).toBeInTheDocument();
 
         expect(screen.getByText("3 / 10")).toBeInTheDocument();
-        expect(screen.getByText("Meetup")).toBeInTheDocument();
-        expect(screen.getByText("Tech")).toBeInTheDocument();
         expect(screen.getByText("In person")).toBeInTheDocument();
         expect(screen.getByText("Montreal")).toBeInTheDocument();
     });

@@ -1,21 +1,19 @@
-import { CalendarDays, Clock3, Hourglass, MapPin, MonitorSmartphone, Shapes, Sparkles, Users } from "lucide-react";
+import { CalendarDays, Clock3, Hourglass, MapPin, MonitorSmartphone, Users } from "lucide-react";
 
 /* ==================================================
    EVENT DETAILS SUMMARY
-   Displays key event information in a compact summary
+   Displays practical event information
 
    Handles:
-   - event type and theme
-   - mode and location
-   - capacity
-   - date and time
-   - registration deadline
-   - decorative summary icons
+   - schedule and time display
+   - registration deadline display
+   - mode, location and capacity display
+   - conditional location rendering
+   - responsive event metadata layout
+   - decorative metadata icons
 ================================================== */
 
 export default function EventDetailsSummary({
-    type,
-    theme,
     mode,
     location,
     capacity,
@@ -26,75 +24,86 @@ export default function EventDetailsSummary({
 
     return (
         <dl className="event-details-summary">
-            <div className="event-details-summary-item">
-                <dt className="event-details-summary-label">
-                    <Shapes aria-hidden="true" />
-                    Type
-                </dt>
-                <dd className="event-details-summary-value">{type}</dd>
-            </div>
-
-            <div className="event-details-summary-item">
-                <dt className="event-details-summary-label">
-                    <Sparkles aria-hidden="true" />
-                    Theme
-                </dt>
-                <dd className="event-details-summary-value">{theme}</dd>
-            </div>
-
-            <div className="event-details-summary-item">
-                <dt className="event-details-summary-label">
-                    <MonitorSmartphone aria-hidden="true" />
-                    Mode
-                </dt>
-                <dd className="event-details-summary-value">{mode}</dd>
-            </div>
-
-            <div className="event-details-summary-item">
-                <dt className="event-details-summary-label">
-                    <MapPin aria-hidden="true" />
-                    Location
-                </dt>
-                <dd className="event-details-summary-value">{location}</dd>
-            </div>
-
-            {capacity && (
+            <div className="event-details-summary-column">
                 <div className="event-details-summary-item">
-                    <dt className="event-details-summary-label">
-                        <Users aria-hidden="true" />
-                        Capacity
-                    </dt>
-                    <dd className="event-details-summary-value">{capacity}</dd>
+                    <div className="event-details-summary-icon" aria-hidden="true">
+                        <CalendarDays />
+                    </div>
+
+                    <div>
+                        <dt className="event-details-summary-label">Schedule</dt>
+                        <dd className="event-details-summary-value">{date}</dd>
+                    </div>
                 </div>
-            )}
 
-            <div className="event-details-summary-item">
-                <dt className="event-details-summary-label">
-                    <CalendarDays aria-hidden="true" />
-                    Date
-                </dt>
-                <dd className="event-details-summary-value">{date}</dd>
-            </div>
-
-            <div className="event-details-summary-item">
-                <dt className="event-details-summary-label">
-                    <Clock3 aria-hidden="true" />
-                    Time
-                </dt>
-                <dd className="event-details-summary-value">{time}</dd>
-            </div>
-
-            {registrationDeadline && (
                 <div className="event-details-summary-item">
-                    <dt className="event-details-summary-label">
-                        <Hourglass aria-hidden="true" />
-                        Registration deadline
-                    </dt>
-                    <dd className="event-details-summary-value">
-                        {registrationDeadline}
-                    </dd>
+                    <div className="event-details-summary-icon" aria-hidden="true">
+                        <Clock3 />
+                    </div>
+
+                    <div>
+                        <dt className="event-details-summary-label">Time</dt>
+                        <dd className="event-details-summary-value">{time}</dd>
+                    </div>
                 </div>
-            )}
+
+                {registrationDeadline && (
+                    <div className="event-details-summary-item">
+                        <div className="event-details-summary-icon" aria-hidden="true">
+                            <Hourglass />
+                        </div>
+
+                        <div>
+                            <dt className="event-details-summary-label">
+                                Registration deadline
+                            </dt>
+
+                            <dd className="event-details-summary-value">
+                                {registrationDeadline}
+                            </dd>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <div className="event-details-summary-column">
+                <div className="event-details-summary-item">
+                    <div className="event-details-summary-icon" aria-hidden="true">
+                        <MonitorSmartphone />
+                    </div>
+
+                    <div>
+                        <dt className="event-details-summary-label">Mode</dt>
+                        <dd className="event-details-summary-value">{mode}</dd>
+                    </div>
+                </div>
+
+                {location && (
+                    <div className="event-details-summary-item">
+                        <div className="event-details-summary-icon" aria-hidden="true">
+                            <MapPin />
+                        </div>
+
+                        <div>
+                            <dt className="event-details-summary-label">Location</dt>
+                            <dd className="event-details-summary-value">{location}</dd>
+                        </div>
+                    </div>
+                )}
+
+                {capacity && (
+                    <div className="event-details-summary-item">
+                        <div className="event-details-summary-icon" aria-hidden="true">
+                            <Users />
+                        </div>
+
+                        <div>
+                            <dt className="event-details-summary-label">Capacity</dt>
+                            <dd className="event-details-summary-value">{capacity}</dd>
+                        </div>
+                    </div>
+                )}
+            </div>
         </dl>
     );
 }

@@ -9,19 +9,18 @@ import { createEvent } from "../../factories/events/eventFactory";
 
 /* ==================================================
    EVENT DETAILS SUMMARY TESTS
-   Tests event summary metadata rendering
+   Tests practical event metadata rendering
 
    Handles:
-   - type and theme display
-   - mode and location display
-   - capacity display
-   - date and time display
+   - schedule and time display
    - registration deadline display
-   - optional field visibility
-   - decorative summary icon accessibility
+   - mode, location and capacity display
+   - optional metadata visibility
+   - decorative metadata icon accessibility
 
    Notes:
    - focuses on metadata rendering
+   - location visibility is controlled by props
    - uses reusable render helper
 ================================================== */
 
@@ -34,8 +33,6 @@ describe("EventDetailsSummary", () => {
     const event = createEvent();
 
     const baseProps = {
-        type: event.type,
-        theme: event.theme,
         mode: getEventModeLabel(event.mode),
         location: event.location,
         capacity: `${event.maxParticipants} attendees`,
@@ -64,8 +61,6 @@ describe("EventDetailsSummary", () => {
     it("should display event summary information", () => {
         renderEventDetailsSummary();
 
-        expect(screen.getByText("Meetup")).toBeInTheDocument();
-        expect(screen.getByText("Tech")).toBeInTheDocument();
         expect(screen.getByText("In person")).toBeInTheDocument();
         expect(screen.getByText("Montreal")).toBeInTheDocument();
         expect(screen.getByText("10 attendees")).toBeInTheDocument();
@@ -74,13 +69,25 @@ describe("EventDetailsSummary", () => {
         expect(screen.getByText("19/12/2026")).toBeInTheDocument();
     });
 
+    it("should render metadata labels", () => {
+        renderEventDetailsSummary();
+
+        expect(screen.getByText("Schedule")).toBeInTheDocument();
+        expect(screen.getByText("Time")).toBeInTheDocument();
+        expect(screen.getByText("Registration deadline")).toBeInTheDocument();
+        expect(screen.getByText("Mode")).toBeInTheDocument();
+        expect(screen.getByText("Location")).toBeInTheDocument();
+        expect(screen.getByText("Capacity")).toBeInTheDocument();
+    });
+
     it("should hide decorative icons from assistive technologies", () => {
         renderEventDetailsSummary();
 
-        const icons = document.querySelectorAll(".event-details-summary-label svg[aria-hidden='true']");
+        const icons = document.querySelectorAll(".event-details-summary-icon[aria-hidden='true']");
 
-        expect(icons).toHaveLength(8);
+        expect(icons).toHaveLength(6);
     });
+
     /* =============================
        OPTIONAL FIELDS
     ============================= */
@@ -99,5 +106,13 @@ describe("EventDetailsSummary", () => {
         });
 
         expect(screen.queryByText(/^Registration deadline$/i)).not.toBeInTheDocument();
+    });
+
+    it("should hide location when not provided", () => {
+        renderEventDetailsSummary({
+            location: null
+        });
+
+        expect(screen.queryByText(/^Location$/i)).not.toBeInTheDocument();
     });
 });

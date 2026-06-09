@@ -64,9 +64,65 @@
    CONTENT
 ========================================= */
 
-.event-details-description {
+.event-details-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+}
+
+.event-details-section-title {
+    margin: 0;
+    font-size: var(--font-size-base);
+    font-weight: 700;
+}
+
+.event-details-heading-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.event-details-category-label {
     color: var(--color-text-muted);
-    margin-bottom: var(--space-5);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+}
+
+.event-details-category-list {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.event-details-category-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+
+    padding: var(--space-1) var(--space-2);
+
+    color: var(--color-primary);
+    background: var(--color-primary-subtle);
+
+    border-radius: var(--radius-sm);
+
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+}
+
+.event-details-category-tag svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+}
+
+.event-details-description {
+    margin: 0;
+    color: var(--color-text-muted);
+    line-height: 1.6;
 }
 
 /* =========================================

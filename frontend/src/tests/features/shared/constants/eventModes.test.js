@@ -4,7 +4,8 @@ import {
     EVENT_MODES,
     VALID_EVENT_MODES,
     EVENT_MODE_LABELS,
-    getEventModeLabel
+    getEventModeLabel,
+    isOnlineEventMode
 } from "../../../../features/shared/constants/eventModes";
 
 /* ==================================================
@@ -54,20 +55,22 @@ describe("eventModes", () => {
     ============================= */
 
     it("should resolve online display label", () => {
-        expect(
-            getEventModeLabel(EVENT_MODES.ONLINE)
-        ).toBe("Online");
+        expect(getEventModeLabel(EVENT_MODES.ONLINE)).toBe("Online");
     });
 
     it("should resolve in-person display label", () => {
-        expect(
-            getEventModeLabel(EVENT_MODES.IN_PERSON)
-        ).toBe("In person");
+        expect(getEventModeLabel(EVENT_MODES.IN_PERSON)).toBe("In person");
     });
 
     it("should fallback to raw mode when label does not exist", () => {
-        expect(
-            getEventModeLabel("custom_mode")
-        ).toBe("custom_mode");
+        expect(getEventModeLabel("custom_mode")).toBe("custom_mode");
+    });
+
+    it("should return true for online mode", () => {
+        expect(isOnlineEventMode(EVENT_MODES.ONLINE)).toBe(true);
+    });
+
+    it("should return false for non-online mode", () => {
+        expect(isOnlineEventMode(EVENT_MODES.IN_PERSON)).toBe(false);
     });
 });

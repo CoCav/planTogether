@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Shapes, Sparkles } from "lucide-react";
 
 import { useAuth } from "../features/auth/hooks/useAuth";
 
@@ -15,6 +16,8 @@ import { getEventMembershipState } from "../features/eventMemberships/eventMembe
 import useMembershipActions from "../features/eventMemberships/hooks/useMembershipActions";
 import useMembershipManagement from "../features/eventMemberships/hooks/useMembershipManagement";
 import useMembershipPermissions from "../features/eventMemberships/hooks/useMembershipPermissions";
+
+import { isOnlineEventMode } from "../features/shared/constants/eventModes";
 
 import { defaultEventImage, getEventImage } from "../utils/uploadedFiles";
 
@@ -34,18 +37,15 @@ import PageLoader from "../components/ui/PageLoader";
    Displays and manages a single event details view
 
    Handles:
-   - event details, members, and staff loading
-   - event availability state
-   - membership permissions
-   - ownership transfer orchestration
-   - join / leave event actions
-   - event deletion
-   - event availability badges
-   - started and past event restrictions
-   - staff and participant management
-   - display-ready event data
-   - event status badge display
-   - accessible event image description
+   - event details and membership data loading
+   - event availability and registration state
+   - membership permissions and restrictions
+   - join, leave, edit, and delete actions
+   - ownership transfer and member management
+   - event status and availability badges
+   - display-ready event formatting
+   - accessible event image rendering
+   - staff and participant section management
 ================================================== */
 
 export default function EventDetailsPage() {
@@ -328,18 +328,40 @@ export default function EventDetailsPage() {
                         />
                     </div>
 
-                    <p className="event-details-description">{eventDisplayData.description}</p>
+                    <div className="event-details-content">
+                        <div className="event-details-heading-group">
+                            <h3 className="event-details-section-title">
+                                About this event
+                            </h3>
 
-                    <EventDetailsSummary
-                        type={eventDisplayData.type}
-                        theme={eventDisplayData.theme}
-                        mode={eventDisplayData.mode}
-                        location={eventDisplayData.location}
-                        capacity={eventDisplayData.capacity}
-                        date={eventDisplayData.date}
-                        time={eventDisplayData.time}
-                        registrationDeadline={eventDisplayData.registrationDeadline}
-                    />
+                            <div className="event-details-category-list" aria-label="Event categories">
+                                <span className="event-details-category-tag">
+                                    <span className="event-details-category-label">Type: </span>
+                                    <Shapes aria-hidden="true" />
+                                    {eventDisplayData.type}
+                                </span>
+
+                                <span className="event-details-category-tag">
+                                    <span className="event-details-category-label">Theme: </span>
+                                    <Sparkles aria-hidden="true" />
+                                    {eventDisplayData.theme}
+                                </span>
+                            </div>
+                        </div>
+
+                        <p className="event-details-description">
+                            {eventDisplayData.description}
+                        </p>
+
+                        <EventDetailsSummary
+                            mode={eventDisplayData.mode}
+                            location={isOnlineEventMode(event.mode) ? null : eventDisplayData.location}
+                            capacity={eventDisplayData.capacity}
+                            date={eventDisplayData.date}
+                            time={eventDisplayData.time}
+                            registrationDeadline={eventDisplayData.registrationDeadline}
+                        />
+                    </div>
                 </Card>
             </section>
 

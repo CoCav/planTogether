@@ -12,22 +12,17 @@ import { createEventListingFilters } from "../../factories/shared/eventListingFi
    Tests event listing filter form rendering and interactions
 
    Handles:
-   - filter card header rendering
-   - filter visibility toggle
+   - filter header and visibility toggle
    - hidden and visible form states
-   - accessible form labels and descriptions
-   - text filter changes
-   - mode filter changes
-   - date filter controls
-   - disabled date range fields
-   - sort changes
-   - filter submission
-   - filter reset
+   - accessible labels and section structure
+   - search, mode, date, and sorting interactions
+   - disabled date range states
+   - filter submission and reset actions
    - decorative filter and action icons
 
    Notes:
    - uses reusable filter props
-   - focuses on form visibility and callbacks
+   - focuses on accessibility and callback behavior
 ================================================== */
 
 describe("EventsFilterCard", () => {
@@ -303,5 +298,37 @@ describe("EventsFilterCard", () => {
         }));
 
         expect(onResetFilters).toHaveBeenCalled();
+    });
+
+    /* =============================
+       ACCESSIBILITY
+    ============================= */
+
+    it("renders accessible filter section titles", () => {
+        renderFilterCard({
+            showFilters: true
+        });
+
+        expect(screen.getByRole("heading", {
+            name: /main filters/i
+        })).toBeInTheDocument();
+
+        expect(screen.getByRole("heading", {
+            name: /dates/i
+        })).toBeInTheDocument();
+
+        expect(screen.getByRole("heading", {
+            name: /sort/i
+        })).toBeInTheDocument();
+    });
+
+    it("associates filter sections with accessible titles", () => {
+        renderFilterCard({
+            showFilters: true
+        });
+
+        expect(screen.getByRole("heading", { name: /main filters/i }).closest("section")).toHaveAttribute("aria-labelledby", "events-filter-main-title");
+        expect(screen.getByRole("heading", { name: /dates/i }).closest("section")).toHaveAttribute("aria-labelledby", "events-filter-dates-title");
+        expect(screen.getByRole("heading", { name: /^sort$/i }).closest("section")).toHaveAttribute("aria-labelledby", "events-filter-sort-title");
     });
 });

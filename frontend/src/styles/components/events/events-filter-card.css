@@ -23,7 +23,7 @@
 .events-filter-card-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: var(--space-4);
     flex-wrap: wrap;
 }
@@ -33,22 +33,57 @@
 ========================================= */
 
 .events-filter-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
     margin-top: var(--space-5);
+}
+
+.events-filter-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-top: var(--space-1);
+}
+
+.events-filter-section + .events-filter-section {
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border-light);
+}
+
+.events-filter-section-title {
+    margin: 0;
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
 }
 
 .events-filter-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--space-4);
+}
+
+.events-filter-toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.events-filter-sort {
+    width: 100%;
+    max-width: 360px;
 }
 
 .events-filter-actions {
     display: flex;
     gap: var(--space-2);
     flex-wrap: wrap;
-    margin-top: var(--space-4);
 }
-
 
 /* =========================================
    RESPONSIVE
@@ -60,7 +95,49 @@
         align-items: flex-start;
     }
 
+    .events-filter-form {
+        gap: var(--space-3);
+        margin-top: var(--space-4);
+    }
+
+    .events-filter-section {
+        gap: var(--space-2);
+    }
+
+    .events-filter-section + .events-filter-section {
+        padding-top: var(--space-3);
+    }
+
+    .events-filter-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-3);
+    }
+
+    .events-filter-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-3);
+    }
+
+    .events-filter-sort {
+        max-width: none;
+    }
+
+    .events-filter-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-2);
+    }
+
     .events-filter-actions .btn {
-        flex: 1;
+        width: 100%;
+        justify-content: center;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 420px) {
+    .events-filter-actions {
+        grid-template-columns: 1fr;
     }
 }

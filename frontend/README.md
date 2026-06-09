@@ -24,11 +24,10 @@ It provides a responsive, accessibility-focused, and role-aware user interface f
 The frontend architecture emphasizes:
 
 - feature-oriented architecture
-- reusable hooks and shared frontend patterns
 - centralized API communication
 - protected routing and authentication flows
 - role-aware frontend behavior and access guards
-- reusable filtering, listing, and query synchronization helpers
+- reusable hooks, frontend patterns, and query synchronization helpers
 - comprehensive automated testing with Vitest and React Testing Library
 
 The frontend emphasizes scalable architecture, domain-driven frontend behavior, accessibility-focused UI patterns, maintainable testing workflows, and long-term reliability.
@@ -46,11 +45,9 @@ It allows users to:
 - Join and leave events
 - Interact with role-aware event actions (`organizer`, `co_organizer`, `participant`)
 - Create, edit, and delete events
-- Handle event status-aware actions and restrictions
-- Prevent deletion of started events in alignment with backend authorization rules
-- Prevent editing of started events through frontend validation rules
+- Handle status-aware event actions and started-event restrictions
 - Manage profile information and passwords
-- Upload avatars and event images
+- Upload, preview, and manage avatars and event images
 - Persist authenticated sessions with a "Remember me" feature
 - Access personalized event dashboards for created and joined events
 - Browse public user profiles and public user event listings
@@ -99,7 +96,7 @@ The frontend is built using modern and efficient tools to ensure performance, sc
 
 - **Vitest** – unit and integration testing
 - **React Testing Library** – user interaction and UI behavior testing
-- **Reusable factories, mocks, and render helpers** – maintainable frontend testing architecture
+- **Reusable factories, mocks, render helpers, and testing utilities** – maintainable frontend testing architecture
 
 ---
 
@@ -282,7 +279,7 @@ The frontend also emphasizes semantic structure, reusable accessible UI patterns
 Frontend behavior includes:
 
 - Validation aligned with backend business rules
-- Role-aware UI actions and frontend access behavior based on event state and permissions
+- Role-aware and permission-aware frontend behavior
 - Event status awareness (`upcoming`, `ongoing`, `ended`)
 - Status badge display across event listings and event details
 - Hiding restricted actions when events have already started
@@ -305,10 +302,8 @@ Frontend behavior includes:
 
 ### 📂 My Events Dashboard
 
-- View created events
-- View created event history
-- View joined events
-- View joined event history
+- View active and historical created events
+- View active and historical joined events
 - Leave events directly from the interface
 - Filter events by active views (`created`, `created history`, `joined`, `joined history`)
 - Shared listing behavior with public event pages
@@ -329,7 +324,7 @@ The dashboard uses:
 - Shared validation feedback and upload accessibility behavior
 - Reusable preview removal and replacement workflows
 
-### 🔍 Event Filtering
+### 🔍 Filtering Behavior
 
 Users can filter events using:
 
@@ -350,13 +345,10 @@ Filtering behavior includes:
 - dynamic filter resets
 - centralized query parameter handling
 - view-aware filter synchronization
-
-#### 🔍 Filtering Behavior
-
-- Selecting an exact date disables date range inputs
-- Multiple filters can be combined
-- Resetting filters reloads all events
-- Filters, pagination, and active views are synchronized with the URL
+- selecting an exact date disables date range inputs
+- multiple filters can be combined
+- resetting filters reloads all events
+- filters, pagination, and active views are synchronized with the URL
 
 ### 🧭 Navigation & State Management
 
@@ -755,7 +747,9 @@ Examples include:
 
 ## 🧪 Testing
 
-The frontend includes a comprehensive automated testing architecture built with **Vitest** and **React Testing Library**.
+The frontend includes a comprehensive automated testing architecture built with **Vitest** and **React Testing Library**, covering reusable UI components, frontend business logic, routing, query synchronization, accessibility behavior, and protected frontend workflows.
+
+The testing strategy focuses on reliability, maintainability, accessibility, reusable frontend architecture, and long-term frontend stability.
 
 ### ▶️ Run Tests
 
@@ -775,41 +769,38 @@ npx vitest run --coverage
 - ✅ 1218 passing tests
 - ✅ All tests passing
 
-Coverage:
+**Coverage**:
 - 97.89% statement coverage
 - 95.07% branch coverage
 - 95.03% function coverage
 - 98.12% line coverage
 
+✅ High automated coverage across routing, authentication flows, query synchronization, uploads, accessibility behavior, reusable hooks, and role-aware frontend interactions.
+
 ### 📦 Tested Areas
 
 The frontend test suite covers:
 
-- pages, routing, and protected access flows
-- API modules, reusable helpers, and frontend business logic
+- pages, routing, and protected frontend flows
 - reusable hooks, query synchronization, filtering, pagination, and listing behavior
-- event permissions, frontend access guards, and role-aware UI behavior
-- reusable factories, mocks, render utilities, and testing helpers
-- semantic structure, ARIA behavior, and accessibility-focused interaction flows
-- event status synchronization, status-aware frontend behavior, and status badge rendering
-- started-event editing restrictions and contextual datetime validation behavior
-- event image preservation, replacement, removal, and upload preview behavior
-- reusable upload preview architecture and responsive upload rendering
-- authentication redirect restoration and protected route synchronization flows
-- account deletion and ownership transfer workflows
+- API modules, payload normalization, and frontend business logic
+- role-aware UI behavior and frontend access guards
+- upload previews, drag-and-drop interactions, and image lifecycle handling
+- reusable factories, mocks, render helpers, and testing utilities
+- accessibility behavior, semantic structure, and ARIA-aware interactions
+- event status synchronization and started-event restrictions
+- authentication redirect restoration and protected navigation flows
 - public user profile and public user event listing workflows
-- clean URL synchronization across event listing pages
-- decorative icon accessibility handling and reusable accessibility-focused UI patterns
-- shared event membership interactions and permission-aware behaviors
+- reusable shared component and frontend interaction behavior
 
 ### 🔁 Testing Strategy
 
-- Tests simulate realistic frontend behavior using `React Testing Library`
+- Tests simulate realistic frontend behavior using React Testing Library
 - API calls are mocked to isolate frontend feature behavior
-- Routing behavior is tested through the application router
-- Authentication and protected access flows are validated
-- Critical frontend business logic is tested in isolation
+- Routing and protected access flows are validated through the application router
+- Critical frontend business logic is tested independently from UI rendering
 - Reusable factories, mocks, and helpers reduce duplicated test setup
+- Accessibility behavior and semantic UI structure are validated across reusable frontend components
 
 For more details about the frontend testing architecture, reusable factories, mocks, render helpers, and testing workflows, see [`docs/testing.md`](./docs/testing.md).
 
@@ -845,9 +836,9 @@ npm install
 npm run dev
 ```
 
-The application will be available at:
+The application is available at:
 
-`http://localhost:5173` (Default Vite development port)
+`http://localhost:5173`
 
 ---
 
@@ -871,7 +862,6 @@ The application will be available at:
 - Expanded reusable accessibility-focused UI component patterns
 - Strengthened reusable event listing and query synchronization architecture
 - Improved frontend CSS organization, reusable component styling, and responsive layout consistency
-- Refined shared component and page styling architecture
 
 ### 🧪 Frontend Testing
 

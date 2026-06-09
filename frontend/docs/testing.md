@@ -92,7 +92,7 @@ The testing stack is designed to support reliable frontend evolution and long-te
 - reusable UI interaction patterns and responsive upload behavior
 - semantic structure, accessibility-focused UI patterns, and ARIA-aware interactions
 
-This testing architecture helps maintain predictable frontend behavior, isolated business logic validation, reusable testing workflows, accessibility consistency, and scalable long-term frontend maintainability.
+This testing architecture helps maintain predictable frontend behavior, isolated business logic validation, testing workflows, accessibility consistency, and scalable long-term frontend maintainability.
 
 ---
 

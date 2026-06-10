@@ -35,10 +35,13 @@
 @media (max-width: 480px) {
     .pagination {
         width: 100%;
+        justify-content: center;
+        gap: var(--space-2);
     }
 
     .pagination .btn {
-        flex: 1;
+        flex: 0 0 auto;
+        min-width: 104px;
     }
 
     .pagination-info {

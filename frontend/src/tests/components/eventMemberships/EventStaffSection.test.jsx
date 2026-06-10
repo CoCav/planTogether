@@ -13,17 +13,17 @@ import { createAuthenticatedUser } from "../../factories/users/userFactory";
 
    Handles:
    - staff section copy
-   - accessible staff section copy
    - staff empty message
-   - ownership transfer action callback
-   - ownership transfer action visibility
-   - demote action callback
-   - remove action callback
    - authenticated action visibility
-   - decorative action icons
+   - ownership transfer action configuration
+   - demote action configuration
+   - remove action configuration
+   - guest action hiding
+   - decorative section icon configuration
 
    Notes:
    - mocks EventMembersSection to focus on section configuration
+   - mocks MemberActionsMenu to inspect configured actions
    - uses reusable render helper
 ================================================== */
 
@@ -54,6 +54,26 @@ vi.mock("../../../components/eventMemberships/EventMembersSection", () => ({
                 ))
             )}
         </section>
+    )
+}));
+
+vi.mock("../../../components/eventMemberships/MemberActionsMenu", () => ({
+    default: ({ actions = [] }) => (
+        <div>
+            {actions
+                .filter((action) => action.show)
+                .map((action) => (
+                    <button
+                        key={action.label}
+                        type="button"
+                        data-danger={String(Boolean(action.danger))}
+                        data-separated={String(Boolean(action.separated))}
+                        onClick={action.onClick}
+                    >
+                        {action.label}
+                    </button>
+                ))}
+        </div>
     )
 }));
 
@@ -126,7 +146,7 @@ describe("EventStaffSection", () => {
     });
 
     /* =============================
-       ACTION CALLBACKS
+       ACTION CONFIGURATION
     ============================= */
 
     it("should call onTransferOwnership when ownership transfer action is allowed", () => {
@@ -155,7 +175,7 @@ describe("EventStaffSection", () => {
         })).not.toBeInTheDocument();
 
         expect(screen.getByRole("button", {
-            name: "Demote"
+            name: "Demote from team"
         })).toBeInTheDocument();
     });
 
@@ -168,7 +188,7 @@ describe("EventStaffSection", () => {
         });
 
         fireEvent.click(screen.getByRole("button", {
-            name: "Demote"
+            name: "Demote from team"
         }));
 
         expect(onDemote).toHaveBeenCalledWith(2);
@@ -180,8 +200,13 @@ describe("EventStaffSection", () => {
             canRemove: () => true
         });
 
-        expect(screen.queryByRole("button", { name: "Demote" })).not.toBeInTheDocument();
-        expect(screen.getByRole("button", { name: "Remove" })).toBeInTheDocument();
+        expect(screen.queryByRole("button", {
+            name: "Demote from team"
+        })).not.toBeInTheDocument();
+
+        expect(screen.getByRole("button", {
+            name: "Remove from event"
+        })).toBeInTheDocument();
     });
 
     it("should call onRemove when remove action is allowed", () => {
@@ -193,10 +218,23 @@ describe("EventStaffSection", () => {
         });
 
         fireEvent.click(screen.getByRole("button", {
-            name: "Remove"
+            name: "Remove from event"
         }));
 
         expect(onRemove).toHaveBeenCalledWith(2);
+    });
+
+    it("should configure remove action as danger and separated", () => {
+        renderEventStaffSection({
+            canRemove: () => true
+        });
+
+        const removeButton = screen.getByRole("button", {
+            name: "Remove from event"
+        });
+
+        expect(removeButton).toHaveAttribute("data-danger", "true");
+        expect(removeButton).toHaveAttribute("data-separated", "true");
     });
 
     it("should hide actions for guest users", () => {
@@ -212,11 +250,11 @@ describe("EventStaffSection", () => {
         })).not.toBeInTheDocument();
 
         expect(screen.queryByRole("button", {
-            name: "Demote"
+            name: "Demote from team"
         })).not.toBeInTheDocument();
 
         expect(screen.queryByRole("button", {
-            name: "Remove"
+            name: "Remove from event"
         })).not.toBeInTheDocument();
     });
 });

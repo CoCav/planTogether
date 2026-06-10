@@ -1,6 +1,6 @@
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import EventMembersSection from "../../../components/eventMemberships/EventMembersSection";
 
@@ -8,17 +8,18 @@ import { createOrganizerMember, createParticipantMember } from "../../factories/
 
 /* ==================================================
    EVENT MEMBERS SECTION TESTS
-   Tests reusable event members section rendering
+   Tests reusable event membership list rendering
 
    Handles:
-   - section heading
-   - optional subtitle
+   - section heading and subtitle
    - empty member state
-   - member rows
+   - member rows and role badges
    - public profile navigation
    - optional member actions
-   - accessible section semantics
-   - accessible list semantics
+   - collapsed member preview
+   - expanded paginated member list
+   - view all / collapse toggle
+   - accessible section and list semantics
 ================================================== */
 
 describe("EventMembersSection", () => {
@@ -26,15 +27,18 @@ describe("EventMembersSection", () => {
     /* =============================
        TEST DATA
     ============================= */
+
     const members = [
-        createOrganizerMember({
-            id: 1,
-            name: "Alice"
-        }),
-        createParticipantMember({
-            id: 2,
-            name: "Bob"
-        })
+        createOrganizerMember({ id: 1, name: "Alice" }),
+        createParticipantMember({ id: 2, name: "Bob" })
+    ];
+
+    const manyMembers = [
+        createOrganizerMember({ id: 1, name: "Alice" }),
+        createParticipantMember({ id: 2, name: "Bob" }),
+        createParticipantMember({ id: 3, name: "Charlie" }),
+        createParticipantMember({ id: 4, name: "Diana" }),
+        createParticipantMember({ id: 5, name: "Eve" })
     ];
 
     const renderActions = vi.fn((person) => (
@@ -78,11 +82,9 @@ describe("EventMembersSection", () => {
     it("should render title and subtitle", () => {
         renderEventMembersSection();
 
-        expect(
-            screen.getByRole("heading", {
-                name: "Participants"
-            })
-        ).toBeInTheDocument();
+        expect(screen.getByRole("heading", {
+            name: "Participants"
+        })).toBeInTheDocument();
 
         expect(screen.getByText("People attending this event")).toBeInTheDocument();
     });
@@ -97,12 +99,6 @@ describe("EventMembersSection", () => {
 
     it("should associate section with its heading", () => {
         renderEventMembersSection();
-
-        const heading = screen.getByRole("heading", {
-            name: "Participants"
-        });
-
-        expect(heading).toHaveAttribute("id", "participants-title");
 
         expect(screen.getByRole("region", {
             name: "Participants"
@@ -148,7 +144,6 @@ describe("EventMembersSection", () => {
         renderEventMembersSection();
 
         expect(screen.getByRole("list")).toBeInTheDocument();
-
         expect(screen.getAllByRole("listitem")).toHaveLength(2);
     });
 
@@ -164,6 +159,15 @@ describe("EventMembersSection", () => {
         })).toHaveAttribute("href", "/users/2");
     });
 
+    it("should hide role badges when disabled", () => {
+        renderEventMembersSection({
+            showRoleBadge: false
+        });
+
+        expect(screen.queryByText("Organizer")).not.toBeInTheDocument();
+        expect(screen.queryByText("Participant")).not.toBeInTheDocument();
+    });
+
     /* =============================
        MEMBER ACTIONS
     ============================= */
@@ -175,7 +179,7 @@ describe("EventMembersSection", () => {
         expect(screen.getByText("Remove Bob")).toBeInTheDocument();
     });
 
-    it("should call renderActions for each member when actions are enabled", () => {
+    it("should call renderActions for each visible member when actions are enabled", () => {
         renderEventMembersSection();
 
         expect(renderActions).toHaveBeenCalledTimes(2);
@@ -189,7 +193,6 @@ describe("EventMembersSection", () => {
         });
 
         expect(screen.queryByText(/remove alice/i)).not.toBeInTheDocument();
-
         expect(screen.queryByText(/remove bob/i)).not.toBeInTheDocument();
 
         expect(renderActions).not.toHaveBeenCalled();
@@ -201,5 +204,75 @@ describe("EventMembersSection", () => {
         });
 
         expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    });
+
+    /* =============================
+       PREVIEW AND PAGINATION
+    ============================= */
+
+    it("should render a collapsed member preview when member count exceeds preview limit", () => {
+        renderEventMembersSection({
+            members: manyMembers,
+            previewLimit: 2,
+            pageSize: 2
+        });
+
+        expect(screen.getByText("Alice")).toBeInTheDocument();
+        expect(screen.getByText("Bob")).toBeInTheDocument();
+
+        expect(screen.queryByText("Charlie")).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "View all" })).toBeInTheDocument();
+    });
+
+    it("should expand member list when clicking view all", () => {
+        renderEventMembersSection({
+            members: manyMembers,
+            previewLimit: 2,
+            pageSize: 2
+        });
+
+        fireEvent.click(screen.getByRole("button", { name: "View all" }));
+
+        expect(screen.getByText("Alice")).toBeInTheDocument();
+        expect(screen.getByText("Bob")).toBeInTheDocument();
+
+        expect(screen.getByRole("button", { name: "Collapse" })).toBeInTheDocument();
+        expect(screen.getByText("Page 1 of 3")).toBeInTheDocument();
+    });
+
+    it("should paginate expanded member list", () => {
+        renderEventMembersSection({
+            members: manyMembers,
+            previewLimit: 2,
+            pageSize: 2
+        });
+
+        fireEvent.click(screen.getByRole("button", { name: "View all" }));
+        fireEvent.click(screen.getByRole("button", { name: "Next" }));
+
+        expect(screen.queryByText("Alice")).not.toBeInTheDocument();
+        expect(screen.queryByText("Bob")).not.toBeInTheDocument();
+
+        expect(screen.getByText("Charlie")).toBeInTheDocument();
+        expect(screen.getByText("Diana")).toBeInTheDocument();
+
+        expect(screen.getByText("Page 2 of 3")).toBeInTheDocument();
+    });
+
+    it("should collapse expanded member list", () => {
+        renderEventMembersSection({
+            members: manyMembers,
+            previewLimit: 2,
+            pageSize: 2
+        });
+
+        fireEvent.click(screen.getByRole("button", { name: "View all" }));
+        fireEvent.click(screen.getByRole("button", { name: "Collapse" }));
+
+        expect(screen.getByText("Alice")).toBeInTheDocument();
+        expect(screen.getByText("Bob")).toBeInTheDocument();
+
+        expect(screen.queryByText("Charlie")).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "View all" })).toBeInTheDocument();
     });
 });

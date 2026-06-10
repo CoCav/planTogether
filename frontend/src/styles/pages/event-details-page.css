@@ -130,8 +130,8 @@
 ========================================= */
 
 .event-details-members {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-5);
 }
 
@@ -139,6 +139,12 @@
 /* =========================================
    RESPONSIVE
 ========================================= */
+
+@media (max-width: 900px) {
+    .event-details-members {
+        grid-template-columns: 1fr;
+    }
+}
 
 @media (max-width: 768px) {
     .event-details-header {

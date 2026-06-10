@@ -185,4 +185,18 @@ describe("NavbarUserMenu", () => {
             expect(screen.queryByRole("menu")).not.toBeInTheDocument();
         });
     });
+
+    it("should visually separate logout action from navigation links", async () => {
+        const user = userEvent.setup();
+
+        renderNavbarUserMenu();
+
+        await user.click(screen.getByRole("button", {
+            name: /open john menu/i
+        }));
+
+        expect(screen.getByRole("menuitem", {
+            name: "Logout"
+        })).toHaveClass("navbar-dropdown-separated");
+    });
 });

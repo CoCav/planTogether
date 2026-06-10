@@ -1,10 +1,10 @@
-import { Crown, ShieldMinus, UserX } from "lucide-react";
+import { Crown, ShieldMinus, UserX, UsersRound } from "lucide-react";
 
 import { formatBe, formatCount } from "../../utils/formatters";
 
 import EventMembersSection from "./EventMembersSection";
+import MemberActionsMenu from "./MemberActionsMenu";
 
-import Button from "../ui/Button";
 import Card from "../ui/Card";
 
 /* ==================================================
@@ -13,11 +13,12 @@ import Card from "../ui/Card";
 
    Handles:
    - staff section copy
+   - staff empty state
+   - staff action menu configuration
    - ownership transfer action
    - demote action
    - remove action
-   - staff empty state
-   - decorative action icons
+   - decorative section icon
 ================================================== */
 
 export default function EventStaffSection({
@@ -38,46 +39,37 @@ export default function EventStaffSection({
     return (
         <Card>
             <EventMembersSection
+                icon={UsersRound}
                 title="Event Team"
                 subtitle={`${formatCount(staffCount, "member")} ${formatBe(staffCount)} managing this event.`}
                 members={staff}
                 emptyMessage="No team members."
                 showActions={Boolean(user)}
                 renderActions={(person) => (
-                    <>
-                        {canTransferOwnership?.(person) && (
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => onTransferOwnership(person.id)}
-                            >
-                                <Crown aria-hidden="true" />
-                                Transfer ownership
-                            </Button>
-                        )}
-
-                        {canDemote(person) && (
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => onDemote(person.id)}
-                            >
-                                <ShieldMinus aria-hidden="true" />
-                                Demote
-                            </Button>
-                        )}
-
-                        {canRemove(person) && (
-                            <Button
-                                type="button"
-                                variant="danger"
-                                onClick={() => onRemove(person.id)}
-                            >
-                                <UserX aria-hidden="true" />
-                                Remove
-                            </Button>
-                        )}
-                    </>
+                    <MemberActionsMenu
+                        actions={[
+                            {
+                                label: "Transfer ownership",
+                                icon: Crown,
+                                show: canTransferOwnership?.(person),
+                                onClick: () => onTransferOwnership(person.id)
+                            },
+                            {
+                                label: "Demote from team",
+                                icon: ShieldMinus,
+                                show: canDemote?.(person),
+                                onClick: () => onDemote(person.id)
+                            },
+                            {
+                                label: "Remove from event",
+                                icon: UserX,
+                                show: canRemove?.(person),
+                                danger: true,
+                                separated: true,
+                                onClick: () => onRemove(person.id)
+                            }
+                        ]}
+                    />
                 )}
             />
         </Card>

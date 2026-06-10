@@ -1,10 +1,10 @@
-import { Crown, ShieldPlus, UserX } from "lucide-react";
+import { Crown, ShieldPlus, UserX, Users } from "lucide-react";
 
 import { formatBe, formatCount } from "../../utils/formatters";
 
 import EventMembersSection from "./EventMembersSection";
+import MemberActionsMenu from "./MemberActionsMenu";
 
-import Button from "../ui/Button";
 import Card from "../ui/Card";
 
 /* ==================================================
@@ -13,12 +13,14 @@ import Card from "../ui/Card";
 
    Handles:
    - participant section copy
+   - participant empty state
+   - past event empty state
+   - participant role badge omission
+   - participant action menu configuration
    - ownership transfer action
    - promote action
    - remove action
-   - participant empty state
-   - past event empty state
-   - decorative action icons
+   - decorative section icon
 ================================================== */
 
 export default function EventParticipantsSection({
@@ -41,51 +43,42 @@ export default function EventParticipantsSection({
     return (
         <Card>
             <EventMembersSection
+                icon={Users}
                 title="Event Participants"
                 subtitle={`${formatCount(participantCount, "participant")} ${formatBe(participantCount)} attending this event.`}
                 members={participants}
+                showRoleBadge={false}
                 emptyMessage={
                     isPast
                         ? "No one attended this event."
                         : "No participants yet."
                 }
                 showActions={Boolean(user)}
-
                 renderActions={(person) => (
-                    <>
-                        {canTransferOwnership?.(person) && (
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => onTransferOwnership(person.id)}
-                            >
-                                <Crown aria-hidden="true" />
-                                Transfer ownership
-                            </Button>
-                        )}
-
-                        {canPromote(person) && (
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => onPromote(person.id)}
-                            >
-                                <ShieldPlus aria-hidden="true" />
-                                Promote
-                            </Button>
-                        )}
-
-                        {canRemove(person) && (
-                            <Button
-                                type="button"
-                                variant="danger"
-                                onClick={() => onRemove(person.id)}
-                            >
-                                <UserX aria-hidden="true" />
-                                Remove
-                            </Button>
-                        )}
-                    </>
+                    <MemberActionsMenu
+                        actions={[
+                            {
+                                label: "Transfer ownership",
+                                icon: Crown,
+                                show: canTransferOwnership?.(person),
+                                onClick: () => onTransferOwnership(person.id)
+                            },
+                            {
+                                label: "Promote to team",
+                                icon: ShieldPlus,
+                                show: canPromote?.(person),
+                                onClick: () => onPromote(person.id)
+                            },
+                            {
+                                label: "Remove from event",
+                                icon: UserX,
+                                show: canRemove?.(person),
+                                danger: true,
+                                separated: true,
+                                onClick: () => onRemove(person.id)
+                            }
+                        ]}
+                    />
                 )}
             />
         </Card>

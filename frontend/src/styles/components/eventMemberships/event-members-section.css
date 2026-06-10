@@ -2,10 +2,68 @@
    EVENT MEMBERS SECTION
    Shared member list layout for event membership sections
 
+   Handles:
+   - section header with optional icon
+   - view all / collapse toggle placement
+   - member preview and expanded list layout
+   - member row layout
+   - member identity and role display
+   - optional management actions
+   - responsive stacked member rows
+
    Used by:
    - EventParticipantsSection
    - EventStaffSection
 ================================================== */
+
+/* =========================================
+   HEADER
+========================================= */
+
+.event-members-header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+
+    margin-bottom: var(--space-4);
+}
+
+.event-members-header-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.event-members-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.event-members-toggle {
+    flex-shrink: 0;
+}
+
+.event-members-header-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 44px;
+    height: 44px;
+
+    flex-shrink: 0;
+
+    color: var(--color-primary);
+    background: var(--color-primary-subtle);
+
+    border-radius: var(--radius-md);
+}
+
+.event-members-header-icon svg {
+    width: 22px;
+    height: 22px;
+}
 
 /* =========================================
    LIST
@@ -26,12 +84,12 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--space-3);
-    flex-wrap: wrap;
 
     padding: var(--space-3);
 
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
+
     background: var(--color-background);
 }
 
@@ -43,7 +101,9 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    flex-wrap: wrap;
+
+    min-width: 0;
+    flex-shrink: 0;
 }
 
 .member-name {
@@ -57,7 +117,12 @@
 .member-actions {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
+
     gap: var(--space-2);
+
+    margin-left: auto;
+
     flex-wrap: wrap;
 }
 
@@ -66,17 +131,31 @@
 ========================================= */
 
 @media (max-width: 768px) {
-    .member-row {
-        flex-direction: column;
+    .event-members-header {
+        gap: var(--space-2);
+    }
+
+    .event-members-header-top {
         align-items: flex-start;
-        gap: var(--space-1);
+        justify-content: space-between;
+    }
+
+    .event-members-toggle {
+        width: auto;
+        flex-shrink: 0;
+    }
+
+    .member-row {
+        flex-direction: row;
+        align-items: center;
     }
 
     .member-actions {
-        width: 100%;
+        width: auto;
+        margin-left: auto;
     }
 
     .member-actions .btn {
-        flex: 1 1 140px;
+        flex: initial;
     }
 }

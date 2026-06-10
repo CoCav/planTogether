@@ -17,6 +17,7 @@ import UserAvatar from "../users/UserAvatar";
    - profile navigation
    - events navigation
    - logout action
+   - logout visual separation
    - outside click detection
    - decorative dropdown icon
 ================================================== */
@@ -99,7 +100,7 @@ export default function NavbarUserMenu({ user, avatar, onLogout }) {
                     <button
                         type="button"
                         role="menuitem"
-                        className="navbar-dropdown-item navbar-dropdown-danger"
+                        className="navbar-dropdown-item navbar-dropdown-danger navbar-dropdown-separated"
                         onClick={handleMenuLogout}
                     >
                         Logout

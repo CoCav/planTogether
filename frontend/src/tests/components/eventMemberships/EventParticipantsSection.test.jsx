@@ -13,17 +13,18 @@ import { createAuthenticatedUser } from "../../factories/users/userFactory";
 
    Handles:
    - participant section copy
-   - accessible participant section copy
    - active and past empty messages
-   - ownership transfer action callback
-   - ownership transfer action visibility
-   - promote action callback
-   - remove action callback
+   - participant role badge omission
    - authenticated action visibility
-   - decorative action icons
+   - ownership transfer action configuration
+   - promote action configuration
+   - remove action configuration
+   - guest action hiding
+   - decorative section icon configuration
 
    Notes:
    - mocks EventMembersSection to focus on section configuration
+   - mocks MemberActionsMenu to inspect configured actions
    - uses reusable render helper
 ================================================== */
 
@@ -33,12 +34,14 @@ vi.mock("../../../components/eventMemberships/EventMembersSection", () => ({
         subtitle,
         members,
         emptyMessage,
+        showRoleBadge,
         showActions,
         renderActions
     }) => (
         <section data-testid="event-members-section">
             <h2>{title}</h2>
             <p>{subtitle}</p>
+            <span data-testid="show-role-badge">{String(showRoleBadge)}</span>
 
             {members.length === 0 ? (
                 <p>{emptyMessage}</p>
@@ -57,12 +60,27 @@ vi.mock("../../../components/eventMemberships/EventMembersSection", () => ({
     )
 }));
 
+vi.mock("../../../components/eventMemberships/MemberActionsMenu", () => ({
+    default: ({ actions = [] }) => (
+        <div>
+            {actions
+                .filter((action) => action.show)
+                .map((action) => (
+                    <button
+                        key={action.label}
+                        type="button"
+                        data-danger={String(Boolean(action.danger))}
+                        data-separated={String(Boolean(action.separated))}
+                        onClick={action.onClick}
+                    >
+                        {action.label}
+                    </button>
+                ))}
+        </div>
+    )
+}));
+
 describe("EventParticipantsSection", () => {
-
-    /* =============================
-       TEST DATA
-    ============================= */
-
     const participants = [
         createParticipantMember({
             id: 2,
@@ -86,10 +104,6 @@ describe("EventParticipantsSection", () => {
         onTransferOwnership: vi.fn()
     };
 
-    /* =============================
-       TEST HELPERS
-    ============================= */
-
     const renderEventParticipantsSection = (props = {}) => {
         return render(
             <EventParticipantsSection
@@ -111,6 +125,12 @@ describe("EventParticipantsSection", () => {
         })).toBeInTheDocument();
 
         expect(screen.getByText("1 participant is attending this event.")).toBeInTheDocument();
+    });
+
+    it("should hide participant role badges", () => {
+        renderEventParticipantsSection();
+
+        expect(screen.getByTestId("show-role-badge")).toHaveTextContent("false");
     });
 
     /* =============================
@@ -137,7 +157,7 @@ describe("EventParticipantsSection", () => {
     });
 
     /* =============================
-       ACTION CALLBACKS
+       ACTION CONFIGURATION
     ============================= */
 
     it("should call onTransferOwnership when ownership transfer action is allowed", () => {
@@ -166,7 +186,7 @@ describe("EventParticipantsSection", () => {
         })).not.toBeInTheDocument();
 
         expect(screen.getByRole("button", {
-            name: "Promote"
+            name: "Promote to team"
         })).toBeInTheDocument();
     });
 
@@ -179,7 +199,7 @@ describe("EventParticipantsSection", () => {
         });
 
         fireEvent.click(screen.getByRole("button", {
-            name: "Promote"
+            name: "Promote to team"
         }));
 
         expect(onPromote).toHaveBeenCalledWith(2);
@@ -191,8 +211,13 @@ describe("EventParticipantsSection", () => {
             canRemove: () => true
         });
 
-        expect(screen.queryByRole("button", { name: "Promote" })).not.toBeInTheDocument();
-        expect(screen.getByRole("button", { name: "Remove" })).toBeInTheDocument();
+        expect(screen.queryByRole("button", {
+            name: "Promote to team"
+        })).not.toBeInTheDocument();
+
+        expect(screen.getByRole("button", {
+            name: "Remove from event"
+        })).toBeInTheDocument();
     });
 
     it("should call onRemove when remove action is allowed", () => {
@@ -204,12 +229,24 @@ describe("EventParticipantsSection", () => {
         });
 
         fireEvent.click(screen.getByRole("button", {
-            name: "Remove"
+            name: "Remove from event"
         }));
 
         expect(onRemove).toHaveBeenCalledWith(2);
     });
 
+    it("should configure remove action as danger and separated", () => {
+        renderEventParticipantsSection({
+            canRemove: () => true
+        });
+
+        const removeButton = screen.getByRole("button", {
+            name: "Remove from event"
+        });
+
+        expect(removeButton).toHaveAttribute("data-danger", "true");
+        expect(removeButton).toHaveAttribute("data-separated", "true");
+    });
 
     it("should hide actions for guest users", () => {
         renderEventParticipantsSection({
@@ -224,12 +261,11 @@ describe("EventParticipantsSection", () => {
         })).not.toBeInTheDocument();
 
         expect(screen.queryByRole("button", {
-            name: "Promote"
+            name: "Promote to team"
         })).not.toBeInTheDocument();
 
         expect(screen.queryByRole("button", {
-            name: "Remove"
+            name: "Remove from event"
         })).not.toBeInTheDocument();
-
     });
 });

@@ -325,7 +325,7 @@ describe("EventDetailsPage", () => {
        PAGE STRUCTURE
     ============================= */
 
-    it("should render page heading and event title hierarchy", async () => {
+    it("should render accessible heading hierarchy", async () => {
         renderPage();
 
         expect(
@@ -341,6 +341,19 @@ describe("EventDetailsPage", () => {
                 name: "Test Event"
             })
         ).toBeInTheDocument();
+
+        expect(
+            screen.getByRole("heading", {
+                level: 3,
+                name: /about this event/i
+            })
+        ).toBeInTheDocument();
+    });
+
+    it("should render the event categories section", async () => {
+        renderPage();
+
+        expect(await screen.findByLabelText(/event categories/i)).toBeInTheDocument();
     });
 
     /* =============================
@@ -371,6 +384,15 @@ describe("EventDetailsPage", () => {
         expect(screen.getByTestId("event-details-summary")).toBeInTheDocument();
         expect(screen.getByText("In person")).toBeInTheDocument();
         expect(screen.getByText("Montreal")).toBeInTheDocument();
+    });
+
+    it("should display event category tags", async () => {
+        renderPage();
+
+        expect(await screen.findByLabelText(/event categories/i)).toBeInTheDocument();
+
+        expect(screen.getByText(/type:/i)).toBeInTheDocument();
+        expect(screen.getByText(/theme:/i)).toBeInTheDocument();
     });
 
     it("should use fallback display values when event data is missing", async () => {

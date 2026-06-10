@@ -286,35 +286,37 @@ export default function EventDetailsPage() {
             <section className="event-details-overview" aria-labelledby="event-details-title">
                 <Card className="event-details-card">
                     <div className="event-details-header">
-                        <div className="event-details-title-row">
-                            <h2 className="event-details-title">
+                        <div className="event-details-heading">
+                            <h2 id="event-details-title" className="event-details-title">
                                 {eventDisplayData.title}
                             </h2>
 
-                            <Badge status={eventDisplayData.status} />
+                            <div className="event-details-badges">
+                                <Badge status={eventDisplayData.status} />
 
-                            {isEventFull && (
-                                <Badge variant="danger" label="Event full" />
-                            )}
+                                {isEventFull && (
+                                    <Badge variant="danger" label="Event full" />
+                                )}
 
-                            {isRegistrationClosed && (
-                                <Badge variant="muted" label="Registration closed" />
-                            )}
+                                {isRegistrationClosed && (
+                                    <Badge variant="muted" label="Registration closed" />
+                                )}
+                            </div>
                         </div>
 
-                        <EventDetailsActions
-                            eventId={event.id}
-
-                            canJoin={canJoin}
-                            canLeave={canLeave}
-                            canEdit={canEdit}
-                            canDelete={canDelete}
-
-                            onJoin={handleJoinEvent}
-                            onLeave={handleLeaveEvent}
-                            onEdit={() => navigate(`/events/${event.id}/edit`)}
-                            onDelete={handleDeleteEvent}
-                        />
+                        <div className="event-details-actions">
+                            <EventDetailsActions
+                                eventId={event.id}
+                                canJoin={canJoin}
+                                canLeave={canLeave}
+                                canEdit={canEdit}
+                                canDelete={canDelete}
+                                onJoin={handleJoinEvent}
+                                onLeave={handleLeaveEvent}
+                                onEdit={() => navigate(`/events/${event.id}/edit`)}
+                                onDelete={handleDeleteEvent}
+                            />
+                        </div>
                     </div>
 
                     <div className="event-details-image-wrapper">
@@ -329,29 +331,31 @@ export default function EventDetailsPage() {
                     </div>
 
                     <div className="event-details-content">
-                        <div className="event-details-heading-group">
-                            <h3 className="event-details-section-title">
-                                About this event
-                            </h3>
+                        <div className="event-details-about">
+                            <div className="event-details-heading-group">
+                                <h3 className="event-details-section-title">
+                                    About this event
+                                </h3>
 
-                            <div className="event-details-category-list" aria-label="Event categories">
-                                <span className="event-details-category-tag">
-                                    <span className="event-details-category-label">Type: </span>
-                                    <Shapes aria-hidden="true" />
-                                    {eventDisplayData.type}
-                                </span>
+                                <div className="event-details-category-list" aria-label="Event categories">
+                                    <span className="event-details-category-tag">
+                                        <span className="event-details-category-label">Type: </span>
+                                        <Shapes aria-hidden="true" />
+                                        {eventDisplayData.type}
+                                    </span>
 
-                                <span className="event-details-category-tag">
-                                    <span className="event-details-category-label">Theme: </span>
-                                    <Sparkles aria-hidden="true" />
-                                    {eventDisplayData.theme}
-                                </span>
+                                    <span className="event-details-category-tag">
+                                        <span className="event-details-category-label">Theme: </span>
+                                        <Sparkles aria-hidden="true" />
+                                        {eventDisplayData.theme}
+                                    </span>
+                                </div>
                             </div>
-                        </div>
 
-                        <p className="event-details-description">
-                            {eventDisplayData.description}
-                        </p>
+                            <p className="event-details-description">
+                                {eventDisplayData.description}
+                            </p>
+                        </div>
 
                         <EventDetailsSummary
                             mode={eventDisplayData.mode}

@@ -26,19 +26,33 @@
 .event-details-header {
     display: flex;
     justify-content: space-between;
+    align-items: flex-start;
     gap: var(--space-4);
-    flex-wrap: wrap;
 }
 
-.event-details-title-row {
+.event-details-heading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+
+    min-width: 0;
+}
+
+.event-details-title {
+    margin: 0;
+    line-height: 1.2;
+}
+
+.event-details-badges {
     display: flex;
     align-items: center;
     gap: var(--space-2);
     flex-wrap: wrap;
 }
 
-.event-details-title {
-    line-height: 1.2;
+.event-details-actions {
+    flex-shrink: 0;
 }
 
 /* =========================================
@@ -47,10 +61,11 @@
 
 .event-details-image-wrapper {
     width: 100%;
-    height: 260px;
+    height: 220px;
     overflow: hidden;
-    border-radius: var(--radius-lg);
-    margin: var(--space-4) 0;
+    border-radius: var(--radius-xl);
+    margin-top: var(--space-5);
+    margin-bottom: var(--space-4);
     background: var(--color-surface);
 }
 
@@ -71,17 +86,28 @@
     margin-top: var(--space-4);
 }
 
-.event-details-section-title {
-    margin: 0;
-    font-size: var(--font-size-base);
-    font-weight: 700;
+.event-details-about {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+
+    padding-bottom: var(--space-4);
+
+    border-bottom: 1px solid var(--color-border);
 }
 
 .event-details-heading-group {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    justify-content: space-between;
+    gap: var(--space-3);
     flex-wrap: wrap;
+}
+
+.event-details-section-title {
+    margin: 0;
+    font-size: var(--font-size-base);
+    font-weight: 700;
 }
 
 .event-details-category-label {
@@ -120,9 +146,12 @@
 }
 
 .event-details-description {
+    max-width: 760px;
     margin: 0;
+
     color: var(--color-text-muted);
-    line-height: 1.6;
+
+    line-height: 1.7;
 }
 
 /* =========================================
@@ -149,10 +178,28 @@
 @media (max-width: 768px) {
     .event-details-header {
         flex-direction: column;
+        align-items: stretch;
+    }
+
+    .event-details-heading {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .event-details-heading-group {
         align-items: flex-start;
     }
 
-    .event-details-title-row {
+    .event-details-category-list {
+        width: 100%;
+    }
+
+    .event-details-actions {
+        width: 100%;
+    }
+
+    .event-details-actions .btn {
         width: 100%;
     }
 

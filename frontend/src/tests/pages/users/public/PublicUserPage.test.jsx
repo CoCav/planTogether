@@ -23,6 +23,7 @@ import { getPublicUserProfile, getPublicUserEvents } from "../../../../api/users
    - error state
    - accessible profile and listing sections
    - public profile statistics semantics
+   - total public event statistic rendering
    - decorative profile metadata icons
 
    Notes:
@@ -195,6 +196,9 @@ describe("PublicUserPage", () => {
 
         expect(avatar).toHaveAttribute("src", "/uploads/avatars/sakura.png");
         expect(avatar).toHaveClass("user-avatar", "public-user-profile-avatar");
+
+        expect(screen.getByText("22")).toBeInTheDocument();
+        expect(screen.getByText("public events")).toBeInTheDocument();
 
         expect(screen.getByText("17")).toBeInTheDocument();
         expect(screen.getByText("created events")).toBeInTheDocument();
@@ -444,7 +448,10 @@ describe("PublicUserPage", () => {
 
         expect(statsList).toBeInTheDocument();
 
-        expect(within(statsList).getAllByRole("listitem")).toHaveLength(2);
+        expect(within(statsList).getAllByRole("listitem")).toHaveLength(3);
+        expect(within(statsList).getByText("public events")).toBeInTheDocument();
+        expect(within(statsList).getByText("created events")).toBeInTheDocument();
+        expect(within(statsList).getByText("joined events")).toBeInTheDocument();
     });
 
     /* =============================

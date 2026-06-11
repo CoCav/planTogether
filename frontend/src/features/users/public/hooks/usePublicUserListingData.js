@@ -12,6 +12,7 @@ import { getNormalizedPublicUserEvents } from "../publicUserEventNormalizer";
    Handles:
    - initial public user profile loading
    - public event listing loading
+   - total public event count derivation
    - view-based event listing requests
    - empty filter cleanup before API requests
    - public user payload normalization
@@ -60,6 +61,13 @@ export default function usePublicUserListingData({
     });
 
     const [events, setEvents] = useState([]);
+
+    /* =============================
+       DERIVED DATA
+    ============================= */
+
+    const totalPublicEvents =
+        profile.stats.createdEventsCount + profile.stats.joinedEventsCount;
 
     /* =============================
        PROFILE LOADING
@@ -190,6 +198,7 @@ export default function usePublicUserListingData({
     return {
         profile,
         events,
+        totalPublicEvents,
         loadInitialData,
         refreshEvents
     };

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { Bookmark, FolderOpen } from "lucide-react";
+import { Bookmark, CalendarDays, FolderOpen } from "lucide-react";
 
 import usePublicUserListingData from "../../../features/users/public/hooks/usePublicUserListingData";
 import usePublicUserListingState from "../../../features/users/public/hooks/usePublicUserListingState";
@@ -79,6 +79,7 @@ export default function PublicUserPage() {
     const {
         profile,
         events,
+        totalPublicEvents,
         loadInitialData,
         refreshEvents
     } = usePublicUserListingData({
@@ -228,10 +229,15 @@ export default function PublicUserPage() {
                             </h2>
 
                             <p className="section-subtitle">
-                                Public user profile.
+                                Explore {profile.user.name}'s public event activity on PlanTogether.
                             </p>
 
                             <ul className="public-user-profile-stats" aria-label="Public user statistics">
+                                <li className="public-user-profile-stat public-user-profile-stat-primary">
+                                    <CalendarDays aria-hidden="true" />
+                                    <strong>{totalPublicEvents}</strong>{" "}
+                                    public events
+                                </li>
                                 <li className="public-user-profile-stat">
                                     <FolderOpen aria-hidden="true" />
                                     <strong>{profile.stats.createdEventsCount}</strong>{" "}

@@ -12,6 +12,7 @@ import { getPublicUserProfile, getPublicUserEvents } from "../../../../../api/us
    Handles:
    - initial public user profile loading
    - public event listing loading
+   - total public event count derivation
    - empty filter cleanup before API requests
    - public user payload normalization
    - paginated event payload normalization
@@ -128,6 +129,7 @@ describe("usePublicUserListingData", () => {
         });
 
         expect(result.current.events).toEqual([]);
+        expect(result.current.totalPublicEvents).toBe(0);
     });
 
     /* =============================
@@ -164,6 +166,8 @@ describe("usePublicUserListingData", () => {
             message: "Public user profile retrieved successfully",
             success: true
         });
+
+        expect(result.current.totalPublicEvents).toBe(3);
 
         expect(result.current.events).toEqual([
             expect.objectContaining({

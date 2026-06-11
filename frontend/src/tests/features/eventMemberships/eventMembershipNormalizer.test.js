@@ -29,6 +29,7 @@ import {
    Handles:
    - single membership normalization
    - membership list normalization
+   - public user identity and avatar normalization
    - member and staff list normalization
    - API payload extraction
    - ownership transfer normalization
@@ -53,7 +54,8 @@ describe("eventMembershipNormalizer", () => {
                 User: createMembershipUser({
                     id: 2,
                     name: "John Doe",
-                    email: "john@test.com"
+                    email: "john@test.com",
+                    avatar: "/uploads/avatars/john.png"
                 })
             })
         );
@@ -67,7 +69,8 @@ describe("eventMembershipNormalizer", () => {
                 user: createMembershipUser({
                     id: 2,
                     name: "John Doe",
-                    email: "john@test.com"
+                    email: "john@test.com",
+                    avatar: "/uploads/avatars/john.png"
                 })
             })
         );
@@ -83,7 +86,8 @@ describe("eventMembershipNormalizer", () => {
                 user: createMembershipUser({
                     id: 3,
                     name: "Jane Doe",
-                    email: "jane@test.com"
+                    email: "jane@test.com",
+                    avatar: "/uploads/avatars/jane.png"
                 })
             })
         );
@@ -96,7 +100,8 @@ describe("eventMembershipNormalizer", () => {
             user: {
                 id: 3,
                 name: "Jane Doe",
-                email: "jane@test.com"
+                email: "jane@test.com",
+                avatar: "/uploads/avatars/jane.png"
             }
         });
     });
@@ -114,7 +119,8 @@ describe("eventMembershipNormalizer", () => {
             user: {
                 id: null,
                 name: "",
-                email: ""
+                email: "",
+                avatar: null
             }
         });
     });
@@ -154,7 +160,8 @@ describe("eventMembershipNormalizer", () => {
                 User: createMembershipUser({
                     id: 2,
                     name: "John Doe",
-                    email: "john@test.com"
+                    email: "john@test.com",
+                    avatar: "/uploads/avatars/john.png"
                 })
             })
         ]);
@@ -164,9 +171,13 @@ describe("eventMembershipNormalizer", () => {
                 id: 2,
                 name: "John Doe",
                 email: "john@test.com",
+                avatar: "/uploads/avatars/john.png",
+
                 role: EVENT_ROLES.PARTICIPANT,
+
                 membershipId: 10,
                 eventId: 1,
+
                 joinedAt: "2026-01-01T10:00:00.000Z",
                 createdAt: "2026-01-01T10:00:00.000Z",
                 updatedAt: "2026-01-02T10:00:00.000Z",
@@ -190,7 +201,8 @@ describe("eventMembershipNormalizer", () => {
                         User: createMembershipUser({
                             id: 2,
                             name: "John Doe",
-                            email: "john@test.com"
+                            email: "john@test.com",
+                            avatar: "/uploads/avatars/john.png"
                         })
                     })
                 ]
@@ -204,7 +216,10 @@ describe("eventMembershipNormalizer", () => {
                 id: 2,
                 name: "John Doe",
                 email: "john@test.com",
+                avatar: "/uploads/avatars/john.png",
+
                 role: EVENT_ROLES.PARTICIPANT,
+
                 membershipId: 10,
                 eventId: 1
             })
@@ -222,7 +237,8 @@ describe("eventMembershipNormalizer", () => {
                         User: createMembershipUser({
                             id: 3,
                             name: "Jane Doe",
-                            email: "jane@test.com"
+                            email: "jane@test.com",
+                            avatar: "/uploads/avatars/jane.png"
                         })
                     })
                 ]
@@ -236,7 +252,10 @@ describe("eventMembershipNormalizer", () => {
                 id: 3,
                 name: "Jane Doe",
                 email: "jane@test.com",
+                avatar: "/uploads/avatars/jane.png",
+
                 role: EVENT_ROLES.ORGANIZER,
+
                 membershipId: 11,
                 eventId: 1
             })
@@ -274,6 +293,7 @@ describe("eventMembershipNormalizer", () => {
                         userId: 1,
                         role: EVENT_ROLES.CO_ORGANIZER
                     }),
+
                     newOrganizer: createMembership({
                         id: 21,
                         userId: 2,
@@ -291,6 +311,7 @@ describe("eventMembershipNormalizer", () => {
                 userId: 1,
                 role: EVENT_ROLES.CO_ORGANIZER
             }),
+
             newOrganizer: expect.objectContaining({
                 id: 21,
                 userId: 2,

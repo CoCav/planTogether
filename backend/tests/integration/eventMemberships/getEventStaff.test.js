@@ -74,6 +74,26 @@ describe("Get Event Staff API", () => {
         expect(staffEmails).toContain(coOrganizerAuth.email);
     });
 
+    it("should include staff avatars in event staff response", async () => {
+        const { organizerAuth, event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Event Creator",
+                email: `creatoravatar${Date.now()}@test.com`
+            }
+        });
+
+        const res = await request(app).get(`/api/events/${event.id}/staff`);
+
+        expect(res.statusCode).toBe(200);
+
+        const organizer = res.body.eventStaff.find(
+            (staffMember) => (staffMember.email || staffMember.User?.email) === organizerAuth.email
+        );
+
+        expect(organizer).toBeDefined();
+        expect(organizer.User).toHaveProperty("avatar");
+    });
+
     it("should not include participants in event staff", async () => {
         const { event } = await createEventWithOrganizer({
             organizer: {

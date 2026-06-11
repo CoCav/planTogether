@@ -7,6 +7,7 @@ import { getApiPayload } from "../../api/apiResponse";
    Handles:
    - event members
    - event staff
+   - public user identity and avatar data
    - membership role data
    - ownership transfer result
 ================================================== */
@@ -33,7 +34,8 @@ export const normalizeMembership = (membership = {}) => {
         user: {
             id: user.id ?? membership.userId ?? null,
             name: user.name ?? "",
-            email: user.email ?? ""
+            email: user.email ?? "",
+            avatar: user.avatar ?? null
         }
     };
 };
@@ -49,12 +51,13 @@ export const normalizeMemberships = (memberships = []) => {
    MEMBER / STAFF LISTS
 ============================= */
 
-// Normalizes membership data for member/staff UI lists
+// Normalizes membership data for member/staff UI lists, including public user identity and avatar data
 export const normalizeMemberList = (memberships = []) => {
     return normalizeMemberships(memberships).map((membership) => ({
         id: membership.user.id,
         name: membership.user.name,
         email: membership.user.email,
+        avatar: membership.user.avatar,
 
         role: membership.role,
 

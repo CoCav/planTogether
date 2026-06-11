@@ -64,6 +64,33 @@ describe("Get Event Members API", () => {
         expect(memberEmails).toContain(participantAuth.email);
     });
 
+    it("should include member avatars in event members response", async () => {
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Event Creator",
+                email: `creator${Date.now()}@test.com`
+            }
+        });
+
+        const participantAuth = await registerAndGetToken({
+            name: "Participant Avatar",
+            email: `participantavatar${Date.now()}@test.com`
+        });
+
+        await joinEvent(event.id, participantAuth.headers);
+
+        const res = await request(app).get(`/api/events/${event.id}/members`);
+
+        expect(res.statusCode).toBe(200);
+
+        const participant = res.body.members.find(
+            (member) => (member.email || member.User?.email) === participantAuth.email
+        );
+
+        expect(participant).toBeDefined();
+        expect(participant.User).toHaveProperty("avatar");
+    });
+
     it("should allow public access to event members endpoint", async () => {
         const { event } = await createEventWithOrganizer({
             organizer: {

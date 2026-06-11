@@ -3,6 +3,10 @@ import { Link } from "react-router-dom";
 
 import useMemberListPagination from "../../features/eventMemberships/hooks/useMemberListPagination";
 
+import { getAvatar } from "../../utils/uploadedFiles";
+
+import UserAvatar from "../users/UserAvatar";
+
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import EmptyState from "../ui/EmptyState";
@@ -16,6 +20,8 @@ import Pagination from "../ui/Pagination";
    - section heading, subtitle and optional icon
    - empty member state
    - public profile navigation
+   - member avatar rendering
+   - member identity and role display
    - optional role badges
    - optional member action rendering
    - collapsed member preview
@@ -128,14 +134,28 @@ export default function EventMembersSection({
                                 <div className="member-info">
                                     <Link
                                         to={`/users/${person.id}`}
-                                        className="member-name link-hover-primary"
+                                        className="member-avatar-link"
+                                        aria-label={`View ${person.name} profile`}
                                     >
-                                        {person.name}
+                                        <UserAvatar
+                                            src={getAvatar(person.avatar)}
+                                            name={person.name}
+                                            className="member-avatar"
+                                        />
                                     </Link>
 
-                                    {showRoleBadge && (
-                                        <Badge role={person.role} />
-                                    )}
+                                    <div className="member-meta">
+                                        <Link
+                                            to={`/users/${person.id}`}
+                                            className="member-name link-hover-primary"
+                                        >
+                                            {person.name}
+                                        </Link>
+
+                                        {showRoleBadge && (
+                                            <Badge role={person.role} />
+                                        )}
+                                    </div>
                                 </div>
 
                                 {showActions && renderActions && (

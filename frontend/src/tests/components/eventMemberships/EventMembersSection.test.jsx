@@ -13,8 +13,9 @@ import { createOrganizerMember, createParticipantMember } from "../../factories/
    Handles:
    - section heading and subtitle
    - empty member state
-   - member rows and role badges
-   - public profile navigation
+   - member rows, avatars and role badges
+   - public profile navigation from member names and avatars
+   - avatar fallback/display through UserAvatar
    - optional member actions
    - collapsed member preview
    - expanded paginated member list
@@ -29,8 +30,16 @@ describe("EventMembersSection", () => {
     ============================= */
 
     const members = [
-        createOrganizerMember({ id: 1, name: "Alice" }),
-        createParticipantMember({ id: 2, name: "Bob" })
+        createOrganizerMember({
+            id: 1,
+            name: "Alice",
+            avatar: "/uploads/avatars/alice.png"
+        }),
+        createParticipantMember({
+            id: 2,
+            name: "Bob",
+            avatar: "/uploads/avatars/bob.png"
+        })
     ];
 
     const manyMembers = [
@@ -147,7 +156,7 @@ describe("EventMembersSection", () => {
         expect(screen.getAllByRole("listitem")).toHaveLength(2);
     });
 
-    it("should link members to their public profile pages", () => {
+    it("should link member names to their public profile pages", () => {
         renderEventMembersSection();
 
         expect(screen.getByRole("link", {
@@ -157,6 +166,25 @@ describe("EventMembersSection", () => {
         expect(screen.getByRole("link", {
             name: "Bob"
         })).toHaveAttribute("href", "/users/2");
+    });
+
+    it("should link member avatars to their public profile pages", () => {
+        renderEventMembersSection();
+
+        expect(screen.getByRole("link", {
+            name: "View Alice profile"
+        })).toHaveAttribute("href", "/users/1");
+
+        expect(screen.getByRole("link", {
+            name: "View Bob profile"
+        })).toHaveAttribute("href", "/users/2");
+    });
+
+    it("should render member avatars", () => {
+        renderEventMembersSection();
+
+        expect(screen.getByAltText("Alice avatar")).toBeInTheDocument();
+        expect(screen.getByAltText("Bob avatar")).toBeInTheDocument();
     });
 
     it("should hide role badges when disabled", () => {

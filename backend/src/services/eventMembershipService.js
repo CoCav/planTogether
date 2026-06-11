@@ -19,8 +19,8 @@ const { getPaginationOptions } = require("../utils/pagination");
    Handles:
    - event participation (join / leave)
    - soft-deleted memberships
-   - active member retrieval
-   - active organizer and co_organizer retrieval
+   - active member retrieval with public user data
+   - active organizer and co_organizer retrieval with public user data
    - event member role management
    - event ownership transfer
    - enforcing business rules (capacity, roles, time)
@@ -178,7 +178,7 @@ const getEventMembers = async (eventId) => {
         },
         include: [{
             model: User,
-            attributes: ["id", "name", "email"]
+            attributes: ["id", "name", "email", "avatar"]
         }],
         order: [["createdAt", "ASC"]]
     });
@@ -206,7 +206,7 @@ const getEventStaff = async (eventId) => {
         },
         include: [{
             model: User,
-            attributes: ["id", "name", "email"]
+            attributes: ["id", "name", "email", "avatar"]
         }],
         order: [["role", "ASC"], ["createdAt", "ASC"]]
     });

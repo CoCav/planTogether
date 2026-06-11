@@ -10,7 +10,7 @@
    Ensures:
    - only active event memberships are retrieved
    - inactive memberships are excluded from member listings
-   - event members are retrieved with user data
+   - event members are retrieved with public user data, including avatar
    - missing events are rejected before membership query
    - shared event role constants are used for valid role scenarios
 ================================================== */
@@ -61,7 +61,7 @@ describe("eventMembershipService - getEventMembers", () => {
             },
             include: [{
                 model: User,
-                attributes: ["id", "name", "email"]
+                attributes: ["id", "name", "email", "avatar"]
             }],
             order: [["createdAt", "ASC"]]
         });

@@ -25,6 +25,7 @@ export const createMembershipUser = (overrides = {}) => ({
     id: 1,
     name: "John Doe",
     email: "john@test.com",
+    avatar: "/uploads/avatars/john.png",
 
     ...overrides
 });
@@ -76,9 +77,9 @@ export const createApiMembership = (overrides = {}) => ({
 });
 
 // Generate a list of membership objects
-export const createMembershipList = (memberships = [
-    createMembership()
-]) => memberships;
+export const createMembershipList = (
+    memberships = [createMembership()]
+) => memberships;
 
 /* =============================
    MEMBER LISTS
@@ -90,6 +91,7 @@ export const createMemberListItem = (overrides = {}) => ({
 
     name: "John Doe",
     email: "john@test.com",
+    avatar: "/uploads/avatars/john.png",
 
     role: EVENT_ROLES.PARTICIPANT,
 
@@ -155,7 +157,8 @@ export const createOwnershipTransferPayload = (overrides = {}) => ({
         user: createMembershipUser({
             id: 2,
             name: "Jane Doe",
-            email: "jane@test.com"
+            email: "jane@test.com",
+            avatar: "/uploads/avatars/jane.png"
         })
     }),
 

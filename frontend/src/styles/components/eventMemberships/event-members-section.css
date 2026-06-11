@@ -7,6 +7,7 @@
    - view all / collapse toggle placement
    - member preview and expanded list layout
    - member row layout
+   - member avatar layout
    - member identity and role display
    - optional management actions
    - responsive stacked member rows
@@ -100,14 +101,48 @@
 .member-info {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-3);
 
     min-width: 0;
+}
+
+.member-avatar {
+    width: 44px;
+    height: 44px;
+
+    border-radius: 999px;
+    object-fit: cover;
+
     flex-shrink: 0;
 }
 
+.member-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+
+    min-width: 0;
+}
+
+.member-avatar-link {
+    display: inline-flex;
+    flex-shrink: 0;
+
+    border-radius: 999px;
+}
+
+
 .member-name {
     font-weight: 600;
+    min-width: 0;
+
+    transition: color var(--transition-fast);
+}
+
+.member-info:hover .member-name,
+.member-info:focus-within .member-name {
+    color: var(--color-primary);
 }
 
 /* =========================================

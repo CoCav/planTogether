@@ -11,7 +11,7 @@
    - only active organizer and co_organizer memberships are retrieved
    - inactive staff memberships are excluded from staff listings
    - role-based organizer filtering is applied
-   - organizer data is returned with user information
+   - organizer data is returned with public user information, including avatar
    - missing events are rejected before membership query
    - shared event role constants are used for valid role scenarios
 ================================================== */
@@ -67,7 +67,7 @@ describe("eventMembershipService - getEventStaff", () => {
             },
             include: [{
                 model: User,
-                attributes: ["id", "name", "email"]
+                attributes: ["id", "name", "email", "avatar"]
             }],
             order: [["role", "ASC"], ["createdAt", "ASC"]]
         });

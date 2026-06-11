@@ -43,11 +43,11 @@ export default function useMembershipManagement({
                 EVENT_ROLES.CO_ORGANIZER
             );
 
-            setMessage("✅ User promoted to co-organizer");
+            setMessage("User promoted to co-organizer");
 
             await loadData();
         } catch (error) {
-            setError(getApiErrorMessage(error, "❌ Unable to promote user"));
+            setError(getApiErrorMessage(error, "Unable to promote user"));
         }
     };
 
@@ -63,11 +63,11 @@ export default function useMembershipManagement({
                 EVENT_ROLES.PARTICIPANT
             );
 
-            setMessage("⬇️ User demoted to participant");
+            setMessage("User demoted to participant");
 
             await loadData();
         } catch (error) {
-            setError(getApiErrorMessage(error, "❌ Unable to demote user"));
+            setError(getApiErrorMessage(error, "Unable to demote user"));
         }
     };
 
@@ -89,13 +89,13 @@ export default function useMembershipManagement({
 
             await removeEventMember(eventId, userId);
 
-            setMessage("🗑️ Member removed successfully");
+            setMessage("Member removed successfully");
 
             await loadData();
         } catch (error) {
             setError(getApiErrorMessage(
                 error,
-                "❌ Unable to remove member"
+                "Unable to remove member"
             ));
         }
     };
@@ -118,13 +118,13 @@ export default function useMembershipManagement({
 
             await transferEventOwnership(eventId, targetUserId);
 
-            setMessage("👑 Event ownership transferred successfully");
+            setMessage("Event ownership transferred successfully");
 
             await loadData();
         } catch (error) {
             setError(getApiErrorMessage(
                 error,
-                "❌ Unable to transfer ownership"
+                "Unable to transfer ownership"
             ));
         }
     };

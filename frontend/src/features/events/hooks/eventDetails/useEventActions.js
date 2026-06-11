@@ -42,7 +42,7 @@ export default function useEventActions({ eventId, setMessage, setError }) {
 
             navigate("/events");
         } catch (error) {
-            setError(getApiErrorMessage(error, "❌ Unable to delete event"));
+            setError(getApiErrorMessage(error, "Unable to delete event"));
         }
     };
 

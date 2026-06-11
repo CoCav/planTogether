@@ -110,7 +110,7 @@ export default function useMyPasswordForm({ setMessage, setError }) {
                 newPassword: values.newPassword
             });
 
-            setMessage("✅ Password updated successfully");
+            setMessage("Password updated successfully");
 
             // Reset password form after successful update
             setValues(createDefaultPasswordValues());

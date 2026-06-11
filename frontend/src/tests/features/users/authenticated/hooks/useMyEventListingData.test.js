@@ -332,7 +332,7 @@ describe("useMyEventListingData", () => {
             await result.current.loadData(createMyEventFilters(), 1, "created");
         });
 
-        expect(setError).toHaveBeenCalledWith("❌ Failed to load your events");
+        expect(setError).toHaveBeenCalledWith("Failed to load your events");
         expect(setLoading).toHaveBeenCalledWith(false);
         expect(setInitialLoading).toHaveBeenCalledWith(false);
     });

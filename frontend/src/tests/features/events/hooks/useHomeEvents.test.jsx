@@ -203,7 +203,7 @@ describe("useHomeEvents", () => {
             await result.current.loadData();
         });
 
-        expect(setError).toHaveBeenCalledWith("❌ Failed to load events");
+        expect(setError).toHaveBeenCalledWith("Failed to load events");
         expect(result.current.isLoading).toBe(false);
     });
 });

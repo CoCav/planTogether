@@ -144,13 +144,13 @@ export default function useMyProfileForm({
 
             await refreshUser();
 
-            setMessage("✅ Profile updated successfully");
+            setMessage("Profile updated successfully");
 
         } catch (error) {
             console.error("Error updating profile:", error);
 
             setError(
-                getApiErrorMessage(error, "❌ Unable to update profile")
+                getApiErrorMessage(error, "Unable to update profile")
             );
 
         } finally {

@@ -50,12 +50,12 @@ export default function useMembershipActions({
 
             await joinEvent(eventId);
 
-            setMessage("✅ Successfully joined event!");
+            setMessage("Successfully joined event!");
 
             await loadData();
 
         } catch (error) {
-            setError(getApiErrorMessage(error, "❌ Unable to join event"));
+            setError(getApiErrorMessage(error, "Unable to join event"));
         }
     };
 
@@ -69,7 +69,7 @@ export default function useMembershipActions({
 
         // Prevents organizers from leaving their own event
         if (currentRole === EVENT_ROLES.ORGANIZER) {
-            setError("❌ Organizer cannot leave their own event");
+            setError("Organizer cannot leave their own event");
             return;
         }
 
@@ -89,12 +89,12 @@ export default function useMembershipActions({
 
             await leaveEvent(eventId);
 
-            setMessage("👋 Successfully left event");
+            setMessage("Successfully left event");
 
             await loadData();
 
         } catch (error) {
-            setError(getApiErrorMessage(error, "❌ Unable to leave event"));
+            setError(getApiErrorMessage(error, "Unable to leave event"));
         }
     };
 

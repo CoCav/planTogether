@@ -212,7 +212,7 @@ describe("useMyPasswordForm", () => {
             newPassword: "NewPassword123"
         });
 
-        expect(setMessage).toHaveBeenCalledWith("✅ Password updated successfully");
+        expect(setMessage).toHaveBeenCalledWith("Password updated successfully");
 
         expect(result.current.formState.values).toEqual({
             currentPassword: "",

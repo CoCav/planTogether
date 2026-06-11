@@ -8,13 +8,24 @@
 ========================================= */
 
 .empty-state {
-    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: var(--space-2);
+
+    width: 100%;
+    min-height: 180px;
+
+    margin: 0;
+    padding: var(--space-6);
 
     text-align: center;
     color: var(--color-text-muted);
 
     border: 1px dashed var(--color-border);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
 
     background: var(--color-surface-soft);
 }
@@ -24,10 +35,24 @@
 ========================================= */
 
 .empty-state-icon {
-    margin-bottom: var(--space-3);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 
-    font-size: var(--font-size-2xl);
-    line-height: 1;
+    width: 48px;
+    height: 48px;
+
+    margin-bottom: var(--space-2);
+
+    color: var(--color-primary);
+    background: var(--color-primary-subtle);
+
+    border-radius: var(--radius-md);
+}
+
+.empty-state-icon svg {
+    width: 24px;
+    height: 24px;
 }
 
 /* =========================================
@@ -35,7 +60,7 @@
 ========================================= */
 
 .empty-state-title {
-    margin-bottom: var(--space-2);
+    margin: 0;
 
     color: var(--color-text);
 
@@ -49,8 +74,19 @@
 
 .empty-state-description {
     max-width: 48ch;
-    margin: 0 auto;
+    margin: 0;
 
     font-size: var(--font-size-sm);
     line-height: 1.6;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 640px) {
+    .empty-state {
+        min-height: 180px;
+        padding: var(--space-5);
+    }
 }

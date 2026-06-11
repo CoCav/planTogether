@@ -72,7 +72,7 @@ export default function useHomeEvents({ user, setError }) {
         } catch (error) {
             console.error("Error loading home events:", error);
 
-            setError("❌ Failed to load events");
+            setError("Failed to load events");
 
         } finally {
             setIsLoading(false);

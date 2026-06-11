@@ -13,9 +13,10 @@
     align-items: center;
     justify-content: center;
 
-    gap: var(--space-4);
+    gap: var(--space-3);
 
-    padding: var(--space-8);
+    min-height: 180px;
+    padding: var(--space-6);
 
     text-align: center;
     color: var(--color-text-muted);
@@ -30,14 +31,14 @@
     flex-direction: column;
     gap: var(--space-2);
 
-    max-width: 320px;
+    max-width: 360px;
 }
 
 .loading-state-title {
     margin: 0;
 
     font-size: var(--font-size-lg);
-    font-weight: 600;
+    font-weight: 700;
 
     color: var(--color-text);
 }
@@ -46,7 +47,7 @@
     margin: 0;
 
     font-size: var(--font-size-sm);
-    line-height: 1.5;
+    line-height: 1.6;
 
     color: var(--color-text-muted);
 }
@@ -56,10 +57,10 @@
 ========================================= */
 
 .loading-state-spinner {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
 
-    border: 3px solid var(--color-border);
+    border: 3px solid var(--color-primary-subtle);
     border-top-color: var(--color-primary);
 
     border-radius: 50%;

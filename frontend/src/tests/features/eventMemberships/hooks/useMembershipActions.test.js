@@ -73,7 +73,7 @@ describe("useMembershipActions", () => {
 
         expect(joinEvent).toHaveBeenCalledWith(1);
 
-        expect(hookProps.setMessage).toHaveBeenCalledWith("✅ Successfully joined event!");
+        expect(hookProps.setMessage).toHaveBeenCalledWith("Successfully joined event!");
 
         expect(hookProps.loadData).toHaveBeenCalled();
     });
@@ -109,7 +109,7 @@ describe("useMembershipActions", () => {
 
         expect(window.confirm).not.toHaveBeenCalled();
 
-        expect(hookProps.setError).toHaveBeenCalledWith("❌ Organizer cannot leave their own event");
+        expect(hookProps.setError).toHaveBeenCalledWith("Organizer cannot leave their own event");
     });
 
     it("should use direct current user role when provided", async () => {
@@ -123,9 +123,7 @@ describe("useMembershipActions", () => {
 
         expect(hookProps.getCurrentUserRoleByEvent).not.toHaveBeenCalled();
         expect(leaveEvent).not.toHaveBeenCalled();
-        expect(hookProps.setError).toHaveBeenCalledWith(
-            "❌ Organizer cannot leave their own event"
-        );
+        expect(hookProps.setError).toHaveBeenCalledWith("Organizer cannot leave their own event");
     });
 
     it("should leave event successfully for participant when confirmed", async () => {
@@ -147,7 +145,7 @@ describe("useMembershipActions", () => {
 
         expect(leaveEvent).toHaveBeenCalledWith(1);
 
-        expect(hookProps.setMessage).toHaveBeenCalledWith("👋 Successfully left event");
+        expect(hookProps.setMessage).toHaveBeenCalledWith("Successfully left event");
 
         expect(hookProps.loadData).toHaveBeenCalled();
     });

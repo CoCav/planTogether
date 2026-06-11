@@ -77,7 +77,7 @@ describe("useMembershipManagement", () => {
 
         expect(updateEventMemberRole).toHaveBeenCalledWith(1, 2, EVENT_ROLES.CO_ORGANIZER);
 
-        expect(hookProps.setMessage).toHaveBeenCalledWith("✅ User promoted to co-organizer");
+        expect(hookProps.setMessage).toHaveBeenCalledWith("User promoted to co-organizer");
 
         expect(hookProps.loadData).toHaveBeenCalled();
     });
@@ -107,7 +107,7 @@ describe("useMembershipManagement", () => {
 
         expect(updateEventMemberRole).toHaveBeenCalledWith(1, 2, EVENT_ROLES.PARTICIPANT);
 
-        expect(hookProps.setMessage).toHaveBeenCalledWith("⬇️ User demoted to participant");
+        expect(hookProps.setMessage).toHaveBeenCalledWith("User demoted to participant");
 
         expect(hookProps.loadData).toHaveBeenCalled();
     });
@@ -145,7 +145,7 @@ describe("useMembershipManagement", () => {
 
         expect(removeEventMember).toHaveBeenCalledWith(1, 2);
 
-        expect(hookProps.setMessage).toHaveBeenCalledWith("🗑️ Member removed successfully");
+        expect(hookProps.setMessage).toHaveBeenCalledWith("Member removed successfully");
 
         expect(hookProps.loadData).toHaveBeenCalled();
     });
@@ -197,7 +197,7 @@ describe("useMembershipManagement", () => {
 
         expect(transferEventOwnership).toHaveBeenCalledWith(1, 2);
 
-        expect(hookProps.setMessage).toHaveBeenCalledWith("👑 Event ownership transferred successfully");
+        expect(hookProps.setMessage).toHaveBeenCalledWith("Event ownership transferred successfully");
 
         expect(hookProps.loadData).toHaveBeenCalled();
     });

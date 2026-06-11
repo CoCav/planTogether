@@ -294,7 +294,7 @@ describe("usePublicUserListingData", () => {
             await result.current.loadInitialData();
         });
 
-        expect(defaultOptions.setError).toHaveBeenCalledWith("❌ Failed to load public user profile");
+        expect(defaultOptions.setError).toHaveBeenCalledWith("Failed to load public user profile");
 
         expect(defaultOptions.setIsLoading).toHaveBeenCalledWith(false);
         expect(defaultOptions.setInitialLoading).toHaveBeenCalledWith(false);
@@ -309,7 +309,7 @@ describe("usePublicUserListingData", () => {
             await result.current.refreshEvents();
         });
 
-        expect(defaultOptions.setError).toHaveBeenCalledWith("❌ Failed to load public user events");
+        expect(defaultOptions.setError).toHaveBeenCalledWith("Failed to load public user events");
 
         expect(defaultOptions.setIsLoading).toHaveBeenCalledWith(false);
     });

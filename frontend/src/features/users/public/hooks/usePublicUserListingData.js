@@ -155,7 +155,7 @@ export default function usePublicUserListingData({
         } catch (error) {
             console.error("Error loading public user:", error);
 
-            setError("❌ Failed to load public user profile");
+            setError("Failed to load public user profile");
 
         } finally {
             setIsLoading(false);
@@ -184,7 +184,7 @@ export default function usePublicUserListingData({
         } catch (error) {
             console.error("Error loading public user events:", error);
 
-            setError("❌ Failed to load public user events");
+            setError("Failed to load public user events");
 
         } finally {
             setIsLoading(false);

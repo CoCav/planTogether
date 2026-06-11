@@ -342,7 +342,7 @@ describe("useMyProfileForm", () => {
 
         expect(refreshUser).toHaveBeenCalledTimes(1);
 
-        expect(setMessage).toHaveBeenCalledWith("✅ Profile updated successfully");
+        expect(setMessage).toHaveBeenCalledWith("Profile updated successfully");
 
         expect(result.current.submitState.isSubmitting).toBe(false);
     });

@@ -27,6 +27,7 @@ import {
    - event category tag rendering
    - image fallback behavior
    - accessible event image description
+   - physical event location map display
    - membership section and ownership transfer integration
    - event action integration
    - event status badge display
@@ -136,6 +137,14 @@ vi.mock("../../components/events/EventDetailsSummary", () => ({
             {registrationDeadline && (
                 <span>{registrationDeadline}</span>
             )}
+        </div>
+    )
+}));
+
+vi.mock("../../components/events/EventLocationMap", () => ({
+    default: ({ location }) => (
+        <div data-testid="event-location-map">
+            Event map for {location}
         </div>
     )
 }));
@@ -450,6 +459,44 @@ describe("EventDetailsPage", () => {
         expect(screen.getByText("3 / 10")).toBeInTheDocument();
         expect(screen.getByText("In person")).toBeInTheDocument();
         expect(screen.getByText("Montreal")).toBeInTheDocument();
+    });
+
+    it("should display event location map for physical events with location", async () => {
+        renderPage();
+
+        expect(await screen.findByText("Test Event")).toBeInTheDocument();
+
+        expect(screen.getByRole("heading", {
+            level: 3,
+            name: /event location/i
+        })).toBeInTheDocument();
+
+        expect(screen.getByText("View this event on the map.")).toBeInTheDocument();
+
+        expect(screen.getByTestId("event-location-map")).toHaveTextContent(
+            "Event map for Montreal"
+        );
+    });
+
+    it("should not display event location map for online events", async () => {
+        setupApi({
+            event: createEvent({
+                ...mockEvent,
+                mode: "online",
+                location: "Montreal"
+            })
+        });
+
+        renderPage();
+
+        expect(await screen.findByTestId("event-details-summary")).toBeInTheDocument();
+
+        expect(screen.queryByTestId("event-location-map")).not.toBeInTheDocument();
+
+        expect(screen.queryByRole("heading", {
+            level: 3,
+            name: /event location/i
+        })).not.toBeInTheDocument();
     });
 
     it("should display staff and participant data", async () => {

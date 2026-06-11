@@ -5,6 +5,10 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import AuthProvider from "./context/auth/AuthProvider";
 
+import { setupLeafletIcons } from "./utils/eventMap";
+
+import "leaflet/dist/leaflet.css";
+
 import "./styles/reset.css";
 import "./styles/theme.css";
 import "./styles/layout.css";
@@ -26,6 +30,7 @@ import "./styles/components/events/event-card-actions.css";
 import "./styles/components/events/event-card.css";
 import "./styles/components/events/event-details-actions.css";
 import "./styles/components/events/event-details-summary.css";
+import "./styles/components/events/event-location-map.css";
 import "./styles/components/events/event-view-tabs.css";
 import "./styles/components/events/events-filter-card.css";
 import "./styles/components/events/events-toolbar.css";
@@ -54,6 +59,13 @@ import "./styles/components/ui/select.css";
 import "./styles/components/ui/textarea.css";
 
 import "./styles/components/link.css";
+
+/* ==================================================
+   LEAFLET
+   Configures Leaflet map assets for Vite
+================================================== */
+
+setupLeafletIcons();
 
 /* ==================================================
    MAIN ENTRY

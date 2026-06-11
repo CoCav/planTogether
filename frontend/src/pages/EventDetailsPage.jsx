@@ -23,6 +23,8 @@ import { defaultEventImage, getEventImage } from "../utils/uploadedFiles";
 
 import EventDetailsActions from "../components/events/EventDetailsActions";
 import EventDetailsSummary from "../components/events/EventDetailsSummary";
+import EventLocationMap from "../components/events/EventLocationMap";
+
 import EventParticipantsSection from "../components/eventMemberships/EventParticipantsSection";
 import EventStaffSection from "../components/eventMemberships/EventStaffSection";
 
@@ -45,6 +47,7 @@ import PageLoader from "../components/ui/PageLoader";
    - event status and availability badges
    - display-ready event formatting
    - accessible event image rendering
+   - physical event location map display
    - staff and participant section management
 ================================================== */
 
@@ -365,6 +368,24 @@ export default function EventDetailsPage() {
                             time={eventDisplayData.time}
                             registrationDeadline={eventDisplayData.registrationDeadline}
                         />
+
+                        {!isOnlineEventMode(event.mode) && eventDisplayData.location && (
+                            <section className="event-location-section">
+                                <div className="event-location-heading">
+                                    <h3 className="event-details-section-title">
+                                        Event location
+                                    </h3>
+
+                                    <p className="event-location-description">
+                                        View this event on the map.
+                                    </p>
+                                </div>
+
+                                <EventLocationMap
+                                    location={eventDisplayData.location}
+                                />
+                            </section>
+                        )}
                     </div>
                 </Card>
             </section>

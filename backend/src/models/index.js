@@ -3,6 +3,7 @@ const logger = require("../config/logger");
 
 const User = require("./userModel");
 const Event = require("./eventModel");
+const Location = require("./locationModel");
 const EventUserRole = require("./relations/eventUserRoleModel");
 
 /* ==================================================
@@ -118,4 +119,11 @@ User.hasMany(EventUserRole, { foreignKey: "userId" });
 // An event can have multiple memberships
 Event.hasMany(EventUserRole, { foreignKey: "eventId" });
 
-module.exports = { sequelize, initDB, User, Event, EventUserRole };
+module.exports = {
+    sequelize,
+    initDB,
+    User,
+    Event,
+    Location,
+    EventUserRole
+};

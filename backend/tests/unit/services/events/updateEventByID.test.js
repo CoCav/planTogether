@@ -7,6 +7,9 @@
    - event image replacement
    - event image removal
    - image preservation when omitted
+   - event geolocation resolution
+   - online event geolocation bypass
+   - empty in-person location rejection
    - invalid date order rejection
    - past event update rejection
    - missing event rejection
@@ -17,6 +20,9 @@
    - partial updates preserve omitted fields
    - images can be preserved, replaced or removed
    - old images are deleted only after successful DB commit
+   - location-aware event updates
+   - location provider calls are skipped when not needed
+   - in-person events cannot be updated with an empty location
    - past event rules are enforced
    - Sequelize transactions are committed on successful updates
    - Sequelize transactions are rolled back on failed updates
@@ -32,6 +38,10 @@ jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({}));
 
 jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
+}));
+
+jest.mock("../../../../src/services/locationService", () => ({
+    resolveEventLocation: jest.fn()
 }));
 
 jest.mock("../../../../src/utils/events/eventDataBuilder", () => ({
@@ -50,6 +60,9 @@ const sequelize = require("../../../../src/config/database");
 const Event = require("../../../../src/models/eventModel");
 
 const eventService = require("../../../../src/services/eventService");
+const locationService = require("../../../../src/services/locationService");
+
+const { EVENT_MODES } = require("../../../../src/constants/eventModes");
 
 const { buildEventUpdateData } = require("../../../../src/utils/events/eventDataBuilder");
 const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
@@ -70,6 +83,12 @@ describe("eventService - updateEventByID", () => {
         };
 
         sequelize.transaction.mockResolvedValue(transaction);
+
+        locationService.resolveEventLocation.mockResolvedValue({
+            latitude: 46.8137431,
+            longitude: -71.2084061,
+            label: "Québec, Canada"
+        });
     });
 
     /* =============================
@@ -103,7 +122,7 @@ describe("eventService - updateEventByID", () => {
 
         expect(buildEventUpdateData).toHaveBeenCalledWith(event, {
             title: "Updated Event"
-        });
+        }, null);
 
         expect(event.update).toHaveBeenCalledWith(updateData, { transaction });
 
@@ -143,7 +162,7 @@ describe("eventService - updateEventByID", () => {
 
         expect(buildEventUpdateData).toHaveBeenCalledWith(event, {
             title: "Updated Event"
-        });
+        }, null);
 
         expect(event.update).toHaveBeenCalledWith(updateData, { transaction });
 
@@ -171,6 +190,10 @@ describe("eventService - updateEventByID", () => {
         await eventService.updateEventByID(1, {
             image: "/uploads/events/new-event.png"
         });
+
+        expect(buildEventUpdateData).toHaveBeenCalledWith(event, {
+            image: "/uploads/events/new-event.png"
+        }, null);
 
         expect(sequelize.transaction).toHaveBeenCalled();
 
@@ -202,9 +225,143 @@ describe("eventService - updateEventByID", () => {
             image: null
         });
 
+        expect(buildEventUpdateData).toHaveBeenCalledWith(event, {
+            image: null
+        }, null);
+
+        expect(event.update).toHaveBeenCalledWith(updateData, { transaction });
+
         expect(transaction.commit).toHaveBeenCalled();
 
         expect(deleteUploadedFile).toHaveBeenCalledWith("/uploads/events/old-event.png");
+    });
+
+    it("should resolve location data when updating physical event location", async () => {
+        const event = createMockEventModel({
+            id: 1,
+            mode: EVENT_MODES.IN_PERSON,
+            location: "Montreal",
+            image: null,
+            update: jest.fn().mockResolvedValue()
+        });
+
+        const updateData = {
+            location: "Quebec City",
+            latitude: 46.8137431,
+            longitude: -71.2084061,
+            locationLabel: "Québec, Canada"
+        };
+
+        Event.findByPk.mockResolvedValue(event);
+        assertEventNotPast.mockImplementation(() => { });
+        buildEventUpdateData.mockReturnValue(updateData);
+
+        await eventService.updateEventByID(1, {
+            location: "Quebec City"
+        });
+
+        expect(locationService.resolveEventLocation).toHaveBeenCalledWith("Quebec City");
+
+        expect(buildEventUpdateData).toHaveBeenCalledWith(event, {
+            location: "Quebec City"
+        }, {
+            latitude: 46.8137431,
+            longitude: -71.2084061,
+            label: "Québec, Canada"
+        });
+
+        expect(event.update).toHaveBeenCalledWith(updateData, { transaction });
+    });
+
+    it("should not resolve location data when location is omitted", async () => {
+        const event = createMockEventModel({
+            id: 1,
+            mode: EVENT_MODES.IN_PERSON,
+            location: "Montreal",
+            image: null,
+            update: jest.fn().mockResolvedValue()
+        });
+
+        const updateData = {
+            title: "Updated Event"
+        };
+
+        Event.findByPk.mockResolvedValue(event);
+        assertEventNotPast.mockImplementation(() => { });
+        buildEventUpdateData.mockReturnValue(updateData);
+
+        await eventService.updateEventByID(1, {
+            title: "Updated Event"
+        });
+
+        expect(event.update).toHaveBeenCalledWith(updateData, { transaction });
+
+        expect(locationService.resolveEventLocation).not.toHaveBeenCalled();
+
+        expect(buildEventUpdateData).toHaveBeenCalledWith(event, {
+            title: "Updated Event"
+        }, null);
+    });
+
+    it("should not resolve location data when updating event to online mode", async () => {
+        const event = createMockEventModel({
+            id: 1,
+            mode: EVENT_MODES.IN_PERSON,
+            location: "Montreal",
+            image: null,
+            update: jest.fn().mockResolvedValue()
+        });
+
+        const updateData = {
+            mode: EVENT_MODES.ONLINE,
+            location: null,
+            latitude: null,
+            longitude: null,
+            locationLabel: null
+        };
+
+        Event.findByPk.mockResolvedValue(event);
+        assertEventNotPast.mockImplementation(() => { });
+        buildEventUpdateData.mockReturnValue(updateData);
+
+        await eventService.updateEventByID(1, {
+            mode: EVENT_MODES.ONLINE
+        });
+
+        expect(locationService.resolveEventLocation).not.toHaveBeenCalled();
+
+        expect(buildEventUpdateData).toHaveBeenCalledWith(event, {
+            mode: EVENT_MODES.ONLINE
+        }, null);
+
+        expect(event.update).toHaveBeenCalledWith(updateData, { transaction });
+    });
+
+    it("should reject empty location for in-person event update", async () => {
+        const event = createMockEventModel({
+            id: 1,
+            mode: EVENT_MODES.IN_PERSON,
+            location: "Montreal",
+            image: null,
+            update: jest.fn()
+        });
+
+        Event.findByPk.mockResolvedValue(event);
+        assertEventNotPast.mockImplementation(() => { });
+
+        await expect(eventService.updateEventByID(1, {
+            location: ""
+        })).rejects.toMatchObject({
+            message: "Location is required for in-person events",
+            statusCode: 400
+        });
+
+        expect(locationService.resolveEventLocation).not.toHaveBeenCalled();
+        expect(buildEventUpdateData).not.toHaveBeenCalled();
+        expect(event.update).not.toHaveBeenCalled();
+
+        expect(transaction.rollback).toHaveBeenCalled();
+        expect(transaction.commit).not.toHaveBeenCalled();
     });
 
     /* =============================
@@ -309,13 +466,33 @@ describe("eventService - updateEventByID", () => {
     ============================= */
 
     it("should forward database errors and rollback transaction", async () => {
-        Event.findByPk.mockRejectedValue(new Error("DB error"));
+        const event = createMockEventModel({
+            id: 1,
+            image: null,
+            update: jest.fn().mockRejectedValue(new Error("DB error"))
+        });
+
+        Event.findByPk.mockResolvedValue(event);
+
+        assertEventNotPast.mockImplementation(() => { });
+
+        buildEventUpdateData.mockReturnValue({
+            title: "Updated Event"
+        });
 
         await expect(eventService.updateEventByID(1, {
             title: "Updated Event"
         })).rejects.toThrow("DB error");
 
         expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(buildEventUpdateData).toHaveBeenCalledWith(event, {
+            title: "Updated Event"
+        }, null);
+
+        expect(event.update).toHaveBeenCalledWith({
+            title: "Updated Event"
+        }, { transaction });
 
         expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
 

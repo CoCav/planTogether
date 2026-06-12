@@ -40,6 +40,7 @@ import "./styles/components/users/password-field.css";
 import "./styles/components/users/password-requirements.css";
 import "./styles/components/users/user-avatar.css";
 
+import "./styles/components/forms/event-form-map.css";
 import "./styles/components/forms/file-upload-preview-field.css";
 
 import "./styles/components/layout/footer.css";

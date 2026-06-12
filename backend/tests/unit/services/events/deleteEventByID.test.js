@@ -32,6 +32,10 @@ jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
     destroy: jest.fn()
 }));
 
+jest.mock("../../../../src/services/locationService", () => ({
+    resolveEventLocation: jest.fn()
+}));
+
 jest.mock("../../../../src/utils/events/eventStatus", () => ({
     assertEventNotPast: jest.fn(),
     assertEventNotStarted: jest.fn(),

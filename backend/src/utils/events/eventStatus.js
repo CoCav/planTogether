@@ -1,3 +1,6 @@
+const { EVENT_STATUS } = require("../../constants/eventStatus");
+const { throwHttpError } = require("../errors/httpError");
+
 /* ==================================================
    EVENT STATUS
 
@@ -10,9 +13,6 @@
    - centralizes all time logic to avoid duplication
    - event statuses are centralized through shared constants
 ================================================== */
-
-const { EVENT_STATUS } = require("../../constants/eventStatus");
-const { throwHttpError } = require("../errors/httpError");
 
 /* =============================
    STATUS HELPERS

@@ -2,6 +2,8 @@ import FileUploadPreviewField from "../forms/FileUploadPreviewField";
 
 import { getEventImage } from "../../utils/uploadedFiles";
 
+import EventLocationMap from "./EventLocationMap";
+
 import Button from "../ui/Button";
 import FormField from "../ui/FormField";
 import Input from "../ui/Input";
@@ -15,6 +17,7 @@ import TextArea from "../ui/TextArea";
    Handles:
    - event field rendering
    - event image upload rendering
+   - live location map preview rendering
    - accessible form field descriptions
    - accessible invalid field states
    - validation error display
@@ -151,19 +154,37 @@ export default function EventForm({
                 </FormField>
 
                 {!isOnlineEvent && (
-                    <FormField label="Location" htmlFor="location" error={fieldErrors.location}>
-                        {(errorId) => (
-                            <Input
-                                id="location"
-                                name="location"
-                                value={values.location}
-                                onChange={onFieldChange}
-                                placeholder="e.g. Montreal"
-                                error={fieldErrors.location}
-                                aria-describedby={errorId}
-                            />
+                    <>
+                        <FormField label="Location" htmlFor="location" error={fieldErrors.location}>
+                            {(errorId) => (
+                                <Input
+                                    id="location"
+                                    name="location"
+                                    value={values.location}
+                                    onChange={onFieldChange}
+                                    placeholder="e.g. Montreal"
+                                    error={fieldErrors.location}
+                                    aria-describedby={errorId}
+                                />
+                            )}
+                        </FormField>
+
+                        {values.location?.trim() && (
+                            <section className="event-form-map form-grid-column-full">
+                                <div className="event-form-map-heading">
+                                    <h3 className="event-form-map-title">
+                                        Location preview
+                                    </h3>
+
+                                    <p className="event-form-map-description">
+                                        Preview how this event location will appear on the event page.
+                                    </p>
+                                </div>
+
+                                <EventLocationMap location={values.location} />
+                            </section>
                         )}
-                    </FormField>
+                    </>
                 )}
 
                 <FormField label="Participant limit (optional)" htmlFor="maxParticipants">

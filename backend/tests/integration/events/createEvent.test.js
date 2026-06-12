@@ -3,8 +3,9 @@
 
    Tests:
    - authenticated event creation
+   - in-person event geolocation persistence
    - event creation with image upload
-   - online event creation without location
+   - online event creation without location or geolocation
    - organizer role assignment to event creator
    - authentication protection
    - missing required fields validation
@@ -17,6 +18,8 @@
 
    Ensures:
    - authenticated users can create events
+   - in-person events persist resolved coordinates
+   - online events skip geocoding and keep location data null
    - uploaded images are stored correctly
    - event creator automatically becomes organizer
    - validators protect event creation payloads
@@ -39,9 +42,31 @@ const { createEventPayload } = require("../../factories/eventFactory");
 
 describe("Create Event API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            json: jest.fn().mockResolvedValue([
+                {
+                    lat: "45.5031824",
+                    lon: "-73.5698065",
+                    display_name: "Montréal, Québec, Canada"
+                }
+            ])
+        });
+
+        await initDB();
+    });
+
+    afterEach(async () => {
+        await resetDB();
+        jest.clearAllMocks();
+    });
+
+    afterAll(async () => {
+        await closeDB();
+        delete global.fetch;
+    });
 
     /* =============================
        EVENT CREATION SUCCESS
@@ -68,8 +93,13 @@ describe("Create Event API", () => {
         expect(res.body.event).toMatchObject({
             title: "Tech Meetup",
             mode: EVENT_MODES.IN_PERSON,
-            location: "Montreal"
+            location: "Montreal",
+            latitude: 45.5031824,
+            longitude: -73.5698065,
+            locationLabel: "Montréal, Québec, Canada"
         });
+
+        expect(global.fetch.mock.calls[0][0]).toContain("q=Montreal");
     });
 
     it("should create an event with image upload", async () => {
@@ -100,7 +130,29 @@ describe("Create Event API", () => {
         expect(res.body.event.image).toMatch(/^\/uploads\/events\/event-/);
     });
 
-    it("should create an online event without location", async () => {
+    it("should call location provider when creating an in-person event", async () => {
+        const userAuth = await registerAndGetToken({
+            name: "Geo Creator",
+            email: `geo${Date.now()}@test.com`
+        });
+
+        const res = await request(app)
+            .post("/api/events")
+            .set(userAuth.headers)
+            .send(createEventPayload({
+                title: "Geo Event",
+                description: "Geocoded event",
+                location: "Sherbrooke"
+            }));
+
+        expect(res.statusCode).toBe(201);
+
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+
+        expect(global.fetch.mock.calls[0][0]).toContain("q=Sherbrooke");
+    });
+
+    it("should create an online event without geolocation data", async () => {
         const userAuth = await registerAndGetToken({
             name: "Online Creator",
             email: `online${Date.now()}@test.com`
@@ -121,6 +173,10 @@ describe("Create Event API", () => {
         expect(res.body).toHaveProperty("message", "Event created successfully");
 
         expect(res.body.event.location).toBeNull();
+        expect(res.body.event.latitude).toBeNull();
+        expect(res.body.event.longitude).toBeNull();
+        expect(res.body.event.locationLabel).toBeNull();
+        expect(global.fetch).not.toHaveBeenCalled();
     });
 
     it("should assign organizer role to event creator", async () => {

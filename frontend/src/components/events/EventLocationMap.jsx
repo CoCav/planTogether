@@ -1,6 +1,6 @@
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 
-import useEventMapLocation from "../../features/events/hooks/useEventMapLocation";
+import useEventMapLocation from "../../features/events/hooks/form/useEventMapLocation";
 
 import EmptyState from "../ui/EmptyState";
 import LoadingState from "../ui/LoadingState";
@@ -10,7 +10,7 @@ import LoadingState from "../ui/LoadingState";
    Displays an event location on an interactive map
 
    Handles:
-   - text location geocoding
+   - backend geocoded location rendering
    - loading state
    - missing location state
    - failed geocoding state
@@ -35,6 +35,7 @@ export default function EventLocationMap({ location }) {
        DISPLAY STATES
     ============================= */
 
+    // No physical location available
     if (!location) {
         return (
             <EmptyState
@@ -44,6 +45,7 @@ export default function EventLocationMap({ location }) {
         );
     }
 
+    // Loading backend geolocation data
     if (isLoading) {
         return (
             <LoadingState
@@ -53,11 +55,15 @@ export default function EventLocationMap({ location }) {
         );
     }
 
+    // Failed geolocation or provider error
     if (error || !coordinates) {
         return (
             <EmptyState
                 title="Map unavailable"
-                description="We could not find this event location on the map."
+                description={
+                    error ||
+                    "We could not find this event location on the map."
+                }
             />
         );
     }
@@ -81,7 +87,7 @@ export default function EventLocationMap({ location }) {
 
                 <Marker position={[coordinates.lat, coordinates.lng]}>
                     <Popup>
-                        {location}
+                        {coordinates.label}
                     </Popup>
                 </Marker>
             </MapContainer>

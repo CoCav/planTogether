@@ -4,7 +4,12 @@ const fs = require("fs");
 
 const { createHttpError } = require("../utils/errors/httpError");
 
-const { ALLOWED_IMAGE_MIME_TYPES, ALLOWED_IMAGE_EXTENSIONS, MAX_AVATAR_SIZE, MAX_EVENT_IMAGE_SIZE } = require("../config/security/uploadPolicy");
+const {
+    ALLOWED_IMAGE_MIME_TYPES,
+    ALLOWED_IMAGE_EXTENSIONS,
+    MAX_AVATAR_SIZE,
+    MAX_EVENT_IMAGE_SIZE
+} = require("../config/security/uploadPolicy");
 
 /* ==================================================
    UPLOAD FILES MIDDLEWARE

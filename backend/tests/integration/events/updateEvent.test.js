@@ -7,6 +7,8 @@
    - event update with image upload
    - event image removal
    - image cleanup after replacement
+   - event geolocation update
+   - online event geolocation cleanup
    - authentication protection
    - participant update rejection
    - nonexistent event handling
@@ -19,6 +21,8 @@
    Ensures:
    - organizers and co-organizers can update events
    - participants cannot update events
+   - in-person event updates persist resolved coordinates
+   - online event updates clear geolocation data
    - validators and authorization protect event updates
    - uploaded event images are preserved, replaced or removed correctly
    - shared event role constants are used for valid role scenarios
@@ -42,9 +46,31 @@ const { getUserIdByEmail } = require("../../helpers/api/userHelper");
 
 describe("Update Event API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            json: jest.fn().mockResolvedValue([
+                {
+                    lat: "45.5031824",
+                    lon: "-73.5698065",
+                    display_name: "Montréal, Québec, Canada"
+                }
+            ])
+        });
+
+        await initDB();
+    });
+
+    afterEach(async () => {
+        await resetDB();
+        jest.clearAllMocks();
+    });
+
+    afterAll(async () => {
+        await closeDB();
+        delete global.fetch;
+    });
 
     /* =============================
        EVENT UPDATE SUCCESS
@@ -96,6 +122,48 @@ describe("Update Event API", () => {
         expect(res.body).toHaveProperty("message", "Event updated successfully");
 
         expect(res.body.event.title).toBe("Co Organizer Updated Event");
+    });
+
+    it("should update event geolocation data", async () => {
+        const { organizerAuth, event } = await createEventWithOrganizer();
+
+        const res = await request(app)
+            .put(`/api/events/${event.id}`)
+            .set(organizerAuth.headers)
+            .send({
+                location: "Quebec City"
+            });
+
+        expect(res.statusCode).toBe(200);
+
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+
+        expect(res.body.event).toMatchObject({
+            location: "Quebec City",
+            latitude: 45.5031824,
+            longitude: -73.5698065,
+            locationLabel: "Montréal, Québec, Canada"
+        });
+    });
+
+    it("should clear geolocation data when updating event to online", async () => {
+        const { organizerAuth, event } = await createEventWithOrganizer();
+
+        const res = await request(app)
+            .put(`/api/events/${event.id}`)
+            .set(organizerAuth.headers)
+            .send({
+                mode: EVENT_MODES.ONLINE
+            });
+
+        expect(res.statusCode).toBe(200);
+
+        expect(global.fetch).not.toHaveBeenCalled();
+
+        expect(res.body.event.location).toBeNull();
+        expect(res.body.event.latitude).toBeNull();
+        expect(res.body.event.longitude).toBeNull();
+        expect(res.body.event.locationLabel).toBeNull();
     });
 
     it("should update event image", async () => {

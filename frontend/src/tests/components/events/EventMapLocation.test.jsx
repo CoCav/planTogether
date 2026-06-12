@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 
 import EventLocationMap from "../../../components/events/EventLocationMap";
 
-import useEventMapLocation from "../../../features/events/hooks/useEventMapLocation";
+import useEventMapLocation from "../../../features/events/hooks/form/useEventMapLocation";
 
 /* ==================================================
    EVENT LOCATION MAP TESTS
@@ -21,7 +21,7 @@ import useEventMapLocation from "../../../features/events/hooks/useEventMapLocat
    - mocks React Leaflet components to avoid real map rendering in tests
 ================================================== */
 
-vi.mock("../../../features/events/hooks/useEventMapLocation", () => ({
+vi.mock("../../../features/events/hooks/form/useEventMapLocation", () => ({
     default: vi.fn()
 }));
 
@@ -97,7 +97,7 @@ describe("EventLocationMap", () => {
         render(<EventLocationMap location="Montréal" />);
 
         expect(screen.getByText("Map unavailable")).toBeInTheDocument();
-        expect(screen.getByText("We could not find this event location on the map.")).toBeInTheDocument();
+        expect(screen.getByText("Location could not be loaded")).toBeInTheDocument();
 
         expect(screen.queryByTestId("map-container")).not.toBeInTheDocument();
     });
@@ -165,7 +165,7 @@ describe("EventLocationMap", () => {
             JSON.stringify([45.5017, -73.5673])
         );
 
-        expect(screen.getByTestId("map-popup")).toHaveTextContent("Montréal");
+        expect(screen.getByTestId("map-popup")).toHaveTextContent("Montréal, Québec, Canada");
     });
 
     it("should call useEventMapLocation with the provided location", () => {

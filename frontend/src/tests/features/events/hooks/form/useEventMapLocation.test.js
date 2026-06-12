@@ -1,48 +1,71 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import useEventMapLocation from "../../../../features/events/hooks/useEventMapLocation";
+import useEventMapLocation from "../../../../../features/events/hooks/form/useEventMapLocation";
+
+import { normalizeApiError } from "../../../../../api/apiError";
+import { searchLocations } from "../../../../../api/locations/locationApi";
 
 /* ==================================================
    USE EVENT MAP LOCATION TESTS
-   Tests event map geocoding behavior
+   Tests event map location lookup behavior
 
    Handles:
    - empty location fallback
-   - successful geocoding
+   - successful backend location lookup
+   - fallback label handling
    - loading state
-   - failed requests
-   - empty geocoding results
+   - failed API requests
+   - API not found errors
+   - API rate limit errors
+   - empty location results
    - trimmed location requests
-   - aborted request handling
+   - cancelled request handling
+
+   Ensures:
+   - hook no longer calls Nominatim directly
+   - backend location API is used for map coordinates
+   - user-facing errors are normalized
+   - stale async updates are ignored after unmount
 ================================================== */
+
+vi.mock("../../../../../api/locations/locationApi", () => ({
+    searchLocations: vi.fn()
+}));
+
+vi.mock("../../../../../api/apiError", () => ({
+    normalizeApiError: vi.fn()
+}));
 
 describe("useEventMapLocation", () => {
 
     /* =============================
-       TEST HELPERS
+       TEST DATA
     ============================= */
 
-    const createSuccessfulFetchResponse = (results = []) => ({
-        ok: true,
-        json: vi.fn().mockResolvedValue(results)
-    });
-
-    const createFailedFetchResponse = () => ({
-        ok: false,
-        json: vi.fn()
-    });
+    const successfulLocationResponse = {
+        locations: [
+            {
+                latitude: 45.5017,
+                longitude: -73.5673,
+                label: "Montréal, Québec, Canada"
+            }
+        ]
+    };
 
     /* =============================
        TEST SETUP
     ============================= */
 
     beforeEach(() => {
-        vi.stubGlobal("fetch", vi.fn());
+        vi.clearAllMocks();
+
+        normalizeApiError.mockImplementation((error) => error);
+
+        searchLocations.mockResolvedValue(successfulLocationResponse);
     });
 
     afterEach(() => {
-        vi.unstubAllGlobals();
         vi.clearAllMocks();
     });
 
@@ -59,7 +82,7 @@ describe("useEventMapLocation", () => {
         expect(result.current.isLoading).toBe(false);
         expect(result.current.error).toBe("");
 
-        expect(fetch).not.toHaveBeenCalled();
+        expect(searchLocations).not.toHaveBeenCalled();
     });
 
     it("should return empty fallback state when location only contains spaces", () => {
@@ -71,7 +94,7 @@ describe("useEventMapLocation", () => {
         expect(result.current.isLoading).toBe(false);
         expect(result.current.error).toBe("");
 
-        expect(fetch).not.toHaveBeenCalled();
+        expect(searchLocations).not.toHaveBeenCalled();
     });
 
     it("should return empty fallback state when location is null", () => {
@@ -83,24 +106,14 @@ describe("useEventMapLocation", () => {
         expect(result.current.isLoading).toBe(false);
         expect(result.current.error).toBe("");
 
-        expect(fetch).not.toHaveBeenCalled();
+        expect(searchLocations).not.toHaveBeenCalled();
     });
 
     /* =============================
-       SUCCESSFUL GEOCODING
+       SUCCESSFUL LOCATION LOOKUP
     ============================= */
 
     it("should load coordinates successfully", async () => {
-        fetch.mockResolvedValue(
-            createSuccessfulFetchResponse([
-                {
-                    lat: "45.5017",
-                    lon: "-73.5673",
-                    display_name: "Montréal, Québec, Canada"
-                }
-            ])
-        );
-
         const { result } = renderHook(() =>
             useEventMapLocation("Montréal")
         );
@@ -113,19 +126,21 @@ describe("useEventMapLocation", () => {
             });
         });
 
+        expect(searchLocations).toHaveBeenCalledWith("Montréal");
+
         expect(result.current.isLoading).toBe(false);
         expect(result.current.error).toBe("");
     });
 
-    it("should use original location as label when display name is missing", async () => {
-        fetch.mockResolvedValue(
-            createSuccessfulFetchResponse([
+    it("should use original location as label when backend label is missing", async () => {
+        searchLocations.mockResolvedValue({
+            locations: [
                 {
-                    lat: "45.5017",
-                    lon: "-73.5673"
+                    latitude: 45.5017,
+                    longitude: -73.5673
                 }
-            ])
-        );
+            ]
+        });
 
         const { result } = renderHook(() =>
             useEventMapLocation("Montréal")
@@ -144,12 +159,12 @@ describe("useEventMapLocation", () => {
        LOADING STATE
     ============================= */
 
-    it("should expose loading state while geocoding", async () => {
-        let resolveFetch;
+    it("should expose loading state while location is loading", async () => {
+        let resolveSearch;
 
-        fetch.mockReturnValue(
+        searchLocations.mockReturnValue(
             new Promise((resolve) => {
-                resolveFetch = resolve;
+                resolveSearch = resolve;
             })
         );
 
@@ -162,15 +177,7 @@ describe("useEventMapLocation", () => {
         });
 
         await act(async () => {
-            resolveFetch(
-                createSuccessfulFetchResponse([
-                    {
-                        lat: "45.5017",
-                        lon: "-73.5673",
-                        display_name: "Montréal, Québec, Canada"
-                    }
-                ])
-            );
+            resolveSearch(successfulLocationResponse);
         });
 
         await waitFor(() => {
@@ -182,8 +189,13 @@ describe("useEventMapLocation", () => {
        ERROR STATES
     ============================= */
 
-    it("should handle failed requests", async () => {
-        fetch.mockResolvedValue(createFailedFetchResponse());
+    it("should handle failed API requests", async () => {
+        const apiError = {
+            status: 500
+        };
+
+        searchLocations.mockRejectedValue(apiError);
+        normalizeApiError.mockReturnValue(apiError);
 
         const { result } = renderHook(() =>
             useEventMapLocation("Montréal")
@@ -197,10 +209,52 @@ describe("useEventMapLocation", () => {
         expect(result.current.isLoading).toBe(false);
     });
 
-    it("should handle empty geocoding results", async () => {
-        fetch.mockResolvedValue(
-            createSuccessfulFetchResponse([])
+    it("should handle API not found errors", async () => {
+        const apiError = {
+            status: 404
+        };
+
+        searchLocations.mockRejectedValue(apiError);
+        normalizeApiError.mockReturnValue(apiError);
+
+        const { result } = renderHook(() =>
+            useEventMapLocation("Unknown place")
         );
+
+        await waitFor(() => {
+            expect(result.current.error).toBe("Location could not be found");
+        });
+
+        expect(result.current.coordinates).toBeNull();
+        expect(result.current.isLoading).toBe(false);
+    });
+
+    it("should handle API rate limit errors", async () => {
+        const apiError = {
+            status: 429
+        };
+
+        searchLocations.mockRejectedValue(apiError);
+        normalizeApiError.mockReturnValue(apiError);
+
+        const { result } = renderHook(() =>
+            useEventMapLocation("Montréal")
+        );
+
+        await waitFor(() => {
+            expect(result.current.error).toBe(
+                "Location search is temporarily limited. Please try again later."
+            );
+        });
+
+        expect(result.current.coordinates).toBeNull();
+        expect(result.current.isLoading).toBe(false);
+    });
+
+    it("should handle empty location results", async () => {
+        searchLocations.mockResolvedValue({
+            locations: []
+        });
 
         const { result } = renderHook(() =>
             useEventMapLocation("Unknown place")
@@ -219,77 +273,38 @@ describe("useEventMapLocation", () => {
     ============================= */
 
     it("should trim location before making the request", async () => {
-        fetch.mockResolvedValue(
-            createSuccessfulFetchResponse([
-                {
-                    lat: "45.5017",
-                    lon: "-73.5673",
-                    display_name: "Montréal, Québec, Canada"
-                }
-            ])
-        );
-
         renderHook(() =>
             useEventMapLocation("   Montréal   ")
         );
 
         await waitFor(() => {
-            expect(fetch).toHaveBeenCalled();
+            expect(searchLocations).toHaveBeenCalledWith("Montréal");
         });
-
-        const [url] = fetch.mock.calls[0];
-
-        expect(url).toContain("q=Montr%C3%A9al");
-        expect(url).toContain("format=json");
-        expect(url).toContain("limit=1");
-    });
-
-    it("should send abort signal and JSON accept header", async () => {
-        fetch.mockResolvedValue(
-            createSuccessfulFetchResponse([
-                {
-                    lat: "45.5017",
-                    lon: "-73.5673",
-                    display_name: "Montréal, Québec, Canada"
-                }
-            ])
-        );
-
-        renderHook(() =>
-            useEventMapLocation("Montréal")
-        );
-
-        await waitFor(() => {
-            expect(fetch).toHaveBeenCalled();
-        });
-
-        const [, options] = fetch.mock.calls[0];
-
-        expect(options.headers).toEqual({
-            Accept: "application/json"
-        });
-
-        expect(options.signal).toBeInstanceOf(AbortSignal);
     });
 
     /* =============================
-       ABORT HANDLING
+       CANCELLATION HANDLING
     ============================= */
 
-    it("should ignore aborted request errors", async () => {
-        fetch.mockRejectedValue(
-            new DOMException("Aborted", "AbortError")
+    it("should ignore stale updates after unmount", async () => {
+        let resolveSearch;
+
+        searchLocations.mockReturnValue(
+            new Promise((resolve) => {
+                resolveSearch = resolve;
+            })
         );
 
-        const { result } = renderHook(() =>
+        const { result, unmount } = renderHook(() =>
             useEventMapLocation("Montréal")
         );
 
-        await waitFor(() => {
-            expect(result.current.isLoading).toBe(false);
+        unmount();
+
+        await act(async () => {
+            resolveSearch(successfulLocationResponse);
         });
 
         expect(result.current.coordinates).toBeNull();
-        expect(result.current.error).toBe("");
     });
 });

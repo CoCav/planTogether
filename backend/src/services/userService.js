@@ -12,6 +12,7 @@ const { EVENT_ROLES } = require("../constants/eventRoles");
 const { throwHttpError } = require("../utils/errors/httpError");
 
 const { formatPublicUser } = require("../utils/formatting/userFormatter");
+const { normalizeEmail } = require("../utils/formatting/stringFormatter");
 
 const {
     buildEventWhereConditions,
@@ -25,7 +26,6 @@ const { getPublicCreatedEvents, getPublicJoinedEvents } = require("../utils/user
 
 const { deleteUploadedFile } = require("../utils/files/uploadedFileStorage");
 
-const { normalizeEmail } = require("../utils/normalize");
 const { getPaginationOptions, getTotalCount, getTotalPages } = require("../utils/pagination");
 
 /* ==================================================

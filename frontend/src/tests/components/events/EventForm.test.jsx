@@ -14,13 +14,27 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../features/shared/constants
    Handles:
    - event field rendering
    - shared image upload field rendering
-   - conditional fields
+   - live location map preview rendering
+   - conditional field rendering
    - started event field restrictions
    - submit and cancel actions
    - validation error display
    - accessible form field descriptions
    - accessible invalid field states
+
+   Ensures:
+   - create/edit event flows share consistent form behavior
+   - location preview is only displayed for physical events with a location
+   - validation errors remain accessible
 ================================================== */
+
+vi.mock("../../../components/events/EventLocationMap", () => ({
+    default: ({ location }) => (
+        <div data-testid="event-location-map">
+            Location map preview: {location}
+        </div>
+    )
+}));
 
 describe("EventForm", () => {
 
@@ -158,6 +172,32 @@ describe("EventForm", () => {
         expect(screen.getByLabelText(/custom deadline/i)).toBeInTheDocument();
 
         expect(screen.getByLabelText(/custom deadline/i)).toHaveAttribute("type", "datetime-local");
+    });
+
+    it("shows location map preview when physical event has a location", () => {
+        renderComponent({
+            values: {
+                mode: EVENT_MODES.IN_PERSON,
+                location: "Montreal"
+            },
+            isOnlineEvent: false
+        });
+
+        expect(screen.getByText(/location preview/i)).toBeInTheDocument();
+        expect(screen.getByTestId("event-location-map")).toHaveTextContent("Montreal");
+    });
+
+    it("hides location map preview when physical event has no location", () => {
+        renderComponent({
+            values: {
+                mode: EVENT_MODES.IN_PERSON,
+                location: ""
+            },
+            isOnlineEvent: false
+        });
+
+        expect(screen.queryByText(/location preview/i)).not.toBeInTheDocument();
+        expect(screen.queryByTestId("event-location-map")).not.toBeInTheDocument();
     });
 
     /* =============================

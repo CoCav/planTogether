@@ -1,5 +1,5 @@
 /* ==================================================
-   USER FORMATTER UTILITIES
+   USER FORMATTER
 
    Handles:
    - authenticated user response formatting

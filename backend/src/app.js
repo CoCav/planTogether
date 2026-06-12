@@ -12,10 +12,10 @@ const corsOptions = require("./config/cors");
 const errorHandler = require("./middlewares/errors/errorHandler");
 
 const authRoutes = require("./routes/authRoutes");
+const locationRoutes = require("./routes/locationRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const eventMembershipRoutes = require("./routes/eventMembershipRoutes");
 const userRoutes = require("./routes/userRoutes");
-
 /* ==================================================
    EXPRESS APPLICATION SETUP
 
@@ -92,6 +92,9 @@ app.get("/", (req, res) => {
 
 // Authentication routes
 app.use("/api/auth", authRoutes);
+
+// Location search routes
+app.use("/api/locations", locationRoutes);
 
 // Event membership routes
 app.use("/api/events", eventMembershipRoutes);

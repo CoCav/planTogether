@@ -4,8 +4,11 @@ const Event = require("../models/eventModel");
 const User = require("../models/userModel");
 const EventUserRole = require("../models/relations/eventUserRoleModel");
 
+const locationService = require("./locationService");
+
 const { EVENT_ROLES } = require("../constants/eventRoles");
 const { EVENT_STATUS } = require("../constants/eventStatus");
+const { EVENT_MODES } = require("../constants/eventModes");
 
 const { throwHttpError } = require("../utils/errors/httpError");
 
@@ -37,6 +40,7 @@ const { getPaginationOptions, getTotalCount, getTotalPages } = require("../utils
    - single event retrieval and access resolution
    - current authenticated user event access
    - event update and deletion
+   - event geolocation resolution and persistence
    - event image replacement and removal
    - participant count and status enrichment
 
@@ -46,6 +50,8 @@ const { getPaginationOptions, getTotalCount, getTotalPages } = require("../utils
    - event listings count active participants with COUNT DISTINCT
    - participant count queries ignore soft-deleted memberships
    - getAllEvents supports filters through query params
+   - physical event locations are resolved through locationService
+   - online events never persist geolocation data
    - past events cannot be updated
    - started events cannot be deleted
    - event images are preserved when omitted from updates
@@ -54,6 +60,19 @@ const { getPaginationOptions, getTotalCount, getTotalPages } = require("../utils
    - event roles are centralized through shared constants
    - uses shared HTTP error utilities
 ================================================== */
+
+/* =============================
+   EVENT LOCATION
+============================= */
+
+// Resolves persisted location coordinates for physical events
+const resolveEventLocationData = async (mode, location) => {
+    if (mode === EVENT_MODES.ONLINE || !String(location ?? "").trim()) {
+        return null;
+    }
+
+    return locationService.resolveEventLocation(location);
+};
 
 /* =============================
    CREATE EVENT
@@ -71,7 +90,9 @@ const createEvent = async (data, userId) => {
             throwHttpError(400, "End date must be after start date");
         }
 
-        const eventData = buildEventCreateData(data, userId);
+        const locationData = await resolveEventLocationData(data.mode, data.location);
+
+        const eventData = buildEventCreateData(data, userId, locationData);
 
         const event = await Event.create(eventData, { transaction });
 
@@ -250,7 +271,30 @@ const updateEventByID = async (id, data) => {
             throwHttpError(400, "End date must be after start date");
         }
 
-        const updatedData = buildEventUpdateData(event, data);
+        // Resolve the next persisted mode after partial updates
+        const nextMode = data.mode ?? event.mode;
+
+        // Resolve the next persisted location after partial updates
+        const nextLocation = data.location !== undefined
+            ? data.location
+            : event.location;
+
+
+        // Physical events must always keep a valid location
+        if (nextMode === EVENT_MODES.IN_PERSON && data.location !== undefined && !String(nextLocation ?? "").trim()) {
+            throwHttpError(400, "Location is required for in-person events");
+        }
+
+        // Re-geocode only when the physical location changes
+        const shouldRefreshLocationData =
+            nextMode === EVENT_MODES.IN_PERSON &&
+            data.location !== undefined;
+
+        const locationData = shouldRefreshLocationData
+            ? await resolveEventLocationData(nextMode, nextLocation)
+            : null;
+
+        const updatedData = buildEventUpdateData(event, data, locationData);
 
         await event.update(updatedData, { transaction });
 

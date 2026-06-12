@@ -4,6 +4,8 @@
    Tests:
    - successful event creation
    - organizer membership creation
+   - event geolocation resolution
+   - online event geolocation bypass
    - invalid date order rejection
    - transaction rollback on database errors
 
@@ -30,6 +32,10 @@ jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
     create: jest.fn()
 }));
 
+jest.mock("../../../../src/services/locationService", () => ({
+    resolveEventLocation: jest.fn()
+}));
+
 jest.mock("../../../../src/utils/events/eventDataBuilder", () => ({
     buildEventCreateData: jest.fn()
 }));
@@ -39,6 +45,7 @@ const Event = require("../../../../src/models/eventModel");
 const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
 
 const eventService = require("../../../../src/services/eventService");
+const locationService = require("../../../../src/services/locationService");
 
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 const { EVENT_MODES } = require("../../../../src/constants/eventModes");
@@ -60,6 +67,12 @@ describe("eventService - createEvent", () => {
         };
 
         sequelize.transaction.mockResolvedValue(transaction);
+
+        locationService.resolveEventLocation.mockResolvedValue({
+            latitude: 45.5031824,
+            longitude: -73.5698065,
+            label: "Montréal, Québec, Canada"
+        });
     });
 
     /* =============================
@@ -97,7 +110,17 @@ describe("eventService - createEvent", () => {
 
         expect(sequelize.transaction).toHaveBeenCalled();
 
-        expect(buildEventCreateData).toHaveBeenCalledWith(eventInput, 10);
+        expect(locationService.resolveEventLocation).toHaveBeenCalledWith("Montreal");
+
+        expect(buildEventCreateData).toHaveBeenCalledWith(
+            eventInput,
+            10,
+            {
+                latitude: 45.5031824,
+                longitude: -73.5698065,
+                label: "Montréal, Québec, Canada"
+            }
+        );
 
         expect(Event.create).toHaveBeenCalledWith(builtEventData, { transaction });
 
@@ -111,6 +134,50 @@ describe("eventService - createEvent", () => {
 
         expect(transaction.commit).toHaveBeenCalled();
         expect(transaction.rollback).not.toHaveBeenCalled();
+
+        expect(result).toBe(event);
+    });
+
+    it("should not resolve location data for online events", async () => {
+        const eventInput = createEventPayload({
+            mode: EVENT_MODES.ONLINE,
+            location: undefined,
+            startDateTime: "2026-12-20T10:00:00.000Z",
+            endDateTime: "2026-12-20T12:00:00.000Z"
+        });
+
+        const builtEventData = {
+            creatorId: 10,
+            ...eventInput,
+            location: null,
+            latitude: null,
+            longitude: null,
+            locationLabel: null
+        };
+
+        const event = {
+            id: 1,
+            title: "Online Event"
+        };
+
+        buildEventCreateData.mockReturnValue(builtEventData);
+
+        Event.create.mockResolvedValue(event);
+        EventUserRole.create.mockResolvedValue({});
+
+        const result = await eventService.createEvent(eventInput, 10);
+
+        expect(locationService.resolveEventLocation).not.toHaveBeenCalled();
+
+        expect(buildEventCreateData).toHaveBeenCalledWith(
+            eventInput,
+            10,
+            null
+        );
+
+        expect(Event.create).toHaveBeenCalledWith(builtEventData, { transaction });
+        expect(EventUserRole.create).toHaveBeenCalled();
+        expect(transaction.commit).toHaveBeenCalled();
 
         expect(result).toBe(event);
     });
@@ -134,6 +201,8 @@ describe("eventService - createEvent", () => {
 
         expect(transaction.rollback).toHaveBeenCalled();
         expect(transaction.commit).not.toHaveBeenCalled();
+
+        expect(locationService.resolveEventLocation).not.toHaveBeenCalled();
 
         expect(buildEventCreateData).not.toHaveBeenCalled();
         expect(Event.create).not.toHaveBeenCalled();
@@ -167,6 +236,14 @@ describe("eventService - createEvent", () => {
             .toThrow("DB error");
 
         expect(sequelize.transaction).toHaveBeenCalled();
+
+        expect(locationService.resolveEventLocation).not.toHaveBeenCalled();
+
+        expect(buildEventCreateData).toHaveBeenCalledWith(
+            eventInput,
+            10,
+            null
+        );
 
         expect(Event.create).toHaveBeenCalledWith(builtEventData, { transaction });
 

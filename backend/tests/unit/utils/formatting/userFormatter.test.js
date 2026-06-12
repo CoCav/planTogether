@@ -1,5 +1,5 @@
 /* ==================================================
-   USER FORMATTER UTILITIES TESTS
+   USER FORMATTER TESTS
 
    Tests:
    - authenticated user formatting

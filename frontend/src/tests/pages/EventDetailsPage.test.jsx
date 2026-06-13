@@ -28,6 +28,7 @@ import {
    - image fallback behavior
    - accessible event image description
    - physical event location map display
+   - selected location coordinate map hydration
    - membership section and ownership transfer integration
    - event action integration
    - event status badge display
@@ -142,9 +143,15 @@ vi.mock("../../components/events/EventDetailsSummary", () => ({
 }));
 
 vi.mock("../../components/events/EventLocationMap", () => ({
-    default: ({ location }) => (
+    default: ({ location, selectedLocation }) => (
         <div data-testid="event-location-map">
             Event map for {location}
+
+            {selectedLocation && (
+                <span>
+                    Selected: {selectedLocation.label}
+                </span>
+            )}
         </div>
     )
 }));
@@ -461,44 +468,6 @@ describe("EventDetailsPage", () => {
         expect(screen.getByText("Montreal")).toBeInTheDocument();
     });
 
-    it("should display event location map for physical events with location", async () => {
-        renderPage();
-
-        expect(await screen.findByText("Test Event")).toBeInTheDocument();
-
-        expect(screen.getByRole("heading", {
-            level: 3,
-            name: /event location/i
-        })).toBeInTheDocument();
-
-        expect(screen.getByText("View this event on the map.")).toBeInTheDocument();
-
-        expect(screen.getByTestId("event-location-map")).toHaveTextContent(
-            "Event map for Montreal"
-        );
-    });
-
-    it("should not display event location map for online events", async () => {
-        setupApi({
-            event: createEvent({
-                ...mockEvent,
-                mode: "online",
-                location: "Montreal"
-            })
-        });
-
-        renderPage();
-
-        expect(await screen.findByTestId("event-details-summary")).toBeInTheDocument();
-
-        expect(screen.queryByTestId("event-location-map")).not.toBeInTheDocument();
-
-        expect(screen.queryByRole("heading", {
-            level: 3,
-            name: /event location/i
-        })).not.toBeInTheDocument();
-    });
-
     it("should display staff and participant data", async () => {
         setupApi({
             staff: [
@@ -639,6 +608,67 @@ describe("EventDetailsPage", () => {
     });
 
     /* =============================
+       EVENT LOCATION MAP
+    ============================= */
+
+    it("should display event location map for physical events with location", async () => {
+        renderPage();
+
+        expect(await screen.findByText("Test Event")).toBeInTheDocument();
+
+        expect(screen.getByRole("heading", {
+            level: 3,
+            name: /event location/i
+        })).toBeInTheDocument();
+
+        expect(screen.getByText("View this event on the map.")).toBeInTheDocument();
+
+        expect(screen.getByTestId("event-location-map")).toHaveTextContent(
+            "Event map for Montreal"
+        );
+    });
+
+    it("should not display event location map for online events", async () => {
+        setupApi({
+            event: createEvent({
+                ...mockEvent,
+                mode: "online",
+                location: "Montreal"
+            })
+        });
+
+        renderPage();
+
+        expect(await screen.findByTestId("event-details-summary")).toBeInTheDocument();
+
+        expect(screen.queryByTestId("event-location-map")).not.toBeInTheDocument();
+
+        expect(screen.queryByRole("heading", {
+            level: 3,
+            name: /event location/i
+        })).not.toBeInTheDocument();
+    });
+
+
+    it("should pass selected location coordinates to EventLocationMap", async () => {
+        setupApi({
+            event: createEvent({
+                ...mockEvent,
+                location: "Central Park, New York, USA",
+                locationLabel: "Central Park, New York, USA",
+                latitude: 40.785091,
+                longitude: -73.968285
+            })
+        });
+
+        renderPage();
+
+        expect(await screen.findByTestId("event-location-map")).toBeInTheDocument();
+
+        expect(screen.getByText("Selected: Central Park, New York, USA")).toBeInTheDocument();
+    });
+
+    /* =============================
        EVENT ACTIONS
     ============================= */
 
@@ -654,11 +684,9 @@ describe("EventDetailsPage", () => {
 
         renderPage();
 
-        expect(
-            await screen.findByRole("button", {
-                name: /edit event/i
-            })
-        ).toBeInTheDocument();
+        expect(await screen.findByRole("button", {
+            name: /edit event/i
+        })).toBeInTheDocument();
 
         expect(screen.getByRole("button", {
             name: /delete event/i
@@ -681,11 +709,9 @@ describe("EventDetailsPage", () => {
 
         renderPage();
 
-        expect(
-            await screen.findByRole("button", {
-                name: /edit event/i
-            })
-        ).toBeInTheDocument();
+        expect(await screen.findByRole("button", {
+            name: /edit event/i
+        })).toBeInTheDocument();
 
         expect(screen.queryByRole("button", {
             name: /delete event/i
@@ -706,11 +732,9 @@ describe("EventDetailsPage", () => {
 
         renderPage();
 
-        await user.click(
-            await screen.findByRole("button", {
-                name: /edit event/i
-            })
-        );
+        await user.click(await screen.findByRole("button", {
+            name: /edit event/i
+        }));
 
         expect(mockNavigate).toHaveBeenCalledWith("/events/1/edit");
     });
@@ -733,11 +757,9 @@ describe("EventDetailsPage", () => {
 
         renderPage();
 
-        await user.click(
-            await screen.findByRole("button", {
-                name: /delete event/i
-            })
-        );
+        await user.click(await screen.findByRole("button", {
+            name: /delete event/i
+        }));
 
         await waitFor(() => {
             expect(mockDeleteEvent).toHaveBeenCalledWith("1");
@@ -762,11 +784,9 @@ describe("EventDetailsPage", () => {
 
         renderPage();
 
-        await user.click(
-            await screen.findByRole("button", {
-                name: /delete event/i
-            })
-        );
+        await user.click(await screen.findByRole("button", {
+            name: /delete event/i
+        }));
 
         expect(mockDeleteEvent).not.toHaveBeenCalled();
         expect(mockNavigate).not.toHaveBeenCalledWith("/events");
@@ -790,11 +810,9 @@ describe("EventDetailsPage", () => {
 
         renderPage();
 
-        await user.click(
-            await screen.findByRole("button", {
-                name: /delete event/i
-            })
-        );
+        await user.click(await screen.findByRole("button", {
+            name: /delete event/i
+        }));
 
         expect(await screen.findByText(/api error/i)).toBeInTheDocument();
 

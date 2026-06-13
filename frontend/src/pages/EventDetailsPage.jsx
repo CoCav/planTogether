@@ -383,6 +383,7 @@ export default function EventDetailsPage() {
 
                                 <EventLocationMap
                                     location={eventDisplayData.location}
+                                    selectedLocation={eventDisplayData.selectedLocation}
                                 />
                             </section>
                         )}

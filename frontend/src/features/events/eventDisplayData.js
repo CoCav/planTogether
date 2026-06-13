@@ -38,6 +38,15 @@ export function getEventDisplayData(event) {
             ? getEventModeLabel(EVENT_MODES.ONLINE)
             : event.location || "N/A",
 
+        selectedLocation: !isOnline && event.latitude && event.longitude
+            ? {
+                label: event.locationLabel || event.location,
+                latitude: event.latitude,
+                longitude: event.longitude,
+                provider: "nominatim"
+            }
+            : null,
+
         participantLabel: event.maxParticipants
             ? `${event.participantCount} / ${event.maxParticipants}`
             : formatCount(event.participantCount, "participant"),

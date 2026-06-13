@@ -16,6 +16,7 @@ import { createEvent } from "../../factories/events/eventFactory";
    - formatted date and time
    - display mode labels
    - display mode and location handling
+   - selected location display data
    - capacity display
    - registration deadline display
    - event status display data
@@ -24,6 +25,7 @@ import { createEvent } from "../../factories/events/eventFactory";
    Notes:
    - focuses on display-ready transformation logic
    - uses shared event test factory
+   - selectedLocation is used by event map rendering
 ================================================== */
 
 describe("getEventDisplayData", () => {
@@ -133,6 +135,63 @@ describe("getEventDisplayData", () => {
         });
 
         expect(data.location).toBe("N/A");
+    });
+
+    it("should build selected location when event has coordinates", () => {
+        const data = getDisplayData({
+            mode: EVENT_MODES.IN_PERSON,
+            location: "Central Park",
+            locationLabel: "Central Park, New York, USA",
+            latitude: 40.785091,
+            longitude: -73.968285
+        });
+
+        expect(data.selectedLocation).toEqual({
+            label: "Central Park, New York, USA",
+            latitude: 40.785091,
+            longitude: -73.968285,
+            provider: "nominatim"
+        });
+    });
+
+    it("should fallback to event location when selected location label is missing", () => {
+        const data = getDisplayData({
+            mode: EVENT_MODES.IN_PERSON,
+            location: "Central Park",
+            locationLabel: "",
+            latitude: 40.785091,
+            longitude: -73.968285
+        });
+
+        expect(data.selectedLocation).toEqual({
+            label: "Central Park",
+            latitude: 40.785091,
+            longitude: -73.968285,
+            provider: "nominatim"
+        });
+    });
+
+    it("should return null selected location when coordinates are missing", () => {
+        const data = getDisplayData({
+            mode: EVENT_MODES.IN_PERSON,
+            location: "Central Park",
+            latitude: null,
+            longitude: null
+        });
+
+        expect(data.selectedLocation).toBeNull();
+    });
+
+    it("should return null selected location for online events", () => {
+        const data = getDisplayData({
+            mode: EVENT_MODES.ONLINE,
+            location: "Central Park",
+            locationLabel: "Central Park, New York, USA",
+            latitude: 40.785091,
+            longitude: -73.968285
+        });
+
+        expect(data.selectedLocation).toBeNull();
     });
 
     /* =============================

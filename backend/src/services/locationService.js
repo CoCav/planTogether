@@ -9,6 +9,7 @@ const { normalizeString, normalizeSearchKey } = require("../utils/formatting/str
 const {
     LOCATION_PROVIDER,
     buildNominatimSearchParams,
+    buildLocationSearchQueries,
     formatProviderLocation
 } = require("../utils/formatting/locationFormatter");
 
@@ -19,6 +20,7 @@ const {
    Handles:
    - location query validation
    - cached location lookup
+   - fallback location search queries
    - OpenStreetMap Nominatim provider search
    - location result persistence
    - provider error and rate limit handling
@@ -70,8 +72,8 @@ const saveLocationsToCache = async (locations = []) => {
    PROVIDER SEARCH
 ============================= */
 
-// Searches matching locations from Nominatim
-const searchNominatimLocations = async (query) => {
+// Searches matching locations from Nominatim for one query
+const searchNominatimLocations = async (query, originalQuery = query) => {
     const params = buildNominatimSearchParams(query);
 
     const response = await fetch(
@@ -98,12 +100,28 @@ const searchNominatimLocations = async (query) => {
     const results = await response.json();
 
     if (!Array.isArray(results) || results.length === 0) {
-        throwHttpError(404, "Location not found");
+        return [];
     }
 
+    // Cache results under the original user query, even if a fallback query worked
     return results.map((result) =>
-        formatProviderLocation(query, result)
+        formatProviderLocation(originalQuery, result)
     );
+};
+
+// Searches provider with progressively broader fallback queries
+const searchProviderLocationsWithFallbacks = async (query) => {
+    const searchQueries = buildLocationSearchQueries(query);
+
+    for (const searchQuery of searchQueries) {
+        const locations = await searchNominatimLocations(searchQuery, query);
+
+        if (locations.length > 0) {
+            return locations;
+        }
+    }
+
+    throwHttpError(404, "Location not found");
 };
 
 /* =============================
@@ -124,7 +142,7 @@ const searchLocations = async (query) => {
         return cachedLocations;
     }
 
-    const providerLocations = await searchNominatimLocations(cleanQuery);
+    const providerLocations = await searchProviderLocationsWithFallbacks(cleanQuery);
 
     return saveLocationsToCache(providerLocations);
 };

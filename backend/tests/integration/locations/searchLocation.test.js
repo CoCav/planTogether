@@ -3,6 +3,7 @@
 
    Tests:
    - authenticated location search
+   - fallback location search
    - cached location reuse
    - authentication protection
    - missing query validation
@@ -14,6 +15,7 @@
    Ensures:
    - authenticated users can search locations
    - provider results are persisted in the location cache
+   - detailed addresses can resolve through fallback queries
    - cached results avoid repeated provider calls
    - validators protect location search input
    - provider errors are returned as API errors
@@ -85,6 +87,50 @@ describe("Search Location API", () => {
         ]);
 
         expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("should resolve detailed addresses through fallback search", async () => {
+        const userAuth = await registerAndGetToken({
+            name: "Fallback Location User",
+            email: `fallbacklocation${Date.now()}@test.com`
+        });
+
+        global.fetch
+            .mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                json: jest.fn().mockResolvedValue([])
+            })
+            .mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                json: jest.fn().mockResolvedValue([
+                    {
+                        lat: "46.8137431",
+                        lon: "-71.2084061",
+                        display_name: "Québec, Capitale-Nationale, Québec, Canada"
+                    }
+                ])
+            });
+
+        const res = await request(app)
+            .get("/api/locations/search")
+            .query({
+                q: "179 Grande Allée O, Québec, QC G1R 2H1, Canada"
+            })
+            .set(userAuth.headers);
+
+        expect(res.statusCode).toBe(200);
+
+        expect(global.fetch).toHaveBeenCalledTimes(2);
+
+        expect(res.body.locations[0]).toMatchObject({
+            query: "179 grande allée o, québec, qc g1r 2h1, canada",
+            label: "Québec, Capitale-Nationale, Québec, Canada",
+            latitude: 46.8137431,
+            longitude: -71.2084061,
+            provider: "nominatim"
+        });
     });
 
     it("should persist provider results in location cache", async () => {
@@ -195,7 +241,7 @@ describe("Search Location API", () => {
 
         const res = await request(app)
             .get("/api/locations/search")
-            .query({ q: "Unknown place" })
+            .query({ q: "Unknownplace" })
             .set(userAuth.headers);
 
         expect(res.statusCode).toBe(404);

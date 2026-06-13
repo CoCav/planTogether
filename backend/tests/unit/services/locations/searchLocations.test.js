@@ -5,6 +5,7 @@
    - empty query rejection
    - cached location lookup
    - provider search when cache is empty
+   - fallback provider search when first query has no result
    - provider result persistence
    - provider rate limit handling
    - provider unavailable handling
@@ -13,6 +14,7 @@
    Ensures:
    - empty location queries are rejected early
    - cached locations avoid external provider calls
+   - fallback queries improve detailed address matching
    - provider results are normalized and persisted
    - provider errors are converted into HTTP errors
 ================================================== */
@@ -154,6 +156,67 @@ describe("locationService - searchLocations", () => {
         expect(result).toEqual([savedLocation]);
     });
 
+    it("should try fallback queries when provider returns no result for the first query", async () => {
+        Location.findAll.mockResolvedValue([]);
+
+        global.fetch
+            .mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                json: jest.fn().mockResolvedValue([])
+            })
+            .mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                json: jest.fn().mockResolvedValue([
+                    {
+                        lat: "46.8137431",
+                        lon: "-71.2084061",
+                        display_name: "Québec, Capitale-Nationale, Québec, Canada"
+                    }
+                ])
+            });
+
+        const savedLocation = {
+            id: 1,
+            query: "179 grande allée o, québec, qc g1r 2h1, canada",
+            label: "Québec, Capitale-Nationale, Québec, Canada",
+            latitude: 46.8137431,
+            longitude: -71.2084061,
+            provider: "nominatim"
+        };
+
+        Location.findOrCreate.mockResolvedValue([savedLocation]);
+
+        const result = await locationService.searchLocations(
+            "179 Grande Allée O, Québec, QC G1R 2H1, Canada"
+        );
+
+        expect(global.fetch).toHaveBeenCalledTimes(2);
+
+        expect(global.fetch.mock.calls[0][0]).toContain("q=179+Grande+All%C3%A9e+O%2C+Qu%C3%A9bec%2C+QC+G1R+2H1%2C+Canada");
+
+        expect(global.fetch.mock.calls[1][0]).toContain("q=179+Grande+All%C3%A9e+O%2C+Qu%C3%A9bec%2C+QC%2C+Canada");
+
+        expect(Location.findOrCreate).toHaveBeenCalledWith({
+            where: {
+                query: "179 grande allée o, québec, qc g1r 2h1, canada",
+                provider: "nominatim",
+                latitude: 46.8137431,
+                longitude: -71.2084061
+            },
+            defaults: {
+                query: "179 grande allée o, québec, qc g1r 2h1, canada",
+                label: "Québec, Capitale-Nationale, Québec, Canada",
+                latitude: 46.8137431,
+                longitude: -71.2084061,
+                provider: "nominatim"
+            }
+        });
+
+        expect(result).toEqual([savedLocation]);
+    });
+
     it("should throw 429 when provider rate limit is reached", async () => {
         Location.findAll.mockResolvedValue([]);
 
@@ -209,5 +272,6 @@ describe("locationService - searchLocations", () => {
             });
 
         expect(Location.findOrCreate).not.toHaveBeenCalled();
+        expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 });

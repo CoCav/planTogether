@@ -30,6 +30,7 @@ import "./styles/components/events/event-card-actions.css";
 import "./styles/components/events/event-card.css";
 import "./styles/components/events/event-details-actions.css";
 import "./styles/components/events/event-details-summary.css";
+import "./styles/components/events/event-location-field.css";
 import "./styles/components/events/event-location-map.css";
 import "./styles/components/events/event-view-tabs.css";
 import "./styles/components/events/events-filter-card.css";

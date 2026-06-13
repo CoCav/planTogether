@@ -14,11 +14,14 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../../../features/shared/con
    Handles:
    - initial form state
    - field changes
+   - selected location state
    - dependent field resets
    - online mode location reset
+   - selected location reset on typing
    - image changes
    - image removal
    - form helpers
+   - location suggestion selection
    - configurable validation options
    - validation errors
    - successful submit
@@ -27,6 +30,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../../../features/shared/con
    Notes:
    - uses shared default event form values
    - submit behavior is injected by caller
+   - selectedLocation is UI-only state for autocomplete/map preview
    - event-specific edit rules are provided through validation options
 ================================================== */
 
@@ -185,6 +189,58 @@ describe("useEventForm", () => {
         expect(result.current.formState.values.location).toBe("");
     });
 
+    it("should clear selected location when switching to online mode", () => {
+        const { result } = setupHook({
+            initialValues: createValidValues({
+                mode: EVENT_MODES.IN_PERSON,
+                location: "Montreal",
+                selectedLocation: {
+                    label: "Montréal, Québec, Canada",
+                    latitude: 45.5017,
+                    longitude: -73.5673,
+                    provider: "nominatim"
+                }
+            })
+        });
+
+        act(() => {
+            result.current.formActions.handleFieldChange(
+                createChangeEvent({
+                    name: "mode",
+                    value: EVENT_MODES.ONLINE
+                })
+            );
+        });
+
+        expect(result.current.formState.values.selectedLocation).toBeNull();
+    });
+
+    it("should clear selected location when location text changes", () => {
+        const { result } = setupHook({
+            initialValues: createValidValues({
+                location: "Montréal, Québec, Canada",
+                selectedLocation: {
+                    label: "Montréal, Québec, Canada",
+                    latitude: 45.5017,
+                    longitude: -73.5673,
+                    provider: "nominatim"
+                }
+            })
+        });
+
+        act(() => {
+            result.current.formActions.handleFieldChange(
+                createChangeEvent({
+                    name: "location",
+                    value: "Montréal Museum"
+                })
+            );
+        });
+
+        expect(result.current.formState.values.location).toBe("Montréal Museum");
+        expect(result.current.formState.values.selectedLocation).toBeNull();
+    });
+
     it("should clear custom registration deadline when switching to no deadline", () => {
         const { result } = setupHook({
             initialValues: createValidValues({
@@ -227,6 +283,52 @@ describe("useEventForm", () => {
         expect(result.current.formState.values.registrationDeadlineOption).toBe(EVENT_REGISTRATION_DEADLINES.DAY_BEFORE);
 
         expect(result.current.formState.values.registrationDeadlineCustom).toBe("");
+    });
+
+    /* =============================
+       LOCATION SELECTION
+    ============================= */
+
+    it("should store selected location when autocomplete suggestion is selected", () => {
+        const { result } = setupHook();
+
+        const selectedLocation = {
+            label: "Central Park, Manhattan, New York, USA",
+            latitude: 40.785091,
+            longitude: -73.968285,
+            provider: "nominatim"
+        };
+
+        act(() => {
+            result.current.formActions.handleLocationSelect(selectedLocation);
+        });
+
+        expect(result.current.formState.values.selectedLocation).toBe(selectedLocation);
+
+        expect(result.current.formState.values.location).toContain("Central Park");
+        expect(result.current.formState.values.location).toContain("New York, USA");
+        expect(result.current.formState.values.location).toContain("•");
+    });
+
+    it("should clear location error when autocomplete suggestion is selected", () => {
+        const { result } = setupHook();
+
+        act(() => {
+            result.current.formState.setFieldErrors({
+                location: "Location is required"
+            });
+        });
+
+        act(() => {
+            result.current.formActions.handleLocationSelect({
+                label: "Central Park, Manhattan, New York, USA",
+                latitude: 40.785091,
+                longitude: -73.968285,
+                provider: "nominatim"
+            });
+        });
+
+        expect(result.current.formState.fieldErrors.location).toBeUndefined();
     });
 
     /* =============================

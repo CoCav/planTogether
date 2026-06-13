@@ -7,8 +7,8 @@
    - event date ranges
    - count labels
    - verb agreement
+   - location suggestion labels
 ================================================== */
-
 
 /* =============================
    DATE / TIME
@@ -57,4 +57,25 @@ export const formatCount = (count, singular, plural = `${singular}s`) => {
 // Formats the verb "to be"
 export const formatBe = (count) => {
     return count > 1 ? "are" : "is";
+};
+
+/* =============================
+   LOCATION HELPERS
+============================= */
+
+// Formats provider location labels for autocomplete display
+export const formatLocationSuggestionLabel = (label = "") => {
+    const parts = String(label)
+        .split(",")
+        .map((part) => part.trim())
+        .filter(Boolean);
+
+    if (parts.length <= 3) {
+        return parts.join(", ");
+    }
+
+    return [
+        parts[0],
+        `${parts[parts.length - 2]}, ${parts[parts.length - 1]}`
+    ].join(" • ");
 };

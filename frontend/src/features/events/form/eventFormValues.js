@@ -113,6 +113,14 @@ export const createEventFormValuesFromEvent = (event = {}) => {
 
         mode: event.mode || EVENT_MODES.IN_PERSON,
         location: event.location || "",
+        selectedLocation: event.latitude && event.longitude
+            ? {
+                label: event.locationLabel || event.location || "",
+                latitude: event.latitude,
+                longitude: event.longitude,
+                provider: "nominatim"
+            }
+            : null,
 
         startDateTime: toDateTimeLocalValue(event.startDateTime),
         endDateTime: toDateTimeLocalValue(event.endDateTime),

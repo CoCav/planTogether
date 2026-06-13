@@ -19,12 +19,14 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../../features/shared/consta
    - empty and invalid datetime values
    - default event form values
    - API event prefill values
+   - selected location prefill values
    - registration deadline option resolution
    - existing image mapping
    - unchanged image state preservation
 
    Notes:
    - used by EditEventPage form hydration
+   - selectedLocation hydrates autocomplete/map preview state
    - existing images are stored as currentImage
    - image remains undefined until users select or remove an image
 ================================================== */
@@ -136,6 +138,7 @@ describe("eventFormValues", () => {
 
             mode: EVENT_MODES.IN_PERSON,
             location: "Montreal",
+            selectedLocation: null,
 
             startDateTime: toDateTimeLocalValue(event.startDateTime),
             endDateTime: toDateTimeLocalValue(event.endDateTime),
@@ -216,5 +219,50 @@ describe("eventFormValues", () => {
 
         expect(values.image).toBeUndefined();
         expect(values.currentImage).toBe("event.png");
+    });
+
+    it("should hydrate selected location from event coordinates", () => {
+        const values = createEventFormValuesFromEvent({
+            location: "Montréal, Québec, Canada",
+            locationLabel: "Montréal, Québec, Canada",
+            latitude: 45.5017,
+            longitude: -73.5673
+        });
+
+        expect(values.selectedLocation).toEqual({
+            label: "Montréal, Québec, Canada",
+            latitude: 45.5017,
+            longitude: -73.5673,
+            provider: "nominatim"
+        });
+    });
+
+    it("should fallback to event location when locationLabel is missing", () => {
+        const values = createEventFormValuesFromEvent({
+            location: "Montreal",
+            latitude: 45.5017,
+            longitude: -73.5673
+        });
+
+        expect(values.selectedLocation).toEqual({
+            label: "Montreal",
+            latitude: 45.5017,
+            longitude: -73.5673,
+            provider: "nominatim"
+        });
+    });
+
+    /* =============================
+       EDGE CASES
+    ============================= */
+
+    it("should not hydrate selected location when coordinates are incomplete", () => {
+        const values = createEventFormValuesFromEvent({
+            location: "Montreal",
+            latitude: 45.5017,
+            longitude: null
+        });
+
+        expect(values.selectedLocation).toBeNull();
     });
 });

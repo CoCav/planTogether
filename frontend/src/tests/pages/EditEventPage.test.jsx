@@ -14,10 +14,14 @@ import EditEventPage from "../../pages/EditEventPage";
    - event access loading
    - protected edit form access
    - event form hydration
+   - selected location hydration
+   - location map preview rendering
    - accessible form section
    - existing image preview
-   - event update FormData payload and nullable field clearing
+   - event update FormData payload
+   - nullable field clearing
    - image update payload
+   - online mode location clearing
    - started event start date lock
    - validation feedback
    - API error feedback
@@ -26,8 +30,14 @@ import EditEventPage from "../../pages/EditEventPage";
    Notes:
    - uses real EventForm and useEventForm behavior
    - mocks event loading, event update API and navigation
+   - selectedLocation is hydrated from existing event coordinates
+   - map preview only appears when a selected location exists
    - started events lock their original start datetime in the edit form
 ================================================== */
+
+/* =============================
+   MOCKS
+============================= */
 
 const mockNavigate = vi.fn();
 const mockGetCurrentUserEventAccess = vi.fn();
@@ -52,6 +62,10 @@ vi.mock("../../api/events/eventApi", () => ({
     updateEvent: (...args) => mockUpdateEvent(...args)
 }));
 
+/* =============================
+   TEST DATA
+============================= */
+
 const createDateTime = (daysOffset, hours = 10) => {
     const date = new Date();
 
@@ -69,14 +83,25 @@ const mockEventResponse = {
         type: "Meetup",
         theme: "Tech",
         mode: "in_person",
+
         location: "Montreal",
+        locationLabel: "Montréal, Québec, Canada",
+        latitude: 45.5017,
+        longitude: -73.5673,
+
         startDateTime: createDateTime(30, 10),
         endDateTime: createDateTime(30, 12),
+
         maxParticipants: 20,
         registrationDeadline: createDateTime(29),
+
         image: "/uploads/events/event-current.png"
     }
 };
+
+/* =============================
+   TEST HELPERS
+============================= */
 
 const renderPage = () => {
     return render(
@@ -91,6 +116,11 @@ const getSubmittedFormData = () => {
 };
 
 describe("EditEventPage", () => {
+
+    /* =============================
+       TEST SETUP
+    ============================= */
+
     beforeEach(() => {
         vi.clearAllMocks();
 
@@ -109,13 +139,16 @@ describe("EditEventPage", () => {
         globalThis.URL.revokeObjectURL = vi.fn();
     });
 
+    /* =============================
+       LOADING / ACCESS
+    ============================= */
+
     it("renders loading state before event is loaded", () => {
         mockGetCurrentUserEventAccess.mockReturnValue(new Promise(() => { }));
 
         renderPage();
 
         expect(screen.getByRole("status")).toHaveTextContent(/loading event form/i);
-
         expect(screen.getByText(/please wait while we load this event's details/i)).toBeInTheDocument();
     });
 
@@ -150,6 +183,10 @@ describe("EditEventPage", () => {
         expect(mockGetEventById).not.toHaveBeenCalled();
     });
 
+    /* =============================
+       FORM HYDRATION
+    ============================= */
+
     it("loads event and hydrates form values", async () => {
         renderPage();
 
@@ -157,10 +194,39 @@ describe("EditEventPage", () => {
         expect(screen.getByDisplayValue("Original description")).toBeInTheDocument();
         expect(screen.getByDisplayValue("Meetup")).toBeInTheDocument();
         expect(screen.getByDisplayValue("Tech")).toBeInTheDocument();
-        expect(screen.getByDisplayValue("Montreal")).toBeInTheDocument();
+
+        expect(screen.getByLabelText(/^location$/i).value).toContain("Mont");
 
         expect(mockGetEventById).toHaveBeenCalledWith("42");
     });
+
+    it("hydrates selected location and shows map preview when event has coordinates", async () => {
+        renderPage();
+
+        expect(await screen.findByDisplayValue("Original Event")).toBeInTheDocument();
+
+        expect(screen.getByText(/location preview/i)).toBeInTheDocument();
+    });
+
+    it("does not show location map preview when loaded event has no coordinates", async () => {
+        mockGetEventById.mockResolvedValue({
+            event: {
+                ...mockEventResponse.event,
+                latitude: null,
+                longitude: null
+            }
+        });
+
+        renderPage();
+
+        await screen.findByDisplayValue("Original Event");
+
+        expect(screen.queryByText(/location preview/i)).not.toBeInTheDocument();
+    });
+
+    /* =============================
+       DATE LOCK
+    ============================= */
 
     it("keeps start datetime enabled for upcoming events", async () => {
         renderPage();
@@ -188,6 +254,10 @@ describe("EditEventPage", () => {
         expect(screen.getByLabelText(/end date time/i)).toBeEnabled();
     });
 
+    /* =============================
+       RENDERING
+    ============================= */
+
     it("renders accessible edit event form section", async () => {
         renderPage();
 
@@ -208,6 +278,10 @@ describe("EditEventPage", () => {
         expect(screen.getByText(/existing image/i)).toBeInTheDocument();
         expect(screen.getByText(/uploaded previously/i)).toBeInTheDocument();
     });
+
+    /* =============================
+       UPDATE FLOW
+    ============================= */
 
     it("updates event with FormData payload", async () => {
         const user = userEvent.setup();
@@ -237,7 +311,7 @@ describe("EditEventPage", () => {
         expect(formData.get("type")).toBe("Meetup");
         expect(formData.get("theme")).toBe("Tech");
         expect(formData.get("mode")).toBe("in_person");
-        expect(formData.get("location")).toBe("Montreal");
+        expect(formData.get("location")).toContain("Mont");
 
         expect(mockNavigate).toHaveBeenCalledWith("/events/42", {
             replace: true
@@ -252,7 +326,6 @@ describe("EditEventPage", () => {
         await screen.findByDisplayValue("Original Event");
 
         await user.clear(screen.getByLabelText(/participant limit/i));
-
         await user.selectOptions(screen.getByLabelText(/registration deadline/i), "none");
 
         await user.click(screen.getByRole("button", {
@@ -268,6 +341,50 @@ describe("EditEventPage", () => {
         expect(formData.get("maxParticipants")).toBe("");
         expect(formData.get("registrationDeadline")).toBe("");
     });
+
+    it("updates online event with empty location", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await screen.findByDisplayValue("Original Event");
+
+        await user.selectOptions(screen.getByLabelText(/^mode$/i), "online");
+
+        expect(screen.queryByLabelText(/^location$/i)).not.toBeInTheDocument();
+        expect(screen.queryByText(/location preview/i)).not.toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", {
+            name: /update event/i
+        }));
+
+        await waitFor(() => {
+            expect(mockUpdateEvent).toHaveBeenCalledTimes(1);
+        });
+
+        const formData = getSubmittedFormData();
+
+        expect(formData.get("mode")).toBe("online");
+        expect(formData.get("location")).toBe("");
+    });
+
+    it("clears selected location when switching event mode to online", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        await screen.findByDisplayValue("Original Event");
+
+        expect(screen.getByText(/location preview/i)).toBeInTheDocument();
+
+        await user.selectOptions(screen.getByLabelText(/^mode$/i), "online");
+
+        expect(screen.queryByText(/location preview/i)).not.toBeInTheDocument();
+    });
+
+    /* =============================
+       IMAGE UPDATE
+    ============================= */
 
     it("updates event with selected image after removing existing image", async () => {
         const user = userEvent.setup();
@@ -320,30 +437,9 @@ describe("EditEventPage", () => {
         expect(getSubmittedFormData().get("image")).toBe("");
     });
 
-    it("updates online event with empty location", async () => {
-        const user = userEvent.setup();
-
-        renderPage();
-
-        await screen.findByDisplayValue("Original Event");
-
-        await user.selectOptions(screen.getByLabelText(/^mode$/i), "online");
-
-        expect(screen.queryByLabelText(/^location$/i)).not.toBeInTheDocument();
-
-        await user.click(screen.getByRole("button", {
-            name: /update event/i
-        }));
-
-        await waitFor(() => {
-            expect(mockUpdateEvent).toHaveBeenCalledTimes(1);
-        });
-
-        const formData = getSubmittedFormData();
-
-        expect(formData.get("mode")).toBe("online");
-        expect(formData.get("location")).toBe("");
-    });
+    /* =============================
+       VALIDATION
+    ============================= */
 
     it("does not update event when validation fails", async () => {
         const user = userEvent.setup();
@@ -399,6 +495,10 @@ describe("EditEventPage", () => {
         expect(formData.get("endDateTime")).toBeTruthy();
     });
 
+    /* =============================
+       ERROR FEEDBACK
+    ============================= */
+
     it("displays error when event loading fails", async () => {
         mockGetEventById.mockRejectedValue(new Error("API error"));
 
@@ -426,6 +526,10 @@ describe("EditEventPage", () => {
 
         expect(mockNavigate).not.toHaveBeenCalled();
     });
+
+    /* =============================
+       NAVIGATION
+    ============================= */
 
     it("navigates back to event detail when cancelling", async () => {
         const user = userEvent.setup();

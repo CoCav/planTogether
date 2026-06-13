@@ -1,0 +1,99 @@
+/* ==================================================
+   EVENT LOCATION FIELD
+   Autocomplete location input and suggestion dropdown
+================================================== */
+
+/* =========================================
+   BASE
+========================================= */
+
+.location-autocomplete {
+    position: relative;
+    width: 100%;
+}
+
+/* =========================================
+   DROPDOWN
+========================================= */
+
+.location-autocomplete-dropdown {
+    position: absolute;
+    z-index: var(--z-dropdown);
+    top: calc(100% + var(--space-2));
+    left: 0;
+    right: 0;
+
+    display: flex;
+    flex-direction: column;
+    max-height: 260px;
+    overflow-y: auto;
+
+    padding: var(--space-2);
+
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+
+    background: var(--color-surface);
+    box-shadow: var(--shadow-md);
+}
+
+/* =========================================
+   OPTION
+========================================= */
+
+.location-autocomplete-option {
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+
+    border: none;
+    border-radius: var(--radius-sm);
+
+    background: transparent;
+    color: var(--color-text);
+
+    font: inherit;
+    font-size: var(--font-size-sm);
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        background-color var(--transition-fast),
+        color var(--transition-fast);
+}
+
+.location-autocomplete-option:hover,
+.location-autocomplete-option.is-highlighted {
+    background: var(--color-primary-subtle);
+    color: var(--color-primary);
+}
+
+/* =========================================
+   STATUS
+========================================= */
+
+.location-autocomplete-status {
+    padding: var(--space-2) var(--space-3);
+
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+}
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
+
+.location-autocomplete-option:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-primary);
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+    .location-autocomplete-dropdown {
+        max-height: 220px;
+    }
+}

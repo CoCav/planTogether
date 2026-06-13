@@ -3,6 +3,7 @@ import FileUploadPreviewField from "../forms/FileUploadPreviewField";
 import { getEventImage } from "../../utils/uploadedFiles";
 
 import EventLocationMap from "./EventLocationMap";
+import EventLocationField from "./EventLocationField";
 
 import Button from "../ui/Button";
 import FormField from "../ui/FormField";
@@ -17,7 +18,8 @@ import TextArea from "../ui/TextArea";
    Handles:
    - event field rendering
    - event image upload rendering
-   - live location map preview rendering
+   - location autocomplete integration
+   - selected location map preview
    - accessible form field descriptions
    - accessible invalid field states
    - validation error display
@@ -26,6 +28,7 @@ import TextArea from "../ui/TextArea";
 
    Notes:
    - shared by create and edit flows
+   - map preview only appears after location selection
    - started events may lock specific fields during editing
 ================================================== */
 
@@ -44,10 +47,18 @@ export default function EventForm({
     onFieldChange,
     onImageChange,
     onRemoveImage,
+    onSelectLocation,
 
     onSubmit,
     onCancel
 }) {
+
+    /* =============================
+       LOCATION STATE
+    ============================= */
+
+    // Map preview only appears after selecting a suggestion
+    const hasSelectedLocation = Boolean(values.selectedLocation);
 
     return (
         <form onSubmit={onSubmit} className="form-layout">
@@ -95,6 +106,7 @@ export default function EventForm({
             ============================= */}
 
             <div className="form-grid">
+
                 <FormField label="Title" htmlFor="title" error={fieldErrors.title}>
                     {(errorId) => (
                         <Input
@@ -157,19 +169,20 @@ export default function EventForm({
                     <>
                         <FormField label="Location" htmlFor="location" error={fieldErrors.location}>
                             {(errorId) => (
-                                <Input
+                                <EventLocationField
                                     id="location"
                                     name="location"
                                     value={values.location}
                                     onChange={onFieldChange}
-                                    placeholder="e.g. Montreal"
+                                    onSelectLocation={onSelectLocation}
+                                    placeholder="Enter a location"
                                     error={fieldErrors.location}
-                                    aria-describedby={errorId}
+                                    ariaDescribedBy={errorId}
                                 />
                             )}
                         </FormField>
 
-                        {values.location?.trim() && (
+                        {hasSelectedLocation && (
                             <section className="event-form-map form-grid-column-full">
                                 <div className="event-form-map-heading">
                                     <h3 className="event-form-map-title">
@@ -181,7 +194,9 @@ export default function EventForm({
                                     </p>
                                 </div>
 
-                                <EventLocationMap location={values.location} />
+                                <EventLocationMap
+                                    selectedLocation={values.selectedLocation}
+                                />
                             </section>
                         )}
                     </>
@@ -200,12 +215,7 @@ export default function EventForm({
                     )}
                 </FormField>
 
-                <FormField
-                    label="Description"
-                    htmlFor="description"
-                    className="form-grid-column-full"
-                    error={fieldErrors.description}
-                >
+                <FormField label="Description" htmlFor="description" className="form-grid-column-full" error={fieldErrors.description}>
                     {(errorId) => (
                         <TextArea
                             id="description"
@@ -258,11 +268,15 @@ export default function EventForm({
                             aria-describedby={errorId}
                         >
                             <option value="none">No deadline</option>
-                            <option value="day_before">1 day before event</option>
+                            <option value="day_before">
+                                1 day before event
+                            </option>
                             <option value="two_days_before">
                                 2 days before event
                             </option>
-                            <option value="custom">Custom date</option>
+                            <option value="custom">
+                                Custom date
+                            </option>
                         </Select>
                     )}
                 </FormField>
@@ -288,7 +302,10 @@ export default function EventForm({
             ============================= */}
 
             <div className="form-actions">
-                <Button type="submit" loading={isSubmitting}>
+                <Button
+                    type="submit"
+                    loading={isSubmitting}
+                >
                     {submitLabel}
                 </Button>
 

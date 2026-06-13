@@ -31,6 +31,7 @@ import {
    - online location normalization
    - nullable optional fields
    - image field handling
+   - autocomplete UI state exclusion
    - unchanged image omission
    - explicit image clearing in update payloads
    - create FormData payload creation
@@ -141,6 +142,24 @@ describe("eventPayloadBuilder", () => {
         });
 
         expect(payload.registrationDeadline).toBeNull();
+    });
+
+    it("should exclude selected location UI state from form payload", () => {
+        const payload = buildEventFormPayload({
+            title: "Test Event",
+            mode: EVENT_MODES.IN_PERSON,
+            location: "Montreal",
+            selectedLocation: {
+                label: "Montréal, Québec, Canada",
+                latitude: 45.5017,
+                longitude: -73.5673,
+                provider: "nominatim"
+            }
+        });
+
+        expect(payload).not.toHaveProperty("selectedLocation");
+
+        expect(payload.location).toBe("Montreal");
     });
 
     /* =============================
@@ -342,5 +361,23 @@ describe("eventPayloadBuilder", () => {
         const formData = buildEventFormData(eventData);
 
         expect(formData.get("image")).toBe(eventData.image);
+    });
+
+    it("should not append selected location UI state to FormData", () => {
+        const formData = buildEventFormPayloadData({
+            title: "Test Event",
+            mode: EVENT_MODES.IN_PERSON,
+            location: "Montreal",
+            selectedLocation: {
+                label: "Montréal, Québec, Canada",
+                latitude: 45.5017,
+                longitude: -73.5673,
+                provider: "nominatim"
+            }
+        });
+
+        expect(formData.has("selectedLocation")).toBe(false);
+
+        expect(formData.get("location")).toBe("Montreal");
     });
 });

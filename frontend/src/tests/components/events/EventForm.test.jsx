@@ -14,7 +14,8 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../features/shared/constants
    Handles:
    - event field rendering
    - shared image upload field rendering
-   - live location map preview rendering
+   - location autocomplete field rendering
+   - selected location map preview rendering
    - conditional field rendering
    - started event field restrictions
    - submit and cancel actions
@@ -24,14 +25,14 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../features/shared/constants
 
    Ensures:
    - create/edit event flows share consistent form behavior
-   - location preview is only displayed for physical events with a location
+   - location preview is only displayed after a location suggestion is selected
    - validation errors remain accessible
 ================================================== */
 
 vi.mock("../../../components/events/EventLocationMap", () => ({
-    default: ({ location }) => (
+    default: ({ selectedLocation }) => (
         <div data-testid="event-location-map">
-            Location map preview: {location}
+            Location map preview: {selectedLocation?.label}
         </div>
     )
 }));
@@ -55,6 +56,7 @@ describe("EventForm", () => {
         onFieldChange: vi.fn(),
         onImageChange: vi.fn(),
         onRemoveImage: vi.fn(),
+        onSelectLocation: vi.fn(),
 
         onSubmit: vi.fn((event) => event.preventDefault()),
         onCancel: vi.fn()
@@ -174,24 +176,32 @@ describe("EventForm", () => {
         expect(screen.getByLabelText(/custom deadline/i)).toHaveAttribute("type", "datetime-local");
     });
 
-    it("shows location map preview when physical event has a location", () => {
+    it("shows location map preview when physical event has a selected location", () => {
         renderComponent({
             values: {
                 mode: EVENT_MODES.IN_PERSON,
-                location: "Montreal"
+                location: "Montreal",
+                selectedLocation: {
+                    label: "Montréal, Québec, Canada",
+                    latitude: 45.5031824,
+                    longitude: -73.5698065,
+                    provider: "nominatim"
+                }
             },
             isOnlineEvent: false
         });
 
         expect(screen.getByText(/location preview/i)).toBeInTheDocument();
-        expect(screen.getByTestId("event-location-map")).toHaveTextContent("Montreal");
+        expect(screen.getByTestId("event-location-map"))
+            .toHaveTextContent("Montréal, Québec, Canada");
     });
 
-    it("hides location map preview when physical event has no location", () => {
+    it("hides location map preview when physical event has typed location but no selected location", () => {
         renderComponent({
             values: {
                 mode: EVENT_MODES.IN_PERSON,
-                location: ""
+                location: "Montreal",
+                selectedLocation: null
             },
             isOnlineEvent: false
         });

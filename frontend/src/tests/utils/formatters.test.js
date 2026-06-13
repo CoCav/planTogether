@@ -5,6 +5,7 @@ import {
     formatCount,
     formatDate,
     formatEventDateRange,
+    formatLocationSuggestionLabel,
     formatTime
 } from "../../utils/formatters";
 
@@ -18,6 +19,7 @@ import {
    - event date range formatting
    - count labels
    - verb agreement
+   - location suggestion label formatting
 ================================================== */
 
 describe("formatters", () => {
@@ -86,5 +88,25 @@ describe("formatters", () => {
     it("should format verb agreement", () => {
         expect(formatBe(1)).toBe("is");
         expect(formatBe(2)).toBe("are");
+    });
+
+    /* =============================
+       LOCATION HELPERS
+    ============================= */
+
+    it("should keep short location labels unchanged", () => {
+        expect(formatLocationSuggestionLabel("Central Park, New York, USA")).toBe("Central Park, New York, USA");
+    });
+
+    it("should simplify long provider location labels", () => {
+        expect(formatLocationSuggestionLabel("Central Park, Manhattan, New York, USA")).toBe("Central Park • New York, USA");
+    });
+
+    it("should trim empty location label parts", () => {
+        expect(formatLocationSuggestionLabel("Central Park, , New York, USA")).toBe("Central Park, New York, USA");
+    });
+
+    it("should return empty string for missing location label", () => {
+        expect(formatLocationSuggestionLabel()).toBe("");
     });
 });

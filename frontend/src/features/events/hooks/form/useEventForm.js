@@ -5,6 +5,8 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../shared/constants/eventReg
 
 import { isOnlineEventForm, shouldShowCustomDeadline } from "../../form/eventFormConfig";
 
+import { formatLocationSuggestionLabel } from "../../../../utils/formatters";
+
 import { validateEventForm } from "../../form/eventValidation";
 
 /* ==================================================
@@ -13,12 +15,14 @@ import { validateEventForm } from "../../form/eventValidation";
 
    Handles:
    - event form values
+   - selected location suggestion state
    - field validation errors
    - page-level errors
    - submit loading state
    - field changes
    - dependent field resets
    - image changes
+   - location suggestion selection
    - shared submit validation flow
    - configurable validation options
 
@@ -26,6 +30,7 @@ import { validateEventForm } from "../../form/eventValidation";
    - submit behavior is provided by caller
    - reusable by CreateEventPage and EditEventPage
    - validation options support create/edit differences
+   - selectedLocation is used for map preview only
 ================================================== */
 
 export default function useEventForm({
@@ -70,12 +75,22 @@ export default function useEventForm({
         const { name, value } = event.target;
 
         setValues((prev) => {
-            // Clear location when switching to online mode
+            // Clear location data when switching to online mode
             if (name === "mode" && value === EVENT_MODES.ONLINE) {
                 return {
                     ...prev,
                     mode: value,
-                    location: ""
+                    location: "",
+                    selectedLocation: null
+                };
+            }
+
+            // Clear selected location when user manually edits the location text
+            if (name === "location") {
+                return {
+                    ...prev,
+                    location: value,
+                    selectedLocation: null
                 };
             }
 
@@ -129,6 +144,24 @@ export default function useEventForm({
         setFieldErrors((prev) => ({
             ...prev,
             image: undefined
+        }));
+    };
+
+    /* =============================
+       LOCATION HANDLER
+    ============================= */
+
+    // Stores selected autocomplete suggestion and uses its label as form location
+    const handleLocationSelect = (location) => {
+        setValues((prev) => ({
+            ...prev,
+            location: formatLocationSuggestionLabel(location.label),
+            selectedLocation: location
+        }));
+
+        setFieldErrors((prev) => ({
+            ...prev,
+            location: undefined
         }));
     };
 
@@ -192,6 +225,7 @@ export default function useEventForm({
             handleFieldChange,
             handleImageChange,
             handleRemoveImage,
+            handleLocationSelect,
             handleSubmit
         }
     };

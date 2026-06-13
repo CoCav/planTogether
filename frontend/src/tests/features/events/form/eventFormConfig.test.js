@@ -17,6 +17,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../../features/shared/consta
 
    Handles:
    - default event form values
+   - selected location default state
    - event mode select options
    - registration deadline select options
    - event form display helpers
@@ -24,6 +25,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../../features/shared/consta
    Notes:
    - event mode values come from shared constants
    - registration deadline values come from shared constants
+   - selectedLocation is UI-only state used by autocomplete/map preview
 ================================================== */
 
 describe("eventFormConfig", () => {
@@ -41,6 +43,7 @@ describe("eventFormConfig", () => {
 
             mode: EVENT_MODES.IN_PERSON,
             location: "",
+            selectedLocation: null,
 
             startDateTime: "",
             endDateTime: "",

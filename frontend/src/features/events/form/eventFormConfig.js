@@ -10,12 +10,15 @@ import {
 
    Handles:
    - default event form values
-   - select options
+   - selected location state for autocomplete/map preview
+   - event mode select options
+   - registration deadline select options
    - event form display helpers
 
    Notes:
    - shared by create and edit event forms
    - event mode and registration deadline values come from shared constants
+   - selectedLocation stores the chosen geocoded location suggestion
 ================================================== */
 
 /* =============================
@@ -30,6 +33,7 @@ export const createDefaultEventFormValues = () => ({
 
     mode: EVENT_MODES.IN_PERSON,
     location: "",
+    selectedLocation: null,
 
     startDateTime: "",
     endDateTime: "",

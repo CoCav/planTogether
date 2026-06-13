@@ -10,33 +10,56 @@ import LoadingState from "../ui/LoadingState";
    Displays an event location on an interactive map
 
    Handles:
-   - backend geocoded location rendering
+   - selected geocoded location rendering
+   - fallback backend geocoding from location text
    - loading state
    - missing location state
    - failed geocoding state
    - OpenStreetMap tile rendering
    - marker and popup display
-   - reusable event map location rendering
+
+   Notes:
+   - selectedLocation avoids an extra API search after autocomplete selection
+   - location text fallback keeps the component reusable outside event forms
 ================================================== */
 
-export default function EventLocationMap({ location }) {
+export default function EventLocationMap({ location, selectedLocation = null }) {
 
     /* =============================
        LOCATION DATA
     ============================= */
 
+    const shouldSearchLocation = !selectedLocation;
+
     const {
-        coordinates,
+        coordinates: searchedCoordinates,
         isLoading,
         error
-    } = useEventMapLocation(location);
+    } = useEventMapLocation(
+        shouldSearchLocation ? location : ""
+    );
+
+    /* =============================
+       DERIVED LOCATION
+    ============================= */
+
+    // Use selected autocomplete coordinates first, then fallback search coordinates
+    const coordinates = selectedLocation
+        ? {
+            lat: Number(selectedLocation.latitude),
+            lng: Number(selectedLocation.longitude),
+            label: selectedLocation.label
+        }
+        : searchedCoordinates;
+
+    const displayLocation = selectedLocation?.label || location;
 
     /* =============================
        DISPLAY STATES
     ============================= */
 
     // No physical location available
-    if (!location) {
+    if (!displayLocation) {
         return (
             <EmptyState
                 title="No location available"
@@ -46,7 +69,7 @@ export default function EventLocationMap({ location }) {
     }
 
     // Loading backend geolocation data
-    if (isLoading) {
+    if (shouldSearchLocation && isLoading) {
         return (
             <LoadingState
                 title="Loading map..."

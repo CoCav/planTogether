@@ -13,7 +13,8 @@ import useEventMapLocation from "../../../features/events/hooks/form/useEventMap
    - missing location empty state
    - loading state
    - failed geocoding empty state
-   - successful map rendering
+   - fallback location search rendering
+   - selected location rendering without search
    - marker popup location display
 
    Notes:
@@ -180,5 +181,54 @@ describe("EventLocationMap", () => {
         render(<EventLocationMap location="Montréal" />);
 
         expect(useEventMapLocation).toHaveBeenCalledWith("Montréal");
+    });
+
+    it("should render map from selected location without searching", () => {
+        mockLocationState();
+
+        render(
+            <EventLocationMap
+                selectedLocation={{
+                    label: "Musée d'art contemporain de Montréal",
+                    latitude: 45.5076,
+                    longitude: -73.5661,
+                    provider: "nominatim"
+                }}
+            />
+        );
+
+        expect(useEventMapLocation).toHaveBeenCalledWith("");
+
+        expect(screen.getByTestId("map-container")).toHaveAttribute(
+            "data-center",
+            JSON.stringify([45.5076, -73.5661])
+        );
+
+        expect(screen.getByTestId("map-marker")).toHaveAttribute(
+            "data-position",
+            JSON.stringify([45.5076, -73.5661])
+        );
+
+        expect(screen.getByTestId("map-popup")).toHaveTextContent("Musée d'art contemporain de Montréal");
+    });
+
+    it("should ignore loading state when selected location is provided", () => {
+        mockLocationState({
+            isLoading: true
+        });
+
+        render(
+            <EventLocationMap
+                selectedLocation={{
+                    label: "Montréal, Québec, Canada",
+                    latitude: 45.5017,
+                    longitude: -73.5673,
+                    provider: "nominatim"
+                }}
+            />
+        );
+
+        expect(screen.getByTestId("map-container")).toBeInTheDocument();
+        expect(screen.queryByRole("status")).not.toBeInTheDocument();
     });
 });

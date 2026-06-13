@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+import { searchLocations } from "../../api/locations/locationApi";
+
 import CreateEventPage from "../../pages/CreateEventPage";
 
 /* ==================================================
@@ -16,6 +18,7 @@ import CreateEventPage from "../../pages/CreateEventPage";
    - event creation FormData payload
    - online event location normalization
    - image upload payload
+   - location autocomplete suggestion selection
    - API error feedback
    - cancel navigation
 
@@ -48,6 +51,10 @@ vi.mock("../../api/events/eventApi", () => ({
     createEvent: (...args) => mockCreateEvent(...args)
 }));
 
+vi.mock("../../api/locations/locationApi", () => ({
+    searchLocations: vi.fn()
+}));
+
 /* =============================
    TEST HELPERS
 ============================= */
@@ -60,11 +67,21 @@ const renderPage = () => {
     );
 };
 
+const selectLocationSuggestion = async (user, query = "Central Park") => {
+    await user.type(screen.getByLabelText(/^location$/i), query);
+
+    const suggestion = await screen.findByRole("option", {
+        name: /central park/i
+    });
+
+    await user.click(suggestion);
+};
+
 const fillRequiredForm = async (user) => {
     await user.type(screen.getByLabelText(/^title$/i), "Tech Meetup");
     await user.type(screen.getByLabelText(/^type$/i), "Meetup");
     await user.type(screen.getByLabelText(/^theme$/i), "Technology");
-    await user.type(screen.getByLabelText(/^location$/i), "Montreal");
+    await selectLocationSuggestion(user);
     await user.type(screen.getByLabelText(/^description$/i), "A great event");
 
     await user.type(
@@ -99,6 +116,17 @@ describe("CreateEventPage", () => {
 
         globalThis.URL.createObjectURL = vi.fn(() => "blob:event-preview");
         globalThis.URL.revokeObjectURL = vi.fn();
+
+        searchLocations.mockResolvedValue({
+            locations: [
+                {
+                    label: "Central Park, Manhattan, New York, USA",
+                    latitude: 40.785091,
+                    longitude: -73.968285,
+                    provider: "nominatim"
+                }
+            ]
+        });
     });
 
     /* =============================
@@ -186,11 +214,14 @@ describe("CreateEventPage", () => {
         expect(formData.get("type")).toBe("Meetup");
         expect(formData.get("theme")).toBe("Technology");
         expect(formData.get("mode")).toBe("in_person");
-        expect(formData.get("location")).toBe("Montreal");
+        expect(formData.get("location")).toContain("Central Park");
+        expect(formData.get("location")).toContain("New York, USA");
         expect(formData.get("startDateTime")).toBe("2026-12-20T10:00");
         expect(formData.get("endDateTime")).toBe("2026-12-20T12:00");
         expect(formData.has("registrationDeadline")).toBe(false);
         expect(formData.has("image")).toBe(false);
+
+        expect(searchLocations).toHaveBeenCalledWith("Central Park");
 
         expect(mockNavigate).toHaveBeenCalledWith("/events");
     });

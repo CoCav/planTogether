@@ -115,6 +115,7 @@ export default function EditEventPage() {
         handleFieldChange,
         handleImageChange,
         handleRemoveImage,
+        handleLocationSelect,
         handleSubmit
     } = formActions;
 
@@ -233,6 +234,7 @@ export default function EditEventPage() {
                             onFieldChange={handleFieldChange}
                             onImageChange={handleImageChange}
                             onRemoveImage={handleRemoveImage}
+                            onSelectLocation={handleLocationSelect}
 
                             onSubmit={handleSubmit}
                             onCancel={handleCancel}

@@ -10,6 +10,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../shared/constants/eventRegist
    - create/update event payloads
    - online event location normalization
    - nullable event field normalization
+   - autocomplete UI state exclusion
    - unchanged image omission
    - explicit image clearing for updates
    - multipart form data support
@@ -17,6 +18,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../shared/constants/eventRegist
    Notes:
    - aligned with backend eventDataBuilder
    - event forms use datetime-local values
+   - selectedLocation is UI-only and is not submitted
    - online events always use null location
    - create payloads omit null optional fields
    - update payloads preserve explicit null field clearing

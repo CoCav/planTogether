@@ -6,12 +6,14 @@ import { EVENT_STATUS } from "../../../features/shared/constants/eventStatus";
 
    Handles:
    - event object generation
+   - event geolocation test data
    - paginated event payload generation
    - event form data generation
 
    Notes:
    - shared across frontend unit and component tests
    - accepts overrides for flexible scenarios
+   - default in-person events include persisted location metadata
 ================================================== */
 
 /* =============================
@@ -28,7 +30,11 @@ export const createEvent = (overrides = {}) => ({
     type: "Meetup",
 
     mode: EVENT_MODES.IN_PERSON,
+
     location: "Montreal",
+    locationLabel: "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada",
+    latitude: 46.8176,
+    longitude: -71.2004,
 
     startDateTime: "2026-12-20T10:00:00.000Z",
     endDateTime: "2026-12-20T12:00:00.000Z",

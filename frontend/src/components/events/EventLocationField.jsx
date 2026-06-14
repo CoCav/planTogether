@@ -2,7 +2,7 @@ import Input from "../ui/Input";
 
 import useLocationAutocomplete from "../../features/events/hooks/form/useLocationAutocomplete";
 
-import { formatLocationSuggestionLabel } from "../../utils/formatters";
+import { formatLocationInlineLabel } from "../../utils/formatters";
 
 /* ==================================================
    EVENT LOCATION FIELD
@@ -141,7 +141,7 @@ export default function EventLocationField({
                                     selectSuggestion(suggestion);
                                 }}
                             >
-                                {formatLocationSuggestionLabel(suggestion.label)}
+                                {formatLocationInlineLabel(suggestion.label)}
                             </button>
                         );
                     })}

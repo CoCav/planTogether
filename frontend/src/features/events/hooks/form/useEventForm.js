@@ -5,7 +5,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../shared/constants/eventReg
 
 import { isOnlineEventForm, shouldShowCustomDeadline } from "../../form/eventFormConfig";
 
-import { formatLocationSuggestionLabel } from "../../../../utils/formatters";
+import { formatLocationInlineLabel } from "../../../../utils/formatters";
 
 import { validateEventForm } from "../../form/eventValidation";
 
@@ -155,7 +155,9 @@ export default function useEventForm({
     const handleLocationSelect = (location) => {
         setValues((prev) => ({
             ...prev,
-            location: formatLocationSuggestionLabel(location.label),
+
+            // Store a readable inline provider label inside the form state
+            location: formatLocationInlineLabel(location.label),
             selectedLocation: location
         }));
 

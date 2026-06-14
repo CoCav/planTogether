@@ -23,6 +23,57 @@
 }
 
 /* =========================================
+   POPUP
+========================================= */
+
+.event-location-popup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+
+    min-width: 180px;
+    max-width: 220px;
+}
+
+.event-location-popup-title {
+    margin: 0;
+    padding-bottom: var(--space-2);
+
+    color: var(--color-primary);
+
+    border-bottom: 1px solid var(--color-border);
+
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.event-location-popup-address {
+    margin: 0;
+
+    color: var(--color-text);
+
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    line-height: 1.45;
+
+    white-space: pre-line;
+}
+
+.event-location-map .leaflet-popup-content {
+    width: auto !important;
+    margin: var(--space-3);
+}
+
+.event-location-map .leaflet-popup-content p {
+    margin: 0;
+}
+
+.event-location-map .leaflet-popup-content-wrapper {
+    border-radius: var(--radius-md);
+}
+
+/* =========================================
    RESPONSIVE
 ========================================= */
 

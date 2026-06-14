@@ -7,7 +7,8 @@
    - event date ranges
    - count labels
    - verb agreement
-   - location suggestion labels
+   - inline location labels
+   - multi-line location labels
 ================================================== */
 
 /* =============================
@@ -63,19 +64,34 @@ export const formatBe = (count) => {
    LOCATION HELPERS
 ============================= */
 
-// Formats provider location labels for autocomplete display
-export const formatLocationSuggestionLabel = (label = "") => {
+// Extracts useful location parts from a provider label
+const getLocationDisplayParts = (label = "") => {
     const parts = String(label)
         .split(",")
         .map((part) => part.trim())
         .filter(Boolean);
 
     if (parts.length <= 3) {
-        return parts.join(", ");
+        return parts;
     }
 
+    const placeName = parts[0];
+    const streetOrArea = parts[1];
+    const lastParts = parts.slice(-3).join(", ");
+
     return [
-        parts[0],
-        `${parts[parts.length - 2]}, ${parts[parts.length - 1]}`
-    ].join(" • ");
+        placeName,
+        streetOrArea,
+        lastParts
+    ].filter(Boolean);
+};
+
+// Formats provider location labels for multi-line display
+export const formatLocationDisplayLabel = (label = "") => {
+    return getLocationDisplayParts(label).join("\n");
+};
+
+// Formats provider location labels for inline display
+export const formatLocationInlineLabel = (label = "") => {
+    return getLocationDisplayParts(label).join(", ");
 };

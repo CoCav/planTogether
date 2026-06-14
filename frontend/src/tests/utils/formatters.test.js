@@ -5,7 +5,8 @@ import {
     formatCount,
     formatDate,
     formatEventDateRange,
-    formatLocationSuggestionLabel,
+    formatLocationDisplayLabel,
+    formatLocationInlineLabel,
     formatTime
 } from "../../utils/formatters";
 
@@ -19,7 +20,8 @@ import {
    - event date range formatting
    - count labels
    - verb agreement
-   - location suggestion label formatting
+   - inline location label formatting
+   - multi-line location label formatting
 ================================================== */
 
 describe("formatters", () => {
@@ -94,19 +96,39 @@ describe("formatters", () => {
        LOCATION HELPERS
     ============================= */
 
-    it("should keep short location labels unchanged", () => {
-        expect(formatLocationSuggestionLabel("Central Park, New York, USA")).toBe("Central Park, New York, USA");
+    it("should format short location labels inline", () => {
+        expect(formatLocationInlineLabel("Central Park, New York, USA")).toBe("Central Park, New York, USA");
     });
 
-    it("should simplify long provider location labels", () => {
-        expect(formatLocationSuggestionLabel("Central Park, Manhattan, New York, USA")).toBe("Central Park • New York, USA");
+    it("should format long provider location labels inline", () => {
+        expect(formatLocationInlineLabel(
+            "Agora du Vieux-Port, Rue de Quercy, Vieux-Québec, Québec, G1K 4B9, Canada"
+        )).toBe("Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada");
     });
 
-    it("should trim empty location label parts", () => {
-        expect(formatLocationSuggestionLabel("Central Park, , New York, USA")).toBe("Central Park, New York, USA");
+    it("should trim empty location label parts inline", () => {
+        expect(formatLocationInlineLabel("Central Park, , New York, USA")).toBe("Central Park, New York, USA");
     });
 
-    it("should return empty string for missing location label", () => {
-        expect(formatLocationSuggestionLabel()).toBe("");
+    it("should return empty string for missing inline location label", () => {
+        expect(formatLocationInlineLabel()).toBe("");
+    });
+
+    it("should format short location labels as multi-line display", () => {
+        expect(formatLocationDisplayLabel("Central Park, New York, USA")).toBe("Central Park\nNew York\nUSA");
+    });
+
+    it("should format long provider location labels as multi-line display", () => {
+        expect(formatLocationDisplayLabel(
+            "Agora du Vieux-Port, Rue de Quercy, Vieux-Québec, Québec, G1K 4B9, Canada"
+        )).toBe("Agora du Vieux-Port\nRue de Quercy\nQuébec, G1K 4B9, Canada");
+    });
+
+    it("should trim empty location label parts for multi-line display", () => {
+        expect(formatLocationDisplayLabel("Central Park, , New York, USA")).toBe("Central Park\nNew York\nUSA");
+    });
+
+    it("should return empty string for missing multi-line location label", () => {
+        expect(formatLocationDisplayLabel()).toBe("");
     });
 });

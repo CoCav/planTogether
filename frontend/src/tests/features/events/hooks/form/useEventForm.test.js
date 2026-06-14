@@ -17,7 +17,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../../../features/shared/con
    - selected location state
    - dependent field resets
    - online mode location reset
-   - selected location reset on typing
+   - formatted selected location state
    - image changes
    - image removal
    - form helpers
@@ -285,19 +285,19 @@ describe("useEventForm", () => {
         expect(result.current.formState.values.registrationDeadlineCustom).toBe("");
     });
 
-    /* =============================
+    /* =============================v
        LOCATION SELECTION
     ============================= */
 
-    it("should store selected location when autocomplete suggestion is selected", () => {
+    it("should store formatted inline location when autocomplete suggestion is selected", () => {
         const { result } = setupHook();
 
         const selectedLocation = {
-            label: "Central Park, Manhattan, New York, USA",
+            label: "Central Park, New York, USA",
             latitude: 40.785091,
             longitude: -73.968285,
             provider: "nominatim"
-        };
+        };;
 
         act(() => {
             result.current.formActions.handleLocationSelect(selectedLocation);
@@ -305,9 +305,7 @@ describe("useEventForm", () => {
 
         expect(result.current.formState.values.selectedLocation).toBe(selectedLocation);
 
-        expect(result.current.formState.values.location).toContain("Central Park");
-        expect(result.current.formState.values.location).toContain("New York, USA");
-        expect(result.current.formState.values.location).toContain("•");
+        expect(result.current.formState.values.location).toBe("Central Park, New York, USA");
     });
 
     it("should clear location error when autocomplete suggestion is selected", () => {

@@ -2,6 +2,8 @@ import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 
 import useEventMapLocation from "../../features/events/hooks/form/useEventMapLocation";
 
+import { formatLocationDisplayLabel } from "../../utils/formatters";
+
 import EmptyState from "../ui/EmptyState";
 import LoadingState from "../ui/LoadingState";
 
@@ -17,13 +19,18 @@ import LoadingState from "../ui/LoadingState";
    - failed geocoding state
    - OpenStreetMap tile rendering
    - marker and popup display
+   - formatted popup title and address display
 
    Notes:
    - selectedLocation avoids an extra API search after autocomplete selection
    - location text fallback keeps the component reusable outside event forms
 ================================================== */
 
-export default function EventLocationMap({ location, selectedLocation = null }) {
+export default function EventLocationMap({
+    eventTitle = "",
+    location,
+    selectedLocation = null
+}) {
 
     /* =============================
        LOCATION DATA
@@ -110,7 +117,15 @@ export default function EventLocationMap({ location, selectedLocation = null }) 
 
                 <Marker position={[coordinates.lat, coordinates.lng]}>
                     <Popup>
-                        {coordinates.label}
+                        <div className="event-location-popup">
+                            <p className="event-location-popup-title">
+                                {eventTitle}
+                            </p>
+
+                            <p className="event-location-popup-address">
+                                {formatLocationDisplayLabel(coordinates.label)}
+                            </p>
+                        </div>
                     </Popup>
                 </Marker>
             </MapContainer>

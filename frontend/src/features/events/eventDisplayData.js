@@ -1,4 +1,9 @@
-import { formatCount, formatEventDateRange, formatTime } from "../../utils/formatters";
+import {
+    formatCount,
+    formatEventDateRange,
+    formatLocationInlineLabel,
+    formatTime
+} from "../../utils/formatters";
 
 import { EVENT_MODES, getEventModeLabel } from "../shared/constants/eventModes";
 
@@ -9,15 +14,27 @@ import { EVENT_MODES, getEventModeLabel } from "../shared/constants/eventModes";
    Handles:
    - fallback text values
    - formatted date and time
-   - display mode and location
-   - participant display labels
-   - capacity display
+   - inline location display formatting
+   - selected location map data
+   - online/in-person mode display
+   - participant and capacity display
    - registration deadline display
    - event status display data
+
+   Notes:
+   - selectedLocation is used by map components
+   - location labels support provider-formatted addresses
 ================================================== */
 
 export function getEventDisplayData(event) {
     const isOnline = event.mode === EVENT_MODES.ONLINE;
+
+    // Prefer persisted provider label before fallback event location
+    const locationLabel =
+        event.locationLabel ||
+        event.selectedLocation?.label ||
+        event.location ||
+        "N/A";
 
     return {
         title: event.title || "No title provided.",
@@ -36,11 +53,12 @@ export function getEventDisplayData(event) {
 
         location: isOnline
             ? getEventModeLabel(EVENT_MODES.ONLINE)
-            : event.location || "N/A",
+            : formatLocationInlineLabel(locationLabel),
 
+        // Build map-ready location data only for physical events
         selectedLocation: !isOnline && event.latitude && event.longitude
             ? {
-                label: event.locationLabel || event.location,
+                label: locationLabel,
                 latitude: event.latitude,
                 longitude: event.longitude,
                 provider: "nominatim"

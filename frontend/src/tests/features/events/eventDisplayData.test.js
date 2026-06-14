@@ -14,18 +14,16 @@ import { createEvent } from "../../factories/events/eventFactory";
    Handles:
    - fallback display values
    - formatted date and time
-   - display mode labels
-   - display mode and location handling
-   - selected location display data
-   - capacity display
+   - online and in-person display modes
+   - inline location display formatting
+   - selected location map data
+   - participant and capacity display
    - registration deadline display
-   - event status display data
    - nullable display fields
 
    Notes:
    - focuses on display-ready transformation logic
-   - uses shared event test factory
-   - selectedLocation is used by event map rendering
+   - selectedLocation supports event map rendering
 ================================================== */
 
 describe("getEventDisplayData", () => {
@@ -122,7 +120,8 @@ describe("getEventDisplayData", () => {
     it("should use event location for in-person events", () => {
         const data = getDisplayData({
             mode: EVENT_MODES.IN_PERSON,
-            location: "Montreal"
+            location: "Montreal",
+            locationLabel: ""
         });
 
         expect(data.location).toBe("Montreal");
@@ -131,7 +130,9 @@ describe("getEventDisplayData", () => {
     it("should use fallback location when missing", () => {
         const data = getDisplayData({
             mode: EVENT_MODES.IN_PERSON,
-            location: ""
+            location: "",
+            locationLabel: "",
+            selectedLocation: null
         });
 
         expect(data.location).toBe("N/A");
@@ -192,6 +193,33 @@ describe("getEventDisplayData", () => {
         });
 
         expect(data.selectedLocation).toBeNull();
+    });
+
+    it("should prefer persisted location label for display location", () => {
+        const data = getDisplayData({
+            mode: EVENT_MODES.IN_PERSON,
+            location: "Montreal",
+            locationLabel:
+                "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"
+        });
+
+        expect(data.location).toBe("Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada");
+    });
+
+    it("should fallback to selected location label when persisted label is missing", () => {
+        const data = getDisplayData({
+            mode: EVENT_MODES.IN_PERSON,
+            location: "Montreal",
+
+            locationLabel: "",
+
+            selectedLocation: {
+                label:
+                    "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"
+            }
+        });
+
+        expect(data.location).toBe("Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada");
     });
 
     /* =============================

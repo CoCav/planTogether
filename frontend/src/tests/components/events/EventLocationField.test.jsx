@@ -14,7 +14,7 @@ import useLocationAutocomplete from "../../../features/events/hooks/form/useLoca
    - autocomplete dropdown rendering
    - loading state rendering
    - error state rendering
-   - suggestion rendering
+   - formatted location suggestion rendering
    - highlighted suggestion styling
    - suggestion selection
    - accessible combobox attributes
@@ -201,16 +201,16 @@ describe("EventLocationField", () => {
         expect(screen.getByText("No matching location found")).toBeInTheDocument();
     });
 
-    it("should render formatted suggestions", () => {
+    it("should render formatted inline location suggestions", () => {
         renderComponent({
             hookState: {
                 autocompleteState: {
                     isOpen: true,
                     suggestions: [
                         {
-                            label: "Musée d'art contemporain de Montréal, Ville-Marie, Montréal, Québec, Canada",
-                            latitude: 45.5076,
-                            longitude: -73.5661,
+                            label: "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada",
+                            latitude: 46.8176,
+                            longitude: -71.2004,
                             provider: "nominatim"
                         }
                     ]
@@ -218,11 +218,9 @@ describe("EventLocationField", () => {
             }
         });
 
-        expect(
-            screen.getByRole("option", {
-                name: "Musée d'art contemporain de Montréal • Québec, Canada"
-            })
-        ).toBeInTheDocument();
+        expect(screen.getByRole("option", {
+            name: "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"
+        })).toBeInTheDocument();
     });
 
     it("should mark highlighted suggestion as selected", () => {

@@ -15,7 +15,9 @@ import useEventMapLocation from "../../../features/events/hooks/form/useEventMap
    - failed geocoding empty state
    - fallback location search rendering
    - selected location rendering without search
-   - marker popup location display
+   - marker and popup rendering
+   - event title popup display
+   - formatted multi-line address display
 
    Notes:
    - mocks useEventMapLocation to focus on component rendering
@@ -141,11 +143,16 @@ describe("EventLocationMap", () => {
             coordinates: {
                 lat: 45.5017,
                 lng: -73.5673,
-                label: "Montréal, Québec, Canada"
+                label: "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"
             }
         });
 
-        render(<EventLocationMap location="Montréal" />);
+        render(
+            <EventLocationMap
+                eventTitle="Rock Concert Night!"
+                location="Agora du Vieux-Port"
+            />
+        );
 
         expect(screen.getByTestId("map-container")).toHaveAttribute(
             "data-center",
@@ -156,17 +163,14 @@ describe("EventLocationMap", () => {
         expect(screen.getByTestId("map-container")).toHaveAttribute("data-scroll-wheel-zoom", "false");
         expect(screen.getByTestId("map-container")).toHaveClass("event-location-map-canvas");
 
-        expect(screen.getByTestId("tile-layer")).toHaveAttribute(
-            "data-url",
-            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        );
+        expect(screen.getByTestId("tile-layer")).toHaveAttribute("data-url", "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
 
-        expect(screen.getByTestId("map-marker")).toHaveAttribute(
-            "data-position",
-            JSON.stringify([45.5017, -73.5673])
-        );
+        expect(screen.getByTestId("map-marker")).toHaveAttribute("data-position", JSON.stringify([45.5017, -73.5673]));
 
-        expect(screen.getByTestId("map-popup")).toHaveTextContent("Montréal, Québec, Canada");
+        expect(screen.getByTestId("map-popup")).toHaveTextContent("Rock Concert Night!");
+        expect(screen.getByTestId("map-popup")).toHaveTextContent("Agora du Vieux-Port");
+        expect(screen.getByTestId("map-popup")).toHaveTextContent("Rue de Quercy");
+        expect(screen.getByTestId("map-popup")).toHaveTextContent("Québec, G1K 4B9, Canada");
     });
 
     it("should call useEventMapLocation with the provided location", () => {
@@ -189,11 +193,12 @@ describe("EventLocationMap", () => {
         render(
             <EventLocationMap
                 selectedLocation={{
-                    label: "Musée d'art contemporain de Montréal",
-                    latitude: 45.5076,
-                    longitude: -73.5661,
+                    label: "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada",
+                    latitude: 46.8176,
+                    longitude: -71.2004,
                     provider: "nominatim"
                 }}
+                eventTitle="Rock Concert Night!"
             />
         );
 
@@ -201,15 +206,18 @@ describe("EventLocationMap", () => {
 
         expect(screen.getByTestId("map-container")).toHaveAttribute(
             "data-center",
-            JSON.stringify([45.5076, -73.5661])
+            JSON.stringify([46.8176, -71.2004]
+
+            )
         );
 
         expect(screen.getByTestId("map-marker")).toHaveAttribute(
             "data-position",
-            JSON.stringify([45.5076, -73.5661])
+            JSON.stringify([46.8176, -71.2004])
         );
 
-        expect(screen.getByTestId("map-popup")).toHaveTextContent("Musée d'art contemporain de Montréal");
+        expect(screen.getByTestId("map-popup")).toHaveTextContent("Rock Concert Night!");
+        expect(screen.getByTestId("map-popup")).toHaveTextContent("Rue de Quercy");
     });
 
     it("should ignore loading state when selected location is provided", () => {

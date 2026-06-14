@@ -29,6 +29,8 @@ import {
    - accessible event image description
    - physical event location map display
    - selected location coordinate map hydration
+   - formatted inline location display
+   - formatted provider location labels
    - membership section and ownership transfer integration
    - event action integration
    - event status badge display
@@ -66,7 +68,10 @@ const mockEvent = createEvent({
     description: "Test description",
     image: "/uploads/events/event-test.png",
     maxParticipants: null,
-    status: EVENT_STATUS.UPCOMING
+    status: EVENT_STATUS.UPCOMING,
+
+    location: "Agora du Vieux-Port",
+    locationLabel: "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"
 });
 
 /* =============================
@@ -399,7 +404,9 @@ describe("EventDetailsPage", () => {
 
         expect(screen.getByTestId("event-details-summary")).toBeInTheDocument();
         expect(screen.getByText("In person")).toBeInTheDocument();
-        expect(screen.getByText("Montreal")).toBeInTheDocument();
+        expect(screen.getByText(
+            "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"
+        )).toBeInTheDocument();
     });
 
     it("should display event category tags", async () => {
@@ -429,6 +436,23 @@ describe("EventDetailsPage", () => {
         const summary = screen.getByTestId("event-details-summary");
 
         expect(summary).toBeInTheDocument();
+    });
+
+    it("should display formatted inline location label", async () => {
+        setupApi({
+            event: createEvent({
+                ...mockEvent,
+                location: "Agora du Vieux-Port",
+                locationLabel:
+                    "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"
+            })
+        });
+
+        renderPage();
+
+        expect(await screen.findByText(
+            "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"
+        )).toBeInTheDocument();
     });
 
     it("should hide location in summary for online events", async () => {
@@ -465,7 +489,9 @@ describe("EventDetailsPage", () => {
 
         expect(screen.getByText("3 / 10")).toBeInTheDocument();
         expect(screen.getByText("In person")).toBeInTheDocument();
-        expect(screen.getByText("Montreal")).toBeInTheDocument();
+        expect(screen.getByText(
+            "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"
+        )).toBeInTheDocument();
     });
 
     it("should display staff and participant data", async () => {
@@ -624,7 +650,7 @@ describe("EventDetailsPage", () => {
         expect(screen.getByText("View this event on the map.")).toBeInTheDocument();
 
         expect(screen.getByTestId("event-location-map")).toHaveTextContent(
-            "Event map for Montreal"
+            "Event map for Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"
         );
     });
 

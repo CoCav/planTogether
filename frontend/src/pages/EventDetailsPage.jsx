@@ -249,7 +249,6 @@ export default function EventDetailsPage() {
 
     const eventDisplayData = getEventDisplayData(event);
 
-
     /* =============================
        MAIN RENDER
     ============================= */
@@ -382,6 +381,7 @@ export default function EventDetailsPage() {
                                 </div>
 
                                 <EventLocationMap
+                                    eventTitle={eventDisplayData.title}
                                     location={eventDisplayData.location}
                                     selectedLocation={eventDisplayData.selectedLocation}
                                 />

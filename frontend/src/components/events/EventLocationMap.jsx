@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import { Check, Copy, ExternalLink, Navigation } from "lucide-react";
 
 import useEventMapLocation from "../../features/events/hooks/form/useEventMapLocation";
 
-import { formatLocationDisplayLabel } from "../../utils/formatters";
+import { formatLocationDisplayLabel, buildGoogleMapsUrl } from "../../utils/formatters";
 
 import EmptyState from "../ui/EmptyState";
 import LoadingState from "../ui/LoadingState";
@@ -20,6 +22,9 @@ import LoadingState from "../ui/LoadingState";
    - OpenStreetMap tile rendering
    - marker and popup display
    - formatted popup title and address display
+   - Google Maps external link
+   - copy address action
+   - copied feedback state
 
    Notes:
    - selectedLocation avoids an extra API search after autocomplete selection
@@ -31,6 +36,12 @@ export default function EventLocationMap({
     location,
     selectedLocation = null
 }) {
+
+    /* =============================
+       COPY STATE
+    ============================= */
+
+    const [copied, setCopied] = useState(false);
 
     /* =============================
        LOCATION DATA
@@ -118,13 +129,55 @@ export default function EventLocationMap({
                 <Marker position={[coordinates.lat, coordinates.lng]}>
                     <Popup>
                         <div className="event-location-popup">
-                            <p className="event-location-popup-title">
-                                {eventTitle}
-                            </p>
+                            <div className="event-location-popup-header">
+                                <p className="event-location-popup-title">
+                                    {eventTitle}
+                                </p>
 
-                            <p className="event-location-popup-address">
-                                {formatLocationDisplayLabel(coordinates.label)}
-                            </p>
+                                <p className="event-location-popup-address">
+                                    {formatLocationDisplayLabel(coordinates.label)}
+                                </p>
+                            </div>
+
+                            <div className="event-location-popup-actions" role="group" aria-label="Map actions">
+                                <a
+                                    href={buildGoogleMapsUrl(coordinates.lat, coordinates.lng)}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="popup-btn"
+                                    aria-label={`Open ${coordinates.label} in Google Maps (opens new tab)`}
+                                >
+                                    <ExternalLink />
+                                    Open in Google Maps
+                                </a>
+
+                                <a
+                                    href={`https://www.google.com/maps/dir/?api=1&destination=${coordinates.lat},${coordinates.lng}`}
+                                    className="popup-btn secondary"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    aria-label={`Get directions to ${coordinates.label} (opens new tab)`}
+                                >
+                                    <Navigation />
+                                    Get directions
+                                </a>
+
+                                <button
+                                    type="button"
+                                    className="popup-btn secondary"
+                                    aria-live="polite"
+                                    aria-label={copied ? "Address copied to clipboard" : "Copy address to clipboard"}
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(coordinates.label);
+                                        setCopied(true);
+
+                                        setTimeout(() => setCopied(false), 1500);
+                                    }}
+                                >
+                                    {copied ? <Check /> : <Copy />}
+                                    {copied ? "Copied" : "Copy address"}
+                                </button>
+                            </div>
                         </div>
                     </Popup>
                 </Marker>

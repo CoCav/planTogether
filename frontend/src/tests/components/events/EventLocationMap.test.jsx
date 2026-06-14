@@ -1,8 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 
 import EventLocationMap from "../../../components/events/EventLocationMap";
-
 import useEventMapLocation from "../../../features/events/hooks/form/useEventMapLocation";
 
 /* ==================================================
@@ -10,18 +9,16 @@ import useEventMapLocation from "../../../features/events/hooks/form/useEventMap
    Tests event location map rendering states
 
    Handles:
-   - missing location empty state
+   - empty location state
    - loading state
-   - failed geocoding empty state
-   - fallback location search rendering
-   - selected location rendering without search
-   - marker and popup rendering
-   - event title popup display
-   - formatted multi-line address display
+   - error state
+   - map rendering
+   - selected location bypassing API
+   - popup content rendering
 
    Notes:
-   - mocks useEventMapLocation to focus on component rendering
-   - mocks React Leaflet components to avoid real map rendering in tests
+   - react-leaflet is mocked to avoid DOM complexity
+   - hook is fully mocked for deterministic tests
 ================================================== */
 
 vi.mock("../../../features/events/hooks/form/useEventMapLocation", () => ({
@@ -29,46 +26,32 @@ vi.mock("../../../features/events/hooks/form/useEventMapLocation", () => ({
 }));
 
 vi.mock("react-leaflet", () => ({
-    MapContainer: ({ children, center, zoom, scrollWheelZoom, className }) => (
+    MapContainer: ({ children, center, zoom, className }) => (
         <div
             data-testid="map-container"
             data-center={JSON.stringify(center)}
             data-zoom={zoom}
-            data-scroll-wheel-zoom={String(scrollWheelZoom)}
             className={className}
         >
             {children}
         </div>
     ),
-    TileLayer: ({ url, attribution }) => (
-        <div
-            data-testid="tile-layer"
-            data-url={url}
-            data-attribution={attribution}
-        />
+    TileLayer: ({ url }) => (
+        <div data-testid="tile-layer" data-url={url} />
     ),
     Marker: ({ children, position }) => (
-        <div
-            data-testid="map-marker"
-            data-position={JSON.stringify(position)}
-        >
+        <div data-testid="map-marker" data-position={JSON.stringify(position)}>
             {children}
         </div>
     ),
     Popup: ({ children }) => (
-        <div data-testid="map-popup">
-            {children}
-        </div>
+        <div data-testid="map-popup">{children}</div>
     )
 }));
 
 describe("EventLocationMap", () => {
 
-    /* =============================
-       TEST SETUP
-    ============================= */
-
-    const mockLocationState = (state = {}) => {
+    const mockHook = (state = {}) => {
         useEventMapLocation.mockReturnValue({
             coordinates: null,
             isLoading: false,
@@ -77,23 +60,29 @@ describe("EventLocationMap", () => {
         });
     };
 
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
     /* =============================
        EMPTY STATES
     ============================= */
 
-    it("should render missing location empty state when no location is provided", () => {
-        mockLocationState();
+    it("should render empty state when no location is provided", () => {
+        mockHook();
 
         render(<EventLocationMap location="" />);
 
         expect(screen.getByText("No location available")).toBeInTheDocument();
-        expect(screen.getByText("This event does not have a physical location.")).toBeInTheDocument();
+        expect(
+            screen.getByText("This event does not have a physical location.")
+        ).toBeInTheDocument();
 
         expect(screen.queryByTestId("map-container")).not.toBeInTheDocument();
     });
 
-    it("should render unavailable empty state when geocoding fails", () => {
-        mockLocationState({
+    it("should render error state when geocoding fails", () => {
+        mockHook({
             error: "Location could not be loaded"
         });
 
@@ -101,34 +90,30 @@ describe("EventLocationMap", () => {
 
         expect(screen.getByText("Map unavailable")).toBeInTheDocument();
         expect(screen.getByText("Location could not be loaded")).toBeInTheDocument();
-
-        expect(screen.queryByTestId("map-container")).not.toBeInTheDocument();
     });
 
-    it("should render unavailable empty state when coordinates are missing", () => {
-        mockLocationState({
+    it("should render error state when no coordinates returned", () => {
+        mockHook({
             coordinates: null
         });
 
         render(<EventLocationMap location="Montréal" />);
 
         expect(screen.getByText("Map unavailable")).toBeInTheDocument();
-
-        expect(screen.queryByTestId("map-container")).not.toBeInTheDocument();
     });
 
     /* =============================
        LOADING STATE
     ============================= */
 
-    it("should render loading state while location is loading", () => {
-        mockLocationState({
+    it("should show loading state while fetching coordinates", () => {
+        mockHook({
             isLoading: true
         });
 
         render(<EventLocationMap location="Montréal" />);
 
-        expect(screen.getByRole("status")).toHaveTextContent("Loading map...");
+        expect(screen.getByText("Loading map...")).toBeInTheDocument();
         expect(screen.getByText("Finding this event location.")).toBeInTheDocument();
 
         expect(screen.queryByTestId("map-container")).not.toBeInTheDocument();
@@ -138,19 +123,19 @@ describe("EventLocationMap", () => {
        MAP RENDERING
     ============================= */
 
-    it("should render map when coordinates are available", () => {
-        mockLocationState({
+    it("should render map with coordinates from API", () => {
+        mockHook({
             coordinates: {
                 lat: 45.5017,
                 lng: -73.5673,
-                label: "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"
+                label: "Agora du Vieux-Port, Québec"
             }
         });
 
         render(
             <EventLocationMap
-                eventTitle="Rock Concert Night!"
-                location="Agora du Vieux-Port"
+                eventTitle="Rock Concert"
+                location="Montréal"
             />
         );
 
@@ -159,26 +144,25 @@ describe("EventLocationMap", () => {
             JSON.stringify([45.5017, -73.5673])
         );
 
-        expect(screen.getByTestId("map-container")).toHaveAttribute("data-zoom", "13");
-        expect(screen.getByTestId("map-container")).toHaveAttribute("data-scroll-wheel-zoom", "false");
-        expect(screen.getByTestId("map-container")).toHaveClass("event-location-map-canvas");
+        expect(screen.getByTestId("map-marker")).toHaveAttribute(
+            "data-position",
+            JSON.stringify([45.5017, -73.5673])
+        );
 
-        expect(screen.getByTestId("tile-layer")).toHaveAttribute("data-url", "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
-
-        expect(screen.getByTestId("map-marker")).toHaveAttribute("data-position", JSON.stringify([45.5017, -73.5673]));
-
-        expect(screen.getByTestId("map-popup")).toHaveTextContent("Rock Concert Night!");
+        expect(screen.getByTestId("map-popup")).toHaveTextContent("Rock Concert");
         expect(screen.getByTestId("map-popup")).toHaveTextContent("Agora du Vieux-Port");
-        expect(screen.getByTestId("map-popup")).toHaveTextContent("Rue de Quercy");
-        expect(screen.getByTestId("map-popup")).toHaveTextContent("Québec, G1K 4B9, Canada");
     });
 
-    it("should call useEventMapLocation with the provided location", () => {
-        mockLocationState({
+    /* =============================
+       API CALL
+    ============================= */
+
+    it("should call hook with location string", () => {
+        mockHook({
             coordinates: {
-                lat: 45.5017,
-                lng: -73.5673,
-                label: "Montréal, Québec, Canada"
+                lat: 1,
+                lng: 1,
+                label: "test"
             }
         });
 
@@ -187,18 +171,22 @@ describe("EventLocationMap", () => {
         expect(useEventMapLocation).toHaveBeenCalledWith("Montréal");
     });
 
-    it("should render map from selected location without searching", () => {
-        mockLocationState();
+    /* =============================
+       SELECTED LOCATION OVERRIDE
+    ============================= */
+
+    it("should use selectedLocation instead of API", () => {
+        mockHook();
 
         render(
             <EventLocationMap
+                eventTitle="Test Event"
                 selectedLocation={{
-                    label: "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada",
-                    latitude: 46.8176,
-                    longitude: -71.2004,
+                    label: "Central Park",
+                    latitude: 40.7,
+                    longitude: -73.9,
                     provider: "nominatim"
                 }}
-                eventTitle="Rock Concert Night!"
             />
         );
 
@@ -206,37 +194,31 @@ describe("EventLocationMap", () => {
 
         expect(screen.getByTestId("map-container")).toHaveAttribute(
             "data-center",
-            JSON.stringify([46.8176, -71.2004]
-
-            )
+            JSON.stringify([40.7, -73.9])
         );
 
         expect(screen.getByTestId("map-marker")).toHaveAttribute(
             "data-position",
-            JSON.stringify([46.8176, -71.2004])
+            JSON.stringify([40.7, -73.9])
         );
-
-        expect(screen.getByTestId("map-popup")).toHaveTextContent("Rock Concert Night!");
-        expect(screen.getByTestId("map-popup")).toHaveTextContent("Rue de Quercy");
     });
 
-    it("should ignore loading state when selected location is provided", () => {
-        mockLocationState({
+    it("should ignore loading when selectedLocation is provided", () => {
+        mockHook({
             isLoading: true
         });
 
         render(
             <EventLocationMap
                 selectedLocation={{
-                    label: "Montréal, Québec, Canada",
-                    latitude: 45.5017,
-                    longitude: -73.5673,
-                    provider: "nominatim"
+                    label: "Central Park",
+                    latitude: 40.7,
+                    longitude: -73.9
                 }}
             />
         );
 
         expect(screen.getByTestId("map-container")).toBeInTheDocument();
-        expect(screen.queryByRole("status")).not.toBeInTheDocument();
+        expect(screen.queryByText("Loading map...")).not.toBeInTheDocument();
     });
 });

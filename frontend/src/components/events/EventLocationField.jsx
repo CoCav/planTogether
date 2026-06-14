@@ -1,8 +1,10 @@
-import Input from "../ui/Input";
+import { MapPin } from "lucide-react";
 
 import useLocationAutocomplete from "../../features/events/hooks/form/useLocationAutocomplete";
 
 import { formatLocationInlineLabel } from "../../utils/formatters";
+
+import Input from "../ui/Input";
 
 /* ==================================================
    EVENT LOCATION FIELD
@@ -141,7 +143,11 @@ export default function EventLocationField({
                                     selectSuggestion(suggestion);
                                 }}
                             >
-                                {formatLocationInlineLabel(suggestion.label)}
+                                <MapPin aria-hidden="true" />
+
+                                <span>
+                                    {formatLocationInlineLabel(suggestion.label)}
+                                </span>
                             </button>
                         );
                     })}

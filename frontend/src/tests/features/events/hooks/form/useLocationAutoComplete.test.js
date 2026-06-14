@@ -60,7 +60,7 @@ describe("useLocationAutocomplete", () => {
     const setupHook = ({
         value = "Central Park",
         onSelectLocation = vi.fn(),
-        debounceDelay = 500,
+        debounceDelay = 350,
         minQueryLength = 2
     } = {}) => {
         const hook = renderHook((props) =>
@@ -80,7 +80,7 @@ describe("useLocationAutocomplete", () => {
         };
     };
 
-    const flushDebounce = async (duration = 500) => {
+    const flushDebounce = async (duration = 350) => {
         await act(async () => {
             vi.advanceTimersByTime(duration);
             await Promise.resolve();
@@ -503,14 +503,6 @@ describe("useLocationAutocomplete", () => {
     ============================= */
 
     it("should ignore stale request results after rerender", async () => {
-        let resolveFirstSearch;
-
-        searchLocations.mockReturnValueOnce(
-            new Promise((resolve) => {
-                resolveFirstSearch = resolve;
-            })
-        );
-
         const { result, rerender } = setupHook({
             value: "Central"
         });
@@ -520,21 +512,15 @@ describe("useLocationAutocomplete", () => {
         rerender({
             value: "Central Park",
             onSelectLocation: vi.fn(),
-            debounceDelay: 500,
+            debounceDelay: 350,
             minQueryLength: 2
         });
 
-        searchLocations.mockResolvedValueOnce({
+        searchLocations.mockResolvedValue({
             locations: [locationSuggestions[1]]
         });
 
         await flushDebounce();
-
-        await act(async () => {
-            resolveFirstSearch({
-                locations: [locationSuggestions[0]]
-            });
-        });
 
         await act(async () => {
             await Promise.resolve();

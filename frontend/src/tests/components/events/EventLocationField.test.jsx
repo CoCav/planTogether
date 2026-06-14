@@ -2,7 +2,6 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import EventLocationField from "../../../components/events/EventLocationField";
-
 import useLocationAutocomplete from "../../../features/events/hooks/form/useLocationAutocomplete";
 
 /* ==================================================
@@ -17,12 +16,12 @@ import useLocationAutocomplete from "../../../features/events/hooks/form/useLoca
    - formatted location suggestion rendering
    - highlighted suggestion styling
    - suggestion selection
-   - accessible combobox attributes
+   - keyboard navigation
+   - accessibility attributes
 
-   Ensures:
-   - location autocomplete UI stays predictable
-   - selected suggestions are delegated to the autocomplete hook
-   - provider labels are formatted before display
+   Notes:
+   - mocks autocomplete hook
+   - ensures UI stays predictable and accessible
 ================================================== */
 
 vi.mock("../../../features/events/hooks/form/useLocationAutocomplete", () => ({
@@ -30,6 +29,7 @@ vi.mock("../../../features/events/hooks/form/useLocationAutocomplete", () => ({
 }));
 
 describe("EventLocationField", () => {
+
     const defaultHookState = {
         autocompleteState: {
             suggestions: [],
@@ -98,7 +98,6 @@ describe("EventLocationField", () => {
 
     it("should render location input", () => {
         renderComponent();
-
         expect(screen.getByRole("combobox")).toBeInTheDocument();
     });
 
@@ -129,9 +128,7 @@ describe("EventLocationField", () => {
 
     it("should call hook with value and onSelectLocation", () => {
         renderComponent({
-            props: {
-                value: "Montreal"
-            }
+            props: { value: "Montreal" }
         });
 
         expect(useLocationAutocomplete).toHaveBeenCalledWith({
@@ -144,10 +141,7 @@ describe("EventLocationField", () => {
         renderComponent();
 
         fireEvent.change(screen.getByRole("combobox"), {
-            target: {
-                name: "location",
-                value: "Montreal"
-            }
+            target: { name: "location", value: "Montreal" }
         });
 
         expect(defaultProps.onChange).toHaveBeenCalledTimes(1);
@@ -166,6 +160,24 @@ describe("EventLocationField", () => {
 
         fireEvent.keyDown(screen.getByRole("combobox"), {
             key: "ArrowDown"
+        });
+
+        expect(handleKeyDown).toHaveBeenCalledTimes(1);
+    });
+
+    it("should call handleKeyDown for Escape key", () => {
+        const handleKeyDown = vi.fn();
+
+        renderComponent({
+            hookState: {
+                autocompleteActions: {
+                    handleKeyDown
+                }
+            }
+        });
+
+        fireEvent.keyDown(screen.getByRole("combobox"), {
+            key: "Escape"
         });
 
         expect(handleKeyDown).toHaveBeenCalledTimes(1);
@@ -218,9 +230,7 @@ describe("EventLocationField", () => {
             }
         });
 
-        expect(screen.getByRole("option", {
-            name: "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"
-        })).toBeInTheDocument();
+        expect(screen.getByRole("option")).toHaveTextContent("Agora du Vieux-Port");
     });
 
     it("should mark highlighted suggestion as selected", () => {
@@ -272,5 +282,15 @@ describe("EventLocationField", () => {
         fireEvent.mouseDown(screen.getByRole("option"));
 
         expect(selectSuggestion).toHaveBeenCalledWith(suggestion);
+    });
+
+    /* =============================
+       EDGE / UX STATES
+    ============================= */
+
+    it("should not render dropdown when closed", () => {
+        renderComponent();
+
+        expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
     });
 });

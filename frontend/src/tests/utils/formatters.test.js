@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+    buildGoogleMapsUrl,
     formatBe,
     formatCount,
     formatDate,
@@ -22,6 +23,11 @@ import {
    - verb agreement
    - inline location label formatting
    - multi-line location label formatting
+   - Google Maps URL generation
+
+   Notes:
+   - focuses on pure display helpers
+   - date and time assertions avoid timezone-specific values
 ================================================== */
 
 describe("formatters", () => {
@@ -31,7 +37,7 @@ describe("formatters", () => {
     ============================= */
 
     it("should format a valid date", () => {
-        expect(formatDate("2026-12-20T10:00:00.000Z")).toBe("20/12/2026");
+        expect(formatDate("2026-12-20T10:00:00.000Z")).toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
     });
 
     it("should return fallback when date is missing", () => {
@@ -39,7 +45,9 @@ describe("formatters", () => {
     });
 
     it("should format a valid time", () => {
-        expect(formatTime("2026-12-20T10:00:00.000Z")).toMatch(/\d{2}:\d{2}/);
+        expect(formatTime("2026-12-20T10:00:00.000Z")).toMatch(
+            /^([01]\d|2[0-3]):[0-5]\d$/
+        );
     });
 
     it("should return an empty string when time is missing", () => {
@@ -50,25 +58,25 @@ describe("formatters", () => {
        EVENT DATE RANGE
     ============================= */
 
-    it("should format start date only when end date is missing", () => {
+    it("should return fallback when start date is missing", () => {
         expect(formatEventDateRange(
-            "2026-12-20T10:00:00.000Z",
-            null
-        )).toBe("20/12/2026");
+            null,
+            "2026-12-22T12:00:00.000Z"
+        )).toBe("No date");
     });
 
     it("should format a single-day event date range", () => {
         expect(formatEventDateRange(
             "2026-12-20T10:00:00.000Z",
             "2026-12-20T12:00:00.000Z"
-        )).toBe("20/12/2026");
+        )).toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
     });
 
     it("should format a multi-day event date range", () => {
         expect(formatEventDateRange(
             "2026-12-20T10:00:00.000Z",
             "2026-12-22T12:00:00.000Z"
-        )).toBe("20/12/2026 → 22/12/2026");
+        )).toMatch(/^\d{2}\/\d{2}\/\d{4} → \d{2}\/\d{2}\/\d{4}$/);
     });
 
     /* =============================
@@ -83,6 +91,10 @@ describe("formatters", () => {
         expect(formatCount(2, "participant")).toBe("2 participants");
     });
 
+    it("should handle zero count", () => {
+        expect(formatCount(0, "participant")).toBe("0 participants");
+    });
+
     it("should format custom plural count labels", () => {
         expect(formatCount(2, "person", "people")).toBe("2 people");
     });
@@ -92,12 +104,18 @@ describe("formatters", () => {
         expect(formatBe(2)).toBe("are");
     });
 
+    it("should default to plural verb for zero", () => {
+        expect(formatBe(0)).toBe("are");
+    });
+
     /* =============================
        LOCATION HELPERS
     ============================= */
 
     it("should format short location labels inline", () => {
-        expect(formatLocationInlineLabel("Central Park, New York, USA")).toBe("Central Park, New York, USA");
+        expect(formatLocationInlineLabel(
+            "Central Park, New York, USA"
+        )).toBe("Central Park, New York, USA");
     });
 
     it("should format long provider location labels inline", () => {
@@ -107,15 +125,29 @@ describe("formatters", () => {
     });
 
     it("should trim empty location label parts inline", () => {
-        expect(formatLocationInlineLabel("Central Park, , New York, USA")).toBe("Central Park, New York, USA");
+        expect(formatLocationInlineLabel(
+            "Central Park, , New York, USA"
+        )).toBe("Central Park, New York, USA");
     });
 
     it("should return empty string for missing inline location label", () => {
         expect(formatLocationInlineLabel()).toBe("");
     });
 
+    it("should handle null location safely", () => {
+        expect(formatLocationInlineLabel(null)).toBe("");
+        expect(formatLocationDisplayLabel(null)).toBe("");
+    });
+
+    it("should handle malformed location input safely", () => {
+        expect(formatLocationInlineLabel(",,,")).toBe("");
+        expect(formatLocationDisplayLabel(",,,")).toBe("");
+    });
+
     it("should format short location labels as multi-line display", () => {
-        expect(formatLocationDisplayLabel("Central Park, New York, USA")).toBe("Central Park\nNew York\nUSA");
+        expect(formatLocationDisplayLabel(
+            "Central Park, New York, USA"
+        )).toBe("Central Park\nNew York\nUSA");
     });
 
     it("should format long provider location labels as multi-line display", () => {
@@ -125,10 +157,24 @@ describe("formatters", () => {
     });
 
     it("should trim empty location label parts for multi-line display", () => {
-        expect(formatLocationDisplayLabel("Central Park, , New York, USA")).toBe("Central Park\nNew York\nUSA");
+        expect(formatLocationDisplayLabel(
+            "Central Park, , New York, USA"
+        )).toBe("Central Park\nNew York\nUSA");
     });
 
     it("should return empty string for missing multi-line location label", () => {
         expect(formatLocationDisplayLabel()).toBe("");
+    });
+
+    /* =============================
+       GOOGLE MAPS
+    ============================= */
+
+    it("should build a Google Maps URL from coordinates", () => {
+        expect(buildGoogleMapsUrl(45.5017, -73.5673)).toBe("https://www.google.com/maps?q=45.5017,-73.5673");
+    });
+
+    it("should build a Google Maps URL from negative coordinates", () => {
+        expect(buildGoogleMapsUrl(-1, -2)).toBe("https://www.google.com/maps?q=-1,-2");
     });
 });

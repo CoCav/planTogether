@@ -22,7 +22,7 @@ import { searchLocations } from "../../../../api/locations/locationApi";
 export default function useLocationAutocomplete({
     value,
     onSelectLocation,
-    debounceDelay = 500,
+    debounceDelay = 350,
     minQueryLength = 2
 }) {
 

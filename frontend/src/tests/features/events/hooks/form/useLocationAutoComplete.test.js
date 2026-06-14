@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 
-import useLocationAutocomplete from "../../../../../features/events/hooks/form/useLocationAutocomplete";
+import useLocationAutocomplete from "../../../../../features/events/hooks/form/useLocationAutoComplete";
 
 import { searchLocations } from "../../../../../api/locations/locationApi";
 

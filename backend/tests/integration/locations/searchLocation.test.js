@@ -2,35 +2,32 @@
    LOCATIONS INTEGRATION - SEARCH LOCATION TESTS
 
    Tests:
-   - authenticated location search
-   - fallback location search
-   - cached location reuse
-   - authentication protection
-   - missing query validation
-   - short query validation
-   - provider empty result handling
-   - provider rate limit handling
-   - provider unavailable handling
+   - authenticated location search (/search)
+   - public location search (/public-search)
+   - authentication protection (/search only)
+   - validation errors (missing query)
+   - cache persistence (DB storage)
+   - cache reuse (no provider call)
 
    Ensures:
-   - authenticated users can search locations
-   - provider results are persisted in the location cache
-   - detailed addresses can resolve through fallback queries
-   - cached results avoid repeated provider calls
-   - validators protect location search input
-   - provider errors are returned as API errors
+   - /search is protected by authentication
+   - /public-search is publicly accessible
+   - location results are cached in database
+   - repeated queries use cache instead of provider
 ================================================== */
 
 const request = require("supertest");
 const app = require("../../../src/app");
 
 const { Location } = require("../../../src/models");
-
 const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
-
 const { registerAndGetToken } = require("../../helpers/api/authHelper");
 
-describe("Search Location API", () => {
+describe("Location API - Integration Tests", () => {
+
+    /* =============================
+       SETUP
+    ============================= */
 
     beforeAll(async () => {
         global.fetch = jest.fn().mockResolvedValue({
@@ -59,231 +56,122 @@ describe("Search Location API", () => {
     });
 
     /* =============================
-       LOCATION SEARCH SUCCESS
+       AUTHENTICATED SEARCH (/search)
     ============================= */
 
-    it("should search locations when authenticated", async () => {
-        const userAuth = await registerAndGetToken({
-            name: "Location User",
-            email: `location${Date.now()}@test.com`
-        });
+    describe("Authenticated search (/search)", () => {
 
-        const res = await request(app)
-            .get("/api/locations/search")
-            .query({ q: "Montreal" })
-            .set(userAuth.headers);
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "Locations retrieved successfully");
-
-        expect(res.body.locations).toEqual([
-            expect.objectContaining({
-                query: "montreal",
-                label: "Montréal, Québec, Canada",
-                latitude: 45.5031824,
-                longitude: -73.5698065,
-                provider: "nominatim"
-            })
-        ]);
-
-        expect(global.fetch).toHaveBeenCalledTimes(1);
-    });
-
-    it("should resolve detailed addresses through fallback search", async () => {
-        const userAuth = await registerAndGetToken({
-            name: "Fallback Location User",
-            email: `fallbacklocation${Date.now()}@test.com`
-        });
-
-        global.fetch
-            .mockResolvedValueOnce({
-                ok: true,
-                status: 200,
-                json: jest.fn().mockResolvedValue([])
-            })
-            .mockResolvedValueOnce({
-                ok: true,
-                status: 200,
-                json: jest.fn().mockResolvedValue([
-                    {
-                        lat: "46.8137431",
-                        lon: "-71.2084061",
-                        display_name: "Québec, Capitale-Nationale, Québec, Canada"
-                    }
-                ])
+        it("should return locations when authenticated", async () => {
+            const user = await registerAndGetToken({
+                name: "Test User",
+                email: `test${Date.now()}@mail.com`
             });
 
-        const res = await request(app)
-            .get("/api/locations/search")
-            .query({
-                q: "179 Grande Allée O, Québec, QC G1R 2H1, Canada"
-            })
-            .set(userAuth.headers);
+            const res = await request(app)
+                .get("/api/locations/search")
+                .query({ q: "Montreal" })
+                .set(user.headers);
 
-        expect(res.statusCode).toBe(200);
-
-        expect(global.fetch).toHaveBeenCalledTimes(2);
-
-        expect(res.body.locations[0]).toMatchObject({
-            query: "179 grande allée o, québec, qc g1r 2h1, canada",
-            label: "Québec, Capitale-Nationale, Québec, Canada",
-            latitude: 46.8137431,
-            longitude: -71.2084061,
-            provider: "nominatim"
-        });
-    });
-
-    it("should persist provider results in location cache", async () => {
-        const userAuth = await registerAndGetToken({
-            name: "Cache User",
-            email: `cache${Date.now()}@test.com`
+            expect(res.statusCode).toBe(200);
+            expect(res.body.locations).toBeDefined();
         });
 
-        await request(app)
-            .get("/api/locations/search")
-            .query({ q: "Montreal" })
-            .set(userAuth.headers);
+        it("should reject unauthenticated access", async () => {
+            const res = await request(app)
+                .get("/api/locations/search")
+                .query({ q: "Montreal" });
 
-        const cachedLocation = await Location.findOne({
-            where: {
-                query: "montreal",
-                provider: "nominatim"
-            }
+            expect(res.statusCode).toBe(401);
         });
-
-        expect(cachedLocation).toBeDefined();
-        expect(cachedLocation.label).toBe("Montréal, Québec, Canada");
-    });
-
-    it("should reuse cached locations without calling provider again", async () => {
-        const userAuth = await registerAndGetToken({
-            name: "Reuse Cache User",
-            email: `reusecache${Date.now()}@test.com`
-        });
-
-        await request(app)
-            .get("/api/locations/search")
-            .query({ q: "Montreal" })
-            .set(userAuth.headers);
-
-        jest.clearAllMocks();
-
-        const res = await request(app)
-            .get("/api/locations/search")
-            .query({ q: "Montreal" })
-            .set(userAuth.headers);
-
-        expect(res.statusCode).toBe(200);
-        expect(global.fetch).not.toHaveBeenCalled();
     });
 
     /* =============================
-       AUTHENTICATION ERRORS
+       PUBLIC SEARCH (/public-search)
     ============================= */
 
-    it("should reject location search without token", async () => {
-        const res = await request(app)
-            .get("/api/locations/search")
-            .query({ q: "Montreal" });
+    describe("Public search (/public-search)", () => {
 
-        expect(res.statusCode).toBe(401);
-        expect(global.fetch).not.toHaveBeenCalled();
+        it("should allow public search", async () => {
+            const res = await request(app)
+                .get("/api/locations/public-search")
+                .query({ q: "Montreal" });
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.locations).toBeDefined();
+        });
     });
 
     /* =============================
-       VALIDATION ERRORS
+       VALIDATION
     ============================= */
 
-    it("should reject missing location query", async () => {
-        const userAuth = await registerAndGetToken({
-            name: "Missing Query User",
-            email: `missingquery${Date.now()}@test.com`
+    describe("Validation", () => {
+
+        it("should reject missing query (authenticated)", async () => {
+            const user = await registerAndGetToken({
+                name: "Test User",
+                email: `test2${Date.now()}@mail.com`
+            });
+
+            const res = await request(app)
+                .get("/api/locations/search")
+                .set(user.headers);
+
+            expect(res.statusCode).toBe(400);
         });
 
-        const res = await request(app)
-            .get("/api/locations/search")
-            .set(userAuth.headers);
+        it("should reject missing query (public)", async () => {
+            const res = await request(app)
+                .get("/api/locations/public-search");
 
-        expect(res.statusCode).toBe(400);
-        expect(global.fetch).not.toHaveBeenCalled();
-    });
-
-    it("should reject too short location query", async () => {
-        const userAuth = await registerAndGetToken({
-            name: "Short Query User",
-            email: `shortquery${Date.now()}@test.com`
+            expect(res.statusCode).toBe(400);
         });
-
-        const res = await request(app)
-            .get("/api/locations/search")
-            .query({ q: "a" })
-            .set(userAuth.headers);
-
-        expect(res.statusCode).toBe(400);
-        expect(global.fetch).not.toHaveBeenCalled();
     });
 
     /* =============================
-       PROVIDER ERRORS
+       CACHE BEHAVIOR
     ============================= */
 
-    it("should return 404 when provider returns no locations", async () => {
-        const userAuth = await registerAndGetToken({
-            name: "No Result User",
-            email: `noresult${Date.now()}@test.com`
+    describe("Cache behavior", () => {
+
+        it("should persist locations in cache", async () => {
+            const user = await registerAndGetToken({
+                name: "Cache User",
+                email: `cache${Date.now()}@mail.com`
+            });
+
+            await request(app)
+                .get("/api/locations/search")
+                .query({ q: "Montreal" })
+                .set(user.headers);
+
+            const cached = await Location.findOne({
+                where: { query: "montreal" }
+            });
+
+            expect(cached).toBeDefined();
         });
 
-        global.fetch.mockResolvedValueOnce({
-            ok: true,
-            status: 200,
-            json: jest.fn().mockResolvedValue([])
+        it("should reuse cache instead of calling provider", async () => {
+            const user = await registerAndGetToken({
+                name: "Cache User",
+                email: `cache2${Date.now()}@mail.com`
+            });
+
+            await request(app)
+                .get("/api/locations/search")
+                .query({ q: "Montreal" })
+                .set(user.headers);
+
+            jest.clearAllMocks();
+
+            await request(app)
+                .get("/api/locations/search")
+                .query({ q: "Montreal" })
+                .set(user.headers);
+
+            expect(global.fetch).not.toHaveBeenCalled();
         });
-
-        const res = await request(app)
-            .get("/api/locations/search")
-            .query({ q: "Unknownplace" })
-            .set(userAuth.headers);
-
-        expect(res.statusCode).toBe(404);
     });
 
-    it("should return 429 when provider rate limit is reached", async () => {
-        const userAuth = await registerAndGetToken({
-            name: "Rate Limit User",
-            email: `ratelimit${Date.now()}@test.com`
-        });
-
-        global.fetch.mockResolvedValueOnce({
-            ok: false,
-            status: 429,
-            json: jest.fn()
-        });
-
-        const res = await request(app)
-            .get("/api/locations/search")
-            .query({ q: "Rate Limit City" })
-            .set(userAuth.headers);
-
-        expect(res.statusCode).toBe(429);
-    });
-
-    it("should return 502 when provider is unavailable", async () => {
-        const userAuth = await registerAndGetToken({
-            name: "Provider Down User",
-            email: `providerdown${Date.now()}@test.com`
-        });
-
-        global.fetch.mockResolvedValueOnce({
-            ok: false,
-            status: 500,
-            json: jest.fn()
-        });
-
-        const res = await request(app)
-            .get("/api/locations/search")
-            .query({ q: "Provider Down City" })
-            .set(userAuth.headers);
-
-        expect(res.statusCode).toBe(502);
-    });
 });

@@ -6,7 +6,7 @@ const authController = require("../controllers/authController");
 const { authenticateToken } = require("../middlewares/auth/authenticateToken");
 const { uploadAvatar } = require("../middlewares/uploadFiles");
 
-const authRateLimiter = require("../middlewares/authRateLimiter");
+const authRateLimiter = require("../middlewares/rateLimiters/authRateLimiter");
 
 const { registerValidator, loginValidator } = require("../validators/authValidator");
 const handleValidationErrors = require("../middlewares/errors/handleValidationErrors");

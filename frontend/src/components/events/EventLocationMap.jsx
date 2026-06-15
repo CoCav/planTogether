@@ -16,6 +16,7 @@ import LoadingState from "../ui/LoadingState";
    Handles:
    - selected geocoded location rendering
    - fallback backend geocoding from location text
+   - authenticated or public map lookup
    - loading state
    - missing location state
    - failed geocoding state
@@ -23,18 +24,21 @@ import LoadingState from "../ui/LoadingState";
    - marker and popup display
    - formatted popup title and address display
    - Google Maps external link
+   - directions external link
    - copy address action
    - copied feedback state
 
    Notes:
    - selectedLocation avoids an extra API search after autocomplete selection
    - location text fallback keeps the component reusable outside event forms
+   - isPublic uses the public location endpoint for pages visible without login
 ================================================== */
 
 export default function EventLocationMap({
     eventTitle = "",
     location,
-    selectedLocation = null
+    selectedLocation = null,
+    isPublic = false
 }) {
 
     /* =============================
@@ -51,17 +55,19 @@ export default function EventLocationMap({
 
     const {
         coordinates: searchedCoordinates,
+        hasSearched,
         isLoading,
         error
     } = useEventMapLocation(
-        shouldSearchLocation ? location : ""
+        shouldSearchLocation ? location : "",
+        { isPublic }
     );
 
     /* =============================
        DERIVED LOCATION
     ============================= */
 
-    // Use selected autocomplete coordinates first, then fallback search coordinates
+    // Prefer selected autocomplete coordinates, fallback to backend search result
     const coordinates = selectedLocation
         ? {
             lat: Number(selectedLocation.latitude),
@@ -86,8 +92,8 @@ export default function EventLocationMap({
         );
     }
 
-    // Loading backend geolocation data
-    if (shouldSearchLocation && isLoading) {
+    // Avoid rendering the map before coordinates are ready
+    if (shouldSearchLocation && (!hasSearched || isLoading)) {
         return (
             <LoadingState
                 title="Loading map..."
@@ -97,7 +103,7 @@ export default function EventLocationMap({
     }
 
     // Failed geolocation or provider error
-    if (error || !coordinates) {
+    if (hasSearched && (error || !coordinates)) {
         return (
             <EmptyState
                 title="Map unavailable"

@@ -4,7 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import useEventMapLocation from "../../../../../features/events/hooks/form/useEventMapLocation";
 
 import { normalizeApiError } from "../../../../../api/apiError";
-import { searchLocations } from "../../../../../api/locations/locationApi";
+
+import { searchLocations, searchPublicLocations } from "../../../../../api/locations/locationApi";
 
 /* ==================================================
    USE EVENT MAP LOCATION TESTS
@@ -12,9 +13,11 @@ import { searchLocations } from "../../../../../api/locations/locationApi";
 
    Handles:
    - empty location fallback
-   - successful backend location lookup
+   - authenticated backend location lookup
+   - public backend location lookup
    - fallback label handling
    - loading state
+   - completed search tracking
    - failed API requests
    - API not found errors
    - API rate limit errors
@@ -23,14 +26,17 @@ import { searchLocations } from "../../../../../api/locations/locationApi";
    - cancelled request handling
 
    Ensures:
-   - hook no longer calls Nominatim directly
-   - backend location API is used for map coordinates
+   - hook uses authenticated search by default
+   - hook uses public search when isPublic is true
+   - map coordinates are normalized for Leaflet
+   - hasSearched avoids premature unavailable states
    - user-facing errors are normalized
    - stale async updates are ignored after unmount
 ================================================== */
 
 vi.mock("../../../../../api/locations/locationApi", () => ({
-    searchLocations: vi.fn()
+    searchLocations: vi.fn(),
+    searchPublicLocations: vi.fn()
 }));
 
 vi.mock("../../../../../api/apiError", () => ({
@@ -63,11 +69,21 @@ describe("useEventMapLocation", () => {
         normalizeApiError.mockImplementation((error) => error);
 
         searchLocations.mockResolvedValue(successfulLocationResponse);
+        searchPublicLocations.mockResolvedValue(successfulLocationResponse);
     });
 
     afterEach(() => {
         vi.clearAllMocks();
     });
+
+    const waitForDebounce = async () => {
+        await waitFor(() => {
+            expect(searchLocations.mock.calls.length + searchPublicLocations.mock.calls.length)
+                .toBeGreaterThan(0);
+        }, {
+            timeout: 1000
+        });
+    };
 
     /* =============================
        EMPTY LOCATION
@@ -79,10 +95,12 @@ describe("useEventMapLocation", () => {
         );
 
         expect(result.current.coordinates).toBeNull();
+        expect(result.current.hasSearched).toBe(false);
         expect(result.current.isLoading).toBe(false);
         expect(result.current.error).toBe("");
 
         expect(searchLocations).not.toHaveBeenCalled();
+        expect(searchPublicLocations).not.toHaveBeenCalled();
     });
 
     it("should return empty fallback state when location only contains spaces", () => {
@@ -91,10 +109,12 @@ describe("useEventMapLocation", () => {
         );
 
         expect(result.current.coordinates).toBeNull();
+        expect(result.current.hasSearched).toBe(false);
         expect(result.current.isLoading).toBe(false);
         expect(result.current.error).toBe("");
 
         expect(searchLocations).not.toHaveBeenCalled();
+        expect(searchPublicLocations).not.toHaveBeenCalled();
     });
 
     it("should return empty fallback state when location is null", () => {
@@ -103,20 +123,24 @@ describe("useEventMapLocation", () => {
         );
 
         expect(result.current.coordinates).toBeNull();
+        expect(result.current.hasSearched).toBe(false);
         expect(result.current.isLoading).toBe(false);
         expect(result.current.error).toBe("");
 
         expect(searchLocations).not.toHaveBeenCalled();
+        expect(searchPublicLocations).not.toHaveBeenCalled();
     });
 
     /* =============================
        SUCCESSFUL LOCATION LOOKUP
     ============================= */
 
-    it("should load coordinates successfully", async () => {
+    it("should load coordinates successfully with authenticated search by default", async () => {
         const { result } = renderHook(() =>
             useEventMapLocation("Montréal")
         );
+
+        await waitForDebounce();
 
         await waitFor(() => {
             expect(result.current.coordinates).toEqual({
@@ -127,9 +151,32 @@ describe("useEventMapLocation", () => {
         });
 
         expect(searchLocations).toHaveBeenCalledWith("Montréal");
+        expect(searchPublicLocations).not.toHaveBeenCalled();
 
+        expect(result.current.hasSearched).toBe(true);
         expect(result.current.isLoading).toBe(false);
         expect(result.current.error).toBe("");
+    });
+
+    it("should load coordinates with public search when isPublic is true", async () => {
+        const { result } = renderHook(() =>
+            useEventMapLocation("Montréal", { isPublic: true })
+        );
+
+        await waitForDebounce();
+
+        await waitFor(() => {
+            expect(result.current.coordinates).toEqual({
+                lat: 45.5017,
+                lng: -73.5673,
+                label: "Montréal, Québec, Canada"
+            });
+        });
+
+        expect(searchPublicLocations).toHaveBeenCalledWith("Montréal");
+        expect(searchLocations).not.toHaveBeenCalled();
+
+        expect(result.current.hasSearched).toBe(true);
     });
 
     it("should use original location as label when backend label is missing", async () => {
@@ -145,6 +192,8 @@ describe("useEventMapLocation", () => {
         const { result } = renderHook(() =>
             useEventMapLocation("Montréal")
         );
+
+        await waitForDebounce();
 
         await waitFor(() => {
             expect(result.current.coordinates).toEqual({
@@ -172,8 +221,11 @@ describe("useEventMapLocation", () => {
             useEventMapLocation("Montréal")
         );
 
+        await waitForDebounce();
+
         await waitFor(() => {
             expect(result.current.isLoading).toBe(true);
+            expect(result.current.hasSearched).toBe(false);
         });
 
         await act(async () => {
@@ -182,6 +234,7 @@ describe("useEventMapLocation", () => {
 
         await waitFor(() => {
             expect(result.current.isLoading).toBe(false);
+            expect(result.current.hasSearched).toBe(true);
         });
     });
 
@@ -201,11 +254,14 @@ describe("useEventMapLocation", () => {
             useEventMapLocation("Montréal")
         );
 
+        await waitForDebounce();
+
         await waitFor(() => {
             expect(result.current.error).toBe("Location could not be loaded");
         });
 
         expect(result.current.coordinates).toBeNull();
+        expect(result.current.hasSearched).toBe(true);
         expect(result.current.isLoading).toBe(false);
     });
 
@@ -221,11 +277,14 @@ describe("useEventMapLocation", () => {
             useEventMapLocation("Unknown place")
         );
 
+        await waitForDebounce();
+
         await waitFor(() => {
             expect(result.current.error).toBe("Location could not be found");
         });
 
         expect(result.current.coordinates).toBeNull();
+        expect(result.current.hasSearched).toBe(true);
         expect(result.current.isLoading).toBe(false);
     });
 
@@ -241,6 +300,8 @@ describe("useEventMapLocation", () => {
             useEventMapLocation("Montréal")
         );
 
+        await waitForDebounce();
+
         await waitFor(() => {
             expect(result.current.error).toBe(
                 "Location search is temporarily limited. Please try again later."
@@ -248,6 +309,7 @@ describe("useEventMapLocation", () => {
         });
 
         expect(result.current.coordinates).toBeNull();
+        expect(result.current.hasSearched).toBe(true);
         expect(result.current.isLoading).toBe(false);
     });
 
@@ -260,11 +322,14 @@ describe("useEventMapLocation", () => {
             useEventMapLocation("Unknown place")
         );
 
+        await waitForDebounce();
+
         await waitFor(() => {
             expect(result.current.error).toBe("Location could not be found");
         });
 
         expect(result.current.coordinates).toBeNull();
+        expect(result.current.hasSearched).toBe(true);
         expect(result.current.isLoading).toBe(false);
     });
 
@@ -276,6 +341,8 @@ describe("useEventMapLocation", () => {
         renderHook(() =>
             useEventMapLocation("   Montréal   ")
         );
+
+        await waitForDebounce();
 
         await waitFor(() => {
             expect(searchLocations).toHaveBeenCalledWith("Montréal");
@@ -298,6 +365,8 @@ describe("useEventMapLocation", () => {
         const { result, unmount } = renderHook(() =>
             useEventMapLocation("Montréal")
         );
+
+        await waitForDebounce();
 
         unmount();
 

@@ -384,6 +384,7 @@ export default function EventDetailsPage() {
                                     eventTitle={eventDisplayData.title}
                                     location={eventDisplayData.location}
                                     selectedLocation={eventDisplayData.selectedLocation}
+                                    isPublic={!user}
                                 />
                             </section>
                         )}

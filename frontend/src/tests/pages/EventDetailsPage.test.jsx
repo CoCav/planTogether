@@ -28,6 +28,7 @@ import {
    - image fallback behavior
    - accessible event image description
    - physical event location map display
+   - authenticated and public map lookup behavior
    - selected location coordinate map hydration
    - formatted inline location display
    - formatted provider location labels
@@ -42,6 +43,7 @@ import {
    - mocks API modules
    - mocks authenticated user state
    - mocks extracted event display components
+   - mocks react-leaflet dependent map component
    - uses MemoryRouter for route context
 ================================================== */
 
@@ -148,9 +150,13 @@ vi.mock("../../components/events/EventDetailsSummary", () => ({
 }));
 
 vi.mock("../../components/events/EventLocationMap", () => ({
-    default: ({ location, selectedLocation }) => (
+    default: ({ location, selectedLocation, isPublic }) => (
         <div data-testid="event-location-map">
             Event map for {location}
+
+            <span>
+                {isPublic ? "Public map lookup" : "Authenticated map lookup"}
+            </span>
 
             {selectedLocation && (
                 <span>
@@ -692,6 +698,23 @@ describe("EventDetailsPage", () => {
         expect(await screen.findByTestId("event-location-map")).toBeInTheDocument();
 
         expect(screen.getByText("Selected: Central Park, New York, USA")).toBeInTheDocument();
+    });
+
+    it("should use authenticated map lookup for authenticated users", async () => {
+        renderPage();
+
+        expect(await screen.findByTestId("event-location-map")).toHaveTextContent("Authenticated map lookup");
+    });
+
+    it("should use public map lookup for guest users", async () => {
+        mockAuthState = {
+            user: null,
+            loading: false
+        };
+
+        renderPage();
+
+        expect(await screen.findByTestId("event-location-map")).toHaveTextContent("Public map lookup");
     });
 
     /* =============================

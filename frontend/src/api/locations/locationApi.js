@@ -3,24 +3,44 @@ import { unwrapApiResponse } from "../apiResponse";
 
 /* ==================================================
    LOCATION API
-   Handles authenticated location search requests
+
+   Handles:
+   - authenticated location search
+   - public location search
 
    Routes:
    - GET /locations/search
+   - GET /locations/public-search
 
    Notes:
-   - location search is protected by the backend
+   - authenticated search is used for internal app features
+     (event forms, dashboard, protected pages)
+   - public search is used for public event pages and maps
    - results come from backend cache or provider
-   - used for event form map preview and future autocomplete
 ================================================== */
 
 /* =============================
-   SEARCH LOCATIONS
+   AUTHENTICATED LOCATION SEARCH
 ============================= */
 
-// Searches locations by text query
+// Search locations for authenticated app usage
 export const searchLocations = async (query) => {
     const response = await apiClient.get("/locations/search", {
+        params: {
+            q: query
+        }
+    });
+
+    return unwrapApiResponse(response);
+};
+
+/* =============================
+   PUBLIC LOCATION SEARCH
+============================= */
+
+// Search locations for public pages and maps
+export const searchPublicLocations = async (query) => {
+    const response = await apiClient.get("/locations/public-search", {
         params: {
             q: query
         }

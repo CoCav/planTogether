@@ -1,29 +1,38 @@
 import { useEffect, useState } from "react";
 
 import { normalizeApiError } from "../../../../api/apiError";
-import { searchLocations } from "../../../../api/locations/locationApi";
+
+import { searchLocations, searchPublicLocations } from "../../../../api/locations/locationApi";
 
 /* ==================================================
    USE EVENT MAP LOCATION
    Converts a location text into map coordinates
 
    Handles:
-   - backend location search
+   - authenticated or public backend location search
    - cached/provider geocoding through API
    - loading state
+   - completed search tracking
    - error state
    - empty location fallback
    - request cancellation on unmount
    - rate limit and not found errors
+
+   Notes:
+   - authenticated search is used by protected app pages
+   - public search is used by public event pages
+   - hasSearched prevents showing "Map unavailable" before lookup finishes
 ================================================== */
 
-export default function useEventMapLocation(location) {
+export default function useEventMapLocation(location, options = {}) {
+    const { isPublic = false } = options;
 
     /* =============================
        STATE
     ============================= */
 
     const [coordinates, setCoordinates] = useState(null);
+    const [hasSearched, setHasSearched] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -38,21 +47,25 @@ export default function useEventMapLocation(location) {
 
         const cleanLocation = String(location ?? "").trim();
 
-        // Reset state when location is empty
+        // Reset map lookup state when no location is available
         if (!cleanLocation) {
             setCoordinates(null);
             setError("");
+            setHasSearched(false);
             setIsLoading(false);
             return;
         }
 
         const loadLocation = async () => {
             try {
+                setHasSearched(false);
                 setIsLoading(true);
                 setError("");
 
-                // Search locations through backend API
-                const data = await searchLocations(cleanLocation);
+                // Use the public endpoint for public pages, otherwise protected search
+                const data = isPublic
+                    ? await searchPublicLocations(cleanLocation)
+                    : await searchLocations(cleanLocation);
 
                 if (isCancelled) return;
 
@@ -79,13 +92,11 @@ export default function useEventMapLocation(location) {
 
                 setCoordinates(null);
 
-                // Backend/provider temporary rate limit
                 if (apiError.status === 429) {
                     setError("Location search is temporarily limited. Please try again later.");
                     return;
                 }
 
-                // No matching location found
                 if (apiError.status === 404) {
                     setError("Location could not be found");
                     return;
@@ -96,12 +107,13 @@ export default function useEventMapLocation(location) {
 
             } finally {
                 if (!isCancelled) {
+                    setHasSearched(true);
                     setIsLoading(false);
                 }
             }
         };
 
-        // Wait before searching to avoid one API call per typed character
+        // Debounce map lookup to avoid extra API calls during typing
         const timeoutId = setTimeout(() => {
             loadLocation();
         }, 600);
@@ -111,10 +123,11 @@ export default function useEventMapLocation(location) {
             clearTimeout(timeoutId);
         };
 
-    }, [location]);
+    }, [location, isPublic]);
 
     return {
         coordinates,
+        hasSearched,
         isLoading,
         error
     };

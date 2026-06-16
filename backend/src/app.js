@@ -16,6 +16,8 @@ const locationRoutes = require("./routes/locationRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const eventMembershipRoutes = require("./routes/eventMembershipRoutes");
 const userRoutes = require("./routes/userRoutes");
+const eventReviewRoutes = require("./routes/eventReviewRoutes");
+
 /* ==================================================
    EXPRESS APPLICATION SETUP
 
@@ -98,6 +100,9 @@ app.use("/api/locations", locationRoutes);
 
 // Event membership routes
 app.use("/api/events", eventMembershipRoutes);
+
+// Event review routes
+app.use("/api/events", eventReviewRoutes);
 
 // Event CRUD routes
 app.use("/api/events", eventRoutes);

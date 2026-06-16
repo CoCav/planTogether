@@ -5,6 +5,7 @@ const User = require("./userModel");
 const Event = require("./eventModel");
 const Location = require("./locationModel");
 const EventUserRole = require("./relations/eventUserRoleModel");
+const EventReview = require("./relations/eventReviewModel");
 
 /* ==================================================
    DATABASE INITIALIZATION
@@ -58,11 +59,13 @@ const initDB = async () => {
    Handles:
    - event creators
    - event participants
+   - event reviews
    - direct membership queries
 
    Notes:
    - EventUserRole stores role and joinedAt
    - EventUserRole → Event uses alias "event"
+   - EventReview stores user comments on completed events
 ================================================== */
 
 /* =============================
@@ -102,6 +105,21 @@ Event.belongsToMany(User, {
     as: "participants"
 });
 
+/* =============================
+   REVIEW RELATIONSHIPS
+============================= */
+
+// A user can leave multiple event reviews
+User.hasMany(EventReview, { foreignKey: "userId", as: "reviews" });
+
+// Each review belongs to one user
+EventReview.belongsTo(User, { foreignKey: "userId", as: "user" });
+
+// An event can have multiple reviews
+Event.hasMany(EventReview, { foreignKey: "eventId", as: "reviews" });
+
+// Each review belongs to one event
+EventReview.belongsTo(Event, { foreignKey: "eventId", as: "event" });
 
 /* =============================
    DIRECT MEMBERSHIP RELATIONSHIPS
@@ -125,5 +143,6 @@ module.exports = {
     User,
     Event,
     Location,
-    EventUserRole
+    EventUserRole,
+    EventReview
 };

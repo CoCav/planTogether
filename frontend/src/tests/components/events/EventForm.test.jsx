@@ -109,6 +109,8 @@ describe("EventForm", () => {
 
         expect(screen.getByLabelText(/start date & time/i)).toHaveAttribute("type", "datetime-local");
         expect(screen.getByLabelText(/end date & time/i)).toHaveAttribute("type", "datetime-local");
+
+        expect(screen.getByPlaceholderText(/search for a city, venue or address/i)).toBeInTheDocument();
     });
 
     it("identifies optional event fields", () => {

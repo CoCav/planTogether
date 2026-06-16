@@ -189,7 +189,7 @@ export default function EventForm({
                                     value={values.location}
                                     onChange={onFieldChange}
                                     onSelectLocation={onSelectLocation}
-                                    placeholder="Enter a location"
+                                    placeholder="Search for a city, venue or address"
                                     error={fieldErrors.location}
                                     ariaDescribedBy={errorId}
                                 />

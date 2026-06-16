@@ -8,10 +8,10 @@ import Input from "../ui/Input";
 
 /* ==================================================
    EVENT LOCATION FIELD
-   Renders a location input with backend-powered suggestions
+   Renders a searchable location input with backend-powered suggestions
 
    Handles:
-   - location text input rendering
+   - city, venue or address search input rendering
    - debounced suggestion dropdown
    - loading dropdown state
    - no-results dropdown state

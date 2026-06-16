@@ -53,7 +53,7 @@ describe("EventLocationField", () => {
         name: "location",
         value: "",
         error: "",
-        placeholder: "Enter a location",
+        placeholder: "Search for a city, venue or address",
         ariaDescribedBy: undefined,
         onChange: vi.fn(),
         onSelectLocation: vi.fn()
@@ -124,6 +124,12 @@ describe("EventLocationField", () => {
         expect(input).toHaveAttribute("aria-expanded", "true");
         expect(input).toHaveAttribute("aria-controls", "location-suggestions");
         expect(input).toHaveAttribute("autocomplete", "off");
+    });
+
+    it("should render city, venue or address placeholder", () => {
+        renderComponent();
+
+        expect(screen.getByPlaceholderText(/search for a city, venue or address/i)).toBeInTheDocument();
     });
 
     it("should call hook with value and onSelectLocation", () => {

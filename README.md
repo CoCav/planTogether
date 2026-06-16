@@ -11,14 +11,11 @@
 ![Axios](https://img.shields.io/badge/API-Axios-green)
 ![Accessibility](https://img.shields.io/badge/accessibility-semantic%20%26%20ARIA-blue)
 
-![Backend Tests](https://img.shields.io/badge/backend-650%20passing-brightgreen)
-![Backend Coverage](https://img.shields.io/badge/backend%20coverage-99.14%25%20statements%20%7C%2094.65%25%20branches-brightgreen)
+![Backend Tests](https://img.shields.io/badge/backend-715%20passing-brightgreen)
+![Backend Coverage](https://img.shields.io/badge/backend%20coverage-99.27%25%20statements%20%7C%2095.33%25%20branches-brightgreen)
 
-![Frontend Tests](https://img.shields.io/badge/frontend-1218%20passing-brightgreen)
-![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-97.89%25%20statements%20%7C%2095.07%25%20branches-brightgreen)
-
-![Backend CI](https://github.com/CoCav/planTogether/actions/workflows/backend-ci.yml/badge.svg)
-![Frontend CI](https://github.com/CoCav/planTogether/actions/workflows/frontend-ci.yml/badge.svg)
+![Frontend Tests](https://img.shields.io/badge/frontend-1363%20passing-brightgreen)
+![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-96.49%25%20statements%20%7C%2093.01%25%20branches-brightgreen)
 
 ![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -26,29 +23,28 @@
 
 PlanTogether is a fullstack event management platform that enables users to create, discover, join, and manage collaborative events through a secure role-aware system.
 
-The project is composed of:
+The project combines:
 
-- a **Node.js / Express backend API** responsible for authentication, business logic, permissions, filtering, uploads, transactions, logging, validation, and data persistence
-- a **React frontend application** providing a responsive, accessibility-focused, and role-aware user experience with protected routes, advanced filtering, query synchronization, and dynamic permission-aware UI behavior
+- a **Node.js / Express backend API** responsible for authentication, permissions, business logic, validation, uploads, and data persistence
+- a **React frontend application** providing a responsive, accessibility-focused, and permission-aware user experience with advanced filtering, location-aware workflows, interactive maps, and protected routes
 
-Together, the frontend and backend provide a complete end-to-end experience, from secure API workflows and database operations to responsive UI interactions, synchronized permissions, and comprehensive automated testing.
-
-The application focuses on scalability, security, API consistency, maintainability, continuous integration, and predictable behavior across both backend and frontend layers.
+Together, these layers deliver secure data handling, synchronized permissions, automated testing, and a consistent end-to-end user experience.
 
 ---
 
 ## 🎯 Key Highlights
 
-- 🧪 **1868 automated tests across backend and frontend** (Jest + Supertest + Vitest + React Testing Library)
-- 📊 **High automated test coverage** (~99% backend / ~98% frontend)
-- 🔁 **Separate backend and frontend CI workflows** using GitHub Actions
-- 🔐 **Secure authentication and role-based access control (RBAC)** with centralized validation, security policies, error handling, and consistent API behavior
-- 🧱 **Clean fullstack architecture** combining modular backend services, a feature-oriented React frontend, protected routes, reusable business logic, and permission-aware UI behavior
-- ♿ **Accessibility-focused frontend architecture** with semantic HTML, ARIA support, keyboard-friendly interactions, and reusable accessible UI patterns
-- 🔄 **Transaction-safe backend workflows** with optimized filtering, pagination, participant counting, query utilities, and scalable database operations
-- 🔍 **Advanced event filtering and synchronized listing behavior** with search, creator filters, date ranges, sorting, pagination, synchronized views, and clean URL synchronization
-- 👤 **Public user profiles and event activity pages** with created and joined event listings
-- 🖼️ **Shared upload and image lifecycle handling** with validation, previews, drag-and-drop interactions, preservation, replacement, cleanup, and upload protection
+- 🧪 **2078 automated tests** across backend and frontend (Jest, Supertest, Vitest, React Testing Library)
+- 📊 **High automated test coverage** (~99% backend / ~96% frontend)
+- 🔁 **Dedicated backend and frontend CI pipelines** with GitHub Actions
+- 🔐 **Secure authentication and RBAC** with centralized validation and permission management
+- 🧱 **Modular fullstack architecture** with layered backend services and a feature-oriented React frontend
+- ♿ **Accessibility-focused frontend** with semantic HTML, ARIA support, and keyboard-friendly interactions
+- 🌍 **Location-aware event workflows** powered by OpenStreetMap and geolocation services
+- 🔄 **Transaction-safe backend workflows** with filtering, pagination, and optimized database operations
+- 🔍 **Advanced search, filtering, pagination, and URL-synchronized event listings** across public and authenticated views
+- 👤 **Public user profiles and event activity pages** showcasing created and joined events
+- 🖼️ **Shared upload workflows** with previews, validation, and image lifecycle management
 
 ---
 
@@ -73,37 +69,38 @@ The application focuses on scalability, security, API consistency, maintainabili
 
 ## 🚀 Application Overview
 
-PlanTogether provides a complete fullstack event management experience, combining a secure backend API with a modern, responsive, and role-aware frontend application.
+PlanTogether is a fullstack event management platform that combines a secure backend API with a modern, responsive, and role-aware frontend application.
 
 Users can:
 
-- Create, update, and manage events
-- Join and leave events
-- Browse, search, sort, and filter events
-- Upload and manage avatars and event images
-- Interact with events through a role-based system (`organizer`, `co_organizer`, `participant`)
-- Manage profile information and authentication securely
-- Interact with status-aware event workflows (`ongoing`, `upcoming`, `past`)
-- Access permission-aware actions synchronized across frontend and backend layers
-- Browse public user profiles and public user event activity
+- create, manage, and participate in events
+- browse, search, sort, and filter events
+- discover events through location search and interactive maps
+- upload and manage avatars and event images
+- manage profiles and authenticated sessions
+- interact with role-based and permission-aware event workflows
+- browse public user profiles and event activity
 
-The platform is designed to provide a smooth and intuitive user experience through contextual and role-aware UI interactions, protected routing, centralized permission management, transaction-safe backend workflows, and consistent API-driven behavior.
+The platform provides:
 
-Additional frontend capabilities include:
+- secure authentication and protected routes
+- centralized filtering, pagination, and query synchronization
+- geolocation-aware event discovery powered by OpenStreetMap
+- responsive and accessibility-focused user interfaces
+- transaction-safe backend workflows and consistent API behavior
+- synchronized permissions across frontend and backend layers
 
-- URL-synchronized filters, pagination, sorting, and active views
-- protected routes and frontend access guards
-- centralized filtering and query synchronization behavior
-- clean URL generation for synchronized event listings
-- shared upload previews and drag-and-drop interactions
-- contextual loading, validation, and empty-state behavior
-- accessibility-focused UI patterns with semantic HTML and ARIA support
-
-Together, the frontend and backend provide secure data handling, synchronized permissions, predictable API behavior, and consistent fullstack interactions across the application.
+Together, the frontend and backend deliver secure data handling, predictable behavior, and a consistent end-to-end user experience.
 
 ---
 
 ## ⚙️ Getting Started
+
+### Requirements:
+
+- Node.js
+- PostgreSQL
+- npm
 
 Follow these steps to run the fullstack application locally.
 
@@ -121,20 +118,24 @@ cd backend
 npm install
 ```
 
-Create a `.env` file inside the `backend` folder:
+Create a `.env` file inside the `backend` folder using `.env.example` as a reference.
+
+A `.env.example` file is provided as a reference configuration. Test environments should use a separate local test configuration.
 
 ```env
+NODE_ENV=development
+
 PORT=3000
+JWT_SECRET=your_jwt_secret_here
 
-JWT_SECRET=your_secret_key
-
-DB_NAME=plantogether_db
-DB_NAME_TEST=plantogether_test_db
-
-DB_USER=postgres
-DB_PASSWORD=your_password
 DB_HOST=localhost
 DB_PORT=5432
+
+DB_USER=postgres
+DB_PASSWORD=your_database_password
+
+DB_NAME=plantogether_db
+DB_NAME_TEST=plantogether_test
 
 UPLOAD_DIR=uploads
 
@@ -143,12 +144,20 @@ DB_SSL=false
 
 LOG_LEVEL=info
 
-NODE_ENV=development
+AUTH_RATE_LIMIT_WINDOW_MS=900000
+AUTH_RATE_LIMIT_MAX=10
+
+LOCATION_RATE_LIMIT_WINDOW_MS=60000
+LOCATION_RATE_LIMIT_MAX=30
+
+LOCATION_PROVIDER=nominatim
+GEOCODING_USER_AGENT=PlanTogether/1.0
+
+NOMINATIM_SEARCH_URL=https://nominatim.openstreetmap.org/search
+GEOCODING_RESULT_LIMIT=5
 
 CORS_ORIGIN=http://localhost:5173
 ```
-
-`.env.example` and `.env.test` files are provided as reference configurations.
 
 Make sure PostgreSQL is running and that the configured databases exist before starting the backend server.
 
@@ -168,7 +177,7 @@ cd frontend
 npm install
 ```
 
-Create a `.env` file inside the `frontend` folder:
+Create a `.env` file inside the `frontend` folder using `.env.example` as a reference:
 
 ```env
 VITE_API_URL=http://localhost:3000/api
@@ -182,71 +191,43 @@ npm run dev
 
 ### 4️⃣ Access the Application
 
-- Frontend:
+Frontend:
 
-`http://localhost:5173`
+```txt
+http://localhost:5173
+```
 
-- Backend API:
+Backend API:
 
-`http://localhost:3000/api`
+```txt
+http://localhost:3000/api
+```
 
 ---
 
 ## 📖 Project Documentation
 
-The backend API is fully documented in the backend README:
+Detailed documentation is available for both application layers and their testing architectures.
 
-👉 [`/backend/README.md`](./backend/README.md)
+### Backend
 
-It covers:
+👉 `/backend/README.md`
 
-- backend architecture and project structure
-- API endpoints and response formats
-- authentication and authorization
-- security, validation, uploads, and logging
-- filtering, pagination, query optimization, and permissions
-- transactions, soft-delete lifecycle handling, and database consistency
-- testing overview and CI integration
+Covers backend architecture, API workflows, security, validation, geolocation features, database operations, and CI integration.
 
-Dedicated backend testing documentation is also available:
+👉 `/backend/docs/testing.md`
 
-👉 [`/backend/docs/testing.md`](./backend/docs/testing.md)
+Covers backend testing architecture, integration and unit testing, database isolation, reusable test utilities, and CI workflows.
 
-It covers:
+### Frontend
 
-- testing architecture and strategy
-- integration and unit testing
-- reusable helpers and factories
-- transaction, upload, and validator testing
-- database isolation and CI workflows
-- middleware testing and mocking strategies
+👉 `/frontend/README.md`
 
-The frontend application is documented in the frontend README:
+Covers frontend architecture, reusable features and hooks, authentication, maps, query synchronization, API integration, and UI patterns.
 
-👉 [`/frontend/README.md`](./frontend/README.md)
+👉 `/frontend/docs/testing.md`
 
-It covers:
-
-- frontend architecture and project structure
-- feature-oriented frontend logic and reusable hooks
-- routing, authentication, and frontend access guards
-- query synchronization and listing behavior
-- API integration and frontend workflows
-- styling architecture and UI behavior
-- frontend testing overview
-
-Dedicated frontend testing documentation is also available:
-
-👉 [`/frontend/docs/testing.md`](./frontend/docs/testing.md)
-
-It covers:
-
-- frontend testing architecture and strategy
-- testing layers and testing workflows
-- feature, hook, route, API, and utility testing
-- reusable factories, mocks, helpers, and render utilities
-- mocking strategies and isolation patterns
-- query synchronization and frontend access guard testing
+Covers frontend testing architecture, testing layers, reusable utilities, accessibility testing, and mocking strategies.
 
 ---
 
@@ -261,13 +242,12 @@ The project uses a modern fullstack stack combining a secure backend API, a resp
 - PostgreSQL
 - Sequelize ORM
 - JWT authentication
-- bcrypt password hashing
+- bcrypt
 - express-validator
 - Multer
 - Helmet
 - express-rate-limit
 - Pino
-- centralized CORS configuration
 - Sequelize transactions
 
 ### ⚛️ Frontend
@@ -279,9 +259,9 @@ The project uses a modern fullstack stack combining a secure backend API, a resp
 - Lucide React
 - Context API
 - custom hooks
-- feature-oriented React architecture
-- URL query synchronization
-- FormData upload handling
+- feature-oriented architecture
+- React Leaflet
+- OpenStreetMap / Nominatim
 
 ### 🧪 Testing Stack
 
@@ -295,30 +275,27 @@ The project uses a modern fullstack stack combining a secure backend API, a resp
 
 - Vitest
 - React Testing Library
-- @testing-library/jest-dom
-- @testing-library/user-event
 - jsdom
 
 ### 🔁 Continuous Integration
 
-- separate backend and frontend GitHub Actions workflows
+- GitHub Actions
+- separate backend and frontend CI workflows
 
 ---
 
 ## 📁 Fullstack Structure
 
-The project is organized into two main applications: a backend API and a frontend client, each following a modular and maintainable structure.
+The project is organized into two main applications: a backend API and a frontend client, each following a modular and maintainable architecture.
 
-This separation creates clear boundaries between backend business logic, data management, security, frontend state management, testing, and user interface behavior.
+This separation creates clear boundaries between backend business logic, data management, security, frontend application logic, testing, and user interface behavior.
 
 ```txt
 planTogether/
 ├── backend/
 │   ├── docs/
-│   │
 │   ├── src/
 │   │   ├── config/
-│   │   ├── constants/
 │   │   ├── controllers/
 │   │   ├── middlewares/
 │   │   ├── models/
@@ -326,64 +303,35 @@ planTogether/
 │   │   ├── services/
 │   │   ├── utils/
 │   │   └── validators/
-│   │
 │   ├── tests/
-│   │   ├── factories/
-│   │   ├── helpers/
-│   │   ├── integration/
-│   │   └── unit/
-│   │
 │   ├── uploads/
-│   ├── .env.example
-│   ├── .env.test
 │   └── README.md
 │
 ├── frontend/
 │   ├── docs/
-│   │
 │   ├── src/
 │   │   ├── api/
-│   │   ├── assets/
 │   │   ├── components/
 │   │   ├── context/
 │   │   ├── features/
-│   │   │   ├── auth/
-│   │   │   ├── events/
-│   │   │   ├── eventMemberships/
-│   │   │   ├── users/
-│   │   │   │   ├── authenticated/
-│   │   │   │   └── public/
-│   │   │   └── shared/
 │   │   ├── hooks/
 │   │   ├── pages/
 │   │   ├── routes/
 │   │   ├── styles/
 │   │   ├── tests/
-│   │   │   ├── api/
-│   │   │   ├── components/
-│   │   │   ├── context/
-│   │   │   ├── factories/
-│   │   │   ├── features/
-│   │   │   ├── helpers/
-│   │   │   ├── hooks/
-│   │   │   ├── pages/
-│   │   │   ├── routes/
-│   │   │   ├── setup/
-│   │   │   └── utils/
 │   │   └── utils/
-│   │
-│   ├── public/
 │   └── README.md
 │
 └── README.md
 ```
 
-This structure promotes maintainability, testing consistency, separation of concerns, and long-term project organization across both backend and frontend layers.
+### Structure Highlights
 
-Testing strategies are intentionally separated:
+- **Backend** centralizes API endpoints, business logic, validation, security, database access, uploads, and automated testing.
+- **Frontend** follows a feature-oriented architecture with reusable components, hooks, routing, API integration, location-aware workflows, and automated testing.
+- **Testing** is maintained independently for each application, with dedicated documentation and testing strategies.
 
-- backend tests are organized around integration and unit testing layers
-- frontend tests are organized around features, hooks, pages, routes, APIs, and reusable utilities
+This structure promotes maintainability, separation of concerns, testing consistency, and long-term scalability across both backend and frontend layers.
 
 ---
 
@@ -392,62 +340,46 @@ Testing strategies are intentionally separated:
 ### 🔐 Authentication
 
 - User registration and login with JWT authentication
-- Secure password hashing with bcrypt
-- Authentication rate limiting protection
-- Profile management (name, email, avatar)
-- Avatar upload, update, preview, and persistence support
+- Secure password hashing and authentication rate limiting
+- Profile management with avatar upload support
 - Password updates with current password verification
 - Session persistence with optional "Remember me" functionality
-- Redirect restoration after protected authentication flows
-- Protected frontend routes and authentication persistence
+- Protected routes, authentication persistence, and redirect restoration
 
 ### 📅 Event Management
 
-- Create, update, delete, and view events
-- Upload, preview, preserve, replace, and remove event images
-- Event image lifecycle handling synchronized across frontend and backend
-- Automatic organizer assignment upon event creation
-- Strong frontend and backend validation
-- Started-event editing restrictions and protected event workflows
+- Create, update, delete, and browse events
+- Upload and manage event images
+- Event status-aware workflows (upcoming, ongoing, ended)
+- Frontend and backend validation
+- Started-event restrictions and protected event actions
 - Centralized filtering, sorting, pagination, and listing behavior
-- URL-synchronized filters, pagination, sorting, and active views
-- Ongoing, upcoming, archived, and all event views
-- Centralized event status handling and status badge rendering
-- Optimized participant count and query behavior
-- Transaction-safe backend workflows for critical operations
+- URL-synchronized views and query parameters
+- Transaction-safe backend workflows
 
-### 👥 Event Participation
+### 🌍 Location & Discovery
+
+- Location search powered by OpenStreetMap and Nominatim
+- Interactive event maps
+- Geolocation-aware event workflows
+- Location-based event discovery and filtering
+
+### 👥 Participation & Community
 
 - Join and leave events
-- Prevent duplicate participation
-- Retrieve event members and organizers
-- Personalized dashboards with active and historical event views
+- Role-aware event participation
+- Organizer ownership transfer workflows
+- Personalized dashboards with active and historical events
 - Public user profiles with organized and joined event history
 - Membership restoration and soft-delete lifecycle handling
-- Organizer ownership transfer workflows
-- Role-aware membership actions and protected interactions
 
-### 🔍 Event Search & Filtering
+### 🔍 Search & Filtering
 
-- Keyword search (title and description)
-- Creator-based search
-- Filtering by type, theme, mode, and location
-- Exact date and date range filtering
-- Combined filters with sorting and pagination
+- Keyword, creator, type, theme, and location filters
+- Exact-date and date-range filtering
+- Combined filtering, sorting, and pagination
 - URL-synchronized filters and active views
-- Centralized listing state and query synchronization behavior
-
-### 🖼️ Media & Upload Experience
-
-- Shared avatar and event image upload system
-- Drag-and-drop upload interactions
-- Image previews with filename and size feedback
-- Uploaded file removal before submission
-- Default image fallback handling
-- Automatic cleanup of replaced and removed uploads
-- Upload rollback protection during failed operations
-- Secure upload validation and protected file handling
-- Event image preservation and removal behavior during edit workflows
+- Centralized query synchronization behavior
 
 ### 🎭 Roles & Permissions
 
@@ -457,91 +389,60 @@ The application enforces a strict role hierarchy:
 organizer > co_organizer > participant
 ```
 
-Each role defines specific permissions:
-
-- **Organizer** → full control over events and members
-- **Co-organizer** → manage participants and edit events
-- **Participant** → join and leave events
-
-Unauthenticated users can access public event and public user information in read-only mode.
-
 Access control is enforced through:
 
-- role-based access control (RBAC) across backend and frontend
-- centralized permission validation and protected actions
-- frontend access guards and protected event flows
+- role-based access control (RBAC)
+- centralized permission validation
+- protected routes and frontend access guards
+- permission-aware UI behavior
 - strict role hierarchy enforcement
+
+### 🖼️ Uploads & Media
+
+- Shared avatar and event image upload workflows
+- Drag-and-drop uploads with previews
+- Secure upload validation and protected file handling
+- Image preservation, replacement, removal, and cleanup workflows
 
 ### 📄 User Experience
 
-- Contextual empty states based on filters and active views
-- Loading states for asynchronous operations
-- Config-driven event tabs and active views
-- Responsive UI and reusable component architecture
-- Consistent filtering and synchronized listing behavior
-- Semantic HTML structure and accessibility-focused UI behavior
-- Accessible forms, validation feedback, and keyboard-friendly interactions
+- Responsive and accessibility-focused UI
+- Semantic HTML and ARIA-aware interactions
+- Keyboard-friendly navigation
+- Contextual loading, validation, and empty states
+- Reusable component architecture and consistent user workflows
 
 ---
 
 ## 🧱 Architecture
 
-PlanTogether follows a clean fullstack architecture with a clear separation between backend and frontend responsibilities.
+PlanTogether follows a modular fullstack architecture with a clear separation between backend and frontend responsibilities.
 
 ### 🔧 Backend
 
-The backend uses a modular layered architecture:
+The backend uses a layered architecture organized around:
 
-- Routes → define API endpoints
-- Controllers → handle requests and responses
+- Routes and Controllers → API endpoints and request handling
 - Services → business logic, permissions, and workflows
 - Models → database structure and Sequelize relations
-- Validators → request validation and input rules
-- Middlewares → authentication, authorization, uploads, rate limiting, and error handling
-- Utils → shared filtering, pagination, formatting, and file management helpers
-- Config → centralized environment, logging, and security configuration
-- Constants → shared business values and role definitions
+- Validators and Middlewares → validation, authentication, authorization, uploads, rate limiting, and error handling
+- Utils, Config, and Constants → shared helpers, environment configuration, logging, and business rules
 
-This architecture supports:
-
-- centralized security and validation
-- secure role-based access control (RBAC)
-- transaction-safe critical operations
-- filtering, pagination, and optimized query behavior
-- uploaded file management and cleanup
-- consistent API responses
-- maintainability and testability
-- soft-delete lifecycle protection
+This architecture provides centralized security, role-based access control (RBAC), transaction-safe operations, filtering and pagination utilities, upload management, and consistent API behavior.
 
 ### ⚛️ Frontend
 
-The frontend uses a component-based and feature-oriented architecture focused on maintainability, predictable UI behavior, and reusable frontend patterns.
+The frontend follows a feature-oriented architecture organized around:
 
-The frontend is organized around:
+- Pages and Components → application views and reusable UI elements
+- API Layer → centralized API communication and normalization
+- Context and Hooks → authentication state and reusable interaction logic
+- Features → domain-specific business logic and query synchronization
+- Utils and Tests → shared helpers, factories, mocks, and testing utilities
 
-- Pages → application views and route composition
-- Components → reusable UI elements
-- API layer → centralized API communication and normalization
-- Context → global authentication state
-- Hooks → reusable state and interaction logic
-- Features → domain-specific logic and query synchronization
-- Utils → shared formatting, pagination, and upload helpers
-- Tests → reusable factories, helpers, mocks, and isolated testing layers
+This architecture supports permission-aware interfaces, synchronized filtering and navigation, location-aware workflows, reusable UI patterns, protected routes, accessibility-focused interactions, and scalable feature development.
 
-This architecture supports:
-
-- responsive and dynamic UI behavior
-- permission-aware rendering and interactions
-- URL-synchronized filters, pagination, and active views
-- reusable validation and normalization patterns
-- scalable feature organization
-- semantic structure and accessibility-focused behavior
-- protected routes and frontend access guards
-- synchronized listing and filtering behavior
-- selective create/edit datetime validation workflows
-- started-event editing protections
-
-Together, this architecture helps maintain consistent frontend and backend behavior, predictable state management, centralized business logic, and long-term maintainability across the application.
+Together, these architectural layers help maintain consistent behavior, predictable workflows, strong separation of concerns, and long-term maintainability across the application.
 
 ---
 
@@ -567,121 +468,86 @@ npm run test:run
 
 ### 📊 Results
 
-- Backend: 650 tests (79 test suites)
-- Frontend: 1218 tests (128 test files)
-- Total: 1868 automated tests
-- ✅ Fully integrated backend and frontend testing architecture
+- Backend: **715 tests** across **88 test suites**
+- Frontend: **1363 tests** across **136 test files**
+- Total: **2078 automated tests**
 - ✅ High automated coverage across the fullstack application
+- ✅ Separate backend and frontend CI workflows
 
-### 📦 Test Coverage
+### 📦 Coverage Areas
 
 #### 🔧 Backend
 
-- Authentication and profile management
-- Authentication rate limiting and security rules
-- Event CRUD operations
-- Filtering, sorting, pagination, and query optimization
-- Event memberships, permissions, and RBAC workflows
-- Validation, edge cases, and centralized error handling
-- File uploads, cleanup, rollback protection, and image lifecycle handling
-- Transaction-safe workflows and database isolation behavior
-- Soft-delete lifecycle handling and ownership transfer flows
-- Internal utilities (filtering, pagination, formatting, uploads, query builders)
+- authentication, authorization, and security
+- event management and memberships
+- filtering, pagination, and geolocation workflows
+- uploads, validation, and error handling
+- transactions, soft deletes, and ownership transfers
+- services, middleware, utilities, and database workflows
 
 #### ⚛️ Frontend
 
-- Authentication, routing, and protected access flows
-- Frontend access guards and permission-aware interactions
-- API layers and normalization helpers
-- Feature-oriented workflows and reusable state management
-- Event filtering, pagination, listing behavior, and query synchronization
-- Public user profile and public user event listing workflows
-- Clean URL synchronization across event listing pages
-- Upload interactions, validation behavior, and image lifecycle handling
-- Role-aware frontend interactions and protected event behavior
-- Reusable factories, mocks, render helpers, and testing utilities
-- Semantic structure, ARIA validation, and accessibility-focused interactions
-- Event status synchronization and badge rendering
-- Started-event editing restrictions and selective datetime validation workflows
+- authentication, routing, and protected access
+- feature-oriented business logic and reusable hooks
+- filtering, pagination, query synchronization, and maps
+- uploads, validation, and permission-aware interactions
+- API integration, state management, and reusable utilities
+- accessibility, semantic structure, and user interactions
 
 ### 🔁 Test Strategy
 
-- Backend tests validate both integration workflows and isolated internal modules
-- Frontend tests validate frontend business logic and user-facing behavior
-- Backend integration tests use the real Express application with an isolated PostgreSQL test database
-- Frontend API calls are mocked to isolate frontend behavior
-- Separate backend and frontend CI workflows run automatically through GitHub Actions
-- Tests cover validation, permissions, uploads, filtering, transactions, synchronization, and error handling
-- Reusable helpers, mocks, and factories reduce duplicated test setup
-- Tests remain isolated to ensure deterministic and predictable behavior across the stack
+- Backend tests combine integration and unit testing with an isolated PostgreSQL test database.
+- Frontend tests validate business logic and user-facing behavior using Vitest and React Testing Library.
+- API calls are mocked on the frontend to isolate UI behavior.
+- Reusable factories, mocks, helpers, and render utilities reduce duplicated test setup.
+- Separate GitHub Actions workflows automatically validate backend and frontend changes.
 
-Dedicated backend testing documentation is available:
+Detailed testing documentation is available:
 
 👉 [`/backend/docs/testing.md`](./backend/docs/testing.md)
 
-Dedicated frontend testing documentation is also available:
-
 👉 [`/frontend/docs/testing.md`](./frontend/docs/testing.md)
 
-These testing strategies help support reliable backend workflows, predictable frontend behavior, safer refactoring, and maintainable long-term fullstack development.
+These testing strategies support reliable workflows, safer refactoring, and long-term maintainability across the fullstack application.
 
 ---
 
 ## 🔐 Security
 
-The application implements multiple security mechanisms to protect data, enforce access control, and ensure safe and consistent behavior across both backend and frontend layers.
+PlanTogether implements multiple security mechanisms to protect data, enforce access control, and maintain consistent behavior across both backend and frontend layers.
 
-### 🔑 Authentication
+### 🔑 Authentication & Access Control
 
-- JWT-based authentication with secure token handling
-- Protected API routes through authentication middleware
-- Protected frontend routes and authentication persistence
-- Password updates require current password verification
-- Authentication rate limiting protection against brute-force attacks
+- JWT-based authentication
+- Password hashing with bcrypt
+- Authentication rate limiting
+- Protected API endpoints and frontend routes
+- Role-based access control (RBAC)
+- Centralized permission validation and role hierarchy enforcement
 
-### 🛡️ Authorization
+### 🛡️ Validation & Data Protection
 
-- Role-based access control (RBAC) across backend and frontend
-- Permission checks for events and memberships
-- Event state-aware restrictions and started-event protections
-- Centralized permission validation and protected actions
-- Frontend access guards for protected event workflows
-- Strict role hierarchy enforcement
-
-### 🧾 Input Validation
-
-- Backend and frontend request validation
-- Validation of request bodies, query parameters, and route parameters
-- Protection against malformed and invalid data
+- Backend and frontend validation of request bodies, query parameters, and route parameters
 - Password policy enforcement
-- Centralized validation error formatting
+- Sensitive data protection through Sequelize scopes
+- Email normalization and consistent error handling
 
 ### 📁 Upload Security
 
 - MIME type and file extension validation
-- File size limits and protected upload handling
-- Controlled and normalized upload destinations
-- Uploaded file preservation, replacement, removal, and cleanup
-- Upload rollback protection during failed operations
-- Secure file handling and path normalization
+- File size restrictions and protected upload handling
+- Secure upload destinations and path normalization
+- Upload cleanup, replacement, and rollback protection
 
-### 🔒 Data Protection
-
-- Password hashing with bcrypt
-- Sensitive data protection through Sequelize scopes
-- Consistent API responses and centralized error handling
-- Email normalization before persistence and authentication
-
-### ⚙️ Additional Security Measures
+### ⚙️ Infrastructure & Application Security
 
 - Helmet security headers
 - Centralized CORS configuration
 - SQL injection protection through Sequelize parameterized queries
-- Transaction-safe critical operations for database consistency
-- Database indexes for optimized query behavior
-- Centralized logging and environment-based security configuration
+- Transaction-safe database operations
+- Centralized logging and environment-based configuration
 
-These mechanisms help ensure secure data handling, predictable application behavior, protected access flows, transaction-safe operations, and strong protection against unauthorized actions across the application.
+These security mechanisms help protect user data, enforce permissions, prevent unauthorized actions, and maintain predictable application behavior across the fullstack architecture.
 
 ---
 
@@ -689,36 +555,25 @@ These mechanisms help ensure secure data handling, predictable application behav
 
 ### ⚛️ Frontend
 
-- Implemented reusable event listing architecture with URL-synchronized filters, pagination, and active views
-- Added public user profiles with created and joined event listings
-- Added paginated public user event views with synchronized URL state
-- Improved clean URL behavior by omitting fallback views, first pages, and default sorting values
-- Added ongoing event views, centralized event status handling, and status-aware UI behavior
-- Improved event image lifecycle handling and authenticated user event image support
-- Added selective create/edit datetime validation and started-event editing protections
-- Expanded accessibility-focused UI behavior, semantic structure, and reusable component patterns
-- Improved upload preview architecture and responsive upload interactions
-- Expanded frontend testing coverage and dedicated frontend testing documentation
+- Added location-aware event workflows with interactive maps and location search
+- Expanded public user profiles and event activity pages
+- Improved filtering, pagination, query synchronization, and clean URL behavior
+- Strengthened accessibility, responsive UI patterns, and reusable component architecture
+- Enhanced upload workflows, image lifecycle handling, and protected frontend interactions
 
 ### 🔧 Backend
 
-- Centralized filtering, pagination, query builders, and query utilities
-- Added transaction-safe workflows, ownership transfer, and soft-delete lifecycle handling
-- Improved event status handling, access permissions, and started-event restrictions
-- Added public user profiles and public user event listings with filtering, sorting, pagination, and created/joined views
-- Improved public user event enrichment, statistics handling, and pagination/query-builder helpers
-- Expanded security, validation, upload handling, and API consistency behavior
-- Added dedicated backend testing documentation
+- Centralized filtering, pagination, geolocation, and query utilities
+- Added transaction-safe workflows, ownership transfers, and soft-delete lifecycle handling
+- Expanded permissions, validation, upload handling, and API consistency
+- Improved public user profile and event activity workflows
 
 ### 🧪 Testing
 
-- Reached 1868 automated tests across backend and frontend
-- Expanded coverage across filtering, pagination, permissions, uploads, validation, synchronization, routing, and business rules
-- Added coverage for public user profiles, public user event listings, and clean URL synchronization
-- Added coverage for event status workflows, image lifecycle handling, and started-event restrictions
-- Expanded accessibility, semantic structure, and protected route testing coverage
-- Improved reusable factories, mocks, helpers, and render utilities
-- Maintained high automated coverage across backend and frontend layers
+- Reached **2078 automated tests** across backend and frontend
+- Expanded coverage for permissions, geolocation, uploads, validation, routing, accessibility, and business workflows
+- Added dedicated backend and frontend testing documentation
+- Maintained high automated coverage across the fullstack application
 
 ---
 
@@ -726,17 +581,13 @@ These mechanisms help ensure secure data handling, predictable application behav
 
 | Area | Status |
 |------|--------|
-| Backend Architecture | ✅ Modular, scalable, and production-oriented |
-| Frontend Architecture | ✅ Feature-oriented, accessibility-focused, and fully tested |
-| Authentication & RBAC | ✅ Centralized and synchronized across backend and frontend |
-| Security | ✅ Centralized, validated, and production-oriented |
-| Database & Transactions | ✅ Optimized, indexed, and transaction-safe |
-| Backend API | ✅ Stable, standardized, and fully tested |
-| Frontend Application | ✅ Responsive, role-aware, accessibility-focused, and URL-synchronized |
-| Backend Testing & CI | ✅ 650 tests across 79 test suites |
-| Frontend Testing & CI | ✅ 1218 tests across 128 test files |
+| Backend | ✅ Modular architecture, secure API, transaction-safe workflows, and comprehensive test coverage |
+| Frontend | ✅ Feature-oriented architecture, responsive UI, accessibility-focused interactions, and permission-aware workflows |
+| Authentication & Permissions | ✅ JWT authentication and RBAC synchronized across backend and frontend |
+| Geolocation & Maps | ✅ Location search, geolocation workflows, and OpenStreetMap integration implemented |
+| Uploads & Media | ✅ Shared avatar and event image workflows with validation and lifecycle handling |
+| Testing & CI | ✅ 2078 automated tests with dedicated backend and frontend CI pipelines |
 | Documentation | ✅ Backend, frontend, and testing documentation available |
-| UX & Accessibility | ✅ Responsive UI, semantic structure, upload UX, and accessibility-focused interactions implemented |
 
 ---
 
@@ -744,91 +595,72 @@ These mechanisms help ensure secure data handling, predictable application behav
 
 ### 🚀 Features
 
-- Implement an event invitation system (email invitations or shareable links)
-- Add event notifications and reminders
-- Support public and private events with fine-grained access control
-- Add event capacity management and registration deadlines
-- Introduce event activity feeds and moderation audit logs
+- Event invitations and sharing workflows
+- Notifications and reminder systems
+- Public and private events with expanded access controls
+- Event capacity management and registration deadlines
+- Participation analytics and event reporting
 
-### 📅 Event Management
+### 👥 Community & Moderation
 
-- Improve archived and past-event lifecycle management
-- Expand advanced membership moderation workflows
-- Add membership role history and audit tracking
-- Improve participation analytics and event reporting
+- Advanced membership management and moderation workflows
+- Event activity feeds and audit logs
+- Membership history and role tracking
+- Enhanced archived and historical event management
 
-### ⚛️ Frontend & UX
+### ⚛️ Frontend & User Experience
 
-- Continue reusable UI component extraction and frontend architecture refinement
-- Continue responsive and accessibility-focused UI improvements
-- Enhance UI consistency, transitions, animations, and async feedback behavior
-- Expand reusable hooks, listing abstractions, and query synchronization behavior
-- Introduce richer feedback systems (toasts, notifications, contextual async states)
+- Continued UI component extraction and architecture refinement
+- Additional accessibility and responsive design improvements
+- Richer feedback systems (toasts, notifications, async states)
+- Enhanced animations, transitions, and interaction feedback
+- Further expansion of reusable hooks and listing abstractions
 
 ### ⚙️ Infrastructure & Deployment
 
-- Containerize the application using Docker
-- Deploy the application (Vercel, Railway, Render, or Fly.io)
-- Improve production environment configuration
-- Expand CI/CD automation for testing and deployment workflows
-- Improve production-ready file storage and upload strategies
-- Add Swagger / OpenAPI documentation support
+- Docker containerization
+- Cloud deployment and production environment setup
+- Expanded CI/CD automation
+- Production-ready file storage strategies
+- OpenAPI / Swagger documentation
 
 ---
 
 ## 🧠 What I Learned
 
-Through this project, I strengthened my fullstack development skills and gained hands-on experience building a production-oriented application focused on architecture, security, testing, maintainability, scalability, and long-term reliability.
+Through this project, I strengthened my fullstack development skills by building a production-oriented application focused on architecture, security, testing, maintainability, and long-term scalability.
 
-### 🔧 Backend
+### 🔧 Backend Development
 
-- Designing modular and scalable REST API architectures
-- Implementing secure JWT authentication and role-based access control (RBAC)
-- Managing relational data with Sequelize and PostgreSQL
-- Handling complex business logic around roles, permissions, memberships, and event workflows
-- Building reusable filtering, pagination, formatting, and query utilities
-- Implementing secure file upload systems with validation, cleanup, and lifecycle management
-- Working with transaction-safe workflows and protected database operations
-- Improving query consistency, indexing, and scalable backend behavior
-- Managing soft-delete lifecycle handling and ownership transfer workflows
-- Centralizing validation, security policies, logging, and API response handling
-- Aligning frontend and backend permission enforcement
-- Managing synchronized event image behavior across database updates and filesystem cleanup
-- Improving maintainability through modular backend architecture patterns
+- Designing modular and maintainable REST APIs
+- Implementing secure authentication, authorization, and role-based access control (RBAC)
+- Managing relational data and complex business workflows with PostgreSQL and Sequelize
+- Building reusable validation, filtering, pagination, upload, and query utilities
+- Working with transactions, soft-delete workflows, and data consistency patterns
+- Designing secure file upload and lifecycle management systems
 
-### ⚛️ Frontend
+### ⚛️ Frontend Development
 
-- Structuring a modular and feature-oriented React application
-- Managing global state with the Context API
-- Creating reusable frontend patterns with custom hooks and shared feature logic
-- Building dynamic, role-aware, and status-aware UI behavior
-- Synchronizing filters, pagination, and active views with URL parameters
-- Designing reusable listing, filtering, and query synchronization behavior
-- Building interactive UX patterns including drag-and-drop uploads, previews, loading states, and contextual empty states
-- Improving maintainability through reusable frontend architecture patterns
-- Designing permission-aware frontend workflows aligned with backend authorization rules
-- Managing event image preservation, replacement, and removal workflows
-- Designing selective create/edit validation workflows
-- Managing started-event editing protections without impacting reusable form behavior
-- Improving accessibility-focused UI behavior with semantic structure and ARIA-aware components
+- Structuring a feature-oriented React application
+- Managing authentication, routing, and global state with Context API
+- Building reusable hooks, components, and shared business logic
+- Implementing permission-aware, status-aware, and accessibility-focused user interfaces
+- Synchronizing application state with URL parameters, filters, and navigation workflows
+- Creating responsive user experiences with uploads, maps, forms, validation, and asynchronous interactions
 
-### 🧪 Testing & Quality
+### 🧪 Testing & Quality Assurance
 
-- Writing backend tests with Jest and Supertest
-- Building frontend tests with Vitest and React Testing Library
-- Testing full API workflows and complex frontend interactions
-- Designing reusable testing helpers, factories, mocks, and isolated test environments
-- Validating business rules, permissions, uploads, filtering, transactions, synchronization, and security behavior
-- Improving reliability through automated testing, CI workflows, edge-case validation, database isolation, and rollback protection
+- Writing backend and frontend automated tests with Jest, Supertest, Vitest, and React Testing Library
+- Testing business rules, permissions, validation, uploads, and user-facing workflows
+- Building reusable testing utilities, factories, mocks, and isolated test environments
+- Improving reliability through CI workflows, database isolation, and regression testing
 
-### 🧱 Architecture & Practices
+### 🧱 Architecture & Engineering Practices
 
-- Applying separation of concerns across backend and frontend layers
-- Designing maintainable and scalable architectures
-- Aligning frontend and backend validation and permission behavior
-- Structuring applications around reusable and domain-driven features
-- Building consistent API-driven frontend/backend interactions
+- Applying separation of concerns across frontend and backend layers
+- Designing scalable and maintainable application architectures
+- Aligning frontend and backend validation, permissions, and business rules
+- Building consistent API-driven workflows and reusable abstractions
 - Writing clean, testable, and production-oriented code
-- Improving long-term maintainability through reusable architecture and testing practices
 
 ---

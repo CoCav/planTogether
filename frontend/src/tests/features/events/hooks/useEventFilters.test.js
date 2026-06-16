@@ -16,6 +16,7 @@ import { createHookCallbacks } from "../../../helpers/hooks/createHookProps";
    Handles:
    - default filter state
    - filter form updates
+   - mutually exclusive date and date range filters
    - filter panel visibility
    - filter submission and reset
    - sort changes
@@ -115,6 +116,68 @@ describe("useEventFilters", () => {
         });
 
         expect(result.current.filterState.filters.search).toBe("music");
+    });
+
+    it("should clear date range filters when exact date is selected", () => {
+        const { result } = setupHook({
+            initialFilters: createEventFilters({
+                startDate: "2026-05-18",
+                endDate: "2026-05-20"
+            })
+        });
+
+        act(() => {
+            result.current.filterActions.handleFilterChange({
+                target: {
+                    name: "date",
+                    value: "2026-05-19"
+                }
+            });
+        });
+
+        expect(result.current.filterState.filters.date).toBe("2026-05-19");
+        expect(result.current.filterState.filters.startDate).toBe("");
+        expect(result.current.filterState.filters.endDate).toBe("");
+    });
+
+    it("should clear exact date filter when start date is selected", () => {
+        const { result } = setupHook({
+            initialFilters: createEventFilters({
+                date: "2026-05-19"
+            })
+        });
+
+        act(() => {
+            result.current.filterActions.handleFilterChange({
+                target: {
+                    name: "startDate",
+                    value: "2026-05-18"
+                }
+            });
+        });
+
+        expect(result.current.filterState.filters.date).toBe("");
+        expect(result.current.filterState.filters.startDate).toBe("2026-05-18");
+    });
+
+    it("should clear exact date filter when end date is selected", () => {
+        const { result } = setupHook({
+            initialFilters: createEventFilters({
+                date: "2026-05-19"
+            })
+        });
+
+        act(() => {
+            result.current.filterActions.handleFilterChange({
+                target: {
+                    name: "endDate",
+                    value: "2026-05-20"
+                }
+            });
+        });
+
+        expect(result.current.filterState.filters.date).toBe("");
+        expect(result.current.filterState.filters.endDate).toBe("2026-05-20");
     });
 
     it("should toggle filter panel visibility", () => {

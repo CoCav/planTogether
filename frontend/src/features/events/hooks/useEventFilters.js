@@ -16,6 +16,7 @@ import { getDefaultEventFilters } from "../eventFilters";
 
    Handles:
    - filter form state
+   - mutually exclusive date and date range filters
    - filter panel visibility
    - sorting
    - quick filters
@@ -46,14 +47,29 @@ export default function useEventFilters({
        FILTER CHANGES
     ============================= */
 
-    // Updates filter form values
+    // Updates filter form values and clears conflicting date filters
     const handleFilterChange = (event) => {
         const { name, value } = event.target;
 
-        setFilters((prev) => ({
-            ...prev,
-            [name]: value
-        }));
+        setFilters((prev) => {
+            const nextFilters = {
+                ...prev,
+                [name]: value
+            };
+
+            // Exact date filter replaces date range filters
+            if (name === "date" && value) {
+                nextFilters.startDate = "";
+                nextFilters.endDate = "";
+            }
+
+            // Date range filters replace exact date filter
+            if ((name === "startDate" || name === "endDate") && value) {
+                nextFilters.date = "";
+            }
+
+            return nextFilters;
+        });
     };
 
     // Applies filters and reloads first page

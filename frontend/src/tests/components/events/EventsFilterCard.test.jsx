@@ -16,7 +16,7 @@ import { createEventListingFilters } from "../../factories/shared/eventListingFi
    - hidden and visible form states
    - accessible labels and section structure
    - search, mode, date, and sorting interactions
-   - disabled date range states
+   - mutually exclusive exact date and date range states
    - filter submission and reset actions
    - decorative filter and action icons
 
@@ -220,7 +220,7 @@ describe("EventsFilterCard", () => {
     });
 
     /* =============================
-       DATE RANGE STATE
+       MUTUALLY EXCLUSIVE DATE FILTERS
     ============================= */
 
     it("disables start and end date fields when exact date is selected", () => {
@@ -236,6 +236,30 @@ describe("EventsFilterCard", () => {
         expect(screen.getByLabelText(/end date/i)).toBeDisabled();
     });
 
+    it("disables exact date field when start date is selected", () => {
+        renderFilterCard({
+            showFilters: true,
+            filters: {
+                ...filters,
+                startDate: "2026-05-18"
+            }
+        });
+
+        expect(screen.getByLabelText(/^date$/i)).toBeDisabled();
+    });
+
+    it("disables exact date field when end date is selected", () => {
+        renderFilterCard({
+            showFilters: true,
+            filters: {
+                ...filters,
+                endDate: "2026-05-20"
+            }
+        });
+
+        expect(screen.getByLabelText(/^date$/i)).toBeDisabled();
+    });
+
     it("keeps start and end date fields enabled when exact date is empty", () => {
         renderFilterCard({
             showFilters: true
@@ -243,6 +267,14 @@ describe("EventsFilterCard", () => {
 
         expect(screen.getByLabelText(/start date/i)).not.toBeDisabled();
         expect(screen.getByLabelText(/end date/i)).not.toBeDisabled();
+    });
+
+    it("keeps exact date field enabled when date range is empty", () => {
+        renderFilterCard({
+            showFilters: true
+        });
+
+        expect(screen.getByLabelText(/^date$/i)).not.toBeDisabled();
     });
 
     /* =============================

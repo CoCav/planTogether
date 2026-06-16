@@ -14,7 +14,8 @@ import Select from "../ui/Select";
 
    Handles:
    - search filters
-   - date filters
+   - date and date range filters
+   - mutually exclusive date filter controls
    - sorting controls
    - accessible visibility toggle
 ================================================== */
@@ -29,6 +30,13 @@ export default function EventsFilterCard({
     onSortChange,
     onResetFilters
 }) {
+
+    /* =============================
+       DATE FILTER STATE
+    ============================= */
+
+    const hasDateRangeFilter = Boolean(filters.startDate || filters.endDate);
+    const hasSpecificDateFilter = Boolean(filters.date);
 
     /* =============================
        CONSTANTS
@@ -179,6 +187,7 @@ export default function EventsFilterCard({
                                         name="date"
                                         value={filters.date}
                                         onChange={onFilterChange}
+                                        disabled={hasDateRangeFilter}
                                         aria-describedby={errorId}
                                     />
                                 )}
@@ -192,7 +201,7 @@ export default function EventsFilterCard({
                                         name="startDate"
                                         value={filters.startDate}
                                         onChange={onFilterChange}
-                                        disabled={Boolean(filters.date)}
+                                        disabled={hasSpecificDateFilter}
                                         aria-describedby={errorId}
                                     />
                                 )}
@@ -206,7 +215,7 @@ export default function EventsFilterCard({
                                         name="endDate"
                                         value={filters.endDate}
                                         onChange={onFilterChange}
-                                        disabled={Boolean(filters.date)}
+                                        disabled={hasSpecificDateFilter}
                                         aria-describedby={errorId}
                                     />
                                 )}

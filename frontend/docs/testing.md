@@ -2,9 +2,9 @@
 
 ![Vitest](https://img.shields.io/badge/Test-Vitest-6E9F18)
 ![RTL](https://img.shields.io/badge/Test-React%20Testing%20Library-E33332)
-![Test Files](https://img.shields.io/badge/test%20files-128%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-1218%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-97.89%25%20statements%20%7C%2095.07%25%20branches-brightgreen)
+![Test Files](https://img.shields.io/badge/test%20files-136%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-1363%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-96.49%25%20statements%20%7C%2093.01%25%20branches-brightgreen)
 
 This document describes the frontend testing architecture and overall testing strategy used in the PlanTogether frontend.
 
@@ -12,15 +12,13 @@ The project uses **Vitest** and **React Testing Library** to validate isolated f
 
 The testing architecture focuses on:
 
-- frontend reliability and long-term maintainability
-- reusable frontend interaction logic and query synchronization
-- routing, authentication, and frontend access guard validation
-- filtering, pagination, listing, and state synchronization behavior
-- reusable factories, mocks, helpers, and render utilities
-- API abstraction and normalization consistency
-- semantic structure, ARIA behavior, and accessibility-focused UI interactions
-- isolated and predictable frontend test flows
-- scalable and maintainable frontend testing workflows
+- frontend reliability, maintainability, and long-term stability
+- authentication, routing, and protected access workflows
+- reusable business logic, query synchronization, and state management
+- API abstraction, normalization, and frontend error handling
+- accessibility, semantic structure, and responsive UI behavior
+- reusable factories, mocks, helpers, and testing utilities
+- isolated, predictable, and scalable testing workflows
 
 ---
 
@@ -28,31 +26,29 @@ The testing architecture focuses on:
 
 The frontend testing architecture is designed to validate:
 
-- authentication flows, protected access behavior, and route synchronization
-- API request helpers, response normalization, and frontend error handling
-- frontend validation behavior and reusable business logic
-- event filtering, pagination, listing behavior, and URL query synchronization
-- event workflows, membership workflows, and role-aware frontend permissions
-- public and authenticated user workflows, including public profile and event listing behavior
-- reusable hooks, frontend state management, and shared utilities
-- page rendering, routing behavior, and navigation flows
-- reusable factories, mocks, render helpers, and testing utilities
-- semantic structure, ARIA behavior, accessibility-focused interactions, and accessible navigation patterns
-- responsive component behavior and reusable UI interaction patterns
-- event status synchronization, status-aware UI behavior, and status badge rendering
-- event image preservation, replacement, removal, and metadata handling
-- started-event editing restrictions and contextual datetime validation behavior
+- authentication flows, protected access behavior, and route restoration
+- API modules, response normalization, and frontend error handling
+- frontend validation, reusable business logic, and shared utilities
+- event, membership, and role-aware permission workflows
+- filtering, pagination, listing behavior, and URL query synchronization
+- location search, geolocation workflows, and interactive map behavior
+- public and authenticated user workflows
+- reusable hooks, page rendering, and state management behavior
+- accessibility, semantic structure, ARIA behavior, and keyboard interactions
+- responsive UI behavior and reusable component interactions
+- event status synchronization, started-event restrictions, and datetime validation
+- image upload, preservation, replacement, and removal workflows
 
 The current frontend test suite includes:
 
-- **128 passing test files**
-- **1218 passing tests**
-- **97.89% statement coverage**
-- **95.07% branch coverage**
-- **95.03% function coverage**
-- **98.12% line coverage**
+- **136 passing test files**
+- **1363 passing tests**
+- **96.49% statement coverage**
+- **93.01% branch coverage**
+- **94.87% function coverage**
+- **97.21% line coverage**
 
-The combination of integration-style frontend testing, isolated business logic testing, route testing, reusable UI testing, and shared utility testing helps ensure frontend reliability, accessibility consistency, predictable behavior, and scalable long-term frontend development.
+The combination of integration-style frontend testing, isolated business-logic testing, route testing, reusable UI testing, and shared utility testing helps ensure frontend reliability, accessibility consistency, predictable behavior, and scalable long-term frontend evolution.
 
 ---
 
@@ -74,25 +70,23 @@ The frontend testing architecture relies on the following tools and libraries:
 ### Testing Utilities
 
 - Reusable factories for consistent frontend test data generation
-- Reusable render helpers for providers, routing, and protected flows
-- Reusable hook testing utilities
+- Reusable render and hook testing helpers for providers, routing, and protected flows
 - Shared mocks for API behavior, uploads, dialogs, pagination, and routing
-- Centralized frontend test setup and cleanup utilities
-- Shared helpers for semantic structure, ARIA validation, and accessibility-oriented assertions
+- Centralized test setup, cleanup, and frontend testing utilities
+- Shared helpers for semantic structure, ARIA validation, and accessibility-focused assertions
 
 ### Coverage Scope
 
 The testing stack is designed to support reliable frontend evolution and long-term maintainability across:
 
 - API modules, request helpers, and normalization utilities
-- reusable frontend business logic and query synchronization
+- reusable frontend business logic, hooks, state management, and query synchronization
 - routing, protected access behavior, and navigation flows
-- reusable hooks and frontend state management
 - page-level rendering and interaction behavior
 - reusable UI interaction patterns and responsive upload behavior
 - semantic structure, accessibility-focused UI patterns, and ARIA-aware interactions
 
-This testing architecture helps maintain predictable frontend behavior, isolated business logic validation, testing workflows, accessibility consistency, and scalable long-term frontend maintainability.
+This testing architecture helps maintain predictable frontend behavior, reliable business-logic validation, accessibility consistency, and scalable long-term frontend maintainability.
 
 ---
 
@@ -132,28 +126,25 @@ This organization improves:
 
 - readability and long-term maintainability
 - reusable test setup, rendering, and interaction behavior
-- consistent frontend business logic validation
-- scalable page, route, and feature-level test coverage
-- maintainable and reusable frontend testing workflows
+- consistent frontend business-logic validation
+- scalable and maintainable page, route, feature, and utility-level test coverage
 
 ---
 
 ## 🧪 Frontend Testing Layers
 
-The frontend test suite combines isolated business logic validation, reusable hook testing, route testing, API testing, and page-level interaction testing across the application.
+The frontend test suite combines API testing, route testing, reusable hook testing, page-level interaction testing, and isolated business-logic validation across the application.
 
 Covered testing layers include:
 
-- API modules and normalization helpers
-- centralized frontend business logic
-- reusable hooks and frontend state management
-- authentication context behavior
-- protected routes, routing flows, and navigation behavior
-- page rendering and interaction behavior
-- query synchronization and listing architecture
-- upload interactions, image lifecycle handling, and validation behavior
-- shared frontend utilities, factories, mocks, and render helpers
-- semantic structure, ARIA behavior, and accessibility-focused interaction testing
+- API modules, normalization helpers, and frontend error handling
+- centralized frontend business logic and reusable hooks
+- authentication context, routing, and protected access behavior
+- page rendering, user interactions, and navigation flows
+- query synchronization, listing architecture, and frontend state management
+- upload workflows, image lifecycle handling, and validation behavior
+- shared utilities, factories, mocks, and render helpers
+- semantic structure, ARIA behavior, and accessibility-focused interactions
 
 The testing architecture separates frontend business logic from rendering concerns whenever possible, helping keep tests predictable, scalable, reusable, and maintainable as the frontend architecture evolves.
 
@@ -161,26 +152,22 @@ The testing architecture separates frontend business logic from rendering concer
 
 ## 🧩 Feature & Hook Testing
 
-Feature and hook tests validate reusable frontend behavior independently from full page rendering.
+Feature and hook tests validate reusable frontend business logic, state management, and interaction behavior independently from full page rendering.
 
 Covered areas include:
 
 - authentication normalization, validation, redirect behavior, and token persistence
-- event filtering, pagination, listing state management, and URL query synchronization
-- event view configuration, status handling, and status badge behavior
+- event filtering, pagination, query synchronization, clean URL generation, view configuration, and status-aware listing behavior
 - event validation, payload normalization, and contextual datetime validation
-- started-event editing restrictions and frontend access behavior
+- started-event restrictions and permission-aware access behavior
 - membership validation, permissions, actions, and management workflows
-- authenticated and public user event filters, views, normalizers, and listing behavior
-- public user profile loading, normalization, pagination, and view synchronization
-- clean URL generation across event listing pages
-- reusable listing helpers, shared constants, upload rules, and password rules
+- authenticated and public user profiles, listings, pagination, filtering, normalization, and view synchronization
+- reusable hooks, listing helpers, shared constants, and validation rules
 - upload interactions, image preservation, replacement, removal, and lifecycle handling
 - ownership transfer validation, account deletion safeguards, and ownership requirements
 - accessible form validation behavior and accessibility-focused interaction flows
-- pagination hooks, query synchronization hooks, and reusable frontend state management
 
-These tests help keep frontend business logic predictable, scalable, maintainable, and easier to evolve over time.
+These tests help keep frontend business logic predictable, maintainable, and easier to evolve as frontend features and workflows grow.
 
 ---
 
@@ -194,17 +181,14 @@ Covered areas include:
 - JWT authorization header injection
 - paginated payload normalization and API response unwrapping
 - API error normalization and reusable error handling
-- frontend access and permission endpoints
+- authentication, event, membership, user, and access-permission API requests
 - multipart upload requests and image lifecycle handling
-- authentication, event, membership, and user API requests
 
 API calls are mocked so tests can focus on:
 
-- endpoint paths
-- request payloads
-- URL query parameters
-- returned payload structures
-- response normalization and error handling behavior
+- endpoint paths and URL query parameters
+- request payloads and returned data structures
+- response normalization and error-handling behavior
 
 ---
 
@@ -218,11 +202,9 @@ Covered areas include:
 - public and protected route rendering
 - unauthenticated redirects and redirect restoration behavior
 - loading states during authentication initialization
-- authenticated context behavior
-- protected event edit access and permission flows
-- started-event deletion protection and edit restrictions
-- started-event start datetime lock behavior
-- protected ownership transfer workflows
+- authentication context initialization and state management behavior
+- protected event access, permission, and ownership-transfer workflows
+- started-event deletion protection, edit restrictions, and datetime lock behavior
 - public user profile page routing
 
 Route tests use mocked authentication state and router utilities to validate navigation behavior in isolation.
@@ -236,13 +218,9 @@ Utility tests validate reusable frontend helpers and shared normalization behavi
 Covered areas include:
 
 - date, time, range, count, and text formatting
-- uploaded file URL resolution and fallback handling
-- avatar and event image lifecycle helpers
-- accessible uploaded file and fallback behavior
-- paginated fetching and item merging
-- query parameter synchronization helpers
-- event listing normalization helpers
-- event status helpers and clean URL generation
+- uploaded file URL resolution, fallback handling, image lifecycle helpers, and accessibility behavior
+- paginated fetching, item merging, and event listing normalization
+- query synchronization, clean URL generation, and event status helpers
 
 These tests help keep shared frontend helpers stable, reusable, and predictable across components, pages, hooks, and feature logic.
 
@@ -258,13 +236,12 @@ Examples include:
 
 - authenticated and public user factories
 - authentication payload factories
-- event and event payload factories
-- event listing and view factories
+- event, event payload, listing, and view factories
 - membership and membership payload factories
 - user event factories
 - URL query parameter factories
 
-Factories support overrides for scenario-specific test data.
+Factories support scenario-specific overrides when tests require customized data.
 
 Example pattern:
 
@@ -275,7 +252,7 @@ createEvent({
 });
 ```
 
-This approach improves readability, reduces duplication, and helps keep large frontend architecture changes easier to maintain over time.
+This approach improves readability, reduces duplication, and helps keep frontend tests maintainable as the application evolves.
 
 ---
 
@@ -288,10 +265,7 @@ Examples include:
 - render helpers for providers, routing, and protected flows
 - reusable route and navigation helpers
 - hook testing helpers
-- mock API error helpers
-- mock file and uploaded file URL helpers
-- mock paginated fetch helpers
-- mock confirmation dialog helpers
+- mock helpers for API errors, uploads, dialogs, and paginated data
 - centralized frontend test setup utilities
 - reusable event listing test helpers
 
@@ -322,12 +296,11 @@ Examples include:
 
 - API modules and navigation helpers
 - confirmation dialogs and hook callbacks
-- upload files and uploaded image state transitions
-- dates, timers, and browser APIs
+- uploads, image state transitions, dates, timers, and browser APIs
 
 ### 🛣️ Route & Context Tests
 
-Route and context tests mock authentication state, API calls, and router behavior to isolate frontend access control, protected navigation, and routing behavior.
+Route and context tests mock authentication state, API calls, and router behavior to isolate frontend access control and protected navigation flows.
 
 ### 🧰 Utility Tests
 
@@ -353,13 +326,13 @@ npm run test:run
 Run tests with coverage:
 
 ```bash
-npx vitest run --coverage
+npm run test:coverage
 ```
 
 Run tests in watch mode during development:
 
 ```bash
-npm test --watch
+npm run test:watch
 ```
 
 Run all tests inside a specific folder:
@@ -382,8 +355,8 @@ These commands help target specific frontend testing layers during development, 
 
 The frontend testing architecture aims to provide:
 
-- reliable frontend business logic validation
-- predictable API abstraction and normalization behavior
+- reliable frontend business-logic validation
+- predictable API abstraction, normalization, and error-handling behavior
 - safe role-aware and permission-aware interactions
 - reusable test data, mocks, and setup utilities
 - reduced duplicated test setup and payload generation
@@ -391,9 +364,7 @@ The frontend testing architecture aims to provide:
 - clear separation between testing layers
 - scalable and maintainable frontend testing workflows
 - consistent semantic structure and accessibility-focused UI behavior
-- reliable event status, permission, and started-event restriction validation
-- reliable event image lifecycle handling
-- reliable create/edit datetime validation behavior
+- reliable validation of event status, permissions, started-event restrictions, image lifecycle workflows, and datetime rules
 
 These goals support long-term frontend maintainability, safer feature development, predictable UI behavior, and scalable frontend architecture evolution.
 
@@ -406,8 +377,7 @@ Potential future testing improvements include:
 - additional end-to-end testing for complete user journeys
 - expanded reusable UI component and accessibility-focused testing
 - expanded interaction testing for role-aware event management flows
-- further refinement of reusable factories, mocks, helpers, and render utilities
-- improved reusable test providers and render helper architecture
+- further refinement of reusable factories, mocks, render helpers, providers, and testing utilities
 - deeper coverage for advanced listing edge cases and navigation flows
 - continued frontend testing architecture improvements and standardization
 

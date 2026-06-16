@@ -233,7 +233,7 @@ describe("EditEventPage", () => {
 
         expect(await screen.findByDisplayValue("Original Event")).toBeInTheDocument();
 
-        expect(screen.getByLabelText(/start date time/i)).toBeEnabled();
+        expect(screen.getByLabelText(/start date & time/i)).toBeEnabled();
     });
 
     it("disables start datetime when loaded event has already started", async () => {
@@ -250,8 +250,8 @@ describe("EditEventPage", () => {
 
         expect(await screen.findByDisplayValue("Original Event")).toBeInTheDocument();
 
-        expect(screen.getByLabelText(/start date time/i)).toBeDisabled();
-        expect(screen.getByLabelText(/end date time/i)).toBeEnabled();
+        expect(screen.getByLabelText(/start date & time/i)).toBeDisabled();
+        expect(screen.getByLabelText(/end date & time/i)).toBeEnabled();
     });
 
     /* =============================
@@ -401,7 +401,7 @@ describe("EditEventPage", () => {
             name: /remove event image/i
         }));
 
-        await user.upload(screen.getByLabelText("Event image (optional)"), image);
+        await user.upload(screen.getByLabelText("Event image"), image);
 
         await user.click(screen.getByRole("button", {
             name: /update event/i
@@ -475,7 +475,7 @@ describe("EditEventPage", () => {
 
         await screen.findByDisplayValue("Original Event");
 
-        expect(screen.getByLabelText(/start date time/i)).toBeDisabled();
+        expect(screen.getByLabelText(/start date & time/i)).toBeDisabled();
 
         await user.clear(screen.getByLabelText(/^title$/i));
         await user.type(screen.getByLabelText(/^title$/i), "Updated Started Event");

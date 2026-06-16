@@ -23,6 +23,7 @@ import TextArea from "../ui/TextArea";
    - accessible form field descriptions
    - accessible invalid field states
    - validation error display
+   - optional field indicators
    - conditional field rendering
    - started event field restrictions
 
@@ -71,7 +72,7 @@ export default function EventForm({
                 <FileUploadPreviewField
                     variant="event"
 
-                    label="Event image (optional)"
+                    label="Event image"
                     inputId="event-image"
                     fieldName="image"
                     accept="image/jpeg,image/png,image/webp,image/gif"
@@ -94,6 +95,7 @@ export default function EventForm({
                         "image/webp",
                         "image/gif"
                     ]}
+
                     getCurrentFileUrl={getEventImage}
 
                     onFileChange={onImageChange}
@@ -105,9 +107,8 @@ export default function EventForm({
                FIELDS
             ============================= */}
 
-            <div className="form-grid">
-
-                <FormField label="Title" htmlFor="title" error={fieldErrors.title}>
+            <div className="form-grid event-form-grid">
+                <FormField label="Title" htmlFor="title" className="form-grid-column-full" error={fieldErrors.title}>
                     {(errorId) => (
                         <Input
                             id="title"
@@ -121,7 +122,7 @@ export default function EventForm({
                     )}
                 </FormField>
 
-                <FormField label="Type" htmlFor="type" error={fieldErrors.type}>
+                <FormField label="Type" htmlFor="type" className="event-form-field-half" error={fieldErrors.type}>
                     {(errorId) => (
                         <Input
                             id="type"
@@ -135,7 +136,7 @@ export default function EventForm({
                     )}
                 </FormField>
 
-                <FormField label="Theme" htmlFor="theme" error={fieldErrors.theme}>
+                <FormField label="Theme" htmlFor="theme" className="event-form-field-half" error={fieldErrors.theme}>
                     {(errorId) => (
                         <Input
                             id="theme"
@@ -149,7 +150,7 @@ export default function EventForm({
                     )}
                 </FormField>
 
-                <FormField label="Mode" htmlFor="mode" error={fieldErrors.mode}>
+                <FormField label="Mode" htmlFor="mode" className="event-form-field-half" error={fieldErrors.mode}>
                     {(errorId) => (
                         <Select
                             id="mode"
@@ -165,9 +166,22 @@ export default function EventForm({
                     )}
                 </FormField>
 
+                <FormField label="Participant limit" optional htmlFor="maxParticipants" className="event-form-field-half">
+                    {(errorId) => (
+                        <Input
+                            id="maxParticipants"
+                            type="number"
+                            name="maxParticipants"
+                            value={values.maxParticipants}
+                            onChange={onFieldChange}
+                            aria-describedby={errorId}
+                        />
+                    )}
+                </FormField>
+
                 {!isOnlineEvent && (
                     <>
-                        <FormField label="Location" htmlFor="location" error={fieldErrors.location}>
+                        <FormField label="Location" htmlFor="location" className="form-grid-column-full" error={fieldErrors.location}>
                             {(errorId) => (
                                 <EventLocationField
                                     id="location"
@@ -194,42 +208,13 @@ export default function EventForm({
                                     </p>
                                 </div>
 
-                                <EventLocationMap
-                                    selectedLocation={values.selectedLocation}
-                                />
+                                <EventLocationMap selectedLocation={values.selectedLocation} />
                             </section>
                         )}
                     </>
                 )}
 
-                <FormField label="Participant limit (optional)" htmlFor="maxParticipants">
-                    {(errorId) => (
-                        <Input
-                            id="maxParticipants"
-                            type="number"
-                            name="maxParticipants"
-                            value={values.maxParticipants}
-                            onChange={onFieldChange}
-                            aria-describedby={errorId}
-                        />
-                    )}
-                </FormField>
-
-                <FormField label="Description" htmlFor="description" className="form-grid-column-full" error={fieldErrors.description}>
-                    {(errorId) => (
-                        <TextArea
-                            id="description"
-                            name="description"
-                            value={values.description}
-                            onChange={onFieldChange}
-                            placeholder="Describe your event"
-                            error={fieldErrors.description}
-                            aria-describedby={errorId}
-                        />
-                    )}
-                </FormField>
-
-                <FormField label="Start date time" htmlFor="startDateTime" error={fieldErrors.startDateTime}>
+                <FormField label="Start date & time" htmlFor="startDateTime" className="event-form-field-half" error={fieldErrors.startDateTime}>
                     {(errorId) => (
                         <Input
                             id="startDateTime"
@@ -244,7 +229,7 @@ export default function EventForm({
                     )}
                 </FormField>
 
-                <FormField label="End date time" htmlFor="endDateTime" error={fieldErrors.endDateTime}>
+                <FormField label="End date & time" htmlFor="endDateTime" className="event-form-field-half" error={fieldErrors.endDateTime}>
                     {(errorId) => (
                         <Input
                             id="endDateTime"
@@ -258,7 +243,7 @@ export default function EventForm({
                     )}
                 </FormField>
 
-                <FormField label="Registration deadline" htmlFor="registrationDeadlineOption">
+                <FormField label="Registration deadline" optional htmlFor="registrationDeadlineOption" className="event-form-field-half">
                     {(errorId) => (
                         <Select
                             id="registrationDeadlineOption"
@@ -282,7 +267,7 @@ export default function EventForm({
                 </FormField>
 
                 {showCustomDeadline && (
-                    <FormField label="Custom deadline" htmlFor="registrationDeadlineCustom">
+                    <FormField label="Custom deadline" htmlFor="registrationDeadlineCustom" className="event-form-field-half">
                         {(errorId) => (
                             <Input
                                 id="registrationDeadlineCustom"
@@ -295,6 +280,20 @@ export default function EventForm({
                         )}
                     </FormField>
                 )}
+
+                <FormField label="Description" htmlFor="description" className="form-grid-column-full" error={fieldErrors.description}>
+                    {(errorId) => (
+                        <TextArea
+                            id="description"
+                            name="description"
+                            value={values.description}
+                            onChange={onFieldChange}
+                            placeholder="Describe your event"
+                            error={fieldErrors.description}
+                            aria-describedby={errorId}
+                        />
+                    )}
+                </FormField>
             </div>
 
             {/* =============================

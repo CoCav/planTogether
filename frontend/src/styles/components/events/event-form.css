@@ -1,0 +1,32 @@
+/* ==================================================
+   EVENT FORM
+   Controls event form grid structure and field spans
+
+   Used by:
+   - CreateEventPage
+   - EditEventPage
+================================================== */
+
+/* =========================================
+   GRID
+========================================= */
+
+.event-form-grid {
+    grid-template-columns: repeat(6, 1fr);
+}
+
+/* =========================================
+   FIELD SIZES
+========================================= */
+
+.event-form-grid > .form-field {
+    grid-column: span 2;
+}
+
+.event-form-grid > .event-form-field-half {
+    grid-column: span 3;
+}
+
+.event-form-grid > .form-grid-column-full {
+    grid-column: 1 / -1;
+}

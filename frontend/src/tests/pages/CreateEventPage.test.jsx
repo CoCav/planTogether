@@ -85,12 +85,12 @@ const fillRequiredForm = async (user) => {
     await user.type(screen.getByLabelText(/^description$/i), "A great event");
 
     await user.type(
-        screen.getByLabelText(/^start date time$/i),
+        screen.getByLabelText(/^start date & time$/i),
         "2026-12-20T10:00"
     );
 
     await user.type(
-        screen.getByLabelText(/^end date time$/i),
+        screen.getByLabelText(/^end date & time$/i),
         "2026-12-20T12:00"
     );
 };
@@ -271,12 +271,12 @@ describe("CreateEventPage", () => {
         await user.type(screen.getByLabelText(/^description$/i), "A great online event");
 
         await user.type(
-            screen.getByLabelText(/^start date time$/i),
+            screen.getByLabelText(/^start date & time$/i),
             "2026-12-20T10:00"
         );
 
         await user.type(
-            screen.getByLabelText(/^end date time$/i),
+            screen.getByLabelText(/^end date & time$/i),
             "2026-12-20T12:00"
         );
 
@@ -302,7 +302,7 @@ describe("CreateEventPage", () => {
         await fillRequiredForm(user);
 
         await user.selectOptions(
-            screen.getByLabelText(/^registration deadline$/i),
+            screen.getByLabelText(/registration deadline/i),
             "custom"
         );
 
@@ -332,7 +332,7 @@ describe("CreateEventPage", () => {
         await fillRequiredForm(user);
 
         await user.selectOptions(
-            screen.getByLabelText(/^registration deadline$/i),
+            screen.getByLabelText(/registration deadline/i),
             "day_before"
         );
 

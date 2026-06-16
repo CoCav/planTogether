@@ -14,6 +14,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../features/shared/constants
    Handles:
    - event field rendering
    - shared image upload field rendering
+   - optional field indicators
    - location autocomplete field rendering
    - selected location map preview rendering
    - conditional field rendering
@@ -25,6 +26,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../features/shared/constants
 
    Ensures:
    - create/edit event flows share consistent form behavior
+   - optional fields are clearly identified
    - location preview is only displayed after a location suggestion is selected
    - validation errors remain accessible
 ================================================== */
@@ -101,18 +103,25 @@ describe("EventForm", () => {
         expect(screen.getByLabelText(/location/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/participant limit/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/start date time/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/end date time/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/start date & time/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/end date & time/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/registration deadline/i)).toBeInTheDocument();
 
-        expect(screen.getByLabelText(/start date time/i)).toHaveAttribute("type", "datetime-local");
-        expect(screen.getByLabelText(/end date time/i)).toHaveAttribute("type", "datetime-local");
+        expect(screen.getByLabelText(/start date & time/i)).toHaveAttribute("type", "datetime-local");
+        expect(screen.getByLabelText(/end date & time/i)).toHaveAttribute("type", "datetime-local");
+    });
+
+    it("identifies optional event fields", () => {
+        renderComponent();
+
+        expect(screen.getByLabelText(/participant limit/i)).toHaveAccessibleName(/participant limit\s*\(optional\)/i);
+        expect(screen.getByLabelText(/registration deadline/i)).toHaveAccessibleName(/registration deadline\s*\(optional\)/i);
     });
 
     it("keeps start datetime enabled by default", () => {
         renderComponent();
 
-        expect(screen.getByLabelText(/start date time/i)).toBeEnabled();
+        expect(screen.getByLabelText(/start date & time/i)).toBeEnabled();
     });
 
     it("disables start datetime when start datetime is locked", () => {
@@ -120,7 +129,7 @@ describe("EventForm", () => {
             isStartDateTimeDisabled: true
         });
 
-        expect(screen.getByLabelText(/start date time/i)).toBeDisabled();
+        expect(screen.getByLabelText(/start date & time/i)).toBeDisabled();
     });
 
     it("calls onFieldChange when editing a field", () => {

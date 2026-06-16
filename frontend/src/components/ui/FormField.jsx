@@ -5,8 +5,9 @@
    Supports:
    - accessible label association via htmlFor
    - accessible error association via aria-describedby
+   - optional field indicator
    - custom field content
-   - optional error message
+   - validation error display
    - custom classes
 ================================================== */
 
@@ -15,6 +16,7 @@ export default function FormField({
     htmlFor,
     error,
     children,
+    optional = false,
     className = ""
 }) {
 
@@ -34,6 +36,12 @@ export default function FormField({
         <div className={fieldClasses}>
             <label htmlFor={htmlFor} className="form-field-label">
                 {label}
+
+                {optional && (
+                    <span className="form-field-optional">
+                        (Optional)
+                    </span>
+                )}
             </label>
 
             {children(errorId)}

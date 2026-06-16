@@ -9,15 +9,17 @@ import FormField from "../../../components/ui/FormField";
 
    Handles:
    - label rendering
+   - optional field indicator rendering
    - accessible label association
    - accessible error association
    - custom field content
    - validation error rendering
    - custom class merging
 
-   Notes:
-   - focuses on reusable form layout behavior
-   - verifies label-to-control accessibility
+   Ensures:
+   - labels remain associated with their controls
+   - optional indicators are visible and included in the accessible name
+   - validation errors remain accessible through aria-describedby
 ================================================== */
 
 describe("FormField", () => {
@@ -55,6 +57,14 @@ describe("FormField", () => {
         expect(screen.getByPlaceholderText("Your email")).toBeInTheDocument();
     });
 
+    it("should render optional indicator when field is optional", () => {
+        renderFormField({
+            optional: true
+        });
+
+        expect(screen.getByText("(Optional)")).toHaveClass("form-field-optional");
+    });
+
     /* =============================
        ACCESSIBILITY
     ============================= */
@@ -72,6 +82,14 @@ describe("FormField", () => {
 
         expect(screen.getByLabelText("Email")).toHaveAttribute("aria-describedby", "email-error");
         expect(screen.getByText("Invalid email")).toHaveAttribute("id", "email-error");
+    });
+
+    it("should include optional indicator in accessible name", () => {
+        renderFormField({
+            optional: true
+        });
+
+        expect(screen.getByLabelText(/email/i)).toHaveAccessibleName(/email\s*\(optional\)/i);
     });
 
     /* =============================

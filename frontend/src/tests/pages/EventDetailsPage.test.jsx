@@ -267,6 +267,14 @@ vi.mock("../../components/eventMemberships/EventParticipantsSection", () => ({
     )
 }));
 
+vi.mock("../../components/eventReviews/EventReviewsSection", () => ({
+    default: () => (
+        <section data-testid="event-reviews-section">
+            Event Reviews Section
+        </section>
+    )
+}));
+
 /* =============================
    TEST HELPERS
 ============================= */
@@ -381,6 +389,12 @@ describe("EventDetailsPage", () => {
         renderPage();
 
         expect(await screen.findByLabelText(/event categories/i)).toBeInTheDocument();
+    });
+
+    it("should render event reviews section", async () => {
+        renderPage();
+
+        expect(await screen.findByTestId("event-reviews-section")).toBeInTheDocument();
     });
 
     /* =============================

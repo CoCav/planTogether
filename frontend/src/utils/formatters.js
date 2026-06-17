@@ -5,11 +5,16 @@
    Handles:
    - dates and times
    - event date ranges
+   - review dates
    - count and text labels
    - provider location formatting
    - multi-line map popup addresses
    - inline location summaries
    - external Google Maps links
+
+   Notes:
+   - shared across multiple frontend features
+   - formatting helpers should remain presentation-focused
 ================================================== */
 
 /* =============================
@@ -93,9 +98,24 @@ export const formatLocationDisplayLabel = (label = "") => {
 export const formatLocationInlineLabel = (label = "") => {
     if (!label) return "";
     return getLocationDisplayParts(label).join(", ");
-};;
+};
 
 // Builds a Google Maps URL from coordinates
 export const buildGoogleMapsUrl = (lat, lng) => {
     return `https://www.google.com/maps?q=${lat},${lng}`;
+};
+
+/* =============================
+   REVIEW HELPERS
+============================= */
+
+// Formats review dates
+export const formatReviewDate = (date) => {
+    if (!date) return "";
+
+    return new Date(date).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    });
 };

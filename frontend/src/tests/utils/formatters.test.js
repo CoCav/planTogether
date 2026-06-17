@@ -8,6 +8,7 @@ import {
     formatEventDateRange,
     formatLocationDisplayLabel,
     formatLocationInlineLabel,
+    formatReviewDate,
     formatTime
 } from "../../utils/formatters";
 
@@ -24,6 +25,7 @@ import {
    - inline location label formatting
    - multi-line location label formatting
    - Google Maps URL generation
+   - review date formatting
 
    Notes:
    - focuses on pure display helpers
@@ -176,5 +178,19 @@ describe("formatters", () => {
 
     it("should build a Google Maps URL from negative coordinates", () => {
         expect(buildGoogleMapsUrl(-1, -2)).toBe("https://www.google.com/maps?q=-1,-2");
+    });
+
+    /* =============================
+       REVIEW DATES
+    ============================= */
+
+    it("should format a review date", () => {
+        expect(formatReviewDate("2026-12-20T10:00:00.000Z")).toMatch(
+            /^\d{2} \w{3} \d{4}$/
+        );
+    });
+
+    it("should return an empty string when review date is missing", () => {
+        expect(formatReviewDate(null)).toBe("");
     });
 });

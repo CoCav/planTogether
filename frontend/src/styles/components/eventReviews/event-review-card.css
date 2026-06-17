@@ -1,0 +1,79 @@
+/* ==================================================
+   EVENT REVIEW CARD
+   Reusable event review display card
+================================================== */
+
+/* =========================================
+   CARD
+========================================= */
+
+.event-review-card-inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+
+    padding: var(--space-4);
+
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+
+    background: var(--color-surface-soft);
+}
+
+/* =========================================
+   HEADER
+========================================= */
+
+.event-review-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-4);
+}
+
+/* =========================================
+   REVIEWER
+========================================= */
+
+.event-review-card-user {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.event-review-card-user-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.event-review-card-name {
+    line-height: 1.2;
+}
+
+.event-review-card-date {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+}
+
+/* =========================================
+   COMMENT
+========================================= */
+
+.event-review-card-comment {
+    color: var(--color-text);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+    .event-review-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

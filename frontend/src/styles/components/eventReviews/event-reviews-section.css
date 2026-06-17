@@ -1,0 +1,44 @@
+/* ==================================================
+   EVENT REVIEWS SECTION
+   Event review content section layout
+================================================== */
+
+/* =========================================
+   CARD
+========================================= */
+
+.event-reviews-section-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+/* =========================================
+   BLOCKS
+========================================= */
+
+.event-reviews-section-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.event-reviews-section-form {
+    padding-bottom: var(--space-5);
+}
+
+.event-reviews-section-block + .event-reviews-section-block {
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+}
+
+/* =========================================
+   SUBTITLE
+========================================= */
+
+.event-reviews-section-subtitle {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    color: var(--color-text);
+}

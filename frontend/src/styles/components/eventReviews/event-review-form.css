@@ -1,0 +1,32 @@
+/* ==================================================
+   EVENT REVIEW FORM
+   Event review creation form
+================================================== */
+
+/* =========================================
+   FORM
+========================================= */
+
+.event-review-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+/* =========================================
+   TEXTAREA
+========================================= */
+
+.event-review-form-textarea {
+    width: 100%;
+    min-height: 88px;
+}
+
+/* =========================================
+   ACTIONS
+========================================= */
+
+.event-review-form-actions {
+    display: flex;
+    justify-content: flex-end;
+}

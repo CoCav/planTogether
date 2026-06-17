@@ -28,6 +28,8 @@ import EventLocationMap from "../components/events/EventLocationMap";
 import EventParticipantsSection from "../components/eventMemberships/EventParticipantsSection";
 import EventStaffSection from "../components/eventMemberships/EventStaffSection";
 
+import EventReviewsSection from "../components/eventReviews/EventReviewsSection";
+
 import Alert from "../components/ui/Alert";
 import Badge from "../components/ui/Badge";
 import Card from "../components/ui/Card";
@@ -49,6 +51,7 @@ import PageLoader from "../components/ui/PageLoader";
    - accessible event image rendering
    - physical event location map display
    - staff and participant section management
+   - event review section placement
 ================================================== */
 
 export default function EventDetailsPage() {
@@ -422,6 +425,14 @@ export default function EventDetailsPage() {
                     onTransferOwnership={handleTransferOwnership}
                     onPromote={handlePromoteMember}
                     onRemove={handleRemoveMember}
+                />
+            </section>
+
+            <section className="event-details-reviews" aria-labelledby="event-reviews-title">
+                <EventReviewsSection
+                    eventId={event.id}
+                    user={user}
+                    setMessage={setMessage}
                 />
             </section>
         </main>

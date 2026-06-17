@@ -1,0 +1,72 @@
+import { getApiPayload } from "../../api/apiResponse";
+
+/* ==================================================
+   EVENT REVIEW NORMALIZER
+   Converts backend review payloads into frontend-friendly data
+
+   Handles:
+   - single review normalization
+   - review list normalization
+   - public reviewer identity and avatar data
+   - review response extraction
+
+   Notes:
+   - reviews are loaded from GET /events/:eventId/reviews
+   - reviewer data comes from the backend user include
+   - rating support will be added later
+================================================== */
+
+/* =============================
+   REVIEW NORMALIZATION
+============================= */
+
+// Normalizes one review item
+export const normalizeEventReview = (review = {}) => {
+    const user = review.user ?? review.User ?? {};
+
+    return {
+        id: review.id ?? null,
+        eventId: review.eventId ?? null,
+        userId: review.userId ?? user.id ?? null,
+
+        comment: review.comment ?? "",
+
+        createdAt: review.createdAt ?? null,
+        updatedAt: review.updatedAt ?? null,
+
+        user: {
+            id: user.id ?? review.userId ?? null,
+            name: user.name ?? "",
+            avatar: user.avatar ?? null
+        }
+    };
+};
+
+// Normalizes an array of review items
+export const normalizeEventReviews = (reviews = []) => {
+    if (!Array.isArray(reviews)) return [];
+
+    return reviews.map(normalizeEventReview);
+};
+
+/* =============================
+   REVIEW LISTS
+============================= */
+
+// Extracts and normalizes reviews from GET /events/:eventId/reviews
+export const getNormalizedEventReviews = (payload = {}) => {
+    const reviews = getApiPayload(payload, "reviews");
+
+    return normalizeEventReviews(reviews);
+};
+
+/* =============================
+   SINGLE REVIEW
+============================= */
+
+// Extracts and normalizes one review from POST /events/:eventId/reviews
+export const getNormalizedEventReview = (payload = {}) => {
+    const review = getApiPayload(payload, "review");
+
+    return normalizeEventReview(review);
+};

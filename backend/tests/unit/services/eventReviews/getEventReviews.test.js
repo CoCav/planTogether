@@ -5,11 +5,12 @@
    - event review retrieval
    - event existence validation
    - review ordering
+   - review rating retrieval
    - public user data inclusion
 
    Ensures:
    - reviews are retrieved only for existing events
-   - reviews include public user data
+   - reviews include ratings and public user data
    - reviews are ordered from newest to oldest
    - missing events are rejected before review lookup
 ================================================== */
@@ -44,6 +45,7 @@ describe("eventReviewService.getEventReviews", () => {
                 id: 1,
                 eventId: 1,
                 userId: 10,
+                rating: 5,
                 comment: "Great event!"
             }
         ];
@@ -68,6 +70,11 @@ describe("eventReviewService.getEventReviews", () => {
         });
 
         expect(result).toBe(reviews);
+
+        expect(result[0]).toMatchObject({
+            rating: 5,
+            comment: "Great event!"
+        })
     });
 
     /* =============================

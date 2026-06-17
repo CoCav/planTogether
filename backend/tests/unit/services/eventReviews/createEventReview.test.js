@@ -3,6 +3,7 @@
 
    Tests:
    - event review creation
+   - rating and comment persistence
    - completed event requirement
    - active participant requirement
    - duplicate review prevention
@@ -11,6 +12,7 @@
    Ensures:
    - users can review only completed events they joined
    - users can leave only one review per event
+   - review ratings are persisted
    - review comments are trimmed before persistence
    - created reviews are returned with public user data
    - failed review creation rolls back the transaction
@@ -71,6 +73,7 @@ describe("eventReviewService.createEventReview", () => {
             id: 5,
             eventId: 1,
             userId: 10,
+            rating: 5,
             comment: "Great event!",
             user: {
                 id: 10,
@@ -89,6 +92,7 @@ describe("eventReviewService.createEventReview", () => {
         const result = await eventReviewService.createEventReview({
             eventId: 1,
             userId: 10,
+            rating: 5,
             comment: "  Great event!  "
         });
 
@@ -114,6 +118,7 @@ describe("eventReviewService.createEventReview", () => {
         expect(EventReview.create).toHaveBeenCalledWith({
             eventId: 1,
             userId: 10,
+            rating: 5,
             comment: "Great event!"
         }, {
             transaction
@@ -143,6 +148,7 @@ describe("eventReviewService.createEventReview", () => {
         await expect(eventReviewService.createEventReview({
             eventId: 999,
             userId: 10,
+            rating: 5,
             comment: "Great event!"
         })).rejects.toMatchObject({
             statusCode: 404,
@@ -159,6 +165,7 @@ describe("eventReviewService.createEventReview", () => {
         await expect(eventReviewService.createEventReview({
             eventId: 1,
             userId: 10,
+            rating: 5,
             comment: "Great event!"
         })).rejects.toMatchObject({
             statusCode: 403,
@@ -180,6 +187,7 @@ describe("eventReviewService.createEventReview", () => {
         await expect(eventReviewService.createEventReview({
             eventId: 1,
             userId: 10,
+            rating: 5,
             comment: "Great event!"
         })).rejects.toMatchObject({
             statusCode: 403,
@@ -202,6 +210,7 @@ describe("eventReviewService.createEventReview", () => {
         await expect(eventReviewService.createEventReview({
             eventId: 1,
             userId: 10,
+            rating: 5,
             comment: "Great event!"
         })).rejects.toMatchObject({
             statusCode: 409,

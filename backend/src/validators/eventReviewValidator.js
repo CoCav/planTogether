@@ -6,12 +6,12 @@ const { body, param } = require("express-validator");
    Handles:
    - event ID param validation
    - review ID param validation
-   - event review creation validation
+   - review rating validation
+   - review comment validation
 
    Notes:
    - handleValidationErrors must run after these validators
    - review permissions are handled separately by services/controllers
-   - rating validation will be added later with the rating milestone
 ================================================== */
 
 /* =============================
@@ -40,6 +40,15 @@ const reviewIdParamValidator = [
 
 // Validate event review creation payload
 const createReviewValidator = [
+
+    body("rating")
+        .notEmpty()
+        .withMessage("Rating is required")
+        .bail()
+        .isInt({ min: 1, max: 5 })
+        .withMessage("Rating must be an integer between 1 and 5")
+        .toInt(),
+
     body("comment")
         .trim()
         .notEmpty()

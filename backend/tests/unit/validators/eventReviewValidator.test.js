@@ -4,20 +4,17 @@
    Tests:
    - eventId param validation
    - reviewId param validation
-   - review creation validation
-   - comment length validation
+   - review rating validation
+   - review comment validation
 
    Ensures:
    - route params are valid positive integers
+   - review rating is required and between 1 and 5
    - empty review comments are rejected
    - review comments stay within allowed length
 ================================================== */
 
-const {
-    eventIdParamValidator,
-    reviewIdParamValidator,
-    createReviewValidator
-} = require("../../../src/validators/eventReviewValidator");
+const { eventIdParamValidator, reviewIdParamValidator, createReviewValidator } = require("../../../src/validators/eventReviewValidator");
 
 const { runValidation } = require("../../helpers/validation/validationHelper");
 
@@ -92,9 +89,10 @@ describe("eventReviewValidator", () => {
     ============================= */
 
     describe("createReviewValidator", () => {
-        it("should pass with a valid comment", async () => {
+        it("should pass with a valid rating and comment", async () => {
             const result = await runValidation(createReviewValidator, {
                 body: {
+                    rating: 5,
                     comment: "Great event!"
                 }
             });
@@ -102,9 +100,86 @@ describe("eventReviewValidator", () => {
             expect(result.isEmpty()).toBe(true);
         });
 
+        /* =============================
+           RATING VALIDATION
+        ============================= */
+
+        it("should fail if rating is missing", async () => {
+            const result = await runValidation(createReviewValidator, {
+                body: {
+                    comment: "Great event!"
+                }
+            });
+
+            expect(result.array()).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        msg: "Rating is required"
+                    })
+                ])
+            );
+        });
+
+        it("should fail if rating is lower than 1", async () => {
+            const result = await runValidation(createReviewValidator, {
+                body: {
+                    rating: 0,
+                    comment: "Great event!"
+                }
+            });
+
+            expect(result.array()).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        msg: "Rating must be an integer between 1 and 5"
+                    })
+                ])
+            );
+        });
+
+        it("should fail if rating is higher than 5", async () => {
+            const result = await runValidation(createReviewValidator, {
+                body: {
+                    rating: 6,
+                    comment: "Great event!"
+                }
+            });
+
+            expect(result.array()).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        msg: "Rating must be an integer between 1 and 5"
+                    })
+                ])
+            );
+        });
+
+        it("should fail if rating is not an integer", async () => {
+            const result = await runValidation(createReviewValidator, {
+                body: {
+                    rating: "bad",
+                    comment: "Great event!"
+                }
+            });
+
+            expect(result.array()).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        msg: "Rating must be an integer between 1 and 5"
+                    })
+                ])
+            );
+        });
+
+        /* =============================
+           COMMENT VALIDATION
+        ============================= */
+
         it("should fail if comment is missing", async () => {
             const result = await runValidation(createReviewValidator, {
-                body: {}
+                body: {
+                    rating: 5
+                }
             });
 
             expect(result.array()).toEqual(
@@ -119,6 +194,7 @@ describe("eventReviewValidator", () => {
         it("should fail if comment is too short", async () => {
             const result = await runValidation(createReviewValidator, {
                 body: {
+                    rating: 5,
                     comment: "Hey"
                 }
             });
@@ -135,6 +211,7 @@ describe("eventReviewValidator", () => {
         it("should fail if comment is too long", async () => {
             const result = await runValidation(createReviewValidator, {
                 body: {
+                    rating: 5,
                     comment: "a".repeat(1001)
                 }
             });

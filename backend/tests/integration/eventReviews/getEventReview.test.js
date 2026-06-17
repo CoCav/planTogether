@@ -6,12 +6,13 @@
    - empty review list retrieval
    - nonexistent event handling
    - invalid event ID validation
+   - review rating retrieval
    - review user data enrichment
    - review ordering
 
    Ensures:
    - event reviews can be retrieved publicly
-   - reviews include public user data
+   - reviews include ratings and public user data
    - reviews are ordered from newest to oldest
    - invalid event review requests are rejected correctly
 ================================================== */
@@ -71,10 +72,11 @@ describe("Get Event Reviews API", () => {
         };
     };
 
-    const createReviewForEvent = async ({ event, participantAuth, comment }) => {
+    const createReviewForEvent = async ({ event, participantAuth, rating = 5, comment }) => {
         return EventReview.create({
             eventId: event.id,
             userId: participantAuth.user.userId,
+            rating,
             comment
         });
     };
@@ -89,6 +91,7 @@ describe("Get Event Reviews API", () => {
         await createReviewForEvent({
             event,
             participantAuth,
+            rating: 5,
             comment: "Great event!"
         });
 
@@ -174,6 +177,7 @@ describe("Get Event Reviews API", () => {
         await EventReview.create({
             eventId: event.id,
             userId: participantAuth.user.userId,
+            rating: 4,
             comment: "Older review",
             createdAt: new Date("2026-01-01T10:00:00.000Z"),
             updatedAt: new Date("2026-01-01T10:00:00.000Z")
@@ -182,6 +186,7 @@ describe("Get Event Reviews API", () => {
         await EventReview.create({
             eventId: event.id,
             userId: secondParticipantAuth.user.userId,
+            rating: 5,
             comment: "Newer review",
             createdAt: new Date("2026-01-01T11:00:00.000Z"),
             updatedAt: new Date("2026-01-01T11:00:00.000Z")
@@ -194,6 +199,22 @@ describe("Get Event Reviews API", () => {
 
         expect(res.body.reviews[0].comment).toBe("Newer review");
         expect(res.body.reviews[1].comment).toBe("Older review");
+    });
+
+    it("should include review rating", async () => {
+        const { event, participantAuth } = await createPastEventWithParticipant();
+
+        await createReviewForEvent({
+            event,
+            participantAuth,
+            rating: 4,
+            comment: "Nice event!"
+        });
+
+        const res = await request(app).get(`/api/events/${event.id}/reviews`);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.reviews[0].rating).toBe(4);
     });
 
     /* =============================

@@ -26,6 +26,7 @@ const createEventReview = async (req, res, next) => {
         const review = await eventReviewService.createEventReview({
             eventId: req.params.eventId,
             userId: req.user.userId,
+            rating: req.body.rating,
             comment: req.body.comment
         });
 

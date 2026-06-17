@@ -6,7 +6,7 @@ const sequelize = require("../../config/database");
 
    Handles:
    - event review records
-   - user comments on completed events
+   - user ratings and comments on completed events
    - duplicate review prevention
    - review lookup indexes
 
@@ -26,6 +26,15 @@ const EventReview = sequelize.define("EventReview", {
     userId: {
         type: DataTypes.INTEGER,
         allowNull: false
+    },
+
+    rating: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        validate: {
+            min: 1,
+            max: 5
+        }
     },
 
     comment: {

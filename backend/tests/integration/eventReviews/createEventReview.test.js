@@ -3,15 +3,16 @@
 
    Tests:
    - authenticated review creation
+   - rating persistence and validation
+   - comment trimming and validation
    - completed event requirement
    - active participant requirement
    - duplicate review prevention
    - authentication protection
    - event ID validation
-   - comment validation
 
    Ensures:
-   - authenticated participants can review completed events
+   - authenticated participants can rate and review completed events
    - users cannot review upcoming or unjoined events
    - users can leave only one review per event
    - validators protect review creation payloads
@@ -80,6 +81,7 @@ describe("Create Event Review API", () => {
             .post(`/api/events/${event.id}/reviews`)
             .set(participantAuth.headers)
             .send({
+                rating: 5,
                 comment: "Great event!"
             });
 
@@ -90,6 +92,7 @@ describe("Create Event Review API", () => {
         expect(res.body.review).toMatchObject({
             eventId: event.id,
             userId: participantAuth.user.userId,
+            rating: 5,
             comment: "Great event!"
         });
 
@@ -118,6 +121,7 @@ describe("Create Event Review API", () => {
             .post(`/api/events/${event.id}/reviews`)
             .set(participantAuth.headers)
             .send({
+                rating: 5,
                 comment: "Great event!"
             });
 
@@ -125,6 +129,7 @@ describe("Create Event Review API", () => {
             .post(`/api/events/${event.id}/reviews`)
             .set(secondParticipantAuth.headers)
             .send({
+                rating: 5,
                 comment: "Amazing event!"
             });
 
@@ -139,6 +144,7 @@ describe("Create Event Review API", () => {
             .post(`/api/events/${event.id}/reviews`)
             .set(participantAuth.headers)
             .send({
+                rating: 5,
                 comment: "   Really nice event!   "
             });
 
@@ -179,6 +185,7 @@ describe("Create Event Review API", () => {
             .post(`/api/events/${event.id}/reviews`)
             .set(participantAuth.headers)
             .send({
+                rating: 5,
                 comment: "Great event!"
             });
 
@@ -208,6 +215,7 @@ describe("Create Event Review API", () => {
             .post(`/api/events/${event.id}/reviews`)
             .set(userAuth.headers)
             .send({
+                rating: 5,
                 comment: "Great event!"
             });
 
@@ -225,6 +233,7 @@ describe("Create Event Review API", () => {
         const res = await request(app)
             .post(`/api/events/${event.id}/reviews`)
             .send({
+                rating: 5,
                 comment: "Great event!"
             });
 
@@ -245,6 +254,7 @@ describe("Create Event Review API", () => {
             .post("/api/events/abc/reviews")
             .set(userAuth.headers)
             .send({
+                rating: 5,
                 comment: "Great event!"
             });
 
@@ -257,7 +267,9 @@ describe("Create Event Review API", () => {
         const res = await request(app)
             .post(`/api/events/${event.id}/reviews`)
             .set(participantAuth.headers)
-            .send({});
+            .send({
+                rating: 5
+            });
 
         expect(res.statusCode).toBe(400);
     });
@@ -269,7 +281,49 @@ describe("Create Event Review API", () => {
             .post(`/api/events/${event.id}/reviews`)
             .set(participantAuth.headers)
             .send({
+                rating: 5,
                 comment: "Hey"
+            });
+
+        expect(res.statusCode).toBe(400);
+    });
+
+    it("should reject missing rating", async () => {
+        const { event, participantAuth } = await createPastEventWithParticipant();
+
+        const res = await request(app)
+            .post(`/api/events/${event.id}/reviews`)
+            .set(participantAuth.headers)
+            .send({
+                comment: "Great event!"
+            });
+
+        expect(res.statusCode).toBe(400);
+    });
+
+    it("should reject rating lower than 1", async () => {
+        const { event, participantAuth } = await createPastEventWithParticipant();
+
+        const res = await request(app)
+            .post(`/api/events/${event.id}/reviews`)
+            .set(participantAuth.headers)
+            .send({
+                rating: 0,
+                comment: "Great event!"
+            });
+
+        expect(res.statusCode).toBe(400);
+    });
+
+    it("should reject rating higher than 5", async () => {
+        const { event, participantAuth } = await createPastEventWithParticipant();
+
+        const res = await request(app)
+            .post(`/api/events/${event.id}/reviews`)
+            .set(participantAuth.headers)
+            .send({
+                rating: 6,
+                comment: "Great event!"
             });
 
         expect(res.statusCode).toBe(400);
@@ -289,6 +343,7 @@ describe("Create Event Review API", () => {
             .post("/api/events/999999/reviews")
             .set(userAuth.headers)
             .send({
+                rating: 5,
                 comment: "Great event!"
             });
 
@@ -324,6 +379,7 @@ describe("Create Event Review API", () => {
             .post(`/api/events/${event.id}/reviews`)
             .set(participantAuth.headers)
             .send({
+                rating: 5,
                 comment: "Great event!"
             });
 
@@ -338,6 +394,7 @@ describe("Create Event Review API", () => {
             .post(`/api/events/${event.id}/reviews`)
             .set(participantAuth.headers)
             .send({
+                rating: 5,
                 comment: "First review"
             });
 
@@ -345,6 +402,7 @@ describe("Create Event Review API", () => {
             .post(`/api/events/${event.id}/reviews`)
             .set(participantAuth.headers)
             .send({
+                rating: 5,
                 comment: "Second review"
             });
 

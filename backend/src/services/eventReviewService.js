@@ -14,6 +14,7 @@ const { isEventPast } = require("../utils/events/eventStatus");
 
    Handles:
    - review creation
+   - rating and comment persistence
    - completed event review restrictions
    - participant-only review permissions
    - duplicate review prevention
@@ -24,7 +25,6 @@ const { isEventPast } = require("../utils/events/eventStatus");
    - users can only review completed events they joined
    - one user can only leave one review per event
    - deleted memberships cannot create reviews
-   - review rating support will be added later
 ================================================== */
 
 /* =============================
@@ -85,7 +85,7 @@ const assertUserHasNotReviewedEvent = async ({ eventId, userId, transaction }) =
 ============================= */
 
 // Creates a review for a completed event
-const createEventReview = async ({ eventId, userId, comment }) => {
+const createEventReview = async ({ eventId, userId, rating, comment }) => {
     const transaction = await sequelize.transaction();
 
     try {
@@ -108,6 +108,7 @@ const createEventReview = async ({ eventId, userId, comment }) => {
         const review = await EventReview.create({
             eventId,
             userId,
+            rating,
             comment: String(comment ?? "").trim()
         }, {
             transaction

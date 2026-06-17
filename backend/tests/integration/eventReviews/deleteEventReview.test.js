@@ -9,7 +9,7 @@
    - invalid review ID validation
 
    Ensures:
-   - users can delete their own reviews
+   - users can delete their own rated reviews
    - users cannot delete reviews owned by others
    - protected routes require authentication
    - invalid review requests are rejected correctly
@@ -65,6 +65,7 @@ describe("Delete Event Review API", () => {
         const review = await EventReview.create({
             eventId: event.id,
             userId: reviewerAuth.user.userId,
+            rating: 5,
             comment: "Great event!"
         });
 

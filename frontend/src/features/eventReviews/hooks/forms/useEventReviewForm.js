@@ -7,22 +7,21 @@ import { validateEventReview } from "../../forms/eventReviewValidation";
    Manages event review form state
 
    Handles:
-   - review form values
+   - rating and comment values
    - field validation errors
+   - rating selection changes
    - comment field changes
    - shared submit validation flow
    - form reset after successful submit
 
    Notes:
    - submit behavior is provided by caller
-   - rating support will be added later
+   - submitted review data includes rating and trimmed comment
 ================================================== */
 
-const initialValues = {
-    comment: ""
-};
+const initialValues = { rating: "", comment: "" };
 
-export default function useEventReview({ onSubmitValid }) {
+export default function useEventReviewForm({ onSubmitValid }) {
 
     /* =============================
        FORM STATE
@@ -35,6 +34,7 @@ export default function useEventReview({ onSubmitValid }) {
        FIELD HANDLERS
     ============================= */
 
+    // Updates text fields and clears their validation error
     const handleFieldChange = (event) => {
         const { name, value } = event.target;
 
@@ -49,10 +49,24 @@ export default function useEventReview({ onSubmitValid }) {
         }));
     };
 
+    // Updates rating value and clears rating validation error
+    const handleRatingChange = (rating) => {
+        setValues((prev) => ({
+            ...prev,
+            rating
+        }));
+
+        setFieldErrors((prev) => ({
+            ...prev,
+            rating: undefined
+        }));
+    };
+
     /* =============================
        FORM RESET
     ============================= */
 
+    // Restores initial review form values
     const resetForm = () => {
         setValues(initialValues);
         setFieldErrors({});
@@ -62,6 +76,7 @@ export default function useEventReview({ onSubmitValid }) {
        SUBMIT HANDLER
     ============================= */
 
+    // Validates and submits rating with a trimmed comment
     const handleSubmit = async (event) => {
         event.preventDefault();
 
@@ -75,6 +90,7 @@ export default function useEventReview({ onSubmitValid }) {
         setFieldErrors({});
 
         await onSubmitValid({
+            rating: Number(values.rating),
             comment: values.comment.trim()
         });
 
@@ -89,6 +105,7 @@ export default function useEventReview({ onSubmitValid }) {
 
         formActions: {
             handleFieldChange,
+            handleRatingChange,
             handleSubmit,
             resetForm
         }

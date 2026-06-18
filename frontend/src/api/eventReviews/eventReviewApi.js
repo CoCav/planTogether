@@ -13,6 +13,7 @@ import { unwrapApiResponse } from "../apiResponse";
    Notes:
    - review retrieval is public
    - review creation requires authentication
+   - review creation sends rating and comment
    - review deletion requires authentication
    - backend enforces review permissions and ownership
 ================================================== */

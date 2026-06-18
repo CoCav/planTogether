@@ -5,6 +5,7 @@ import { getAvatar } from "../../utils/uploadedFiles";
 import UserAvatar from "../users/UserAvatar";
 
 import EventReviewActions from "./EventReviewActions";
+import EventReviewRating from "./EventReviewRating";
 
 /* ==================================================
    EVENT REVIEW CARD
@@ -14,6 +15,7 @@ import EventReviewActions from "./EventReviewActions";
    - reviewer identity display
    - reviewer avatar display
    - review date display
+   - review rating display
    - review comment display
    - review action visibility
 
@@ -39,12 +41,15 @@ export default function EventReviewCard({
         currentUserId
     });
 
+    // Determines whether the current review is being deleted
     const isDeleting = deletingReviewId === reviewDisplayData.id;
 
     return (
         <article className="event-review-card">
             <div className="event-review-card-inner">
                 <header className="event-review-card-header">
+
+                    {/* Reviewer information */}
                     <div className="event-review-card-user">
                         <UserAvatar
                             src={getAvatar(reviewDisplayData.reviewerAvatar)}
@@ -62,9 +67,15 @@ export default function EventReviewCard({
                                     {reviewDisplayData.date}
                                 </p>
                             )}
+
+                            {/* Review rating */}
+                            <div className="event-review-card-rating">
+                                <EventReviewRating value={reviewDisplayData.rating} readOnly />
+                            </div>
                         </div>
                     </div>
 
+                    {/* Owner-only review actions */}
                     <EventReviewActions
                         reviewId={reviewDisplayData.id}
                         canDelete={reviewDisplayData.isOwner}
@@ -73,6 +84,7 @@ export default function EventReviewCard({
                     />
                 </header>
 
+                {/* Review content */}
                 <p className="event-review-card-comment">
                     {reviewDisplayData.comment}
                 </p>

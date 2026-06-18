@@ -1,0 +1,74 @@
+/* ==================================================
+   EVENT REVIEW RATING
+   Event review rating display and input
+================================================== */
+
+/* =========================================
+   BASE
+========================================= */
+
+.event-review-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+/* =========================================
+   ICON
+========================================= */
+
+.event-review-rating-icon {
+    width: 22px;
+    height: 22px;
+
+    color: var(--color-text-muted);
+
+    opacity: 0.45;
+}
+
+.event-review-rating-icon-active {
+    color: var(--color-primary);
+    fill: currentColor;
+    opacity: 1;
+}
+
+/* =========================================
+   BUTTONS
+========================================= */
+
+.event-review-rating-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: var(--space-1);
+
+    color: var(--color-text-muted);
+    background: transparent;
+
+    border: 0;
+    border-radius: var(--radius-sm);
+
+    cursor: pointer;
+
+    transition:
+        color var(--transition-fast),
+        background var(--transition-fast),
+        transform var(--transition-fast);
+}
+
+.event-review-rating-button:hover:not(:disabled) {
+    color: var(--color-primary);
+    background: var(--color-primary-subtle);
+    transform: translateY(-1px);
+}
+
+.event-review-rating-button:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-primary);
+}
+
+.event-review-rating-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}

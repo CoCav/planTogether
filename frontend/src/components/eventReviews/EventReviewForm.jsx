@@ -1,5 +1,7 @@
 import useEventReviewForm from "../../features/eventReviews/hooks/forms/useEventReviewForm";
 
+import EventReviewRating from "./EventReviewRating";
+
 import Button from "../ui/Button";
 import FormField from "../ui/FormField";
 
@@ -8,6 +10,7 @@ import FormField from "../ui/FormField";
    Displays the event review creation form
 
    Handles:
+   - review rating selection
    - review comment input
    - validation error display
    - submit action
@@ -31,10 +34,30 @@ export default function EventReviewForm({ onSubmit, isSubmitting = false }) {
 
     const { values, fieldErrors } = formState;
 
-    const { handleFieldChange, handleSubmit } = formActions;
+    const { handleFieldChange, handleRatingChange, handleSubmit } = formActions;
 
     return (
         <form className="event-review-form" onSubmit={handleSubmit}>
+
+            {/* =========================
+               RATING FIELD
+            ========================= */}
+
+            <FormField label="Rating" htmlFor="review-rating" error={fieldErrors.rating}>
+                {(errorId) => (
+                    <div
+                        id="review-rating"
+                        aria-describedby={errorId}
+                        aria-invalid={Boolean(fieldErrors.rating)}
+                    >
+                        <EventReviewRating
+                            value={values.rating}
+                            onChange={handleRatingChange}
+                            disabled={isSubmitting}
+                        />
+                    </div>
+                )}
+            </FormField>
 
             {/* =========================
                 COMMENT FIELD

@@ -7,9 +7,12 @@ import { getEventReviewDisplayData } from "../../../features/eventReviews/eventR
    Tests event review display data generation
 
    Handles:
+   - review rating display
    - review comment display
    - reviewer identity display
    - reviewer avatar display
+   - reviewer identity fallback
+   - reviewer avatar fallback
    - formatted review dates
    - review ownership detection
 
@@ -28,6 +31,7 @@ describe("getEventReviewDisplayData", () => {
             review: {
                 id: 1,
                 userId: 2,
+                rating: 4,
                 comment: "Great event!",
                 createdAt: "2026-06-15T10:00:00.000Z",
                 user: {
@@ -84,7 +88,8 @@ describe("getEventReviewDisplayData", () => {
     it("should return a formatted review date", () => {
         const data = getDisplayData();
 
-        expect(data.date).toBeTruthy();
+        expect(typeof data.date).toBe("string");
+        expect(data.date.length).toBeGreaterThan(0);
     });
 
     /* =============================
@@ -107,5 +112,23 @@ describe("getEventReviewDisplayData", () => {
         const data = getDisplayData();
 
         expect(data.isOwner).toBe(false);
+    });
+
+    /* =============================
+       RATING
+    ============================= */
+
+    it("should return review rating", () => {
+        const data = getDisplayData();
+
+        expect(data.rating).toBe(4);
+    });
+
+    it("should return null rating when missing", () => {
+        const data = getDisplayData({
+            rating: null
+        });
+
+        expect(data.rating).toBeNull();
     });
 });

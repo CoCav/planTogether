@@ -8,17 +8,18 @@ import { getNormalizedEventReviews } from "../eventReviewNormalizer";
 
 /* ==================================================
    USE EVENT REVIEW DATA
-   Handles event review list loading
+   Handles event review list state and loading
 
    Handles:
-   - event review loading
+   - public review retrieval
    - review response normalization
+   - review list state
    - loading state
    - error state
 
    Notes:
-   - review retrieval is public
-   - mutations are handled by dedicated review hooks
+   - review mutations are handled by useEventReviewActions
+   - normalized reviews include rating, comment and reviewer data
 ================================================== */
 
 export default function useEventReviewData({ eventId }) {
@@ -45,6 +46,7 @@ export default function useEventReviewData({ eventId }) {
        REVIEW LOADING
     ============================= */
 
+    // Loads and normalizes reviews for the current event
     const loadReviews = useCallback(async () => {
         if (!eventId) return;
 

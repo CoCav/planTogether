@@ -14,12 +14,14 @@ import {
    Handles:
    - single review normalization
    - review list normalization
+   - review rating normalization
    - reviewer data normalization
    - API payload extraction
    - fallback values
 
    Notes:
    - supports reviewer data aliases
+   - normalized reviews include rating, comment and public reviewer data
 ================================================== */
 
 describe("eventReviewNormalizer", () => {
@@ -39,6 +41,7 @@ describe("eventReviewNormalizer", () => {
             eventId: null,
             userId: null,
 
+            rating: null,
             comment: "Great event!",
 
             createdAt: null,
@@ -68,6 +71,16 @@ describe("eventReviewNormalizer", () => {
             name: "Alice",
             avatar: "/uploads/avatars/alice.png"
         });
+    });
+
+    it("should normalize review rating", () => {
+        const review = normalizeEventReview({
+            id: 1,
+            rating: 4,
+            comment: "Great event!"
+        });
+
+        expect(review.rating).toBe(4);
     });
 
     it("should normalize reviewer data from User alias", () => {
@@ -105,6 +118,7 @@ describe("eventReviewNormalizer", () => {
             id: 1,
             eventId: 10,
             userId: 2,
+            rating: 5,
             comment: "Great event!",
             createdAt: "2026-06-15T10:00:00.000Z",
             updatedAt: "2026-06-15T11:00:00.000Z"
@@ -114,6 +128,7 @@ describe("eventReviewNormalizer", () => {
             id: 1,
             eventId: 10,
             userId: 2,
+            rating: 5,
             comment: "Great event!",
             createdAt: "2026-06-15T10:00:00.000Z",
             updatedAt: "2026-06-15T11:00:00.000Z"
@@ -159,6 +174,7 @@ describe("eventReviewNormalizer", () => {
                         id: 1,
                         eventId: 10,
                         userId: 2,
+                        rating: 5,
                         comment: "Great event!",
                         user: {
                             id: 2,
@@ -178,6 +194,7 @@ describe("eventReviewNormalizer", () => {
             id: 1,
             eventId: 10,
             userId: 2,
+            rating: 5,
             comment: "Great event!",
             user: {
                 id: 2,
@@ -194,6 +211,7 @@ describe("eventReviewNormalizer", () => {
                     id: 1,
                     eventId: 10,
                     userId: 2,
+                    rating: 5,
                     comment: "Great event!"
                 }
             }
@@ -205,6 +223,7 @@ describe("eventReviewNormalizer", () => {
             id: 1,
             eventId: 10,
             userId: 2,
+            rating: 5,
             comment: "Great event!"
         });
     });

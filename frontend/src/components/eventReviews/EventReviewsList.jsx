@@ -16,6 +16,7 @@ import EmptyState from "../ui/EmptyState";
    Notes:
    - individual review display is delegated to EventReviewCard
    - review loading state is handled by EventReviewsSection
+   - review ratings are displayed inside each review card
 ================================================== */
 
 export default function EventReviewsList({
@@ -24,6 +25,10 @@ export default function EventReviewsList({
     deletingReviewId = null,
     onDelete
 }) {
+
+    /* =========================
+       EMPTY STATE
+    ========================= */
 
     if (reviews.length === 0) {
         return (

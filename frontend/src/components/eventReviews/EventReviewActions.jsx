@@ -13,10 +13,16 @@ import Button from "../ui/Button";
 
    Notes:
    - review ownership is resolved in EventReviewCard
-   - backend remains the source of truth for delete authorization
+   - deletion is delegated to the parent component
 ================================================== */
 
 export default function EventReviewActions({ reviewId, canDelete, isDeleting, onDelete }) {
+
+    /* =========================
+       VISIBILITY
+    ========================= */
+
+    // Review actions are only visible to the review owner
     if (!canDelete) return null;
 
     return (

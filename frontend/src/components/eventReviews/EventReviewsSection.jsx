@@ -11,11 +11,11 @@ import Card from "../ui/Card";
 
 /* ==================================================
    EVENT REVIEWS SECTION
-   Displays event review content for one event
+   Displays and manages event reviews for one event
 
    Handles:
    - review loading
-   - review creation
+   - review creation with rating and comment
    - review deletion
    - review feedback display
    - authenticated review form visibility

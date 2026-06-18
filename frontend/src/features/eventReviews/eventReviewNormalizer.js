@@ -2,18 +2,18 @@ import { getApiPayload } from "../../api/apiResponse";
 
 /* ==================================================
    EVENT REVIEW NORMALIZER
-   Converts backend review payloads into frontend-friendly data
+   Converts backend review payloads into frontend data
 
    Handles:
    - single review normalization
    - review list normalization
-   - public reviewer identity and avatar data
+   - review rating data
+   - public reviewer identity data
    - review response extraction
 
    Notes:
    - reviews are loaded from GET /events/:eventId/reviews
    - reviewer data comes from the backend user include
-   - rating support will be added later
 ================================================== */
 
 /* =============================
@@ -29,6 +29,7 @@ export const normalizeEventReview = (review = {}) => {
         eventId: review.eventId ?? null,
         userId: review.userId ?? user.id ?? null,
 
+        rating: review.rating ?? null,
         comment: review.comment ?? "",
 
         createdAt: review.createdAt ?? null,

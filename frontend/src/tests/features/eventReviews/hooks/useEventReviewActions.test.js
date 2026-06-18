@@ -13,7 +13,7 @@ import { mockConfirmAccepted, mockConfirmCancelled } from "../../../helpers/mock
    Tests current user event review actions
 
    Handles:
-   - event review creation
+   - event review creation with rating and comment
    - review list refresh after creation
    - create error handling
    - review deletion confirmation
@@ -70,6 +70,7 @@ describe("useEventReviewActions", () => {
 
         await act(async () => {
             await result.current.handleCreateReview({
+                rating: 5,
                 comment: "Great event!"
             });
         });
@@ -78,6 +79,7 @@ describe("useEventReviewActions", () => {
         expect(hookProps.setError).toHaveBeenCalledWith("");
 
         expect(createEventReview).toHaveBeenCalledWith(1, {
+            rating: 5,
             comment: "Great event!"
         });
 
@@ -98,6 +100,7 @@ describe("useEventReviewActions", () => {
 
         await act(async () => {
             result.current.handleCreateReview({
+                rating: 5,
                 comment: "Great event!"
             });
         });
@@ -118,6 +121,7 @@ describe("useEventReviewActions", () => {
 
         await act(async () => {
             await result.current.handleCreateReview({
+                rating: 5,
                 comment: "Great event!"
             });
         });

@@ -6,18 +6,17 @@ import { createEventReview, deleteEventReview } from "../../../api/eventReviews/
 
 /* ==================================================
    EVENT REVIEW ACTIONS HOOK
-   Handles current user event review actions
+   Handles event review mutations for the current user
 
    Actions:
-   - create event review
-   - delete own event review
-   - refresh reviews after success
+   - create a review with rating and comment
+   - delete the current user's own review
+   - refresh reviews after successful mutations
    - expose submit and delete loading states
 
    Notes:
    - backend enforces completed-event and participant-only review rules
    - backend enforces review ownership on deletion
-   - rating support will be added later
 ================================================== */
 
 export default function useEventReviewActions({
@@ -39,13 +38,14 @@ export default function useEventReviewActions({
     ============================= */
 
     // Creates a review and refreshes the review list
-    const handleCreateReview = async ({ comment }) => {
+    const handleCreateReview = async ({ rating, comment }) => {
         try {
             setMessage("");
             setError("");
             setIsSubmitting(true);
 
             await createEventReview(eventId, {
+                rating,
                 comment
             });
 

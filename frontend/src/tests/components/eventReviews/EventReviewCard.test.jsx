@@ -9,15 +9,18 @@ import EventReviewCard from "../../../components/eventReviews/EventReviewCard";
 
    Handles:
    - reviewer information rendering
-   - review comment rendering
+   - reviewer avatar rendering
    - review date rendering
+   - review rating rendering
+   - review comment rendering
    - delete action visibility
    - delete loading state
-   - avatar rendering
+   - delete callback forwarding
 
    Notes:
    - review display data is mocked
    - review actions are tested separately
+   - rating rendering uses EventReviewRating in read-only mode
 ================================================== */
 
 vi.mock("../../../utils/uploadedFiles", () => ({
@@ -29,6 +32,7 @@ vi.mock("../../../features/eventReviews/eventReviewDisplayData", () => ({
         id: 1,
         reviewerName: "John Doe",
         reviewerAvatar: "/uploads/avatar.png",
+        rating: 4,
         comment: "Great event!",
         date: "15 Jun 2026",
         isOwner: currentUserId === 1
@@ -83,11 +87,22 @@ describe("EventReviewCard", () => {
     it("should display reviewer avatar", () => {
         renderEventReviewCard();
 
-        expect(
-            screen.getByAltText("John Doe avatar")
-        ).toBeInTheDocument();
+        expect(screen.getByAltText("John Doe avatar")).toBeInTheDocument();
     });
 
+    it("should display review rating", () => {
+        renderEventReviewCard();
+
+        expect(screen.getByRole("img", {
+            name: "4 out of 5 stars"
+        })).toBeInTheDocument();
+    });
+
+    it("should render rating in read-only mode", () => {
+        renderEventReviewCard();
+
+        expect(screen.queryAllByRole("radio")).toHaveLength(0);
+    });
     /* =============================
        ACTIONS
     ============================= */

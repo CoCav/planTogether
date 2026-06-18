@@ -8,12 +8,13 @@ import useEventReviewForm from "../../../../../features/eventReviews/hooks/forms
    Tests event review form state
 
    Handles:
-   - initial form state
+   - initial rating and comment state
+   - rating field changes
    - comment field changes
    - field error cleanup
    - validation errors
    - successful submit
-   - trimmed submit payload
+   - rating and trimmed comment payload
    - form reset
 ================================================== */
 
@@ -49,6 +50,20 @@ describe("useEventReviewForm", () => {
         };
     };
 
+    const fillValidForm = (result) => {
+        act(() => {
+            result.current.formActions.handleRatingChange(5);
+        });
+
+        act(() => {
+            result.current.formActions.handleFieldChange(
+                createChangeEvent({
+                    value: "Great event!"
+                })
+            );
+        });
+    };
+
     /* =============================
        INITIAL STATE
     ============================= */
@@ -57,6 +72,7 @@ describe("useEventReviewForm", () => {
         const { result } = setupHook();
 
         expect(result.current.formState.values).toEqual({
+            rating: "",
             comment: ""
         });
 
@@ -66,6 +82,16 @@ describe("useEventReviewForm", () => {
     /* =============================
        FIELD CHANGES
     ============================= */
+
+    it("should update rating value", () => {
+        const { result } = setupHook();
+
+        act(() => {
+            result.current.formActions.handleRatingChange(4);
+        });
+
+        expect(result.current.formState.values.rating).toBe(4);
+    });
 
     it("should update comment value", () => {
         const { result } = setupHook();
@@ -79,6 +105,22 @@ describe("useEventReviewForm", () => {
         });
 
         expect(result.current.formState.values.comment).toBe("Great event!");
+    });
+
+    it("should clear rating error when rating changes", async () => {
+        const { result } = setupHook();
+
+        await act(async () => {
+            await result.current.formActions.handleSubmit(createSubmitEvent());
+        });
+
+        expect(result.current.formState.fieldErrors.rating).toBe("Rating is required");
+
+        act(() => {
+            result.current.formActions.handleRatingChange(5);
+        });
+
+        expect(result.current.formState.fieldErrors.rating).toBeUndefined();
     });
 
     it("should clear comment error when comment changes", async () => {
@@ -119,6 +161,7 @@ describe("useEventReviewForm", () => {
         expect(onSubmitValid).not.toHaveBeenCalled();
 
         expect(result.current.formState.fieldErrors).toMatchObject({
+            rating: "Rating is required",
             comment: "Comment is required"
         });
     });
@@ -128,6 +171,10 @@ describe("useEventReviewForm", () => {
 
         const { result } = setupHook({
             onSubmitValid
+        });
+
+        act(() => {
+            result.current.formActions.handleRatingChange(5);
         });
 
         act(() => {
@@ -153,7 +200,7 @@ describe("useEventReviewForm", () => {
        SUBMIT
     ============================= */
 
-    it("should submit valid comment", async () => {
+    it("should submit valid review", async () => {
         const onSubmitValid = vi.fn();
 
         const { result } = setupHook({
@@ -162,13 +209,7 @@ describe("useEventReviewForm", () => {
 
         const submitEvent = createSubmitEvent();
 
-        act(() => {
-            result.current.formActions.handleFieldChange(
-                createChangeEvent({
-                    value: "Great event!"
-                })
-            );
-        });
+        fillValidForm(result);
 
         await act(async () => {
             await result.current.formActions.handleSubmit(submitEvent);
@@ -177,6 +218,7 @@ describe("useEventReviewForm", () => {
         expect(submitEvent.preventDefault).toHaveBeenCalledTimes(1);
 
         expect(onSubmitValid).toHaveBeenCalledWith({
+            rating: 5,
             comment: "Great event!"
         });
 
@@ -188,6 +230,10 @@ describe("useEventReviewForm", () => {
 
         const { result } = setupHook({
             onSubmitValid
+        });
+
+        act(() => {
+            result.current.formActions.handleRatingChange(5);
         });
 
         act(() => {
@@ -203,6 +249,7 @@ describe("useEventReviewForm", () => {
         });
 
         expect(onSubmitValid).toHaveBeenCalledWith({
+            rating: 5,
             comment: "Great event!"
         });
     });
@@ -214,19 +261,14 @@ describe("useEventReviewForm", () => {
             onSubmitValid
         });
 
-        act(() => {
-            result.current.formActions.handleFieldChange(
-                createChangeEvent({
-                    value: "Great event!"
-                })
-            );
-        });
+        fillValidForm(result);
 
         await act(async () => {
             await result.current.formActions.handleSubmit(createSubmitEvent());
         });
 
         expect(result.current.formState.values).toEqual({
+            rating: "",
             comment: ""
         });
 
@@ -236,19 +278,14 @@ describe("useEventReviewForm", () => {
     it("should reset form when resetForm is called", () => {
         const { result } = setupHook();
 
-        act(() => {
-            result.current.formActions.handleFieldChange(
-                createChangeEvent({
-                    value: "Great event!"
-                })
-            );
-        });
+        fillValidForm(result);
 
         act(() => {
             result.current.formActions.resetForm();
         });
 
         expect(result.current.formState.values).toEqual({
+            rating: "",
             comment: ""
         });
 

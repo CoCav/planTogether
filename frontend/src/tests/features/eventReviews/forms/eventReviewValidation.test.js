@@ -7,7 +7,9 @@ import { validateEventReview } from "../../../../features/eventReviews/forms/eve
    Tests event review form validation
 
    Handles:
-   - valid review comments
+   - valid review rating and comment
+   - required rating validation
+   - rating range validation
    - required comment validation
    - trimmed comment validation
    - minimum comment length validation
@@ -16,24 +18,78 @@ import { validateEventReview } from "../../../../features/eventReviews/forms/eve
 
    Notes:
    - aligned with backend eventReviewValidator
-   - rating validation will be added later
+   - rating values range from 1 to 5
 ================================================== */
 
 describe("eventReviewValidation", () => {
 
     /* =============================
-       VALID COMMENT
+       TEST DATA
     ============================= */
 
-    it("should return no errors for a valid comment", () => {
-        expect(validateEventReview({
-            comment: "Great event!"
-        })).toEqual({});
+    const validReview = {
+        rating: 5,
+        comment: "Great event!"
+    };
+
+    /* =============================
+       VALID REVIEW
+    ============================= */
+
+    it("should return no errors for a valid review", () => {
+        expect(validateEventReview(validReview)).toEqual({});
     });
 
     it("should trim comment before validating", () => {
         expect(validateEventReview({
+            rating: 5,
             comment: "   Great event!   "
+        })).toEqual({});
+    });
+
+    /* =============================
+       RATING
+    ============================= */
+
+    it("should require rating", () => {
+        const errors = validateEventReview({
+            comment: "Great event!"
+        });
+
+        expect(errors.rating).toBe("Rating is required");
+    });
+
+    it("should reject rating lower than 1", () => {
+        const errors = validateEventReview({
+            ...validReview,
+            rating: -1
+        });
+
+        expect(errors.rating).toBe("Rating must be an integer between 1 and 5");
+    });
+
+    it("should reject rating higher than 5", () => {
+        const errors = validateEventReview({
+            ...validReview,
+            rating: 6
+        });
+
+        expect(errors.rating).toBe("Rating must be an integer between 1 and 5");
+    });
+
+    it("should reject non-integer rating", () => {
+        const errors = validateEventReview({
+            ...validReview,
+            rating: "bad"
+        });
+
+        expect(errors.rating).toBe("Rating must be an integer between 1 and 5");
+    });
+
+    it("should allow rating as numeric string", () => {
+        expect(validateEventReview({
+            ...validReview,
+            rating: "5"
         })).toEqual({});
     });
 
@@ -43,6 +99,7 @@ describe("eventReviewValidation", () => {
 
     it("should require comment", () => {
         const errors = validateEventReview({
+            rating: 5,
             comment: ""
         });
 
@@ -51,6 +108,7 @@ describe("eventReviewValidation", () => {
 
     it("should require comment when value only contains spaces", () => {
         const errors = validateEventReview({
+            rating: 5,
             comment: "   "
         });
 
@@ -65,6 +123,7 @@ describe("eventReviewValidation", () => {
 
     it("should require comment when comment is null", () => {
         const errors = validateEventReview({
+            rating: 5,
             comment: null
         });
 
@@ -77,6 +136,7 @@ describe("eventReviewValidation", () => {
 
     it("should reject comment shorter than 5 characters", () => {
         const errors = validateEventReview({
+            rating: 5,
             comment: "abcd"
         });
 
@@ -85,18 +145,21 @@ describe("eventReviewValidation", () => {
 
     it("should allow comment with exactly 5 characters", () => {
         expect(validateEventReview({
+            rating: 5,
             comment: "abcde"
         })).toEqual({});
     });
 
     it("should allow comment with exactly 1000 characters", () => {
         expect(validateEventReview({
+            rating: 5,
             comment: "a".repeat(1000)
         })).toEqual({});
     });
 
     it("should reject comment longer than 1000 characters", () => {
         const errors = validateEventReview({
+            rating: 5,
             comment: "a".repeat(1001)
         });
 

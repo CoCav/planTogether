@@ -20,13 +20,14 @@ import { EVENT_MODES, getEventModeLabel } from "../shared/constants/eventModes";
    - participant and capacity display
    - registration deadline display
    - event status display data
+   - review count and average rating display
 
    Notes:
    - selectedLocation is used by map components
    - location labels support provider-formatted addresses
 ================================================== */
 
-export function getEventDisplayData(event) {
+export function getEventDisplayData(event = {}) {
     const isOnline = event.mode === EVENT_MODES.ONLINE;
 
     // Prefer persisted provider label before fallback event location
@@ -35,6 +36,10 @@ export function getEventDisplayData(event) {
         event.selectedLocation?.label ||
         event.location ||
         "N/A";
+
+    // Review statistics used by event cards and details pages
+    const reviewCount = event.reviewCount ?? 0;
+    const averageRating = event.averageRating ?? null;
 
     return {
         title: event.title || "No title provided.",
@@ -71,6 +76,15 @@ export function getEventDisplayData(event) {
 
         capacity: event.maxParticipants
             ? `${event.participantCount} / ${event.maxParticipants}`
+            : null,
+
+        reviewCount,
+
+        averageRating,
+
+        // Display review summary only when ratings exist
+        reviewLabel: reviewCount > 0 && averageRating !== null
+            ? `${averageRating} ★ (${formatCount(reviewCount, "review")})`
             : null,
 
         registrationDeadline: event.registrationDeadline

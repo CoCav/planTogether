@@ -26,9 +26,12 @@ import {
    - paginated event payload normalization
    - API payload extraction
    - fallback values
+   - participant count normalization
+   - review stats normalization
 
    Notes:
    - uses reusable event test factories
+   - review stats are normalized for event cards and details pages
 ================================================== */
 
 describe("eventNormalizer", () => {
@@ -59,6 +62,8 @@ describe("eventNormalizer", () => {
             maxParticipants: null,
             registrationDeadline: null,
             participantCount: 0,
+            reviewCount: 0,
+            averageRating: null,
             status: EVENT_STATUS.UPCOMING,
             createdAt: null,
             updatedAt: null
@@ -85,19 +90,21 @@ describe("eventNormalizer", () => {
         const event = normalizeEvent(
             createEvent({
                 participantCount: "3",
-                maxParticipants: "10"
+                maxParticipants: "10",
+                reviewCount: "2",
+                averageRating: "4.5"
             })
         );
 
         expect(event.participantCount).toBe(3);
-
         expect(event.maxParticipants).toBe(10);
+
+        expect(event.reviewCount).toBe(2);
+        expect(event.averageRating).toBe(4.5);
     });
 
     it("should keep maxParticipants as null when missing", () => {
-        expect(
-            normalizeEvent({}).maxParticipants
-        ).toBeNull();
+        expect(normalizeEvent({}).maxParticipants).toBeNull();
     });
 
     it("should preserve optional event metadata", () => {
@@ -116,6 +123,37 @@ describe("eventNormalizer", () => {
             createdAt: "2026-01-01T10:00:00.000Z",
             updatedAt: "2026-01-02T10:00:00.000Z"
         });
+    });
+
+    /* =============================
+       REVIEW STATS
+    ============================= */
+
+    it("should normalize review stats", () => {
+        const event = normalizeEvent({
+            reviewCount: "12",
+            averageRating: "4.7"
+        });
+
+        expect(event.reviewCount).toBe(12);
+        expect(event.averageRating).toBe(4.7);
+    });
+
+    it("should use fallback review stats when missing", () => {
+        const event = normalizeEvent({});
+
+        expect(event.reviewCount).toBe(0);
+        expect(event.averageRating).toBeNull();
+    });
+
+    it("should keep average rating null when missing", () => {
+        expect(normalizeEvent({
+            averageRating: null
+        }).averageRating).toBeNull();
+
+        expect(normalizeEvent({
+            averageRating: undefined
+        }).averageRating).toBeNull();
     });
 
     /* =============================
@@ -207,7 +245,9 @@ describe("eventNormalizer", () => {
                     createEvent({
                         id: 1,
                         title: "Event 1",
-                        image: "/uploads/events/event.png"
+                        image: "/uploads/events/event.png",
+                        reviewCount: 2,
+                        averageRating: 4.5
                     })
                 ]
             }
@@ -220,7 +260,9 @@ describe("eventNormalizer", () => {
         expect(events[0]).toMatchObject({
             id: 1,
             title: "Event 1",
-            image: "/uploads/events/event.png"
+            image: "/uploads/events/event.png",
+            reviewCount: 2,
+            averageRating: 4.5
         });
     });
 

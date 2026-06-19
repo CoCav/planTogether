@@ -38,6 +38,9 @@ import {
    - event availability badges
    - authenticated and guest states
    - started and past event restrictions
+   - completed event reviews section display
+   - active event reviews section hiding
+   - event review summary forwarding
 
    Notes:
    - mocks API modules
@@ -268,9 +271,13 @@ vi.mock("../../components/eventMemberships/EventParticipantsSection", () => ({
 }));
 
 vi.mock("../../components/eventReviews/EventReviewsSection", () => ({
-    default: () => (
+    default: ({ reviewLabel }) => (
         <section data-testid="event-reviews-section">
             Event Reviews Section
+
+            {reviewLabel && (
+                <span>Review summary: {reviewLabel}</span>
+            )}
         </section>
     )
 }));
@@ -391,10 +398,47 @@ describe("EventDetailsPage", () => {
         expect(await screen.findByLabelText(/event categories/i)).toBeInTheDocument();
     });
 
-    it("should render event reviews section", async () => {
+    it("should render event reviews section for past events", async () => {
+        setupApi({
+            event: createEvent({
+                ...mockEvent,
+                status: EVENT_STATUS.PAST
+            })
+        });
+
         renderPage();
 
         expect(await screen.findByTestId("event-reviews-section")).toBeInTheDocument();
+    });
+
+    it("should hide event reviews section for upcoming events", async () => {
+        setupApi({
+            event: createEvent({
+                ...mockEvent,
+                status: EVENT_STATUS.UPCOMING
+            })
+        });
+
+        renderPage();
+
+        await screen.findByText("Test Event");
+
+        expect(screen.queryByTestId("event-reviews-section")).not.toBeInTheDocument();
+    });
+
+    it("should forward review summary to event reviews section", async () => {
+        setupApi({
+            event: createEvent({
+                ...mockEvent,
+                status: EVENT_STATUS.PAST,
+                reviewCount: 2,
+                averageRating: 4.5
+            })
+        });
+
+        renderPage();
+
+        expect(await screen.findByText("Review summary: 4.5 ★ (2 reviews)")).toBeInTheDocument();
     });
 
     /* =============================

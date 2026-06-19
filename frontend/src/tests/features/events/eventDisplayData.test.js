@@ -20,10 +20,13 @@ import { createEvent } from "../../factories/events/eventFactory";
    - participant and capacity display
    - registration deadline display
    - nullable display fields
+   - review count and average rating display
+   - review summary label display
 
    Notes:
    - focuses on display-ready transformation logic
    - selectedLocation supports event map rendering
+   - reviewLabel is only returned when ratings exist
 ================================================== */
 
 describe("getEventDisplayData", () => {
@@ -250,6 +253,56 @@ describe("getEventDisplayData", () => {
         });
 
         expect(data.capacity).toBeNull();
+    });
+
+    /* =============================
+       REVIEWS
+    ============================= */
+
+    it("should return review stats", () => {
+        const data = getDisplayData({
+            reviewCount: 2,
+            averageRating: 4.5
+        });
+
+        expect(data.reviewCount).toBe(2);
+        expect(data.averageRating).toBe(4.5);
+    });
+
+    it("should return review label when ratings exist", () => {
+        const data = getDisplayData({
+            reviewCount: 2,
+            averageRating: 4.5
+        });
+
+        expect(data.reviewLabel).toBe("4.5 ★ (2 reviews)");
+    });
+
+    it("should return singular review label", () => {
+        const data = getDisplayData({
+            reviewCount: 1,
+            averageRating: 5
+        });
+
+        expect(data.reviewLabel).toBe("5 ★ (1 review)");
+    });
+
+    it("should return null review label when review count is zero", () => {
+        const data = getDisplayData({
+            reviewCount: 0,
+            averageRating: null
+        });
+
+        expect(data.reviewLabel).toBeNull();
+    });
+
+    it("should return null review label when average rating is missing", () => {
+        const data = getDisplayData({
+            reviewCount: 2,
+            averageRating: null
+        });
+
+        expect(data.reviewLabel).toBeNull();
     });
 
     /* =============================

@@ -11,6 +11,8 @@ import { EVENT_MODES } from "../shared/constants/eventModes";
    - single event normalization
    - event list normalization
    - paginated public event payloads
+   - participant count normalization
+   - review stats normalization
 ================================================== */
 
 /* =============================
@@ -22,22 +24,35 @@ export const normalizeEvent = (event = {}) => ({
     id: event.id ?? null,
     title: event.title ?? "",
     description: event.description ?? "",
+
     theme: event.theme ?? "",
     type: event.type ?? "",
+
     mode: event.mode ?? EVENT_MODES.IN_PERSON,
     location: event.location ?? "",
+
     startDateTime: event.startDateTime ?? null,
     endDateTime: event.endDateTime ?? null,
+
     creatorId: event.creatorId ?? null,
     creatorName: event.creator?.name ?? event.creatorName ?? "",
+
     image: event.image ?? null,
     maxParticipants:
         event.maxParticipants === null || event.maxParticipants === undefined
             ? null
             : Number(event.maxParticipants),
+
     registrationDeadline: event.registrationDeadline ?? null,
     participantCount: Number(event.participantCount ?? 0),
+
+    reviewCount: Number(event.reviewCount ?? 0),
+    averageRating: event.averageRating === null || event.averageRating === undefined
+        ? null
+        : Number(event.averageRating),
+
     status: event.status ?? EVENT_STATUS.UPCOMING,
+
     createdAt: event.createdAt ?? null,
     updatedAt: event.updatedAt ?? null
 });

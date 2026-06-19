@@ -20,6 +20,7 @@ import Card from "../ui/Card";
    - review feedback display
    - authenticated review form visibility
    - review list rendering
+   - review stats display
 
    Notes:
    - page-level section placement is handled by EventDetailsPage
@@ -27,7 +28,7 @@ import Card from "../ui/Card";
    - create and delete mutations refresh the review list after success
 ================================================== */
 
-export default function EventReviewsSection({ eventId, user, setMessage }) {
+export default function EventReviewsSection({ eventId, user, setMessage, reviewLabel }) {
 
     /* =========================
        REVIEW DATA
@@ -70,14 +71,22 @@ export default function EventReviewsSection({ eventId, user, setMessage }) {
 
     return (
         <Card className="event-reviews-section-card">
-            <div className="section-header">
-                <h2 id="event-reviews-title" className="section-title">
-                    Event reviews
-                </h2>
+            <div className="section-header event-reviews-section-header">
+                <div>
+                    <h2 id="event-reviews-title" className="section-title">
+                        Event reviews
+                    </h2>
 
-                <p className="section-subtitle">
-                    See what participants shared after attending this event.
-                </p>
+                    <p className="section-subtitle">
+                        See what participants shared after attending this event.
+                    </p>
+                </div>
+
+                {reviewLabel && (
+                    <div className="event-reviews-summary" aria-label="Event review summary">
+                        {reviewLabel}
+                    </div>
+                )}
             </div>
 
             {error && <Alert type="danger">{error}</Alert>}

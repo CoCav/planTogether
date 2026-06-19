@@ -25,6 +25,8 @@ import { createEvent } from "../../factories/events/eventFactory";
    - event state badge display
    - registration closed state
    - join and leave callbacks
+   - completed event review summary display
+   - completed event empty review summary display
    - accessible image links
    - accessible event labels
    - decorative icon accessibility
@@ -34,12 +36,13 @@ import { createEvent } from "../../factories/events/eventFactory";
    - uses reusable event render helper
    - mocks formatter utilities
    - mocks uploaded file utilities
+   - completed events display review summary instead of membership actions
 ================================================== */
 
 vi.mock("../../../utils/formatters", () => ({
     formatEventDateRange: () => "Apr 24",
     formatTime: () => "10:00",
-    formatCount: (count) => `${count} participants`
+    formatCount: (count, singular) => `${count} ${count === 1 ? singular : `${singular}s`}`
 }));
 
 vi.mock("../../../utils/uploadedFiles", () => ({
@@ -333,6 +336,42 @@ describe("EventCard", () => {
         expect(screen.queryByRole("button", {
             name: /leave the event/i
         })).not.toBeInTheDocument();
+    });
+
+    it("should display review summary when event is past and has reviews", () => {
+        renderCard({
+            event: {
+                status: EVENT_STATUS.PAST,
+                reviewCount: 2,
+                averageRating: 4.5
+            }
+        });
+
+        expect(screen.getByLabelText("Event review summary")).toHaveTextContent("4.5 ★ (2 reviews)");
+    });
+
+    it("should display empty review summary when past event has no reviews", () => {
+        renderCard({
+            event: {
+                status: EVENT_STATUS.PAST,
+                reviewCount: 0,
+                averageRating: null
+            }
+        });
+
+        expect(screen.getByLabelText("Event review summary")).toHaveTextContent("No reviews yet");
+    });
+
+    it("should not display review summary when event is not past", () => {
+        renderCard({
+            event: {
+                status: EVENT_STATUS.UPCOMING,
+                reviewCount: 2,
+                averageRating: 4.5
+            }
+        });
+
+        expect(screen.queryByLabelText("Event review summary")).not.toBeInTheDocument();
     });
 
     /* =============================

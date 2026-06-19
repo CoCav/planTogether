@@ -23,6 +23,7 @@ import Badge from "../ui/Badge";
    - event preview content
    - role, type, status and state badges
    - event metadata display
+   - review stats display for completed events
    - membership action visibility
    - image fallback handling
    - public profile navigation
@@ -76,6 +77,9 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
     const imageAlt = `Event cover for ${eventDisplayData.title}`;
 
     const shouldShowOrganizerInline = role !== EVENT_ROLES.ORGANIZER;
+
+    // Completed events show review stats instead of membership actions
+    const shouldShowReviewSummary = isPast;
 
     return (
         <article className="event-card">
@@ -140,15 +144,21 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                         </div>
                     </div>
 
-                    <EventCardActions
-                        eventId={event.id}
-
-                        canLeave={canLeave}
-                        showJoinButton={showJoinButton}
-
-                        onJoin={onJoin}
-                        onLeave={onLeave}
-                    />
+                    <div className="event-card-header-aside">
+                        {shouldShowReviewSummary ? (
+                            <div className="event-card-review-summary" aria-label="Event review summary">
+                                {eventDisplayData.reviewLabel || "No reviews yet"}
+                            </div>
+                        ) : (
+                            <EventCardActions
+                                eventId={event.id}
+                                canLeave={canLeave}
+                                showJoinButton={showJoinButton}
+                                onJoin={onJoin}
+                                onLeave={onLeave}
+                            />
+                        )}
+                    </div>
                 </header>
 
                 {/* =========================

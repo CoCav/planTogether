@@ -51,7 +51,7 @@ import PageLoader from "../components/ui/PageLoader";
    - accessible event image rendering
    - physical event location map display
    - staff and participant section management
-   - event review section placement
+   - event review section placement for completed events
 ================================================== */
 
 export default function EventDetailsPage() {
@@ -428,13 +428,16 @@ export default function EventDetailsPage() {
                 />
             </section>
 
-            <section className="event-details-reviews" aria-labelledby="event-reviews-title">
-                <EventReviewsSection
-                    eventId={event.id}
-                    user={user}
-                    setMessage={setMessage}
-                />
-            </section>
+            {isPast && (
+                <section className="event-details-reviews" aria-labelledby="event-reviews-title">
+                    <EventReviewsSection
+                        eventId={event.id}
+                        user={user}
+                        setMessage={setMessage}
+                        reviewLabel={eventDisplayData.reviewLabel}
+                    />
+                </section>
+            )}
         </main>
     );
 }

@@ -19,6 +19,8 @@ import useEventReviewData from "../../../features/eventReviews/hooks/useEventRev
    - loading state display
    - review list configuration
    - review create and delete action forwarding
+   - review summary display
+   - missing review summary hiding
 
    Notes:
    - mocks review hooks to focus on section configuration
@@ -35,7 +37,10 @@ vi.mock("../../../components/eventReviews/EventReviewForm", () => ({
             data-submitting={String(isSubmitting)}
             onSubmit={(event) => {
                 event.preventDefault();
-                onSubmit({ comment: "Great event!" });
+                onSubmit({
+                    rating: 5,
+                    comment: "Great event!"
+                });
             }}
         >
             <button type="submit">
@@ -77,7 +82,8 @@ describe("EventReviewsSection", () => {
         user: {
             userId: 2
         },
-        setMessage: vi.fn()
+        setMessage: vi.fn(),
+        reviewLabel: "4 ★ (1 review)"
     };
 
     const loadReviews = vi.fn();
@@ -142,6 +148,20 @@ describe("EventReviewsSection", () => {
         expect(screen.getByText(
             "See what participants shared after attending this event."
         )).toBeInTheDocument();
+    });
+
+    it("should render review summary when provided", () => {
+        renderEventReviewsSection();
+
+        expect(screen.getByLabelText("Event review summary")).toHaveTextContent("4 ★ (1 review)");
+    });
+
+    it("should hide review summary when missing", () => {
+        renderEventReviewsSection({
+            reviewLabel: null
+        });
+
+        expect(screen.queryByLabelText("Event review summary")).not.toBeInTheDocument();
     });
 
     /* =============================
@@ -238,6 +258,7 @@ describe("EventReviewsSection", () => {
         }).click();
 
         expect(handleCreateReview).toHaveBeenCalledWith({
+            rating: 5,
             comment: "Great event!"
         });
     });

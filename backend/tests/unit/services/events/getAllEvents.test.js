@@ -6,6 +6,8 @@
    - event filter forwarding
    - creator include configuration
    - active participant include configuration
+   - review stats include configuration
+   - review count and average rating enrichment
    - status enrichment
    - grouped count handling
    - database error propagation
@@ -16,6 +18,7 @@
    - active participants are counted through optimized query helpers
    - pagination metadata is returned correctly
    - events are enriched with computed status
+   - review stats are built through optimized query helpers
    - shared event status constants are used for expected statuses
 ================================================== */
 
@@ -27,7 +30,10 @@ jest.mock("../../../../src/utils/events/eventQueryBuilder", () => ({
     buildEventWhereConditions: jest.fn(),
     buildEventCreatorInclude: jest.fn(),
     buildActiveParticipantInclude: jest.fn(),
-    buildParticipantCountAttribute: jest.fn()
+    buildParticipantCountAttribute: jest.fn(),
+    buildEventReviewInclude: jest.fn(),
+    buildReviewCountAttribute: jest.fn(),
+    buildAverageRatingAttribute: jest.fn()
 }));
 
 jest.mock("../../../../src/utils/events/eventStatus", () => ({
@@ -48,6 +54,7 @@ const Event = require("../../../../src/models/eventModel");
 const User = require("../../../../src/models/userModel");
 
 const eventService = require("../../../../src/services/eventService");
+const EventReview = require("../../../../src/models/relations/eventReviewModel");
 
 const { EVENT_MODES } = require("../../../../src/constants/eventModes");
 const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
@@ -57,7 +64,10 @@ const {
     buildEventWhereConditions,
     buildEventCreatorInclude,
     buildActiveParticipantInclude,
-    buildParticipantCountAttribute
+    buildParticipantCountAttribute,
+    buildEventReviewInclude,
+    buildReviewCountAttribute,
+    buildAverageRatingAttribute
 } = require("../../../../src/utils/events/eventQueryBuilder");
 
 const { getPaginationOptions, getTotalCount, getTotalPages } = require("../../../../src/utils/pagination");
@@ -76,6 +86,22 @@ describe("eventService - getAllEvents", () => {
             as: "participants",
             attributes: []
         });
+
+        buildEventReviewInclude.mockReturnValue({
+            model: EventReview,
+            as: "reviews",
+            attributes: []
+        });
+
+        buildReviewCountAttribute.mockReturnValue([
+            "COUNT_DISTINCT_REVIEWS",
+            "reviewCount"
+        ]);
+
+        buildAverageRatingAttribute.mockReturnValue([
+            "AVG_REVIEWS_RATING",
+            "averageRating"
+        ]);
     });
 
     /* =============================
@@ -209,7 +235,7 @@ describe("eventService - getAllEvents", () => {
 
         buildEventCreatorInclude.mockReturnValue({
             model: User,
-            as: "creator",
+            as: "creator"
         });
 
         Event.findAndCountAll.mockResolvedValue({
@@ -226,6 +252,41 @@ describe("eventService - getAllEvents", () => {
         expect(result.events[0]).toMatchObject({
             status: EVENT_STATUS.PAST
         });
+    });
+
+    it("should use optimized review stats helpers", async () => {
+        getPaginationOptions.mockReturnValue({
+            page: 1,
+            pageSize: 10,
+            limit: 10,
+            offset: 0,
+            orderField: "createdAt",
+            orderDirection: "DESC"
+        });
+
+        buildEventCreatorInclude.mockReturnValue({
+            model: User,
+            as: "creator"
+        });
+
+        Event.findAndCountAll.mockResolvedValue({
+            count: [],
+            rows: []
+        });
+
+        await eventService.getAllEvents({});
+
+        expect(buildReviewCountAttribute).toHaveBeenCalledWith(
+            expect.any(Object),
+            "reviews.id"
+        );
+
+        expect(buildAverageRatingAttribute).toHaveBeenCalledWith(
+            expect.any(Object),
+            "reviews.rating"
+        );
+
+        expect(buildEventReviewInclude).toHaveBeenCalledWith(EventReview);
     });
 
     /* =============================

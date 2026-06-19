@@ -5,8 +5,8 @@ const eventService = require("../services/eventService");
 
    Handles:
    - event creation
-   - event listing with optional filters and pagination
-   - single event retrieval
+   - event listing with optional filters, pagination and review stats
+   - single event retrieval with participant and review stats
    - current authenticated user event access
    - event update with image preservation, replacement and removal
    - event deletion
@@ -15,6 +15,7 @@ const eventService = require("../services/eventService");
    Notes:
    - business logic is delegated to eventService
    - uploaded event image paths and clear-image requests are formatted here
+   - event listing/detail responses may include participant count, review count and average rating
    - event access responses support frontend UI guards
    - successful responses include success, message and top-level payload fields when needed
 ================================================== */

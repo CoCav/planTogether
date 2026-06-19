@@ -9,17 +9,22 @@
    - inactive membership exclusion from participant count
    - event status enrichment
    - creator data enrichment
+   - review count enrichment
+   - average rating enrichment
 
    Ensures:
    - a single event can be retrieved publicly by ID
    - invalid event requests are rejected correctly
    - event metadata is enriched in the response
    - participant counts only include active memberships
+   - review stats are enriched in the response
    - shared event status constants are used for expected statuses
 =============================================== */
 
 const request = require("supertest");
 const app = require("../../../src/app");
+
+const { EventReview } = require("../../../src/models");
 
 const { EVENT_STATUS } = require("../../../src/constants/eventStatus");
 
@@ -183,6 +188,73 @@ describe("Get Event API", () => {
         expect(res.statusCode).toBe(200);
 
         expect(res.body.event.status).toBe(EVENT_STATUS.PAST);
+    });
+
+    it("should include review count and average rating", async () => {
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Review Stats Creator",
+                email: `reviewstatscreator${Date.now()}@test.com`
+            },
+            event: {
+                title: "Review Stats Event",
+                startDateTime: "2020-01-01T10:00:00.000Z",
+                endDateTime: "2020-01-01T12:00:00.000Z"
+            }
+        });
+
+        const reviewerAuthA = await registerAndGetToken({
+            name: "Reviewer A",
+            email: `reviewera${Date.now()}@test.com`
+        });
+
+        const reviewerAuthB = await registerAndGetToken({
+            name: "Reviewer B",
+            email: `reviewerb${Date.now()}@test.com`
+        });
+
+        await EventReview.create({
+            eventId: event.id,
+            userId: reviewerAuthA.user.userId,
+            rating: 5,
+            comment: "Great event!"
+        });
+
+        await EventReview.create({
+            eventId: event.id,
+            userId: reviewerAuthB.user.userId,
+            rating: 4,
+            comment: "Nice event!"
+        });
+
+        const res = await request(app).get(`/api/events/${event.id}`);
+
+        expect(res.statusCode).toBe(200);
+
+        expect(res.body.event).toHaveProperty("reviewCount");
+        expect(res.body.event).toHaveProperty("averageRating");
+
+        expect(Number(res.body.event.reviewCount)).toBe(2);
+        expect(Number(res.body.event.averageRating)).toBe(4.5);
+    });
+
+    it("should return empty review stats when event has no reviews", async () => {
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "No Review Stats Creator",
+                email: `noreviewstats${Date.now()}@test.com`
+            },
+            event: {
+                title: "No Review Stats Event"
+            }
+        });
+
+        const res = await request(app).get(`/api/events/${event.id}`);
+
+        expect(res.statusCode).toBe(200);
+
+        expect(Number(res.body.event.reviewCount)).toBe(0);
+        expect(res.body.event.averageRating).toBeNull();
     });
 
     /* =============================

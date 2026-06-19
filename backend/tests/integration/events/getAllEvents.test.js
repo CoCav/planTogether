@@ -17,6 +17,8 @@
    - pagination
    - sorting
    - invalid query validation
+   - review count enrichment
+   - average rating enrichment
 
    Ensures:
    - public event listing works correctly
@@ -24,11 +26,14 @@
    - event metadata is enriched in responses
    - validators protect query params
    - participant counts only include active memberships
+   - review stats are enriched in event listings
    - shared event status constants are used for expected statuses
 ================================================== */
 
 const request = require("supertest");
 const app = require("../../../src/app");
+
+const { EventReview } = require("../../../src/models");
 
 const { EVENT_STATUS } = require("../../../src/constants/eventStatus");
 const { EVENT_MODES } = require("../../../src/constants/eventModes");
@@ -158,6 +163,85 @@ describe("Get All Events API", () => {
 
         expect(event).toBeDefined();
         expect(event.status).toBe(EVENT_STATUS.PAST);
+    });
+
+    it("should include review count and average rating in events", async () => {
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Listing Review Stats Creator",
+                email: `listingreviewstats${Date.now()}@test.com`
+            },
+            event: {
+                title: "Listing Review Stats Event",
+                startDateTime: "2020-01-01T10:00:00.000Z",
+                endDateTime: "2020-01-01T12:00:00.000Z"
+            }
+        });
+
+        const reviewerAuthA = await registerAndGetToken({
+            name: "Listing Reviewer A",
+            email: `listingreviewera${Date.now()}@test.com`
+        });
+
+        const reviewerAuthB = await registerAndGetToken({
+            name: "Listing Reviewer B",
+            email: `listingreviewerb${Date.now()}@test.com`
+        });
+
+        await EventReview.create({
+            eventId: event.id,
+            userId: reviewerAuthA.user.userId,
+            rating: 5,
+            comment: "Great event!"
+        });
+
+        await EventReview.create({
+            eventId: event.id,
+            userId: reviewerAuthB.user.userId,
+            rating: 4,
+            comment: "Nice event!"
+        });
+
+        const res = await request(app).get("/api/events");
+
+        expect(res.statusCode).toBe(200);
+
+        const foundEvent = res.body.events.find(
+            (item) => item.title === "Listing Review Stats Event"
+        );
+
+        expect(foundEvent).toBeDefined();
+
+        expect(foundEvent).toHaveProperty("reviewCount");
+        expect(foundEvent).toHaveProperty("averageRating");
+
+        expect(Number(foundEvent.reviewCount)).toBe(2);
+        expect(Number(foundEvent.averageRating)).toBe(4.5);
+    });
+
+    it("should include empty review stats for events without reviews", async () => {
+        await createEventWithOrganizer({
+            organizer: {
+                name: "Listing No Review Stats Creator",
+                email: `listingnoreviewstats${Date.now()}@test.com`
+            },
+            event: {
+                title: "Listing No Review Stats Event"
+            }
+        });
+
+        const res = await request(app).get("/api/events");
+
+        expect(res.statusCode).toBe(200);
+
+        const foundEvent = res.body.events.find(
+            (item) => item.title === "Listing No Review Stats Event"
+        );
+
+        expect(foundEvent).toBeDefined();
+
+        expect(Number(foundEvent.reviewCount)).toBe(0);
+        expect(foundEvent.averageRating).toBeNull();
     });
 
     /* =============================

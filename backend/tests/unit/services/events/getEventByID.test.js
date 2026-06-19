@@ -5,6 +5,8 @@
    - successful event retrieval with optimized participant count
    - event status enrichment
    - active participant include configuration
+   - review stats include configuration
+   - review count and average rating enrichment
    - missing event rejection
    - database error propagation
 
@@ -12,6 +14,7 @@
    - single events are retrieved correctly
    - active participants are counted through optimized query helpers
    - computed status is added before response
+   - review stats are built through optimized query helpers
    - missing events return a 404 error
    - shared event status constants are used for expected statuses
 ================================================== */
@@ -23,7 +26,10 @@ jest.mock("../../../../src/models/eventModel", () => ({
 jest.mock("../../../../src/utils/events/eventQueryBuilder", () => ({
     buildEventCreatorInclude: jest.fn(),
     buildActiveParticipantInclude: jest.fn(),
-    buildParticipantCountAttribute: jest.fn()
+    buildParticipantCountAttribute: jest.fn(),
+    buildEventReviewInclude: jest.fn(),
+    buildReviewCountAttribute: jest.fn(),
+    buildAverageRatingAttribute: jest.fn()
 }));
 
 jest.mock("../../../../src/utils/events/eventStatus", () => ({
@@ -34,6 +40,7 @@ const Event = require("../../../../src/models/eventModel");
 const User = require("../../../../src/models/userModel");
 
 const eventService = require("../../../../src/services/eventService");
+const EventReview = require("../../../../src/models/relations/eventReviewModel");
 
 const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
 const { getEventStatus } = require("../../../../src/utils/events/eventStatus");
@@ -41,7 +48,10 @@ const { getEventStatus } = require("../../../../src/utils/events/eventStatus");
 const {
     buildEventCreatorInclude,
     buildActiveParticipantInclude,
-    buildParticipantCountAttribute
+    buildParticipantCountAttribute,
+    buildEventReviewInclude,
+    buildReviewCountAttribute,
+    buildAverageRatingAttribute
 } = require("../../../../src/utils/events/eventQueryBuilder");
 
 const { createMockEventModel } = require("../../../factories/eventFactory");
@@ -65,6 +75,22 @@ describe("eventService - getEventByID", () => {
         buildParticipantCountAttribute.mockReturnValue([
             "COUNT_DISTINCT_PARTICIPANTS",
             "participantCount"
+        ]);
+
+        buildEventReviewInclude.mockReturnValue({
+            model: EventReview,
+            as: "reviews",
+            attributes: []
+        });
+
+        buildReviewCountAttribute.mockReturnValue([
+            "COUNT_DISTINCT_REVIEWS",
+            "reviewCount"
+        ]);
+
+        buildAverageRatingAttribute.mockReturnValue([
+            "AVG_REVIEWS_RATING",
+            "averageRating"
         ]);
     });
 
@@ -129,6 +155,26 @@ describe("eventService - getEventByID", () => {
 
         expect(buildEventCreatorInclude).toHaveBeenCalledWith(User);
         expect(buildActiveParticipantInclude).toHaveBeenCalledWith(User);
+    });
+
+    it("should use optimized review stats helpers", async () => {
+        Event.findOne.mockResolvedValue(createMockEventModel());
+
+        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
+
+        await eventService.getEventByID(1);
+
+        expect(buildReviewCountAttribute).toHaveBeenCalledWith(
+            expect.any(Object),
+            "reviews.id"
+        );
+
+        expect(buildAverageRatingAttribute).toHaveBeenCalledWith(
+            expect.any(Object),
+            "reviews.rating"
+        );
+
+        expect(buildEventReviewInclude).toHaveBeenCalledWith(EventReview);
     });
 
     /* =============================

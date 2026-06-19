@@ -3,6 +3,7 @@ const sequelize = require("../config/database");
 const Event = require("../models/eventModel");
 const User = require("../models/userModel");
 const EventUserRole = require("../models/relations/eventUserRoleModel");
+const EventReview = require("../models/relations/eventReviewModel");
 
 const locationService = require("./locationService");
 
@@ -16,7 +17,10 @@ const {
     buildEventWhereConditions,
     buildEventCreatorInclude,
     buildParticipantCountAttribute,
-    buildActiveParticipantInclude
+    buildActiveParticipantInclude,
+    buildEventReviewInclude,
+    buildReviewCountAttribute,
+    buildAverageRatingAttribute
 } = require("../utils/events/eventQueryBuilder");
 
 const { buildEventCreateData, buildEventUpdateData } = require("../utils/events/eventDataBuilder");
@@ -42,13 +46,15 @@ const { getPaginationOptions, getTotalCount, getTotalPages } = require("../utils
    - event update and deletion
    - event geolocation resolution and persistence
    - event image replacement and removal
-   - participant count and status enrichment
+   - participant count, review stats and status enrichment
 
    Notes:
    - critical write operations use Sequelize transactions
    - creator is automatically added as organizer
    - event listings count active participants with COUNT DISTINCT
+   - event listings expose review count and average rating
    - participant count queries ignore soft-deleted memberships
+   - review stats are built from event review ratings
    - getAllEvents supports filters through query params
    - physical event locations are resolved through locationService
    - online events never persist geolocation data
@@ -147,12 +153,15 @@ const getAllEvents = async (query = {}) => {
         order: [[orderField, orderDirection]],
         attributes: {
             include: [
-                buildParticipantCountAttribute(sequelize, "participants.id")
+                buildParticipantCountAttribute(sequelize, "participants.id"),
+                buildReviewCountAttribute(sequelize, "reviews.id"),
+                buildAverageRatingAttribute(sequelize, "reviews.rating")
             ]
         },
         include: [
             buildEventCreatorInclude(User, query.creator),
-            buildActiveParticipantInclude(User)
+            buildActiveParticipantInclude(User),
+            buildEventReviewInclude(EventReview)
         ],
         group: ["Event.id", "creator.id"],
         subQuery: false
@@ -223,12 +232,15 @@ const getEventByID = async (id) => {
         where: { id },
         attributes: {
             include: [
-                buildParticipantCountAttribute(sequelize, "participants.id")
+                buildParticipantCountAttribute(sequelize, "participants.id"),
+                buildReviewCountAttribute(sequelize, "reviews.id"),
+                buildAverageRatingAttribute(sequelize, "reviews.rating")
             ]
         },
         include: [
             buildEventCreatorInclude(User),
-            buildActiveParticipantInclude(User)
+            buildActiveParticipantInclude(User),
+            buildEventReviewInclude(EventReview)
         ],
         group: ["Event.id", "creator.id"]
     });

@@ -9,6 +9,9 @@
    - creator include builder
    - active participant include builder
    - participant count attribute builder
+   - review stats include builder
+   - review count attribute builder
+   - average rating attribute builder
 
    Ensures:
    - upcoming, ongoing and past filters generate correct date conditions
@@ -17,6 +20,9 @@
    - creator filtering is handled through includes
    - active participant includes exclude soft-deleted memberships
    - participant count attributes use COUNT DISTINCT
+   - review includes support aggregated rating stats
+   - review count attributes use COUNT DISTINCT
+   - average rating attributes use review ratings
    - shared event status and role constants are used correctly
 ================================================== */
 
@@ -36,7 +42,10 @@ const {
     buildEventCreatorInclude,
     buildActiveParticipantInclude,
     buildParticipantCountAttribute,
-    countActiveParticipantsByEventIds
+    countActiveParticipantsByEventIds,
+    buildEventReviewInclude,
+    buildReviewCountAttribute,
+    buildAverageRatingAttribute
 } = require("../../../../src/utils/events/eventQueryBuilder");
 
 describe("eventQueryBuilder utils", () => {
@@ -312,6 +321,47 @@ describe("eventQueryBuilder utils", () => {
             );
 
             expect(result[1]).toBe("participantCount");
+        });
+    });
+
+    /* =============================
+       REVIEW STATS HELPERS
+    ============================= */
+
+    describe("buildEventReviewInclude", () => {
+        const EventReview = {
+            name: "EventReviewModel"
+        };
+
+        it("should build review include for review stats", () => {
+            expect(buildEventReviewInclude(EventReview)).toEqual({
+                model: EventReview,
+                as: "reviews",
+                attributes: [],
+                required: false
+            });
+        });
+    });
+
+    describe("buildReviewCountAttribute", () => {
+        it("should build DISTINCT review count attribute", () => {
+            const result = buildReviewCountAttribute(
+                sequelize,
+                "reviews.id"
+            );
+
+            expect(result[1]).toBe("reviewCount");
+        });
+    });
+
+    describe("buildAverageRatingAttribute", () => {
+        it("should build average rating attribute", () => {
+            const result = buildAverageRatingAttribute(
+                sequelize,
+                "reviews.rating"
+            );
+
+            expect(result[1]).toBe("averageRating");
         });
     });
 

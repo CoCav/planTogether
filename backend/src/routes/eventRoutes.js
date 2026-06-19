@@ -31,6 +31,7 @@ const handleValidationErrors = require("../middlewares/errors/handleValidationEr
 
    Notes:
    - /api/events is the main listing endpoint
+   - listing and detail responses may include event review stats
    - /:eventId/me must be declared before /:eventId
    - /:eventId/me supports frontend access checks
    - update/delete routes require event role authorization

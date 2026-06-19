@@ -14,14 +14,17 @@ const { EVENT_ROLES } = require("../../constants/eventRoles");
    - event creator include with optional filtering
    - active participant include building
    - optimized participant count attribute building
+   - review stats include building
+   - review count and average rating attributes
    - grouped active participant count queries
 
    Notes:
    - designed to be reused across services
    - participant count queries exclude soft-deleted memberships
    - grouped participant counts avoid N+1 queries
-   - participant count attributes use COUNT DISTINCT
+   - participant and review count attributes use COUNT DISTINCT
    - participant includes exclude soft-deleted memberships
+   - review stats use event review ratings
    - keeps controllers/services clean
    - mutates the provided whereConditions object
 ================================================== */
@@ -252,14 +255,60 @@ const countActiveParticipantsByEventIds = async (EventUserRole, sequelize, event
     }, {});
 };
 
+/* =============================
+   REVIEW STATS HELPERS
+============================= */
+
+// Build review include used for review stats
+const buildEventReviewInclude = (EventReview) => ({
+    model: EventReview,
+    as: "reviews",
+    attributes: [],
+    required: false
+});
+
+// Build review count attribute with DISTINCT to avoid duplicate counts
+const buildReviewCountAttribute = (sequelize, reviewIdPath) => ([
+    sequelize.fn(
+        "COUNT",
+        sequelize.fn(
+            "DISTINCT",
+            sequelize.col(reviewIdPath)
+        )
+    ),
+    "reviewCount"
+]);
+
+// Build average rating attribute from event reviews
+const buildAverageRatingAttribute = (sequelize, ratingPath) => ([
+    sequelize.fn(
+        "ROUND",
+        sequelize.cast(
+            sequelize.fn("AVG", sequelize.col(ratingPath)),
+            "numeric"
+        ),
+        1
+    ),
+    "averageRating"
+]);
+
 module.exports = {
     addAndCondition,
     buildEventCreatorInclude,
+
     applyEventStatusFilter,
+
     applyEventDateFilters,
+
     applyEventBasicFilters,
+
     buildEventWhereConditions,
+
     buildActiveParticipantInclude,
     buildParticipantCountAttribute,
-    countActiveParticipantsByEventIds
+    countActiveParticipantsByEventIds,
+
+    buildEventReviewInclude,
+    buildReviewCountAttribute,
+    buildAverageRatingAttribute
 };

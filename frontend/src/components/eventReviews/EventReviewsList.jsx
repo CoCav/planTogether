@@ -10,7 +10,9 @@ import EmptyState from "../ui/EmptyState";
    - empty review state
    - review card rendering
    - current user ownership forwarding
+   - update state forwarding
    - delete state forwarding
+   - edit action forwarding
    - delete action forwarding
 
    Notes:
@@ -22,7 +24,9 @@ import EmptyState from "../ui/EmptyState";
 export default function EventReviewsList({
     reviews = [],
     currentUserId = null,
+    updatingReviewId = null,
     deletingReviewId = null,
+    onEdit,
     onDelete
 }) {
 
@@ -46,7 +50,9 @@ export default function EventReviewsList({
                     key={review.id}
                     review={review}
                     currentUserId={currentUserId}
+                    updatingReviewId={updatingReviewId}
                     deletingReviewId={deletingReviewId}
+                    onEdit={onEdit}
                     onDelete={onDelete}
                 />
             ))}

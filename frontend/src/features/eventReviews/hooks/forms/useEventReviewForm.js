@@ -19,9 +19,14 @@ import { validateEventReview } from "../../forms/eventReviewValidation";
    - submitted review data includes rating and trimmed comment
 ================================================== */
 
-const initialValues = { rating: "", comment: "" };
 
-export default function useEventReviewForm({ onSubmitValid }) {
+export default function useEventReviewForm({
+    initialValues = {
+        rating: "",
+        comment: ""
+    },
+    onSubmitValid
+}) {
 
     /* =============================
        FORM STATE
@@ -89,12 +94,14 @@ export default function useEventReviewForm({ onSubmitValid }) {
 
         setFieldErrors({});
 
-        await onSubmitValid({
+        const success = await onSubmitValid?.({
             rating: Number(values.rating),
             comment: values.comment.trim()
         });
 
-        resetForm();
+        if (success !== false) {
+            resetForm();
+        }
     };
 
     return {

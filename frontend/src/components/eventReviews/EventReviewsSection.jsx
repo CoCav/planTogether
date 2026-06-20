@@ -20,6 +20,7 @@ import LoadingState from "../ui/LoadingState";
    - review loading
    - review form accordion state
    - review creation with rating and comment
+   - review update with rating and comment
    - review deletion
    - review feedback display
    - authenticated review form toggle
@@ -30,7 +31,7 @@ import LoadingState from "../ui/LoadingState";
    Notes:
    - page-level section placement is handled by EventDetailsPage
    - review permissions are enforced by the backend
-   - create and delete mutations refresh the review list after success
+   - create, update and delete mutations refresh the review list after success
 ================================================== */
 
 export default function EventReviewsSection({ eventId, user, setMessage, reviewLabel }) {
@@ -61,9 +62,11 @@ export default function EventReviewsSection({ eventId, user, setMessage, reviewL
 
     const {
         isSubmitting,
+        updatingReviewId,
         deletingReviewId,
 
         handleCreateReview,
+        handleUpdateReview,
         handleDeleteReview
     } = useEventReviewActions({
         eventId,
@@ -82,6 +85,8 @@ export default function EventReviewsSection({ eventId, user, setMessage, reviewL
 
     const handleSubmitReview = async (reviewData) => {
         await handleCreateReview(reviewData);
+
+        // Close the create-review form after a successful submission
         setIsReviewFormOpen(false);
     };
 
@@ -175,7 +180,9 @@ export default function EventReviewsSection({ eventId, user, setMessage, reviewL
                     <EventReviewsList
                         reviews={reviews}
                         currentUserId={user?.userId}
+                        updatingReviewId={updatingReviewId}
                         deletingReviewId={deletingReviewId}
+                        onEdit={handleUpdateReview}
                         onDelete={handleDeleteReview}
                     />
                 )}

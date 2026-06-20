@@ -2,21 +2,27 @@ import { useState } from "react";
 
 import { getApiErrorMessage } from "../../../api/apiError";
 
-import { createEventReview, deleteEventReview } from "../../../api/eventReviews/eventReviewApi";
+import { createEventReview, deleteEventReview, updateEventReview } from "../../../api/eventReviews/eventReviewApi";
 
 /* ==================================================
-   EVENT REVIEW ACTIONS HOOK
-   Handles event review mutations for the current user
+   USE EVENT REVIEW ACTIONS HOOK
+   Handles event review mutations and UI states
 
    Actions:
-   - create a review with rating and comment
-   - delete the current user's own review
-   - refresh reviews after successful mutations
-   - expose submit and delete loading states
+   - create review (rating + comment)
+   - update own review
+   - delete own review with confirmation
+   - refresh review list after success
+
+   UI states:
+   - isSubmitting (create)
+   - updatingReviewId (edit per review)
+   - deletingReviewId (delete per review)
 
    Notes:
-   - backend enforces completed-event and participant-only review rules
-   - backend enforces review ownership on deletion
+   - backend enforces permissions (ownership + event rules)
+   - loadReviews is the source of truth refresh mechanism
+   - window.confirm is used for delete confirmation
 ================================================== */
 
 export default function useEventReviewActions({
@@ -31,6 +37,7 @@ export default function useEventReviewActions({
     ============================= */
 
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [updatingReviewId, setUpdatingReviewId] = useState(null);
     const [deletingReviewId, setDeletingReviewId] = useState(null);
 
     /* =============================
@@ -53,11 +60,45 @@ export default function useEventReviewActions({
 
             await loadReviews();
 
+            return true;
+
         } catch (error) {
             setError(getApiErrorMessage(error, "Unable to create review"));
 
+            return false;
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    /* =============================
+       UPDATE REVIEW
+    ============================= */
+
+    // Updates the current user's review and refreshes the review list
+    const handleUpdateReview = async (reviewId, { rating, comment }) => {
+        try {
+            setMessage("");
+            setError("");
+            setUpdatingReviewId(reviewId);
+
+            await updateEventReview(reviewId, {
+                rating,
+                comment
+            });
+
+            setMessage("Review updated successfully");
+
+            await loadReviews();
+
+            return true;
+
+        } catch (error) {
+            setError(getApiErrorMessage(error, "Unable to update review"));
+
+            return false;
+        } finally {
+            setUpdatingReviewId(null);
         }
     };
 
@@ -69,7 +110,7 @@ export default function useEventReviewActions({
     const handleDeleteReview = async (reviewId) => {
         const confirmed = window.confirm("Are you sure you want to delete this review?");
 
-        if (!confirmed) return;
+        if (!confirmed) return false;
 
         try {
             setMessage("");
@@ -82,8 +123,11 @@ export default function useEventReviewActions({
 
             await loadReviews();
 
+            return true;  // ✅ FIX
+
         } catch (error) {
             setError(getApiErrorMessage(error, "Unable to delete review"));
+            return false;
 
         } finally {
             setDeletingReviewId(null);
@@ -92,9 +136,11 @@ export default function useEventReviewActions({
 
     return {
         isSubmitting,
+        updatingReviewId,
         deletingReviewId,
 
         handleCreateReview,
+        handleUpdateReview,
         handleDeleteReview
     };
 }

@@ -8,13 +8,15 @@ import { unwrapApiResponse } from "../apiResponse";
    Routes:
    - GET /events/:eventId/reviews
    - POST /events/:eventId/reviews
+   - PUT /events/reviews/:reviewId
    - DELETE /events/reviews/:reviewId
 
    Notes:
    - review retrieval is public
    - review creation requires authentication
-   - review creation sends rating and comment
+   - review update requires authentication
    - review deletion requires authentication
+   - review creation and update send rating and comment
    - backend enforces review permissions and ownership
 ================================================== */
 
@@ -34,10 +36,14 @@ export const getEventReviews = async (eventId) => {
 
 // Creates a review for one event
 export const createEventReview = async (eventId, reviewData) => {
-    const response = await apiClient.post(
-        `/events/${eventId}/reviews`,
-        reviewData
-    );
+    const response = await apiClient.post(`/events/${eventId}/reviews`, reviewData);
+
+    return unwrapApiResponse(response);
+};
+
+// Updates a review by ID
+export const updateEventReview = async (reviewId, reviewData) => {
+    const response = await apiClient.put(`/events/reviews/${reviewId}`, reviewData);
 
     return unwrapApiResponse(response);
 };

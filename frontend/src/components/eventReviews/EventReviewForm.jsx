@@ -12,8 +12,10 @@ import FormField from "../ui/FormField";
    Handles:
    - review rating selection
    - review comment input
-   - validation error display
-   - submit action
+   - review validation error display
+   - create review submission
+   - edit review submission
+   - optional cancel action
    - submit loading state
    - accessible form field association
 
@@ -22,13 +24,20 @@ import FormField from "../ui/FormField";
    - backend enforces review permissions
 ================================================== */
 
-export default function EventReviewForm({ onSubmit, isSubmitting = false }) {
+export default function EventReviewForm({
+    onSubmit,
+    onCancel,
+    isSubmitting = false,
+    initialValues,
+    submitLabel = "Submit review"
+}) {
 
     /* =========================
        FORM STATE
     ========================= */
 
     const { formState, formActions } = useEventReviewForm({
+        initialValues,
         onSubmitValid: onSubmit
     });
 
@@ -82,13 +91,27 @@ export default function EventReviewForm({ onSubmit, isSubmitting = false }) {
                 ========================= */}
 
                 <div className="event-review-form-actions">
+
+                    {/* Cancel is only available when editing an existing review */}
+                    {onCancel && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onCancel}
+                            disabled={isSubmitting}
+                        >
+                            Cancel
+                        </Button>
+                    )}
+
                     <Button
                         type="submit"
                         variant="primary"
                         disabled={isSubmitting}
                     >
-                        {isSubmitting ? "Submitting..." : "Submit review"}
+                        {isSubmitting ? "Saving..." : submitLabel}
                     </Button>
+
                 </div>
             </div>
         </form>

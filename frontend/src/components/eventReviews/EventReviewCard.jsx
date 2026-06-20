@@ -49,7 +49,6 @@ export default function EventReviewCard({
             <div className="event-review-card-inner">
                 <header className="event-review-card-header">
 
-                    {/* Reviewer information */}
                     <div className="event-review-card-user">
                         <UserAvatar
                             src={getAvatar(reviewDisplayData.reviewerAvatar)}
@@ -58,24 +57,24 @@ export default function EventReviewCard({
                         />
 
                         <div className="event-review-card-user-info">
-                            <h4 className="event-review-card-name">
-                                {reviewDisplayData.reviewerName}
-                            </h4>
+                            <div className="event-review-card-user-main">
+                                <h4 className="event-review-card-name">
+                                    {reviewDisplayData.reviewerName}
+                                </h4>
+
+                                <div className="event-review-card-rating">
+                                    <EventReviewRating value={reviewDisplayData.rating} readOnly />
+                                </div>
+                            </div>
 
                             {reviewDisplayData.date && (
                                 <p className="event-review-card-date">
                                     {reviewDisplayData.date}
                                 </p>
                             )}
-
-                            {/* Review rating */}
-                            <div className="event-review-card-rating">
-                                <EventReviewRating value={reviewDisplayData.rating} readOnly />
-                            </div>
                         </div>
                     </div>
 
-                    {/* Owner-only review actions */}
                     <EventReviewActions
                         reviewId={reviewDisplayData.id}
                         canDelete={reviewDisplayData.isOwner}
@@ -84,7 +83,6 @@ export default function EventReviewCard({
                     />
                 </header>
 
-                {/* Review content */}
                 <p className="event-review-card-comment">
                     {reviewDisplayData.comment}
                 </p>

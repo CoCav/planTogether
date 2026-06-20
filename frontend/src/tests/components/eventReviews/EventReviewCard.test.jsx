@@ -5,13 +5,13 @@ import EventReviewCard from "../../../components/eventReviews/EventReviewCard";
 
 /* ==================================================
    EVENT REVIEW CARD TESTS
-   Tests event review rendering and actions
+   Tests event review card rendering and owner actions
 
    Handles:
    - reviewer information rendering
    - reviewer avatar rendering
    - review date rendering
-   - review rating rendering
+   - review rating rendering in the card header
    - review comment rendering
    - delete action visibility
    - delete loading state
@@ -103,6 +103,17 @@ describe("EventReviewCard", () => {
 
         expect(screen.queryAllByRole("radio")).toHaveLength(0);
     });
+
+    it("should render rating next to reviewer identity", () => {
+        renderEventReviewCard();
+
+        const reviewerBlock = screen.getByText("John Doe").closest(".event-review-card-user-main");
+
+        expect(reviewerBlock).toHaveTextContent("John Doe");
+
+        expect(reviewerBlock.querySelector(".event-review-card-rating")).toBeInTheDocument();
+    });
+
     /* =============================
        ACTIONS
     ============================= */

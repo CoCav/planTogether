@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
 import EventReviewForm from "../../../components/eventReviews/EventReviewForm";
 
@@ -9,12 +9,14 @@ import EventReviewForm from "../../../components/eventReviews/EventReviewForm";
 
    Handles:
    - comment field rendering
-   - submit action rendering
-   - submit loading state
+   - comment field updates
    - rating field rendering
    - rating selection
-   - comment field updates
+   - bottom row rating and submit layout
+   - submit action rendering
+   - submit loading state
    - form submission
+   - form reset after successful submit
    - validation error display
    - accessible validation descriptions
    - accessible invalid field states
@@ -97,6 +99,18 @@ describe("EventReviewForm", () => {
         expect(screen.getByRole("radio", {
             name: /4 stars/i
         })).toHaveAttribute("aria-checked", "true");
+    });
+
+    it("should render rating and submit action in the bottom row", () => {
+        renderEventReviewForm();
+
+        const bottomRow = screen.getByText("Rating").closest(".event-review-form-bottom-row");
+
+        expect(bottomRow).toBeInTheDocument();
+
+        expect(within(bottomRow).getByRole("button", {
+            name: /submit review/i
+        })).toBeInTheDocument();
     });
 
     /* =============================

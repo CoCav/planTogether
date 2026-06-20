@@ -32,6 +32,11 @@
     opacity: 1;
 }
 
+.event-review-card .event-review-rating-icon {
+    width: 18px;
+    height: 18px;
+}
+
 /* =========================================
    BUTTONS
 ========================================= */

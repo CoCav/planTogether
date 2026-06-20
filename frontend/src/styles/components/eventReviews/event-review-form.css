@@ -26,7 +26,38 @@
    ACTIONS
 ========================================= */
 
+.event-review-form-bottom-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-4);
+}
+
 .event-review-form-actions {
     display: flex;
     justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 700px) {
+    .event-review-form-bottom-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .event-review-form-actions {
+        justify-content: stretch;
+    }
+
+    .event-review-form-actions .btn {
+        width: 100%;
+    }
+
+    .event-review-form-textarea {
+        min-height: 104px;
+    }
 }

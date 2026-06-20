@@ -10,3 +10,18 @@
 .event-review-card-actions {
     flex-shrink: 0;
 }
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+    .event-review-card-actions {
+        width: 100%;
+        margin-top: var(--space-1);
+    }
+
+    .event-review-card-actions .btn {
+        width: 100%;
+    }
+}

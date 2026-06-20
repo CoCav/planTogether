@@ -12,24 +12,21 @@ import { createEvent } from "../../factories/events/eventFactory";
 
 /* ==================================================
    EVENT CARD TESTS
-   Tests event preview rendering, permissions and actions
+   Tests event preview rendering, badges and actions
 
    Handles:
    - event information rendering
    - event image rendering and fallback
-   - role, status and type badge display
+   - status, state, type, creator and role badge display
    - fallback display values
    - join and leave action visibility
    - guest action restrictions
    - past event state
-   - event state badge display
-   - registration closed state
-   - join and leave callbacks
    - completed event review summary display
    - completed event empty review summary display
+   - join and leave callbacks
    - accessible image links
    - accessible event labels
-   - decorative icon accessibility
    - public profile navigation
 
    Notes:

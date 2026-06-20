@@ -20,19 +20,17 @@ import Badge from "../ui/Badge";
    Displays a reusable event preview card
 
    Handles:
-   - event preview content
-   - role, type, status and state badges
+   - event title, image and description display
+   - status, type, creator and role badges
    - event metadata display
-   - review stats display for completed events
+   - review summary display for completed events
    - membership action visibility
    - image fallback handling
    - public profile navigation
-   - accessible image links
-   - accessible event labels
-   - decorative badge and metadata icons
+   - accessible event links and labels
 
    Notes:
-   - event statuses and business states are displayed as badges
+   - completed events show review stats instead of join/leave actions
    - membership actions are delegated to EventCardActions
 ================================================== */
 
@@ -99,7 +97,6 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                         </Link>
 
                         <div className="event-card-badges" aria-label="Event labels">
-
                             <Badge status={eventDisplayData.status} />
 
                             {isEventFull && (
@@ -118,30 +115,19 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
 
                             {shouldShowOrganizerInline && event.creatorName && (
                                 event.creatorId ? (
-                                    <Link
-                                        to={`/users/${event.creatorId}`}
-                                        className="link-hover-primary"
-                                    >
-                                        <Badge
-                                            variant="organizer"
-                                            icon={Crown}
-                                            label={event.creatorName}
-                                        />
+                                    <Link to={`/users/${event.creatorId}`} className="link-hover-primary">
+                                        <Badge variant="organizer" icon={Crown} label={event.creatorName} />
                                     </Link>
                                 ) : (
-                                    <Badge
-                                        variant="organizer"
-                                        icon={Crown}
-                                        label={event.creatorName}
-                                    />
+                                    <Badge variant="organizer" icon={Crown} label={event.creatorName} />
                                 )
                             )}
 
                             {user && role && (
                                 <Badge role={role} />
                             )}
-
                         </div>
+
                     </div>
 
                     <div className="event-card-header-aside">

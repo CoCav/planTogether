@@ -6,6 +6,7 @@ const eventReviewService = require("../services/eventReviewService");
    Handles:
    - creating event reviews
    - retrieving event reviews
+   - updating authenticated user's own reviews
    - deleting authenticated user's own reviews
    - API response formatting
 
@@ -64,13 +65,38 @@ const getEventReviews = async (req, res, next) => {
 };
 
 /* =============================
+   UPDATE REVIEW
+============================= */
+
+// Update current user's review
+const updateEventReview = async (req, res, next) => {
+    try {
+        const review = await eventReviewService.updateEventReviewByID({
+            reviewId: req.params.reviewId,
+            userId: req.user.userId,
+            rating: req.body.rating,
+            comment: req.body.comment
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Event review updated successfully",
+            review
+        });
+
+    } catch (error) {
+        return next(error);
+    }
+};
+
+/* =============================
    DELETE REVIEW
 ============================= */
 
 // Delete current user's review
 const deleteEventReview = async (req, res, next) => {
     try {
-        await eventReviewService.deleteEventReview({
+        await eventReviewService.deleteEventReviewByID({
             reviewId: req.params.reviewId,
             userId: req.user.userId
         });
@@ -88,5 +114,6 @@ const deleteEventReview = async (req, res, next) => {
 module.exports = {
     createEventReview,
     getEventReviews,
+    updateEventReview,
     deleteEventReview
 };

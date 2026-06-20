@@ -38,7 +38,7 @@ const { isEventPast } = require("../../../../src/utils/events/eventStatus");
 
 const eventReviewService = require("../../../../src/services/eventReviewService");
 
-describe("eventReviewService.createEventReview", () => {
+describe("eventReviewService - createEventReview", () => {
 
     /* =============================
        TEST SETUP

@@ -6,8 +6,10 @@ const { body, param } = require("express-validator");
    Handles:
    - event ID param validation
    - review ID param validation
-   - review rating validation
-   - review comment validation
+   - review creation rating validation
+   - review creation comment validation
+   - review update rating validation
+   - review update comment validation
 
    Notes:
    - handleValidationErrors must run after these validators
@@ -58,8 +60,29 @@ const createReviewValidator = [
         .withMessage("Comment must be between 5 and 1000 characters")
 ];
 
+// Validate event review update payload
+const updateReviewValidator = [
+
+    body("rating")
+        .notEmpty()
+        .withMessage("Rating is required")
+        .bail()
+        .isInt({ min: 1, max: 5 })
+        .withMessage("Rating must be an integer between 1 and 5")
+        .toInt(),
+
+    body("comment")
+        .trim()
+        .notEmpty()
+        .withMessage("Comment is required")
+        .bail()
+        .isLength({ min: 5, max: 1000 })
+        .withMessage("Comment must be between 5 and 1000 characters")
+];
+
 module.exports = {
     eventIdParamValidator,
     reviewIdParamValidator,
-    createReviewValidator
+    createReviewValidator,
+    updateReviewValidator
 };

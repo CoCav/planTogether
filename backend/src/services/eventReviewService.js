@@ -19,11 +19,13 @@ const { isEventPast } = require("../utils/events/eventStatus");
    - participant-only review permissions
    - duplicate review prevention
    - event review retrieval
+   - review update
    - review deletion
 
    Notes:
    - users can only review completed events they joined
    - one user can only leave one review per event
+   - users can only update or delete their own reviews
    - deleted memberships cannot create reviews
 ================================================== */
 
@@ -77,6 +79,24 @@ const assertUserHasNotReviewedEvent = async ({ eventId, userId, transaction }) =
 
     if (existingReview) {
         throwHttpError(409, "You have already reviewed this event");
+    }
+};
+
+// Finds a review or throws a 404 error
+const findReviewOrFail = async (reviewId, options = {}) => {
+    const review = await EventReview.findByPk(reviewId, options);
+
+    if (!review) {
+        throwHttpError(404, "Review not found");
+    }
+
+    return review;
+};
+
+// Ensures the review belongs to the current user
+const assertReviewOwner = (review, userId) => {
+    if (review.userId !== userId) {
+        throwHttpError(403, "You can only manage your own review");
     }
 };
 
@@ -152,20 +172,38 @@ const getEventReviews = async (eventId) => {
 };
 
 /* =============================
+   UPDATE REVIEW
+============================= */
+
+// Updates a review owned by the current user
+const updateEventReviewByID = async ({ reviewId, userId, rating, comment }) => {
+    const review = await findReviewOrFail(reviewId);
+
+    assertReviewOwner(review, userId);
+
+    await review.update({
+        rating,
+        comment: String(comment ?? "").trim()
+    });
+
+    return EventReview.findByPk(review.id, {
+        include: [{
+            model: User,
+            as: "user",
+            attributes: ["id", "name", "avatar"]
+        }]
+    });
+};
+
+/* =============================
    DELETE REVIEW
 ============================= */
 
 // Deletes a review owned by the current user
-const deleteEventReview = async ({ reviewId, userId }) => {
-    const review = await EventReview.findByPk(reviewId);
+const deleteEventReviewByID = async ({ reviewId, userId }) => {
+    const review = await findReviewOrFail(reviewId);
 
-    if (!review) {
-        throwHttpError(404, "Review not found");
-    }
-
-    if (review.userId !== userId) {
-        throwHttpError(403, "You can only delete your own review");
-    }
+    assertReviewOwner(review, userId);
 
     await review.destroy();
 };
@@ -173,5 +211,6 @@ const deleteEventReview = async ({ reviewId, userId }) => {
 module.exports = {
     createEventReview,
     getEventReviews,
-    deleteEventReview
+    updateEventReviewByID,
+    deleteEventReviewByID
 };

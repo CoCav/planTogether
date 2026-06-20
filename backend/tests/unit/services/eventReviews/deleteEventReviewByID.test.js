@@ -1,5 +1,5 @@
 /* ==================================================
-   DELETE EVENT REVIEW SERVICE TESTS
+   DELETE EVENT REVIEW SERVICE BY ID TESTS
 
    Tests:
    - event review deletion
@@ -19,7 +19,7 @@ const EventReview = require("../../../../src/models/relations/eventReviewModel")
 
 const eventReviewService = require("../../../../src/services/eventReviewService");
 
-describe("eventReviewService.deleteEventReview", () => {
+describe("eventReviewService - deleteEventReviewByID", () => {
 
     /* =============================
        TEST SETUP
@@ -42,12 +42,12 @@ describe("eventReviewService.deleteEventReview", () => {
 
         EventReview.findByPk.mockResolvedValue(review);
 
-        await eventReviewService.deleteEventReview({
+        await eventReviewService.deleteEventReviewByID({
             reviewId: 1,
             userId: 10
         });
 
-        expect(EventReview.findByPk).toHaveBeenCalledWith(1);
+        expect(EventReview.findByPk).toHaveBeenCalledWith(1, {});
         expect(review.destroy).toHaveBeenCalledTimes(1);
     });
 
@@ -58,7 +58,7 @@ describe("eventReviewService.deleteEventReview", () => {
     it("should throw 404 when review does not exist", async () => {
         EventReview.findByPk.mockResolvedValue(null);
 
-        await expect(eventReviewService.deleteEventReview({
+        await expect(eventReviewService.deleteEventReviewByID({
             reviewId: 999,
             userId: 10
         })).rejects.toMatchObject({
@@ -80,12 +80,12 @@ describe("eventReviewService.deleteEventReview", () => {
 
         EventReview.findByPk.mockResolvedValue(review);
 
-        await expect(eventReviewService.deleteEventReview({
+        await expect(eventReviewService.deleteEventReviewByID({
             reviewId: 1,
             userId: 10
         })).rejects.toMatchObject({
             statusCode: 403,
-            message: "You can only delete your own review"
+            message: "You can only manage your own review"
         });
 
         expect(review.destroy).not.toHaveBeenCalled();

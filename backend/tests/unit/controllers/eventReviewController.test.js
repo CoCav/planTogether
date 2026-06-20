@@ -4,11 +4,13 @@
    Tests:
    - creating event reviews
    - retrieving event reviews
+   - updating reviews
    - deleting reviews
 
    Ensures:
    - controller calls service correctly
    - authenticated user payload is passed correctly
+   - review rating and comment payloads are forwarded
    - HTTP responses are properly formatted
    - errors are forwarded to next()
 ================================================== */
@@ -40,6 +42,7 @@ describe("eventReviewController", () => {
                     userId: 10
                 },
                 body: {
+                    rating: 5,
                     comment: "Great event!"
                 }
             });
@@ -48,6 +51,7 @@ describe("eventReviewController", () => {
                 id: 1,
                 eventId: 1,
                 userId: 10,
+                rating: 5,
                 comment: "Great event!"
             };
 
@@ -58,6 +62,7 @@ describe("eventReviewController", () => {
             expect(eventReviewService.createEventReview).toHaveBeenCalledWith({
                 eventId: "1",
                 userId: 10,
+                rating: 5,
                 comment: "Great event!"
             });
 
@@ -131,6 +136,65 @@ describe("eventReviewController", () => {
     });
 
     /* =============================
+       UPDATE REVIEW
+    ============================= */
+
+    describe("updateEventReview", () => {
+        it("should update a review", async () => {
+            const { req, res, next } = createEventControllerMocks({
+                params: {
+                    reviewId: "1"
+                },
+                user: {
+                    userId: 10
+                },
+                body: {
+                    rating: 4,
+                    comment: "Updated review comment"
+                }
+            });
+
+            const review = {
+                id: 1,
+                userId: 10,
+                rating: 4,
+                comment: "Updated review comment"
+            };
+
+            eventReviewService.updateEventReviewByID.mockResolvedValue(review);
+
+            await eventReviewController.updateEventReview(req, res, next);
+
+            expect(eventReviewService.updateEventReviewByID).toHaveBeenCalledWith({
+                reviewId: "1",
+                userId: 10,
+                rating: 4,
+                comment: "Updated review comment"
+            });
+
+            expect(res.status).toHaveBeenCalledWith(200);
+
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: "Event review updated successfully",
+                review
+            });
+        });
+
+        it("should forward update review errors to next", async () => {
+            const { req, res, next } = createEventControllerMocks();
+
+            const error = new Error("Update review failed");
+
+            eventReviewService.updateEventReviewByID.mockRejectedValue(error);
+
+            await eventReviewController.updateEventReview(req, res, next);
+
+            expect(next).toHaveBeenCalledWith(error);
+        });
+    });
+
+    /* =============================
        DELETE REVIEW
     ============================= */
 
@@ -145,11 +209,11 @@ describe("eventReviewController", () => {
                 }
             });
 
-            eventReviewService.deleteEventReview.mockResolvedValue();
+            eventReviewService.deleteEventReviewByID.mockResolvedValue();
 
             await eventReviewController.deleteEventReview(req, res, next);
 
-            expect(eventReviewService.deleteEventReview).toHaveBeenCalledWith({
+            expect(eventReviewService.deleteEventReviewByID).toHaveBeenCalledWith({
                 reviewId: "1",
                 userId: 10
             });
@@ -167,7 +231,7 @@ describe("eventReviewController", () => {
 
             const error = new Error("Delete review failed");
 
-            eventReviewService.deleteEventReview.mockRejectedValue(error);
+            eventReviewService.deleteEventReviewByID.mockRejectedValue(error);
 
             await eventReviewController.deleteEventReview(req, res, next);
 

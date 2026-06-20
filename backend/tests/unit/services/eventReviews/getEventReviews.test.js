@@ -25,7 +25,7 @@ const EventReview = require("../../../../src/models/relations/eventReviewModel")
 
 const eventReviewService = require("../../../../src/services/eventReviewService");
 
-describe("eventReviewService.getEventReviews", () => {
+describe("eventReviewService getEventReviews", () => {
 
     /* =============================
        TEST SETUP

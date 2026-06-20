@@ -4,17 +4,26 @@
    Tests:
    - eventId param validation
    - reviewId param validation
+   - review creation payload validation
+   - review update payload validation
    - review rating validation
    - review comment validation
 
    Ensures:
    - route params are valid positive integers
+   - review creation requires valid rating and comment
+   - review update requires valid rating and comment
    - review rating is required and between 1 and 5
    - empty review comments are rejected
    - review comments stay within allowed length
 ================================================== */
 
-const { eventIdParamValidator, reviewIdParamValidator, createReviewValidator } = require("../../../src/validators/eventReviewValidator");
+const {
+    eventIdParamValidator,
+    reviewIdParamValidator,
+    createReviewValidator,
+    updateReviewValidator
+} = require("../../../src/validators/eventReviewValidator");
 
 const { runValidation } = require("../../helpers/validation/validationHelper");
 
@@ -213,6 +222,89 @@ describe("eventReviewValidator", () => {
                 body: {
                     rating: 5,
                     comment: "a".repeat(1001)
+                }
+            });
+
+            expect(result.array()).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        msg: "Comment must be between 5 and 1000 characters"
+                    })
+                ])
+            );
+        });
+    });
+
+    /* =============================
+       REVIEW UPDATE VALIDATION
+    ============================= */
+
+    describe("updateReviewValidator", () => {
+        it("should pass with a valid rating and comment", async () => {
+            const result = await runValidation(updateReviewValidator, {
+                body: {
+                    rating: 4,
+                    comment: "Updated review comment"
+                }
+            });
+
+            expect(result.isEmpty()).toBe(true);
+        });
+
+        it("should fail if rating is missing", async () => {
+            const result = await runValidation(updateReviewValidator, {
+                body: {
+                    comment: "Updated review comment"
+                }
+            });
+
+            expect(result.array()).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        msg: "Rating is required"
+                    })
+                ])
+            );
+        });
+
+        it("should fail if rating is outside allowed range", async () => {
+            const result = await runValidation(updateReviewValidator, {
+                body: {
+                    rating: 6,
+                    comment: "Updated review comment"
+                }
+            });
+
+            expect(result.array()).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        msg: "Rating must be an integer between 1 and 5"
+                    })
+                ])
+            );
+        });
+
+        it("should fail if comment is missing", async () => {
+            const result = await runValidation(updateReviewValidator, {
+                body: {
+                    rating: 4
+                }
+            });
+
+            expect(result.array()).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        msg: "Comment is required"
+                    })
+                ])
+            );
+        });
+
+        it("should fail if comment length is invalid", async () => {
+            const result = await runValidation(updateReviewValidator, {
+                body: {
+                    rating: 4,
+                    comment: "Bad"
                 }
             });
 

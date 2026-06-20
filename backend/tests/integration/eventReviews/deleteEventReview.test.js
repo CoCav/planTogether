@@ -1,18 +1,18 @@
 /* ==================================================
-   EVENT REVIEWS INTEGRATION - DELETE REVIEW TESTS
+  EVENT REVIEWS INTEGRATION - DELETE REVIEW TESTS
 
-   Tests:
-   - authenticated review deletion
-   - ownership enforcement
-   - authentication protection
-   - nonexistent review handling
-   - invalid review ID validation
+  Tests:
+  - authenticated review deletion
+  - ownership enforcement
+  - authentication protection
+  - nonexistent review handling
+  - invalid review ID validation
 
-   Ensures:
-   - users can delete their own rated reviews
-   - users cannot delete reviews owned by others
-   - protected routes require authentication
-   - invalid review requests are rejected correctly
+  Ensures:
+  - users can delete their own rated reviews
+  - users cannot delete reviews owned by others
+  - protected routes require authentication
+  - invalid review requests are rejected correctly
 ================================================== */
 
 const request = require("supertest");
@@ -126,7 +126,7 @@ describe("Delete Event Review API", () => {
 
         expect(res.statusCode).toBe(403);
 
-        expect(res.body.message).toBe("You can only delete your own review");
+        expect(res.body.message).toBe("You can only manage your own review");
     });
 
     /* =============================

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import EventReviewsSection from "../../../components/eventReviews/EventReviewsSection";
 
@@ -14,9 +14,9 @@ import useEventReviewData from "../../../features/eventReviews/hooks/useEventRev
    - section copy
    - review data loading
    - review error display
-   - authenticated review form visibility
+   - authenticated review form accordion
    - guest review form hiding
-   - loading state display
+   - accessible loading state display
    - review list configuration
    - review create and delete action forwarding
    - review summary display
@@ -214,25 +214,56 @@ describe("EventReviewsSection", () => {
 
         renderEventReviewsSection();
 
+        expect(screen.getByRole("status")).toBeInTheDocument();
         expect(screen.getByText("Loading reviews...")).toBeInTheDocument();
+        expect(screen.getByText("Fetching participant reviews for this event.")).toBeInTheDocument();
         expect(screen.queryByTestId("event-reviews-list")).not.toBeInTheDocument();
     });
 
     /* =============================
-       REVIEW FORM
+       REVIEW FORM ACCORDION
     ============================= */
 
-    it("should render review form for authenticated users", () => {
+    it("should show review form toggle for authenticated users", () => {
         renderEventReviewsSection();
 
+        expect(screen.getByRole("button", {
+            name: /write a review/i
+        })).toBeInTheDocument();
+
+        expect(screen.getByRole("button", {
+            name: /write a review/i
+        })).toHaveAttribute("aria-expanded", "false");
+    });
+
+    it("should hide review form by default", () => {
+        renderEventReviewsSection();
+
+        expect(screen.queryByTestId("event-review-form")).not.toBeInTheDocument();
+    });
+
+    it("should open review form when clicking toggle", () => {
+        renderEventReviewsSection();
+
+        fireEvent.click(screen.getByRole("button", {
+            name: /write a review/i
+        }));
+
         expect(screen.getByTestId("event-review-form")).toBeInTheDocument();
-        expect(screen.getByText("Share your experience")).toBeInTheDocument();
+
+        expect(screen.getByRole("button", {
+            name: /hide review form/i
+        })).toHaveAttribute("aria-expanded", "true");
     });
 
     it("should hide review form for guest users", () => {
         renderEventReviewsSection({
             user: null
         });
+
+        expect(screen.queryByRole("button", {
+            name: /write a review/i
+        })).not.toBeInTheDocument();
 
         expect(screen.queryByTestId("event-review-form")).not.toBeInTheDocument();
     });
@@ -244,22 +275,36 @@ describe("EventReviewsSection", () => {
 
         renderEventReviewsSection();
 
+        fireEvent.click(screen.getByRole("button", {
+            name: /write a review/i
+        }));
+
         expect(screen.getByTestId("event-review-form")).toHaveAttribute(
             "data-submitting",
             "true"
         );
     });
 
-    it("should forward create action to review form", () => {
+    it("should forward create action to review form and close form after submit", async () => {
+        handleCreateReview.mockResolvedValue(undefined);
+
         renderEventReviewsSection();
 
-        screen.getByRole("button", {
+        fireEvent.click(screen.getByRole("button", {
+            name: /write a review/i
+        }));
+
+        fireEvent.click(screen.getByRole("button", {
             name: /submit mocked review/i
-        }).click();
+        }));
 
         expect(handleCreateReview).toHaveBeenCalledWith({
             rating: 5,
             comment: "Great event!"
+        });
+
+        await waitFor(() => {
+            expect(screen.queryByTestId("event-review-form")).not.toBeInTheDocument();
         });
     });
 

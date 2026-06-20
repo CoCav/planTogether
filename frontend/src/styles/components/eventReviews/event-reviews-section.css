@@ -1,6 +1,6 @@
 /* ==================================================
    EVENT REVIEWS SECTION
-   Event review content section layout
+   Event reviews section layout and interactions
 ================================================== */
 
 /* =========================================
@@ -21,7 +21,14 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+
     gap: var(--space-4);
+}
+
+.event-reviews-section-heading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
 }
 
 .event-reviews-summary {
@@ -29,74 +36,90 @@
 
     padding: var(--space-1) var(--space-2);
 
-    color: var(--color-primary);
-    background: var(--color-primary-subtle);
-
     border-radius: var(--radius-sm);
+
+    background: var(--color-primary-subtle);
+    color: var(--color-primary);
 
     font-size: var(--font-size-sm);
     font-weight: 500;
+
     white-space: nowrap;
 }
 
-@media (max-width: 700px) {
-    .event-reviews-section-header {
-        flex-direction: column;
-    }
+/* =========================================
+   DESCRIPTION & ACTIONS
+========================================= */
+
+.event-reviews-section-description-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    gap: var(--space-4);
+}
+
+.event-reviews-section-description-row .section-subtitle {
+    margin: 0;
 }
 
 /* =========================================
-   BLOCKS
+   REVIEW FORM
 ========================================= */
-
-.event-reviews-section-block {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-}
 
 .event-reviews-section-form {
     padding: var(--space-4);
+
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
+
     background: var(--color-surface-soft);
 }
 
-.event-reviews-section-block + .event-reviews-section-block {
-    padding-top: var(--space-5);
-    border-top: 1px solid var(--color-border);
-}
-
 /* =========================================
-   SUBTITLE
+   REVIEWS LIST
 ========================================= */
+
+.event-reviews-section-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
 
 .event-reviews-section-subtitle {
     margin: 0;
+
     font-size: var(--font-size-sm);
-    font-weight: 700;
-    color: var(--color-text);
+    font-weight: 600;
 }
 
 /* =========================================
    RESPONSIVE
 ========================================= */
 
-@media (max-width: 700px) {
+@media (max-width: 768px) {
     .event-reviews-section-header {
-        flex-direction: row;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
         align-items: flex-start;
-        justify-content: space-between;
+
         gap: var(--space-3);
     }
 
-    .event-reviews-section-header .section-title {
-        margin-bottom: var(--space-1);
+    .event-reviews-section-heading {
+        min-width: 0;
     }
 
     .event-reviews-summary {
-        margin-top: 0;
         font-size: var(--font-size-xs);
-        white-space: nowrap;
+    }
+
+    .event-reviews-section-description-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .event-reviews-section-description-row .btn {
+        width: 100%;
     }
 }

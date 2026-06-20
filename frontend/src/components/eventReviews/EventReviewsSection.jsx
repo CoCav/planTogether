@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import useEventReviewActions from "../../features/eventReviews/hooks/useEventReviewActions";
 import useEventReviewData from "../../features/eventReviews/hooks/useEventReviewData";
@@ -7,7 +7,10 @@ import EventReviewForm from "./EventReviewForm";
 import EventReviewsList from "./EventReviewsList";
 
 import Alert from "../ui/Alert";
+import Button from "../ui/Button";
 import Card from "../ui/Card";
+
+import LoadingState from "../ui/LoadingState";
 
 /* ==================================================
    EVENT REVIEWS SECTION
@@ -15,12 +18,14 @@ import Card from "../ui/Card";
 
    Handles:
    - review loading
+   - review form accordion state
    - review creation with rating and comment
    - review deletion
    - review feedback display
-   - authenticated review form visibility
+   - authenticated review form toggle
    - review list rendering
    - review stats display
+   - responsive review section layout
 
    Notes:
    - page-level section placement is handled by EventDetailsPage
@@ -29,6 +34,12 @@ import Card from "../ui/Card";
 ================================================== */
 
 export default function EventReviewsSection({ eventId, user, setMessage, reviewLabel }) {
+
+    /* =========================
+       UI STATE
+    ========================= */
+
+    const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
 
     /* =========================
        REVIEW DATA
@@ -62,6 +73,19 @@ export default function EventReviewsSection({ eventId, user, setMessage, reviewL
     });
 
     /* =========================
+       HANDLERS
+    ========================= */
+
+    const handleToggleReviewForm = () => {
+        setIsReviewFormOpen((prev) => !prev);
+    };
+
+    const handleSubmitReview = async (reviewData) => {
+        await handleCreateReview(reviewData);
+        setIsReviewFormOpen(false);
+    };
+
+    /* =========================
        INITIAL LOADING
     ========================= */
 
@@ -71,15 +95,16 @@ export default function EventReviewsSection({ eventId, user, setMessage, reviewL
 
     return (
         <Card className="event-reviews-section-card">
-            <div className="section-header event-reviews-section-header">
-                <div>
-                    <h2 id="event-reviews-title" className="section-title">
+
+            {/* =========================
+               HEADER
+            ========================= */}
+
+            <div className="event-reviews-section-header">
+                <div className="event-reviews-section-heading">
+                    <h2 className="section-title">
                         Event reviews
                     </h2>
-
-                    <p className="section-subtitle">
-                        See what participants shared after attending this event.
-                    </p>
                 </div>
 
                 {reviewLabel && (
@@ -89,28 +114,63 @@ export default function EventReviewsSection({ eventId, user, setMessage, reviewL
                 )}
             </div>
 
+            {/* =========================
+               DESCRIPTION & ACTIONS
+            ========================= */}
+
+            <div className="event-reviews-section-description-row">
+                <p className="section-subtitle">
+                    See what participants shared after attending this event.
+                </p>
+
+                {user && (
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleToggleReviewForm}
+                        aria-expanded={isReviewFormOpen}
+                        aria-controls="event-review-form-panel"
+                    >
+                        {isReviewFormOpen
+                            ? "Hide review form"
+                            : "Write a review"}
+                    </Button>
+                )}
+            </div>
+
+            {/* =========================
+               FEEDBACK
+            ========================= */}
+
             {error && <Alert type="danger">{error}</Alert>}
 
-            {user && (
-                <div className="event-reviews-section-block event-reviews-section-form">
-                    <h3 className="event-reviews-section-subtitle">
-                        Share your experience
-                    </h3>
+            {/* =========================
+               REVIEW FORM
+            ========================= */}
 
+            {user && isReviewFormOpen && (
+                <div id="event-review-form-panel" className="event-reviews-section-form">
                     <EventReviewForm
-                        onSubmit={handleCreateReview}
+                        onSubmit={handleSubmitReview}
                         isSubmitting={isSubmitting}
                     />
                 </div>
             )}
 
-            <div className="event-reviews-section-block">
+            {/* =========================
+               REVIEWS LIST
+            ========================= */}
+
+            <div className="event-reviews-section-list">
                 <h3 className="event-reviews-section-subtitle">
                     Participant reviews
                 </h3>
 
                 {isLoading ? (
-                    <p className="status-text">Loading reviews...</p>
+                    <LoadingState
+                        title="Loading reviews..."
+                        description="Fetching participant reviews for this event."
+                    />
                 ) : (
                     <EventReviewsList
                         reviews={reviews}
@@ -120,6 +180,7 @@ export default function EventReviewsSection({ eventId, user, setMessage, reviewL
                     />
                 )}
             </div>
+
         </Card>
     );
 }

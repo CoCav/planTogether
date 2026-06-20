@@ -67,11 +67,7 @@ export default function EventReviewForm({ onSubmit, isSubmitting = false }) {
             <div className="event-review-form-bottom-row">
                 <FormField label="Rating" htmlFor="review-rating" error={fieldErrors.rating}>
                     {(errorId) => (
-                        <div
-                            id="review-rating"
-                            aria-describedby={errorId}
-                            aria-invalid={Boolean(fieldErrors.rating)}
-                        >
+                        <div id="review-rating" aria-describedby={errorId} aria-invalid={Boolean(fieldErrors.rating)}>
                             <EventReviewRating
                                 value={values.rating}
                                 onChange={handleRatingChange}
@@ -86,7 +82,11 @@ export default function EventReviewForm({ onSubmit, isSubmitting = false }) {
                 ========================= */}
 
                 <div className="event-review-form-actions">
-                    <Button type="submit" variant="primary" disabled={isSubmitting}>
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        disabled={isSubmitting}
+                    >
                         {isSubmitting ? "Submitting..." : "Submit review"}
                     </Button>
                 </div>

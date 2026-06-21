@@ -6,7 +6,7 @@ import { getAvatar } from "../../utils/uploadedFiles";
 
 import UserAvatar from "../users/UserAvatar";
 
-import EventReviewActions from "./EventReviewActions";
+import EventReviewActionsMenu from "./EventReviewActionsMenu";
 import EventReviewRating from "./EventReviewRating";
 import EventReviewForm from "./EventReviewForm";
 
@@ -20,12 +20,13 @@ import EventReviewForm from "./EventReviewForm";
    - review date display
    - review rating display
    - review comment display
-   - review edit action visibility
-   - review delete action visibility
+   - review edit mode (inline form)
+   - review update & delete actions (owner only)
+   - loading states (updating / deleting)
 
    Notes:
    - review display data is prepared by eventReviewDisplayData
-   - review actions are delegated to EventReviewActions
+   - review actions are delegated to EventReviewActionsMenu
    - backend remains the source of truth for review ownership
 ================================================== */
 
@@ -44,10 +45,7 @@ export default function EventReviewCard({
        DISPLAY DATA
     ========================= */
 
-    const reviewDisplayData = getEventReviewDisplayData({
-        review,
-        currentUserId
-    });
+    const data = getEventReviewDisplayData({ review, currentUserId });
 
     /* =========================
        LOCAL STATE
@@ -57,86 +55,89 @@ export default function EventReviewCard({
     const [isEditing, setIsEditing] = useState(false);
 
     // Determines whether the current review is being updated
-    const isUpdating = updatingReviewId === reviewDisplayData.id;
+    const isUpdating = updatingReviewId === data.id;
 
     // Determines whether the current review is being deleted
-    const isDeleting = deletingReviewId === reviewDisplayData.id;
+    const isDeleting = deletingReviewId === data.id;
 
     /* =========================
        HANDLERS
     ========================= */
 
     // Updates the review and closes the form only if the update succeeds
-    const handleEditReview = async (reviewData) => {
-        const success = await onEdit?.(reviewDisplayData.id, reviewData);
-
-        if (success !== false) {
-            setIsEditing(false);
-        }
+    const handleEdit = async (payload) => {
+        const ok = await onEdit?.(data.id, payload);
+        if (ok !== false) setIsEditing(false);
     };
 
     return (
         <article className="event-review-card">
             <div className="event-review-card-inner">
-                <header className="event-review-card-header">
-                    <div className="event-review-card-user">
+
+                <div className="event-review-card-top">
+                    <div className="event-review-card-left">
+
                         <UserAvatar
-                            src={getAvatar(reviewDisplayData.reviewerAvatar)}
-                            name={reviewDisplayData.reviewerName}
+                            src={getAvatar(data.reviewerAvatar)}
+                            name={data.reviewerName}
                             className="user-avatar-sm"
                         />
 
-                        <div className="event-review-card-user-info">
-                            <div className="event-review-card-user-main">
+                        <div className="event-review-card-content">
+                            <div className="event-review-card-name-row">
                                 <h4 className="event-review-card-name">
-                                    {reviewDisplayData.reviewerName}
+                                    {data.reviewerName}
                                 </h4>
 
                                 <div className="event-review-card-rating">
-                                    <EventReviewRating value={reviewDisplayData.rating} readOnly />
+                                    <EventReviewRating
+                                        value={data.rating}
+                                        readOnly
+                                    />
                                 </div>
                             </div>
 
-                            {reviewDisplayData.date && (
-                                <p className="event-review-card-date">
-                                    {reviewDisplayData.date}
-                                </p>
-                            )}
                         </div>
+
                     </div>
 
-                    <EventReviewActions
-                        canManage={reviewDisplayData.isOwner}
-                        isEditing={isEditing}
-                        isDeleting={isDeleting}
+                    {data.isOwner && (
+                        <div className="event-review-card-actions">
+                            <EventReviewActionsMenu
+                                canManage={data.isOwner}
+                                isEditing={isEditing}
+                                isDeleting={isDeleting}
+                                onEdit={() => setIsEditing(true)}
+                                onDelete={() => onDelete?.(data.id)}
+                            />
+                        </div>
+                    )}
 
-                        // Opens inline edit mode for this review
-                        onEdit={() => setIsEditing(true)}
+                </div>
 
-                        // Deletes the current review
-                        onDelete={() => onDelete?.(reviewDisplayData.id)}
-                    />
-                </header>
+                {data.date && (
+                    <p className="event-review-card-date">
+                        {data.date}
+                    </p>
+                )}
 
                 {isEditing ? (
                     <EventReviewForm
                         initialValues={{
-                            rating: reviewDisplayData.rating,
-                            comment: reviewDisplayData.comment
+                            rating: data.rating,
+                            comment: data.comment
                         }}
-
                         submitLabel="Save changes"
                         isSubmitting={isUpdating}
-                        onSubmit={handleEditReview}
-
-                        // Leaves edit mode without saving changes
+                        onSubmit={handleEdit}
                         onCancel={() => setIsEditing(false)}
                     />
                 ) : (
                     <p className="event-review-card-comment">
-                        {reviewDisplayData.comment}
+                        {data.comment}
                     </p>
                 )}
+
             </div>
         </article>
     );

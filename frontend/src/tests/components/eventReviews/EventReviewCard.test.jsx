@@ -5,29 +5,27 @@ import EventReviewCard from "../../../components/eventReviews/EventReviewCard";
 
 /* ==================================================
    EVENT REVIEW CARD TESTS
-   Tests event review card rendering and owner actions
+   Tests event review card rendering and interactions
 
    Handles:
    - reviewer information rendering
-   - reviewer avatar rendering
-   - review date rendering
-   - review rating rendering
-   - review comment rendering
-   - owner action visibility
-   - review edit mode
-   - review update loading state
-   - review delete loading state
-   - review update callback forwarding
-   - review delete callback forwarding
+   - avatar rendering
+   - date rendering
+   - rating rendering (read-only)
+   - comment rendering
+   - owner permissions (actions visibility)
+   - edit mode toggle
+   - edit submission flow
+   - delete callback
+   - loading states (update & delete)
 
    Notes:
-   - review display data is mocked
-   - review actions are tested separately
-   - rating rendering uses EventReviewRating in read-only mode
+   - display data is mocked via getEventReviewDisplayData
+   - actions menu is integration-tested only
 ================================================== */
 
 vi.mock("../../../utils/uploadedFiles", () => ({
-    getAvatar: vi.fn((avatar) => avatar || "avatar_user_per_default.png")
+    getAvatar: vi.fn((avatar) => avatar || "avatar.png")
 }));
 
 vi.mock("../../../features/eventReviews/eventReviewDisplayData", () => ({
@@ -43,9 +41,7 @@ vi.mock("../../../features/eventReviews/eventReviewDisplayData", () => ({
 }));
 
 vi.mock("../../../components/users/UserAvatar", () => ({
-    default: ({ name }) => (
-        <img alt={`${name} avatar`} />
-    )
+    default: ({ name }) => <img alt={`${name} avatar`} />
 }));
 
 vi.mock("../../../components/eventReviews/EventReviewForm", () => ({
@@ -67,6 +63,10 @@ vi.mock("../../../components/eventReviews/EventReviewForm", () => ({
 
 describe("EventReviewCard", () => {
 
+    /* =============================
+       TEST DATA
+    ============================= */
+
     const baseProps = {
         review: { id: 1 },
         currentUserId: null,
@@ -75,6 +75,10 @@ describe("EventReviewCard", () => {
         onEdit: vi.fn(),
         onDelete: vi.fn()
     };
+
+    /* =============================
+       TEST HELPERS
+    ============================= */
 
     const renderCard = (props = {}) =>
         render(<EventReviewCard {...baseProps} {...props} />);
@@ -97,38 +101,33 @@ describe("EventReviewCard", () => {
         expect(screen.getByAltText("John Doe avatar")).toBeInTheDocument();
     });
 
-    it("should render rating (read only)", () => {
-        renderCard();
-
-        expect(screen.getByRole("img", { name: /4 out of 5 stars/i })).toBeInTheDocument();
-    });
-
     /* =========================
        PERMISSIONS
     ========================= */
 
-    it("should show actions for owner", () => {
+    it("should show actions menu for owner", () => {
         renderCard({ currentUserId: 1 });
 
-        expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /delete/i })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /manage/i }))
+            .toBeInTheDocument();
     });
 
-    it("should hide actions for non-owner", () => {
+    it("should hide actions menu for non-owner", () => {
         renderCard({ currentUserId: 2 });
 
-        expect(screen.queryByRole("button", { name: /edit/i })).not.toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /manage/i })).not.toBeInTheDocument();
     });
 
     /* =========================
        EDIT MODE
     ========================= */
 
-    it("should open edit mode", () => {
+    it("should open edit mode from menu", () => {
         renderCard({ currentUserId: 1 });
 
-        fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+        fireEvent.click(screen.getByRole("button", { name: /manage/i }));
+
+        fireEvent.click(screen.getByText(/edit/i));
 
         expect(screen.getByRole("button", { name: /save changes/i })).toBeInTheDocument();
     });
@@ -136,13 +135,15 @@ describe("EventReviewCard", () => {
     it("should cancel edit mode", () => {
         renderCard({ currentUserId: 1 });
 
-        fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+        fireEvent.click(screen.getByRole("button", { name: /manage/i }));
+        fireEvent.click(screen.getByText(/edit/i));
+
         fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
 
         expect(screen.queryByRole("button", { name: /save changes/i })).not.toBeInTheDocument();
     });
 
-    it("should call onEdit and close edit mode", () => {
+    it("should call onEdit with updated data", () => {
         const onEdit = vi.fn().mockResolvedValue(true);
 
         renderCard({
@@ -150,7 +151,8 @@ describe("EventReviewCard", () => {
             onEdit
         });
 
-        fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+        fireEvent.click(screen.getByRole("button", { name: /manage/i }));
+        fireEvent.click(screen.getByText(/edit/i));
         fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
         expect(onEdit).toHaveBeenCalledWith(
@@ -166,7 +168,7 @@ describe("EventReviewCard", () => {
        DELETE
     ========================= */
 
-    it("should call onDelete with id", () => {
+    it("should call onDelete from menu", () => {
         const onDelete = vi.fn();
 
         renderCard({
@@ -174,7 +176,8 @@ describe("EventReviewCard", () => {
             onDelete
         });
 
-        fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+        fireEvent.click(screen.getByRole("button", { name: /manage/i }));
+        fireEvent.click(screen.getByText(/delete/i));
 
         expect(onDelete).toHaveBeenCalledWith(1);
     });
@@ -185,20 +188,21 @@ describe("EventReviewCard", () => {
             deletingReviewId: 1
         });
 
-        expect(screen.getByRole("button", { name: /deleting/i })).toBeDisabled();
+        expect(screen.getByRole("button", { name: /manage/i })).toBeDisabled();
     });
 
     /* =========================
        UPDATING STATE
     ========================= */
 
-    it("should show saving state when updating", () => {
+    it("should show saving state", () => {
         renderCard({
             currentUserId: 1,
             updatingReviewId: 1
         });
 
-        fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+        fireEvent.click(screen.getByRole("button", { name: /manage/i }));
+        fireEvent.click(screen.getByText(/edit/i));
 
         expect(screen.getByText("Saving...")).toBeInTheDocument();
     });

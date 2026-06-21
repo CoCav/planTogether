@@ -3,53 +3,40 @@
    Reusable event review display card
 ================================================== */
 
-/* =========================================
+/* =========================
    CARD
-========================================= */
+========================= */
 
 .event-review-card-inner {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
+    gap: var(--space-2);
 
     padding: var(--space-4);
-
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
-
     background: var(--color-surface-soft);
 }
 
-/* =========================================
-   HEADER
-========================================= */
+/* =========================
+   TOP ROW
+========================= */
 
-.event-review-card-header {
+.event-review-card-top {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    gap: var(--space-4);
+    align-items: center;
+    gap: var(--space-2);
 }
 
-/* =========================================
-   REVIEWER
-========================================= */
-
-.event-review-card-user {
+.event-review-card-left {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: var(--space-3);
     min-width: 0;
 }
 
-.event-review-card-user-info {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    min-width: 0;
-}
-
-.event-review-card-user-main {
+.event-review-card-name-row {
     display: flex;
     align-items: center;
     gap: var(--space-2);
@@ -60,40 +47,46 @@
     line-height: 1.2;
 }
 
+.event-review-card-rating {
+    display: flex;
+    align-items: center;
+    line-height: 1;
+
+    transform: translateY(1px);
+}
+
+.event-review-card-actions {
+    flex-shrink: 0;
+}
+
 .event-review-card-date {
     font-size: var(--font-size-sm);
     color: var(--color-text-muted);
 }
 
-/* =========================================
-   RATING
-========================================= */
-
-.event-review-card-rating {
-    display: inline-flex;
-    align-items: center;
-}
-
-/* =========================================
-   COMMENT
-========================================= */
-
 .event-review-card-comment {
-    color: var(--color-text);
     line-height: 1.6;
     white-space: pre-wrap;
-    word-break: break-word;
-    margin-top: var(--space-1);
 }
 
-/* =========================================
+/* =========================
    RESPONSIVE
-========================================= */
+========================= */
 
 @media (max-width: 768px) {
-    .event-review-card-header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: var(--space-3);
+    .event-review-card-top, .event-review-card-left {
+        align-items: center;
+    }
+
+    .event-review-card-name-row {
+        flex-direction: row;
+    }
+
+    .event-review-card-actions {
+        align-self: flex-start;
+    }
+
+    .event-review-card-comment {
+        font-size: var(--font-size-sm);
     }
 }

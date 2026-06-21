@@ -8,14 +8,17 @@ import EventReviewActions from "../../../components/eventReviews/EventReviewActi
    Tests review action rendering and callbacks
 
    Handles:
-   - hidden delete action
+   - hidden review actions
+   - visible edit action
    - visible delete action
+   - edit loading state
    - delete loading state
+   - edit callback
    - delete callback
 
    Notes:
    - review ownership is resolved by EventReviewCard
-   - backend remains the source of truth for delete authorization
+   - action handlers are delegated to the parent component
 ================================================== */
 
 describe("EventReviewActions", () => {
@@ -25,9 +28,10 @@ describe("EventReviewActions", () => {
     ============================= */
 
     const baseProps = {
-        reviewId: 1,
-        canDelete: true,
+        canManage: true,
+        isEditing: false,
         isDeleting: false,
+        onEdit: vi.fn(),
         onDelete: vi.fn()
     };
 
@@ -50,18 +54,17 @@ describe("EventReviewActions", () => {
 
     it("should not render delete action when deletion is not allowed", () => {
         renderEventReviewActions({
-            canDelete: false
+            canManage: false
         });
 
         expect(screen.queryByRole("button")).not.toBeInTheDocument();
     });
 
-    it("should render delete action when deletion is allowed", () => {
+    it("should not render review actions when management is not allowed", () => {
         renderEventReviewActions();
 
-        expect(screen.getByRole("button", {
-            name: /delete/i
-        })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /delete/i })).toBeInTheDocument();
     });
 
     /* =============================
@@ -78,11 +81,43 @@ describe("EventReviewActions", () => {
         })).toBeDisabled();
     });
 
+    it("should disable actions while editing", () => {
+        renderEventReviewActions({
+            isEditing: true
+        });
+
+        expect(screen.getByRole("button", { name: /edit/i })).toBeDisabled();
+
+        expect(screen.getByRole("button", { name: /delete/i })).toBeDisabled();
+    });
+
+    it("should disable actions while deleting", () => {
+        renderEventReviewActions({
+            isDeleting: true
+        });
+
+        expect(screen.getByRole("button", { name: /deleting/i })).toBeDisabled();
+    });
+
     /* =============================
        CALLBACKS
     ============================= */
 
-    it("should call onDelete with review id", () => {
+    it("should call onEdit", () => {
+        const onEdit = vi.fn();
+
+        renderEventReviewActions({
+            onEdit
+        });
+
+        fireEvent.click(screen.getByRole("button", {
+            name: /edit/i
+        }));
+
+        expect(onEdit).toHaveBeenCalledTimes(1);
+    });
+
+    it("should call onDelete", () => {
         const onDelete = vi.fn();
 
         renderEventReviewActions({
@@ -93,6 +128,6 @@ describe("EventReviewActions", () => {
             name: /delete/i
         }));
 
-        expect(onDelete).toHaveBeenCalledWith(1);
+        expect(onDelete).toHaveBeenCalledTimes(1);
     });
 });

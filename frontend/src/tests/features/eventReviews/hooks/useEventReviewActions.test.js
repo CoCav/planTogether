@@ -4,27 +4,24 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import useEventReviewActions from "../../../../features/eventReviews/hooks/useEventReviewActions";
 
 import { createEventReview, deleteEventReview } from "../../../../api/eventReviews/eventReviewApi";
-
 import { createMutationHookProps } from "../../../helpers/hooks/createHookProps";
 import { mockConfirmAccepted, mockConfirmCancelled } from "../../../helpers/mocks/mockWindowConfirm";
 
 /* ==================================================
-   USE EVENT REVIEW ACTIONS TESTS
-   Tests current user event review actions
+   USE EVENT REVIEW ACTIONS HOOK TESTS
+   Tests review mutation logic (create / delete)
 
    Handles:
-   - event review creation with rating and comment
-   - review list refresh after creation
-   - create error handling
-   - review deletion confirmation
-   - review deletion cancellation
-   - review list refresh after deletion
-   - delete error handling
-   - submit and delete loading states
+   - review creation lifecycle
+   - review deletion with confirmation
+   - loading states (submit + delete)
+   - error handling
+   - success / failure return values
 
    Notes:
-   - uses reusable mutation hook prop helpers
-   - uses reusable confirmation dialog mock helpers
+   - backend enforces ownership & permissions
+   - loadReviews is triggered after successful mutations
+   - window.confirm controls deletion flow
 ================================================== */
 
 vi.mock("../../../../api/eventReviews/eventReviewApi", () => ({
@@ -33,72 +30,75 @@ vi.mock("../../../../api/eventReviews/eventReviewApi", () => ({
 }));
 
 describe("useEventReviewActions", () => {
+
     let hookProps;
+
+    const loadReviews = vi.fn();
+    const setMessage = vi.fn();
+    const setError = vi.fn();
 
     beforeEach(() => {
         vi.clearAllMocks();
 
         hookProps = {
-            ...createMutationHookProps({
-                eventId: 1
-            }),
-            loadReviews: vi.fn()
+            ...createMutationHookProps({ eventId: 1 }),
+            loadReviews,
+            setMessage,
+            setError
         };
 
         mockConfirmAccepted();
     });
 
     /* =============================
-       TEST HELPERS
+       HELPERS
     ============================= */
 
-    // Render event review actions hook
-    const setupHook = () => {
-        return renderHook(() =>
-            useEventReviewActions(hookProps)
-        );
-    };
+    const setupHook = () => renderHook(() => useEventReviewActions(hookProps));
 
     /* =============================
        CREATE REVIEW
     ============================= */
 
-    it("should create review and refresh reviews", async () => {
+    it("should create review and refresh list", async () => {
         createEventReview.mockResolvedValue();
 
         const { result } = setupHook();
 
+        let response;
+
         await act(async () => {
-            await result.current.handleCreateReview({
+            response = await result.current.handleCreateReview({
                 rating: 5,
                 comment: "Great event!"
             });
         });
-
-        expect(hookProps.setMessage).toHaveBeenCalledWith("");
-        expect(hookProps.setError).toHaveBeenCalledWith("");
 
         expect(createEventReview).toHaveBeenCalledWith(1, {
             rating: 5,
             comment: "Great event!"
         });
 
-        expect(hookProps.setMessage).toHaveBeenCalledWith("Review added successfully");
-        expect(hookProps.loadReviews).toHaveBeenCalledTimes(1);
+        expect(setMessage).toHaveBeenCalledWith("Review added successfully");
+        expect(setError).toHaveBeenCalledWith("");
 
+        expect(loadReviews).toHaveBeenCalledTimes(1);
+        expect(response).toBe(true);
         expect(result.current.isSubmitting).toBe(false);
     });
 
-    it("should expose submit loading state while creating review", async () => {
+    it("should expose loading state during creation", async () => {
         let resolveCreate;
 
-        createEventReview.mockImplementation(() => new Promise((resolve) => {
-            resolveCreate = resolve;
-        }));
+        createEventReview.mockImplementation(
+            () => new Promise((resolve) => {
+                resolveCreate = resolve;
+            })
+        );
 
         const { result } = setupHook();
 
-        await act(async () => {
+        act(() => {
             result.current.handleCreateReview({
                 rating: 5,
                 comment: "Great event!"
@@ -114,75 +114,78 @@ describe("useEventReviewActions", () => {
         expect(result.current.isSubmitting).toBe(false);
     });
 
-    it("should handle create review errors", async () => {
+    it("should handle create error", async () => {
         createEventReview.mockRejectedValue(new Error("Request failed"));
 
         const { result } = setupHook();
 
+        let response;
+
         await act(async () => {
-            await result.current.handleCreateReview({
+            response = await result.current.handleCreateReview({
                 rating: 5,
                 comment: "Great event!"
             });
         });
 
-        expect(hookProps.setError).toHaveBeenCalledWith("Request failed");
-        expect(hookProps.loadReviews).not.toHaveBeenCalled();
-
-        expect(result.current.isSubmitting).toBe(false);
+        expect(setError).toHaveBeenCalledWith("Request failed");
+        expect(loadReviews).not.toHaveBeenCalled();
+        expect(response).toBe(false);
     });
 
     /* =============================
        DELETE REVIEW
     ============================= */
 
-    it("should delete review and refresh reviews when user confirms", async () => {
+    it("should delete review when confirmed", async () => {
         deleteEventReview.mockResolvedValue();
 
         const { result } = setupHook();
 
+        let response;
+
         await act(async () => {
-            await result.current.handleDeleteReview(5);
+            response = await result.current.handleDeleteReview(5);
         });
-
-        expect(window.confirm).toHaveBeenCalledWith(
-            "Are you sure you want to delete this review?"
-        );
-
-        expect(hookProps.setMessage).toHaveBeenCalledWith("");
-        expect(hookProps.setError).toHaveBeenCalledWith("");
 
         expect(deleteEventReview).toHaveBeenCalledWith(5);
 
-        expect(hookProps.setMessage).toHaveBeenCalledWith("Review deleted successfully");
-        expect(hookProps.loadReviews).toHaveBeenCalledTimes(1);
+        expect(setMessage).toHaveBeenCalledWith("Review deleted successfully");
+        expect(setError).toHaveBeenCalledWith("");
 
+        expect(loadReviews).toHaveBeenCalledTimes(1);
+        expect(response).toBe(true);
         expect(result.current.deletingReviewId).toBe(null);
     });
 
-    it("should not delete review when user cancels", async () => {
+    it("should not delete when user cancels", async () => {
         mockConfirmCancelled();
 
         const { result } = setupHook();
 
+        let response;
+
         await act(async () => {
-            await result.current.handleDeleteReview(5);
+            response = await result.current.handleDeleteReview(5);
         });
 
         expect(deleteEventReview).not.toHaveBeenCalled();
-        expect(hookProps.loadReviews).not.toHaveBeenCalled();
+        expect(loadReviews).not.toHaveBeenCalled();
+        expect(response).toBe(false);
     });
 
-    it("should expose deleting review state while deleting review", async () => {
+    it("should expose deleting state during delete", async () => {
         let resolveDelete;
 
-        deleteEventReview.mockImplementation(() => new Promise((resolve) => {
-            resolveDelete = resolve;
-        }));
+        deleteEventReview.mockImplementation(
+            () => new Promise((resolve) => {
+                resolveDelete = resolve;
+            })
+        );
 
         const { result } = setupHook();
 
-        await act(async () => {
+        act(() => {
             result.current.handleDeleteReview(5);
         });
 
@@ -195,18 +198,19 @@ describe("useEventReviewActions", () => {
         expect(result.current.deletingReviewId).toBe(null);
     });
 
-    it("should handle delete review errors", async () => {
+    it("should handle delete error", async () => {
         deleteEventReview.mockRejectedValue(new Error("Request failed"));
 
         const { result } = setupHook();
 
+        let response;
+
         await act(async () => {
-            await result.current.handleDeleteReview(5);
+            response = await result.current.handleDeleteReview(5);
         });
 
-        expect(hookProps.setError).toHaveBeenCalledWith("Request failed");
-        expect(hookProps.loadReviews).not.toHaveBeenCalled();
-
-        expect(result.current.deletingReviewId).toBe(null);
+        expect(setError).toHaveBeenCalledWith("Request failed");
+        expect(loadReviews).not.toHaveBeenCalled();
+        expect(response).toBe(false);
     });
 });

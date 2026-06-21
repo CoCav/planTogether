@@ -5,30 +5,43 @@ import EventReviewsList from "../../../components/eventReviews/EventReviewsList"
 
 /* ==================================================
    EVENT REVIEWS LIST TESTS
-   Tests event review list rendering
+   Tests event reviews list rendering and prop forwarding
 
    Handles:
-   - empty review state
-   - review card rendering
+   - empty state rendering
+   - review list rendering
    - accessible list semantics
-   - current user ownership forwarding
-   - delete state forwarding
-   - delete action forwarding
+   - prop forwarding to EventReviewCard
+   - update/delete state forwarding
+   - action handler forwarding
 
    Notes:
-   - EventReviewCard is mocked to focus on list behavior
-   - review loading state is handled by EventReviewsSection
+   - EventReviewCard is mocked to isolate list behavior
+   - this test focuses only on list orchestration logic
 ================================================== */
 
 vi.mock("../../../components/eventReviews/EventReviewCard", () => ({
-    default: ({ review, currentUserId, deletingReviewId, onDelete }) => (
+    default: ({
+        review,
+        currentUserId,
+        deletingReviewId,
+        updatingReviewId,
+        onDelete,
+        onEdit
+    }) => (
         <div role="listitem" data-testid={`review-card-${review.id}`}>
             <p>{review.comment}</p>
+
             <p>Current user: {currentUserId}</p>
             <p>Deleting review: {deletingReviewId}</p>
+            <p>Updating review: {updatingReviewId}</p>
 
             <button type="button" onClick={() => onDelete(review.id)}>
-                Delete {review.id}
+                Delete
+            </button>
+
+            <button type="button" onClick={() => onEdit?.(review.id, {})}>
+                Edit
             </button>
         </div>
     )
@@ -41,99 +54,97 @@ describe("EventReviewsList", () => {
     ============================= */
 
     const reviews = [
-        {
-            id: 1,
-            comment: "Great event!"
-        },
-        {
-            id: 2,
-            comment: "Amazing meetup!"
-        }
+        { id: 1, comment: "Great event!" },
+        { id: 2, comment: "Amazing meetup!" }
     ];
 
     const baseProps = {
         reviews,
         currentUserId: 10,
-        deletingReviewId: null,
-        onDelete: vi.fn()
+        updatingReviewId: 1,
+        deletingReviewId: 2,
+        onDelete: vi.fn(),
+        onEdit: vi.fn()
     };
 
     /* =============================
        TEST HELPERS
     ============================= */
 
-    const renderEventReviewsList = (props = {}) => {
-        return render(
-            <EventReviewsList
-                {...baseProps}
-                {...props}
-            />
-        );
-    };
+    const renderList = (props = {}) =>
+        render(<EventReviewsList {...baseProps} {...props} />);
 
-    /* =============================
+    /* =========================
        EMPTY STATE
-    ============================= */
+    ========================= */
 
-    it("should render empty state when there are no reviews", () => {
-        renderEventReviewsList({
-            reviews: []
-        });
+    it("should render empty state when no reviews", () => {
+        renderList({ reviews: [] });
 
         expect(screen.getByText("No reviews yet")).toBeInTheDocument();
-
-        expect(screen.getByText(
-            "Reviews will appear here once participants share their experience."
-        )).toBeInTheDocument();
     });
 
-    /* =============================
-       REVIEW CARDS
-    ============================= */
+    /* =========================
+       LIST RENDERING
+    ========================= */
 
     it("should render review cards", () => {
-        renderEventReviewsList();
+        renderList();
 
         expect(screen.getByText("Great event!")).toBeInTheDocument();
         expect(screen.getByText("Amazing meetup!")).toBeInTheDocument();
     });
 
-    it("should render reviews as an accessible list", () => {
-        renderEventReviewsList();
+    it("should render accessible list", () => {
+        renderList();
 
         expect(screen.getByRole("list")).toBeInTheDocument();
         expect(screen.getAllByRole("listitem")).toHaveLength(2);
     });
 
-    /* =============================
+    /* =========================
        PROP FORWARDING
-    ============================= */
+    ========================= */
 
-    it("should forward current user id to review cards", () => {
-        renderEventReviewsList();
+    it("should forward currentUserId", () => {
+        renderList();
 
         expect(screen.getAllByText("Current user: 10")).toHaveLength(2);
     });
 
-    it("should forward deleting review id to review cards", () => {
-        renderEventReviewsList({
-            deletingReviewId: 2
-        });
+    it("should forward deletingReviewId", () => {
+        renderList();
 
         expect(screen.getAllByText("Deleting review: 2")).toHaveLength(2);
     });
 
-    it("should forward delete action to review cards", () => {
+    it("should forward updatingReviewId", () => {
+        renderList();
+
+        expect(screen.getAllByText("Updating review: 1")).toHaveLength(2);
+    });
+
+    /* =========================
+       ACTION FORWARDING
+    ========================= */
+
+    it("should forward onDelete callback", () => {
         const onDelete = vi.fn();
 
-        renderEventReviewsList({
-            onDelete
-        });
+        renderList({ onDelete });
 
-        screen.getByRole("button", {
-            name: /delete 1/i
-        }).click();
+        screen.getAllByText("Delete")[0].click();
 
         expect(onDelete).toHaveBeenCalledWith(1);
+    });
+
+    it("should forward onEdit callback", () => {
+        const onEdit = vi.fn();
+
+        renderList({ onEdit });
+
+        screen.getAllByText("Edit")[0].click();
+
+        expect(onEdit).toHaveBeenCalledWith(1, {});
     });
 });

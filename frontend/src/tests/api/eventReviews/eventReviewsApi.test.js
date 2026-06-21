@@ -4,6 +4,7 @@ import apiClient from "../../../api/apiClient";
 
 import {
     createEventReview,
+    updateEventReview,
     deleteEventReview,
     getEventReviews
 } from "../../../api/eventReviews/eventReviewApi";
@@ -15,6 +16,7 @@ import {
    Handles:
    - event review retrieval
    - event review creation
+   - event review update
    - event review deletion
 
    Notes:
@@ -26,6 +28,7 @@ vi.mock("../../../api/apiClient", () => ({
     default: {
         get: vi.fn(),
         post: vi.fn(),
+        put: vi.fn(),
         delete: vi.fn()
     }
 }));
@@ -65,7 +68,7 @@ describe("eventReviewApi", () => {
     });
 
     /* =============================
-       WRITE REVIEWS
+       CREATE REVIEW
     ============================= */
 
     it("should create a review for one event", async () => {
@@ -89,13 +92,44 @@ describe("eventReviewApi", () => {
 
         const result = await createEventReview(10, reviewData);
 
-        expect(apiClient.post).toHaveBeenCalledWith(
-            "/events/10/reviews",
-            reviewData
-        );
+        expect(apiClient.post).toHaveBeenCalledWith("/events/10/reviews", reviewData);
 
         expect(result).toEqual(mockPayload);
     });
+
+    /* =============================
+       UPDATE REVIEW
+    ============================= */
+
+    it("should update a review by ID", async () => {
+        const mockPayload = {
+            success: true,
+            review: {
+                id: 5,
+                rating: 4,
+                comment: "Updated review"
+            }
+        };
+
+        apiClient.put.mockResolvedValue({
+            data: mockPayload
+        });
+
+        const reviewData = {
+            rating: 4,
+            comment: "Updated review"
+        };
+
+        const result = await updateEventReview(5, reviewData);
+
+        expect(apiClient.put).toHaveBeenCalledWith("/events/reviews/5", reviewData);
+
+        expect(result).toEqual(mockPayload);
+    });
+
+    /* =============================
+       DELETE REVIEW
+    ============================= */
 
     it("should delete a review by ID", async () => {
         const mockPayload = {
@@ -113,4 +147,5 @@ describe("eventReviewApi", () => {
 
         expect(result).toEqual(mockPayload);
     });
+
 });

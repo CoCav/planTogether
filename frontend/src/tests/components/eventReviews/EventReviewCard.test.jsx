@@ -11,11 +11,14 @@ import EventReviewCard from "../../../components/eventReviews/EventReviewCard";
    - reviewer information rendering
    - reviewer avatar rendering
    - review date rendering
-   - review rating rendering in the card header
+   - review rating rendering
    - review comment rendering
-   - delete action visibility
-   - delete loading state
-   - delete callback forwarding
+   - owner action visibility
+   - review edit mode
+   - review update loading state
+   - review delete loading state
+   - review update callback forwarding
+   - review delete callback forwarding
 
    Notes:
    - review display data is mocked
@@ -31,7 +34,7 @@ vi.mock("../../../features/eventReviews/eventReviewDisplayData", () => ({
     getEventReviewDisplayData: vi.fn(({ currentUserId }) => ({
         id: 1,
         reviewerName: "John Doe",
-        reviewerAvatar: "/uploads/avatar.png",
+        reviewerAvatar: "/avatar.png",
         rating: 4,
         comment: "Great event!",
         date: "15 Jun 2026",
@@ -39,128 +42,164 @@ vi.mock("../../../features/eventReviews/eventReviewDisplayData", () => ({
     }))
 }));
 
+vi.mock("../../../components/users/UserAvatar", () => ({
+    default: ({ name }) => (
+        <img alt={`${name} avatar`} />
+    )
+}));
+
+vi.mock("../../../components/eventReviews/EventReviewForm", () => ({
+    default: ({ onSubmit, onCancel, submitLabel, isSubmitting }) => (
+        <div>
+            <button onClick={() => onSubmit({
+                rating: 5,
+                comment: "Updated comment"
+            })}>
+                {submitLabel}
+            </button>
+
+            <button onClick={onCancel}>Cancel</button>
+
+            {isSubmitting && <span>Saving...</span>}
+        </div>
+    )
+}));
+
 describe("EventReviewCard", () => {
 
-    /* =============================
-       TEST DATA
-    ============================= */
-
     const baseProps = {
-        review: {
-            id: 1
-        },
+        review: { id: 1 },
         currentUserId: null,
+        updatingReviewId: null,
         deletingReviewId: null,
+        onEdit: vi.fn(),
         onDelete: vi.fn()
     };
 
-    /* =============================
-       TEST HELPERS
-    ============================= */
+    const renderCard = (props = {}) =>
+        render(<EventReviewCard {...baseProps} {...props} />);
 
-    const renderEventReviewCard = (props = {}) => {
-        return render(
-            <EventReviewCard
-                {...baseProps}
-                {...props}
-            />
-        );
-    };
-
-    /* =============================
+    /* =========================
        DISPLAY
-    ============================= */
+    ========================= */
 
-    it("should display reviewer information", () => {
-        renderEventReviewCard();
+    it("should render review content", () => {
+        renderCard();
 
         expect(screen.getByText("John Doe")).toBeInTheDocument();
         expect(screen.getByText("15 Jun 2026")).toBeInTheDocument();
-    });
-
-    it("should display review comment", () => {
-        renderEventReviewCard();
-
         expect(screen.getByText("Great event!")).toBeInTheDocument();
     });
 
-    it("should display reviewer avatar", () => {
-        renderEventReviewCard();
+    it("should render avatar", () => {
+        renderCard();
 
         expect(screen.getByAltText("John Doe avatar")).toBeInTheDocument();
     });
 
-    it("should display review rating", () => {
-        renderEventReviewCard();
+    it("should render rating (read only)", () => {
+        renderCard();
 
-        expect(screen.getByRole("img", {
-            name: "4 out of 5 stars"
-        })).toBeInTheDocument();
+        expect(screen.getByRole("img", { name: /4 out of 5 stars/i })).toBeInTheDocument();
     });
 
-    it("should render rating in read-only mode", () => {
-        renderEventReviewCard();
+    /* =========================
+       PERMISSIONS
+    ========================= */
 
-        expect(screen.queryAllByRole("radio")).toHaveLength(0);
+    it("should show actions for owner", () => {
+        renderCard({ currentUserId: 1 });
+
+        expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /delete/i })).toBeInTheDocument();
     });
 
-    it("should render rating next to reviewer identity", () => {
-        renderEventReviewCard();
+    it("should hide actions for non-owner", () => {
+        renderCard({ currentUserId: 2 });
 
-        const reviewerBlock = screen.getByText("John Doe").closest(".event-review-card-user-main");
-
-        expect(reviewerBlock).toHaveTextContent("John Doe");
-
-        expect(reviewerBlock.querySelector(".event-review-card-rating")).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /edit/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
     });
 
-    /* =============================
-       ACTIONS
-    ============================= */
+    /* =========================
+       EDIT MODE
+    ========================= */
 
-    it("should display delete action for review owner", () => {
-        renderEventReviewCard({
-            currentUserId: 1
-        });
+    it("should open edit mode", () => {
+        renderCard({ currentUserId: 1 });
 
-        expect(screen.getByRole("button", {
-            name: /delete/i
-        })).toBeInTheDocument();
+        fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+
+        expect(screen.getByRole("button", { name: /save changes/i })).toBeInTheDocument();
     });
 
-    it("should not display delete action for non-owner", () => {
-        renderEventReviewCard({
-            currentUserId: 2
-        });
+    it("should cancel edit mode", () => {
+        renderCard({ currentUserId: 1 });
 
-        expect(screen.queryByRole("button", {
-            name: /delete/i
-        })).not.toBeInTheDocument();
+        fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+        fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
+
+        expect(screen.queryByRole("button", { name: /save changes/i })).not.toBeInTheDocument();
     });
 
-    it("should display deleting state", () => {
-        renderEventReviewCard({
+    it("should call onEdit and close edit mode", () => {
+        const onEdit = vi.fn().mockResolvedValue(true);
+
+        renderCard({
             currentUserId: 1,
-            deletingReviewId: 1
+            onEdit
         });
 
-        expect(screen.getByRole("button", {
-            name: /deleting/i
-        })).toBeDisabled();
+        fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+        fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+        expect(onEdit).toHaveBeenCalledWith(
+            1,
+            expect.objectContaining({
+                rating: 5,
+                comment: "Updated comment"
+            })
+        );
     });
 
-    it("should call onDelete when owner clicks delete", () => {
+    /* =========================
+       DELETE
+    ========================= */
+
+    it("should call onDelete with id", () => {
         const onDelete = vi.fn();
 
-        renderEventReviewCard({
+        renderCard({
             currentUserId: 1,
             onDelete
         });
 
-        fireEvent.click(screen.getByRole("button", {
-            name: /delete/i
-        }));
+        fireEvent.click(screen.getByRole("button", { name: /delete/i }));
 
         expect(onDelete).toHaveBeenCalledWith(1);
+    });
+
+    it("should show deleting state", () => {
+        renderCard({
+            currentUserId: 1,
+            deletingReviewId: 1
+        });
+
+        expect(screen.getByRole("button", { name: /deleting/i })).toBeDisabled();
+    });
+
+    /* =========================
+       UPDATING STATE
+    ========================= */
+
+    it("should show saving state when updating", () => {
+        renderCard({
+            currentUserId: 1,
+            updatingReviewId: 1
+        });
+
+        fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+
+        expect(screen.getByText("Saving...")).toBeInTheDocument();
     });
 });

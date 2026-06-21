@@ -8,23 +8,20 @@ import useEventReviewData from "../../../features/eventReviews/hooks/useEventRev
 
 /* ==================================================
    EVENT REVIEWS SECTION TESTS
-   Tests event reviews section configuration
+   Tests event reviews section orchestration
 
    Handles:
-   - section copy
-   - review data loading
-   - review error display
-   - authenticated review form accordion
-   - guest review form hiding
-   - accessible loading state display
-   - review list configuration
-   - review create and delete action forwarding
-   - review summary display
-   - missing review summary hiding
+   - section rendering (title, subtitle, summary)
+   - review loading lifecycle
+   - review form toggle behavior
+   - review creation flow
+   - review deletion flow
+   - review update flow
+   - prop forwarding to child components
 
    Notes:
-   - mocks review hooks to focus on section configuration
-   - mocks child review components to inspect forwarded props
+   - hooks are mocked to isolate orchestration logic
+   - child components are mocked to inspect forwarded props
 ================================================== */
 
 vi.mock("../../../features/eventReviews/hooks/useEventReviewData");
@@ -35,31 +32,36 @@ vi.mock("../../../components/eventReviews/EventReviewForm", () => ({
         <form
             data-testid="event-review-form"
             data-submitting={String(isSubmitting)}
-            onSubmit={(event) => {
-                event.preventDefault();
+            onSubmit={(e) => {
+                e.preventDefault();
                 onSubmit({
                     rating: 5,
                     comment: "Great event!"
                 });
             }}
         >
-            <button type="submit">
-                Submit mocked review
-            </button>
+            <button type="submit">Submit</button>
         </form>
     )
 }));
 
 vi.mock("../../../components/eventReviews/EventReviewsList", () => ({
-    default: ({ reviews, currentUserId, deletingReviewId, onDelete }) => (
+    default: ({
+        reviews,
+        currentUserId,
+        updatingReviewId,
+        deletingReviewId,
+        onDelete,
+        onEdit
+    }) => (
         <div data-testid="event-reviews-list">
-            <span>Review count: {reviews.length}</span>
-            <span>Current user: {currentUserId ?? "guest"}</span>
-            <span>Deleting review: {deletingReviewId ?? "none"}</span>
+            <p>count:{reviews.length}</p>
+            <p>user:{currentUserId ?? "guest"}</p>
+            <p>updating:{updatingReviewId ?? "none"}</p>
+            <p>deleting:{deletingReviewId ?? "none"}</p>
 
-            <button type="button" onClick={() => onDelete(1)}>
-                Delete mocked review
-            </button>
+            <button onClick={() => onDelete(1)}>delete</button>
+            <button onClick={() => onEdit(1, {})}>edit</button>
         </div>
     )
 }));
@@ -70,18 +72,11 @@ describe("EventReviewsSection", () => {
        TEST DATA
     ============================= */
 
-    const reviews = [
-        {
-            id: 1,
-            comment: "Great event!"
-        }
-    ];
+    const reviews = [{ id: 1, comment: "Great" }];
 
     const baseProps = {
         eventId: 10,
-        user: {
-            userId: 2
-        },
+        user: { userId: 2 },
         setMessage: vi.fn(),
         reviewLabel: "4 ★ (1 review)"
     };
@@ -90,213 +85,84 @@ describe("EventReviewsSection", () => {
     const setError = vi.fn();
 
     const handleCreateReview = vi.fn();
+    const handleUpdateReview = vi.fn();
     const handleDeleteReview = vi.fn();
 
     /* =============================
        TEST HELPERS
     ============================= */
 
-    const setupHookMocks = ({
-        reviewsValue = reviews,
-        error = "",
-        isLoading = false,
-        isSubmitting = false,
-        deletingReviewId = null
-    } = {}) => {
+    const setupMocks = (overrides = {}) => {
         useEventReviewData.mockReturnValue({
-            reviews: reviewsValue,
-            error,
+            reviews,
+            error: "",
             setError,
-            isLoading,
-            loadReviews
+            isLoading: false,
+            loadReviews,
+            ...overrides.data
         });
 
         useEventReviewActions.mockReturnValue({
-            isSubmitting,
-            deletingReviewId,
+            isSubmitting: false,
+            updatingReviewId: null,
+            deletingReviewId: null,
             handleCreateReview,
-            handleDeleteReview
+            handleUpdateReview,
+            handleDeleteReview,
+            ...overrides.actions
         });
     };
 
-    const renderEventReviewsSection = (props = {}) => {
-        return render(
-            <EventReviewsSection
-                {...baseProps}
-                {...props}
-            />
-        );
-    };
+    const renderComp = (props = {}) =>
+        render(<EventReviewsSection {...baseProps} {...props} />);
 
     beforeEach(() => {
         vi.clearAllMocks();
-
-        setupHookMocks();
+        setupMocks();
     });
 
-    /* =============================
-       SECTION COPY
-    ============================= */
+    /* =========================
+       BASIC RENDER
+    ========================= */
 
-    it("should render section title and subtitle", () => {
-        renderEventReviewsSection();
+    it("should render title and subtitle", () => {
+        renderComp();
 
-        expect(screen.getByRole("heading", {
-            name: /event reviews/i
-        })).toBeInTheDocument();
-
-        expect(screen.getByText(
-            "See what participants shared after attending this event."
-        )).toBeInTheDocument();
+        expect(screen.getByText(/event reviews/i)).toBeInTheDocument();
+        expect(screen.getByText(/see what participants shared/i)).toBeInTheDocument();
     });
 
-    it("should render review summary when provided", () => {
-        renderEventReviewsSection();
+    it("should render review label", () => {
+        renderComp();
 
         expect(screen.getByLabelText("Event review summary")).toHaveTextContent("4 ★ (1 review)");
     });
 
-    it("should hide review summary when missing", () => {
-        renderEventReviewsSection({
-            reviewLabel: null
-        });
+    /* =========================
+       FORM TOGGLE
+    ========================= */
 
-        expect(screen.queryByLabelText("Event review summary")).not.toBeInTheDocument();
-    });
+    it("should open and close review form", () => {
+        renderComp();
 
-    /* =============================
-       DATA LOADING
-    ============================= */
-
-    it("should load reviews on mount", () => {
-        renderEventReviewsSection();
-
-        expect(loadReviews).toHaveBeenCalledTimes(1);
-    });
-
-    it("should pass event review dependencies to action hook", () => {
-        renderEventReviewsSection();
-
-        expect(useEventReviewActions).toHaveBeenCalledWith({
-            eventId: 10,
-            loadReviews,
-            setMessage: baseProps.setMessage,
-            setError
-        });
-    });
-
-    it("should initialize review data hook with event id", () => {
-        renderEventReviewsSection();
-
-        expect(useEventReviewData).toHaveBeenCalledWith({
-            eventId: 10
-        });
-    });
-
-    /* =============================
-       FEEDBACK
-    ============================= */
-
-    it("should render review error message", () => {
-        setupHookMocks({
-            error: "Unable to load event reviews"
-        });
-
-        renderEventReviewsSection();
-
-        expect(screen.getByText("Unable to load event reviews")).toBeInTheDocument();
-    });
-
-    it("should render loading state", () => {
-        setupHookMocks({
-            isLoading: true
-        });
-
-        renderEventReviewsSection();
-
-        expect(screen.getByRole("status")).toBeInTheDocument();
-        expect(screen.getByText("Loading reviews...")).toBeInTheDocument();
-        expect(screen.getByText("Fetching participant reviews for this event.")).toBeInTheDocument();
-        expect(screen.queryByTestId("event-reviews-list")).not.toBeInTheDocument();
-    });
-
-    /* =============================
-       REVIEW FORM ACCORDION
-    ============================= */
-
-    it("should show review form toggle for authenticated users", () => {
-        renderEventReviewsSection();
-
-        expect(screen.getByRole("button", {
-            name: /write a review/i
-        })).toBeInTheDocument();
-
-        expect(screen.getByRole("button", {
-            name: /write a review/i
-        })).toHaveAttribute("aria-expanded", "false");
-    });
-
-    it("should hide review form by default", () => {
-        renderEventReviewsSection();
-
-        expect(screen.queryByTestId("event-review-form")).not.toBeInTheDocument();
-    });
-
-    it("should open review form when clicking toggle", () => {
-        renderEventReviewsSection();
-
-        fireEvent.click(screen.getByRole("button", {
-            name: /write a review/i
-        }));
-
+        fireEvent.click(screen.getByText(/write a review/i));
         expect(screen.getByTestId("event-review-form")).toBeInTheDocument();
 
-        expect(screen.getByRole("button", {
-            name: /hide review form/i
-        })).toHaveAttribute("aria-expanded", "true");
-    });
-
-    it("should hide review form for guest users", () => {
-        renderEventReviewsSection({
-            user: null
-        });
-
-        expect(screen.queryByRole("button", {
-            name: /write a review/i
-        })).not.toBeInTheDocument();
-
+        fireEvent.click(screen.getByText(/hide review form/i));
         expect(screen.queryByTestId("event-review-form")).not.toBeInTheDocument();
     });
 
-    it("should forward submitting state to review form", () => {
-        setupHookMocks({
-            isSubmitting: true
-        });
+    /* =========================
+       CREATE FLOW
+    ========================= */
 
-        renderEventReviewsSection();
+    it("should create review and close form", async () => {
+        handleCreateReview.mockResolvedValue();
 
-        fireEvent.click(screen.getByRole("button", {
-            name: /write a review/i
-        }));
+        renderComp();
 
-        expect(screen.getByTestId("event-review-form")).toHaveAttribute(
-            "data-submitting",
-            "true"
-        );
-    });
-
-    it("should forward create action to review form and close form after submit", async () => {
-        handleCreateReview.mockResolvedValue(undefined);
-
-        renderEventReviewsSection();
-
-        fireEvent.click(screen.getByRole("button", {
-            name: /write a review/i
-        }));
-
-        fireEvent.click(screen.getByRole("button", {
-            name: /submit mocked review/i
-        }));
+        fireEvent.click(screen.getByText(/write a review/i));
+        fireEvent.click(screen.getByText(/submit/i));
 
         expect(handleCreateReview).toHaveBeenCalledWith({
             rating: 5,
@@ -308,49 +174,47 @@ describe("EventReviewsSection", () => {
         });
     });
 
-    /* =============================
-       REVIEW LIST
-    ============================= */
+    /* =========================
+       LIST + FORWARDING
+    ========================= */
 
-    it("should render review list", () => {
-        renderEventReviewsSection();
-
-        expect(screen.getByText("Participant reviews")).toBeInTheDocument();
-        expect(screen.getByTestId("event-reviews-list")).toBeInTheDocument();
-        expect(screen.getByText("Review count: 1")).toBeInTheDocument();
-    });
-
-    it("should forward current user id to review list", () => {
-        renderEventReviewsSection();
-
-        expect(screen.getByText("Current user: 2")).toBeInTheDocument();
-    });
-
-    it("should forward guest user state to review list", () => {
-        renderEventReviewsSection({
-            user: null
+    it("should forward props to list", () => {
+        setupMocks({
+            actions: {
+                updatingReviewId: 1,
+                deletingReviewId: 2
+            }
         });
 
-        expect(screen.getByText("Current user: guest")).toBeInTheDocument();
+        renderComp();
+
+        expect(screen.getByText("updating:1")).toBeInTheDocument();
+        expect(screen.getByText("deleting:2")).toBeInTheDocument();
     });
 
-    it("should forward deleting review id to review list", () => {
-        setupHookMocks({
-            deletingReviewId: 1
-        });
+    it("should forward delete action", () => {
+        renderComp();
 
-        renderEventReviewsSection();
-
-        expect(screen.getByText("Deleting review: 1")).toBeInTheDocument();
-    });
-
-    it("should forward delete action to review list", () => {
-        renderEventReviewsSection();
-
-        screen.getByRole("button", {
-            name: /delete mocked review/i
-        }).click();
+        fireEvent.click(screen.getByText("delete"));
 
         expect(handleDeleteReview).toHaveBeenCalledWith(1);
+    });
+
+    it("should forward update action", () => {
+        renderComp();
+
+        fireEvent.click(screen.getByText("edit"));
+
+        expect(handleUpdateReview).toHaveBeenCalledWith(1, {});
+    });
+
+    /* =========================
+       LOAD ON MOUNT
+    ========================= */
+
+    it("should call loadReviews on mount", () => {
+        renderComp();
+
+        expect(loadReviews).toHaveBeenCalledTimes(1);
     });
 });

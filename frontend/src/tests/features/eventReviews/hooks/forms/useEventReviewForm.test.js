@@ -4,18 +4,22 @@ import { act, renderHook } from "@testing-library/react";
 import useEventReviewForm from "../../../../../features/eventReviews/hooks/forms/useEventReviewForm";
 
 /* ==================================================
-   USE EVENT REVIEW FORM TESTS
-   Tests event review form state
+   USE EVENT REVIEW FORM
+   Manages event review form state and validation flow
 
    Handles:
-   - initial rating and comment state
-   - rating field changes
+   - rating and comment values
+   - field validation errors
+   - rating selection changes
    - comment field changes
-   - field error cleanup
-   - validation errors
-   - successful submit
-   - rating and trimmed comment payload
-   - form reset
+   - form validation on submit
+   - submit flow with async callback
+   - automatic reset after successful submit
+
+   Notes:
+   - validation is handled via validateEventReview
+   - onSubmitValid is provided by parent (API layer)
+   - reset only happens if submit is successful
 ================================================== */
 
 describe("useEventReviewForm", () => {
@@ -197,6 +201,58 @@ describe("useEventReviewForm", () => {
     });
 
     /* =============================
+       EDGE CASES
+    ============================= */
+
+    it("should not crash if onSubmitValid is undefined", async () => {
+        const { result } = renderHook(() =>
+            useEventReviewForm({})
+        );
+
+        act(() => {
+            result.current.formActions.handleRatingChange(5);
+            result.current.formActions.handleFieldChange({
+                target: { name: "comment", value: "Great event!" }
+            });
+        });
+
+        await act(async () => {
+            await result.current.formActions.handleSubmit({
+                preventDefault: vi.fn()
+            });
+        });
+
+        expect(result.current.formState.values).toEqual({
+            rating: "",
+            comment: ""
+        });
+    });
+
+    it("should handle missing onSubmitValid safely", async () => {
+        const { result } = renderHook(() =>
+            useEventReviewForm({})
+        );
+
+        act(() => {
+            result.current.formActions.handleRatingChange(5);
+            result.current.formActions.handleFieldChange({
+                target: { name: "comment", value: "Great event!" }
+            });
+        });
+
+        await act(async () => {
+            await result.current.formActions.handleSubmit({
+                preventDefault: vi.fn()
+            });
+        });
+
+        expect(result.current.formState.values).toEqual({
+            rating: "",
+            comment: ""
+        });
+    });
+
+    /* =============================
        SUBMIT
     ============================= */
 
@@ -273,6 +329,23 @@ describe("useEventReviewForm", () => {
         });
 
         expect(result.current.formState.fieldErrors).toEqual({});
+    });
+
+    it("should not reset form when submit returns false", async () => {
+        const onSubmitValid = vi.fn().mockResolvedValue(false);
+
+        const { result } = setupHook({ onSubmitValid });
+
+        fillValidForm(result);
+
+        await act(async () => {
+            await result.current.formActions.handleSubmit({
+                preventDefault: vi.fn()
+            });
+        });
+
+        expect(result.current.formState.values.rating).toBe(5);
+        expect(result.current.formState.values.comment).toBe("Great event!");
     });
 
     it("should reset form when resetForm is called", () => {

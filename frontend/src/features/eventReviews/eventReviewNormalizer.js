@@ -11,6 +11,7 @@ import { getApiPayload, getPaginatedPayload } from "../../api/apiResponse";
    - public reviewer identity data
    - review response extraction
    - paginated review response extraction
+   - review statistics extraction
 
    Notes:
    - reviews are loaded from GET /events/:eventId/reviews

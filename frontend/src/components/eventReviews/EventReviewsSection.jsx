@@ -62,14 +62,13 @@ export default function EventReviewsSection({ eventId, user, setMessage }) {
         pageSize: 4
     });
 
-    // Review statistics (derived from reviews list)
+    // Review statistics are derived from review pagination metadata
     const reviewCount = pagination.totalReviews;
 
-    // Average rating displayed for event summary (1–5 scale)
-    const averageRating = reviews.length > 0
-        ? (reviews.reduce((acc, r) => acc + Number(r.rating || 0), 0) / reviews.length).toFixed(1)
-        : 0;
-
+    // Average rating is global and comes from the review listing response
+    const averageRating = pagination.averageRating !== null
+        ? Number(pagination.averageRating).toFixed(1)
+        : "0";
 
     /* =========================
        REVIEW ACTIONS

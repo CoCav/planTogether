@@ -10,6 +10,8 @@ import { getApiPayload, getPaginatedPayload, unwrapApiResponse } from "../../api
    - Axios response unwrapping
    - payload extraction
    - paginated payload normalization
+   - generic total item fallback normalization
+   - paginated review statistics normalization
 ================================================== */
 
 describe("apiResponse", () => {
@@ -81,6 +83,7 @@ describe("apiResponse", () => {
                 pageSize: 10,
                 totalItems: 25,
                 totalPages: 3,
+                averageRating: 4.5,
                 success: true,
                 message: "Events retrieved"
             }
@@ -92,7 +95,8 @@ describe("apiResponse", () => {
                 page: 2,
                 pageSize: 10,
                 totalItems: 25,
-                totalPages: 3
+                totalPages: 3,
+                averageRating: 4.5
             },
             success: true,
             message: "Events retrieved"
@@ -110,6 +114,24 @@ describe("apiResponse", () => {
         expect(getPaginatedPayload(response, "events").pagination.totalItems).toBe(12);
     });
 
+    it("should fallback to totalReviews when totalItems and totalEvents are missing", () => {
+        const response = {
+            data: {
+                reviews: [{ id: 1 }],
+                totalReviews: 7,
+                averageRating: 4.2
+            }
+        };
+
+        expect(getPaginatedPayload(response, "reviews")).toMatchObject({
+            items: [{ id: 1 }],
+            pagination: {
+                totalItems: 7,
+                averageRating: 4.2
+            }
+        });
+    });
+
     it("should return default pagination values when metadata is missing", () => {
         expect(getPaginatedPayload({}, "events")).toEqual({
             items: [],
@@ -117,7 +139,8 @@ describe("apiResponse", () => {
                 page: 1,
                 pageSize: null,
                 totalItems: 0,
-                totalPages: 1
+                totalPages: 1,
+                averageRating: null
             },
             success: false,
             message: ""

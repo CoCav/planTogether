@@ -39,7 +39,8 @@ export const getPaginatedPayload = (response = {}, key = "") => {
                 payload?.totalEvents ??
                 payload?.totalReviews ??
                 0,
-            totalPages: payload?.totalPages ?? 1
+            totalPages: payload?.totalPages ?? 1,
+            averageRating: payload?.averageRating ?? null
         },
         success: payload?.success ?? false,
         message: payload?.message ?? ""

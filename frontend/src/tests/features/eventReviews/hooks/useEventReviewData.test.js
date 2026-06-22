@@ -56,6 +56,7 @@ describe("useEventReviewData", () => {
         pageSize: 4,
         totalReviews: 1,
         totalPages: 1,
+        averageRating: 4.5,
         reviews
     };
 
@@ -89,7 +90,8 @@ describe("useEventReviewData", () => {
             page: 1,
             pageSize: 10,
             totalPages: 1,
-            totalReviews: 0
+            totalReviews: 0,
+            averageRating: null
         });
 
         expect(result.current.error).toBe("");
@@ -118,7 +120,8 @@ describe("useEventReviewData", () => {
             page: 1,
             pageSize: 4,
             totalPages: 1,
-            totalReviews: 1
+            totalReviews: 1,
+            averageRating: 4.5
         });
 
         expect(result.current.reviews).toEqual([
@@ -140,7 +143,8 @@ describe("useEventReviewData", () => {
             page: 2,
             pageSize: 4,
             totalReviews: 8,
-            totalPages: 2
+            totalPages: 2,
+            averageRating: 4.2
         });
 
         const { result } = setupHook({
@@ -160,7 +164,8 @@ describe("useEventReviewData", () => {
             page: 2,
             pageSize: 4,
             totalPages: 2,
-            totalReviews: 8
+            totalReviews: 8,
+            averageRating: 4.2
         });
     });
 
@@ -261,7 +266,8 @@ describe("useEventReviewData", () => {
                 page: 2,
                 pageSize: 4,
                 totalPages: 3,
-                totalReviews: 12
+                totalReviews: 12,
+                averageRating: 4.8
             });
         });
 
@@ -269,7 +275,8 @@ describe("useEventReviewData", () => {
             page: 2,
             pageSize: 4,
             totalPages: 3,
-            totalReviews: 12
+            totalReviews: 12,
+            averageRating: 4.8
         });
     });
 

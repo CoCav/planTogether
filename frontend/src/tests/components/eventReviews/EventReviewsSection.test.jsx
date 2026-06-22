@@ -12,7 +12,7 @@ import useEventReviewData from "../../../features/eventReviews/hooks/useEventRev
 
    Handles:
    - section rendering (title, subtitle, summary pill)
-   - review statistics display (rating + total count)
+   - review statistics display (global average rating + total count)
    - paginated review loading lifecycle
    - review pagination controls
    - review form toggle behavior
@@ -101,7 +101,8 @@ describe("EventReviewsSection", () => {
                 page: 1,
                 pageSize: 4,
                 totalPages: 2,
-                totalReviews: 5
+                totalReviews: 5,
+                averageRating: 4.2
             },
             error: "",
             setError,
@@ -147,8 +148,29 @@ describe("EventReviewsSection", () => {
 
         expect(summary).toBeInTheDocument();
 
-        expect(summary.textContent).toMatch(/4\.0/);
+        expect(summary.textContent).toMatch(/4\.2/);
         expect(summary.textContent).toMatch(/5 reviews/);
+    });
+
+    it("should display zero rating when average rating is missing", () => {
+        setupMocks({
+            data: {
+                pagination: {
+                    page: 1,
+                    pageSize: 4,
+                    totalPages: 1,
+                    totalReviews: 0,
+                    averageRating: null
+                }
+            }
+        });
+
+        renderComp();
+
+        const summary = screen.getByLabelText("Event review summary");
+
+        expect(summary.textContent).toMatch(/0/);
+        expect(summary.textContent).toMatch(/0 review/);
     });
 
     /* =========================
@@ -252,7 +274,8 @@ describe("EventReviewsSection", () => {
                     page: 1,
                     pageSize: 4,
                     totalPages: 1,
-                    totalReviews: 1
+                    totalReviews: 1,
+                    averageRating: 5
                 }
             }
         });

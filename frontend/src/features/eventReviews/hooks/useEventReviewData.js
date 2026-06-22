@@ -14,6 +14,7 @@ import { getNormalizedEventReviewPage } from "../eventReviewNormalizer";
    - public paginated review retrieval
    - review response normalization
    - review list state
+   - review statistics state
    - pagination state
    - loading state
    - error state
@@ -21,7 +22,7 @@ import { getNormalizedEventReviewPage } from "../eventReviewNormalizer";
    Notes:
    - review mutations are handled by useEventReviewActions
    - normalized reviews include rating, comment and reviewer data
-   - pagination metadata comes from GET /events/:eventId/reviews
+   - pagination metadata and review statistics come from GET /events/:eventId/reviews
 ================================================== */
 
 export default function useEventReviewData({ eventId, pageSize = 10 }) {
@@ -40,7 +41,8 @@ export default function useEventReviewData({ eventId, pageSize = 10 }) {
         page: 1,
         pageSize,
         totalPages: 1,
-        totalReviews: 0
+        totalReviews: 0,
+        averageRating: null
     });
 
     /* =============================
@@ -81,7 +83,8 @@ export default function useEventReviewData({ eventId, pageSize = 10 }) {
                 page: normalized.pagination.page,
                 pageSize: normalized.pagination.pageSize || prev.pageSize || pageSize,
                 totalPages: normalized.pagination.totalPages,
-                totalReviews: normalized.pagination.totalItems
+                totalReviews: normalized.pagination.totalItems,
+                averageRating: normalized.pagination.averageRating
             }));
 
         } catch (error) {

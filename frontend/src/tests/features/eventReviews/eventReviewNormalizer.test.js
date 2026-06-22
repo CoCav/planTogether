@@ -16,6 +16,7 @@ import {
    - single review normalization
    - review list normalization
    - paginated review payload normalization
+   - review statistics metadata normalization
    - review rating normalization
    - reviewer data normalization
    - API payload extraction
@@ -239,6 +240,7 @@ describe("eventReviewNormalizer", () => {
                 pageSize: 4,
                 totalReviews: 9,
                 totalPages: 3,
+                averageRating: 4.5,
                 reviews: [
                     {
                         id: 1,
@@ -272,7 +274,8 @@ describe("eventReviewNormalizer", () => {
             page: 2,
             pageSize: 4,
             totalItems: 9,
-            totalPages: 3
+            totalPages: 3,
+            averageRating: 4.5
         });
     });
 });

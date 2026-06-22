@@ -12,10 +12,11 @@
    - review rating retrieval
    - review user data enrichment
    - review ordering
+   - global average rating retrieval
 
    Ensures:
    - event reviews can be retrieved publicly
-   - paginated responses include page, pageSize, totalReviews and totalPages
+   - paginated responses include page, pageSize, totalReviews, totalPages and averageRating
    - reviews include ratings and public user data
    - reviews are ordered from newest to oldest by default
    - invalid event review requests are rejected correctly
@@ -109,7 +110,8 @@ describe("Get Event Reviews API", () => {
             page: 1,
             pageSize: 10,
             totalReviews: 1,
-            totalPages: 1
+            totalPages: 1,
+            averageRating: 5
         });
 
         expect(res.body.reviews.length).toBe(1);
@@ -141,7 +143,8 @@ describe("Get Event Reviews API", () => {
             page: 1,
             pageSize: 10,
             totalReviews: 0,
-            totalPages: 0
+            totalPages: 0,
+            averageRating: null
         });
     });
 
@@ -236,6 +239,40 @@ describe("Get Event Reviews API", () => {
         expect(res.body.reviews[0].rating).toBe(4);
     });
 
+    it("should include global average rating for all event reviews", async () => {
+        const { event, participantAuth } = await createPastEventWithParticipant();
+
+        await createReviewForEvent({
+            event,
+            participantAuth,
+            rating: 5,
+            comment: "First rating review"
+        });
+
+        const secondParticipantAuth = await registerAndGetToken({
+            name: "Average Rating Reviewer",
+            email: `averageratingreviewer${Date.now()}@test.com`
+        });
+
+        await EventUserRole.create({
+            eventId: event.id,
+            userId: secondParticipantAuth.user.userId,
+            role: EVENT_ROLES.PARTICIPANT
+        });
+
+        await EventReview.create({
+            eventId: event.id,
+            userId: secondParticipantAuth.user.userId,
+            rating: 4,
+            comment: "Second rating review"
+        });
+
+        const res = await request(app).get(`/api/events/${event.id}/reviews`);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.averageRating).toBe(4.5);
+    });
+
     /* =============================
        PAGINATION
     ============================= */
@@ -324,6 +361,44 @@ describe("Get Event Reviews API", () => {
         });
 
         expect(res.body.reviews).toHaveLength(1);
+    });
+
+    it("should keep average rating global when reviews are paginated", async () => {
+        const { event, participantAuth } = await createPastEventWithParticipant();
+
+        await createReviewForEvent({
+            event,
+            participantAuth,
+            rating: 5,
+            comment: "First paginated rating review"
+        });
+
+        const secondParticipantAuth = await registerAndGetToken({
+            name: "Paginated Average Reviewer",
+            email: `paginatedaveragereviewer${Date.now()}@test.com`
+        });
+
+        await EventUserRole.create({
+            eventId: event.id,
+            userId: secondParticipantAuth.user.userId,
+            role: EVENT_ROLES.PARTICIPANT
+        });
+
+        await EventReview.create({
+            eventId: event.id,
+            userId: secondParticipantAuth.user.userId,
+            rating: 1,
+            comment: "Second paginated rating review"
+        });
+
+        const res = await request(app)
+            .get(`/api/events/${event.id}/reviews?page=1&pageSize=1`);
+
+        expect(res.statusCode).toBe(200);
+
+        expect(res.body.reviews).toHaveLength(1);
+        expect(res.body.totalReviews).toBe(2);
+        expect(res.body.averageRating).toBe(3);
     });
 
     /* =============================

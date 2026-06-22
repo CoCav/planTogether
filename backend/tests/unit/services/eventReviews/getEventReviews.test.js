@@ -4,6 +4,7 @@
    Tests:
    - paginated event review retrieval
    - pagination metadata generation
+   - global average rating calculation
    - event existence validation
    - review ordering query configuration
    - review rating retrieval
@@ -11,7 +12,8 @@
 
    Ensures:
    - reviews are retrieved only for existing events
-   - paginated responses include page metadata
+   - paginated responses include page metadata and average rating
+   - average rating is calculated globally for the event
    - reviews include ratings and public user data
    - reviews are ordered according to pagination settings
    - missing events are rejected before review lookup
@@ -59,6 +61,10 @@ describe("eventReviewService getEventReviews", () => {
             rows: reviews
         });
 
+        EventReview.findOne.mockResolvedValue({
+            averageRating: "5.0000000000000000"
+        });
+
         const result = await eventReviewService.getEventReviews(1);
 
         expect(Event.findByPk).toHaveBeenCalledWith(1, {});
@@ -82,6 +88,7 @@ describe("eventReviewService getEventReviews", () => {
             pageSize: 10,
             totalReviews: 1,
             totalPages: 1,
+            averageRating: 5,
             reviews
         });
 
@@ -99,6 +106,10 @@ describe("eventReviewService getEventReviews", () => {
             rows: []
         });
 
+        EventReview.findOne.mockResolvedValue({
+            averageRating: "4.2000000000000000"
+        });
+
         await eventReviewService.getEventReviews(1, {
             page: 2,
             pageSize: 5
@@ -110,6 +121,55 @@ describe("eventReviewService getEventReviews", () => {
                 offset: 5
             })
         );
+    });
+
+    it("should include global average rating for event reviews", async () => {
+        Event.findByPk.mockResolvedValue({ id: 1 });
+
+        EventReview.findAndCountAll.mockResolvedValue({
+            count: 2,
+            rows: []
+        });
+
+        EventReview.findOne.mockResolvedValue({
+            averageRating: "4.5000000000000000"
+        });
+
+        const result = await eventReviewService.getEventReviews(1);
+
+        expect(EventReview.findOne).toHaveBeenCalledWith({
+            where: {
+                eventId: 1
+            },
+            attributes: [
+                expect.any(Array)
+            ],
+            raw: true
+        });
+
+        expect(result.averageRating).toBe(4.5);
+    });
+
+    it("should return null average rating when event has no reviews", async () => {
+        Event.findByPk.mockResolvedValue({ id: 1 });
+
+        EventReview.findAndCountAll.mockResolvedValue({
+            count: 0,
+            rows: []
+        });
+
+        EventReview.findOne.mockResolvedValue({
+            averageRating: null
+        });
+
+        const result = await eventReviewService.getEventReviews(1);
+
+        expect(result).toMatchObject({
+            totalReviews: 0,
+            totalPages: 0,
+            averageRating: null,
+            reviews: []
+        });
     });
 
     /* =============================
@@ -126,6 +186,7 @@ describe("eventReviewService getEventReviews", () => {
                 message: "Event not found"
             });
 
+        expect(EventReview.findOne).not.toHaveBeenCalled();
         expect(EventReview.findAndCountAll).not.toHaveBeenCalled();
     });
 });

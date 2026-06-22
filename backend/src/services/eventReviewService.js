@@ -1,4 +1,5 @@
 const sequelize = require("../config/database");
+const { fn, col } = require("sequelize");
 
 const Event = require("../models/eventModel");
 const User = require("../models/userModel");
@@ -21,6 +22,7 @@ const { getPaginationOptions, getTotalCount, getTotalPages } = require("../utils
    - participant-only review permissions
    - duplicate review prevention
    - paginated event review retrieval
+   - global average rating calculation
    - review update
    - review deletion
 
@@ -29,7 +31,7 @@ const { getPaginationOptions, getTotalCount, getTotalPages } = require("../utils
    - one user can only leave one review per event
    - users can only update or delete their own reviews
    - deleted memberships cannot create reviews
-   - review retrieval supports pagination through query params
+   - review retrieval supports pagination and global rating stats
 ================================================== */
 
 /* =============================
@@ -101,6 +103,25 @@ const assertReviewOwner = (review, userId) => {
     if (review.userId !== userId) {
         throwHttpError(403, "You can only manage your own review");
     }
+};
+
+// Calculates the global average rating for one event
+const getEventAverageRating = async (eventId) => {
+    const result = await EventReview.findOne({
+        where: {
+            eventId
+        },
+        attributes: [
+            [fn("AVG", col("rating")), "averageRating"]
+        ],
+        raw: true
+    });
+
+    const averageRating = result?.averageRating;
+
+    return averageRating === null || averageRating === undefined
+        ? null
+        : Number(Number(averageRating).toFixed(1));
 };
 
 /* =============================
@@ -190,12 +211,14 @@ const getEventReviews = async (eventId, query = {}) => {
     });
 
     const totalReviews = getTotalCount(count);
+    const averageRating = await getEventAverageRating(eventId);
 
     return {
         page,
         pageSize,
         totalReviews,
         totalPages: getTotalPages(totalReviews, pageSize),
+        averageRating,
         reviews: rows
     };
 };

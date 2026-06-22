@@ -3,15 +3,16 @@
 
    Tests:
    - creating event reviews
-   - retrieving event reviews
+   - retrieving paginated event reviews
    - updating reviews
    - deleting reviews
 
    Ensures:
    - controller calls service correctly
    - authenticated user payload is passed correctly
+   - review query params are forwarded for pagination
    - review rating and comment payloads are forwarded
-   - HTTP responses are properly formatted
+   - paginated review responses are properly formatted
    - errors are forwarded to next()
 ================================================== */
 
@@ -93,32 +94,52 @@ describe("eventReviewController", () => {
     ============================= */
 
     describe("getEventReviews", () => {
-        it("should get all event reviews", async () => {
+        it("should get paginated event reviews", async () => {
             const { req, res, next } = createEventControllerMocks({
                 params: {
                     eventId: "1"
+                },
+                query: {
+                    page: "1",
+                    pageSize: "10",
+                    sortBy: "createdAt",
+                    order: "desc"
                 }
             });
 
-            const reviews = [
-                {
-                    id: 1,
-                    comment: "Great event!"
-                }
-            ];
+            const payload = {
+                page: 1,
+                pageSize: 10,
+                totalReviews: 1,
+                totalPages: 1,
+                reviews: [
+                    {
+                        id: 1,
+                        comment: "Great event!"
+                    }
+                ]
+            };
 
-            eventReviewService.getEventReviews.mockResolvedValue(reviews);
+            eventReviewService.getEventReviews.mockResolvedValue(payload);
 
             await eventReviewController.getEventReviews(req, res, next);
 
-            expect(eventReviewService.getEventReviews).toHaveBeenCalledWith("1");
+            expect(eventReviewService.getEventReviews).toHaveBeenCalledWith(
+                "1",
+                {
+                    page: "1",
+                    pageSize: "10",
+                    sortBy: "createdAt",
+                    order: "desc"
+                }
+            );
 
             expect(res.status).toHaveBeenCalledWith(200);
 
             expect(res.json).toHaveBeenCalledWith({
                 success: true,
                 message: "Event reviews retrieved successfully",
-                reviews
+                ...payload
             });
         });
 

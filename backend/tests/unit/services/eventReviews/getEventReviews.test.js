@@ -2,16 +2,18 @@
    GET EVENT REVIEWS SERVICE TESTS
 
    Tests:
-   - event review retrieval
+   - paginated event review retrieval
+   - pagination metadata generation
    - event existence validation
-   - review ordering
+   - review ordering query configuration
    - review rating retrieval
    - public user data inclusion
 
    Ensures:
    - reviews are retrieved only for existing events
+   - paginated responses include page metadata
    - reviews include ratings and public user data
-   - reviews are ordered from newest to oldest
+   - reviews are ordered according to pagination settings
    - missing events are rejected before review lookup
 ================================================== */
 
@@ -39,7 +41,7 @@ describe("eventReviewService getEventReviews", () => {
        SUCCESS CASES
     ============================= */
 
-    it("should get all reviews for an event", async () => {
+    it("should get paginated reviews for an event", async () => {
         const reviews = [
             {
                 id: 1,
@@ -51,13 +53,17 @@ describe("eventReviewService getEventReviews", () => {
         ];
 
         Event.findByPk.mockResolvedValue({ id: 1 });
-        EventReview.findAll.mockResolvedValue(reviews);
+
+        EventReview.findAndCountAll.mockResolvedValue({
+            count: 1,
+            rows: reviews
+        });
 
         const result = await eventReviewService.getEventReviews(1);
 
         expect(Event.findByPk).toHaveBeenCalledWith(1, {});
 
-        expect(EventReview.findAll).toHaveBeenCalledWith({
+        expect(EventReview.findAndCountAll).toHaveBeenCalledWith({
             where: {
                 eventId: 1
             },
@@ -66,15 +72,44 @@ describe("eventReviewService getEventReviews", () => {
                 as: "user",
                 attributes: ["id", "name", "avatar"]
             }],
-            order: [["createdAt", "DESC"]]
+            order: [["createdAt", "DESC"]],
+            limit: 10,
+            offset: 0
         });
 
-        expect(result).toBe(reviews);
+        expect(result).toMatchObject({
+            page: 1,
+            pageSize: 10,
+            totalReviews: 1,
+            totalPages: 1,
+            reviews
+        });
 
-        expect(result[0]).toMatchObject({
+        expect(result.reviews[0]).toMatchObject({
             rating: 5,
             comment: "Great event!"
-        })
+        });
+    });
+
+    it("should apply custom pagination params", async () => {
+        Event.findByPk.mockResolvedValue({ id: 1 });
+
+        EventReview.findAndCountAll.mockResolvedValue({
+            count: 25,
+            rows: []
+        });
+
+        await eventReviewService.getEventReviews(1, {
+            page: 2,
+            pageSize: 5
+        });
+
+        expect(EventReview.findAndCountAll).toHaveBeenCalledWith(
+            expect.objectContaining({
+                limit: 5,
+                offset: 5
+            })
+        );
     });
 
     /* =============================
@@ -91,6 +126,6 @@ describe("eventReviewService getEventReviews", () => {
                 message: "Event not found"
             });
 
-        expect(EventReview.findAll).not.toHaveBeenCalled();
+        expect(EventReview.findAndCountAll).not.toHaveBeenCalled();
     });
 });

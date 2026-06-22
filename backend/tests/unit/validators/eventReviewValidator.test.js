@@ -4,23 +4,25 @@
    Tests:
    - eventId param validation
    - reviewId param validation
-   - review creation payload validation
-   - review update payload validation
+   - review creation validation
+   - review update validation
+   - review query validation with sorting and pagination
    - review rating validation
    - review comment validation
 
    Ensures:
    - route params are valid positive integers
-   - review creation requires valid rating and comment
-   - review update requires valid rating and comment
+   - review creation and update require valid rating and comment
+   - review listing query params support sorting and pagination
+   - invalid review listing query params are rejected
    - review rating is required and between 1 and 5
-   - empty review comments are rejected
    - review comments stay within allowed length
 ================================================== */
 
 const {
     eventIdParamValidator,
     reviewIdParamValidator,
+    getEventReviewsValidator,
     createReviewValidator,
     updateReviewValidator
 } = require("../../../src/validators/eventReviewValidator");
@@ -90,6 +92,73 @@ describe("eventReviewValidator", () => {
                     })
                 ])
             );
+        });
+    });
+
+    /* =============================
+       REVIEW QUERY VALIDATION
+    ============================= */
+
+    describe("getEventReviewsValidator", () => {
+        it("should pass with valid query params", async () => {
+            const result = await runValidation(getEventReviewsValidator, {
+                query: {
+                    page: "1",
+                    pageSize: "10",
+                    sortBy: "createdAt",
+                    order: "desc"
+                }
+            });
+
+            expect(result.isEmpty()).toBe(true);
+        });
+
+        it("should pass when query params are omitted", async () => {
+            const result = await runValidation(getEventReviewsValidator, {
+                query: {}
+            });
+
+            expect(result.isEmpty()).toBe(true);
+        });
+
+        it("should fail with invalid sortBy", async () => {
+            const result = await runValidation(getEventReviewsValidator, {
+                query: {
+                    sortBy: "invalid"
+                }
+            });
+
+            expect(result.array()[0].msg).toMatch(/invalid sort field/i);
+        });
+
+        it("should fail with invalid page", async () => {
+            const result = await runValidation(getEventReviewsValidator, {
+                query: {
+                    page: "0"
+                }
+            });
+
+            expect(result.array()[0].msg).toMatch(/page must be a positive integer/i);
+        });
+
+        it("should fail with invalid pageSize", async () => {
+            const result = await runValidation(getEventReviewsValidator, {
+                query: {
+                    pageSize: "101"
+                }
+            });
+
+            expect(result.array()[0].msg).toMatch(/page size must be between 1 and 100/i);
+        });
+
+        it("should fail with invalid order", async () => {
+            const result = await runValidation(getEventReviewsValidator, {
+                query: {
+                    order: "newest"
+                }
+            });
+
+            expect(result.array()[0].msg).toMatch(/order must be asc or desc/i);
         });
     });
 

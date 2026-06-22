@@ -1,4 +1,4 @@
-const { body, param } = require("express-validator");
+const { body, param, query } = require("express-validator");
 
 /* ==================================================
    EVENT REVIEW VALIDATORS
@@ -60,6 +60,33 @@ const createReviewValidator = [
         .withMessage("Comment must be between 5 and 1000 characters")
 ];
 
+/* =============================
+   REVIEW QUERY
+============================= */
+
+// Validate event review listing query params
+const getEventReviewsValidator = [
+    query("sortBy")
+        .optional()
+        .isIn(["createdAt", "rating"])
+        .withMessage("Invalid sort field"),
+
+    query("page")
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage("Page must be a positive integer"),
+
+    query("pageSize")
+        .optional()
+        .isInt({ min: 1, max: 100 })
+        .withMessage("Page size must be between 1 and 100"),
+
+    query("order")
+        .optional()
+        .isIn(["asc", "desc"])
+        .withMessage("Order must be asc or desc")
+];
+
 // Validate event review update payload
 const updateReviewValidator = [
 
@@ -83,6 +110,7 @@ const updateReviewValidator = [
 module.exports = {
     eventIdParamValidator,
     reviewIdParamValidator,
+    getEventReviewsValidator,
     createReviewValidator,
     updateReviewValidator
 };

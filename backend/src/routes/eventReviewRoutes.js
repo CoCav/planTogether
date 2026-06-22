@@ -8,6 +8,7 @@ const { authenticateToken } = require("../middlewares/auth/authenticateToken");
 const {
     eventIdParamValidator,
     reviewIdParamValidator,
+    getEventReviewsValidator,
     createReviewValidator,
     updateReviewValidator
 } = require("../validators/eventReviewValidator");
@@ -19,13 +20,13 @@ const handleValidationErrors = require("../middlewares/errors/handleValidationEr
 
    Handles:
    - creating reviews for completed events
-   - retrieving event reviews
+   - retrieving paginated event reviews
    - updating current user's own reviews
    - deleting current user's own reviews
 
    Notes:
    - review creation, update and deletion require authentication
-   - review retrieval is public
+   - review retrieval is public and supports pagination query params
    - review permissions are enforced in eventReviewService
    - validators run before controller logic
 ================================================== */
@@ -34,9 +35,10 @@ const handleValidationErrors = require("../middlewares/errors/handleValidationEr
    EVENT REVIEWS
 ============================= */
 
-// Get all reviews for an event
+// Get paginated reviews for an event
 router.get("/:eventId/reviews",
     eventIdParamValidator,
+    getEventReviewsValidator,
     handleValidationErrors,
     eventReviewController.getEventReviews
 );

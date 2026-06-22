@@ -8,6 +8,8 @@ const EventReview = require("../models/relations/eventReviewModel");
 const { throwHttpError } = require("../utils/errors/httpError");
 const { isEventPast } = require("../utils/events/eventStatus");
 
+const { getPaginationOptions, getTotalCount, getTotalPages } = require("../utils/pagination");
+
 /* ==================================================
    EVENT REVIEW SERVICE
    Handles event review business logic
@@ -18,7 +20,7 @@ const { isEventPast } = require("../utils/events/eventStatus");
    - completed event review restrictions
    - participant-only review permissions
    - duplicate review prevention
-   - event review retrieval
+   - paginated event review retrieval
    - review update
    - review deletion
 
@@ -27,6 +29,7 @@ const { isEventPast } = require("../utils/events/eventStatus");
    - one user can only leave one review per event
    - users can only update or delete their own reviews
    - deleted memberships cannot create reviews
+   - review retrieval supports pagination through query params
 ================================================== */
 
 /* =============================
@@ -154,11 +157,25 @@ const createEventReview = async ({ eventId, userId, rating, comment }) => {
    GET REVIEWS
 ============================= */
 
-// Gets all reviews for one event
-const getEventReviews = async (eventId) => {
+// Gets paginated reviews for one event
+const getEventReviews = async (eventId, query = {}) => {
     await findEventOrFail(eventId);
 
-    return EventReview.findAll({
+    const {
+        page,
+        pageSize,
+        limit,
+        offset,
+        orderField,
+        orderDirection
+    } = getPaginationOptions(
+        query,
+        ["createdAt", "rating"],
+        "createdAt",
+        "DESC"
+    );
+
+    const { count, rows } = await EventReview.findAndCountAll({
         where: {
             eventId
         },
@@ -167,8 +184,20 @@ const getEventReviews = async (eventId) => {
             as: "user",
             attributes: ["id", "name", "avatar"]
         }],
-        order: [["createdAt", "DESC"]]
+        order: [[orderField, orderDirection]],
+        limit,
+        offset
     });
+
+    const totalReviews = getTotalCount(count);
+
+    return {
+        page,
+        pageSize,
+        totalReviews,
+        totalPages: getTotalPages(totalReviews, pageSize),
+        reviews: rows
+    };
 };
 
 /* =============================

@@ -2,18 +2,22 @@
    EVENT REVIEWS INTEGRATION - GET REVIEWS TESTS
 
    Tests:
-   - public event review retrieval
+   - public paginated event review retrieval
    - empty review list retrieval
+   - review pagination metadata
+   - review pagination query params
    - nonexistent event handling
    - invalid event ID validation
+   - invalid pagination query validation
    - review rating retrieval
    - review user data enrichment
    - review ordering
 
    Ensures:
    - event reviews can be retrieved publicly
+   - paginated responses include page, pageSize, totalReviews and totalPages
    - reviews include ratings and public user data
-   - reviews are ordered from newest to oldest
+   - reviews are ordered from newest to oldest by default
    - invalid event review requests are rejected correctly
 ================================================== */
 
@@ -100,6 +104,14 @@ describe("Get Event Reviews API", () => {
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty("message", "Event reviews retrieved successfully");
         expect(Array.isArray(res.body.reviews)).toBe(true);
+
+        expect(res.body).toMatchObject({
+            page: 1,
+            pageSize: 10,
+            totalReviews: 1,
+            totalPages: 1
+        });
+
         expect(res.body.reviews.length).toBe(1);
 
         expect(res.body.reviews[0]).toMatchObject({
@@ -124,6 +136,13 @@ describe("Get Event Reviews API", () => {
 
         expect(res.statusCode).toBe(200);
         expect(res.body.reviews).toEqual([]);
+
+        expect(res.body).toMatchObject({
+            page: 1,
+            pageSize: 10,
+            totalReviews: 0,
+            totalPages: 0
+        });
     });
 
     /* =============================
@@ -218,6 +237,96 @@ describe("Get Event Reviews API", () => {
     });
 
     /* =============================
+       PAGINATION
+    ============================= */
+
+    it("should return paginated review metadata", async () => {
+        const { event, participantAuth } = await createPastEventWithParticipant();
+
+        await createReviewForEvent({
+            event,
+            participantAuth,
+            rating: 5,
+            comment: "First review"
+        });
+
+        const secondParticipantAuth = await registerAndGetToken({
+            name: "Second Pagination Reviewer",
+            email: `secondpaginationreviewer${Date.now()}@test.com`
+        });
+
+        await EventUserRole.create({
+            eventId: event.id,
+            userId: secondParticipantAuth.user.userId,
+            role: EVENT_ROLES.PARTICIPANT
+        });
+
+        await EventReview.create({
+            eventId: event.id,
+            userId: secondParticipantAuth.user.userId,
+            rating: 4,
+            comment: "Second review"
+        });
+
+        const res = await request(app)
+            .get(`/api/events/${event.id}/reviews?page=1&pageSize=1`);
+
+        expect(res.statusCode).toBe(200);
+
+        expect(res.body).toMatchObject({
+            page: 1,
+            pageSize: 1,
+            totalReviews: 2,
+            totalPages: 2
+        });
+
+        expect(res.body.reviews).toHaveLength(1);
+    });
+
+    it("should retrieve the requested review page", async () => {
+        const { event, participantAuth } = await createPastEventWithParticipant();
+
+        await createReviewForEvent({
+            event,
+            participantAuth,
+            rating: 5,
+            comment: "First page review"
+        });
+
+        const secondParticipantAuth = await registerAndGetToken({
+            name: "Second Page Reviewer",
+            email: `secondpagereviewer${Date.now()}@test.com`
+        });
+
+        await EventUserRole.create({
+            eventId: event.id,
+            userId: secondParticipantAuth.user.userId,
+            role: EVENT_ROLES.PARTICIPANT
+        });
+
+        await EventReview.create({
+            eventId: event.id,
+            userId: secondParticipantAuth.user.userId,
+            rating: 4,
+            comment: "Second page review"
+        });
+
+        const res = await request(app)
+            .get(`/api/events/${event.id}/reviews?page=2&pageSize=1`);
+
+        expect(res.statusCode).toBe(200);
+
+        expect(res.body).toMatchObject({
+            page: 2,
+            pageSize: 1,
+            totalReviews: 2,
+            totalPages: 2
+        });
+
+        expect(res.body.reviews).toHaveLength(1);
+    });
+
+    /* =============================
        EDGE CASES
     ============================= */
 
@@ -226,10 +335,18 @@ describe("Get Event Reviews API", () => {
 
         expect(res.statusCode).toBe(404);
     });
-
     /* =============================
        VALIDATION ERRORS
     ============================= */
+
+    it("should reject invalid pagination query params", async () => {
+        const { event } = await createPastEventWithParticipant();
+
+        const res = await request(app)
+            .get(`/api/events/${event.id}/reviews?page=0`);
+
+        expect(res.statusCode).toBe(400);
+    });
 
     it("should reject invalid eventId", async () => {
         const res = await request(app).get("/api/events/abc/reviews");

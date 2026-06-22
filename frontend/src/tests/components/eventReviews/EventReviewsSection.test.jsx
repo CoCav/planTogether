@@ -11,17 +11,18 @@ import useEventReviewData from "../../../features/eventReviews/hooks/useEventRev
    Tests event reviews section orchestration
 
    Handles:
-   - section rendering (title, subtitle, summary)
+   - section rendering (title, subtitle, summary pill)
+   - review statistics display (rating + count)
    - review loading lifecycle
    - review form toggle behavior
    - review creation flow
-   - review deletion flow
    - review update flow
-   - prop forwarding to child components
+   - review deletion flow
+   - props forwarding to child components
 
    Notes:
    - hooks are mocked to isolate orchestration logic
-   - child components are mocked to inspect forwarded props
+   - child components are mocked for controlled assertions
 ================================================== */
 
 vi.mock("../../../features/eventReviews/hooks/useEventReviewData");
@@ -72,13 +73,12 @@ describe("EventReviewsSection", () => {
        TEST DATA
     ============================= */
 
-    const reviews = [{ id: 1, comment: "Great" }];
+    const reviews = [{ id: 1, comment: "Great", rating: 4 }];
 
     const baseProps = {
         eventId: 10,
         user: { userId: 2 },
-        setMessage: vi.fn(),
-        reviewLabel: "4 ★ (1 review)"
+        setMessage: vi.fn()
     };
 
     const loadReviews = vi.fn();
@@ -132,10 +132,15 @@ describe("EventReviewsSection", () => {
         expect(screen.getByText(/see what participants shared/i)).toBeInTheDocument();
     });
 
-    it("should render review label", () => {
+    it("should render review summary (rating + count)", () => {
         renderComp();
 
-        expect(screen.getByLabelText("Event review summary")).toHaveTextContent("4 ★ (1 review)");
+        const summary = screen.getByLabelText("Event review summary");
+
+        expect(summary).toBeInTheDocument();
+
+        expect(summary.textContent).toMatch(/4\.0/);
+        expect(summary.textContent).toMatch(/1 review/);
     });
 
     /* =========================

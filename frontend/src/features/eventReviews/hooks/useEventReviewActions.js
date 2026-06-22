@@ -123,7 +123,7 @@ export default function useEventReviewActions({
 
             await loadReviews();
 
-            return true;  // ✅ FIX
+            return true;
 
         } catch (error) {
             setError(getApiErrorMessage(error, "Unable to delete review"));

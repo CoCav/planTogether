@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Star } from "lucide-react";
 
 import useEventReviewActions from "../../features/eventReviews/hooks/useEventReviewActions";
 import useEventReviewData from "../../features/eventReviews/hooks/useEventReviewData";
@@ -17,24 +18,23 @@ import LoadingState from "../ui/LoadingState";
    Displays and manages event reviews for one event
 
    Handles:
-   - review loading
-   - review form accordion state
-   - review creation with rating and comment
-   - review update with rating and comment
-   - review deletion
-   - review feedback display
-   - authenticated review form toggle
+   - review loading lifecycle
+   - review form toggle state
+   - review creation, update and deletion
+   - review statistics (count + average rating)
+   - review summary display (rating pill)
+   - error / success feedback display
+   - authenticated review form access
    - review list rendering
-   - review stats display
-   - responsive review section layout
+   - responsive layout for reviews section
 
    Notes:
-   - page-level section placement is handled by EventDetailsPage
-   - review permissions are enforced by the backend
-   - create, update and delete mutations refresh the review list after success
+   - section layout is controlled by EventDetailsPage
+   - review permissions are enforced by backend
+   - all mutations refresh review list as single source of truth
 ================================================== */
 
-export default function EventReviewsSection({ eventId, user, setMessage, reviewLabel }) {
+export default function EventReviewsSection({ eventId, user, setMessage }) {
 
     /* =========================
        UI STATE
@@ -55,6 +55,15 @@ export default function EventReviewsSection({ eventId, user, setMessage, reviewL
         isLoading,
         loadReviews
     } = useEventReviewData({ eventId });
+
+    // Review statistics (derived from reviews list)
+    const reviewCount = reviews.length;
+
+    // Average rating displayed for event summary (1–5 scale)
+    const averageRating = reviews.length > 0
+        ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
+        : 0;
+
 
     /* =========================
        REVIEW ACTIONS
@@ -112,11 +121,20 @@ export default function EventReviewsSection({ eventId, user, setMessage, reviewL
                     </h2>
                 </div>
 
-                {reviewLabel && (
-                    <div className="event-reviews-summary" aria-label="Event review summary">
-                        {reviewLabel}
-                    </div>
-                )}
+                <div className="event-reviews-summary" aria-label="Event review summary">
+                    <span className="event-reviews-summary-rating">
+                        {averageRating}
+                    </span>
+
+                    <Star className="event-reviews-summary-icon" fill="var(--color-primary)" aria-hidden="true" />
+
+                    <span className="event-reviews-summary-separator">•</span>
+
+                    <span className="event-reviews-summary-count">
+                        ({reviewCount} review{reviewCount > 1 ? "s" : ""})
+                    </span>
+                </div>
+
             </div>
 
             {/* =========================

@@ -12,8 +12,9 @@ import useEventReviewData from "../../../features/eventReviews/hooks/useEventRev
 
    Handles:
    - section rendering (title, subtitle, summary pill)
-   - review statistics display (rating + count)
-   - review loading lifecycle
+   - review statistics display (rating + total count)
+   - paginated review loading lifecycle
+   - review pagination controls
    - review form toggle behavior
    - review creation flow
    - review update flow
@@ -23,6 +24,7 @@ import useEventReviewData from "../../../features/eventReviews/hooks/useEventRev
    Notes:
    - hooks are mocked to isolate orchestration logic
    - child components are mocked for controlled assertions
+   - pagination uses shared usePagination and Pagination components
 ================================================== */
 
 vi.mock("../../../features/eventReviews/hooks/useEventReviewData");
@@ -95,6 +97,12 @@ describe("EventReviewsSection", () => {
     const setupMocks = (overrides = {}) => {
         useEventReviewData.mockReturnValue({
             reviews,
+            pagination: {
+                page: 1,
+                pageSize: 4,
+                totalPages: 2,
+                totalReviews: 5
+            },
             error: "",
             setError,
             isLoading: false,
@@ -140,7 +148,7 @@ describe("EventReviewsSection", () => {
         expect(summary).toBeInTheDocument();
 
         expect(summary.textContent).toMatch(/4\.0/);
-        expect(summary.textContent).toMatch(/1 review/);
+        expect(summary.textContent).toMatch(/5 reviews/);
     });
 
     /* =========================
@@ -211,6 +219,49 @@ describe("EventReviewsSection", () => {
         fireEvent.click(screen.getByText("edit"));
 
         expect(handleUpdateReview).toHaveBeenCalledWith(1, {});
+    });
+
+    /* =========================
+       PAGINATION
+    ========================= */
+
+    it("should render pagination controls when there are multiple review pages", () => {
+        renderComp();
+
+        expect(screen.getByRole("navigation", {
+            name: /event reviews pagination/i
+        })).toBeInTheDocument();
+
+        expect(screen.getByText(/page 1 of 2/i)).toBeInTheDocument();
+    });
+
+    it("should load next review page", () => {
+        renderComp();
+
+        fireEvent.click(screen.getByRole("button", {
+            name: /next/i
+        }));
+
+        expect(loadReviews).toHaveBeenCalledWith(2);
+    });
+
+    it("should not render pagination controls when there is only one review page", () => {
+        setupMocks({
+            data: {
+                pagination: {
+                    page: 1,
+                    pageSize: 4,
+                    totalPages: 1,
+                    totalReviews: 1
+                }
+            }
+        });
+
+        renderComp();
+
+        expect(screen.queryByRole("navigation", {
+            name: /event reviews pagination/i
+        })).not.toBeInTheDocument();
     });
 
     /* =========================

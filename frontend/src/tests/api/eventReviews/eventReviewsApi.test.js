@@ -14,13 +14,15 @@ import {
    Tests event review API requests
 
    Handles:
-   - event review retrieval
+   - paginated event review retrieval
+   - event review pagination params
    - event review creation
    - event review update
    - event review deletion
 
    Notes:
    - API helpers return unwrapped backend payloads
+   - review retrieval supports optional pagination query params
    - backend enforces review permissions and ownership
 ================================================== */
 
@@ -43,14 +45,19 @@ describe("eventReviewApi", () => {
        READ REVIEWS
     ============================= */
 
-    it("should fetch reviews for one event", async () => {
+    it("should fetch paginated reviews for one event", async () => {
         const mockPayload = {
             success: true,
+            page: 1,
+            pageSize: 4,
+            totalReviews: 1,
+            totalPages: 1,
             reviews: [
                 {
                     id: 1,
                     eventId: 10,
                     userId: 2,
+                    rating: 5,
                     comment: "Great event!"
                 }
             ]
@@ -60,9 +67,17 @@ describe("eventReviewApi", () => {
             data: mockPayload
         });
 
-        const result = await getEventReviews(10);
+        const result = await getEventReviews(10, {
+            page: 1,
+            pageSize: 4
+        });
 
-        expect(apiClient.get).toHaveBeenCalledWith("/events/10/reviews");
+        expect(apiClient.get).toHaveBeenCalledWith("/events/10/reviews", {
+            params: {
+                page: 1,
+                pageSize: 4
+            }
+        });
 
         expect(result).toEqual(mockPayload);
     });

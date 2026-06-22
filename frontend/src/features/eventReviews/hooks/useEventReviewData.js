@@ -4,31 +4,44 @@ import { getEventReviews } from "../../../api/eventReviews/eventReviewApi";
 
 import { getApiErrorMessage } from "../../../api/apiError";
 
-import { getNormalizedEventReviews } from "../eventReviewNormalizer";
+import { getNormalizedEventReviewPage } from "../eventReviewNormalizer";
 
 /* ==================================================
    USE EVENT REVIEW DATA
-   Handles event review list state and loading
+   Handles event review list state, loading and pagination
 
    Handles:
-   - public review retrieval
+   - public paginated review retrieval
    - review response normalization
    - review list state
+   - pagination state
    - loading state
    - error state
 
    Notes:
    - review mutations are handled by useEventReviewActions
    - normalized reviews include rating, comment and reviewer data
+   - pagination metadata comes from GET /events/:eventId/reviews
 ================================================== */
 
-export default function useEventReviewData({ eventId }) {
+export default function useEventReviewData({ eventId, pageSize = 10 }) {
 
     /* =============================
        REVIEW STATE
     ============================= */
 
     const [reviews, setReviews] = useState([]);
+
+    /* =============================
+       PAGINATION STATE
+    ============================= */
+
+    const [pagination, setPagination] = useState({
+        page: 1,
+        pageSize,
+        totalPages: 1,
+        totalReviews: 0
+    });
 
     /* =============================
        FEEDBACK STATE
@@ -46,17 +59,30 @@ export default function useEventReviewData({ eventId }) {
        REVIEW LOADING
     ============================= */
 
-    // Loads and normalizes reviews for the current event
-    const loadReviews = useCallback(async () => {
+    // Loads and normalizes reviews for the current event page
+    const loadReviews = useCallback(async (page = 1) => {
         if (!eventId) return;
 
         try {
             setError("");
             setIsLoading(true);
 
-            const response = await getEventReviews(eventId);
+            const response = await getEventReviews(eventId, {
+                page,
+                pageSize
+            });
 
-            setReviews(getNormalizedEventReviews(response));
+            const normalized = getNormalizedEventReviewPage(response);
+
+            setReviews(normalized.reviews);
+
+            setPagination((prev) => ({
+                ...prev,
+                page: normalized.pagination.page,
+                pageSize: normalized.pagination.pageSize || prev.pageSize || pageSize,
+                totalPages: normalized.pagination.totalPages,
+                totalReviews: normalized.pagination.totalItems
+            }));
 
         } catch (error) {
             setError(getApiErrorMessage(
@@ -67,11 +93,17 @@ export default function useEventReviewData({ eventId }) {
         } finally {
             setIsLoading(false);
         }
-    }, [eventId]);
+    }, [
+        eventId,
+        pageSize
+    ]);
 
     return {
         reviews,
         setReviews,
+
+        pagination,
+        setPagination,
 
         error,
         setError,

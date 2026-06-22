@@ -34,7 +34,11 @@ export const getPaginatedPayload = (response = {}, key = "") => {
         pagination: {
             page: payload?.page ?? 1,
             pageSize: payload?.pageSize ?? null,
-            totalItems: payload?.totalItems ?? payload?.totalEvents ?? 0,
+            totalItems:
+                payload?.totalItems ??
+                payload?.totalEvents ??
+                payload?.totalReviews ??
+                0,
             totalPages: payload?.totalPages ?? 1
         },
         success: payload?.success ?? false,

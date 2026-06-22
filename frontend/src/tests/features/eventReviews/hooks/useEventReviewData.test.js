@@ -7,18 +7,22 @@ import { getEventReviews } from "../../../../api/eventReviews/eventReviewApi";
 
 /* ==================================================
    USE EVENT REVIEW DATA TESTS
-   Tests event review data loading
+   Tests event review data loading and pagination
 
    Handles:
    - initial review state
-   - event review loading
+   - initial pagination state
+   - paginated event review loading
    - review response normalization
+   - pagination metadata normalization
    - missing event ID guard
    - loading state
    - error state
+   - manual state setters
 
    Notes:
    - review mutations are tested in useEventReviewActions
+   - review pagination comes from GET /events/:eventId/reviews
 ================================================== */
 
 vi.mock("../../../../api/eventReviews/eventReviewApi", () => ({
@@ -48,6 +52,10 @@ describe("useEventReviewData", () => {
 
     const apiResponse = {
         success: true,
+        page: 1,
+        pageSize: 4,
+        totalReviews: 1,
+        totalPages: 1,
         reviews
     };
 
@@ -72,10 +80,18 @@ describe("useEventReviewData", () => {
        INITIAL STATE
     ============================= */
 
-    it("should initialize review state", () => {
+    it("should initialize review and pagination state", () => {
         const { result } = setupHook();
 
         expect(result.current.reviews).toEqual([]);
+
+        expect(result.current.pagination).toEqual({
+            page: 1,
+            pageSize: 10,
+            totalPages: 1,
+            totalReviews: 0
+        });
+
         expect(result.current.error).toBe("");
         expect(result.current.isLoading).toBe(false);
     });
@@ -93,7 +109,17 @@ describe("useEventReviewData", () => {
             await result.current.loadReviews();
         });
 
-        expect(getEventReviews).toHaveBeenCalledWith(10);
+        expect(getEventReviews).toHaveBeenCalledWith(10, {
+            page: 1,
+            pageSize: 10
+        });
+
+        expect(result.current.pagination).toEqual({
+            page: 1,
+            pageSize: 4,
+            totalPages: 1,
+            totalReviews: 1
+        });
 
         expect(result.current.reviews).toEqual([
             expect.objectContaining({
@@ -106,6 +132,36 @@ describe("useEventReviewData", () => {
 
         expect(result.current.error).toBe("");
         expect(result.current.isLoading).toBe(false);
+    });
+
+    it("should load the requested review page with configured page size", async () => {
+        getEventReviews.mockResolvedValue({
+            ...apiResponse,
+            page: 2,
+            pageSize: 4,
+            totalReviews: 8,
+            totalPages: 2
+        });
+
+        const { result } = setupHook({
+            pageSize: 4
+        });
+
+        await act(async () => {
+            await result.current.loadReviews(2);
+        });
+
+        expect(getEventReviews).toHaveBeenCalledWith(10, {
+            page: 2,
+            pageSize: 4
+        });
+
+        expect(result.current.pagination).toEqual({
+            page: 2,
+            pageSize: 4,
+            totalPages: 2,
+            totalReviews: 8
+        });
     });
 
     it("should not load reviews when event ID is missing", async () => {
@@ -195,6 +251,26 @@ describe("useEventReviewData", () => {
         });
 
         expect(result.current.reviews).toEqual(reviews);
+    });
+
+    it("should expose pagination state setter", () => {
+        const { result } = setupHook();
+
+        act(() => {
+            result.current.setPagination({
+                page: 2,
+                pageSize: 4,
+                totalPages: 3,
+                totalReviews: 12
+            });
+        });
+
+        expect(result.current.pagination).toEqual({
+            page: 2,
+            pageSize: 4,
+            totalPages: 3,
+            totalReviews: 12
+        });
     });
 
     it("should expose error state setter", () => {

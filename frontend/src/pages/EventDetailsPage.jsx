@@ -434,7 +434,6 @@ export default function EventDetailsPage() {
                         eventId={event.id}
                         user={user}
                         setMessage={setMessage}
-                        reviewLabel={eventDisplayData.reviewLabel}
                     />
                 </section>
             )}

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
     getNormalizedEventReview,
+    getNormalizedEventReviewPage,
     getNormalizedEventReviews,
     normalizeEventReview,
     normalizeEventReviews
@@ -14,6 +15,7 @@ import {
    Handles:
    - single review normalization
    - review list normalization
+   - paginated review payload normalization
    - review rating normalization
    - reviewer data normalization
    - API payload extraction
@@ -22,6 +24,7 @@ import {
    Notes:
    - supports reviewer data aliases
    - normalized reviews include rating, comment and public reviewer data
+   - paginated payloads include normalized reviews and pagination metadata
 ================================================== */
 
 describe("eventReviewNormalizer", () => {
@@ -225,6 +228,51 @@ describe("eventReviewNormalizer", () => {
             userId: 2,
             rating: 5,
             comment: "Great event!"
+        });
+    });
+
+    it("should extract normalized reviews and pagination metadata from paginated API payload", () => {
+        const payload = {
+            data: {
+                success: true,
+                page: 2,
+                pageSize: 4,
+                totalReviews: 9,
+                totalPages: 3,
+                reviews: [
+                    {
+                        id: 1,
+                        eventId: 10,
+                        userId: 2,
+                        rating: 5,
+                        comment: "Great event!",
+                        user: {
+                            id: 2,
+                            name: "Alice",
+                            avatar: "/uploads/avatars/alice.png"
+                        }
+                    }
+                ]
+            }
+        };
+
+        const result = getNormalizedEventReviewPage(payload);
+
+        expect(result.reviews).toHaveLength(1);
+
+        expect(result.reviews[0]).toMatchObject({
+            id: 1,
+            eventId: 10,
+            userId: 2,
+            rating: 5,
+            comment: "Great event!"
+        });
+
+        expect(result.pagination).toEqual({
+            page: 2,
+            pageSize: 4,
+            totalItems: 9,
+            totalPages: 3
         });
     });
 });

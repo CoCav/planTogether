@@ -12,7 +12,7 @@ import { unwrapApiResponse } from "../apiResponse";
    - DELETE /events/reviews/:reviewId
 
    Notes:
-   - review retrieval is public
+   - review retrieval is public and supports pagination
    - review creation requires authentication
    - review update requires authentication
    - review deletion requires authentication
@@ -24,9 +24,12 @@ import { unwrapApiResponse } from "../apiResponse";
    READ REVIEWS
 ============================= */
 
-// Fetches all reviews for one event
-export const getEventReviews = async (eventId) => {
-    const response = await apiClient.get(`/events/${eventId}/reviews`);
+// Fetches paginated reviews for one event with optional query params
+export const getEventReviews = async (eventId, params = {}) => {
+    const response = await apiClient.get(`/events/${eventId}/reviews`, {
+        params
+    });
+
     return unwrapApiResponse(response);
 };
 
@@ -51,5 +54,6 @@ export const updateEventReview = async (reviewId, reviewData) => {
 // Deletes a review by ID
 export const deleteEventReview = async (reviewId) => {
     const response = await apiClient.delete(`/events/reviews/${reviewId}`);
+
     return unwrapApiResponse(response);
 };

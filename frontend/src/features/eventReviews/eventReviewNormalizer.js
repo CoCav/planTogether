@@ -1,4 +1,4 @@
-import { getApiPayload } from "../../api/apiResponse";
+import { getApiPayload, getPaginatedPayload } from "../../api/apiResponse";
 
 /* ==================================================
    EVENT REVIEW NORMALIZER
@@ -10,6 +10,7 @@ import { getApiPayload } from "../../api/apiResponse";
    - review rating data
    - public reviewer identity data
    - review response extraction
+   - paginated review response extraction
 
    Notes:
    - reviews are loaded from GET /events/:eventId/reviews
@@ -59,6 +60,16 @@ export const getNormalizedEventReviews = (payload = {}) => {
     const reviews = getApiPayload(payload, "reviews");
 
     return normalizeEventReviews(reviews);
+};
+
+// Extracts normalized reviews and pagination metadata from GET /events/:eventId/reviews
+export const getNormalizedEventReviewPage = (payload = {}) => {
+    const { items, pagination } = getPaginatedPayload(payload, "reviews");
+
+    return {
+        reviews: normalizeEventReviews(items),
+        pagination
+    };
 };
 
 /* =============================

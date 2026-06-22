@@ -39,8 +39,6 @@ import {
    - authenticated and guest states
    - started and past event restrictions
    - completed event reviews section display
-   - active event reviews section hiding
-   - event review summary forwarding
 
    Notes:
    - mocks API modules
@@ -271,13 +269,11 @@ vi.mock("../../components/eventMemberships/EventParticipantsSection", () => ({
 }));
 
 vi.mock("../../components/eventReviews/EventReviewsSection", () => ({
-    default: ({ reviewLabel }) => (
+    default: ({ eventId, user }) => (
         <section data-testid="event-reviews-section">
             Event Reviews Section
-
-            {reviewLabel && (
-                <span>Review summary: {reviewLabel}</span>
-            )}
+            <span>Event: {eventId}</span>
+            <span>User: {user ? "authenticated" : "guest"}</span>
         </section>
     )
 }));
@@ -426,19 +422,20 @@ describe("EventDetailsPage", () => {
         expect(screen.queryByTestId("event-reviews-section")).not.toBeInTheDocument();
     });
 
-    it("should forward review summary to event reviews section", async () => {
+    it("should forward event data to EventReviewsSection", async () => {
         setupApi({
             event: createEvent({
                 ...mockEvent,
-                status: EVENT_STATUS.PAST,
-                reviewCount: 2,
-                averageRating: 4.5
+                status: EVENT_STATUS.PAST
             })
         });
 
         renderPage();
 
-        expect(await screen.findByText("Review summary: 4.5 ★ (2 reviews)")).toBeInTheDocument();
+        expect(await screen.findByTestId("event-reviews-section")).toBeInTheDocument();
+
+        expect(screen.getByTestId("event-reviews-section")).toHaveTextContent("Event: 1");
+        expect(screen.getByTestId("event-reviews-section")).toHaveTextContent("User: authenticated");
     });
 
     /* =============================

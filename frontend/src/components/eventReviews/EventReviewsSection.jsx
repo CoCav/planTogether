@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 
+import usePagination from "../../hooks/usePagination";
 import useEventReviewActions from "../../features/eventReviews/hooks/useEventReviewActions";
 import useEventReviewData from "../../features/eventReviews/hooks/useEventReviewData";
 
@@ -10,15 +11,15 @@ import EventReviewsList from "./EventReviewsList";
 import Alert from "../ui/Alert";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
-
 import LoadingState from "../ui/LoadingState";
+import Pagination from "../ui/Pagination";
 
 /* ==================================================
    EVENT REVIEWS SECTION
    Displays and manages event reviews for one event
 
    Handles:
-   - review loading lifecycle
+   - paginated review loading lifecycle
    - review form toggle state
    - review creation, update and deletion
    - review statistics (count + average rating)
@@ -27,6 +28,7 @@ import LoadingState from "../ui/LoadingState";
    - authenticated review form access
    - review list rendering
    - responsive layout for reviews section
+   - review pagination controls
 
    Notes:
    - section layout is controlled by EventDetailsPage
@@ -48,20 +50,24 @@ export default function EventReviewsSection({ eventId, user, setMessage }) {
 
     const {
         reviews,
+        pagination,
 
         error,
         setError,
 
         isLoading,
         loadReviews
-    } = useEventReviewData({ eventId });
+    } = useEventReviewData({
+        eventId,
+        pageSize: 4
+    });
 
     // Review statistics (derived from reviews list)
-    const reviewCount = reviews.length;
+    const reviewCount = pagination.totalReviews;
 
     // Average rating displayed for event summary (1–5 scale)
     const averageRating = reviews.length > 0
-        ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
+        ? (reviews.reduce((acc, r) => acc + Number(r.rating || 0), 0) / reviews.length).toFixed(1)
         : 0;
 
 
@@ -82,6 +88,15 @@ export default function EventReviewsSection({ eventId, user, setMessage }) {
         loadReviews,
         setMessage,
         setError
+    });
+
+    const {
+        goToPreviousPage,
+        goToNextPage
+    } = usePagination({
+        page: pagination.page,
+        totalPages: pagination.totalPages,
+        onPageChange: loadReviews
     });
 
     /* =========================
@@ -195,14 +210,24 @@ export default function EventReviewsSection({ eventId, user, setMessage }) {
                         description="Fetching participant reviews for this event."
                     />
                 ) : (
-                    <EventReviewsList
-                        reviews={reviews}
-                        currentUserId={user?.userId}
-                        updatingReviewId={updatingReviewId}
-                        deletingReviewId={deletingReviewId}
-                        onEdit={handleUpdateReview}
-                        onDelete={handleDeleteReview}
-                    />
+                    <>
+                        <EventReviewsList
+                            reviews={reviews}
+                            currentUserId={user?.userId}
+                            updatingReviewId={updatingReviewId}
+                            deletingReviewId={deletingReviewId}
+                            onEdit={handleUpdateReview}
+                            onDelete={handleDeleteReview}
+                        />
+
+                        <Pagination
+                            page={pagination.page}
+                            totalPages={pagination.totalPages}
+                            onPrevious={goToPreviousPage}
+                            onNext={goToNextPage}
+                            label="Event reviews pagination"
+                        />
+                    </>
                 )}
             </div>
 

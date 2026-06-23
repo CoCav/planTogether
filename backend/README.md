@@ -13,9 +13,9 @@ PlanTogether is a collaborative event management platform where users can create
 
 ![Jest](https://img.shields.io/badge/Test-Jest-red)
 ![Supertest](https://img.shields.io/badge/Test-Supertest-6E9F18)
-![Test Suites](https://img.shields.io/badge/test%20suites-88%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-715%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-99.23%25%20statements%20%7C%2094.13%25%20branches-brightgreen)
+![Test Suites](https://img.shields.io/badge/test%20suites-98%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-815%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-99.29%25%20statements%20%7C%2094.02%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -34,10 +34,11 @@ Users can create, join, leave, update, and manage events depending on their role
 The backend also provides:
 
 - authenticated and public location search
-- reusable geocoding and caching workflows
-- progressive fallback location search
-- persistent event coordinates and normalized location labels
+- reusable geocoding, caching, and normalized location workflows
 - interactive event map support
+- event reviews and ratings
+- participant-only review permissions and ownership management
+- review statistics, pagination, and average rating aggregation
 
 The architecture emphasizes:
 
@@ -49,8 +50,6 @@ The architecture emphasizes:
 - structured logging with Pino
 - automated CI workflows with extensive unit and integration test coverage
 
----
-
 ## 🎯 API Overview
 
 PlanTogether exposes a secure **RESTful API** for collaborative event management and role-based interactions.
@@ -60,13 +59,15 @@ The API allows clients to:
 - authenticate users with JWT
 - create and manage collaborative events
 - manage memberships and permissions
+- create, update, delete, and browse event reviews and ratings
+- access aggregated review statistics
 - upload avatars and event images
 - search, filter, sort, and paginate event listings
 - retrieve public and authenticated user data
 - search and geocode event locations
 - display event maps through authenticated or public location endpoints
 
-The backend centralizes validation, permissions, security, business rules, and geolocation workflows to ensure consistent and reliable API behavior across sensitive operations.
+The backend centralizes validation, permissions, security, business rules, review workflows, and geolocation services to ensure consistent and reliable API behavior across sensitive operations.
 
 ---
 
@@ -104,9 +105,9 @@ Security architecture also includes centralized policies for:
 ### Architecture & Backend Patterns
 
 - **Layered architecture** – routes, controllers, services, middlewares, validators, and utilities
-- **Service-oriented business logic** – centralized permissions, validation, filtering, and reusable workflows
+- **Service-oriented business logic** – centralized permissions, validation, filtering, review management, and reusable workflows
 - **Soft-delete lifecycle workflows** – membership and account preservation logic
-- **Reusable query and formatting utilities** – filtering, pagination, participant counts, and normalization helpers
+- **Reusable query and formatting utilities** – filtering, pagination, aggregation, participant counts, review statistics, and normalization helpers
 - **Sequelize transactions** – critical operation safety and database consistency
 - **Backend-powered geocoding** – cached location search, normalized labels, and fallback search workflows
 - **Reusable rate limiter factories** – shared middleware architecture for protected and public endpoints
@@ -117,7 +118,7 @@ Security architecture also includes centralized policies for:
 - **Jest** – unit testing framework
 - **Supertest** – API integration testing
 - **GitHub Actions** – automated CI workflows
-- **Comprehensive test coverage** – services, middlewares, validators, controllers, uploads, utilities, security flows, and API integrations
+- **Comprehensive test coverage** – services, middlewares, validators, controllers, uploads, utilities, security flows, review workflows, and API integrations
 
 ---
 
@@ -131,7 +132,7 @@ backend/
 ├── docs/
 │   └── testing.md
 │
-├── src
+├── src/
 │   ├── config/
 │   │   ├── database.js
 │   │   ├── cors.js
@@ -156,6 +157,8 @@ backend/
 │   │
 │   ├── models/
 │   │   ├── relations/
+│   │   │   ├── eventReviewModel.js
+│   │   │   └── eventUserRoleModel.js
 │   │   ├── userModel.js
 │   │   ├── eventModel.js
 │   │   ├── locationModel.js
@@ -185,6 +188,7 @@ backend/
 │   │   ├── auth/
 │   │   ├── events/
 │   │   ├── eventMemberships/
+│   │   ├── eventReviews/
 │   │   ├── users/
 │   │   └── locations/
 │   │
@@ -217,13 +221,13 @@ backend/
 
 - **Middlewares** handle reusable authentication, authorization, validation, uploads, rate limiting, and centralized error handling.
 
-- **Models** define database structures, Sequelize relations, and linking models used for many-to-many relationships between users and events.
+- **Models** define database structures, Sequelize relations, event reviews, and linking models used for many-to-many relationships between users and events.
 
 - **Routes** connect API endpoints to controllers, validation, authentication, authorization, and reusable middleware workflows.
 
-- **Services** centralize business logic, permissions, transaction-safe workflows, geolocation handling, and reusable domain operations.
+- **Services** centralize business logic, permissions, review workflows, transaction-safe operations, geolocation handling, and reusable domain services.
 
-- **Utils** centralize reusable backend helpers for filtering, pagination, formatting, event state computation, upload cleanup, token generation, query normalization, and HTTP errors.
+- **Utils** centralize reusable backend helpers for filtering, pagination, aggregation, formatting, event state computation, upload cleanup, token generation, query normalization, and HTTP errors.
 
 - **Validators** isolate reusable request validation rules for routes, uploads, query parameters, and protected actions.
 
@@ -265,13 +269,35 @@ Security features include:
 - Event creator and image metadata included in API responses
 - Transaction-safe operations with Sequelize transactions
 - Strong validation, upload protection, and business-rule enforcement
-- Optimized filtering, pagination, and participant count queries
+- Optimized filtering, pagination, participant count, and review statistics queries
 - Backend-powered geocoding and location caching
 - Persistent event coordinates and normalized location labels
 - Public and authenticated location search endpoints
 - Progressive fallback location search for detailed addresses
 
 Each event automatically assigns the creator as **organizer**.
+
+### ⭐ Event Reviews & Ratings
+
+Participants can leave reviews and ratings for completed events through a dedicated review system.
+
+Supported review capabilities include:
+
+- review creation, update, and deletion
+- one review per participant and event
+- participant-only review permissions
+- completed-event review restrictions
+- review ownership enforcement
+- paginated review retrieval and sorting
+- rating support (1–5 stars)
+- review statistics and average rating aggregation
+
+Review responses include:
+
+- rating and comment data
+- reviewer public profile information
+- pagination metadata
+- aggregated review statistics (review count and average rating)
 
 ### 👥 Memberships, Roles & Permissions
 
@@ -343,7 +369,7 @@ Additional capabilities include:
 
 - pagination and sorting support
 - reusable query-builder utilities
-- optimized participant count queries
+- optimized participant count and review statistics queries
 - soft-delete-aware participant counting
 - consistent filtering behavior across public and authenticated endpoints
 
@@ -415,17 +441,17 @@ npm run test:coverage
 
 ### 📊 Testing Results
 
-- ✅ 88 passing test suites
-- ✅ 715 passing tests
-- ✅ All tests passing
+- ✅ 98 passing test suites
+- ✅ 815 passing tests
+- ✅ 100% passing rate
 
 **Coverage**:
-- 99.23% statements
-- 94.13% branches
+- 99.29% statements
+- 94.02% branches
 - 100% functions
-- 99.29% lines
+- 99.35% lines
 
-✅ High automated coverage across authentication, permissions, uploads, filtering, transactions, soft-delete workflows, geocoding, rate limiting, and full API behavior.
+✅ High automated coverage across authentication, permissions, uploads, filtering, pagination, review systems, transactions, geocoding, rate limiting, and full API behavior.
 
 ### 🔁 Continuous Integration
 
@@ -460,6 +486,7 @@ Tests run against a dedicated **PostgreSQL** test database through **Supertest**
 - profile updates, password changes, and account deletion
 - avatar and event image upload lifecycle handling
 - event CRUD operations and permission-aware workflows
+- event review workflows, ratings, pagination, permissions, and statistics
 - filtering, sorting, pagination, and query synchronization behavior
 - role-based permissions and authorization flows
 - membership management and ownership transfer
@@ -478,9 +505,9 @@ Unit tests validate isolated backend modules independently of HTTP request flows
 📌 Covered modules include:
 
 - controllers and response handling
-- services and business-rule enforcement
-- transaction-safe operations and permission resolution
-- reusable query-builder and filtering utilities
+- services, review workflows, permissions, and business-rule enforcement
+- transaction-safe operations and query aggregation utilities
+- filtering, pagination, and review statistics helpers
 - authentication, authorization, validation, upload, and rate-limiter middleware
 - request validators and security rules
 - pagination, formatting, normalization, and event status utilities
@@ -494,8 +521,8 @@ Unit tests validate isolated backend modules independently of HTTP request flows
 - A dedicated PostgreSQL test database ensures isolated and deterministic behavior
 - Internal modules are tested independently for maintainability and reliability
 - Reusable factories and helpers reduce duplicated test setup
-- Validation, permissions, uploads, filtering, transactions, and business rules are extensively tested
-- Soft-delete flows, query edge cases, and permission restrictions are covered through both integration and unit testing
+- Core workflows, permissions, reviews, uploads, filtering, and business rules are extensively tested
+- Soft-delete flows, review permissions, authorization rules, and query edge cases are covered through both integration and unit testing
 - High automated coverage helps maintain predictable long-term backend stability
 
 For more details about the testing architecture, factories, helpers, database isolation, transaction testing, and mocking strategies, see [`docs/testing.md`](./docs/testing.md).
@@ -511,8 +538,7 @@ The API implements multiple security layers to protect sensitive data, enforce s
 - JWT-based authentication with Bearer tokens
 - Protected routes secured through centralized authentication middleware
 - Current password verification required for sensitive account changes
-- Reusable rate limiting for authentication and public geolocation endpoints
-- Configurable rate limiting through environment variables
+- Reusable and configurable rate limiting for authentication and public endpoints
 
 ### 🛡️ Authorization
 
@@ -524,7 +550,7 @@ Supported roles:
 - `co_organizer`
 - `participant`
 
-Authorization is enforced through reusable middleware and business-rule layers:
+Authorization is enforced through reusable middleware and service-layer business rules:
 
 - `authenticateToken`
 - `authorizeEventRole`
@@ -532,10 +558,9 @@ Authorization is enforced through reusable middleware and business-rule layers:
 
 Additional protections include:
 
-- organizer ownership and hierarchy protection
-- started-event and past-event restrictions
+- role hierarchy, ownership, review ownership, and event-state protections
 - inactive membership and soft-delete access protection
-- prevention of unauthorized or invalid operations
+- prevention of unauthorized operations
 
 Unauthenticated users only have read-only access to public resources.
 
@@ -545,7 +570,7 @@ Unauthenticated users only have read-only access to public resources.
 - Centralized validation and error handling
 - Sanitization and normalization of incoming data
 - Password policy enforcement
-- Validation for route params, query params, request bodies, filtering, sorting, and pagination inputs
+- Validation for route parameters, request bodies, filtering, sorting, and pagination inputs
 
 ### 📁 Upload Security
 
@@ -568,36 +593,48 @@ Unauthenticated users only have read-only access to public resources.
 - Helmet security headers protection
 - Centralized CORS configuration
 - SQL injection protection through Sequelize parameterized queries
-- Query optimization strategies for efficient database access
-- Sequelize transactions for critical operations
-- Database indexes for optimized query performance
+- Query optimization, database indexing, and transaction-safe operations
 - Centralized HTTP error utilities and global error handling
 - Environment-based configuration for database, uploads, CORS, logging, and test behavior
 
-These mechanisms help ensure secure data handling, reusable security workflows, permission-aware protection, and reliable long-term API behavior across the application.
+These measures help ensure secure data handling, consistent authorization, and reliable long-term API behavior.
 
 ---
 
 ## 📦 API Response Format
 
-The API uses a consistent JSON response structure to ensure predictable frontend integration, centralized error handling, and reliable client-side consumption.
+The API uses a consistent JSON response structure to ensure predictable frontend integration and centralized error handling.
 
 ### ✅ Success Response
 
 ```json
 {
   "success": true,
-  "message": "Operation successful",
-  "data": {}
+  "message": "Operation successful"
 }
 ```
 
-Success payloads may include:
+Success responses may also include:
 
-- objects
-- arrays
+- resource payloads (`user`, `event`, `review`, etc.)
+- collections (`events`, `reviews`, etc.)
 - pagination metadata
-- filtered query results
+- aggregated statistics
+
+#### Example:
+
+```json
+{
+  "success": true,
+  "message": "Event reviews retrieved successfully",
+  "page": 1,
+  "pageSize": 10,
+  "totalReviews": 5,
+  "totalPages": 1,
+  "averageRating": 4.6,
+  "reviews": []
+}
+```
 
 ### ❌ Error Response
 
@@ -618,10 +655,11 @@ Success payloads may include:
 
 - `success` → indicates whether the request completed successfully
 - `message` → short human-readable description
-- `data` → response payload (object or array depending on the endpoint)
+- resource fields (`user`, `event`, `review`, `events`, `reviews`, etc.) contain endpoint-specific data
+- pagination fields are included when relevant
 - `errors` → optional validation or request error details
 
-Validation and application errors are normalized through centralized middleware, reusable HTTP error utilities, and the global `errorHandler` middleware to ensure consistent API responses across the application.
+Validation and application errors are normalized through centralized middleware and reusable HTTP error utilities, ensuring consistent API responses across the application.
 
 ---
 
@@ -634,6 +672,8 @@ git clone https://github.com/CoCav/planTogether.git
 cd planTogether/backend
 npm install
 ```
+
+The following sections explain environment configuration, database setup, and available development commands.
 
 ---
 
@@ -684,19 +724,24 @@ CORS_ORIGIN=http://localhost:5173
 
 - `NODE_ENV` → defines the current environment (`development`, `production`, `test`)
 - `JWT_SECRET` → used to sign and verify JWT authentication tokens
+
 - `DB_NAME_TEST` → dedicated database used for automated testing
 - `DB_LOGGING` → enables Sequelize SQL query logging (`true` or `false`)
 - `DB_SSL` → enables SSL for production or cloud-hosted databases
+
 - `LOG_LEVEL` → defines the Pino logger level (`info`, `debug`, `error`, etc.)
-- `AUTH_RATE_LIMIT_WINDOW_MS` / `AUTH_RATE_LIMIT_MAX` → authentication rate limiting configuration
-- `LOCATION_RATE_LIMIT_WINDOW_MS` / `LOCATION_RATE_LIMIT_MAX` → geolocation API rate limiting configuration
+
+- `AUTH_RATE_LIMIT_*` → authentication rate limiting configuration
+- `LOCATION_RATE_LIMIT_*` → geolocation API rate limiting configuration
+
 - `LOCATION_PROVIDER` → active geolocation provider configuration
 - `GEOCODING_USER_AGENT` → user agent sent to the geolocation provider
 - `GEOCODING_RESULT_LIMIT` → maximum number of returned geolocation results
+
 - `CORS_ORIGIN` → allowed frontend origins (comma-separated values supported)
 - `UPLOAD_DIR` → upload root directory for avatars and event images
 
-`.env.example` and `.env.test` files are provided as reference configurations.
+`.env.example` and `.env.test` are provided as reference configurations for local development and automated testing.
 
 ---
 
@@ -726,7 +771,7 @@ Run tests with coverage reporting:
 npm run test:coverage
 ```
 
-The server starts only after successful database connection and model synchronization.
+The server starts after a successful database connection and model synchronization.
 
 API base URL:
 
@@ -783,13 +828,24 @@ GET    /api/users/:id/events           (public user events with filtering, sorti
 Event management and public event access endpoints.
 
 ```http
-GET    /api/events                     (filtering, sorting, and pagination)
-GET    /api/events/:eventId
+GET    /api/events                     (filtering, sorting, pagination, review statistics)
+GET    /api/events/:eventId            (includes review statistics)
 GET    /api/events/:eventId/me         (authenticated event permissions and access)
 
 POST   /api/events                     (authenticated, supports image upload)
 PUT    /api/events/:eventId            (organizer or co_organizer, supports image upload)
 DELETE /api/events/:eventId            (organizer only, before event start)
+```
+
+### ⭐ Event Reviews
+
+Review and rating endpoints.
+
+```http
+GET    /api/events/:eventId/reviews                     (public, paginated)
+POST   /api/events/:eventId/reviews                     (authenticated participant)
+PUT    /api/events/reviews/:reviewId                    (review owner)
+DELETE /api/events/reviews/:reviewId                    (review owner)
 ```
 
 ### 👥 Event Memberships
@@ -823,37 +879,46 @@ GET    /api/locations/public-search   (public)
 GET    /api/health
 GET    /
 ```
-
 ---
 
 ## 🚀 Recent Improvements
 
-### 🗺️ Backend Location & Geocoding System
+### ⭐ Event Reviews & Ratings
 
-- Added a reusable backend-powered geocoding architecture with OpenStreetMap Nominatim integration
-- Added persistent location caching and normalized location formatting workflows
+- Added a complete event review system with ratings (1–5 stars)
+- Added review creation, update, retrieval, and deletion workflows
+- Added participant-only and completed-event review restrictions
+- Added review ownership validation and duplicate-review prevention
+- Added paginated review retrieval with average rating aggregation
+
+### 📊 Event Statistics
+
+- Added review count and average rating aggregation to event queries
+- Integrated review statistics into event listing and detail endpoints
+- Exposed review insights across event discovery workflows
+
+### 🗺️ Location & Geocoding System
+
+- Added backend-powered geocoding with OpenStreetMap Nominatim
+- Added location caching and normalized location formatting
 - Added authenticated and public location search endpoints
-- Added progressive fallback location search for detailed addresses
-- Added persistent event coordinates and normalized location labels
-- Added reusable location rate limiter middleware
-- Expanded unit and integration coverage for geocoding, caching, and fallback workflows
+- Added progressive fallback search for detailed addresses
 
-### 🔐 Security & Middleware Architecture
+### 🔐 Security & Architecture
 
-- Added reusable rate limiter factory architecture
-- Centralized authentication and public API rate limiting
-- Improved middleware organization, scalability, and test coverage
+- Added reusable rate limiter architecture
+- Improved centralized validation, permissions, and middleware organization
+- Expanded coverage for authorization, filtering, pagination, and review workflows
 
 ### 🧪 Testing & Reliability
 
-- Expanded integration coverage for geolocation workflows and provider fallbacks
-- Improved middleware and geocoding service testing architecture
-- Reached 88 passing test suites and 715 passing tests
+- Expanded unit and integration coverage across review, event, membership, and geolocation workflows
+- Reached 98 passing test suites and 815 passing tests
 - Achieved:
-  - 99.23% statement coverage
-  - 94.13% branch coverage
+  - 99.29% statement coverage
+  - 94.02% branch coverage
   - 100% function coverage
-  - 99.29% line coverage
+  - 99.35% line coverage
 
 ---
 
@@ -866,14 +931,16 @@ GET    /
 | Authentication & Users | ✅ JWT authentication, profile management, password updates, and secure account deletion |
 | Authorization & Permissions | ✅ Role-based access control, protected actions, and ownership transfer |
 | Membership System | ✅ Role management, restoration flows, and soft-delete lifecycle handling |
+| Event Reviews & Ratings | ✅ Review creation, updates, ratings, ownership validation, pagination, and review statistics |
+| Event Statistics | ✅ Participant counts, review counts, and average rating aggregation |
 | Location & Geocoding | ✅ Backend-powered geocoding, caching, fallback search, and public map support |
 | Security | ✅ Helmet, validation, upload protection, centralized security policies, and reusable rate limiting |
 | File Uploads | ✅ Avatar and event image upload, replacement, cleanup, and rollback-safe workflows |
 | Logging | ✅ Centralized structured logging with Pino |
 | Database | ✅ PostgreSQL + Sequelize with transactions, indexes, caching, and optimized query behavior |
 | API Consistency | ✅ Standardized JSON responses and centralized error handling |
-| Testing | ✅ 715 tests across 88 test suites |
-| Coverage | ✅ 99.23% statements / 94.13% branches / 100% functions / 99.29% lines |
+| Testing | ✅ 815 tests across 98 test suites |
+| Coverage | ✅ 99.29% statements / 94.02% branches / 100% functions / 99.35% lines |
 | Continuous Integration | ✅ Automated GitHub Actions testing workflows |
 
 ---
@@ -882,36 +949,34 @@ GET    /
 
 ### 🚀 Features
 
-- Event invitation system (email invitations or shareable links)
+- Event moderation and reporting workflows
+- Review replies and organizer responses
+- Event invitation system (shareable links and invitation workflows)
 - Email notifications for invitations, reminders, and event updates
 - Public and private event visibility management
-- Membership role history and moderation audit logs
-- Archived-event lifecycle management and cleanup workflows
-- Expanded participation and moderation workflows
-- Event activity feeds and moderation tracking
+- Archived-event lifecycle management
 
 ### 🧠 Backend & Architecture
 
-- Advanced query aggregation and analytics optimization
-- Additional database indexing and query performance improvements
 - API versioning strategy (`/api/v1`)
-- Further business-rule centralization and abstraction
-- Swagger / OpenAPI documentation support
-- Expanded reusable filtering, formatting, and query-builder utilities
+- Swagger / OpenAPI documentation
+- Advanced analytics and aggregation queries
+- Additional database indexing and query optimization
+- Further business-rule and query-builder abstraction
 
 ### 🧪 Testing & Developer Experience
 
 - Additional end-to-end testing workflows
-- Further test deduplication and simplification
-- Expanded edge-case and regression coverage
-- Improved backend architecture and testing documentation
+- Expanded regression and edge-case coverage
+- Further test simplification and shared test utilities
+- Improved architecture and testing documentation
 
 ### ⚙️ Infrastructure & Deployment
 
 - Docker containerization
 - Cloud deployment (AWS, Render, Fly.io, etc.)
-- Production-ready environment configuration improvements
-- Expanded CI/CD automation workflows
-- Secure cloud-based file storage strategies
+- CI/CD pipeline expansion
+- Production environment hardening
+- Cloud-based file storage (S3-compatible providers)
 
 ---

@@ -2,23 +2,23 @@
 
 ![Jest](https://img.shields.io/badge/Jest-testing-red)
 ![Supertest](https://img.shields.io/badge/Supertest-integration%20testing-6E9F18)
-![Suites](https://img.shields.io/badge/Test%20Suites-88%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/Tests-715%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/Coverage-99.23%25%20statements%20%7C%2094.13%25%20branches-brightgreen)
+![Suites](https://img.shields.io/badge/Test%20Suites-98%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-815%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/Coverage-99.29%25%20statements%20%7C%2094.02%25%20branches-brightgreen)
 
-This document describes the overall testing strategy used in the PlanTogether backend.
+This document describes the testing strategy used in the PlanTogether backend.
 
-The project uses **Jest** and **Supertest** to validate both isolated backend modules and complete API workflows across the application.
+The project uses **Jest** and **Supertest** to validate both isolated backend modules and complete API workflows.
 
 The test suite focuses on:
 
-- backend reliability, maintainability, and long-term stability
+- backend reliability and maintainability
 - API consistency and business-rule validation
-- authentication, authorization, and rate-limiting workflows
-- upload handling, geolocation services, and transaction-safe operations
+- authentication, authorization, reviews, and rate-limiting workflows
+- uploads, geolocation services, pagination, and transaction-safe operations
 - soft-delete lifecycle handling and ownership protection
 - reusable helpers, factories, and testing utilities
-- isolated, deterministic, and scalable automated testing workflows
+- deterministic and scalable automated testing
 
 ---
 
@@ -28,25 +28,25 @@ Core testing coverage includes:
 
 - API behavior, response consistency, and error handling
 - authentication, authorization, and access-control workflows
+- event reviews, ratings, pagination, and review statistics
 - current user event access resolution and frontend guard support
 - service-layer business rules and permission enforcement
 - upload handling, image lifecycle behavior, and filesystem safety
-- filtering, pagination, query utilities, and optimized query behavior
+- filtering, pagination, query utilities, and aggregation helpers
 - backend geocoding, location caching, and fallback search workflows
-- database consistency and rollback behavior
-- soft-delete lifecycle handling and ownership protection workflows
-- participant count, event status, and event-state restriction behavior
-- started-event protections and restricted action enforcement
+- database consistency and transaction behavior
+- soft-delete lifecycle handling and ownership protection
+- participant counts, review statistics, and event-state restrictions
 - public and authenticated rate-limited API behavior
 
 The current backend test suite includes:
 
-- **88** passing test suites
-- **715** passing tests
-- **99.23%** statement coverage
-- **94.13%** branch coverage
+- **98** passing test suites
+- **815** passing tests
+- **99.29%** statement coverage
+- **94.02%** branch coverage
 - **100%** function coverage
-- **99.29%** line coverage
+- **99.35%** line coverage
 
 The combination of integration and unit testing helps ensure secure, stable, and predictable backend behavior across the application.
 
@@ -73,12 +73,12 @@ The backend test suite relies on the following tools and libraries.
 ### Testing Utilities
 
 - reusable factories for consistent test data generation
-- shared helpers for authentication, validation, API flows, and database setup
-- query, formatting, and validation utilities
+- shared helpers for authentication, validation, API workflows, and database setup
+- query, formatting, pagination, and validation utilities
 - Express request/response mocks for middleware and controller testing
-- shared utilities for dates and deterministic testing
+- shared date utilities for deterministic testing
 
-The testing stack supports reliable integration testing, isolated unit testing, transaction validation, and scalable long-term backend maintainability.
+The testing stack supports reliable integration testing, isolated unit testing, transaction validation, and long-term backend maintainability.
 
 ---
 
@@ -102,6 +102,7 @@ tests
 │   ├── auth/
 │   ├── events/
 │   ├── eventMemberships/
+│   ├── eventReviews/
 │   ├── users/
 │   └── locations/
 │
@@ -118,7 +119,7 @@ tests
 
 The testing structure mirrors the backend architecture and separates reusable utilities, isolated modules, and full API workflows into dedicated layers.
 
-This organization improves readability, maintainability, and long-term scalability as the backend evolves.
+This organization improves readability, maintainability, and scalability as the backend evolves.
 
 ---
 
@@ -127,38 +128,33 @@ This organization improves readability, maintainability, and long-term scalabili
 Integration tests validate the complete backend request lifecycle:
 
 ```txt
-Request → Middleware → Controller → Service → Database → Response
+Express → Middleware → Controller → Service → Sequelize → PostgreSQL
 ```
 
-These tests use the real Express application together with a dedicated PostgreSQL test database and real Sequelize models.
+These tests use the real Express application, PostgreSQL test database, and Sequelize models.
 
 Covered areas include:
 
-- authentication flows and rate limiting
-- authenticated and public user routes
-- profile updates, password changes, and secure account deletion
-- public user profiles, statistics, and event listings
-- event CRUD operations and protected event flows
+- authentication, authorization, and rate limiting
+- user profiles, statistics, and event listings
+- event CRUD operations, memberships, and role management
+- event reviews, ratings, pagination, and review statistics
 - filtering, sorting, pagination, and query behavior
-- membership management and ownership transfer
-- role-based authorization and protected action enforcement
-- soft-delete restoration and inactive membership protection
-- current user event access and permission resolution
-- upload handling, upload security, and image lifecycle behavior
-- backend geocoding, location caching, and fallback search flows
-- public and authenticated location endpoints
-- ongoing event filtering and started-event restrictions
-- validation errors, application routes, and global error handling
+- upload handling and image lifecycle workflows
+- geocoding, location caching, and fallback search flows
+- soft-delete lifecycles and ownership protections
+- event access permissions and business-rule enforcement
+- validation, application routes, and global error handling
 
-Integration tests intentionally avoid heavy mocking in order to validate:
+Integration tests intentionally minimize mocking to validate:
 
 - real application behavior
-- database interactions, transactions, and query consistency
-- middleware chaining and authorization flows
+- database interactions and transaction consistency
+- middleware and authorization workflows
 - end-to-end business rules and lifecycle protections
-- consistent API responses and permission-aware behavior
+- consistent API responses
 
-This approach provides stronger confidence during backend evolution and helps ensure stable behavior under realistic application conditions.
+This approach provides strong confidence during backend evolution and helps prevent regressions in production workflows.
 
 ---
 
@@ -169,49 +165,46 @@ Unit tests validate isolated backend modules independently from HTTP requests an
 Covered modules include:
 
 - controllers, services, middlewares, and validators
-- reusable utilities, formatters, and query helpers
+- review services, aggregation helpers, and query utilities
+- pagination, filtering, formatting, and normalization helpers
 - configuration modules (`database`, `logger`, `cors`)
-- shared constants and business values (`EVENT_ROLES`, `EVENT_STATUS`, `EVENT_MODES`)
-- event status, permissions, and started-event helpers
 - security helpers, upload policies, and rate limiter factories
-- pagination, filtering, formatting, and query-builder utilities
-- geocoding services, fallback search utilities, and location formatters
+- event permissions, status helpers, and business-rule utilities
+- geocoding services and location utilities
+- shared constants and reusable backend helpers
 
 Unit tests verify:
 
-- service-layer business rules and permission enforcement
-- event access resolution and restricted action handling
-- upload handling, image lifecycle behavior, and filesystem utilities
-- transaction and rollback-related logic
-- soft-delete lifecycle handling and ownership restrictions
-- validation chains, middleware responses, and error propagation
-- reusable utility, formatter, and query-builder output
+- business rules, permissions, and ownership restrictions
+- review workflows, rating calculations, and aggregations
+- validation chains, middleware behavior, and error propagation
+- upload handling and filesystem utilities
+- transaction-related logic
+- soft-delete lifecycle handling
+- query, formatter, and utility output
 - configuration, security, and rate-limiting behavior
-- public user statistics and event enrichment logic
 
-Dependencies are mocked when necessary to isolate the module under test and keep unit tests fast, focused, and deterministic.
+Dependencies are mocked when necessary to keep tests fast, focused, and deterministic.
 
-This testing layer provides rapid feedback during development while helping maintain reliable business logic, reusable utilities, and consistent internal backend behavior.
+This layer provides rapid feedback during development while ensuring reliable business logic and reusable backend components.
 
 ---
 
 ## 🔧 Helpers
 
-Reusable helpers reduce duplication across the test suite and simplify common testing workflows.
+Reusable helpers reduce duplication and simplify common testing workflows.
 
 Examples include:
 
 - authenticated API request helpers
-- event access and permission request utilities
+- event access and permission utilities
 - database setup, reset, and cleanup helpers
 - pagination, filtering, and query-testing utilities
-- Express request/response mocks for middleware and controller testing
-- shared date mocks for deterministic test behavior
+- Express request/response mocks
+- shared date utilities for deterministic testing
 - validation helpers for `express-validator` chains
 
-Helpers keep tests focused on assertions and business behavior instead of repetitive setup logic.
-
-They also improve consistency, readability, and long-term maintainability across the testing architecture.
+Helpers keep tests focused on business behavior rather than repetitive setup code while improving consistency and maintainability across the test suite.
 
 ---
 
@@ -224,19 +217,19 @@ Examples include:
 - user factories
 - event factories
 - membership factories
-- Sequelize-like mock model instances
+- mock Sequelize model instances
 - reusable payload builders
 
-Factories are commonly used for:
+Factories support:
 
-- service-layer and integration testing
+- service and integration testing
 - middleware and validation scenarios
-- transaction and rollback-related workflows
-- soft-delete lifecycle and ownership-transfer scenarios
+- transaction and rollback workflows
+- soft-delete and ownership-transfer scenarios
 - filtering, query, and pagination workflows
 - complex business-rule validation
 
-This approach reduces duplicated test setup while improving test clarity, flexibility, and long-term maintainability.
+This approach reduces duplicated setup while improving test readability, flexibility, and long-term maintainability.
 
 ---
 
@@ -244,11 +237,11 @@ This approach reduces duplicated test setup while improving test clarity, flexib
 
 Integration tests use a dedicated PostgreSQL database isolated from development and production environments.
 
-The test database is synchronized, cleaned, and reset between test runs to ensure:
+The test database is synchronized, reset, and cleaned between test runs to ensure:
 
-- deterministic and isolated test execution
-- no dependency on execution order
-- safe database mutation during API testing
+- deterministic and isolated execution
+- no dependency on test order
+- safe database mutations during API testing
 - reliable transaction and integration behavior
 
 The testing environment relies on:
@@ -258,9 +251,9 @@ The testing environment relies on:
 - isolated `.env.test` configuration
 - Sequelize synchronization utilities
 - automated database cleanup helpers
-- dedicated PostgreSQL services in GitHub Actions CI
+- dedicated PostgreSQL services in GitHub Actions
 
-This approach helps maintain reliable automated testing, transaction validation, query consistency, and safe separation from development data.
+This approach ensures reliable automated testing, transaction validation, query consistency, and complete separation from development data.
 
 ---
 
@@ -272,37 +265,33 @@ The project uses different mocking strategies depending on the testing layer and
 
 Integration tests use minimal mocking and rely on the real application stack.
 
-They validate real behavior across:
-
 ```txt
 Express → Middlewares → Controllers → Services → Sequelize → PostgreSQL
 ```
 
-This approach helps verify:
+This approach validates:
 
-- real API and middleware flows
+- real API and middleware behavior
 - authorization and validation workflows
-- database interactions and transaction handling
+- database interactions and transactions
 - filtering, pagination, and query behavior
-- soft-delete lifecycle protections
-- end-to-end business rules and permission enforcement
+- business rules, permissions, and lifecycle protections
 
 ### 🧩 Unit Tests
 
 Unit tests mock dependencies when necessary to isolate the module under test.
 
-Examples include:
+Commonly mocked dependencies include:
 
 - Sequelize models and transactions
-- upload cleanup and image lifecycle utilities
-- event status, permission, and started-event helpers
-- query builders and filtering utilities
-- soft-delete and ownership-transfer helpers
-- configuration, logger, and shared date utilities
-- reusable HTTP error helpers
 - service dependencies
+- upload and filesystem utilities
+- event permissions and status helpers
+- query builders and filtering utilities
+- configuration, logging, and date utilities
+- reusable HTTP error helpers
 
-This approach keeps unit tests fast, focused, deterministic, and maintainable as the backend evolves.
+This approach keeps unit tests fast, focused, deterministic, and easy to maintain.
 
 ---
 
@@ -310,58 +299,44 @@ This approach keeps unit tests fast, focused, deterministic, and maintainable as
 
 Critical service operations are tested using Sequelize transaction mocks.
 
-The tests verify that:
+Tests verify that:
 
 - transactions start when expected
 - successful operations trigger `commit`
 - failed operations trigger `rollback`
-- uploaded files are deleted only after successful commits
-- transaction failures properly propagate application errors
-- soft-delete operations preserve historical consistency
-- partial failures do not leave inconsistent database state
+- errors propagate correctly
+- database and filesystem operations remain consistent
 
-Covered transaction scenarios include:
+Covered scenarios include:
 
-- event creation
-- event updates, including image preservation, replacement, and removal
-- event deletion and started-event restrictions
+- event creation, updates, and deletion
+- image upload, replacement, preservation, and removal
 - event joining workflows
-- organizer ownership transfer
-- secure account deletion and anonymization
+- organizer ownership transfers
 - profile updates with avatar replacement
+- account deletion and anonymization
 
-Transaction testing is especially important for workflows involving both database mutations and filesystem operations.
+Transaction testing is particularly important for workflows that combine database mutations and file operations.
 
-This layer helps validate transaction safety, upload rollback protection, and reliable write operations across critical backend workflows.
+This layer helps ensure transaction safety, rollback protection, and reliable write operations across critical backend workflows.
 
 ---
 
 ## 📤 Upload Testing
 
-Upload behavior is tested through both middleware-level and full integration coverage.
+Upload behavior is covered through both middleware and integration tests.
 
-Covered upload scenarios include:
+Covered scenarios include:
 
 - avatar and event image uploads
 - file size, MIME type, and extension validation
 - invalid upload rejection
-- explicit event image removal
-- event image preservation when updates omit image changes
-- old file cleanup after replacement or removal
-- upload rollback protection during failed operations
+- image replacement, removal, and preservation workflows
+- file cleanup after successful updates
+- rollback protection during failed operations
 - upload path normalization and protected file handling
 
-These tests help ensure secure and reliable upload handling across the backend.
-
-Upload testing is especially important because file handling combines:
-
-- HTTP requests
-- filesystem operations
-- validation logic
-- database updates
-- transaction-aware workflows
-
-This testing layer validates secure upload flows, rollback protection, and safe filesystem operations during backend mutations.
+These tests help ensure secure upload handling, safe filesystem operations, and consistent behavior during backend mutations.
 
 ---
 
@@ -371,23 +346,20 @@ Validators are tested independently using reusable validation helpers and `expre
 
 Covered validation areas include:
 
-- authentication payloads and password policy enforcement
-- event creation and update payloads, including event mode and registration deadline validation
-- membership parameters, role validation, and ownership transfer rules
-- account deletion protection workflows
-- user profile updates
+- authentication payloads and password policies
+- event creation and update payloads
+- event reviews, ratings, and review update rules
+- membership parameters, role validation, and ownership transfers
+- account deletion and profile update workflows
 - upload validation rules
-- query, filtering, pagination, and sorting parameters
+- filtering, sorting, pagination, and query parameters
 
-This helps keep validation behavior explicit, centralized, and consistent across the backend.
+Validator testing helps ensure:
 
-Validator testing also helps ensure:
-
-- predictable API responses
-- consistent validation error formatting
-- stronger protection against invalid or malformed input
+- consistent validation behavior and error formatting
+- protection against invalid or malformed input
 - reusable security-policy enforcement
-- safer request handling before controller and service execution
+- safe request handling before controller and service execution
 
 ---
 
@@ -423,7 +395,7 @@ Run a specific test file:
 npm test -- tests/unit/validators/authValidator.test.js
 ```
 
-These commands help target specific backend layers during development, debugging, feature work, and test validation.
+These commands make it easy to target specific areas of the backend during development, debugging, and validation.
 
 ---
 
@@ -432,18 +404,17 @@ These commands help target specific backend layers during development, debugging
 The testing architecture aims to provide:
 
 - reliable and consistent API behavior
-- strong business-rule and authorization coverage
-- current user event access and permission validation
+- strong business-rule, authorization, and permission coverage
 - clear and scalable test organization
 - reusable helpers and factories
-- deterministic database isolation and test execution
+- deterministic database isolation
 - maintainable and readable test suites
 - filtering, pagination, and query validation
-- transaction and rollback-related coverage
-- reliable event-state restriction enforcement
-- confidence during large-scale refactors and feature development
+- transaction and rollback coverage
+- reliable event-state and lifecycle enforcement
+- confidence during refactors and feature development
 
-These goals help support long-term maintainability, safer backend evolution, predictable production behavior, and scalable development workflows.
+These goals support long-term maintainability, predictable production behavior, and safe backend evolution.
 
 ---
 
@@ -451,11 +422,11 @@ These goals help support long-term maintainability, safer backend evolution, pre
 
 Potential future testing improvements include:
 
-- additional end-to-end testing workflows
+- end-to-end testing workflows
 - further test deduplication and simplification
-- additional decoupling of Sequelize-related unit tests
-- expanded edge-case coverage for memberships and authorization rules
-- deeper transaction rollback and failure-state integration coverage
-- performance-oriented testing for complex filtering and query behavior
+- additional decoupling of Sequelize-dependent unit tests
+- expanded edge-case coverage for reviews, memberships, and authorization rules
+- deeper transaction rollback and failure-state validation
+- performance-oriented testing for complex filtering, pagination, and query behavior
 
 ---

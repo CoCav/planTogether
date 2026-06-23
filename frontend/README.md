@@ -9,9 +9,9 @@ PlanTogether is a collaborative event management platform where users can create
 
 ![Vitest](https://img.shields.io/badge/Test-Vitest-6E9F18)
 ![RTL](https://img.shields.io/badge/Test-React%20Testing%20Library-E33332)
-![Test Files](https://img.shields.io/badge/test%20files-136%20passing-brightgreen)
-![Tests](https://img.shields.io/badge/tests-1363%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-96.49%25%20statements%20%7C%2093.01%25%20branches-brightgreen)
+![Test Files](https://img.shields.io/badge/test%20files-149%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-1522%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-96.39%25%20statements%20%7C%2093.27%25%20branches-brightgreen)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -43,10 +43,11 @@ It allows users to:
 
 - authenticate securely using JWT
 - browse, search, filter, and manage events across ongoing, upcoming, all, and archived views
+- create, edit, and delete events
 - join and leave events
 - interact with role-aware event actions (`organizer`, `co_organizer`, `participant`)
-- create, edit, and delete events
-- handle status-aware actions and started-event restrictions
+- create, edit, and manage event reviews and ratings
+- view review summaries and average ratings on completed events
 - manage profile information and passwords
 - upload, preview, and manage avatars and event images
 - persist authenticated sessions with a "Remember me" feature
@@ -55,7 +56,7 @@ It allows users to:
 - interact with location autocomplete and interactive event maps
 - access protected routes through authentication and access guards
 
-The application is built around reusable frontend workflows, centralized query synchronization, responsive UI interactions, protected routing, and consistent role-aware user experiences across the platform.
+The application is built around reusable frontend workflows, centralized query synchronization, responsive UI interactions, protected routing, and consistent role-aware user experiences.
 
 ---
 
@@ -75,7 +76,7 @@ The frontend is built using modern tools and scalable patterns focused on perfor
 
 - **Feature-oriented architecture** – domain-based frontend organization
 - **Context API** – global authentication state management
-- **Custom hooks** – reusable feature logic and shared UI behaviors
+- **Custom hooks** – reusable feature and UI logic
 - **Query synchronization** – URL-driven filtering and pagination workflows
 - **Session Storage / Local Storage** – authentication persistence and session handling
 - **Shared utilities and configs** – centralized helpers and frontend configuration
@@ -89,10 +90,10 @@ The frontend is built using modern tools and scalable patterns focused on perfor
 - **FormData-based upload flows** – image upload and API integration
 - **URL-synchronized filtering and pagination** – filters and active views reflected in the browser URL
 - **Interactive event maps** – React Leaflet and OpenStreetMap integration
-- **Location autocomplete workflows** – reusable geolocation-aware event interactions
+- **Location autocomplete workflows** – reusable geolocation-aware interactions
 - **Contextual loading, error, and empty states** – clear async UI feedback
 - **Shared upload preview architecture** – reusable avatar and event image previews
-- **Accessibility-focused UI feedback patterns** – alerts, loading states, and validation feedback
+- **Accessibility-focused feedback patterns** – alerts, loading states, and validation feedback
 - **Responsive form and upload layouts** – adaptive layouts for forms, uploads, and previews
 - **Semantic and ARIA-aware components** – accessible landmarks, lists, labels, and interactive elements
 
@@ -122,6 +123,7 @@ frontend
 │   │   ├── auth/
 │   │   ├── events/
 │   │   ├── eventMemberships/
+│   │   ├── eventReviews/
 │   │   ├── users/
 │   │   ├── locations/
 │   │   ├── apiClient.js
@@ -134,6 +136,7 @@ frontend
 │   │   ├── auth/
 │   │   ├── events/
 │   │   ├── eventMemberships/
+│   │   ├── eventReviews/
 │   │   ├── users/
 │   │   ├── forms/
 │   │   ├── layout/
@@ -148,6 +151,7 @@ frontend
 │   │   ├── auth/
 │   │   ├── events/
 │   │   ├── eventMemberships/
+│   │   ├── eventReviews/
 │   │   ├── users/
 │   │   │   ├── authenticated/
 │   │   │   └── public/
@@ -210,15 +214,15 @@ frontend
 
 ### 🧩 Architecture Notes
 
-- **API modules** isolate HTTP communication, authenticated requests, upload payloads, response normalization, and error extraction.
+- **API modules** isolate HTTP communication, authenticated requests, uploads, response normalization, pagination handling, and error extraction.
 
 - **Context** manages global application state, currently focused on authentication and session restoration.
 
-- **Components** focus on reusable UI rendering and are grouped by domain (`auth`, `events`, `eventMemberships`, `users`) or shared responsibility (`forms`, `layout`, `ui`).
+- **Components** focus on reusable UI rendering and are grouped by domain (`auth`, `events`, `eventMemberships`, `eventReviews`, `users`) or shared responsibility (`forms`, `layout`, `ui`).
 
 - **Pages** compose API calls, feature hooks, and reusable components into complete user-facing views.
 
-- **Features** centralize domain-specific business logic, validation, filtering, query synchronization, permission rules, normalization helpers, payload builders, and reusable listing workflows.
+- **Features** centralize domain-specific business logic, validation, filtering, pagination, query synchronization, permission rules, normalization helpers, payload builders, and reusable workflows.
 
 - **User features** are separated between `authenticated/` and `public/` flows to isolate current-user dashboards from public profiles and event pages.
 
@@ -232,11 +236,9 @@ frontend
 
 - **Shared UI components and layouts** follow consistent responsive patterns, semantic structure, and accessibility conventions.
 
-- **Tests** mirror the frontend architecture through reusable factories, mocks, render helpers, and domain-based organization.
+- **Tests** mirror the frontend architecture through reusable factories, mocks, render helpers, and feature-based organization.
 
-This architecture separates UI rendering, business logic, routing, API communication, styling, and testing concerns into maintainable frontend layers.
-
-The frontend also emphasizes semantic structure, accessible interactions, reusable UI workflows, and consistent responsive behavior across the application.
+This architecture separates UI rendering, business logic, routing, API communication, styling, and testing concerns into maintainable frontend layers while promoting accessible interactions, reusable workflows, and consistent responsive behavior across the application.
 
 ---
 
@@ -246,49 +248,50 @@ The frontend also emphasizes semantic structure, accessible interactions, reusab
 
 - Login and registration
 - JWT-based authentication
-- Protected frontend routes and access guards
+- Protected routes and access guards
 - Session restoration after refresh
-- Persistent authenticated sessions with a "Remember me" feature
+- Persistent sessions with a "Remember me" feature
 - Redirect users back to protected routes after login
-- Automatic authenticated user restoration and navbar refresh
-- Local storage and session storage token handling
-- Reusable authentication form architecture
-- Shared form validation and authentication state handling
+- Shared authentication forms, validation, and state management
 
 ### 👤 User Profile
 
 - View and update profile information
 - Change passwords with validation
 - Upload, preview, replace, and remove avatars
-- Drag-and-drop avatar upload support
+- Drag-and-drop avatar uploads
 - Delete account with ownership-transfer safeguards
+- Public user profiles with event history and statistics
 - Automatic authenticated user refresh after profile updates
-- Public user profiles with created and joined event listings
-- Public profile statistics and synchronized pagination behavior
-- Shared validation, upload handling, and contextual error feedback
 
 ### 📅 Event Management
 
 - Browse public events across ongoing, upcoming, all, and archived views
 - Create, edit, and delete events
 - Upload, preview, replace, and remove event images
-- Shared event form architecture and validation handling
-- URL-synchronized filtering, pagination, and active views (`ongoing`, `upcoming`, `all`, `archives`)
-- Shared listing architecture across public and authenticated dashboards
-- Interactive event maps with React Leaflet and OpenStreetMap
-- Location autocomplete and geolocation-aware event workflows
+- Shared event forms and validation workflows
+- URL-synchronized filtering, sorting, and pagination
+- Interactive maps and location autocomplete
 - Public and authenticated event map support
 
 Frontend behavior includes:
 
-- validation aligned with backend business rules
-- role-aware and permission-aware UI behavior
+- role-aware and permission-aware interactions
 - event status awareness (`upcoming`, `ongoing`, `ended`)
-- responsive event details layouts and metadata presentation
-- contextual member actions and protected event interactions
-- hiding restricted actions when events have already started
-- started-event date preservation and editing restrictions
-- uploaded image validation, replacement, and preservation workflows
+- started-event editing restrictions
+- responsive event details and member management workflows
+- image preservation, replacement, and validation handling
+
+### ⭐ Event Reviews & Ratings
+
+- Create, edit, and delete event reviews
+- Interactive 1–5 star ratings
+- Review ownership enforcement
+- Paginated review listings
+- Review summaries with average ratings and review counts
+- Completed-event review workflows
+- Collapsible forms and inline editing
+- Backend-synchronized review statistics
 
 ### 👥 Event Memberships
 
@@ -296,26 +299,22 @@ Frontend behavior includes:
 - Transfer event ownership
 - Promote participants and demote co-organizers
 - Remove members through permission-aware actions
-- Role-aware membership interactions and access helpers
+- Role-aware member management
 - Member avatars with public profile navigation
-- Responsive member actions and dropdown interactions
 
 ### 📂 My Events Dashboard
 
-- View active and historical created events
-- View active and historical joined events
-- Leave events directly from the interface
-- Filter events by active dashboard views (`created`, `created history`, `joined`, `joined history`)
-- Shared listing behavior with public event pages
-- Centralized listing state and reusable query helpers
+- View created and joined events
+- Separate active and historical views
+- Leave joined events directly from the dashboard
+- Shared filtering, sorting, and pagination behavior
 
 ### 📤 Shared Upload System
 
-- Shared drag-and-drop upload workflows
-- Reusable upload previews for avatars and event images
-- Responsive upload layouts and preview interactions
-- Conditional dropzone and upload rendering behavior
-- Shared validation feedback and upload accessibility patterns
+- Reusable drag-and-drop upload workflows
+- Shared upload previews for avatars and event images
+- Responsive upload layouts and accessibility support
+- Centralized validation feedback
 
 ### 🔍 Filtering & Navigation
 
@@ -323,19 +322,17 @@ Users can filter events using:
 
 - keyword search
 - creator search
-- event type, theme, and location
+- event type, theme, mode, and location
 - exact dates and date ranges
 - sorting and pagination
 
 Filtering behavior includes:
 
-- synchronized URL query parameters and active views
-- persistent navigation and listing state
-- centralized query parameter handling
-- dynamic filter resets and view-aware synchronization
-- exact-date filtering that disables date range inputs
-- combined multi-filter support
-- clean URL generation without fallback query parameters
+- URL synchronization
+- persistent navigation state
+- view-aware filter management
+- mutually exclusive exact-date and date-range filters
+- clean URL generation
 
 ### 🎭 Role System
 
@@ -349,11 +346,8 @@ participant
 
 #### Organizer
 
-- Edit events
-- Delete events before they start
-- Promote participants
-- Demote co-organizers
-- Remove participants and co-organizers
+- Edit and delete events
+- Manage members and roles
 - Transfer event ownership
 
 #### Co-organizer
@@ -364,6 +358,7 @@ participant
 #### Participant
 
 - Join and leave events
+- Create, edit, and delete reviews for completed events they participated in
 
 ### 🌐 Public Access
 
@@ -373,18 +368,16 @@ Unauthenticated visitors can:
 - browse public user profiles
 - view public membership information
 - access public event pages and maps
+- view event reviews and ratings
 - receive login prompts for protected actions
-
-The UI dynamically adapts based on authentication state and event permissions.
 
 ### 📄 User Experience
 
 - Contextual loading, empty, and error states
-- Responsive and consistent UI behavior across features
-- Semantic HTML structure and ARIA-aware UI patterns
-- Keyboard-friendly navigation and accessible interactions
-- Shared accessibility-focused feedback patterns for alerts, badges, forms, pagination, and loading states
-- Consistent semantic landmarks, labels, and list structures across reusable components
+- Responsive UI patterns
+- Semantic HTML and ARIA support
+- Keyboard-friendly interactions
+- Reusable accessibility-focused feedback components
 
 ---
 
@@ -417,7 +410,7 @@ The frontend supports persistent authenticated sessions through:
 
 - JWT token storage
 - session restoration after refresh
-- persistent login behavior through the "Remember me" feature
+- "Remember me" persistence
 - automatic authenticated user restoration on application load
 
 Authentication state is centralized through:
@@ -433,9 +426,9 @@ The routing layer preserves intended navigation during authentication flows.
 
 Examples include:
 
-- redirecting users back to intended protected pages after authentication
-- preserving route state and query parameters during authentication redirects
-- navigation state restoration between login and registration flows
+- redirecting users back to protected pages after authentication
+- preserving route state and query parameters
+- restoring navigation state between login and registration flows
 - shared authentication redirect helpers
 
 ### 🔒 Frontend Access Guards
@@ -446,12 +439,12 @@ The frontend uses centralized event access checks to:
 - conditionally render edit and delete actions
 - hide deletion actions for events that have already started
 - lock started event start date fields during editing
-- synchronize frontend permissions and role-aware behavior with backend authorization rules
+- synchronize frontend permissions with backend authorization rules
 
 Frontend event access and permissions are synchronized through:
 
 ```http
-GET /events/:eventId/me
+GET /api/events/:eventId/me
 ```
 
 This endpoint allows the frontend to retrieve centralized membership and event access information, including:
@@ -462,7 +455,7 @@ This endpoint allows the frontend to retrieve centralized membership and event a
 - delete permissions
 - started-event restrictions
 
-These frontend guards improve UX consistency, permission-aware interactions, and frontend reliability while keeping the backend as the source of truth for protected actions and authorization rules.
+These guards improve UX consistency and permission-aware interactions while keeping the backend as the source of truth for protected actions and authorization rules.
 
 ---
 
@@ -483,7 +476,7 @@ The frontend API layer centralizes:
 - authenticated API requests
 - JWT token injection
 - multipart uploads with `FormData`
-- reusable request and response handling
+- reusable request, response, and normalization handling
 - reusable error extraction helpers
 - paginated payload handling
 - centralized request configuration
@@ -520,17 +513,17 @@ Handles:
 
 - response unwrapping
 - payload extraction
-- paginated payload handling
+- pagination metadata extraction
 - reusable payload formatting helpers
 
 ### 📌 API Architecture Notes
 
 - JWT tokens are automatically injected into authenticated requests
 - Upload requests support `FormData` with image preservation, replacement, and removal flows
-- API responses are normalized before being consumed by frontend features and UI components
+- API responses and pagination metadata are normalized before being consumed by frontend features and UI components
 - API errors are standardized through reusable normalization helpers
 - Frontend access guards are synchronized through dedicated event access endpoints
-- Shared API helpers reduce duplicated request and response handling across features
+- Shared API helpers reduce duplicated API handling across features
 - Feature modules consume centralized API utilities instead of raw Axios requests
 
 ---
@@ -546,6 +539,7 @@ features/
 ├── auth/
 ├── events/
 ├── eventMemberships/
+├── eventReviews/
 ├── users/
 │   ├── authenticated/
 │   └── public/
@@ -557,13 +551,14 @@ features/
 The feature layer centralizes reusable domain logic such as:
 
 - frontend validation
-- event filtering, pagination, and query synchronization
+- filtering, pagination, and query synchronization
 - payload normalization
 - role-based permissions
 - frontend access and permission synchronization
 - event view configuration
-- empty state management
+- review workflows and statistics
 - membership interaction behavior
+- empty state management
 
 ### 🔐 Authentication Logic
 
@@ -581,13 +576,25 @@ The authentication layer handles:
 The event layer handles:
 
 - event filtering, sorting, and pagination
-- query parameter synchronization and reusable listing behavior
+- query synchronization and reusable listing behavior
 - event validation
 - event payload normalization
-- event status-aware frontend behavior
+- event status-aware behavior
 - started-event editing restrictions
-- contextual create/edit datetime validation behavior
+- datetime validation workflows
 - event image lifecycle handling
+
+### ⭐ Event Review Logic
+
+The review layer handles:
+
+- review creation, editing, and deletion
+- rating validation and state management
+- paginated review retrieval
+- review payload normalization
+- review ownership workflows
+- review statistics and average rating display
+- review form and inline editing interactions
 
 ### 👥 Membership Logic
 
@@ -627,7 +634,7 @@ Shared frontend utilities include:
 - Query synchronization is centralized through reusable helpers
 - Shared utilities reduce duplicated frontend logic across features
 - Feature isolation improves testing maintainability and frontend scalability
-- Payload normalization and reusable listing architecture improve consistency across frontend features and event pages
+- Shared normalization and pagination patterns improve consistency across frontend features
 
 ---
 
@@ -683,7 +690,7 @@ Contains reusable component-level styling for:
 - cards
 - modals
 - navigation
-- reusable UI feedback and interaction patterns
+- feedback, status, and interaction patterns
 
 `styles/pages/`
 
@@ -691,27 +698,25 @@ Contains page-specific styling separated from reusable component styles.
 
 Examples include:
 
-- event page
+- event pages
 - authentication pages
 - dashboard pages
-- profile page
-- public user profile page
+- profile pages
 
 ### 📌 Styling Notes
 
-- Shared styles and reusable layouts reduce duplicated UI and responsive behavior across pages
-- Component styles are separated from page-specific presentation
-- Styling organization improves long-term maintainability, UI consistency, and reusable frontend behavior
-- Shared event listing pages reuse common styling architecture
-- Shared component styles support accessible and semantic UI patterns
+- Shared styles and layouts reduce duplicated UI and responsive behavior across the application
+- Component styles are separated from page-specific presentation concerns
+- The styling architecture promotes maintainability, consistency, accessibility, and reusable UI patterns
+- Event, dashboard, profile, and review interfaces reuse common styling foundations
 
 ---
 
 ## 🧪 Testing
 
-The frontend includes a comprehensive automated testing architecture built with **Vitest** and **React Testing Library**, covering reusable UI components, frontend business logic, routing, query synchronization, accessibility behavior, and protected workflows.
+The frontend includes a comprehensive automated testing architecture built with **Vitest** and **React Testing Library**.
 
-The testing strategy focuses on reliability, maintainability, accessibility, and long-term frontend stability.
+Testing focuses on business logic, routing, accessibility, feature workflows, and long-term maintainability.
 
 ### ▶️ Run Tests
 
@@ -727,41 +732,39 @@ npm run test:coverage
 
 ### 📊 Testing Results
 
-- ✅ 136 passing test files
-- ✅ 1363 passing tests
-- ✅ All tests passing
+- ✅ 149 passing test files
+- ✅ 1522 passing tests
+- ✅ 100% passing rate
 
 **Coverage**:
-- 96.49% statement coverage
-- 93.01% branch coverage
-- 94.87% function coverage
-- 97.21% line coverage
+- 96.39% statement coverage
+- 93.27% branch coverage
+- 95.25% function coverage
+- 97.03% line coverage
 
-✅ High automated coverage across routing, authentication flows, query synchronization, uploads, accessibility behavior, reusable hooks, and role-aware frontend interactions.
+✅ High automated coverage across authentication, routing, filtering, pagination, reviews, uploads, accessibility, and role-aware interactions.
 
 ### 📦 Tested Areas
 
 The frontend test suite covers:
 
-- pages, routing, protected navigation, and authentication redirect restoration
-- reusable hooks, query synchronization, filtering, pagination, and listing behavior
-- API modules, payload normalization, and frontend business logic
+- routing, protected navigation, and authentication flows
+- filtering, pagination, query synchronization, and listing behavior
+- API modules, payload normalization, and response handling
+- event reviews, ratings, pagination, and review statistics
 - role-aware UI behavior and frontend access guards
-- upload previews, drag-and-drop interactions, and image lifecycle handling
-- reusable factories, mocks, render helpers, and testing utilities
-- accessibility behavior, semantic structure, and ARIA-aware interactions
-- event status synchronization and started-event restrictions
-- public user profile and public user event listing workflows
-- reusable shared components and interaction patterns
+- uploads, image lifecycle workflows, and drag-and-drop interactions
+- accessibility, semantic structure, and ARIA-aware interactions
+- public profiles, dashboards, and event management workflows
+- reusable components, hooks, factories, mocks, and testing utilities
 
 ### 🔁 Testing Strategy
 
-- Tests simulate realistic frontend behavior using React Testing Library
-- API calls are mocked to isolate frontend feature behavior
-- Routing and protected access flows are validated through the application router
-- Critical frontend business logic is tested independently from UI rendering
+- React Testing Library is used to simulate realistic user behavior
+- API calls are mocked to isolate frontend feature logic
+- Routing, access control, and business logic are validated independently from UI rendering when appropriate
 - Reusable factories, mocks, and helpers reduce duplicated test setup
-- Accessibility behavior and semantic UI structure are validated across reusable frontend components
+- Accessibility and semantic UI behavior are validated across reusable components
 
 For more details about the frontend testing architecture, reusable factories, mocks, render helpers, and testing workflows, see [`docs/testing.md`](./docs/testing.md).
 
@@ -781,8 +784,8 @@ VITE_API_URL=http://localhost:3000/api
 
 - `VITE_API_URL` defines the base URL of the backend API
 - The value must match the backend server URL
-- Used by the centralized Axios client for all frontend API requests
-- Supports local development and environment-specific configurations
+- Used by the centralized Axios client for all frontend requests
+- Supports environment-specific configurations
 
 An `.env.example` file is provided as a reference configuration.
 
@@ -796,31 +799,21 @@ Install dependencies:
 npm install
 ```
 
-Start the development server:
+Available commands:
 
 ```bash
-npm run dev
+npm run dev       # Development server
+npm run build     # Production build
+npm run preview   # Preview production build
 ```
 
-Build the production bundle:
-
-```bash
-npm run build
-```
-
-Preview the production build locally:
-
-```bash
-npm run preview
-```
-
-The development server is available at:
+Development server:
 
 ```txt
 http://localhost:5173
 ```
 
-The production preview server is available at:
+Production preview:
 
 ```txt
 http://localhost:4173
@@ -830,44 +823,35 @@ http://localhost:4173
 
 ## 🚀 Recent Improvements
 
-### 🗺️ Event Location & Maps
+### ⭐ Event Reviews & Ratings
 
-- Added backend-powered location search and geolocation integration
-- Added location autocomplete workflows for event creation and editing
-- Added interactive event maps using React Leaflet and OpenStreetMap
-- Added public and authenticated map support across event workflows
-- Improved location selection UX and geolocation-aware event interactions
+- Added a complete review system for completed events
+- Added review creation, editing, and deletion workflows
+- Added interactive 1–5 star ratings
+- Added review summaries with average ratings and review counts
+- Added paginated review listings and review statistics
+- Improved review UX with collapsible forms and inline editing
 
-### 🔧 Frontend Features & UX
+### 📅 Event Experience
 
-- Added reusable file upload preview architecture shared across user and event forms
-- Improved drag-and-drop upload UX, conditional preview rendering, and responsive upload behavior
-- Improved public user profiles, profile statistics, and responsive profile layouts
-- Improved authentication redirect restoration and protected navigation flows
-- Added clean URL synchronization across public events, dashboards, and public user listings
-- Expanded accessibility semantics, ARIA behavior, semantic landmarks, and decorative icon handling
-- Refined shared UI components including alerts, badges, loading states, pagination, selects, and password fields
-- Improved responsive UI consistency across reusable components, layouts, and pages
+- Added review statistics to event cards and event details pages
+- Improved event filtering with mutually exclusive exact-date and date-range filters
+- Refined event form layouts, optional field handling, and location search wording
+- Improved responsive event details and member management workflows
 
-### 🔌 Frontend Architecture
+### 🔧 Frontend Architecture & UX
 
-- Extracted reusable FileUploadPreviewField component architecture
-- Centralized shared upload behavior, validation feedback, and preview rendering logic
-- Expanded reusable accessibility-focused UI patterns
-- Strengthened reusable event listing and query synchronization architecture
-- Added centralized frontend support for location and map workflows
-- Improved CSS organization, reusable component styling, and responsive layout consistency
+- Expanded shared pagination and normalization patterns
+- Improved accessibility, semantic structure, and ARIA behavior
+- Refined reusable UI components, loading states, forms, and dropdown interactions
+- Improved responsive consistency across pages and reusable components
 
 ### 🧪 Frontend Testing
 
-- Reached 1363 passing tests across 136 passing test files
-- Expanded accessibility, semantic structure, and ARIA behavior coverage
-- Added upload preview architecture and drag-and-drop interaction coverage
-- Added authentication redirect and navigation restoration coverage
-- Added location API coverage and geolocation workflow testing
-- Added decorative icon accessibility assertions
-- Expanded reusable component, page, hook, and feature regression coverage
-- Added semantic landmark, accessible form, loading, alert, pagination, and interaction coverage
+- Reached 1522 passing tests across 149 passing test files
+- Expanded coverage for reviews, ratings, pagination, and review statistics
+- Added coverage for review editing, ownership controls, and dropdown interactions
+- Continued expanding accessibility, routing, and feature workflow coverage
 
 ---
 
@@ -875,48 +859,56 @@ http://localhost:4173
 
 | Area | Status |
 |------|--------|
-| Frontend UI / Pages | ✅ Responsive, role-aware, accessibility-focused, and geolocation-enabled |
-| Reusable Components | ✅ Reusable, accessibility-aware, and consistently tested |
-| Frontend Business Logic | ✅ Modular, validation-driven, role-aware, and fully tested |
-| Routing & Access Control | ✅ Centralized protected routing, redirect restoration, and permission-aware access guards |
+| Frontend UI & Pages | ✅ Responsive, role-aware, accessibility-focused, and geolocation-enabled |
+| Event Management | ✅ Event creation, editing, filtering, maps, and status-aware workflows |
+| Event Reviews & Ratings | ✅ Review creation, editing, deletion, ratings, pagination, and review statistics |
+| Membership & Permissions | ✅ Role-aware interactions, ownership transfer, and permission-aware UI |
+| Reusable Components | ✅ Modular, accessible, and consistently tested |
+| Frontend Business Logic | ✅ Feature-oriented, validation-driven, and fully tested |
+| Routing & Access Control | ✅ Protected routing, redirect restoration, and frontend access guards |
 | API Communication Layer | ✅ Centralized Axios architecture with normalized request, response, and error handling |
 | Location & Maps | ✅ Location autocomplete, geolocation workflows, and interactive event maps |
-| File Upload System | ✅ Shared upload preview architecture with avatar and event image lifecycle handling |
-| Query Synchronization | ✅ URL-synchronized filtering, pagination, sorting, and active view management |
-| Testing | ✅ 1363 tests across 136 passing test files |
-| Coverage | ✅ 96.49% statements / 93.01% branches / 94.87% functions / 97.21% lines |
-| UX & Accessibility | ✅ Responsive UI polish, semantic structure, ARIA support, and accessibility-focused interactions |
+| File Upload System | ✅ Shared upload previews and image lifecycle handling |
+| Query Synchronization | ✅ URL-synchronized filtering, sorting, pagination, and active view management |
+| UX & Accessibility | ✅ Responsive UI, semantic structure, ARIA support, and accessibility-focused interactions |
+| Testing | ✅ 1522 tests across 149 passing test files |
+| Coverage | ✅ 96.39% statements / 93.27% branches / 95.25% functions / 97.03% lines |
 
 ---
 
 ## 🔮 Future Improvements
 
-### 🚀 Frontend Features & UX
+### 🚀 Features & User Experience
 
-- Notifications and reminder features
-- Expanded event discovery and map exploration workflows
-- Continued accessibility improvements and expanded keyboard interaction support
-- Enhanced UI feedback (toasts, contextual async feedback, and richer loading states)
-- Expanded role-aware event management interactions
-- Improved dashboard, profile, and event management workflows
-- Additional frontend personalization and user experience improvements
+- Toast notifications and richer async feedback
+- Event likes and lightweight social interactions
+- Event discussions and comment threads
+- Event invitations and shareable links
+- Email notifications, reminders, and event updates
+- Additional dashboard, profile, and event management improvements
+- Continued accessibility and keyboard-navigation enhancements
+
+### 🏗️ Frontend Architecture
+
+- Further reuse of shared pagination, normalization, and listing patterns
+- Additional business-logic extraction into reusable feature modules
+- Continued component and styling consolidation
+- Expanded frontend documentation
 
 ### 🗺️ Location & Maps
 
-- Interactive map clustering and performance optimizations
-- Additional geolocation filters and map-based event discovery features
+- Map clustering and performance optimizations
+- Additional geolocation filters and map-based discovery
 - Enhanced location search and autocomplete experiences
-- Improved map interactions for event browsing and navigation
 
 ### 🧪 Frontend Testing
 
 Planned testing improvements include:
 
 - End-to-end testing for complete user journeys
-- Additional reusable UI component coverage
-- Expanded frontend testing documentation
-- Expanded integration and accessibility testing workflows
-- Improved coverage for complex listing, filtering, pagination, and query synchronization workflows
+- Expanded accessibility and integration testing
+- Additional coverage for complex filtering and pagination workflows
 - Additional map and geolocation workflow testing
+- Continued regression coverage for new frontend features
 
 ---

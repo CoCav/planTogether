@@ -20,7 +20,8 @@ import { mockConfirmAccepted } from "../../../helpers/mocks/mockWindowConfirm";
    - member removal
    - ownership transfer
    - confirmation cancellation
-   - API error handling
+   - toast success feedback
+   - toast error feedback
 
    Notes:
    - uses reusable mutation hook prop helpers
@@ -43,6 +44,11 @@ describe("useMembershipManagement", () => {
         hookProps = createMutationHookProps({
             eventId: 1
         });
+
+        hookProps.toast = {
+            success: vi.fn(),
+            danger: vi.fn()
+        };
 
         mockConfirmAccepted();
     });
@@ -71,21 +77,14 @@ describe("useMembershipManagement", () => {
             await result.current.handlePromoteMember(2);
         });
 
-        expect(hookProps.setMessage).toHaveBeenCalledWith("");
-
-        expect(hookProps.setError).toHaveBeenCalledWith("");
-
         expect(updateEventMemberRole).toHaveBeenCalledWith(1, 2, EVENT_ROLES.CO_ORGANIZER);
 
-        expect(hookProps.setMessage).toHaveBeenCalledWith("User promoted to co-organizer");
-
+        expect(hookProps.toast.success).toHaveBeenCalledWith("Member promoted.");
         expect(hookProps.loadData).toHaveBeenCalled();
     });
 
     it("should handle promote errors", async () => {
-        updateEventMemberRole.mockRejectedValue(
-            new Error("Request failed")
-        );
+        updateEventMemberRole.mockRejectedValue(new Error("Request failed"));
 
         const { result } = setupHook();
 
@@ -93,7 +92,7 @@ describe("useMembershipManagement", () => {
             await result.current.handlePromoteMember(2);
         });
 
-        expect(hookProps.setError).toHaveBeenCalledWith("Request failed");
+        expect(hookProps.toast.danger).toHaveBeenCalledWith("Request failed");
     });
 
     it("should demote a co-organizer to participant", async () => {
@@ -107,8 +106,7 @@ describe("useMembershipManagement", () => {
 
         expect(updateEventMemberRole).toHaveBeenCalledWith(1, 2, EVENT_ROLES.PARTICIPANT);
 
-        expect(hookProps.setMessage).toHaveBeenCalledWith("User demoted to participant");
-
+        expect(hookProps.toast.success).toHaveBeenCalledWith("Member demoted.");
         expect(hookProps.loadData).toHaveBeenCalled();
     });
 
@@ -123,7 +121,7 @@ describe("useMembershipManagement", () => {
             await result.current.handleDemoteMember(2);
         });
 
-        expect(hookProps.setError).toHaveBeenCalledWith("Request failed");
+        expect(hookProps.toast.danger).toHaveBeenCalledWith("Request failed");
     });
 
     /* =============================
@@ -139,14 +137,11 @@ describe("useMembershipManagement", () => {
             await result.current.handleRemoveMember(2);
         });
 
-        expect(window.confirm).toHaveBeenCalledWith(
-            "Are you sure you want to remove this member from the event?"
-        );
+        expect(window.confirm).toHaveBeenCalledWith("Are you sure you want to remove this member from the event?");
 
         expect(removeEventMember).toHaveBeenCalledWith(1, 2);
 
-        expect(hookProps.setMessage).toHaveBeenCalledWith("Member removed successfully");
-
+        expect(hookProps.toast.success).toHaveBeenCalledWith("Member removed.");
         expect(hookProps.loadData).toHaveBeenCalled();
     });
 
@@ -165,9 +160,7 @@ describe("useMembershipManagement", () => {
     });
 
     it("should handle remove member errors", async () => {
-        removeEventMember.mockRejectedValue(
-            new Error("Request failed")
-        );
+        removeEventMember.mockRejectedValue(new Error("Request failed"));
 
         const { result } = setupHook();
 
@@ -175,7 +168,7 @@ describe("useMembershipManagement", () => {
             await result.current.handleRemoveMember(2);
         });
 
-        expect(hookProps.setError).toHaveBeenCalledWith("Request failed");
+        expect(hookProps.toast.danger).toHaveBeenCalledWith("Request failed");
     });
 
     /* =============================
@@ -191,14 +184,11 @@ describe("useMembershipManagement", () => {
             await result.current.handleTransferOwnership(2);
         });
 
-        expect(window.confirm).toHaveBeenCalledWith(
-            "Are you sure you want to transfer ownership of this event?"
-        );
+        expect(window.confirm).toHaveBeenCalledWith("Are you sure you want to transfer ownership of this event?");
 
         expect(transferEventOwnership).toHaveBeenCalledWith(1, 2);
 
-        expect(hookProps.setMessage).toHaveBeenCalledWith("Event ownership transferred successfully");
-
+        expect(hookProps.toast.success).toHaveBeenCalledWith("Ownership transferred.");
         expect(hookProps.loadData).toHaveBeenCalled();
     });
 
@@ -217,9 +207,7 @@ describe("useMembershipManagement", () => {
     });
 
     it("should handle transfer ownership errors", async () => {
-        transferEventOwnership.mockRejectedValue(
-            new Error("Request failed")
-        );
+        transferEventOwnership.mockRejectedValue(new Error("Request failed"));
 
         const { result } = setupHook();
 
@@ -227,6 +215,6 @@ describe("useMembershipManagement", () => {
             await result.current.handleTransferOwnership(2);
         });
 
-        expect(hookProps.setError).toHaveBeenCalledWith("Request failed");
+        expect(hookProps.toast.danger).toHaveBeenCalledWith("Request failed");
     });
 });

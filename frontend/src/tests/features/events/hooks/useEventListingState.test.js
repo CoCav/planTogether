@@ -12,7 +12,7 @@ import { EVENT_STATUS } from "../../../../features/shared/constants/eventStatus"
    Handles:
    - initial URL-derived view and pagination
    - custom fallback view
-   - feedback state
+   - inline error feedback
    - loading state
    - pagination reset
    - URL synchronization
@@ -52,10 +52,9 @@ describe("useEventListingState", () => {
        INITIAL STATE
     ============================= */
 
-    it("initializes feedback and loading state", () => {
+    it("initializes error and loading state", () => {
         const { result } = renderUseEventListingState();
 
-        expect(result.current.feedback.message).toBe("");
         expect(result.current.feedback.error).toBe("");
 
         expect(result.current.loadingState.initialLoading).toBe(true);

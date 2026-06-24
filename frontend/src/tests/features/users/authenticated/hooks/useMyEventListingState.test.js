@@ -10,7 +10,7 @@ import useMyEventListingState from "../../../../../features/users/authenticated/
    Handles:
    - initial URL-derived view and pagination
    - custom fallback view
-   - feedback state
+   - inline error feedback
    - loading state
    - pagination reset
    - URL synchronization
@@ -50,10 +50,9 @@ describe("useMyEventListingState", () => {
        INITIAL STATE
     ============================= */
 
-    it("initializes feedback and loading state", () => {
+    it("initializes error and loading state", () => {
         const { result } = renderUseMyEventListingState();
 
-        expect(result.current.feedback.message).toBe("");
         expect(result.current.feedback.error).toBe("");
 
         expect(result.current.loadingState.initialLoading).toBe(true);

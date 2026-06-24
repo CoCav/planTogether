@@ -12,6 +12,7 @@ import App from "../App";
    - navbar rendering
    - routed page rendering
    - footer rendering
+   - toast container rendering
    - main landmark structure
 ================================================== */
 
@@ -27,6 +28,10 @@ vi.mock("../routes/AppRouter", () => ({
     default: () => <main>Page content</main>
 }));
 
+vi.mock("../components/ui/ToastContainer", () => ({
+    default: () => <div data-testid="toast-container" />
+}));
+
 describe("App", () => {
 
     /* =============================
@@ -39,6 +44,7 @@ describe("App", () => {
         expect(screen.getByText("Navbar")).toBeInTheDocument();
         expect(screen.getByText("Page content")).toBeInTheDocument();
         expect(screen.getByText("Footer")).toBeInTheDocument();
+        expect(screen.getByTestId("toast-container")).toBeInTheDocument();
     });
 
     /* =============================

@@ -16,7 +16,7 @@ import { mockConfirmAccepted } from "../../../../helpers/mocks/mockWindowConfirm
    - destructive event deletion confirmation
    - event deletion redirect
    - delete cancellation
-   - delete API error handling
+   - toast error feedback
 
    Notes:
    - uses reusable mutation hook prop helpers
@@ -42,6 +42,10 @@ describe("useEventActions", () => {
         hookProps = createMutationHookProps({
             eventId: 1
         });
+
+        hookProps.toast = {
+            danger: vi.fn()
+        };
 
         mockConfirmAccepted();
     });
@@ -74,10 +78,6 @@ describe("useEventActions", () => {
             "Are you sure you want to delete this event? This action cannot be undone and will remove the event for all participants."
         );
 
-        expect(hookProps.setError).toHaveBeenCalledWith("");
-
-        expect(hookProps.setMessage).toHaveBeenCalledWith("");
-
         expect(deleteEvent).toHaveBeenCalledWith(1);
 
         expect(mockNavigate).toHaveBeenCalledWith("/events");
@@ -98,9 +98,7 @@ describe("useEventActions", () => {
     });
 
     it("should handle delete event errors", async () => {
-        deleteEvent.mockRejectedValue(
-            new Error("Request failed")
-        );
+        deleteEvent.mockRejectedValue(new Error("Request failed"));
 
         const { result } = setupHook();
 
@@ -108,7 +106,7 @@ describe("useEventActions", () => {
             await result.current.handleDeleteEvent();
         });
 
-        expect(hookProps.setError).toHaveBeenCalledWith("Request failed");
+        expect(hookProps.toast.danger).toHaveBeenCalledWith("Request failed");
 
         expect(mockNavigate).not.toHaveBeenCalled();
     });

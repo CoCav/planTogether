@@ -8,6 +8,8 @@ import useMyProfileForm from "../../../../features/users/authenticated/hooks/for
 import useMyPasswordForm from "../../../../features/users/authenticated/hooks/form/useMyPasswordForm";
 import useDeleteAccount from "../../../../features/users/authenticated/hooks/useDeleteAccount";
 
+import useToast from "../../../../hooks/useToast";
+
 /* ==================================================
    MY PROFILE PAGE TESTS
    Tests authenticated user profile settings page
@@ -60,6 +62,13 @@ const mockPasswordFormActions = {
 
 const mockDeleteAccountActions = {
     handleDeleteAccount: vi.fn()
+};
+
+const mockToast = {
+    success: vi.fn(),
+    danger: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn()
 };
 
 /* =============================
@@ -179,6 +188,10 @@ vi.mock("../../../../components/users/DeleteAccountSection", () => ({
     )
 }));
 
+vi.mock("../../../../hooks/useToast", () => ({
+    default: vi.fn()
+}));
+
 /* =============================
    TEST HELPERS
 ============================= */
@@ -270,6 +283,8 @@ describe("MyProfilePage", () => {
         mockProfileHookState = createProfileHookState();
         mockPasswordHookState = createPasswordHookState();
         mockDeleteAccountHookState = createDeleteAccountHookState();
+
+        useToast.mockReturnValue(mockToast);
     });
 
     /* =============================
@@ -516,13 +531,12 @@ describe("MyProfilePage", () => {
         });
     });
 
-    it("initializes delete account hook with auth and feedback handlers", () => {
+    it("initializes delete account hook with auth and toast handlers", () => {
         renderPage();
 
         expect(useDeleteAccount).toHaveBeenCalledWith({
             logout: mockLogout,
-            setMessage: expect.any(Function),
-            setError: expect.any(Function)
+            toast: mockToast
         });
     });
 });

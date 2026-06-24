@@ -17,6 +17,7 @@ import { deleteCurrentUserAccount } from "../../../../../api/users/userApi";
    - post-deletion redirect
    - backend error feedback
    - delete loading state
+   - toast error feedback
 ================================================== */
 
 const mockNavigate = vi.fn();
@@ -41,8 +42,9 @@ describe("useDeleteAccount", () => {
 
         hookProps = {
             logout: vi.fn(),
-            setMessage: vi.fn(),
-            setError: vi.fn()
+            toast: {
+                danger: vi.fn()
+            }
         };
 
         vi.spyOn(window, "confirm").mockReturnValue(true);
@@ -56,8 +58,7 @@ describe("useDeleteAccount", () => {
         return renderHook(() =>
             useDeleteAccount({
                 logout: hookProps.logout,
-                setMessage: hookProps.setMessage,
-                setError: hookProps.setError
+                toast: hookProps.toast
             })
         );
     };
@@ -107,12 +108,11 @@ describe("useDeleteAccount", () => {
             "Are you sure you want to delete your account? This action cannot be undone."
         );
 
-        expect(hookProps.setMessage).toHaveBeenCalledWith("");
-        expect(hookProps.setError).toHaveBeenCalledWith("");
-
         expect(deleteCurrentUserAccount).toHaveBeenCalledTimes(1);
         expect(hookProps.logout).toHaveBeenCalledTimes(1);
         expect(mockNavigate).toHaveBeenCalledWith("/");
+
+        expect(hookProps.toast.danger).not.toHaveBeenCalled();
     });
 
     it("should expose deleting state while account deletion is pending", async () => {
@@ -155,8 +155,9 @@ describe("useDeleteAccount", () => {
             await result.current.handleDeleteAccount();
         });
 
-        expect(hookProps.setError).toHaveBeenCalledWith("Delete failed");
+        expect(hookProps.toast.danger).toHaveBeenCalledWith("Delete failed");
         expect(hookProps.logout).not.toHaveBeenCalled();
+
         expect(mockNavigate).not.toHaveBeenCalledWith("/");
     });
 

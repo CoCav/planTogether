@@ -9,7 +9,7 @@ import usePublicUserListingState from "../../../../../features/users/public/hook
 
    Handles:
    - initial URL-derived view, filters and pagination
-   - feedback state updates
+   - inline error feedback
    - loading state updates
    - active view state updates
    - filter state updates and reset
@@ -125,15 +125,13 @@ describe("usePublicUserListingState", () => {
        FEEDBACK STATE
     ============================= */
 
-    it("should update feedback state", () => {
+    it("should update error state", () => {
         const { result } = renderUsePublicUserListingState();
 
         act(() => {
-            result.current.feedback.setMessage("Saved");
             result.current.feedback.setError("Failed");
         });
 
-        expect(result.current.feedback.message).toBe("Saved");
         expect(result.current.feedback.error).toBe("Failed");
     });
 

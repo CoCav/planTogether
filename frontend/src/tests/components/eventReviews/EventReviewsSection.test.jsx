@@ -6,6 +6,8 @@ import EventReviewsSection from "../../../components/eventReviews/EventReviewsSe
 import useEventReviewActions from "../../../features/eventReviews/hooks/useEventReviewActions";
 import useEventReviewData from "../../../features/eventReviews/hooks/useEventReviewData";
 
+import useToast from "../../../hooks/useToast";
+
 /* ==================================================
    EVENT REVIEWS SECTION TESTS
    Tests event reviews section orchestration
@@ -20,6 +22,7 @@ import useEventReviewData from "../../../features/eventReviews/hooks/useEventRev
    - review update flow
    - review deletion flow
    - props forwarding to child components
+   - toast feedback forwarding to review actions
 
    Notes:
    - hooks are mocked to isolate orchestration logic
@@ -29,6 +32,7 @@ import useEventReviewData from "../../../features/eventReviews/hooks/useEventRev
 
 vi.mock("../../../features/eventReviews/hooks/useEventReviewData");
 vi.mock("../../../features/eventReviews/hooks/useEventReviewActions");
+vi.mock("../../../hooks/useToast");
 
 vi.mock("../../../components/eventReviews/EventReviewForm", () => ({
     default: ({ onSubmit, isSubmitting }) => (
@@ -79,8 +83,14 @@ describe("EventReviewsSection", () => {
 
     const baseProps = {
         eventId: 10,
-        user: { userId: 2 },
-        setMessage: vi.fn()
+        user: { userId: 2 }
+    };
+
+    const toast = {
+        success: vi.fn(),
+        danger: vi.fn(),
+        warning: vi.fn(),
+        info: vi.fn()
     };
 
     const loadReviews = vi.fn();
@@ -120,6 +130,8 @@ describe("EventReviewsSection", () => {
             handleDeleteReview,
             ...overrides.actions
         });
+
+        useToast.mockReturnValue(toast);
     };
 
     const renderComp = (props = {}) =>
@@ -191,8 +203,31 @@ describe("EventReviewsSection", () => {
        CREATE FLOW
     ========================= */
 
+    it("should forward toast to review actions hook", () => {
+        renderComp();
+
+        expect(useEventReviewActions).toHaveBeenCalledWith({
+            eventId: 10,
+            loadReviews,
+            toast
+        });
+    });
+
+    it("should keep review form open when creation fails", async () => {
+        handleCreateReview.mockResolvedValue(false);
+
+        renderComp();
+
+        fireEvent.click(screen.getByText(/write a review/i));
+        fireEvent.click(screen.getByText(/submit/i));
+
+        await waitFor(() => {
+            expect(screen.getByTestId("event-review-form")).toBeInTheDocument();
+        });
+    });
+
     it("should create review and close form", async () => {
-        handleCreateReview.mockResolvedValue();
+        handleCreateReview.mockResolvedValue(true);
 
         renderComp();
 

@@ -77,6 +77,14 @@ const mockEvent = createEvent({
     locationLabel: "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"
 });
 
+const mockToast = {
+    success: vi.fn(),
+    danger: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn()
+};
+
+
 /* =============================
    MOCKS
 ============================= */
@@ -278,6 +286,10 @@ vi.mock("../../components/eventReviews/EventReviewsSection", () => ({
     )
 }));
 
+vi.mock("../../hooks/useToast", () => ({
+    default: () => mockToast
+}));
+
 /* =============================
    TEST HELPERS
 ============================= */
@@ -314,6 +326,11 @@ describe("EventDetailsPage", () => {
         };
 
         setupApi();
+
+        mockToast.success.mockClear();
+        mockToast.danger.mockClear();
+        mockToast.warning.mockClear();
+        mockToast.info.mockClear();
     });
 
     /* =============================
@@ -918,7 +935,9 @@ describe("EventDetailsPage", () => {
             name: /delete event/i
         }));
 
-        expect(await screen.findByText(/api error/i)).toBeInTheDocument();
+        await waitFor(() => {
+            expect(mockToast.danger).toHaveBeenCalledWith("API error");
+        });
 
         expect(mockNavigate).not.toHaveBeenCalledWith("/events");
     });

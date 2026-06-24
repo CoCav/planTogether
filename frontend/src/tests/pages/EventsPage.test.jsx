@@ -52,6 +52,16 @@ const mockFetchAllPaginated = vi.fn();
 
 let mockAuthState = createAuthenticatedTestUser();
 
+const mockToast = {
+    success: vi.fn(),
+    danger: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn()
+};
+
+const mockHandleJoinEvent = vi.fn();
+const mockHandleLeaveEvent = vi.fn();
+
 /* =============================
    MOCKS
 ============================= */
@@ -73,14 +83,30 @@ vi.mock("../../features/events/eventNormalizer", () => ({
 }));
 
 vi.mock("../../components/events/EventCard", () => ({
-    default: ({ event, role }) => (
+    default: ({ event, role, onJoin, onLeave }) => (
         <div>
             <span>{event.title}</span>
             <span data-testid={`event-role-${event.id}`}>
                 {role || "none"}
             </span>
+
+            <button type="button" onClick={() => onJoin(event.id)}>
+                Join
+            </button>
+
+            <button type="button" onClick={() => onLeave(event.id)}>
+                Leave
+            </button>
         </div>
     )
+}));
+
+vi.mock("../../hooks/useToast", () => ({
+    default: () => mockToast
+}));
+
+vi.mock("../../features/eventMemberships/hooks/useMembershipActions", () => ({
+    default: (...args) => mockUseMembershipActions(...args)
 }));
 
 /* =============================
@@ -116,6 +142,11 @@ const renderAndWaitForEmptyState = async (initialEntry = "/events") => {
     await waitForEmptyListingState(screen);
 };
 
+const mockUseMembershipActions = vi.fn(() => ({
+    handleJoinEvent: mockHandleJoinEvent,
+    handleLeaveEvent: mockHandleLeaveEvent
+}));
+
 describe("EventsPage", () => {
 
     /* =============================
@@ -129,6 +160,12 @@ describe("EventsPage", () => {
 
         mockGetAllEvents.mockResolvedValue(createEventsPageResponse());
         mockFetchAllPaginated.mockResolvedValue([]);
+
+        mockUseMembershipActions.mockClear();
+        mockToast.success.mockClear();
+        mockToast.danger.mockClear();
+        mockToast.warning.mockClear();
+        mockToast.info.mockClear();
     });
 
     /* =============================
@@ -669,5 +706,41 @@ describe("EventsPage", () => {
         expect(await screen.findByText("Joined Event")).toBeInTheDocument();
 
         expect(screen.getByTestId("event-role-20")).toHaveTextContent(EVENT_ROLES.PARTICIPANT);
+    });
+
+    /* =============================
+       MEMBERSHIP ACTIONS
+    ============================= */
+
+    it("passes toast to membership actions hook", async () => {
+        await renderAndWaitForEmptyState();
+
+        expect(mockUseMembershipActions).toHaveBeenCalledWith(
+            expect.objectContaining({
+                toast: mockToast,
+                getCurrentUserRoleByEvent: expect.any(Function)
+            })
+        );
+    });
+
+    it("forwards join and leave actions to EventCard", async () => {
+        const user = userEvent.setup();
+
+        mockGetAllEvents.mockResolvedValue(
+            createEventsPageResponse({
+                events: [{ id: 1, title: "Action Event", creatorId: 2 }],
+                totalEvents: 1
+            })
+        );
+
+        renderPage();
+
+        expect(await screen.findByText("Action Event")).toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", { name: "Join" }));
+        await user.click(screen.getByRole("button", { name: "Leave" }));
+
+        expect(mockHandleJoinEvent).toHaveBeenCalledWith(1);
+        expect(mockHandleLeaveEvent).toHaveBeenCalledWith(1);
     });
 });

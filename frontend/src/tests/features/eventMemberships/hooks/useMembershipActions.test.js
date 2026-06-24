@@ -20,7 +20,8 @@ import { mockConfirmAccepted } from "../../../helpers/mocks/mockWindowConfirm";
    - organizer leave protection
    - leave confirmation
    - co-organizer leave warning
-   - API error handling
+   - toast success feedback
+   - toast error feedback
 
    Notes:
    - uses reusable membership hook prop helpers
@@ -40,6 +41,11 @@ describe("useMembershipActions", () => {
         vi.clearAllMocks();
 
         hookProps = createMembershipActionHookProps();
+
+        hookProps.toast = {
+            success: vi.fn(),
+            danger: vi.fn()
+        };
 
         mockConfirmAccepted();
     });
@@ -68,20 +74,14 @@ describe("useMembershipActions", () => {
             await result.current.handleJoinEvent(1);
         });
 
-        expect(hookProps.setError).toHaveBeenCalledWith("");
-        expect(hookProps.setMessage).toHaveBeenCalledWith("");
-
         expect(joinEvent).toHaveBeenCalledWith(1);
 
-        expect(hookProps.setMessage).toHaveBeenCalledWith("Successfully joined event!");
-
+        expect(hookProps.toast.success).toHaveBeenCalledWith("Joined event.");
         expect(hookProps.loadData).toHaveBeenCalled();
     });
 
     it("should handle join event errors", async () => {
-        joinEvent.mockRejectedValue(
-            new Error("Request failed")
-        );
+        joinEvent.mockRejectedValue(new Error("Request failed"));
 
         const { result } = setupHook();
 
@@ -89,7 +89,7 @@ describe("useMembershipActions", () => {
             await result.current.handleJoinEvent(1);
         });
 
-        expect(hookProps.setError).toHaveBeenCalledWith("Request failed");
+        expect(hookProps.toast.danger).toHaveBeenCalledWith("Request failed");
     });
 
     /* =============================
@@ -109,7 +109,7 @@ describe("useMembershipActions", () => {
 
         expect(window.confirm).not.toHaveBeenCalled();
 
-        expect(hookProps.setError).toHaveBeenCalledWith("Organizer cannot leave their own event");
+        expect(hookProps.toast.danger).toHaveBeenCalledWith("Organizer cannot leave their own event");
     });
 
     it("should use direct current user role when provided", async () => {
@@ -122,8 +122,10 @@ describe("useMembershipActions", () => {
         });
 
         expect(hookProps.getCurrentUserRoleByEvent).not.toHaveBeenCalled();
+
         expect(leaveEvent).not.toHaveBeenCalled();
-        expect(hookProps.setError).toHaveBeenCalledWith("Organizer cannot leave their own event");
+
+        expect(hookProps.toast.danger).toHaveBeenCalledWith("Organizer cannot leave their own event");
     });
 
     it("should leave event successfully for participant when confirmed", async () => {
@@ -139,14 +141,9 @@ describe("useMembershipActions", () => {
 
         expect(window.confirm).toHaveBeenCalledWith("Are you sure you want to leave this event?");
 
-        expect(hookProps.setError).toHaveBeenCalledWith("");
-
-        expect(hookProps.setMessage).toHaveBeenCalledWith("");
-
         expect(leaveEvent).toHaveBeenCalledWith(1);
 
-        expect(hookProps.setMessage).toHaveBeenCalledWith("Successfully left event");
-
+        expect(hookProps.toast.success).toHaveBeenCalledWith("Left event.");
         expect(hookProps.loadData).toHaveBeenCalled();
     });
 
@@ -197,6 +194,6 @@ describe("useMembershipActions", () => {
             await result.current.handleLeaveEvent(1);
         });
 
-        expect(hookProps.setError).toHaveBeenCalledWith("Request failed");
+        expect(hookProps.toast.danger).toHaveBeenCalledWith("Request failed");
     });
 });

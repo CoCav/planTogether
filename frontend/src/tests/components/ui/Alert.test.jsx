@@ -31,6 +31,12 @@ describe("Alert", () => {
         );
     };
 
+    const CustomIcon = () => (
+        <span data-testid="custom-icon">
+            Custom
+        </span>
+    );
+
     /* =============================
        VARIANTS
     ============================= */
@@ -59,6 +65,14 @@ describe("Alert", () => {
         expect(screen.getByRole("alert")).toHaveClass("alert-danger");
     });
 
+    it("should render alert content", () => {
+        renderAlert({
+            children: "Custom alert message"
+        });
+
+        expect(screen.getByText("Custom alert message")).toBeInTheDocument();
+    });
+
     /* =============================
        ICONS
     ============================= */
@@ -66,12 +80,22 @@ describe("Alert", () => {
     it("should render decorative variant icon", () => {
         const { container } = renderAlert();
 
-        const icon = container.querySelector(
-            ".alert-icon"
-        );
+        const icon = container.querySelector(".alert-icon");
 
         expect(icon).toBeInTheDocument();
         expect(icon).toHaveAttribute("aria-hidden", "true");
+    });
+
+    /* =============================
+       CUSTOM ICONS
+    ============================= */
+
+    it("should render custom icon when provided", () => {
+        renderAlert({
+            icon: CustomIcon
+        });
+
+        expect(screen.getByTestId("custom-icon")).toBeInTheDocument();
     });
 
     /* =============================

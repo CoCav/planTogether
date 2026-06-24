@@ -8,9 +8,9 @@ import useEventDetailsState from "../../../../../features/events/hooks/eventDeta
    Tests event details page UI state management
 
    Handles:
-   - initial feedback state
+   - initial error state
    - initial loading state
-   - feedback state updates
+   - error state updates
    - loading state updates
 ================================================== */
 
@@ -20,12 +20,10 @@ describe("useEventDetailsState", () => {
        INITIAL STATE
     ============================= */
 
-    it("initializes empty feedback state", () => {
+    it("initializes empty error state", () => {
         const { result } = renderHook(() =>
             useEventDetailsState()
         );
-
-        expect(result.current.feedback.message).toBe("");
 
         expect(result.current.feedback.error).toBe("");
     });
@@ -42,18 +40,14 @@ describe("useEventDetailsState", () => {
        FEEDBACK STATE
     ============================= */
 
-    it("updates feedback state", () => {
+    it("updates error state", () => {
         const { result } = renderHook(() =>
             useEventDetailsState()
         );
 
         act(() => {
-            result.current.feedback.setMessage("Success message");
-
             result.current.feedback.setError("Error message");
         });
-
-        expect(result.current.feedback.message).toBe("Success message");
 
         expect(result.current.feedback.error).toBe("Error message");
     });

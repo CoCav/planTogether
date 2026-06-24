@@ -3,20 +3,28 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import useEventReviewActions from "../../../../features/eventReviews/hooks/useEventReviewActions";
 
-import { createEventReview, deleteEventReview } from "../../../../api/eventReviews/eventReviewApi";
+import {
+    createEventReview,
+    deleteEventReview,
+    updateEventReview
+} from "../../../../api/eventReviews/eventReviewApi";
+
 import { createMutationHookProps } from "../../../helpers/hooks/createHookProps";
 import { mockConfirmAccepted, mockConfirmCancelled } from "../../../helpers/mocks/mockWindowConfirm";
 
 /* ==================================================
    USE EVENT REVIEW ACTIONS HOOK TESTS
-   Tests review mutation logic (create / delete)
+   Tests review mutation logic (create / update / delete)
 
    Handles:
    - review creation lifecycle
    - review deletion with confirmation
+   - review update lifecycle
    - loading states (submit + delete)
    - error handling
    - success / failure return values
+   - toast success feedback
+   - toast error feedback
 
    Notes:
    - backend enforces ownership & permissions
@@ -26,16 +34,24 @@ import { mockConfirmAccepted, mockConfirmCancelled } from "../../../helpers/mock
 
 vi.mock("../../../../api/eventReviews/eventReviewApi", () => ({
     createEventReview: vi.fn(),
-    deleteEventReview: vi.fn()
+    deleteEventReview: vi.fn(),
+    updateEventReview: vi.fn()
 }));
 
 describe("useEventReviewActions", () => {
 
+    /* =============================
+       TEST DATA
+    ============================= */
+
     let hookProps;
 
+    const toast = {
+        success: vi.fn(),
+        danger: vi.fn()
+    };
+
     const loadReviews = vi.fn();
-    const setMessage = vi.fn();
-    const setError = vi.fn();
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -43,8 +59,12 @@ describe("useEventReviewActions", () => {
         hookProps = {
             ...createMutationHookProps({ eventId: 1 }),
             loadReviews,
-            setMessage,
-            setError
+        };
+
+        hookProps = {
+            ...createMutationHookProps({ eventId: 1 }),
+            loadReviews,
+            toast
         };
 
         mockConfirmAccepted();
@@ -79,8 +99,7 @@ describe("useEventReviewActions", () => {
             comment: "Great event!"
         });
 
-        expect(setMessage).toHaveBeenCalledWith("Review added successfully");
-        expect(setError).toHaveBeenCalledWith("");
+        expect(toast.success).toHaveBeenCalledWith("Review posted.");
 
         expect(loadReviews).toHaveBeenCalledTimes(1);
         expect(response).toBe(true);
@@ -128,7 +147,84 @@ describe("useEventReviewActions", () => {
             });
         });
 
-        expect(setError).toHaveBeenCalledWith("Request failed");
+        expect(toast.danger).toHaveBeenCalledWith("Request failed");
+
+        expect(loadReviews).not.toHaveBeenCalled();
+        expect(response).toBe(false);
+    });
+
+    /* =============================
+       UPDATE REVIEW
+    ============================= */
+
+    it("should update review and refresh list", async () => {
+        updateEventReview.mockResolvedValue();
+
+        const { result } = setupHook();
+
+        let response;
+
+        await act(async () => {
+            response = await result.current.handleUpdateReview(5, {
+                rating: 4,
+                comment: "Updated review"
+            });
+        });
+
+        expect(updateEventReview).toHaveBeenCalledWith(5, {
+            rating: 4,
+            comment: "Updated review"
+        });
+
+        expect(toast.success).toHaveBeenCalledWith("Review updated.");
+
+        expect(loadReviews).toHaveBeenCalledTimes(1);
+        expect(response).toBe(true);
+        expect(result.current.updatingReviewId).toBe(null);
+    });
+
+    it("should expose updating state during update", async () => {
+        let resolveUpdate;
+
+        updateEventReview.mockImplementation(
+            () => new Promise((resolve) => {
+                resolveUpdate = resolve;
+            })
+        );
+
+        const { result } = setupHook();
+
+        act(() => {
+            result.current.handleUpdateReview(5, {
+                rating: 4,
+                comment: "Updated review"
+            });
+        });
+
+        expect(result.current.updatingReviewId).toBe(5);
+
+        await act(async () => {
+            resolveUpdate();
+        });
+
+        expect(result.current.updatingReviewId).toBe(null);
+    });
+
+    it("should handle update error", async () => {
+        updateEventReview.mockRejectedValue(new Error("Request failed"));
+
+        const { result } = setupHook();
+
+        let response;
+
+        await act(async () => {
+            response = await result.current.handleUpdateReview(5, {
+                rating: 4,
+                comment: "Updated review"
+            });
+        });
+
+        expect(toast.danger).toHaveBeenCalledWith("Request failed");
         expect(loadReviews).not.toHaveBeenCalled();
         expect(response).toBe(false);
     });
@@ -150,11 +246,11 @@ describe("useEventReviewActions", () => {
 
         expect(deleteEventReview).toHaveBeenCalledWith(5);
 
-        expect(setMessage).toHaveBeenCalledWith("Review deleted successfully");
-        expect(setError).toHaveBeenCalledWith("");
+        expect(toast.success).toHaveBeenCalledWith("Review deleted.");
 
         expect(loadReviews).toHaveBeenCalledTimes(1);
         expect(response).toBe(true);
+
         expect(result.current.deletingReviewId).toBe(null);
     });
 
@@ -209,7 +305,8 @@ describe("useEventReviewActions", () => {
             response = await result.current.handleDeleteReview(5);
         });
 
-        expect(setError).toHaveBeenCalledWith("Request failed");
+        expect(toast.danger).toHaveBeenCalledWith("Request failed");
+
         expect(loadReviews).not.toHaveBeenCalled();
         expect(response).toBe(false);
     });

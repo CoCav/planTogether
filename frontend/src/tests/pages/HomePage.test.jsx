@@ -51,6 +51,13 @@ let mockHomeEventsState = {
     getCurrentUserRoleByEvent: mockGetCurrentUserRoleByEvent
 };
 
+const mockToast = {
+    success: vi.fn(),
+    danger: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn()
+};
+
 /* =============================
    MOCKS
 ============================= */
@@ -90,6 +97,14 @@ vi.mock("../../components/events/EventCard", () => ({
     )
 }));
 
+vi.mock("../../hooks/useToast", () => ({
+    default: () => mockToast
+}));
+
+vi.mock("../../features/eventMemberships/hooks/useMembershipActions", () => ({
+    default: (...args) => mockUseMembershipActions(...args)
+}));
+
 /* =============================
    TEST HELPERS
 ============================= */
@@ -100,6 +115,11 @@ const renderPage = () =>
             <HomePage />
         </MemoryRouter>
     );
+
+const mockUseMembershipActions = vi.fn(() => ({
+    handleJoinEvent: mockHandleJoinEvent,
+    handleLeaveEvent: mockHandleLeaveEvent
+}));
 
 describe("HomePage", () => {
 
@@ -122,6 +142,12 @@ describe("HomePage", () => {
         };
 
         mockGetCurrentUserRoleByEvent.mockReturnValue(null);
+
+        mockUseMembershipActions.mockClear();
+        mockToast.success.mockClear();
+        mockToast.danger.mockClear();
+        mockToast.warning.mockClear();
+        mockToast.info.mockClear();
     });
 
     /* =============================
@@ -292,6 +318,16 @@ describe("HomePage", () => {
 
         expect(mockHandleJoinEvent).toHaveBeenCalledWith(1);
         expect(mockHandleLeaveEvent).toHaveBeenCalledWith(1);
+    });
+
+    it("passes toast to membership actions hook", () => {
+        renderPage();
+
+        expect(mockUseMembershipActions).toHaveBeenCalledWith({
+            loadData: mockLoadData,
+            toast: mockToast,
+            getCurrentUserRoleByEvent: mockGetCurrentUserRoleByEvent
+        });
     });
 
     /* =============================

@@ -3,12 +3,14 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, useLocation } from "react-router-dom";
 
+import { getCurrentUserEvents } from "../../../../api/users/userApi";
+
 import MyEventsPage from "../../../../pages/users/authenticated/MyEventsPage";
 
 import { EVENT_ROLES } from "../../../../features/shared/constants/eventRoles";
 import { EVENT_STATUS } from "../../../../features/shared/constants/eventStatus";
 
-import { getCurrentUserEvents } from "../../../../api/users/userApi";
+import useToast from "../../../../hooks/useToast";
 
 /* ==================================================
    MY EVENTS PAGE TESTS
@@ -35,13 +37,24 @@ import { getCurrentUserEvents } from "../../../../api/users/userApi";
    MOCK DATA
 ============================= */
 
-const mockHandleLeaveEvent = vi.fn();
+
 
 let mockAuthState = {
     user: {
         userId: 1
     }
 };
+
+const mockToast = {
+    success: vi.fn(),
+    danger: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn()
+};
+
+const mockHandleJoinEvent = vi.fn();
+const mockHandleLeaveEvent = vi.fn();
+const mockUseMembershipActions = vi.fn();
 
 /* =============================
    MOCKS
@@ -56,9 +69,7 @@ vi.mock("../../../../api/users/userApi", () => ({
 }));
 
 vi.mock("../../../../features/eventMemberships/hooks/useMembershipActions", () => ({
-    default: () => ({
-        handleLeaveEvent: mockHandleLeaveEvent
-    })
+    default: (...args) => mockUseMembershipActions(...args)
 }));
 
 vi.mock("../../../../components/events/EventCard", () => ({
@@ -77,6 +88,10 @@ vi.mock("../../../../components/events/EventCard", () => ({
             {event.status === EVENT_STATUS.PAST && <span>Ended</span>}
         </article>
     )
+}));
+
+vi.mock("../../../../hooks/useToast", () => ({
+    default: vi.fn()
 }));
 
 /* =============================
@@ -146,6 +161,13 @@ describe("MyEventsPage", () => {
         };
 
         getCurrentUserEvents.mockResolvedValue(createResponse());
+
+        mockUseMembershipActions.mockReturnValue({
+            handleJoinEvent: mockHandleJoinEvent,
+            handleLeaveEvent: mockHandleLeaveEvent
+        });
+
+        useToast.mockReturnValue(mockToast);
     });
 
     /* =============================
@@ -579,6 +601,22 @@ describe("MyEventsPage", () => {
 
         expect(await screen.findByText("Second Page Event")).toBeInTheDocument();
         expect(screen.getByText("Role: co_organizer")).toBeInTheDocument();
+    });
+
+    /* =============================
+       MEMBERSHIP ACTIONS
+    ============================= */
+
+    it("passes toast to membership actions hook", async () => {
+        renderPage();
+
+        await screen.findByText(/no created events/i);
+
+        expect(mockUseMembershipActions).toHaveBeenCalledWith(
+            expect.objectContaining({
+                toast: mockToast
+            })
+        );
     });
 
     it("calls handleLeaveEvent when clicking leave", async () => {

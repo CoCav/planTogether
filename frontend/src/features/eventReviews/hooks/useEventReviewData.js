@@ -88,10 +88,7 @@ export default function useEventReviewData({ eventId, pageSize = 10 }) {
             }));
 
         } catch (error) {
-            setError(getApiErrorMessage(
-                error,
-                "Unable to load event reviews"
-            ));
+            setError(getApiErrorMessage(error, "Unable to load event reviews"));
 
         } finally {
             setIsLoading(false);

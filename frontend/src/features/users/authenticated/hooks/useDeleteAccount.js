@@ -14,13 +14,13 @@ import { deleteCurrentUserAccount } from "../../../../api/users/userApi";
    - session cleanup after deletion
    - post-deletion redirect
    - backend error feedback
+
+   Notes:
+   - uses toast feedback for temporary action errors
+   - window.confirm is kept for delete confirmation
 ================================================== */
 
-export default function useDeleteAccount({
-    logout,
-    setMessage,
-    setError
-}) {
+export default function useDeleteAccount({ logout, toast }) {
     const navigate = useNavigate();
 
     const [isDeleting, setIsDeleting] = useState(false);
@@ -33,8 +33,6 @@ export default function useDeleteAccount({
         if (!confirmed) return;
 
         try {
-            setMessage("");
-            setError("");
             setIsDeleting(true);
 
             await deleteCurrentUserAccount();
@@ -43,10 +41,7 @@ export default function useDeleteAccount({
 
             navigate("/");
         } catch (error) {
-            setError(getApiErrorMessage(
-                error,
-                "Unable to delete account"
-            ));
+            toast.danger(getApiErrorMessage(error, "Unable to delete account"));
         } finally {
             setIsDeleting(false);
         }

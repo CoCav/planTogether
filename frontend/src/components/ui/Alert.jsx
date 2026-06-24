@@ -1,11 +1,11 @@
-import { CircleAlert, CircleCheck, TriangleAlert } from "lucide-react";
+import { CircleAlert, CircleCheck, OctagonAlert, TriangleAlert } from "lucide-react";
 
 /* ==================================================
    ALERT
    Displays contextual feedback and status messages
 
    Supports:
-   - info, success and danger variants
+   - info, success, warning and danger variants
    - automatic variant-based icons
    - optional icon override
    - accessible alert and status roles
@@ -19,7 +19,8 @@ import { CircleAlert, CircleCheck, TriangleAlert } from "lucide-react";
 const ALERT_ICONS = {
     info: CircleAlert,
     success: CircleCheck,
-    danger: TriangleAlert
+    warning: TriangleAlert,
+    danger: OctagonAlert
 };
 
 export default function Alert({

@@ -8,6 +8,8 @@ import useHomeEvents from "../features/events/hooks/useHomeEvents";
 
 import useMembershipActions from "../features/eventMemberships/hooks/useMembershipActions";
 
+import useToast from "../hooks/useToast";
+
 import EventCard from "../components/events/EventCard";
 
 import Alert from "../components/ui/Alert";
@@ -25,18 +27,27 @@ import LoadingState from "../components/ui/LoadingState";
    - authenticated user event roles
    - join and leave event actions
    - latest events loading, empty and error states
+   - toast feedback for membership actions
    - decorative card icons
 ================================================== */
 
 export default function HomePage() {
     const { user } = useAuth();
 
+
+    /* =============================
+       TOAST FEEDBACK
+    ============================= */
+
+    const toast = useToast();
+
+
     /* =============================
        PAGE STATE
     ============================= */
 
-    const [message, setMessage] = useState("");
     const [error, setError] = useState("");
+
 
     /* =============================
        HOME EVENTS
@@ -47,16 +58,17 @@ export default function HomePage() {
         setError
     });
 
+
     /* =============================
        MEMBERSHIP ACTIONS
     ============================= */
 
     const { handleJoinEvent, handleLeaveEvent } = useMembershipActions({
         loadData,
-        setMessage,
-        setError,
+        toast,
         getCurrentUserRoleByEvent
     });
+
 
     /* =============================
        INITIAL DATA LOADING
@@ -66,21 +78,6 @@ export default function HomePage() {
         loadData();
     }, [loadData]);
 
-    /* =============================
-       FEEDBACK CLEANUP
-    ============================= */
-
-    // Auto-clears feedback messages after delay
-    useEffect(() => {
-        if (!message && !error) return;
-
-        const timer = setTimeout(() => {
-            setMessage("");
-            setError("");
-        }, 3000);
-
-        return () => clearTimeout(timer);
-    }, [message, error]);
 
     /* =============================
        MAIN RENDER
@@ -221,7 +218,10 @@ export default function HomePage() {
                     </p>
                 </header>
 
-                {message && <Alert type="success">{message}</Alert>}
+                {/* =============================
+                   FEEDBACK MESSAGE
+                ============================= */}
+
                 {error && <Alert type="danger">{error}</Alert>}
 
                 {isLoading ? (

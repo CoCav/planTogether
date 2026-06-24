@@ -14,6 +14,7 @@ import useMyEventListingState from "../../../features/users/authenticated/hooks/
 import useMembershipActions from "../../../features/eventMemberships/hooks/useMembershipActions";
 
 import usePagination from "../../../hooks/usePagination";
+import useToast from "../../../hooks/useToast";
 
 import EventCard from "../../../components/events/EventCard";
 import EventsFilterCard from "../../../components/events/EventsFilterCard";
@@ -38,11 +39,19 @@ import Pagination from "../../../components/ui/Pagination";
    - leave event action
    - accessible filter and results sections
    - accessible listing metadata
+   - toast feedback for leave event action
 ================================================== */
 
 export default function MyEventsPage() {
     const { user } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
+
+
+    /* =============================
+       TOAST FEEDBACK
+    ============================= */
+
+    const toast = useToast();
 
 
     /* =============================
@@ -71,8 +80,8 @@ export default function MyEventsPage() {
         setSearchParams
     });
 
-    // Feedback messages and error handling
-    const { message, setMessage, error, setError } = feedback;
+    // Feedback error handling
+    const { error, setError } = feedback;
 
     // Active listing view and view helpers
     const { activeView, setActiveView, initialView, getFiltersForView } = view;
@@ -150,8 +159,7 @@ export default function MyEventsPage() {
             pagination.page,
             activeView
         ),
-        setMessage,
-        setError,
+        toast,
         getCurrentUserRoleByEvent
     });
 
@@ -209,27 +217,6 @@ export default function MyEventsPage() {
 
 
     /* =============================
-       FEEDBACK CLEANUP
-    ============================= */
-
-    useEffect(() => {
-        if (!message && !error) return;
-
-        const timer = setTimeout(() => {
-            setMessage("");
-            setError("");
-        }, 3000);
-
-        return () => clearTimeout(timer);
-    }, [
-        message,
-        error,
-        setMessage,
-        setError
-    ]);
-
-
-    /* =============================
        DISPLAY STATE
     ============================= */
 
@@ -256,6 +243,7 @@ export default function MyEventsPage() {
         );
     }
 
+
     /* =============================
        MAIN RENDER
     ============================= */
@@ -274,7 +262,10 @@ export default function MyEventsPage() {
                 </div>
             </header>
 
-            {message && <Alert type="success">{message}</Alert>}
+            {/* =============================
+               FEEDBACK MESSAGE
+            ============================= */}
+
             {error && <Alert type="danger">{error}</Alert>}
 
             <section className="events-filters-section" aria-label="My event filters">

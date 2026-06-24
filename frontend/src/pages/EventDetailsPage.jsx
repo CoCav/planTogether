@@ -17,6 +17,8 @@ import useMembershipActions from "../features/eventMemberships/hooks/useMembersh
 import useMembershipManagement from "../features/eventMemberships/hooks/useMembershipManagement";
 import useMembershipPermissions from "../features/eventMemberships/hooks/useMembershipPermissions";
 
+import useToast from "../hooks/useToast";
+
 import { isOnlineEventMode } from "../features/shared/constants/eventModes";
 
 import { defaultEventImage, getEventImage } from "../utils/uploadedFiles";
@@ -52,6 +54,7 @@ import PageLoader from "../components/ui/PageLoader";
    - physical event location map display
    - staff and participant section management
    - event review section placement for completed events
+   - toast feedback for event and membership actions
 ================================================== */
 
 export default function EventDetailsPage() {
@@ -62,13 +65,18 @@ export default function EventDetailsPage() {
 
 
     /* =============================
+       TOAST FEEDBACK
+    ============================= */
+
+    const toast = useToast();
+
+
+    /* =============================
        PAGE STATE
     ============================= */
 
     const {
         feedback: {
-            message,
-            setMessage,
             error,
             setError
         },
@@ -164,8 +172,7 @@ export default function EventDetailsPage() {
 
     const { handleDeleteEvent } = useEventActions({
         eventId,
-        setMessage,
-        setError
+        toast
     });
 
 
@@ -175,8 +182,7 @@ export default function EventDetailsPage() {
 
     const { handleJoinEvent, handleLeaveEvent } = useMembershipActions({
         loadData,
-        setMessage,
-        setError,
+        toast,
         currentUserRole: myRole
     });
 
@@ -188,8 +194,7 @@ export default function EventDetailsPage() {
     } = useMembershipManagement({
         eventId,
         loadData,
-        setMessage,
-        setError
+        toast
     });
 
 
@@ -203,23 +208,6 @@ export default function EventDetailsPage() {
 
         loadData();
     }, [authLoading, loadData]);
-
-
-    /* =============================
-       FEEDBACK CLEANUP
-    ============================= */
-
-    // Auto-clears feedback messages after delay
-    useEffect(() => {
-        if (!message && !error) return;
-
-        const timer = setTimeout(() => {
-            setMessage("");
-            setError("");
-        }, 3000);
-
-        return () => clearTimeout(timer);
-    }, [message, error, setMessage, setError]);
 
 
     /* =============================
@@ -282,10 +270,9 @@ export default function EventDetailsPage() {
             )}
 
             {/* =============================
-               FEEDBACK MESSAGES
+               FEEDBACK MESSAGE
             ============================= */}
 
-            {message && <Alert type="success">{message}</Alert>}
             {error && <Alert type="danger">{error}</Alert>}
 
             <section className="event-details-overview" aria-labelledby="event-details-title">
@@ -433,7 +420,6 @@ export default function EventDetailsPage() {
                     <EventReviewsSection
                         eventId={event.id}
                         user={user}
-                        setMessage={setMessage}
                     />
                 </section>
             )}

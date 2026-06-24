@@ -46,6 +46,7 @@
     --color-danger-hover: #b91c1c;
 
     /* Feedback */
+    /* Feedback */
     --color-info-text: #1d4ed8;
     --color-info-background: #eff6ff;
     --color-info-border: #bfdbfe;
@@ -53,6 +54,10 @@
     --color-success-text: #15803d;
     --color-success-background: #ecfdf5;
     --color-success-border: #bbf7d0;
+
+    --color-warning-text: #b45309;
+    --color-warning-background: #fffbeb;
+    --color-warning-border: #fde68a;
 
     --color-danger-text: #b91c1c;
     --color-danger-background: #fef2f2;

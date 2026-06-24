@@ -7,6 +7,8 @@ import useMyProfileForm from "../../../features/users/authenticated/hooks/form/u
 import useMyPasswordForm from "../../../features/users/authenticated/hooks/form/useMyPasswordForm";
 import useDeleteAccount from "../../../features/users/authenticated/hooks/useDeleteAccount";
 
+import useToast from "../../../hooks/useToast";
+
 import UserForm from "../../../components/users/UserForm";
 import UserPasswordForm from "../../../components/users/UserPasswordForm";
 import DeleteAccountSection from "../../../components/users/DeleteAccountSection";
@@ -24,7 +26,8 @@ import PageLoader from "../../../components/ui/PageLoader";
    - profile form orchestration
    - password form orchestration
    - account deletion orchestration
-   - feedback messages
+   - inline profile and password feedback messages
+   - toast feedback for account deletion errors
    - accessible profile sections
    - decorative submit icon
 ================================================== */
@@ -32,12 +35,21 @@ import PageLoader from "../../../components/ui/PageLoader";
 export default function MyProfilePage() {
     const { user, refreshUser, logout } = useAuth();
 
+
+    /* =============================
+       TOAST FEEDBACK
+    ============================= */
+
+    const toast = useToast();
+
+
     /* =============================
        FEEDBACK STATE
     ============================= */
 
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
+
 
     /* =============================
        PROFILE FORM
@@ -54,6 +66,7 @@ export default function MyProfilePage() {
         setError
     });
 
+
     /* =============================
        PASSWORD FORM
     ============================= */
@@ -68,15 +81,17 @@ export default function MyProfilePage() {
         setError
     });
 
+
     /* =============================
        DELETE ACCOUNT
     ============================= */
 
     const { isDeleting, handleDeleteAccount } = useDeleteAccount({
         logout,
-        setMessage,
-        setError
+        toast
     });
+
+
 
     /* =============================
        FEEDBACK CLEANUP
@@ -100,6 +115,7 @@ export default function MyProfilePage() {
         setError
     ]);
 
+
     /* =============================
        LOADING STATE
     ============================= */
@@ -112,6 +128,7 @@ export default function MyProfilePage() {
             />
         );
     }
+
 
     /* =============================
        MAIN RENDER

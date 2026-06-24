@@ -57,7 +57,7 @@ export default function PublicUserPage() {
         setSearchParams
     });
 
-    // Feedback messages and error handling
+    // Feedback error handling
     const { error, setError } = feedback;
 
     // Active listing view and view content

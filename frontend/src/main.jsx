@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 
 import App from "./App";
 import AuthProvider from "./context/auth/AuthProvider";
+import ToastProvider from "./context/toast/ToastProvider";
 
 import { setupLeafletIcons } from "./utils/eventMap";
 
@@ -67,6 +68,8 @@ import "./styles/components/ui/loading-state.css";
 import "./styles/components/ui/pagination.css";
 import "./styles/components/ui/select.css";
 import "./styles/components/ui/textarea.css";
+import "./styles/components/ui/toast.css";
+import "./styles/components/ui/toast-container.css";
 
 import "./styles/components/link.css";
 
@@ -85,6 +88,7 @@ setupLeafletIcons();
    - React StrictMode
    - BrowserRouter
    - AuthProvider
+   - ToastProvider
    - global styles
 ================================================== */
 
@@ -92,7 +96,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <React.StrictMode>
         <BrowserRouter>
             <AuthProvider>
-                <App />
+                <ToastProvider>
+                    <App />
+                </ToastProvider>
             </AuthProvider>
         </BrowserRouter>
     </React.StrictMode>

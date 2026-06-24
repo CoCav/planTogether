@@ -9,27 +9,27 @@ import { createEventReview, deleteEventReview, updateEventReview } from "../../.
    Handles event review mutations and UI states
 
    Actions:
-   - create review (rating + comment)
+   - create review
    - update own review
    - delete own review with confirmation
    - refresh review list after success
 
    UI states:
-   - isSubmitting (create)
-   - updatingReviewId (edit per review)
-   - deletingReviewId (delete per review)
+   - isSubmitting
+   - updatingReviewId
+   - deletingReviewId
 
    Notes:
-   - backend enforces permissions (ownership + event rules)
+   - backend enforces permissions
    - loadReviews is the source of truth refresh mechanism
-   - window.confirm is used for delete confirmation
+   - uses toast feedback for temporary action messages
+   - window.confirm is kept for delete confirmation
 ================================================== */
 
 export default function useEventReviewActions({
     eventId,
     loadReviews,
-    setMessage,
-    setError
+    toast
 }) {
 
     /* =============================
@@ -47,8 +47,6 @@ export default function useEventReviewActions({
     // Creates a review and refreshes the review list
     const handleCreateReview = async ({ rating, comment }) => {
         try {
-            setMessage("");
-            setError("");
             setIsSubmitting(true);
 
             await createEventReview(eventId, {
@@ -56,14 +54,14 @@ export default function useEventReviewActions({
                 comment
             });
 
-            setMessage("Review added successfully");
+            toast.success("Review posted.");
 
             await loadReviews();
 
             return true;
 
         } catch (error) {
-            setError(getApiErrorMessage(error, "Unable to create review"));
+            toast.danger(getApiErrorMessage(error, "Unable to create review"));
 
             return false;
         } finally {
@@ -78,8 +76,6 @@ export default function useEventReviewActions({
     // Updates the current user's review and refreshes the review list
     const handleUpdateReview = async (reviewId, { rating, comment }) => {
         try {
-            setMessage("");
-            setError("");
             setUpdatingReviewId(reviewId);
 
             await updateEventReview(reviewId, {
@@ -87,14 +83,14 @@ export default function useEventReviewActions({
                 comment
             });
 
-            setMessage("Review updated successfully");
+            toast.success("Review updated.");
 
             await loadReviews();
 
             return true;
 
         } catch (error) {
-            setError(getApiErrorMessage(error, "Unable to update review"));
+            toast.danger(getApiErrorMessage(error, "Unable to update review"));
 
             return false;
         } finally {
@@ -113,20 +109,18 @@ export default function useEventReviewActions({
         if (!confirmed) return false;
 
         try {
-            setMessage("");
-            setError("");
             setDeletingReviewId(reviewId);
 
             await deleteEventReview(reviewId);
 
-            setMessage("Review deleted successfully");
+            toast.success("Review deleted.");
 
             await loadReviews();
 
             return true;
 
         } catch (error) {
-            setError(getApiErrorMessage(error, "Unable to delete review"));
+            toast.danger(getApiErrorMessage(error, "Unable to delete review"));
             return false;
 
         } finally {

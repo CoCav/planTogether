@@ -15,12 +15,13 @@ import { EVENT_ROLES } from "../../shared/constants/eventRoles";
    Notes:
    - accepts direct current user role for single event pages
    - accepts event role lookup for event listing pages
+   - uses toast feedback for temporary action messages
+   - window.confirm is kept for leave confirmation
 ================================================== */
 
 export default function useMembershipActions({
     loadData,
-    setMessage,
-    setError,
+    toast,
     currentUserRole = null,
     getCurrentUserRoleByEvent = () => null
 }) {
@@ -45,17 +46,14 @@ export default function useMembershipActions({
     // Joins an event as participant
     const handleJoinEvent = async (eventId) => {
         try {
-            setError("");
-            setMessage("");
-
             await joinEvent(eventId);
 
-            setMessage("Successfully joined event!");
+            toast.success("Joined event.");
 
             await loadData();
 
         } catch (error) {
-            setError(getApiErrorMessage(error, "Unable to join event"));
+            toast.danger(getApiErrorMessage(error, "Unable to join event"));
         }
     };
 
@@ -69,7 +67,7 @@ export default function useMembershipActions({
 
         // Prevents organizers from leaving their own event
         if (currentRole === EVENT_ROLES.ORGANIZER) {
-            setError("Organizer cannot leave their own event");
+            toast.danger("Organizer cannot leave their own event");
             return;
         }
 
@@ -84,17 +82,14 @@ export default function useMembershipActions({
         if (!confirmed) return;
 
         try {
-            setError("");
-            setMessage("");
-
             await leaveEvent(eventId);
 
-            setMessage("Successfully left event");
+            toast.success("Left event.");
 
             await loadData();
 
         } catch (error) {
-            setError(getApiErrorMessage(error, "Unable to leave event"));
+            toast.danger(getApiErrorMessage(error, "Unable to leave event"));
         }
     };
 

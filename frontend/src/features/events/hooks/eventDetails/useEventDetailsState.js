@@ -5,7 +5,7 @@ import { useState } from "react";
    Handles event details page UI state
 
    Handles:
-   - feedback messages
+   - inline error feedback
    - loading state
 ================================================== */
 
@@ -15,7 +15,6 @@ export default function useEventDetailsState() {
        FEEDBACK STATE
     ============================= */
 
-    const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
     /* =============================
@@ -26,8 +25,6 @@ export default function useEventDetailsState() {
 
     return {
         feedback: {
-            message,
-            setMessage,
             error,
             setError
         },

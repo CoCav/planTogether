@@ -14,6 +14,7 @@ import useEventListingState from "../features/events/hooks/useEventListingState"
 import useMembershipActions from "../features/eventMemberships/hooks/useMembershipActions";
 
 import usePagination from "../hooks/usePagination";
+import useToast from "../hooks/useToast";
 
 import EventCard from "../components/events/EventCard";
 import EventsFilterCard from "../components/events/EventsFilterCard";
@@ -37,6 +38,7 @@ import Pagination from "../components/ui/Pagination";
    - URL synchronization
    - view switching
    - membership actions
+   - toast feedback for membership actions
    - accessible filters and results sections
    - accessible results metadata
 ================================================== */
@@ -44,6 +46,13 @@ import Pagination from "../components/ui/Pagination";
 export default function EventsPage() {
     const { user } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
+
+
+    /* =============================
+       TOAST FEEDBACK
+    ============================= */
+
+    const toast = useToast();
 
 
     /* =============================
@@ -72,8 +81,8 @@ export default function EventsPage() {
         setSearchParams
     });
 
-    // Feedback messages and error handling
-    const { message, setMessage, error, setError } = feedback;
+    // Feedback error handling
+    const { error, setError } = feedback;
 
     // Active listing view and view helpers
     const { activeView, setActiveView, initialView, getFiltersForView } = view;
@@ -153,8 +162,7 @@ export default function EventsPage() {
             pagination.page,
             activeView
         ),
-        setMessage,
-        setError,
+        toast,
         getCurrentUserRoleByEvent
     });
 
@@ -209,28 +217,6 @@ export default function EventsPage() {
         initialFilters,
         initialPage,
         initialView
-    ]);
-
-
-    /* =============================
-       FEEDBACK CLEANUP
-    ============================= */
-
-    // Auto-clears feedback messages after delay
-    useEffect(() => {
-        if (!message && !error) return;
-
-        const timer = setTimeout(() => {
-            setMessage("");
-            setError("");
-        }, 3000);
-
-        return () => clearTimeout(timer);
-    }, [
-        message,
-        error,
-        setMessage,
-        setError
     ]);
 
 
@@ -293,10 +279,9 @@ export default function EventsPage() {
             )}
 
             {/* =============================
-               FEEDBACK MESSAGES
+               FEEDBACK MESSAGE
             ============================= */}
 
-            {message && <Alert type="success">{message}</Alert>}
             {error && <Alert type="danger">{error}</Alert>}
 
             <section className="events-filters-section" aria-label="Event filters">

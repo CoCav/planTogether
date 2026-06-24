@@ -12,7 +12,7 @@ import { getMyEventViewContent, MY_EVENT_VIEWS } from "../myEventViewConfig";
 
    Handles:
    - initial URL-derived view and pagination
-   - feedback messages
+   - inline error feedback
    - loading state
    - active view state
    - pagination state
@@ -43,7 +43,6 @@ export default function useMyEventListingState({ searchParams, setSearchParams, 
        FEEDBACK STATE
     ============================= */
 
-    const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
     /* =============================
@@ -129,8 +128,6 @@ export default function useMyEventListingState({ searchParams, setSearchParams, 
 
     return {
         feedback: {
-            message,
-            setMessage,
             error,
             setError
         },

@@ -5,6 +5,8 @@ import usePagination from "../../hooks/usePagination";
 import useEventReviewActions from "../../features/eventReviews/hooks/useEventReviewActions";
 import useEventReviewData from "../../features/eventReviews/hooks/useEventReviewData";
 
+import useToast from "../../hooks/useToast";
+
 import EventReviewForm from "./EventReviewForm";
 import EventReviewsList from "./EventReviewsList";
 
@@ -24,7 +26,8 @@ import Pagination from "../ui/Pagination";
    - review creation, update and deletion
    - review statistics (count + average rating)
    - review summary display (rating pill)
-   - error / success feedback display
+   - inline review loading errors
+   - toast feedback for review mutations
    - authenticated review form access
    - review list rendering
    - responsive layout for reviews section
@@ -36,13 +39,21 @@ import Pagination from "../ui/Pagination";
    - all mutations refresh review list as single source of truth
 ================================================== */
 
-export default function EventReviewsSection({ eventId, user, setMessage }) {
+export default function EventReviewsSection({ eventId, user }) {
+
+    /* =============================
+       TOAST FEEDBACK
+    ============================= */
+
+    const toast = useToast();
+
 
     /* =========================
        UI STATE
     ========================= */
 
     const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
+
 
     /* =========================
        REVIEW DATA
@@ -53,7 +64,6 @@ export default function EventReviewsSection({ eventId, user, setMessage }) {
         pagination,
 
         error,
-        setError,
 
         isLoading,
         loadReviews
@@ -70,6 +80,7 @@ export default function EventReviewsSection({ eventId, user, setMessage }) {
         ? Number(pagination.averageRating).toFixed(1)
         : "0";
 
+
     /* =========================
        REVIEW ACTIONS
     ========================= */
@@ -85,8 +96,7 @@ export default function EventReviewsSection({ eventId, user, setMessage }) {
     } = useEventReviewActions({
         eventId,
         loadReviews,
-        setMessage,
-        setError
+        toast
     });
 
     const {
@@ -98,6 +108,7 @@ export default function EventReviewsSection({ eventId, user, setMessage }) {
         onPageChange: loadReviews
     });
 
+
     /* =========================
        HANDLERS
     ========================= */
@@ -107,11 +118,14 @@ export default function EventReviewsSection({ eventId, user, setMessage }) {
     };
 
     const handleSubmitReview = async (reviewData) => {
-        await handleCreateReview(reviewData);
+        const ok = await handleCreateReview(reviewData);
 
-        // Close the create-review form after a successful submission
-        setIsReviewFormOpen(false);
+        // Close the create-review form only after a successful submission
+        if (ok !== false) {
+            setIsReviewFormOpen(false);
+        }
     };
+
 
     /* =========================
        INITIAL LOADING

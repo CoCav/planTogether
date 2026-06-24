@@ -15,9 +15,11 @@ import { deleteEvent } from "../../../../api/events/eventApi";
 
    Notes:
    - membership actions belong to eventMemberships
+   - uses toast feedback for temporary action errors
+   - window.confirm is kept for delete confirmation
 ================================================== */
 
-export default function useEventActions({ eventId, setMessage, setError }) {
+export default function useEventActions({ eventId, toast }) {
 
     // Redirects user after successful deletion
     const navigate = useNavigate();
@@ -35,14 +37,11 @@ export default function useEventActions({ eventId, setMessage, setError }) {
         if (!confirmed) return;
 
         try {
-            setError("");
-            setMessage("");
-
             await deleteEvent(eventId);
 
             navigate("/events");
         } catch (error) {
-            setError(getApiErrorMessage(error, "Unable to delete event"));
+            toast.danger(getApiErrorMessage(error, "Unable to delete event"));
         }
     };
 

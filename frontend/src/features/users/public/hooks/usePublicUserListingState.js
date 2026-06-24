@@ -18,7 +18,7 @@ import { getDefaultPublicUserEventFilters } from "../publicUserEventFilters";
 
    Handles:
    - initial URL-derived view, filters and pagination
-   - feedback messages
+   - inline error feedback
    - loading state
    - active view state
    - filter state
@@ -62,7 +62,6 @@ export default function usePublicUserListingState({
        FEEDBACK STATE
     ============================= */
 
-    const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
     /* =============================
@@ -153,8 +152,6 @@ export default function usePublicUserListingState({
 
     return {
         feedback: {
-            message,
-            setMessage,
             error,
             setError
         },

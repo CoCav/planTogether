@@ -18,13 +18,16 @@ import { EVENT_ROLES } from "../../shared/constants/eventRoles";
    - remove member
    - transfer event ownership
    - refresh data after mutations
+
+   Notes:
+   - uses toast feedback for temporary action messages
+   - window.confirm is kept for destructive or sensitive actions
 ================================================== */
 
 export default function useMembershipManagement({
     eventId,
     loadData,
-    setMessage,
-    setError
+    toast
 }) {
 
     /* =============================
@@ -34,40 +37,34 @@ export default function useMembershipManagement({
     // Promotes a participant to co-organizer
     const handlePromoteMember = async (userId) => {
         try {
-            setMessage("");
-            setError("");
-
             await updateEventMemberRole(
                 eventId,
                 userId,
                 EVENT_ROLES.CO_ORGANIZER
             );
 
-            setMessage("User promoted to co-organizer");
+            toast.success("Member promoted.");
 
             await loadData();
         } catch (error) {
-            setError(getApiErrorMessage(error, "Unable to promote user"));
+            toast.danger(getApiErrorMessage(error, "Unable to promote user"));
         }
     };
 
     // Demotes a co-organizer to participant
     const handleDemoteMember = async (userId) => {
         try {
-            setMessage("");
-            setError("");
-
             await updateEventMemberRole(
                 eventId,
                 userId,
                 EVENT_ROLES.PARTICIPANT
             );
 
-            setMessage("User demoted to participant");
+            toast.success("Member demoted.");
 
             await loadData();
         } catch (error) {
-            setError(getApiErrorMessage(error, "Unable to demote user"));
+            toast.danger(getApiErrorMessage(error, "Unable to demote user"));
         }
     };
 
@@ -75,7 +72,7 @@ export default function useMembershipManagement({
        MEMBER REMOVAL
     ============================= */
 
-    // Removes a member from the event
+    // Removes a member from the event after confirmation
     const handleRemoveMember = async (userId) => {
         const confirmed = window.confirm(
             "Are you sure you want to remove this member from the event?"
@@ -84,19 +81,13 @@ export default function useMembershipManagement({
         if (!confirmed) return;
 
         try {
-            setMessage("");
-            setError("");
-
             await removeEventMember(eventId, userId);
 
-            setMessage("Member removed successfully");
+            toast.success("Member removed.");
 
             await loadData();
         } catch (error) {
-            setError(getApiErrorMessage(
-                error,
-                "Unable to remove member"
-            ));
+            toast.danger(getApiErrorMessage(error, "Unable to remove member"));
         }
     };
 
@@ -104,7 +95,7 @@ export default function useMembershipManagement({
        OWNERSHIP TRANSFER
     ============================= */
 
-    // Transfers event ownership to another member
+    // Transfers event ownership to another member after confirmation
     const handleTransferOwnership = async (targetUserId) => {
         const confirmed = window.confirm(
             "Are you sure you want to transfer ownership of this event?"
@@ -113,19 +104,13 @@ export default function useMembershipManagement({
         if (!confirmed) return;
 
         try {
-            setMessage("");
-            setError("");
-
             await transferEventOwnership(eventId, targetUserId);
 
-            setMessage("Event ownership transferred successfully");
+            toast.success("Ownership transferred.");
 
             await loadData();
         } catch (error) {
-            setError(getApiErrorMessage(
-                error,
-                "Unable to transfer ownership"
-            ));
+            toast.danger(getApiErrorMessage(error, "Unable to transfer ownership"));
         }
     };
 

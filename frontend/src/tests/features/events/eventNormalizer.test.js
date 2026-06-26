@@ -24,7 +24,6 @@ import {
    - single event normalization
    - event list normalization
    - paginated event payload normalization
-   - API payload extraction
    - fallback values
    - participant count normalization
    - review stats normalization
@@ -32,6 +31,7 @@ import {
    Notes:
    - uses reusable event test factories
    - review stats are normalized for event cards and details pages
+   - shared pagination metadata normalization
 ================================================== */
 
 describe("eventNormalizer", () => {
@@ -231,6 +231,28 @@ describe("eventNormalizer", () => {
             totalPages: 1,
             message: "",
             success: false
+        });
+    });
+
+    it("should normalize paginated event payload with totalItems fallback", () => {
+        const result = normalizePaginatedEvents({
+            events: [
+                createEvent({
+                    id: 1,
+                    title: "Event 1"
+                })
+            ],
+            page: 1,
+            pageSize: 4,
+            totalItems: 9,
+            totalPages: 3
+        });
+
+        expect(result).toMatchObject({
+            page: 1,
+            pageSize: 4,
+            totalEvents: 9,
+            totalPages: 3
         });
     });
 

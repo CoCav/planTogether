@@ -21,6 +21,7 @@ import { DEFAULT_EVENT_LISTING_FILTERS } from "../../../../features/shared/event
    - filter-only param extraction
    - view-based status params
    - default and custom sort resolution
+   - paginated payload normalization
    - pagination updates
    - membership role loading integration
    - loading and error states
@@ -438,37 +439,38 @@ describe("useEventListingData", () => {
         });
     });
 
-    /* =============================
-       MEMBERSHIP ROLES
-    ============================= */
-
-    it("loads membership roles after loading events", async () => {
+    it("updates pagination from shared totalItems metadata", async () => {
         getAllEvents.mockResolvedValue(
             createPaginatedEventResponse({
-                events: [
-                    {
-                        id: 1,
-                        title: "React meetup",
-                        creatorId: 10
-                    }
-                ]
+                overrides: {
+                    page: 2,
+                    pageSize: 4,
+                    totalItems: 16,
+                    totalEvents: undefined,
+                    totalPages: 4
+                }
             })
         );
 
-        const { result } = renderUseEventListingData({
-            user: {
-                userId: 42
-            }
-        });
+        const { result } = renderUseEventListingData();
 
         await act(async () => {
-            await result.current.loadData(createFilters(), 1, EVENT_STATUS.ONGOING);
+            await result.current.loadData(createFilters(), 2, EVENT_STATUS.ONGOING);
         });
 
-        expect(mockLoadMembershipRoles).toHaveBeenCalledWith({
-            force: true
+        const paginationUpdater = setPagination.mock.calls[0][0];
+
+        expect(paginationUpdater({ pageSize: 4 })).toEqual({
+            pageSize: 4,
+            page: 2,
+            totalPages: 4,
+            totalEvents: 16
         });
     });
+
+    /* =============================
+       MEMBERSHIP ROLES
+    ============================= */
 
     it("forces membership role refresh after loading events", async () => {
         getAllEvents.mockResolvedValue(createPaginatedEventResponse());

@@ -7,6 +7,8 @@
    - message
    - resource payloads (user, event, events, members...)
    - pagination metadata
+   - shared pagination shape
+   - totalItems fallback from totalEvents / totalReviews
 ================================================== */
 
 // Extracts the backend payload from an Axios response
@@ -25,7 +27,7 @@ export const getApiPayload = (response = {}, key = "") => {
     return payload?.[key];
 };
 
-// Normalizes paginated backend responses
+// Normalizes paginated backend responses into a shared frontend shape
 export const getPaginatedPayload = (response = {}, key = "") => {
     const payload = unwrapApiResponse(response);
 

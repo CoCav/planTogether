@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
     getNormalizedPublicUserEvents,
+    normalizePaginatedPublicUserEvents,
     normalizePublicUserEvents
 } from "../../../../features/users/public/publicUserEventNormalizer";
 
@@ -14,9 +15,12 @@ import { createEvent } from "../../../factories/events/eventFactory";
    Tests public user event payload normalization
 
    Handles:
-   - paginated public user events
+   - public user event item normalization
+   - invalid public user event list fallback
+   - paginated public user event payload normalization
    - public user event listing metadata
-   - normalized event lists
+   - shared pagination metadata normalization
+   - API payload extraction
    - fallback values
 
    Notes:
@@ -30,8 +34,36 @@ describe("publicUserEventNormalizer", () => {
        PUBLIC USER EVENTS
     ============================= */
 
+    it("should normalize public user event items", () => {
+        const result = normalizePublicUserEvents([
+            createEvent({
+                id: 1,
+                title: "Joined Event",
+                status: EVENT_STATUS.UPCOMING
+            })
+        ]);
+
+        expect(result).toEqual([
+            expect.objectContaining({
+                id: 1,
+                title: "Joined Event",
+                status: EVENT_STATUS.UPCOMING
+            })
+        ]);
+    });
+
+    it("should return empty array when public user event items are invalid", () => {
+        expect(normalizePublicUserEvents()).toEqual([]);
+        expect(normalizePublicUserEvents(null)).toEqual([]);
+        expect(normalizePublicUserEvents({})).toEqual([]);
+    });
+
+    /* =============================
+       PAGINATED PUBLIC USER EVENTS
+    ============================= */
+
     it("should normalize paginated public user event payload", () => {
-        const result = normalizePublicUserEvents({
+        const result = normalizePaginatedPublicUserEvents({
             view: "joined",
             page: 2,
             pageSize: 4,
@@ -66,8 +98,8 @@ describe("publicUserEventNormalizer", () => {
         });
     });
 
-    it("should return fallback values when payload is empty", () => {
-        expect(normalizePublicUserEvents()).toEqual({
+    it("should return fallback pagination values", () => {
+        expect(normalizePaginatedPublicUserEvents()).toEqual({
             view: "created",
             page: 1,
             pageSize: 4,
@@ -80,7 +112,7 @@ describe("publicUserEventNormalizer", () => {
     });
 
     it("should convert pagination metadata to numbers", () => {
-        const result = normalizePublicUserEvents({
+        const result = normalizePaginatedPublicUserEvents({
             page: "2",
             pageSize: "8",
             totalEvents: "12",
@@ -96,6 +128,23 @@ describe("publicUserEventNormalizer", () => {
                 totalPages: 3
             })
         );
+    });
+
+    it("should normalize paginated public user event payload with totalItems fallback", () => {
+        const result = normalizePaginatedPublicUserEvents({
+            events: [],
+            page: 1,
+            pageSize: 4,
+            totalItems: 11,
+            totalPages: 3
+        });
+
+        expect(result).toMatchObject({
+            page: 1,
+            pageSize: 4,
+            totalEvents: 11,
+            totalPages: 3
+        });
     });
 
     /* =============================

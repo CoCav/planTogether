@@ -1,4 +1,4 @@
-import { getApiPayload } from "../../api/apiResponse";
+import { getApiPayload, getPaginatedPayload } from "../../api/apiResponse";
 
 import { EVENT_STATUS } from "../shared/constants/eventStatus";
 import { EVENT_MODES } from "../shared/constants/eventModes";
@@ -70,15 +70,19 @@ export const normalizeEvents = (events = []) => {
 };
 
 // Normalizes a paginated public event payload
-export const normalizePaginatedEvents = (payload = {}) => ({
-    events: normalizeEvents(payload.events),
-    page: payload.page ?? 1,
-    pageSize: payload.pageSize ?? 10,
-    totalEvents: payload.totalEvents ?? 0,
-    totalPages: payload.totalPages ?? 1,
-    message: payload.message ?? "",
-    success: payload.success ?? false
-});
+export const normalizePaginatedEvents = (payload = {}) => {
+    const { items, pagination, message, success } = getPaginatedPayload(payload, "events");
+
+    return {
+        events: normalizeEvents(items),
+        page: pagination.page,
+        pageSize: pagination.pageSize ?? 10,
+        totalEvents: pagination.totalItems,
+        totalPages: pagination.totalPages,
+        message,
+        success
+    };
+};
 
 // Extracts and normalizes events from GET /events
 export const getNormalizedEvents = (payload = {}) => {

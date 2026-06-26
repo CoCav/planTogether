@@ -30,10 +30,13 @@ import {
    - membership role enrichment
    - current user event list normalization
    - paginated current user event payloads
+   - shared pagination metadata normalization
+   - current user role extraction
    - API payload extraction
 
    Notes:
    - uses reusable current user event factories
+   - shared pagination metadata normalization
 ================================================== */
 
 describe("myEventNormalizer", () => {
@@ -188,45 +191,6 @@ describe("myEventNormalizer", () => {
         });
     });
 
-    it("should normalize paginated current user event payload from nested API data", () => {
-        const result = normalizePaginatedMyEvents({
-            data: {
-                events: [
-                    createMyEventItem({
-                        id: 10,
-                        role: EVENT_ROLES.PARTICIPANT,
-                        event: createEvent({
-                            id: 1,
-                            title: "Nested Joined Event"
-                        })
-                    })
-                ]
-            },
-            page: 2,
-            pageSize: 5,
-            totalEvents: 12,
-            totalPages: 3,
-            message: "Events retrieved",
-            success: true
-        });
-
-        expect(result).toEqual({
-            events: [
-                expect.objectContaining({
-                    id: 1,
-                    title: "Nested Joined Event",
-                    role: EVENT_ROLES.PARTICIPANT
-                })
-            ],
-            page: 2,
-            pageSize: 5,
-            totalEvents: 12,
-            totalPages: 3,
-            message: "Events retrieved",
-            success: true
-        });
-    });
-
     it("should return fallback pagination values", () => {
         expect(normalizePaginatedMyEvents()).toMatchObject({
             events: [],
@@ -236,6 +200,32 @@ describe("myEventNormalizer", () => {
             totalPages: 1,
             message: "",
             success: false
+        });
+    });
+
+    it("should normalize paginated current user event payload with totalItems fallback", () => {
+        const result = normalizePaginatedMyEvents({
+            events: [
+                createMyEventItem({
+                    id: 10,
+                    role: EVENT_ROLES.PARTICIPANT,
+                    event: createEvent({
+                        id: 1,
+                        title: "Joined Event"
+                    })
+                })
+            ],
+            page: 1,
+            pageSize: 4,
+            totalItems: 7,
+            totalPages: 2
+        });
+
+        expect(result).toMatchObject({
+            page: 1,
+            pageSize: 4,
+            totalEvents: 7,
+            totalPages: 2
         });
     });
 

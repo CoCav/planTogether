@@ -1,4 +1,4 @@
-import { getApiPayload } from "../../../api/apiResponse";
+import { getApiPayload, getPaginatedPayload } from "../../../api/apiResponse";
 
 import { normalizeEvent } from "../../events/eventNormalizer";
 
@@ -40,16 +40,16 @@ export const normalizeMyEvents = (items = []) => {
 
 // Normalizes a paginated current user event payload
 export const normalizePaginatedMyEvents = (payload = {}) => {
-    const events = getApiPayload(payload, "events");
+    const { items, pagination, message, success } = getPaginatedPayload(payload, "events");
 
     return {
-        events: normalizeMyEvents(events),
-        page: payload.page ?? 1,
-        pageSize: payload.pageSize ?? 10,
-        totalEvents: payload.totalEvents ?? 0,
-        totalPages: payload.totalPages ?? 1,
-        message: payload.message ?? "",
-        success: payload.success ?? false
+        events: normalizeMyEvents(items),
+        page: pagination.page,
+        pageSize: pagination.pageSize ?? 10,
+        totalEvents: pagination.totalItems,
+        totalPages: pagination.totalPages,
+        message,
+        success
     };
 };
 

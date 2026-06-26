@@ -79,7 +79,15 @@ vi.mock("../../utils/pagination", () => ({
 }));
 
 vi.mock("../../features/events/eventNormalizer", () => ({
-    getNormalizedEvents: (response) => response.events || []
+    normalizePaginatedEvents: (response = {}) => ({
+        events: response.events || [],
+        page: response.page ?? 1,
+        pageSize: response.pageSize ?? 4,
+        totalEvents: response.totalEvents ?? response.totalItems ?? 0,
+        totalPages: response.totalPages ?? 1,
+        message: response.message ?? "",
+        success: response.success ?? false
+    })
 }));
 
 vi.mock("../../components/events/EventCard", () => ({

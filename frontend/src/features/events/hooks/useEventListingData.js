@@ -6,7 +6,7 @@ import useEventMembershipRoles from "../../eventMemberships/hooks/useEventMember
 
 import { EVENT_STATUS } from "../../shared/constants/eventStatus";
 
-import { getNormalizedEvents } from "../eventNormalizer";
+import { normalizePaginatedEvents } from "../eventNormalizer";
 import { getEventFilterFields } from "../eventFilters";
 import { getEventViewContent } from "../eventViewConfig";
 
@@ -16,6 +16,7 @@ import { getEventViewContent } from "../eventViewConfig";
 
    Handles:
    - public event loading with query params
+   - paginated event payload normalization
    - event listing pagination
    - current user role resolution for event cards
    - forced membership role refresh after event loading
@@ -106,7 +107,9 @@ export default function useEventListingData({
 
             const response = await getAllEvents(removeEmptyParams(params));
 
-            setEvents(getNormalizedEvents(response));
+            const payload = normalizePaginatedEvents(response);
+
+            setEvents(payload.events);
 
             /* =============================
                PAGINATION UPDATE
@@ -114,14 +117,10 @@ export default function useEventListingData({
 
             setPagination((prev = {}) => ({
                 ...prev,
-                page: response.page || 1,
-                pageSize:
-                    response.pageSize ||
-                    prev.pageSize ||
-                    pageSize,
-
-                totalPages: response.totalPages || 1,
-                totalEvents: response.totalEvents || 0
+                page: payload.page,
+                pageSize: payload.pageSize || prev.pageSize || pageSize,
+                totalPages: payload.totalPages,
+                totalEvents: payload.totalEvents
             }));
 
             /* =============================

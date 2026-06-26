@@ -37,12 +37,11 @@ import useToast from "../../../../hooks/useToast";
    MOCK DATA
 ============================= */
 
-
-
 let mockAuthState = {
     user: {
         userId: 1
-    }
+    },
+    loading: false
 };
 
 const mockToast = {
@@ -157,7 +156,8 @@ describe("MyEventsPage", () => {
         mockAuthState = {
             user: {
                 userId: 1
-            }
+            },
+            loading: false
         };
 
         getCurrentUserEvents.mockResolvedValue(createResponse());
@@ -195,6 +195,18 @@ describe("MyEventsPage", () => {
                 })
             );
         });
+    });
+
+    it("does not load events while auth is loading", () => {
+        mockAuthState = {
+            user: null,
+            loading: true
+        };
+
+        renderPage();
+
+        expect(screen.getByRole("status")).toHaveTextContent(/loading your events/i);
+        expect(getCurrentUserEvents).not.toHaveBeenCalled();
     });
 
     /* =============================

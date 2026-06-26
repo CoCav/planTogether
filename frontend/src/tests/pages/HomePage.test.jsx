@@ -21,6 +21,7 @@ import { EVENT_ROLES } from "../../features/shared/constants/eventRoles";
    - membership action integration
    - accessible homepage sections
    - decorative hero and feature icons
+   - auth-ready initial loading guard
 
    Notes:
    - mocks authenticated user state
@@ -41,7 +42,8 @@ const mockHandleJoinEvent = vi.fn();
 const mockHandleLeaveEvent = vi.fn();
 
 let mockAuthState = {
-    user: null
+    user: null,
+    loading: false
 };
 
 let mockHomeEventsState = {
@@ -58,6 +60,11 @@ const mockToast = {
     info: vi.fn()
 };
 
+const mockUseMembershipActions = vi.fn(() => ({
+    handleJoinEvent: mockHandleJoinEvent,
+    handleLeaveEvent: mockHandleLeaveEvent
+}));
+
 /* =============================
    MOCKS
 ============================= */
@@ -71,10 +78,7 @@ vi.mock("../../features/events/hooks/useHomeEvents", () => ({
 }));
 
 vi.mock("../../features/eventMemberships/hooks/useMembershipActions", () => ({
-    default: () => ({
-        handleJoinEvent: mockHandleJoinEvent,
-        handleLeaveEvent: mockHandleLeaveEvent
-    })
+    default: (...args) => mockUseMembershipActions(...args)
 }));
 
 vi.mock("../../components/events/EventCard", () => ({
@@ -101,10 +105,6 @@ vi.mock("../../hooks/useToast", () => ({
     default: () => mockToast
 }));
 
-vi.mock("../../features/eventMemberships/hooks/useMembershipActions", () => ({
-    default: (...args) => mockUseMembershipActions(...args)
-}));
-
 /* =============================
    TEST HELPERS
 ============================= */
@@ -116,11 +116,6 @@ const renderPage = () =>
         </MemoryRouter>
     );
 
-const mockUseMembershipActions = vi.fn(() => ({
-    handleJoinEvent: mockHandleJoinEvent,
-    handleLeaveEvent: mockHandleLeaveEvent
-}));
-
 describe("HomePage", () => {
 
     /* =============================
@@ -131,7 +126,8 @@ describe("HomePage", () => {
         vi.clearAllMocks();
 
         mockAuthState = {
-            user: null
+            user: null,
+            loading: false
         };
 
         mockHomeEventsState = {
@@ -178,7 +174,8 @@ describe("HomePage", () => {
     it("renders authenticated create event action", () => {
         mockAuthState = {
             user: {
-                userId: 1
+                userId: 1,
+                loading: false
             }
         };
 
@@ -232,6 +229,17 @@ describe("HomePage", () => {
         expect(screen.getByRole("status")).toHaveTextContent(/loading latest events/i);
 
         expect(screen.getByText(/fetching the newest events on plantogether/i)).toBeInTheDocument();
+    });
+
+    it("does not load home events while auth is loading", () => {
+        mockAuthState = {
+            user: null,
+            loading: true
+        };
+
+        renderPage();
+
+        expect(mockLoadData).not.toHaveBeenCalled();
     });
 
     /* =============================

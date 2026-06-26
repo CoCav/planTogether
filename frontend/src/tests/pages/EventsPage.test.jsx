@@ -657,6 +657,19 @@ describe("EventsPage", () => {
         expect(screen.queryByText(/login to join events/i)).not.toBeInTheDocument();
     });
 
+    it("does not load events while auth is loading", () => {
+        mockAuthState = {
+            user: null,
+            loading: true
+        };
+
+        renderPage();
+
+        expect(screen.getByRole("status")).toHaveTextContent(/loading events/i);
+        expect(mockGetAllEvents).not.toHaveBeenCalled();
+        expect(mockFetchAllPaginated).not.toHaveBeenCalled();
+    });
+
     /* =============================
        EVENT ROLES
     ============================= */

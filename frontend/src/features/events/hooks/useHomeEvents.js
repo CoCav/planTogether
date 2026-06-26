@@ -15,6 +15,7 @@ import { getNormalizedEvents } from "../eventNormalizer";
    - current user membership role loading
    - loading and error state
    - event card role lookup
+   - authenticated membership role refresh
 
    Notes:
    - used by HomePage event preview section
@@ -67,7 +68,9 @@ export default function useHomeEvents({ user, setError }) {
 
             setEvents(getNormalizedEvents(response));
 
-            await loadMembershipRoles();
+            if (user) {
+                await loadMembershipRoles({ force: true });
+            }
 
         } catch (error) {
             console.error("Error loading home events:", error);
@@ -78,6 +81,7 @@ export default function useHomeEvents({ user, setError }) {
             setIsLoading(false);
         }
     }, [
+        user,
         loadMembershipRoles,
         setError
     ]);

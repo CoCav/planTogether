@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { CalendarPlus, Search, ShieldCheck, Sparkles, Users } from "lucide-react";
 
@@ -29,10 +29,11 @@ import LoadingState from "../components/ui/LoadingState";
    - latest events loading, empty and error states
    - toast feedback for membership actions
    - decorative card icons
+   - auth-ready initial loading guard
 ================================================== */
 
 export default function HomePage() {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
 
 
     /* =============================
@@ -74,9 +75,21 @@ export default function HomePage() {
        INITIAL DATA LOADING
     ============================= */
 
+    // Prevents duplicate initial fetch in StrictMode
+    const hasLoadedRef = useRef(false);
+
     useEffect(() => {
+        if (authLoading) return;
+
+        if (hasLoadedRef.current) return;
+
+        hasLoadedRef.current = true;
+
         loadData();
-    }, [loadData]);
+    }, [
+        authLoading,
+        loadData
+    ]);
 
 
     /* =============================

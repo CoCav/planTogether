@@ -30,11 +30,11 @@ import PageLoader from "../../../components/ui/PageLoader";
    - toast feedback for account deletion errors
    - accessible profile sections
    - decorative submit icon
+   - auth-ready profile rendering
 ================================================== */
 
 export default function MyProfilePage() {
-    const { user, refreshUser, logout } = useAuth();
-
+    const { user, loading: authLoading, refreshUser, logout } = useAuth();
 
     /* =============================
        TOAST FEEDBACK
@@ -120,7 +120,7 @@ export default function MyProfilePage() {
        LOADING STATE
     ============================= */
 
-    if (!user) {
+    if (authLoading || !user) {
         return (
             <PageLoader
                 title="Loading profile..."

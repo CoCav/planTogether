@@ -18,6 +18,7 @@ import { getEventViewContent } from "../eventViewConfig";
    - public event loading with query params
    - event listing pagination
    - current user role resolution for event cards
+   - forced membership role refresh after event loading
 ================================================== */
 
 export default function useEventListingData({
@@ -127,7 +128,8 @@ export default function useEventListingData({
                MEMBERSHIP FETCHING
             ============================= */
 
-            await loadMembershipRoles();
+            // Refreshes roles after events are loaded
+            await loadMembershipRoles({ force: true });
 
         } catch (error) {
             console.error("Error loading events:", error);

@@ -21,11 +21,13 @@ export const createAuthenticatedTestUser = (overrides = {}) => ({
         userId: 1,
 
         ...overrides
-    }
+    },
+    loading: false
 });
 
 export const createGuestTestUser = () => ({
-    user: null
+    user: null,
+    loading: false
 });
 
 /* =============================

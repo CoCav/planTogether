@@ -465,7 +465,27 @@ describe("useEventListingData", () => {
             await result.current.loadData(createFilters(), 1, EVENT_STATUS.ONGOING);
         });
 
-        expect(mockLoadMembershipRoles).toHaveBeenCalledTimes(1);
+        expect(mockLoadMembershipRoles).toHaveBeenCalledWith({
+            force: true
+        });
+    });
+
+    it("forces membership role refresh after loading events", async () => {
+        getAllEvents.mockResolvedValue(createPaginatedEventResponse());
+
+        const { result } = renderUseEventListingData({
+            user: {
+                userId: 42
+            }
+        });
+
+        await act(async () => {
+            await result.current.loadData(createFilters(), 1, EVENT_STATUS.ONGOING);
+        });
+
+        expect(mockLoadMembershipRoles).toHaveBeenCalledWith({
+            force: true
+        });
     });
 
     it("exposes current user role lookup from membership roles hook", () => {

@@ -41,10 +41,11 @@ import Pagination from "../components/ui/Pagination";
    - toast feedback for membership actions
    - accessible filters and results sections
    - accessible results metadata
+   - auth-ready initial loading guard
 ================================================== */
 
 export default function EventsPage() {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
 
 
@@ -207,18 +208,20 @@ export default function EventsPage() {
     const hasLoadedRef = useRef(false);
 
     useEffect(() => {
+        if (authLoading) return;
+
         if (hasLoadedRef.current) return;
 
         hasLoadedRef.current = true;
 
         loadData(initialFilters, initialPage, initialView);
     }, [
+        authLoading,
         loadData,
         initialFilters,
         initialPage,
         initialView
     ]);
-
 
     /* =============================
        DISPLAY STATE

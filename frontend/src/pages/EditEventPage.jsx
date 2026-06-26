@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { getCurrentUserEventAccess, getEventById, updateEvent } from "../api/events/eventApi";
 
+import { useAuth } from "../features/auth/hooks/useAuth";
+
 import { createDefaultEventFormValues } from "../features/events/form/eventFormConfig";
 import { buildEventUpdateFormPayloadData } from "../features/events/form/eventPayloadBuilder";
 import { createEventFormValuesFromEvent } from "../features/events/form/eventFormValues";
@@ -27,6 +29,7 @@ import PageLoader from "../components/ui/PageLoader";
    - update event submission
    - redirect after successful update
    - accessible form section
+   - auth-ready protected loading guard
 
    Notes:
    - frontend permissions improve UX only
@@ -37,6 +40,7 @@ import PageLoader from "../components/ui/PageLoader";
 export default function EditEventPage() {
     const { eventId } = useParams();
     const navigate = useNavigate();
+    const { loading: authLoading } = useAuth();
 
     /* =============================
        ACCESS STATE
@@ -171,8 +175,11 @@ export default function EditEventPage() {
     ============================= */
 
     useEffect(() => {
+        if (authLoading) return;
+
         loadEvent();
     }, [
+        authLoading,
         loadEvent
     ]);
 

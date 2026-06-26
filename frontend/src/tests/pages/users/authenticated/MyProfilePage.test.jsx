@@ -23,6 +23,8 @@ import useToast from "../../../../hooks/useToast";
    - delete account integration
    - decorative submit icon forwarding
    - hook initialization
+   - auth loading state
+   - auth-ready profile rendering
 ================================================== */
 
 /* =============================
@@ -43,6 +45,7 @@ let mockAuthState = {
         email: "john@test.com",
         avatar: null
     },
+    loading: false,
     refreshUser: mockRefreshUser,
     logout: mockLogout
 };
@@ -276,6 +279,7 @@ describe("MyProfilePage", () => {
                 email: "john@test.com",
                 avatar: null
             },
+            loading: false,
             refreshUser: mockRefreshUser,
             logout: mockLogout
         };
@@ -291,9 +295,10 @@ describe("MyProfilePage", () => {
        LOADING STATE
     ============================= */
 
-    it("shows loading state when user is not available", () => {
+    it("shows loading state while auth is loading", () => {
         mockAuthState = {
             user: null,
+            loading: true,
             refreshUser: mockRefreshUser,
             logout: mockLogout
         };
@@ -302,6 +307,19 @@ describe("MyProfilePage", () => {
 
         expect(screen.getByRole("status")).toHaveTextContent("Loading profile...");
         expect(screen.getByText("Please wait while we load your account details.")).toBeInTheDocument();
+    });
+
+    it("shows loading state when user is not available", () => {
+        mockAuthState = {
+            user: null,
+            loading: false,
+            refreshUser: mockRefreshUser,
+            logout: mockLogout
+        };
+
+        renderPage();
+
+        expect(screen.getByRole("status")).toHaveTextContent("Loading profile...");
     });
 
     /* =============================

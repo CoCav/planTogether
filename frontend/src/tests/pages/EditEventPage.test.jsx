@@ -26,6 +26,7 @@ import EditEventPage from "../../pages/EditEventPage";
    - validation feedback
    - API error feedback
    - cancel navigation
+   - auth-ready protected loading guard
 
    Notes:
    - uses real EventForm and useEventForm behavior
@@ -44,6 +45,10 @@ const mockGetCurrentUserEventAccess = vi.fn();
 const mockGetEventById = vi.fn();
 const mockUpdateEvent = vi.fn();
 
+let mockAuthState = {
+    loading: false
+};
+
 vi.mock("react-router-dom", async () => {
     const actual = await vi.importActual("react-router-dom");
 
@@ -60,6 +65,10 @@ vi.mock("../../api/events/eventApi", () => ({
     getCurrentUserEventAccess: (...args) => mockGetCurrentUserEventAccess(...args),
     getEventById: (...args) => mockGetEventById(...args),
     updateEvent: (...args) => mockUpdateEvent(...args)
+}));
+
+vi.mock("../../features/auth/hooks/useAuth", () => ({
+    useAuth: () => mockAuthState
 }));
 
 /* =============================
@@ -124,6 +133,10 @@ describe("EditEventPage", () => {
     beforeEach(() => {
         vi.clearAllMocks();
 
+        mockAuthState = {
+            loading: false
+        };
+
         mockGetCurrentUserEventAccess.mockResolvedValue({
             success: true,
             role: "organizer",
@@ -172,14 +185,24 @@ describe("EditEventPage", () => {
 
         renderPage();
 
-        expect(
-            await screen.findByText(/you do not have permission to edit this event/i)
-        ).toBeInTheDocument();
+        expect(await screen.findByText(/you do not have permission to edit this event/i)).toBeInTheDocument();
 
         expect(screen.queryByRole("region", {
             name: /edit event form/i
         })).not.toBeInTheDocument();
 
+        expect(mockGetEventById).not.toHaveBeenCalled();
+    });
+
+    it("does not load event access while auth is loading", () => {
+        mockAuthState = {
+            loading: true
+        };
+
+        renderPage();
+
+        expect(screen.getByRole("status")).toHaveTextContent(/loading event form/i);
+        expect(mockGetCurrentUserEventAccess).not.toHaveBeenCalled();
         expect(mockGetEventById).not.toHaveBeenCalled();
     });
 

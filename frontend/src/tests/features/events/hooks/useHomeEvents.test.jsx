@@ -18,6 +18,8 @@ import useEventMembershipRoles from "../../../../features/eventMemberships/hooks
    - membership role loading integration
    - current user role lookup exposure
    - loading state updates
+   - authenticated membership role refresh
+   - unauthenticated membership role skip
    - error handling
 
    Notes:
@@ -68,7 +70,9 @@ describe("useHomeEvents", () => {
     const createHook = (options = {}) => {
         return renderHook(() =>
             useHomeEvents({
-                user: options.user ?? user,
+                user: Object.hasOwn(options, "user")
+                    ? options.user
+                    : user,
                 setError
             })
         );
@@ -178,7 +182,9 @@ describe("useHomeEvents", () => {
             await result.current.loadData();
         });
 
-        expect(mockLoadMembershipRoles).toHaveBeenCalledTimes(1);
+        expect(mockLoadMembershipRoles).toHaveBeenCalledWith({
+            force: true
+        });
     });
 
     it("passes current user and events to membership role hook", () => {
@@ -188,6 +194,20 @@ describe("useHomeEvents", () => {
             user,
             events: []
         });
+    });
+
+    it("does not load membership roles when user is not authenticated", async () => {
+        getAllEvents.mockResolvedValue(createEventResponse());
+
+        const { result } = createHook({
+            user: null
+        });
+
+        await act(async () => {
+            await result.current.loadData();
+        });
+
+        expect(mockLoadMembershipRoles).not.toHaveBeenCalled();
     });
 
     /* =============================

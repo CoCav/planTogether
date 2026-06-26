@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import useEventMembershipRoles from "../../../../features/eventMemberships/hooks/useEventMembershipRoles";
 
-import { getCurrentUserEvents } from "../../../../api/users/userApi";
 import { fetchAllPaginated } from "../../../../utils/pagination";
 
 import { EVENT_ROLES } from "../../../../features/shared/constants/eventRoles";
@@ -15,7 +14,9 @@ import { EVENT_ROLES } from "../../../../features/shared/constants/eventRoles";
    Handles:
    - initial membership role state
    - unauthenticated user fallback
-   - membership role map loading
+   - created and joined membership role loading
+   - duplicate membership fetch prevention
+   - forced membership reload
    - current user organizer role resolution
    - current user membership role resolution
    - missing role fallback
@@ -100,22 +101,67 @@ describe("useEventMembershipRoles", () => {
        MEMBERSHIP LOADING
     ============================= */
 
-    it("loads current user membership roles", async () => {
+    it("loads current user created and joined membership roles", async () => {
+        fetchAllPaginated
+            .mockResolvedValueOnce([
+                { id: 10, role: EVENT_ROLES.ORGANIZER }
+            ])
+            .mockResolvedValueOnce([
+                { id: 20, role: EVENT_ROLES.PARTICIPANT }
+            ]);
+
         const { result } = createHook();
 
         await act(async () => {
             await result.current.loadMembershipRoles();
         });
 
-        expect(fetchAllPaginated).toHaveBeenCalledWith({
-            fetchPage: getCurrentUserEvents,
+        expect(fetchAllPaginated).toHaveBeenCalledTimes(2);
+
+        expect(fetchAllPaginated).toHaveBeenNthCalledWith(1, {
+            fetchPage: expect.any(Function),
+            getItems: expect.any(Function),
+            pageSize: 10
+        });
+
+        expect(fetchAllPaginated).toHaveBeenNthCalledWith(2, {
+            fetchPage: expect.any(Function),
             getItems: expect.any(Function),
             pageSize: 10
         });
 
         expect(result.current.membershipMap).toEqual({
+            10: EVENT_ROLES.ORGANIZER,
             20: EVENT_ROLES.PARTICIPANT
         });
+    });
+
+    it("does not reload roles for the same user unless forced", async () => {
+        const { result } = createHook();
+
+        await act(async () => {
+            await result.current.loadMembershipRoles();
+        });
+
+        await act(async () => {
+            await result.current.loadMembershipRoles();
+        });
+
+        expect(fetchAllPaginated).toHaveBeenCalledTimes(2);
+    });
+
+    it("reloads roles for the same user when forced", async () => {
+        const { result } = createHook();
+
+        await act(async () => {
+            await result.current.loadMembershipRoles();
+        });
+
+        await act(async () => {
+            await result.current.loadMembershipRoles({ force: true });
+        });
+
+        expect(fetchAllPaginated).toHaveBeenCalledTimes(4);
     });
 
     it("clears membership role map when user is not authenticated", async () => {

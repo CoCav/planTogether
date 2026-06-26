@@ -2,6 +2,8 @@ import { useCallback, useState } from "react";
 
 import { getAllEvents } from "../../../api/events/eventApi";
 
+import { getApiErrorMessage } from "../../../api/apiError";
+
 import useEventMembershipRoles from "../../eventMemberships/hooks/useEventMembershipRoles";
 
 import { EVENT_STATUS } from "../../shared/constants/eventStatus";
@@ -133,7 +135,7 @@ export default function useEventListingData({
         } catch (error) {
             console.error("Error loading events:", error);
 
-            setError("Failed to load events");
+            setError(getApiErrorMessage(error, "Failed to load events"));
 
         } finally {
             setLoading(false);

@@ -36,10 +36,7 @@ export default function AuthProvider({ children }) {
 
             return data.user;
         } catch (error) {
-            console.error(
-                "Current user fetch error:",
-                getApiErrorMessage(error, "Unable to fetch current user")
-            );
+            console.error("Current user fetch error:", getApiErrorMessage(error, "Unable to fetch current user"));
 
             removeToken();
             setUser(null);
@@ -64,10 +61,7 @@ export default function AuthProvider({ children }) {
         try {
             await logoutUser();
         } catch (error) {
-            console.error(
-                "Logout API error:",
-                getApiErrorMessage(error, "Unable to logout")
-            );
+            console.error("Logout API error:", getApiErrorMessage(error, "Unable to logout"));
         } finally {
             removeToken();
             setUser(null);
@@ -93,10 +87,7 @@ export default function AuthProvider({ children }) {
                     await fetchCurrentUser();
                 }
             } catch (error) {
-                console.error(
-                    "Auth initialization error:",
-                    getApiErrorMessage(error, "Unable to initialize auth")
-                );
+                console.error("Auth initialization error:", getApiErrorMessage(error, "Unable to initialize auth"));
             } finally {
                 setLoading(false);
             }

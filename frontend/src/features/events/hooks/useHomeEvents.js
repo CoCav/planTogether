@@ -2,6 +2,8 @@ import { useCallback, useState } from "react";
 
 import { getAllEvents } from "../../../api/events/eventApi";
 
+import { getApiErrorMessage } from "../../../api/apiError";
+
 import useEventMembershipRoles from "../../eventMemberships/hooks/useEventMembershipRoles";
 
 import { getNormalizedEvents } from "../eventNormalizer";
@@ -75,7 +77,7 @@ export default function useHomeEvents({ user, setError }) {
         } catch (error) {
             console.error("Error loading home events:", error);
 
-            setError("Failed to load events");
+            setError(getApiErrorMessage(error, "Failed to load events"));
 
         } finally {
             setIsLoading(false);

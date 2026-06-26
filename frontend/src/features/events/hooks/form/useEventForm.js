@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { getApiErrorMessage } from "../../../../api/apiError";
+
 import { EVENT_MODES } from "../../../shared/constants/eventModes";
 import { EVENT_REGISTRATION_DEADLINES } from "../../../shared/constants/eventRegistrationDeadlines";
 
@@ -195,7 +197,7 @@ export default function useEventForm({
         } catch (error) {
             console.error("Error submitting event form:", error);
 
-            setError(submitErrorMessage);
+            setError(getApiErrorMessage(error, submitErrorMessage));
         } finally {
             setIsSubmitting(false);
         }

@@ -356,7 +356,7 @@ describe("CreateEventPage", () => {
     it("displays error when event creation fails", async () => {
         const user = userEvent.setup();
 
-        mockCreateEvent.mockRejectedValue(new Error("API error"));
+        mockCreateEvent.mockRejectedValue({});
 
         renderPage();
 

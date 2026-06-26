@@ -2,6 +2,8 @@ import { useCallback, useState } from "react";
 
 import { getPublicUserProfile, getPublicUserEvents } from "../../../../api/users/userApi";
 
+import { getApiErrorMessage } from "../../../../api/apiError";
+
 import { getNormalizedPublicUserProfile } from "../publicUserNormalizer";
 import { getNormalizedPublicUserEvents } from "../publicUserEventNormalizer";
 
@@ -155,8 +157,7 @@ export default function usePublicUserListingData({
         } catch (error) {
             console.error("Error loading public user:", error);
 
-            setError("Failed to load public user profile");
-
+            setError(getApiErrorMessage(error, "Failed to load public user profile"));
         } finally {
             setIsLoading(false);
             setInitialLoading(false);
@@ -184,8 +185,7 @@ export default function usePublicUserListingData({
         } catch (error) {
             console.error("Error loading public user events:", error);
 
-            setError("Failed to load public user events");
-
+            setError(getApiErrorMessage(error, "Failed to load public user events"));
         } finally {
             setIsLoading(false);
         }

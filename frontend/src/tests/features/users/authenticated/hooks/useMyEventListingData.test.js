@@ -324,7 +324,7 @@ describe("useMyEventListingData", () => {
     ============================= */
 
     it("sets an error message when loading current user events fails", async () => {
-        getCurrentUserEvents.mockRejectedValue(new Error("Network error"));
+        getCurrentUserEvents.mockRejectedValue({});
 
         const { result } = renderUseMyEventListingData();
 

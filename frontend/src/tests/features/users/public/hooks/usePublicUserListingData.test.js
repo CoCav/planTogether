@@ -286,7 +286,7 @@ describe("usePublicUserListingData", () => {
     ============================= */
 
     it("should set profile error when initial loading fails", async () => {
-        getPublicUserProfile.mockRejectedValue(new Error("Network error"));
+        getPublicUserProfile.mockRejectedValue({});
 
         const { result } = renderUsePublicUserListingData();
 
@@ -301,7 +301,7 @@ describe("usePublicUserListingData", () => {
     });
 
     it("should set event error when event refresh fails", async () => {
-        getPublicUserEvents.mockRejectedValue(new Error("Network error"));
+        getPublicUserEvents.mockRejectedValue({});
 
         const { result } = renderUsePublicUserListingData();
 

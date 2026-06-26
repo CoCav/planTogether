@@ -11,8 +11,10 @@ import { createMockApiError, createMockNetworkError } from "../helpers/mocks/moc
    Handles:
    - custom ApiError shape
    - Axios error normalization
+   - HTTP status extraction
    - validation errors extraction
-   - fallback message handling
+   - default fallback message handling
+   - custom fallback message handling
 
    Notes:
    - uses reusable API error mock helpers
@@ -129,11 +131,7 @@ describe("apiError", () => {
         expect(getApiErrorMessage(axiosError)).toBe("Email already in use");
     });
 
-    it("should return default message when backend message is empty", () => {
-        const axiosError = createMockApiError({
-            message: ""
-        });
-
-        expect(getApiErrorMessage(axiosError, "Fallback error")).toBe("Something went wrong.");
+    it("should return custom fallback message when no message is available", () => {
+        expect(getApiErrorMessage({}, "Fallback error")).toBe("Fallback error");
     });
 });

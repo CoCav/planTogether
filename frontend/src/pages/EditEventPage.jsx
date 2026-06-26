@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { getCurrentUserEventAccess, getEventById, updateEvent } from "../api/events/eventApi";
 
+import { getApiErrorMessage } from "../api/apiError";
+
 import { useAuth } from "../features/auth/hooks/useAuth";
 
 import { createDefaultEventFormValues } from "../features/events/form/eventFormConfig";
@@ -160,7 +162,7 @@ export default function EditEventPage() {
         } catch (error) {
             console.error("Error loading event:", error);
 
-            setError("Unable to load event");
+            setError(getApiErrorMessage(error, "Unable to load event"));
         } finally {
             setIsLoading(false);
         }

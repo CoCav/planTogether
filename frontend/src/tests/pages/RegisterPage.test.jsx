@@ -492,9 +492,7 @@ describe("RegisterPage", () => {
     it("shows error message when register fails", async () => {
         const user = userEvent.setup();
 
-        mockRegisterUser.mockRejectedValue(
-            new Error("Register failed")
-        );
+        mockRegisterUser.mockRejectedValue({});
 
         renderPage();
 

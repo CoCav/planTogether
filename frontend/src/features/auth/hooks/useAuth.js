@@ -3,7 +3,7 @@ import { useContext } from "react";
 import { AuthContext } from "../../../context/auth/AuthContext";
 
 /* ==================================================
-   USE AUTH HOOK
+   USE AUTH
    Provides access to the authentication context
 
    Returns:

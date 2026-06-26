@@ -219,7 +219,7 @@ describe("useEventDetailsData", () => {
     ============================= */
 
     it("sets error state when event loading fails", async () => {
-        getEventById.mockRejectedValue(new Error("API error"));
+        getEventById.mockRejectedValue({});
 
         const { result } = renderUseEventDetailsData();
 
@@ -234,7 +234,7 @@ describe("useEventDetailsData", () => {
     });
 
     it("sets error state when staff loading fails", async () => {
-        getEventStaff.mockRejectedValue(new Error("Staff API error"));
+        getEventStaff.mockRejectedValue({});
 
         const { result } = renderUseEventDetailsData();
 
@@ -249,7 +249,7 @@ describe("useEventDetailsData", () => {
     });
 
     it("sets error state when member loading fails", async () => {
-        getEventMembers.mockRejectedValue(new Error("Members API error"));
+        getEventMembers.mockRejectedValue({});
 
         const { result } = renderUseEventDetailsData();
 

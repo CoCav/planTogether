@@ -501,7 +501,7 @@ describe("useEventListingData", () => {
     ============================= */
 
     it("sets an error message when loading events fails", async () => {
-        getAllEvents.mockRejectedValue(new Error("Network error"));
+        getAllEvents.mockRejectedValue({});
 
         const { result } = renderUseEventListingData();
 
@@ -517,7 +517,7 @@ describe("useEventListingData", () => {
     it("sets an error message when membership role loading fails", async () => {
         getAllEvents.mockResolvedValue(createPaginatedEventResponse());
 
-        mockLoadMembershipRoles.mockRejectedValue(new Error("Role loading failed"));
+        mockLoadMembershipRoles.mockRejectedValue({});
 
         const { result } = renderUseEventListingData();
 

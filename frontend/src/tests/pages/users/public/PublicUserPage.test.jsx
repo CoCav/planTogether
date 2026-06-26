@@ -459,7 +459,7 @@ describe("PublicUserPage", () => {
     ============================= */
 
     it("shows error message when loading public profile fails", async () => {
-        getPublicUserProfile.mockRejectedValue(new Error("API error"));
+        getPublicUserProfile.mockRejectedValue({});
 
         renderPage();
 
@@ -471,7 +471,7 @@ describe("PublicUserPage", () => {
 
         getPublicUserEvents
             .mockResolvedValueOnce(createEventsResponse())
-            .mockRejectedValueOnce(new Error("API error"));
+            .mockRejectedValueOnce({});
 
         renderPage();
 

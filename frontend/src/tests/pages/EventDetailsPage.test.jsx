@@ -367,7 +367,7 @@ describe("EventDetailsPage", () => {
     });
 
     it("should show empty state when API fails", async () => {
-        mockGetEventById.mockRejectedValue(new Error("API error"));
+        mockGetEventById.mockRejectedValue({});
         mockGetEventStaff.mockResolvedValue({ eventStaff: [] });
         mockGetEventMembers.mockResolvedValue({ members: [] });
 
@@ -927,7 +927,7 @@ describe("EventDetailsPage", () => {
             ]
         });
 
-        mockDeleteEvent.mockRejectedValue(new Error("API error"));
+        mockDeleteEvent.mockRejectedValue({});
 
         renderPage();
 
@@ -936,7 +936,7 @@ describe("EventDetailsPage", () => {
         }));
 
         await waitFor(() => {
-            expect(mockToast.danger).toHaveBeenCalledWith("API error");
+            expect(mockToast.danger).toHaveBeenCalledWith("Unable to delete event");
         });
 
         expect(mockNavigate).not.toHaveBeenCalledWith("/events");

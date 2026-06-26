@@ -64,7 +64,10 @@ export const createMockValidationError = ({
 ============================= */
 
 // Create a network error
+// Create an Axios-like network error
 export const createMockNetworkError = (message = "Network Error") => {
-
-    return new Error(message);
+    return {
+        message,
+        response: undefined
+    };
 };

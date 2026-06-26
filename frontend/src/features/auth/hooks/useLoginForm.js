@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { getApiErrorMessage } from "../../../api/apiError";
+
 import { validateLoginForm } from "../authValidation";
 
 /* ==================================================
@@ -119,7 +121,7 @@ export default function useLoginForm({
         } catch (error) {
             console.error("Error submitting login form:", error);
 
-            setError(submitErrorMessage);
+            setError(getApiErrorMessage(error, submitErrorMessage));
         } finally {
             setIsSubmitting(false);
         }

@@ -2,6 +2,8 @@ import { useCallback, useState } from "react";
 
 import { getEventById } from "../../../../api/events/eventApi";
 
+import { getApiErrorMessage } from "../../../../api/apiError";
+
 import { getEventMembers, getEventStaff } from "../../../../api/eventMemberships/eventMembershipApi";
 
 import { getNormalizedEvent } from "../../eventNormalizer";
@@ -51,7 +53,7 @@ export default function useEventDetailsData({ eventId, setError, setLoading }) {
         } catch (error) {
 
             console.error("Error loading event details:", error);
-            setError("Failed to load event details");
+            setError(getApiErrorMessage(error, "Failed to load event details"));
         } finally {
             setLoading(false);
         }

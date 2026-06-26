@@ -215,7 +215,7 @@ describe("useHomeEvents", () => {
     ============================= */
 
     it("sets an error message when loading events fails", async () => {
-        getAllEvents.mockRejectedValue(new Error("Network error"));
+        getAllEvents.mockRejectedValue({});
 
         const { result } = createHook();
 

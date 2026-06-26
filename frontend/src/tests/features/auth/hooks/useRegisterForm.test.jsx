@@ -319,7 +319,7 @@ describe("useRegisterForm", () => {
 
     it("stores submit error when submission fails", async () => {
         const onSubmitValid = vi.fn(() => {
-            throw new Error("Register failed");
+            throw {};
         });
 
         const { result } = createHook({
@@ -332,16 +332,14 @@ describe("useRegisterForm", () => {
             });
         });
 
-        expect(result.current.feedback.error).toBe(
-            submitErrorMessage
-        );
+        expect(result.current.feedback.error).toBe(submitErrorMessage);
     });
 
     it("uses custom submit error message when submission fails", async () => {
         const customSubmitErrorMessage = "Custom register error";
 
         const onSubmitValid = vi.fn(() => {
-            throw new Error("Register failed");
+            throw {};
         });
 
         const { result } = createHook({

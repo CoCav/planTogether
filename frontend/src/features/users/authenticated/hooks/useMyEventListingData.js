@@ -2,6 +2,8 @@ import { useCallback, useState } from "react";
 
 import { getCurrentUserEvents } from "../../../../api/users/userApi";
 
+import { getApiErrorMessage } from "../../../../api/apiError";
+
 import { getMyEventViewContent } from "../myEventViewConfig";
 import { getMyEventFilterFields } from "../myEventFilters";
 import { normalizePaginatedMyEvents } from "../myEventNormalizer";
@@ -108,7 +110,7 @@ export default function useMyEventListingData({
         } catch (error) {
             console.error("Error loading my events:", error);
 
-            setError("Failed to load your events");
+            setError(getApiErrorMessage(error, "Failed to load your events"));
         } finally {
             setLoading(false);
             setInitialLoading(false);

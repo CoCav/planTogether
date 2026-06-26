@@ -662,7 +662,7 @@ describe("MyEventsPage", () => {
     ============================= */
 
     it("shows error message when loading events fails", async () => {
-        getCurrentUserEvents.mockRejectedValue(new Error("API error"));
+        getCurrentUserEvents.mockRejectedValue({});
 
         renderPage();
 

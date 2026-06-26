@@ -403,9 +403,7 @@ describe("LoginPage", () => {
     it("shows error message when login fails", async () => {
         const user = userEvent.setup();
 
-        mockLoginUser.mockRejectedValue(
-            new Error("Login failed")
-        );
+        mockLoginUser.mockRejectedValue({});
 
         renderPage();
 

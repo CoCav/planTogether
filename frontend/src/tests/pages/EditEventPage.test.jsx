@@ -523,7 +523,7 @@ describe("EditEventPage", () => {
     ============================= */
 
     it("displays error when event loading fails", async () => {
-        mockGetEventById.mockRejectedValue(new Error("API error"));
+        mockGetEventById.mockRejectedValue({});
 
         renderPage();
 
@@ -535,7 +535,7 @@ describe("EditEventPage", () => {
     it("displays error when event update fails", async () => {
         const user = userEvent.setup();
 
-        mockUpdateEvent.mockRejectedValue(new Error("API error"));
+        mockUpdateEvent.mockRejectedValue({});
 
         renderPage();
 

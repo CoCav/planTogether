@@ -18,6 +18,7 @@ import { validateLoginForm } from "../../../../features/auth/authValidation.js";
    - successful submit flow
    - failed submit flow
    - validation error handling
+   - API fallback error handling
 ================================================== */
 
 vi.mock("../../../../features/auth/authValidation.js", () => ({
@@ -261,7 +262,7 @@ describe("useLoginForm", () => {
 
     it("stores submit error when submission fails", async () => {
         const onSubmitValid = vi.fn(() => {
-            throw new Error("Login failed");
+            throw {};
         });
 
         const { result } = createHook({

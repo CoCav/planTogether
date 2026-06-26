@@ -500,7 +500,7 @@ describe("useEventForm", () => {
     });
 
     it("should set error when submit fails", async () => {
-        const onSubmitValid = vi.fn().mockRejectedValue(new Error("API error"));
+        const onSubmitValid = vi.fn().mockRejectedValue({});
 
         const { result } = setupHook({
             initialValues: createValidValues(),

@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { getApiErrorMessage } from "../../../api/apiError";
+
 import { validateRegisterForm } from "../authValidation";
 
 /* ==================================================
@@ -135,7 +137,7 @@ export default function useRegisterForm({
         } catch (error) {
             console.error("Error submitting register form:", error);
 
-            setError(submitErrorMessage);
+            setError(getApiErrorMessage(error, submitErrorMessage));
         } finally {
             setIsSubmitting(false);
         }

@@ -8,8 +8,9 @@ import Toast from "./Toast";
    Displays global toast notifications
 
    Handles:
+   - empty toast state
    - toast list rendering
-   - toast dismissal
+   - toast dismissal forwarding
    - global notification region
 ================================================== */
 
@@ -29,7 +30,7 @@ export default function ToastContainer() {
     ========================= */
 
     return (
-        <div className="toast-container" aria-label="Notifications">
+        <div className="toast-container" role="region" aria-label="Notifications">
             {toasts.map((toast) => (
                 <Toast
                     key={toast.id}

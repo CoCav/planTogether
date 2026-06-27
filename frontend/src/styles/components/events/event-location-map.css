@@ -109,11 +109,6 @@
     flex-shrink: 0;
 }
 
-.popup-btn:hover {
-    opacity: 0.92;
-    transform: translateY(-1px);
-}
-
 .popup-btn:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
@@ -123,12 +118,6 @@
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     color: var(--color-text) !important;
-}
-
-.popup-btn.secondary:hover {
-    background: var(--color-primary-subtle);
-    border-color: var(--color-primary);
-    color: var(--color-primary) !important;
 }
 
 /* =========================================
@@ -191,5 +180,11 @@
     .popup-btn:hover {
         opacity: 0.92;
         transform: translateY(-1px);
+    }
+
+    .popup-btn.secondary:hover {
+        background: var(--color-primary-subtle);
+        border-color: var(--color-primary);
+        color: var(--color-primary) !important;
     }
 }

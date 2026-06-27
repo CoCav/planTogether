@@ -14,8 +14,8 @@ import Input from "../ui/Input";
    Handles:
    - email field rendering
    - password field rendering
-   - remember me state
-   - login form submission
+   - remember me state and disabled state
+   - login form submission state
    - account navigation footer
    - accessible form field associations
    - registration redirect state forwarding
@@ -92,6 +92,7 @@ export default function LoginForm({
                             type="checkbox"
                             checked={rememberMe}
                             onChange={onRememberMeChange}
+                            disabled={isSubmitting}
                         />
 
                         <span>Remember me</span>
@@ -101,7 +102,11 @@ export default function LoginForm({
             </div>
 
             <div className="form-actions">
-                <Button type="submit" loading={isSubmitting}>
+                <Button
+                    type="submit"
+                    loading={isSubmitting}
+                    disabled={isSubmitting}
+                >
                     {submitLabel}
                 </Button>
             </div>

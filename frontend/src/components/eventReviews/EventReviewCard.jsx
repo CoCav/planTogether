@@ -18,11 +18,12 @@ import EventReviewForm from "./EventReviewForm";
    - reviewer identity display
    - reviewer avatar display
    - review date display
-   - review rating display
+   - read-only review rating display
    - review comment display
-   - review edit mode (inline form)
-   - review update & delete actions (owner only)
-   - loading states (updating / deleting)
+   - accessible review list item semantics
+   - review edit mode with inline form
+   - review update and delete actions for owners
+   - loading states for updating and deleting
 
    Notes:
    - review display data is prepared by eventReviewDisplayData
@@ -71,7 +72,7 @@ export default function EventReviewCard({
     };
 
     return (
-        <article className="event-review-card">
+        <article className="event-review-card" role="listitem">
             <div className="event-review-card-inner">
 
                 <div className="event-review-card-top">
@@ -101,7 +102,7 @@ export default function EventReviewCard({
 
                     </div>
 
-                    {data.isOwner && (
+                    {data.isOwner && !isEditing && (
                         <div className="event-review-card-actions">
                             <EventReviewActionsMenu
                                 canManage={data.isOwner}

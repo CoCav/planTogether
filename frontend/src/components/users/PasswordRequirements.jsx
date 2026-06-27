@@ -9,7 +9,9 @@ import { PASSWORD_REQUIREMENTS, PASSWORD_REQUIREMENT_LABELS } from "../../featur
    Handles:
    - password requirement rendering
    - valid requirement state display
+   - live requirement feedback
    - accessible requirement list semantics
+   - optional helper id forwarding
    - decorative validation icons
 ================================================== */
 
@@ -51,7 +53,7 @@ export default function PasswordRequirements({ id, password = "" }) {
     ============================= */
 
     return (
-        <div id={id} className="password-requirements">
+        <div id={id} className="password-requirements" aria-live="polite">
             <p className="password-requirements-title">
                 Your password must contain at least:
             </p>

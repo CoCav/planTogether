@@ -16,16 +16,15 @@ import TextArea from "../ui/TextArea";
    Shared event form for create and edit flows
 
    Handles:
-   - event field rendering
-   - event image upload rendering
-   - location autocomplete integration
-   - selected location map preview
-   - accessible form field descriptions
-   - accessible invalid field states
-   - validation error display
-   - optional field indicators
+   - event image upload
+   - event information fields
+   - location autocomplete
+   - optional location map preview
    - conditional field rendering
-   - started event field restrictions
+   - optional field indicators
+   - validation error display
+   - submit and cancel actions
+   - accessible form fields
 
    Notes:
    - shared by create and edit flows
@@ -166,7 +165,7 @@ export default function EventForm({
                     )}
                 </FormField>
 
-                <FormField label="Participant limit" optional htmlFor="maxParticipants" className="event-form-field-half">
+                <FormField label="Participant limit" optional htmlFor="maxParticipants" className="event-form-field-half" error={fieldErrors.maxParticipants}>
                     {(errorId) => (
                         <Input
                             id="maxParticipants"
@@ -174,6 +173,7 @@ export default function EventForm({
                             name="maxParticipants"
                             value={values.maxParticipants}
                             onChange={onFieldChange}
+                            error={fieldErrors.maxParticipants}
                             aria-describedby={errorId}
                         />
                     )}
@@ -267,7 +267,7 @@ export default function EventForm({
                 </FormField>
 
                 {showCustomDeadline && (
-                    <FormField label="Custom deadline" htmlFor="registrationDeadlineCustom" className="event-form-field-half">
+                    <FormField label="Custom deadline" htmlFor="registrationDeadlineCustom" className="event-form-field-half" error={fieldErrors.registrationDeadlineCustom}>
                         {(errorId) => (
                             <Input
                                 id="registrationDeadlineCustom"
@@ -275,6 +275,7 @@ export default function EventForm({
                                 name="registrationDeadlineCustom"
                                 value={values.registrationDeadlineCustom}
                                 onChange={onFieldChange}
+                                error={fieldErrors.registrationDeadlineCustom}
                                 aria-describedby={errorId}
                             />
                         )}

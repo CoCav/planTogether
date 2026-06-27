@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Star } from "lucide-react";
 
 import usePagination from "../../hooks/usePagination";
@@ -23,14 +23,14 @@ import Pagination from "../ui/Pagination";
    Handles:
    - paginated review loading lifecycle
    - review form toggle state
+   - accessible review form panel relationship
    - review creation, update and deletion
-   - review statistics (count + average rating)
-   - review summary display (rating pill)
+   - review statistics count and average rating
+   - review summary display
    - inline review loading errors
    - toast feedback for review mutations
    - authenticated review form access
    - review list rendering
-   - responsive layout for reviews section
    - review pagination controls
 
    Notes:
@@ -53,6 +53,13 @@ export default function EventReviewsSection({ eventId, user }) {
     ========================= */
 
     const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
+
+
+    /* =============================
+       ACCESSIBILITY
+    ============================= */
+
+    const reviewFormPanelId = useId();
 
 
     /* =========================
@@ -180,7 +187,7 @@ export default function EventReviewsSection({ eventId, user }) {
                         variant="outline"
                         onClick={handleToggleReviewForm}
                         aria-expanded={isReviewFormOpen}
-                        aria-controls="event-review-form-panel"
+                        aria-controls={isReviewFormOpen ? reviewFormPanelId : undefined}
                     >
                         {isReviewFormOpen
                             ? "Hide review form"
@@ -200,7 +207,7 @@ export default function EventReviewsSection({ eventId, user }) {
             ========================= */}
 
             {user && isReviewFormOpen && (
-                <div id="event-review-form-panel" className="event-reviews-section-form">
+                <div id={reviewFormPanelId} className="event-reviews-section-form">
                     <EventReviewForm
                         onSubmit={handleSubmitReview}
                         isSubmitting={isSubmitting}

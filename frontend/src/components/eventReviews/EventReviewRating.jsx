@@ -8,6 +8,8 @@ import { Star } from "lucide-react";
    - read-only rating display
    - interactive rating selection
    - accessible rating controls
+   - optional accessible descriptions
+   - disabled interactive state
    - decorative star icons
 
    Notes:
@@ -20,7 +22,8 @@ export default function EventReviewRating({
     onChange,
     readOnly = false,
     disabled = false,
-    label = "Rating"
+    label = "Rating",
+    describedBy
 }) {
     const stars = [1, 2, 3, 4, 5];
 
@@ -29,6 +32,8 @@ export default function EventReviewRating({
             className="event-review-rating"
             role={readOnly ? "img" : "radiogroup"}
             aria-label={readOnly ? `${value} out of 5 stars` : label}
+            aria-disabled={!readOnly && disabled ? true : undefined}
+            aria-describedby={describedBy}
         >
             {stars.map((star) => {
                 const isActive = star <= Number(value);

@@ -33,13 +33,14 @@ import Pagination from "../components/ui/Pagination";
 
    Handles:
    - public event listing
+   - event listing state orchestration
    - filters and quick filters
    - pagination
    - URL synchronization
    - view switching
    - membership actions
    - toast feedback for membership actions
-   - accessible filters and results sections
+   - accessible page sections
    - accessible results metadata
    - auth-ready initial loading guard
 ================================================== */
@@ -268,7 +269,12 @@ export default function EventsPage() {
                     </p>
                 </div>
 
-                <Link to="/events/create" className="btn btn-primary">Create Event</Link>
+                <Link
+                    to="/events/create"
+                    className="btn btn-primary"
+                >
+                    Create Event
+                </Link>
             </header>
 
             {/* =============================
@@ -300,7 +306,7 @@ export default function EventsPage() {
                 />
             </section>
 
-            <section className="events-results-controls" aria-labelledby="events-results-title">
+            <section className="events-results-controls">
                 <EventsToolbar
                     titleId="events-results-title"
                     title={viewContent.title}

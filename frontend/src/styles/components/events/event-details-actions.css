@@ -28,9 +28,4 @@
     .event-details-actions .btn {
         flex: 1;
     }
-
-    .event-details-actions .alert {
-        width: 100%;
-        margin-bottom: 0;
-    }
 }

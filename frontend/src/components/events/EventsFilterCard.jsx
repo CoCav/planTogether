@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Search, RotateCcw, SlidersHorizontal } from "lucide-react";
 
 import { EVENT_MODES, getEventModeLabel } from "../../features/shared/constants/eventModes";
@@ -13,11 +14,14 @@ import Select from "../ui/Select";
    Reusable filter form for event listing pages
 
    Handles:
-   - search filters
+   - filter visibility toggle
+   - search and category filters
+   - mode filter options
    - date and date range filters
-   - mutually exclusive date filter controls
+   - mutually exclusive date controls
    - sorting controls
-   - accessible visibility toggle
+   - filter submit and reset actions
+   - accessible form and section relationships
 ================================================== */
 
 export default function EventsFilterCard({
@@ -42,17 +46,22 @@ export default function EventsFilterCard({
        CONSTANTS
     ============================= */
 
-    // Accessible form identifier
-    const formId = "events-filters-form";
+    const id = useId();
 
-    // Select-ready sort options
+    const formId = `${id}-form`;
+    const titleId = `${id}-title`;
+    const mainFiltersId = `${id}-main`;
+    const datesId = `${id}-dates`;
+    const sortId = `${id}-sort`;
+
     const sortOptions = Object.entries(sortLabels);
+
 
     return (
         <Card className="events-filter-card">
             <header className="events-filter-card-header">
                 <div>
-                    <h2 id="events-filters-title" className="section-title">
+                    <h2 id={titleId} className="section-title">
                         Filters
                     </h2>
 
@@ -79,11 +88,13 @@ export default function EventsFilterCard({
                     id={formId}
                     className="events-filter-form"
                     onSubmit={onFilterSubmit}
-                    aria-labelledby="events-filters-title"
+                    aria-labelledby={titleId}
                 >
 
-                    <section className="events-filter-section" aria-labelledby="events-filter-main-title">
-                        <h3 id="events-filter-main-title" className="events-filter-section-title">Main filters</h3>
+                    <section className="events-filter-section" aria-labelledby={mainFiltersId}>
+                        <h3 id={mainFiltersId} className="events-filter-section-title">
+                            Main filters
+                        </h3>
 
                         <div className="events-filter-grid">
                             <FormField label="Search" htmlFor="event-filter-search">
@@ -175,8 +186,8 @@ export default function EventsFilterCard({
                         </div>
                     </section>
 
-                    <section className="events-filter-section" aria-labelledby="events-filter-dates-title">
-                        <h3 id="events-filter-dates-title" className="events-filter-section-title">Dates</h3>
+                    <section className="events-filter-section" aria-labelledby={datesId}>
+                        <h3 id={datesId} className="events-filter-section-title">Dates</h3>
 
                         <div className="events-filter-grid">
                             <FormField label="Date" htmlFor="event-filter-date">
@@ -223,8 +234,8 @@ export default function EventsFilterCard({
                         </div>
                     </section>
 
-                    <section className="events-filter-section" aria-labelledby="events-filter-sort-title">
-                        <h3 id="events-filter-sort-title" className="events-filter-section-title">Sort</h3>
+                    <section className="events-filter-section" aria-labelledby={sortId}>
+                        <h3 id={sortId} className="events-filter-section-title">Sort</h3>
 
                         <div className="events-filter-toolbar">
                             <div className="events-filter-sort">

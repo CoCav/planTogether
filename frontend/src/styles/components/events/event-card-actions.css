@@ -19,13 +19,6 @@
 ========================================= */
 
 .event-login-prompt {
-    color: var(--color-text-muted);
-
-    font-size: var(--font-size-sm);
-    font-weight: 500;
-}
-
-.event-login-prompt {
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);

@@ -30,6 +30,8 @@ import PageLoader from "../components/ui/PageLoader";
    - started event start date protection
    - update event submission
    - redirect after successful update
+   - cancel navigation
+   - inline update error feedback
    - accessible form section
    - auth-ready protected loading guard
 
@@ -137,7 +139,7 @@ export default function EditEventPage() {
             const access = await getCurrentUserEventAccess(eventId);
 
             // Prevent unauthorized users from loading the edit form
-            if (!access.canEdit) {
+            if (!access?.canEdit) {
                 setCanAccessEditForm(false);
                 setError("You do not have permission to edit this event.");
                 return;

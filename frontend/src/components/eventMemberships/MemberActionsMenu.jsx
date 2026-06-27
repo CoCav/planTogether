@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 
 import { useClickOutside } from "../../hooks/useClickOutside";
@@ -11,12 +11,13 @@ import Button from "../ui/Button";
 
    Handles:
    - action menu toggle state
-   - dynamic action rendering
+   - dynamic action filtering and rendering
    - menu close after action
    - outside click detection
    - accessible menu trigger state
+   - accessible menu relationship ids
    - decorative action icons
-   - danger action styling
+   - danger and separated action styling
 
    Notes:
    - used inside event member rows
@@ -33,6 +34,7 @@ export default function MemberActionsMenu({ actions = [] }) {
     const [isOpen, setIsOpen] = useState(false);
 
     const menuRef = useRef(null);
+    const menuId = useId();
 
     /* =============================
        DISPLAY STATE
@@ -84,6 +86,7 @@ export default function MemberActionsMenu({ actions = [] }) {
                 onClick={toggleMenu}
                 aria-expanded={isOpen}
                 aria-haspopup="menu"
+                aria-controls={isOpen ? menuId : undefined}
             >
                 Manage
 
@@ -93,7 +96,7 @@ export default function MemberActionsMenu({ actions = [] }) {
             </Button>
 
             {isOpen && (
-                <div className="member-actions-dropdown" role="menu">
+                <div id={menuId} className="member-actions-dropdown" role="menu">
                     {visibleActions.map((action) => {
                         const ActionIcon = action.icon;
 

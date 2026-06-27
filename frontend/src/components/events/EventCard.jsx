@@ -21,13 +21,13 @@ import Badge from "../ui/Badge";
 
    Handles:
    - event title, image and description display
-   - status, type, creator and role badges
+   - status, type, creator and membership badge display
    - event metadata display
-   - review summary display for completed events
+   - completed event review summary display
    - membership action visibility
    - image fallback handling
    - public profile navigation
-   - accessible event links and labels
+   - accessible event links, labels and images
 
    Notes:
    - completed events show review stats instead of join/leave actions
@@ -72,7 +72,9 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
 
     const eventImage = getEventImage(event.image);
 
-    const imageAlt = `Event cover for ${eventDisplayData.title}`;
+    const imageAlt = eventDisplayData.title
+        ? `Event cover for ${eventDisplayData.title}`
+        : "Event cover";
 
     const shouldShowOrganizerInline = role !== EVENT_ROLES.ORGANIZER;
 
@@ -154,7 +156,11 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                 <Link
                     to={eventDetailsPath}
                     className="event-card-image-link"
-                    aria-label={`View details for ${eventDisplayData.title}`}
+                    aria-label={
+                        eventDisplayData.title
+                            ? `View details for ${eventDisplayData.title}`
+                            : "View event details"
+                    }
                 >
                     <img
                         src={eventImage}

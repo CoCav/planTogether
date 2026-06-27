@@ -61,8 +61,9 @@
     cursor: pointer;
 }
 
-.toast-close-button:hover {
-    background: rgba(0, 0, 0, 0.08);
+.toast-close-button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
 }
 
 /* =========================================
@@ -118,5 +119,21 @@
     to {
         opacity: 1;
         transform: translateX(0);
+    }
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (hover: hover) {
+    .toast-close-button:hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .toast {
+        animation: none;
     }
 }

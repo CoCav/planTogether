@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 
@@ -15,10 +15,12 @@ import NavbarUserMenu from "./NavbarUserMenu";
    Handles:
    - application branding
    - primary navigation links
-   - authentication navigation
-   - authenticated user menu
-   - mobile navigation menu
+   - guest authentication navigation
+   - authenticated user navigation
+   - authenticated user menu integration
+   - mobile navigation menu state
    - accessible mobile navigation toggle
+   - logout redirect flow
    - decorative mobile menu icon
 ================================================== */
 
@@ -32,6 +34,12 @@ export default function Navbar() {
     ========================= */
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    /* =========================
+       ACCESSIBILITY
+    ========================= */
+
+    const mobileMenuId = useId();
 
     /* =========================
        DISPLAY DATA
@@ -91,7 +99,7 @@ export default function Navbar() {
                     className="btn btn-outline navbar-mobile-toggle"
                     onClick={toggleMobileMenu}
                     aria-expanded={isMobileMenuOpen}
-                    aria-controls="navbar-mobile-menu"
+                    aria-controls={mobileMenuId}
                     aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
                 >
                     {isMobileMenuOpen ? (
@@ -105,7 +113,7 @@ export default function Navbar() {
                     NAVIGATION CONTENT
                 ========================= */}
 
-                <div id="navbar-mobile-menu" className={`navbar-menu ${isMobileMenuOpen ? "is-open" : ""}`}>
+                <div id={mobileMenuId} className={`navbar-menu ${isMobileMenuOpen ? "is-open" : ""}`}>
                     <nav className="navbar-links" aria-label="Main navigation">
                         <NavLink
                             to="/events"

@@ -52,6 +52,8 @@ import PageLoader from "../components/ui/PageLoader";
    - display-ready event formatting
    - accessible event image rendering
    - physical event location map display
+   - accessible event overview structure
+   - event description and category sections
    - staff and participant section management
    - event review section placement for completed events
    - toast feedback for event and membership actions
@@ -126,7 +128,7 @@ export default function EventDetailsPage() {
         isStarted,
 
         isEventFull,
-        isRegistrationClosed,
+        isRegistrationClosed
     } = useEventStatus({
         user,
         event,
@@ -359,9 +361,9 @@ export default function EventDetailsPage() {
                         />
 
                         {!isOnlineEventMode(event.mode) && eventDisplayData.location && (
-                            <section className="event-location-section">
+                            <section className="event-location-section" aria-labelledby="event-location-title">
                                 <div className="event-location-heading">
-                                    <h3 className="event-details-section-title">
+                                    <h3 id="event-location-title" className="event-details-section-title">
                                         Event location
                                     </h3>
 

@@ -12,8 +12,10 @@ import Input from "../ui/Input";
    - password input rendering
    - password visibility toggle
    - accessible toggle state
-   - validation error display
-   - optional helper content
+   - single validation error display
+   - multiple validation error display
+   - helper content rendering
+   - accessible input descriptions
    - decorative toggle icon
 ================================================== */
 
@@ -34,6 +36,13 @@ export default function PasswordField({
 
     children
 }) {
+
+    /* =============================
+       ACCESSIBILITY
+    ============================= */
+
+    // Links helper content and validation messages to the input
+    const helperId = children ? `${id}-helper` : undefined;
 
     /* =============================
        ERROR STATE
@@ -66,11 +75,10 @@ export default function PasswordField({
                             onChange={onChange}
                             error={!!error}
                             autoComplete={autoComplete}
-                            aria-describedby={
-                                hasMultipleErrors
-                                    ? multipleErrorId
-                                    : errorId
-                            }
+                            aria-describedby={[
+                                hasMultipleErrors ? multipleErrorId : errorId,
+                                helperId
+                            ].filter(Boolean).join(" ") || undefined}
                         />
 
                         <Button
@@ -99,7 +107,11 @@ export default function PasswordField({
                         </ul>
                     )}
 
-                    {children}
+                    {children && (
+                        <div id={helperId}>
+                            {children}
+                        </div>
+                    )}
                 </>
             )}
         </FormField>

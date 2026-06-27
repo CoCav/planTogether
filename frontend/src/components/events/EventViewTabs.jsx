@@ -3,9 +3,14 @@
    Navigation tabs for switching between event views
 
    Handles:
+   - tablist rendering
    - active tab state
+   - inactive tab state
+   - view change callback
+   - safe optional change handler
    - accessible tab navigation
-   - mobile horizontal scrolling
+   - decorative tab icons
+   - mobile horizontal scrolling wrapper
 ================================================== */
 
 export default function EventViewTabs({ views, activeView, onChange }) {
@@ -22,7 +27,7 @@ export default function EventViewTabs({ views, activeView, onChange }) {
                             type="button"
                             role="tab"
                             className={`event-view-tab ${isActive ? "is-active" : ""}`.trim()}
-                            onClick={() => onChange(view.key)}
+                            onClick={() => onChange?.(view.key)}
                             aria-selected={isActive}
                             tabIndex={isActive ? 0 : -1}
                         >

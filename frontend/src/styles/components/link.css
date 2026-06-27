@@ -12,10 +12,6 @@
     font-weight: 500;
 }
 
-.link-inline:hover {
-    text-decoration: underline;
-}
-
 /* =========================================
    ANIMATED UNDERLINE LINK
 ========================================= */
@@ -43,11 +39,6 @@
     transition: transform var(--transition-base);
 }
 
-.link-animated-underline:hover::after,
-.link-animated-underline.active::after {
-    transform: scaleX(1);
-}
-
 /* =========================================
    HOVER LINK
 ========================================= */
@@ -56,7 +47,28 @@
     transition: color var(--transition-fast);
 }
 
-.link-hover-primary:hover,
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (hover: hover) {
+    .link-inline:hover {
+        text-decoration: underline;
+    }
+
+    .link-animated-underline:hover::after {
+        transform: scaleX(1);
+    }
+
+    .link-hover-primary:hover {
+        color: var(--color-primary);
+    }
+}
+
+.link-animated-underline.active::after {
+    transform: scaleX(1);
+}
+
 .link-hover-primary:focus-visible {
     color: var(--color-primary);
 }

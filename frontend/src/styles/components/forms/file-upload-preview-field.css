@@ -34,7 +34,6 @@
         box-shadow var(--transition-fast);
 }
 
-.file-upload-preview-dropzone:hover,
 .file-upload-preview-dropzone.drag-active {
     border-color: var(--color-primary);
     background: var(--color-primary-subtle);
@@ -86,19 +85,17 @@
 }
 
 .file-upload-preview-input {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .file-upload-preview-header .btn {
     color: var(--color-primary);
     border-color: var(--color-primary-border);
     font-weight: 600;
-}
-
-.file-upload-preview-header .btn:hover {
-    color: var(--color-primary-hover);
-    background: var(--color-surface);
-    border-color: var(--color-primary);
 }
 
 /* =========================================
@@ -195,5 +192,19 @@
     .file-upload-preview-field.event .file-upload-preview-remove {
         grid-column: 2;
         align-self: center;
+    }
+}
+
+@media (hover: hover) {
+    .file-upload-preview-dropzone:hover {
+        border-color: var(--color-primary);
+        background: var(--color-primary-subtle);
+        box-shadow: var(--shadow-focus-primary);
+    }
+
+    .file-upload-preview-header .btn:hover {
+        color: var(--color-primary-hover);
+        background: var(--color-surface);
+        border-color: var(--color-primary);
     }
 }

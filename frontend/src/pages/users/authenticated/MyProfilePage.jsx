@@ -23,18 +23,20 @@ import PageLoader from "../../../components/ui/PageLoader";
    update their password, and manage account settings
 
    Handles:
+   - auth-ready profile rendering
    - profile form orchestration
    - password form orchestration
    - account deletion orchestration
-   - inline profile and password feedback messages
-   - toast feedback for account deletion errors
+   - inline success and error feedback
+   - temporary feedback cleanup
+   - toast forwarding for account deletion
    - accessible profile sections
    - decorative submit icon
-   - auth-ready profile rendering
 ================================================== */
 
 export default function MyProfilePage() {
     const { user, loading: authLoading, refreshUser, logout } = useAuth();
+
 
     /* =============================
        TOAST FEEDBACK
@@ -90,7 +92,6 @@ export default function MyProfilePage() {
         logout,
         toast
     });
-
 
 
     /* =============================

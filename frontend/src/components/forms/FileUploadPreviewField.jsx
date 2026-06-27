@@ -11,12 +11,13 @@ import FormField from "../ui/FormField";
    Handles:
    - file input rendering when no preview is available
    - selected file preview display
-   - existing file preview resolution
-   - conditional dropzone / preview rendering
+   - existing file preview display
+   - conditional dropzone and preview rendering
    - drag and drop interactions
    - file removal action
    - accessible helper and error descriptions
-   - decorative upload and remove icons rendering
+   - variant styling hook
+   - decorative upload and remove icons
 
    Notes:
    - reusable for avatar and event image uploads
@@ -82,7 +83,7 @@ export default function FileUploadPreviewField({
 
     return (
         <div className={`file-upload-preview-field ${variant}`.trim()}>
-            <FormField label={label} htmlFor={inputId} error={error}>
+            <FormField label={label} htmlFor={!preview ? inputId : undefined} error={error}>
                 {(errorId) => (
                     <>
                         {!preview && (

@@ -46,7 +46,6 @@
     --color-danger-hover: #b91c1c;
 
     /* Feedback */
-    /* Feedback */
     --color-info-text: #1d4ed8;
     --color-info-background: #eff6ff;
     --color-info-border: #bfdbfe;
@@ -132,4 +131,5 @@
     --z-navbar: 100;
     --z-dropdown: 200;
     --z-mobile-menu: 300;
+    --z-toast: 1000;
 }

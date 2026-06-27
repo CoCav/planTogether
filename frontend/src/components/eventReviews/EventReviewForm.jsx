@@ -1,3 +1,4 @@
+import { useId } from "react";
 import useEventReviewForm from "../../features/eventReviews/hooks/forms/useEventReviewForm";
 
 import EventReviewRating from "./EventReviewRating";
@@ -17,7 +18,8 @@ import FormField from "../ui/FormField";
    - edit review submission
    - optional cancel action
    - submit loading state
-   - accessible form field association
+   - stable accessible field ids
+   - accessible form field associations
 
    Notes:
    - form state and validation are handled by useEventReviewForm
@@ -45,6 +47,15 @@ export default function EventReviewForm({
 
     const { handleFieldChange, handleRatingChange, handleSubmit } = formActions;
 
+    /* =========================
+       ACCESSIBILITY
+    ========================= */
+
+    const formId = useId();
+
+    const commentId = `${formId}-comment`;
+    const ratingId = `${formId}-rating`;
+
     return (
         <form className="event-review-form" onSubmit={handleSubmit}>
 
@@ -52,10 +63,10 @@ export default function EventReviewForm({
                 COMMENT FIELD
             ========================= */}
 
-            <FormField label="Comment" htmlFor="review-comment" error={fieldErrors.comment}>
+            <FormField label="Comment" htmlFor={commentId} error={fieldErrors.comment}>
                 {(errorId) => (
                     <textarea
-                        id="review-comment"
+                        id={commentId}
                         name="comment"
                         value={values.comment}
                         onChange={handleFieldChange}
@@ -74,13 +85,14 @@ export default function EventReviewForm({
             ========================= */}
 
             <div className="event-review-form-bottom-row">
-                <FormField label="Rating" htmlFor="review-rating" error={fieldErrors.rating}>
+                <FormField label="Rating" htmlFor={ratingId} error={fieldErrors.rating}>
                     {(errorId) => (
-                        <div id="review-rating" aria-describedby={errorId} aria-invalid={Boolean(fieldErrors.rating)}>
+                        <div id={ratingId} aria-describedby={errorId} aria-invalid={Boolean(fieldErrors.rating)}>
                             <EventReviewRating
                                 value={values.rating}
                                 onChange={handleRatingChange}
                                 disabled={isSubmitting}
+                                describedBy={errorId}
                             />
                         </div>
                     )}

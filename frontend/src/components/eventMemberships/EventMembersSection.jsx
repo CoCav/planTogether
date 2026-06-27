@@ -17,6 +17,7 @@ import Pagination from "../ui/Pagination";
    Displays event membership lists with optional actions
 
    Handles:
+   - accessible section heading association
    - section heading, subtitle and optional icon
    - empty member state
    - public profile navigation
@@ -26,9 +27,9 @@ import Pagination from "../ui/Pagination";
    - optional member action rendering
    - collapsed member preview
    - expanded paginated member list
-   - view all / collapse toggle
+   - view all / collapse toggle state
    - local pagination controls
-   - accessible section and list semantics
+   - accessible list semantics
 ================================================== */
 
 export default function EventMembersSection({
@@ -106,6 +107,7 @@ export default function EventMembersSection({
                                 variant="outline"
                                 className="event-members-toggle"
                                 onClick={handleToggle}
+                                aria-expanded={isExpanded}
                             >
                                 {toggleLabel}
                             </Button>
@@ -135,7 +137,7 @@ export default function EventMembersSection({
                                     <Link
                                         to={`/users/${person.id}`}
                                         className="member-avatar-link"
-                                        aria-label={`View ${person.name} profile`}
+                                        aria-label={`View ${person.name ?? "member"} profile`}
                                     >
                                         <UserAvatar
                                             src={getAvatar(person.avatar)}
@@ -177,6 +179,7 @@ export default function EventMembersSection({
                             totalPages={totalPages}
                             onPrevious={goToPreviousPage}
                             onNext={goToNextPage}
+                            label={`${title} pagination`}
                         />
                     )}
                 </>

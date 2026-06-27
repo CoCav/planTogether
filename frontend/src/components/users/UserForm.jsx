@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 import FileUploadPreviewField from "../forms/FileUploadPreviewField";
 
 import { getAvatar } from "../../utils/uploadedFiles";
@@ -11,12 +13,15 @@ import Input from "../ui/Input";
    Shared user form for register and profile flows
 
    Handles:
-   - user field rendering
+   - name and email field rendering
    - optional avatar upload rendering
-   - accessible form field descriptions
-   - accessible invalid field states
+   - stable avatar upload input id
+   - custom form content rendering
+   - form footer rendering
    - validation error display
-   - form submission actions
+   - accessible form field descriptions
+   - form submission action
+   - optional submit icon
 ================================================== */
 
 export default function UserForm({
@@ -41,6 +46,13 @@ export default function UserForm({
 }) {
 
     /* =============================
+       ACCESSIBILITY
+    ============================= */
+
+    // Creates a stable unique id for the avatar upload input
+    const avatarInputId = useId();
+
+    /* =============================
        MAIN RENDER
     ============================= */
 
@@ -51,7 +63,7 @@ export default function UserForm({
                     variant="avatar"
 
                     label="Avatar (optional)"
-                    inputId="user-avatar"
+                    inputId={avatarInputId}
                     fieldName="avatar"
                     accept="image/jpeg,image/png,image/webp,image/gif"
 

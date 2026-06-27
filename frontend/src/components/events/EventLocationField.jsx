@@ -14,10 +14,13 @@ import Input from "../ui/Input";
    - city, venue or address search input rendering
    - debounced suggestion dropdown
    - loading dropdown state
-   - no-results dropdown state
+   - error dropdown state
+   - formatted suggestion rendering
+   - highlighted suggestion state
    - keyboard navigation
    - click suggestion selection
    - accessible combobox attributes
+   - active descendant relationship
 
    Notes:
    - parent form owns the final location value
@@ -76,6 +79,11 @@ export default function EventLocationField({
 
     const shouldShowDropdown = isOpen && (isLoading || autocompleteError || suggestions.length > 0);
 
+    const activeOptionId =
+        highlightedIndex >= 0
+            ? `${listboxId}-option-${highlightedIndex}`
+            : undefined;
+
     /* =============================
        RENDER HELPERS
     ============================= */
@@ -106,7 +114,8 @@ export default function EventLocationField({
                 role="combobox"
                 aria-autocomplete="list"
                 aria-expanded={shouldShowDropdown}
-                aria-controls={listboxId}
+                aria-controls={shouldShowDropdown ? listboxId : undefined}
+                aria-activedescendant={shouldShowDropdown ? activeOptionId : undefined}
                 autoComplete="off"
             />
 
@@ -133,6 +142,7 @@ export default function EventLocationField({
 
                         return (
                             <button
+                                id={`${listboxId}-option-${index}`}
                                 key={`${suggestion.provider}-${suggestion.latitude}-${suggestion.longitude}-${index}`}
                                 type="button"
                                 className={`location-autocomplete-option ${isHighlighted ? "is-highlighted" : ""}`.trim()}

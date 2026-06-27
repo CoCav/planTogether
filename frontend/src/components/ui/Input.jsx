@@ -4,9 +4,10 @@
 
    Handles:
    - base input styling
-   - error styling
+   - error class styling
    - accessible invalid state
-   - native input attributes
+   - custom class merging
+   - native input props forwarding
 ================================================== */
 
 export default function Input({ className = "", error = false, ...props }) {
@@ -15,11 +16,13 @@ export default function Input({ className = "", error = false, ...props }) {
        CSS CLASSES
     ========================= */
 
-    const inputClasses = `
-        input
-        ${error ? "error" : ""}
-        ${className}
-    `.trim();
+    const inputClasses = [
+        "input",
+        error && "error",
+        className
+    ]
+        .filter(Boolean)
+        .join(" ");
 
     return (
         <input

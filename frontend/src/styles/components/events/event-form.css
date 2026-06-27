@@ -30,3 +30,19 @@
 .event-form-grid > .form-grid-column-full {
     grid-column: 1 / -1;
 }
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+    .event-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .event-form-grid > .form-field,
+    .event-form-grid > .event-form-field-half,
+    .event-form-grid > .form-grid-column-full {
+        grid-column: 1 / -1;
+    }
+}

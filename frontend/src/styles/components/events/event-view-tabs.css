@@ -48,15 +48,15 @@
         box-shadow var(--transition-fast);
 }
 
-.event-view-tab:hover {
-    background: var(--color-primary-subtle);
-    color: var(--color-primary);
-}
-
 .event-view-tab.is-active {
     background: var(--color-primary);
     color: white;
     box-shadow: var(--shadow-sm);
+}
+
+.event-view-tab:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-primary);
 }
 
 /* =========================================
@@ -72,10 +72,6 @@
 
     color: var(--color-primary);
     opacity: 0.75;
-}
-
-.event-view-tab:hover .event-view-tab-icon {
-    opacity: 1;
 }
 
 .event-view-tab.is-active .event-view-tab-icon {
@@ -134,5 +130,16 @@
     .event-view-tab {
         flex: 1;
         justify-content: center;
+    }
+}
+
+@media (hover: hover) {
+    .event-view-tab:hover {
+        background: var(--color-primary-subtle);
+        color: var(--color-primary);
+    }
+
+    .event-view-tab:hover .event-view-tab-icon {
+        opacity: 1;
     }
 }

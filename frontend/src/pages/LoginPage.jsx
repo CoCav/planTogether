@@ -21,7 +21,9 @@ import Card from "../components/ui/Card";
    - login form orchestration
    - login submission
    - remember me session preference
-   - redirect after successful login
+   - protected route restoration after login
+   - register route state forwarding
+   - login error feedback
    - accessible login form section
 ================================================== */
 
@@ -39,6 +41,7 @@ export default function LoginPage() {
     // Restores protected route path and query params after login
     const redirectPath = getLoginRedirectPath(location.state?.from);
 
+
     /* =============================
        REGISTER NAVIGATION
     ============================= */
@@ -47,6 +50,7 @@ export default function LoginPage() {
     const registerState = location.state?.from
         ? { from: location.state.from }
         : undefined;
+
 
     /* =============================
        SUBMIT HANDLER
@@ -119,7 +123,7 @@ export default function LoginPage() {
 
             {error && <Alert type="danger">{error}</Alert>}
 
-            <section className="account-section" aria-label="Login form">
+            <section className="account-section" aria-labelledby="login-page-title">
                 <Card className="account-card">
                     <LoginForm
                         values={values}

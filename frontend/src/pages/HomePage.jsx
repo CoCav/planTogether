@@ -22,13 +22,15 @@ import LoadingState from "../components/ui/LoadingState";
    Displays the public landing page and latest events preview
 
    Handles:
-   - hero and feature sections
-   - latest event loading
-   - authenticated user event roles
-   - join and leave event actions
+   - hero and feature section rendering
+   - guest and authenticated hero actions
+   - latest events loading lifecycle
    - latest events loading, empty and error states
-   - toast feedback for membership actions
-   - decorative card icons
+   - authenticated user event role forwarding
+   - join and leave event actions
+   - toast feedback forwarding for membership actions
+   - accessible homepage sections
+   - decorative hero and feature icons
    - auth-ready initial loading guard
 ================================================== */
 
@@ -148,9 +150,9 @@ export default function HomePage() {
                     </p>
                 </header>
 
-                <div className="home-features-grid">
+                <div className="home-features-grid" role="list">
 
-                    <Card className="card-interactive home-feature-card">
+                    <Card className="card-interactive home-feature-card" role="listitem">
                         <div className="home-feature-header">
                             <div className="home-feature-icon" aria-hidden="true">
                                 <CalendarPlus />
@@ -167,7 +169,7 @@ export default function HomePage() {
                         </p>
                     </Card>
 
-                    <Card className="card-interactive home-feature-card">
+                    <Card className="card-interactive home-feature-card" role="listitem">
                         <div className="home-feature-header">
                             <div className="home-feature-icon" aria-hidden="true">
                                 <Users />
@@ -183,7 +185,7 @@ export default function HomePage() {
                         </p>
                     </Card>
 
-                    <Card className="card-interactive home-feature-card">
+                    <Card className="card-interactive home-feature-card" role="listitem">
                         <div className="home-feature-header">
                             <div className="home-feature-icon" aria-hidden="true">
                                 <ShieldCheck />
@@ -200,7 +202,7 @@ export default function HomePage() {
                         </p>
                     </Card>
 
-                    <Card className="card-interactive home-feature-card">
+                    <Card className="card-interactive home-feature-card" role="listitem">
                         <div className="home-feature-header">
                             <div className="home-feature-icon" aria-hidden="true">
                                 <Search />

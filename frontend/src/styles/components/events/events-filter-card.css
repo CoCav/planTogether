@@ -48,7 +48,7 @@
 
 .events-filter-section + .events-filter-section {
     padding-top: var(--space-3);
-    border-top: 1px solid var(--color-border-light);
+    border-top: 1px solid var(--color-border);
 }
 
 .events-filter-section-title {

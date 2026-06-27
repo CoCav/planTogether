@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { ChevronDown, Pencil, Trash2 } from "lucide-react";
 
 import { useClickOutside } from "../../hooks/useClickOutside";
@@ -10,14 +10,15 @@ import Button from "../ui/Button";
    Displays available actions for one event review
 
    Handles:
-   - owner-only action menu
+   - owner-only action menu visibility
    - edit action
    - delete action
    - edit and delete loading states
    - menu toggle state
    - menu close after action
    - outside click detection
-   - keyboard / accessibility interactions
+   - accessible menu trigger state
+   - accessible menu relationship ids
    - decorative action icons
 
    Notes:
@@ -38,7 +39,9 @@ export default function EventReviewActionsMenu({
     ========================= */
 
     const [isOpen, setIsOpen] = useState(false);
+
     const menuRef = useRef(null);
+    const menuId = useId();
 
     /* =========================
        DISPLAY STATE
@@ -90,6 +93,7 @@ export default function EventReviewActionsMenu({
                 disabled={isDisabled}
                 aria-expanded={isOpen}
                 aria-haspopup="menu"
+                aria-controls={isOpen ? menuId : undefined}
             >
                 Manage
                 <span className="event-review-actions-caret" aria-hidden="true">
@@ -98,9 +102,10 @@ export default function EventReviewActionsMenu({
             </Button>
 
             {isOpen && (
-                <div className="event-review-actions-dropdown" role="menu">
-
+                <div id={menuId} className="event-review-actions-dropdown" role="menu">
                     <button
+                        type="button"
+                        role="menuitem"
                         className="event-review-actions-dropdown-item"
                         onClick={handleEdit}
                         disabled={isDisabled}
@@ -110,6 +115,8 @@ export default function EventReviewActionsMenu({
                     </button>
 
                     <button
+                        type="button"
+                        role="menuitem"
                         className="event-review-actions-dropdown-item event-review-actions-dropdown-item-danger event-review-actions-dropdown-item-separated"
                         onClick={handleDelete}
                         disabled={isDisabled}

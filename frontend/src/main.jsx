@@ -27,7 +27,7 @@ import "./styles/components/auth/login-form.css";
 import "./styles/components/eventMemberships/event-members-section.css";
 import "./styles/components/eventMemberships/event-actions-menu.css";
 
-import "./styles/components/eventReviews/event-review-actions.css";
+import "./styles/components/eventReviews/event-review-actions-menu.css";
 import "./styles/components/eventReviews/event-review-card.css";
 import "./styles/components/eventReviews/event-review-form.css";
 import "./styles/components/eventReviews/event-review-rating.css";

@@ -73,3 +73,13 @@
         transform: rotate(360deg);
     }
 }
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .loading-state-spinner {
+        animation: none;
+    }
+}

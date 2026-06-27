@@ -17,16 +17,17 @@ import LoadingState from "../ui/LoadingState";
    - selected geocoded location rendering
    - fallback backend geocoding from location text
    - authenticated or public map lookup
-   - loading state
-   - missing location state
+   - loading and missing location states
    - failed geocoding state
    - OpenStreetMap tile rendering
    - marker and popup display
-   - formatted popup title and address display
+   - optional popup title display
+   - formatted popup address display
    - Google Maps external link
    - directions external link
    - copy address action
    - copied feedback state
+   - clipboard failure fallback
 
    Notes:
    - selectedLocation avoids an extra API search after autocomplete selection
@@ -136,9 +137,12 @@ export default function EventLocationMap({
                     <Popup>
                         <div className="event-location-popup">
                             <div className="event-location-popup-header">
-                                <p className="event-location-popup-title">
-                                    {eventTitle}
-                                </p>
+
+                                {eventTitle && (
+                                    <p className="event-location-popup-title">
+                                        {eventTitle}
+                                    </p>
+                                )}
 
                                 <p className="event-location-popup-address">
                                     {formatLocationDisplayLabel(coordinates.label)}
@@ -173,11 +177,14 @@ export default function EventLocationMap({
                                     className="popup-btn secondary"
                                     aria-live="polite"
                                     aria-label={copied ? "Address copied to clipboard" : "Copy address to clipboard"}
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(coordinates.label);
-                                        setCopied(true);
-
-                                        setTimeout(() => setCopied(false), 1500);
+                                    onClick={async () => {
+                                        try {
+                                            await navigator.clipboard.writeText(coordinates.label);
+                                            setCopied(true);
+                                            setTimeout(() => setCopied(false), 1500);
+                                        } catch {
+                                            setCopied(false);
+                                        }
                                     }}
                                 >
                                     {copied ? <Check /> : <Copy />}

@@ -7,10 +7,12 @@ import Button from "../ui/Button";
    Displays contextual actions for a single event
 
    Handles:
-   - join action
-   - leave action
-   - edit action
-   - delete action
+   - join action visibility and callback
+   - leave action visibility and callback
+   - edit action visibility and callback
+   - delete action visibility and callback
+   - safe optional action handlers
+   - decorative action icons
 
    Notes:
    - event statuses and business states are displayed as badges in EventDetailsPage
@@ -36,7 +38,7 @@ export default function EventDetailsActions({
                 <Button
                     type="button"
                     variant="outline-primary"
-                    onClick={() => onJoin(eventId)}
+                    onClick={() => onJoin?.(eventId)}
                 >
                     <UserPlus aria-hidden="true" />
                     Join the event
@@ -47,7 +49,7 @@ export default function EventDetailsActions({
                 <Button
                     type="button"
                     variant="outline-danger"
-                    onClick={() => onLeave(eventId)}
+                    onClick={() => onLeave?.(eventId)}
                 >
                     <LogOut aria-hidden="true" />
                     Leave the event
@@ -58,7 +60,7 @@ export default function EventDetailsActions({
                 <Button
                     type="button"
                     variant="outline"
-                    onClick={onEdit}
+                    onClick={() => onEdit?.()}
                 >
                     <Pencil aria-hidden="true" />
                     Edit Event
@@ -69,7 +71,7 @@ export default function EventDetailsActions({
                 <Button
                     type="button"
                     variant="danger"
-                    onClick={onDelete}
+                    onClick={() => onDelete?.()}
                 >
                     <Trash2 aria-hidden="true" />
                     Delete Event

@@ -18,7 +18,10 @@ import Card from "../components/ui/Card";
    Handles:
    - create event form orchestration
    - create event submission
+   - FormData payload creation
    - redirect after successful creation
+   - cancel navigation
+   - API error feedback
    - accessible form section
 ================================================== */
 
@@ -31,9 +34,7 @@ export default function CreateEventPage() {
     ============================= */
 
     const handleCreateEvent = async (values) => {
-        await createEvent(
-            buildEventFormPayloadData(values)
-        );
+        await createEvent(buildEventFormPayloadData(values));
 
         navigate("/events");
     };
@@ -65,7 +66,7 @@ export default function CreateEventPage() {
         handleImageChange,
         handleRemoveImage,
         handleLocationSelect,
-        handleSubmit,
+        handleSubmit
     } = formActions;
 
 

@@ -30,9 +30,11 @@ import Pagination from "../../../components/ui/Pagination";
    - public profile display
    - created and joined public event views
    - URL-synchronized view and pagination
+   - initial and refresh loading states
    - paginated public user event loading
    - public event listing metadata
    - loading, error and empty states
+   - accessible profile and listing sections
    - decorative profile metadata icons
 ================================================== */
 
@@ -94,7 +96,7 @@ export default function PublicUserPage() {
         setError
     });
 
-    const avatar = getAvatar(profile?.user?.avatar);
+    const avatar = getAvatar(profile.user.avatar);
 
     /* =============================
        DATA LOADING / URL SYNC
@@ -255,7 +257,7 @@ export default function PublicUserPage() {
                 </Card>
             </section>
 
-            <section className="events-results-controls" aria-labelledby="public-user-events-title">
+            <section className="events-results-controls">
                 <EventsToolbar
                     titleId="public-user-events-title"
                     title={viewContent.title}

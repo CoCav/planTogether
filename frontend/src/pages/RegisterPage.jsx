@@ -23,8 +23,12 @@ import Card from "../components/ui/Card";
    Handles:
    - register form orchestration
    - register submission
+   - avatar upload forwarding
    - automatic login after registration
-   - redirect after successful registration
+   - protected route restoration after registration
+   - stale pagination cleanup after registration
+   - login route state forwarding
+   - register error feedback
    - accessible registration form section
    - decorative account navigation icon
 ================================================== */
@@ -34,12 +38,14 @@ export default function RegisterPage() {
     const navigate = useNavigate();
     const location = useLocation();
 
+
     /* =============================
        REDIRECT STATE
     ============================= */
 
     // Restores protected route after registration while removing stale pagination
     const redirectPath = getRegisterRedirectPath(location.state?.from);
+
 
     /* =============================
        LOGIN NAVIGATION
@@ -49,6 +55,7 @@ export default function RegisterPage() {
     const loginState = location.state?.from
         ? { from: location.state.from }
         : undefined;
+
 
     /* =============================
        SUBMIT HANDLER
@@ -122,7 +129,7 @@ export default function RegisterPage() {
 
             {error && <Alert type="danger">{error}</Alert>}
 
-            <section className="account-section" aria-label="Registration form">
+            <section className="account-section" aria-labelledby="register-page-title">
                 <Card className="account-card">
                     <UserForm
                         values={values}

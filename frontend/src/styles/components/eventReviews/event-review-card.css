@@ -74,7 +74,8 @@
 ========================= */
 
 @media (max-width: 768px) {
-    .event-review-card-top, .event-review-card-left {
+    .event-review-card-top,
+    .event-review-card-left {
         align-items: center;
     }
 

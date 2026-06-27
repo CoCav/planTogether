@@ -8,12 +8,13 @@ import EventViewTabs from "./EventViewTabs";
    Displays event results heading and controls
 
    Handles:
-   - results title and subtitle
-   - optional results count
-   - pagination info
-   - view tabs
-   - quick date filters
-   - quick filter button group
+   - results title and subtitle rendering
+   - optional results count display
+   - pagination info display
+   - view tab rendering
+   - quick date filter visibility
+   - quick date filter callbacks
+   - active quick filter state
    - accessible live results metadata
    - decorative quick filter icons
 
@@ -58,7 +59,7 @@ export default function EventsResultsToolbar({
                         )}
                     </h2>
 
-                    <p className="section-subtitle">{subtitle} </p>
+                    <p className="section-subtitle">{subtitle}</p>
                 </div>
 
                 {showPaginationInfo && (

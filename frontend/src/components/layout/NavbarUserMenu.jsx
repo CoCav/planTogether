@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 
@@ -14,6 +14,7 @@ import UserAvatar from "../users/UserAvatar";
    - user avatar menu trigger
    - user dropdown visibility
    - accessible menu trigger state
+   - accessible menu relationship ids
    - profile navigation
    - events navigation
    - logout action
@@ -55,6 +56,12 @@ export default function NavbarUserMenu({ user, avatar, onLogout }) {
 
     useClickOutside(menuRef, closeMenu, isOpen);
 
+    /* =========================
+       ACCESSIBILITY
+    ========================= */
+
+    const menuId = useId();
+
     return (
         <div className="navbar-user-menu" ref={menuRef}>
             <button
@@ -63,7 +70,7 @@ export default function NavbarUserMenu({ user, avatar, onLogout }) {
                 onClick={toggleMenu}
                 aria-expanded={isOpen}
                 aria-haspopup="menu"
-                aria-controls="navbar-user-dropdown"
+                aria-controls={isOpen ? menuId : undefined}
                 aria-label={`${isOpen ? "Close" : "Open"} ${user.name} menu`}
             >
                 <UserAvatar
@@ -78,7 +85,7 @@ export default function NavbarUserMenu({ user, avatar, onLogout }) {
             </button>
 
             {isOpen && (
-                <div id="navbar-user-dropdown" className="navbar-dropdown" role="menu">
+                <div id={menuId} className="navbar-dropdown" role="menu">
                     <Link
                         to="/profile"
                         role="menuitem"

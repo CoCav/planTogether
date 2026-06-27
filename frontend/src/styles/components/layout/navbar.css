@@ -192,11 +192,13 @@
         transition: color var(--transition-fast);
     }
 
-    .navbar-logout-link:hover {
-        color: var(--color-danger-hover);
-    }
-
     .navbar-logout-link.link-animated-underline::after {
         background: var(--color-danger-hover);
+    }
+}
+
+@media (hover: hover) {
+    .navbar-logout-link:hover {
+        color: var(--color-danger-hover);
     }
 }

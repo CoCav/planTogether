@@ -6,8 +6,10 @@ import { ChevronDown } from "lucide-react";
 
    Handles:
    - base select styling
+   - wrapper class styling
    - error state
    - accessible invalid state
+   - native select props forwarding
    - decorative dropdown icon
 ================================================== */
 
@@ -17,16 +19,20 @@ export default function Select({ className = "", error = false, children, ...pro
        CSS CLASSES
     ========================= */
 
-    const wrapperClasses = `
-        select-wrapper
-        ${error ? "error" : ""}
-        ${className}
-    `.trim();
+    const wrapperClasses = [
+        "select-wrapper",
+        error && "error",
+        className
+    ]
+        .filter(Boolean)
+        .join(" ");
 
-    const selectClasses = `
-        select
-        ${error ? "error" : ""}
-    `.trim();
+    const selectClasses = [
+        "select",
+        error && "error"
+    ]
+        .filter(Boolean)
+        .join(" ");
 
     return (
         <div className={wrapperClasses}>
@@ -39,7 +45,7 @@ export default function Select({ className = "", error = false, children, ...pro
             </select>
 
             <span className="select-icon" aria-hidden="true">
-                <ChevronDown aria-hidden="true" />
+                <ChevronDown />
             </span>
         </div>
     );

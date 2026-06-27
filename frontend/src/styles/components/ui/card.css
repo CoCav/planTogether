@@ -28,7 +28,13 @@
         border-color var(--transition-fast);
 }
 
-.card-interactive:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (hover: hover) {
+    .card-interactive:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
 }

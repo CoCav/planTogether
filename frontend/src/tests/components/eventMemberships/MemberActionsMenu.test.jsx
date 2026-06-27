@@ -101,6 +101,24 @@ describe("MemberActionsMenu", () => {
         expect(trigger).toHaveAttribute("aria-expanded", "false");
     });
 
+    it("should associate trigger with dropdown when menu is open", async () => {
+        const user = userEvent.setup();
+
+        renderMemberActionsMenu([transferAction]);
+
+        const trigger = screen.getByRole("button", {
+            name: "Manage"
+        });
+
+        expect(trigger).not.toHaveAttribute("aria-controls");
+
+        await user.click(trigger);
+
+        const menu = screen.getByRole("menu");
+
+        expect(trigger).toHaveAttribute("aria-controls", menu.id);
+    });
+
     it("should render dropdown as accessible menu", async () => {
         const user = userEvent.setup();
 

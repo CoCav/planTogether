@@ -15,10 +15,10 @@ import { createEventListingFilters } from "../../factories/shared/eventListingFi
    - filter header and visibility toggle
    - hidden and visible form states
    - accessible labels and section structure
-   - search, mode, date, and sorting interactions
-   - mutually exclusive exact date and date range states
+   - search, mode, date and sorting interactions
+   - mutually exclusive date controls
    - filter submission and reset actions
-   - decorative filter and action icons
+   - accessible form and toggle relationships
 
    Notes:
    - uses reusable filter props
@@ -86,6 +86,30 @@ describe("EventsFilterCard", () => {
         expect(onToggleFilters).toHaveBeenCalled();
     });
 
+    it("reflects filter visibility with aria-expanded", () => {
+        renderFilterCard({
+            showFilters: true
+        });
+
+        expect(screen.getByRole("button", {
+            name: /hide filters/i
+        })).toHaveAttribute("aria-expanded", "true");
+    });
+
+    it("associates the toggle button with the filter form", () => {
+        renderFilterCard({
+            showFilters: true
+        });
+
+        const button = screen.getByRole("button", {
+            name: /hide filters/i
+        });
+
+        const form = screen.getByRole("form");
+
+        expect(button).toHaveAttribute("aria-controls", form.id);
+    });
+
     /* =============================
        FILTER FORM VISIBILITY
     ============================= */
@@ -117,12 +141,17 @@ describe("EventsFilterCard", () => {
         expect(screen.getByLabelText(/^sort by$/i)).toHaveAttribute("id", "event-filter-sort-by");
     });
 
-    it("keeps filter form labelled by its title", () => {
+    it("labels the filter form with the Filters heading", () => {
         renderFilterCard({
             showFilters: true
         });
 
-        expect(screen.getByRole("form")).toHaveAttribute("aria-labelledby", "events-filters-title");
+        const form = screen.getByRole("form");
+        const heading = screen.getByRole("heading", {
+            name: "Filters"
+        });
+
+        expect(form).toHaveAttribute("aria-labelledby", heading.id);
     });
 
     /* =============================
@@ -354,13 +383,17 @@ describe("EventsFilterCard", () => {
         })).toBeInTheDocument();
     });
 
-    it("associates filter sections with accessible titles", () => {
+    it("associates filter sections with their headings", () => {
         renderFilterCard({
             showFilters: true
         });
 
-        expect(screen.getByRole("heading", { name: /main filters/i }).closest("section")).toHaveAttribute("aria-labelledby", "events-filter-main-title");
-        expect(screen.getByRole("heading", { name: /dates/i }).closest("section")).toHaveAttribute("aria-labelledby", "events-filter-dates-title");
-        expect(screen.getByRole("heading", { name: /^sort$/i }).closest("section")).toHaveAttribute("aria-labelledby", "events-filter-sort-title");
+        ["Main filters", "Dates", "Sort"].forEach((title) => {
+            const heading = screen.getByRole("heading", {
+                name: title
+            });
+
+            expect(heading.closest("section")).toHaveAttribute("aria-labelledby", heading.id);
+        });
     });
 });

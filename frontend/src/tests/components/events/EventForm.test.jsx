@@ -13,16 +13,14 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../features/shared/constants
 
    Handles:
    - event field rendering
-   - shared image upload field rendering
+   - event image upload rendering
    - optional field indicators
-   - location autocomplete field rendering
-   - selected location map preview rendering
    - conditional field rendering
-   - started event field restrictions
-   - submit and cancel actions
+   - location map preview rendering
+   - started event restrictions
+   - form actions
    - validation error display
-   - accessible form field descriptions
-   - accessible invalid field states
+   - accessible form fields
 
    Ensures:
    - create/edit event flows share consistent form behavior
@@ -187,6 +185,12 @@ describe("EventForm", () => {
         expect(screen.getByLabelText(/custom deadline/i)).toHaveAttribute("type", "datetime-local");
     });
 
+    it("hides custom deadline field by default", () => {
+        renderComponent();
+
+        expect(screen.queryByLabelText(/custom deadline/i)).not.toBeInTheDocument();
+    });
+
     it("shows location map preview when physical event has a selected location", () => {
         renderComponent({
             values: {
@@ -239,6 +243,16 @@ describe("EventForm", () => {
         });
 
         expect(screen.getByRole("button", { name: /cancel/i })).toBeDisabled();
+    });
+
+    it("disables submit button while submitting", () => {
+        renderComponent({
+            isSubmitting: true
+        });
+
+        expect(screen.getByRole("button", {
+            name: /loading/i
+        })).toBeDisabled();
     });
 
     it("calls onSubmit when form is submitted", () => {

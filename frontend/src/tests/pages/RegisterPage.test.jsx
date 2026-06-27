@@ -11,13 +11,17 @@ import RegisterPage from "../../pages/RegisterPage";
 
    Handles:
    - register page rendering
+   - accessible registration form section
    - user form validation
    - field and password interactions
+   - password requirements display
    - avatar upload and removal
    - successful registration flow
+   - avatar registration payload
    - automatic login after registration
    - protected route redirect restoration
    - stale pagination cleanup after registration
+   - register loading state
    - register error feedback
    - login navigation state forwarding
    - decorative account navigation icon
@@ -171,12 +175,27 @@ describe("RegisterPage", () => {
         })).toHaveAttribute("href", "/login");
     });
 
-    it("renders the register section with accessible label", () => {
+    it("renders the register section with accessible heading", () => {
         renderPage();
 
         expect(screen.getByRole("region", {
-            name: "Registration form"
+            name: "Register"
         })).toHaveClass("account-section");
+    });
+
+    it("associates the register section with the page heading", () => {
+        renderPage();
+
+        const heading = screen.getByRole("heading", {
+            level: 1,
+            name: "Register"
+        });
+
+        const section = screen.getByRole("region", {
+            name: "Register"
+        });
+
+        expect(section).toHaveAttribute("aria-labelledby", heading.id);
     });
 
     /* =============================

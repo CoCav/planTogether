@@ -8,7 +8,10 @@ import PasswordRequirements from "../../../components/users/PasswordRequirements
    Tests live password requirement display
 
    Handles:
+   - requirement title rendering
    - requirement text rendering
+   - optional helper id forwarding
+   - live feedback region
    - accessible list semantics
    - valid requirement state display
    - decorative icon accessibility
@@ -44,9 +47,13 @@ describe("PasswordRequirements", () => {
             />
         );
 
-        expect(
-            screen.getByText("Your password must contain at least:").parentElement
-        ).toHaveAttribute("id", "newPassword-requirements");
+        expect(screen.getByText("Your password must contain at least:").parentElement).toHaveAttribute("id", "newPassword-requirements");
+    });
+
+    it("renders requirements as a polite live region", () => {
+        renderPasswordRequirements();
+
+        expect(screen.getByText("Your password must contain at least:").parentElement).toHaveAttribute("aria-live", "polite");
     });
 
     it("renders all password requirements", () => {

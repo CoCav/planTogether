@@ -11,13 +11,15 @@ import EventReviewCard from "../../../components/eventReviews/EventReviewCard";
    - reviewer information rendering
    - avatar rendering
    - date rendering
-   - rating rendering (read-only)
+   - read-only rating rendering
    - comment rendering
-   - owner permissions (actions visibility)
+   - accessible list item semantics
+   - owner permissions and actions visibility
    - edit mode toggle
    - edit submission flow
    - delete callback
-   - loading states (update & delete)
+   - update loading state
+   - delete loading state
 
    Notes:
    - display data is mocked via getEventReviewDisplayData
@@ -93,6 +95,12 @@ describe("EventReviewCard", () => {
         expect(screen.getByText("John Doe")).toBeInTheDocument();
         expect(screen.getByText("15 Jun 2026")).toBeInTheDocument();
         expect(screen.getByText("Great event!")).toBeInTheDocument();
+    });
+
+    it("should render review card as a list item", () => {
+        renderCard();
+
+        expect(screen.getByRole("listitem")).toBeInTheDocument();
     });
 
     it("should render avatar", () => {

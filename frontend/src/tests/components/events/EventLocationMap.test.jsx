@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import EventLocationMap from "../../../components/events/EventLocationMap";
 import useEventMapLocation from "../../../features/events/hooks/form/useEventMapLocation";
@@ -10,14 +10,16 @@ import useEventMapLocation from "../../../features/events/hooks/form/useEventMap
 
    Handles:
    - missing location state
-   - loading state before/while searching
+   - loading state before and during search
    - failed geocoding state
    - map rendering with backend coordinates
    - selected location rendering without backend lookup
    - public/private location lookup option
-   - popup title and address display
+   - optional popup title display
+   - formatted popup address display
    - external map and directions links
-   - copy address feedback
+   - copy address success feedback
+   - clipboard failure fallback
 
    Notes:
    - react-leaflet is mocked to avoid real map rendering
@@ -193,6 +195,25 @@ describe("EventLocationMap", () => {
         expect(screen.getByTestId("map-popup")).toHaveTextContent("Québec, G1K 4B9, Canada");
     });
 
+    it("should hide popup title when event title is missing", () => {
+        mockHook({
+            hasSearched: true,
+            coordinates: {
+                lat: 45.5017,
+                lng: -73.5673,
+                label: "Montréal, Québec, Canada"
+            }
+        });
+
+        render(<EventLocationMap location="Montréal" />);
+
+        expect(screen.getByTestId("map-popup")).not.toHaveTextContent("Rock Concert");
+
+        expect(screen.getByTestId("map-popup")).toHaveTextContent("Montréal");
+        expect(screen.getByTestId("map-popup")).toHaveTextContent("Québec");
+        expect(screen.getByTestId("map-popup")).toHaveTextContent("Canada");
+    });
+
     it("should call hook with location and public option", () => {
         mockHook({
             hasSearched: true,
@@ -287,7 +308,7 @@ describe("EventLocationMap", () => {
         );
     });
 
-    it("should copy address to clipboard", () => {
+    it("should copy address to clipboard", async () => {
         mockHook({
             hasSearched: true,
             coordinates: {
@@ -303,8 +324,33 @@ describe("EventLocationMap", () => {
             name: "Copy address to clipboard"
         }));
 
+        await waitFor(() => {
+            expect(navigator.clipboard.writeText).toHaveBeenCalledWith("Montréal, Québec, Canada");
+        });
+
+        expect(await screen.findByText("Copied")).toBeInTheDocument();
+    });
+
+    it("should keep copy feedback hidden when clipboard copy fails", async () => {
+        navigator.clipboard.writeText.mockRejectedValueOnce(new Error("Clipboard blocked"));
+
+        mockHook({
+            hasSearched: true,
+            coordinates: {
+                lat: 45.5017,
+                lng: -73.5673,
+                label: "Montréal, Québec, Canada"
+            }
+        });
+
+        render(<EventLocationMap location="Montréal" />);
+
+        await fireEvent.click(screen.getByRole("button", {
+            name: "Copy address to clipboard"
+        }));
+
         expect(navigator.clipboard.writeText).toHaveBeenCalledWith("Montréal, Québec, Canada");
 
-        expect(screen.getByText("Copied")).toBeInTheDocument();
+        expect(screen.queryByText("Copied")).not.toBeInTheDocument();
     });
 });

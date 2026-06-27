@@ -199,6 +199,23 @@ describe("EventReviewsSection", () => {
         expect(screen.queryByTestId("event-review-form")).not.toBeInTheDocument();
     });
 
+    it("should associate review form toggle with form panel when open", () => {
+        renderComp();
+
+        const toggle = screen.getByRole("button", {
+            name: /write a review/i
+        });
+
+        expect(toggle).not.toHaveAttribute("aria-controls");
+
+        fireEvent.click(toggle);
+
+        const panel = screen.getByTestId("event-review-form").parentElement;
+
+        expect(toggle).toHaveAttribute("aria-controls", panel.id);
+        expect(toggle).toHaveAttribute("aria-expanded", "true");
+    });
+
     /* =========================
        CREATE FLOW
     ========================= */

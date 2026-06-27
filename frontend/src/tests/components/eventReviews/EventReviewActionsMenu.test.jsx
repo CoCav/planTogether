@@ -9,14 +9,15 @@ import EventReviewActionsMenu from "../../../components/eventReviews/EventReview
 
    Handles:
    - hidden review actions
-   - visible edit action
-   - visible delete action
-   - dropdown open/close interaction
-   - user interaction flows (menu toggle)
-   - edit loading state
-   - delete loading state
+   - manage trigger rendering
+   - accessible menu trigger attributes
+   - dropdown open and close behavior
+   - accessible menu relationship ids
+   - edit and delete action rendering
    - edit callback
    - delete callback
+   - edit loading state
+   - delete loading state
 
    Notes:
    - review ownership is resolved by EventReviewCard
@@ -80,13 +81,27 @@ describe("EventReviewActionsMenu", () => {
         expect(screen.getByRole("menu")).toBeInTheDocument();
     });
 
+    it("should associate trigger with dropdown when menu is open", () => {
+        renderEventReviewActions();
+
+        const trigger = screen.getByRole("button", { name: /manage/i });
+
+        expect(trigger).not.toHaveAttribute("aria-controls");
+
+        fireEvent.click(trigger);
+
+        const menu = screen.getByRole("menu");
+
+        expect(trigger).toHaveAttribute("aria-controls", menu.id);
+    });
+
     it("should render edit and delete actions when opened", () => {
         renderEventReviewActions();
 
         fireEvent.click(screen.getByRole("button", { name: /manage/i }));
 
-        expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /delete/i })).toBeInTheDocument();
+        expect(screen.getByRole("menuitem", { name: /edit/i })).toBeInTheDocument();
+        expect(screen.getByRole("menuitem", { name: /delete/i })).toBeInTheDocument();
     });
 
     /* =============================
@@ -100,9 +115,20 @@ describe("EventReviewActionsMenu", () => {
 
         fireEvent.click(screen.getByRole("button", { name: /manage/i }));
 
-        fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+        fireEvent.click(screen.getByRole("menuitem", { name: /edit/i }));
 
         expect(onEdit).toHaveBeenCalledTimes(1);
+    });
+
+    it("should close dropdown after clicking edit action", () => {
+        renderEventReviewActions();
+
+        fireEvent.click(screen.getByRole("button", { name: /manage/i }));
+        fireEvent.click(screen.getByRole("menuitem", {
+            name: /edit/i
+        }));
+
+        expect(screen.queryByRole("menu")).not.toBeInTheDocument();
     });
 
     it("should call onDelete callback", () => {
@@ -111,8 +137,9 @@ describe("EventReviewActionsMenu", () => {
         renderEventReviewActions({ onDelete });
 
         fireEvent.click(screen.getByRole("button", { name: /manage/i }));
-
-        fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+        fireEvent.click(screen.getByRole("menuitem", {
+            name: /delete/i
+        }));
 
         expect(onDelete).toHaveBeenCalledTimes(1);
     });
@@ -126,9 +153,7 @@ describe("EventReviewActionsMenu", () => {
             isEditing: true
         });
 
-        expect(
-            screen.getByRole("button", { name: /manage/i })
-        ).toBeDisabled();
+        expect(screen.getByRole("button", { name: /manage/i })).toBeDisabled();
     });
 
     it("should disable trigger when deleting", () => {

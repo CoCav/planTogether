@@ -8,14 +8,10 @@ import EventDetailsActions from "../../../components/events/EventDetailsActions"
    Tests single event contextual action rendering
 
    Handles:
-   - join action visibility
-   - leave action visibility
-   - edit action visibility
-   - delete action visibility
-   - join callback
-   - leave callback
-   - edit callback
-   - delete callback
+   - join action visibility and callback
+   - leave action visibility and callback
+   - edit action visibility and callback
+   - delete action visibility and callback
    - default empty action state
    - decorative action icons
 

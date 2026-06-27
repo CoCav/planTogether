@@ -22,7 +22,7 @@ import {
    Handles:
    - loading states with contextual feedback
    - empty states
-   - page semantic structure
+   - page semantic structure and accessible sections
    - event display data rendering
    - event category tag rendering
    - image fallback behavior
@@ -32,6 +32,8 @@ import {
    - selected location coordinate map hydration
    - formatted inline location display
    - formatted provider location labels
+   - event description section rendering
+   - membership section rendering
    - membership section and ownership transfer integration
    - event action integration
    - event status badge display
@@ -405,6 +407,16 @@ describe("EventDetailsPage", () => {
         ).toBeInTheDocument();
     });
 
+    it("should render accessible event overview section", async () => {
+        renderPage();
+
+        await screen.findByText("Test Event");
+
+        expect(screen.getByRole("region", {
+            name: "Test Event"
+        })).toBeInTheDocument();
+    });
+
     it("should render the event categories section", async () => {
         renderPage();
 
@@ -496,6 +508,19 @@ describe("EventDetailsPage", () => {
         expect(screen.getByText(/theme:/i)).toBeInTheDocument();
     });
 
+    it("should render about this event section", async () => {
+        renderPage();
+
+        expect(
+            await screen.findByRole("heading", {
+                level: 3,
+                name: /about this event/i
+            })
+        ).toBeInTheDocument();
+
+        expect(screen.getByText("Test description")).toBeInTheDocument();
+    });
+
     it("should use fallback display values when event data is missing", async () => {
         setupApi({
             event: createEvent({
@@ -516,13 +541,23 @@ describe("EventDetailsPage", () => {
         expect(summary).toBeInTheDocument();
     });
 
+    it("should render event location section", async () => {
+        renderPage();
+
+        expect(
+            await screen.findByRole("heading", {
+                level: 3,
+                name: /event location/i
+            })
+        ).toBeInTheDocument();
+    });
+
     it("should display formatted inline location label", async () => {
         setupApi({
             event: createEvent({
                 ...mockEvent,
                 location: "Agora du Vieux-Port",
-                locationLabel:
-                    "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"
+                locationLabel: "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"
             })
         });
 
@@ -662,6 +697,15 @@ describe("EventDetailsPage", () => {
         await waitFor(() => {
             expect(mockTransferEventOwnership).toHaveBeenCalledWith("1", 2);
         });
+    });
+
+    it("should render membership sections", async () => {
+        renderPage();
+
+        await screen.findByTestId("event-staff-section");
+
+        expect(screen.getByTestId("event-staff-section")).toBeInTheDocument();
+        expect(screen.getByTestId("event-participants-section")).toBeInTheDocument();
     });
 
     /* =============================

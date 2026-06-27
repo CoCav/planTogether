@@ -13,12 +13,11 @@ import Navbar from "../../../components/layout/Navbar";
    Handles:
    - public navigation links
    - authenticated navigation links
-   - accessible authenticated navigation
    - main navigation landmark
-   - accessible main navigation
    - user menu integration
    - logout redirect flow
-   - mobile navigation menu
+   - mobile navigation menu toggle state
+   - mobile navigation accessibility relationships
    - mobile authenticated navigation
    - mobile logout flow
    - decorative mobile menu icon
@@ -194,7 +193,21 @@ describe("Navbar", () => {
 
         expect(toggleButton).toHaveAttribute("aria-expanded", "true");
 
-        expect(document.getElementById("navbar-mobile-menu")).toHaveClass("is-open");
+        const menu = document.getElementById(toggleButton.getAttribute("aria-controls"));
+
+        expect(menu).toHaveClass("is-open");
+    });
+
+    it("should associate mobile toggle with mobile menu", () => {
+        renderNavbar();
+
+        const toggleButton = screen.getByRole("button", {
+            name: /open navigation menu/i
+        });
+
+        const menu = document.getElementById(toggleButton.getAttribute("aria-controls"));
+
+        expect(menu).toBeInTheDocument();
     });
 
     it("should close mobile navigation menu", async () => {
@@ -212,7 +225,9 @@ describe("Navbar", () => {
             name: /close navigation menu/i
         }));
 
-        expect(document.getElementById("navbar-mobile-menu")).not.toHaveClass("is-open");
+        const menu = document.getElementById(toggleButton.getAttribute("aria-controls"));
+
+        expect(menu).not.toHaveClass("is-open");
     });
 
     it("should render mobile authenticated navigation links", () => {

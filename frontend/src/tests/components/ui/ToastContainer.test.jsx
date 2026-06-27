@@ -13,8 +13,8 @@ import useToast from "../../../hooks/useToast";
    - empty toast state rendering
    - notification region rendering
    - toast list rendering
-   - toast dismissal forwarding
    - toast variant forwarding
+   - toast dismissal forwarding
 
    Notes:
    - useToast is mocked to isolate container orchestration
@@ -86,7 +86,9 @@ describe("ToastContainer", () => {
     it("should render notification region when toasts exist", () => {
         renderComp();
 
-        expect(screen.getByLabelText("Notifications")).toHaveClass("toast-container");
+        expect(screen.getByRole("region", {
+            name: "Notifications"
+        })).toHaveClass("toast-container");
     });
 
     it("should render toast messages", () => {

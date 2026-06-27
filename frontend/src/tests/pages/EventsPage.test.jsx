@@ -23,17 +23,16 @@ import {
 
    Covers:
    - initial and refresh loading states
-   - empty states
    - public event rendering
    - empty state rendering
    - API loading params
-   - view switching
-   - filter submission and reset
-   - quick date filters
+   - filters and quick filters
    - pagination
    - URL synchronization
-   - guest login alert
+   - view switching
+   - membership action integration
    - current user role forwarding
+   - guest and authenticated states
    - accessible page sections
 
    Notes:
@@ -617,6 +616,14 @@ describe("EventsPage", () => {
         });
     });
 
+    it("does not render pagination when there is only one page", async () => {
+        await renderAndWaitForEmptyState();
+
+        expect(screen.queryByRole("navigation", {
+            name: /events pagination/i
+        })).not.toBeInTheDocument();
+    });
+
     /* =============================
        PAGE ACTIONS
     ============================= */
@@ -645,6 +652,19 @@ describe("EventsPage", () => {
             level: 1,
             name: "Events"
         })).toBeInTheDocument();
+    });
+
+    it("associates results section with toolbar heading", async () => {
+        await renderAndWaitForEmptyState();
+
+        const heading = screen.getByRole("heading", {
+            name: /ongoing events/i,
+            level: 2
+        });
+
+        const resultsSection = document.querySelector(".events-results-section");
+
+        expect(resultsSection).toHaveAttribute("aria-labelledby", heading.id);
     });
 
     /* =============================

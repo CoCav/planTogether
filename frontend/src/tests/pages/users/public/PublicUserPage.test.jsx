@@ -454,6 +454,21 @@ describe("PublicUserPage", () => {
         expect(within(statsList).getByText("joined events")).toBeInTheDocument();
     });
 
+    it("associates listing section with events toolbar heading", async () => {
+        renderPage();
+
+        await screen.findByText(/no created events found/i);
+
+        const heading = screen.getByRole("heading", {
+            level: 2,
+            name: /created events/i
+        });
+
+        const listingSection = document.querySelector(".events-results-section");
+
+        expect(listingSection).toHaveAttribute("aria-labelledby", heading.id);
+    });
+
     /* =============================
        ERROR HANDLING
     ============================= */

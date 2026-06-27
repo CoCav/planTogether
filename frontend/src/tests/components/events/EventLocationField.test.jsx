@@ -9,15 +9,16 @@ import useLocationAutocomplete from "../../../features/events/hooks/form/useLoca
    Tests location autocomplete field rendering
 
    Handles:
-   - input rendering
-   - autocomplete dropdown rendering
+   - combobox input rendering
+   - autocomplete hook integration
+   - dropdown visibility states
    - loading state rendering
    - error state rendering
-   - formatted location suggestion rendering
-   - highlighted suggestion styling
+   - formatted suggestion rendering
+   - highlighted suggestion state
    - suggestion selection
-   - keyboard navigation
-   - accessibility attributes
+   - keyboard navigation forwarding
+   - accessible combobox relationships
 
    Notes:
    - mocks autocomplete hook
@@ -124,6 +125,30 @@ describe("EventLocationField", () => {
         expect(input).toHaveAttribute("aria-expanded", "true");
         expect(input).toHaveAttribute("aria-controls", "location-suggestions");
         expect(input).toHaveAttribute("autocomplete", "off");
+    });
+
+    it("should expose active descendant when a suggestion is highlighted", () => {
+        renderComponent({
+            hookState: {
+                autocompleteState: {
+                    isOpen: true,
+                    highlightedIndex: 0,
+                    suggestions: [
+                        {
+                            label: "Montréal, Québec, Canada",
+                            latitude: 45.5017,
+                            longitude: -73.5673,
+                            provider: "nominatim"
+                        }
+                    ]
+                }
+            }
+        });
+
+        const input = screen.getByRole("combobox");
+        const option = screen.getByRole("option");
+
+        expect(input).toHaveAttribute("aria-activedescendant", option.id);
     });
 
     it("should render city, venue or address placeholder", () => {
@@ -298,5 +323,30 @@ describe("EventLocationField", () => {
         renderComponent();
 
         expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    });
+
+    it("should not expose dropdown relationships when dropdown is closed", () => {
+        renderComponent({
+            hookState: {
+                autocompleteState: {
+                    isOpen: false,
+                    highlightedIndex: 0,
+                    suggestions: [
+                        {
+                            label: "Montréal, Québec, Canada",
+                            latitude: 45.5017,
+                            longitude: -73.5673,
+                            provider: "nominatim"
+                        }
+                    ]
+                }
+            }
+        });
+
+        const input = screen.getByRole("combobox");
+
+        expect(input).toHaveAttribute("aria-expanded", "false");
+        expect(input).not.toHaveAttribute("aria-controls");
+        expect(input).not.toHaveAttribute("aria-activedescendant");
     });
 });

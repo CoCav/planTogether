@@ -11,11 +11,13 @@ import PasswordField from "../../../components/users/PasswordField";
    Handles:
    - password input rendering
    - password visibility state
+   - input change forwarding
    - accessible toggle state
-   - decorative toggle icon
    - single error display
    - multiple error display
    - helper content rendering
+   - accessible input descriptions
+   - decorative toggle icon
 ================================================== */
 
 describe("PasswordField", () => {
@@ -71,6 +73,17 @@ describe("PasswordField", () => {
         });
 
         expect(screen.getByText("Password help")).toBeInTheDocument();
+    });
+
+    it("connects the input to helper content with aria-describedby", () => {
+        renderPasswordField({
+            children: <p>Password help</p>
+        });
+
+        const input = screen.getByLabelText("Password");
+        const helper = screen.getByText("Password help").parentElement;
+
+        expect(input).toHaveAttribute("aria-describedby", helper.id);
     });
 
     /* =============================
@@ -150,6 +163,17 @@ describe("PasswordField", () => {
         });
 
         expect(screen.getByText("Password is required")).toBeInTheDocument();
+    });
+
+    it("connects the input to a single error with aria-describedby", () => {
+        renderPasswordField({
+            error: "Password is required"
+        });
+
+        const input = screen.getByLabelText("Password");
+        const errorMessage = screen.getByText("Password is required");
+
+        expect(input).toHaveAttribute("aria-describedby", errorMessage.id);
     });
 
     it("renders multiple password errors as a list", () => {

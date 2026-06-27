@@ -10,13 +10,16 @@ import UserForm from "../../../components/users/UserForm";
 
    Handles:
    - shared avatar upload field rendering
-   - user field rendering
-   - optional submit icon rendering
-   - accessible field descriptions
    - optional avatar visibility
+   - name and email field rendering
+   - field interaction forwarding
    - custom form content rendering
    - form footer rendering
+   - validation error display
+   - accessible field descriptions
    - form submission
+   - submit loading state
+   - optional submit icon rendering
 ================================================== */
 
 describe("UserForm", () => {
@@ -156,6 +159,21 @@ describe("UserForm", () => {
 
         expect(screen.getByText("Name is required")).toBeInTheDocument();
         expect(screen.getByText("Email is required")).toBeInTheDocument();
+    });
+
+    it("associates fields with validation descriptions", () => {
+        renderUserForm({
+            fieldErrors: {
+                name: "Name is required",
+                email: "Email is required"
+            }
+        });
+
+        const nameInput = screen.getByLabelText("Name");
+        const emailInput = screen.getByLabelText("Email");
+
+        expect(nameInput).toHaveAttribute("aria-describedby", screen.getByText("Name is required").id);
+        expect(emailInput).toHaveAttribute("aria-describedby", screen.getByText("Email is required").id);
     });
 
     /* =============================

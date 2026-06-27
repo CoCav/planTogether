@@ -12,6 +12,7 @@ import NavbarUserMenu from "../../../components/layout/NavbarUserMenu";
    Handles:
    - user avatar trigger rendering
    - accessible menu trigger state
+   - accessible menu relationship ids
    - dropdown open and close behavior
    - accessible dropdown menu items
    - profile and events menu links
@@ -67,7 +68,7 @@ describe("NavbarUserMenu", () => {
         });
 
         expect(trigger).toHaveAttribute("aria-haspopup", "menu");
-        expect(trigger).toHaveAttribute("aria-controls", "navbar-user-dropdown");
+        expect(trigger).not.toHaveAttribute("aria-controls");
         expect(trigger).toHaveAttribute("aria-expanded", "false");
     });
 
@@ -93,6 +94,24 @@ describe("NavbarUserMenu", () => {
 
         expect(trigger).toHaveAttribute("aria-expanded", "false");
         expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    });
+
+    it("associates trigger with dropdown when menu is open", async () => {
+        const user = userEvent.setup();
+
+        renderNavbarUserMenu();
+
+        await user.click(screen.getByRole("button", {
+            name: /open john menu/i
+        }));
+
+        const trigger = screen.getByRole("button", {
+            name: /close john menu/i
+        });
+
+        const menu = screen.getByRole("menu");
+
+        expect(trigger).toHaveAttribute("aria-controls", menu.id);
     });
 
     it("updates trigger accessible label when menu opens", async () => {
@@ -150,8 +169,7 @@ describe("NavbarUserMenu", () => {
             name: /open john menu/i
         }));
 
-        expect(screen.getByRole("menu")).toHaveAttribute("id", "navbar-user-dropdown");
-
+        expect(screen.getByRole("menu")).toBeInTheDocument();
         expect(screen.getAllByRole("menuitem")).toHaveLength(3);
     });
 

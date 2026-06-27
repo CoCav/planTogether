@@ -11,14 +11,14 @@ import FileUploadPreviewField from "../../../components/forms/FileUploadPreviewF
    Handles:
    - conditional dropzone and preview rendering
    - file input rendering
-   - decorative upload and remove icon rendering
-   - upload variant class rendering
+   - variant class rendering
    - selected file preview display
    - existing file preview display
    - drag and drop interactions
    - file removal action
    - validation error display
    - accessible helper and error descriptions
+   - decorative upload and remove icons
 ================================================== */
 
 describe("FileUploadPreviewField", () => {
@@ -195,6 +195,14 @@ describe("FileUploadPreviewField", () => {
        FILE REMOVAL
     ============================= */
 
+    it("does not render remove button when no preview file exists", () => {
+        renderComponent();
+
+        expect(screen.queryByRole("button", {
+            name: /remove image/i
+        })).not.toBeInTheDocument();
+    });
+
     it("renders decorative remove icon", () => {
         renderComponent({
             file: validFile
@@ -297,5 +305,13 @@ describe("FileUploadPreviewField", () => {
         renderComponent();
 
         expect(screen.getByLabelText("Image (optional)")).toHaveAttribute("aria-describedby", "test-image-hint");
+    });
+
+    it("does not expose file input label when preview is displayed", () => {
+        renderComponent({
+            file: validFile
+        });
+
+        expect(screen.queryByLabelText("Image (optional)")).not.toBeInTheDocument();
     });
 });

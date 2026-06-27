@@ -15,16 +15,16 @@ import useToast from "../../../../hooks/useToast";
    Tests authenticated user profile settings page
 
    Handles:
-   - loading state with contextual feedback
-   - page rendering
+   - loading state rendering
+   - page heading and layout rendering
    - accessible profile sections
    - profile form integration
    - password form integration
    - delete account integration
-   - decorative submit icon forwarding
    - hook initialization
-   - auth loading state
+   - toast forwarding
    - auth-ready profile rendering
+   - decorative submit icon forwarding
 ================================================== */
 
 /* =============================

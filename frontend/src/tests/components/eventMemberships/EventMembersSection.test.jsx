@@ -252,6 +252,22 @@ describe("EventMembersSection", () => {
         expect(screen.getByRole("button", { name: "View all" })).toBeInTheDocument();
     });
 
+    it("should expose expanded state on the view all toggle", () => {
+        renderEventMembersSection({
+            members: manyMembers,
+            previewLimit: 2,
+            pageSize: 2
+        });
+
+        const toggle = screen.getByRole("button", { name: "View all" });
+
+        expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+        fireEvent.click(toggle);
+
+        expect(screen.getByRole("button", { name: "Collapse" })).toHaveAttribute("aria-expanded", "true");
+    });
+
     it("should expand member list when clicking view all", () => {
         renderEventMembersSection({
             members: manyMembers,

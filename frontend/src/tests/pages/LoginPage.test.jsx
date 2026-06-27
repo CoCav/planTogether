@@ -11,13 +11,16 @@ import LoginPage from "../../pages/LoginPage";
 
    Handles:
    - login page rendering
+   - accessible login form section
    - login form validation
    - field and password interactions
    - remember me preference
    - successful login flow
    - redirect after successful login
+   - protected route restoration
    - protected route query param preservation
    - register navigation state forwarding
+   - login loading state
    - login error feedback
 
    Notes:
@@ -155,7 +158,24 @@ describe("LoginPage", () => {
     it("renders the login section with accessible label", () => {
         renderPage();
 
-        expect(screen.getByLabelText("Login form")).toHaveClass("account-section");
+        expect(screen.getByRole("region", {
+            name: /login/i
+        })).toHaveClass("account-section");
+    });
+
+    it("associates the login section with the page heading", () => {
+        renderPage();
+
+        const heading = screen.getByRole("heading", {
+            level: 1,
+            name: "Login"
+        });
+
+        expect(heading).toHaveAttribute("id", "login-page-title");
+
+        expect(screen.getByRole("region", {
+            name: "Login"
+        })).toBeInTheDocument();
     });
 
     /* =============================

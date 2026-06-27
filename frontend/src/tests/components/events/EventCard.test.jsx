@@ -17,17 +17,13 @@ import { createEvent } from "../../factories/events/eventFactory";
    Handles:
    - event information rendering
    - event image rendering and fallback
-   - status, state, type, creator and role badge display
-   - fallback display values
-   - join and leave action visibility
-   - guest action restrictions
-   - past event state
-   - completed event review summary display
-   - completed event empty review summary display
+   - event badge rendering
+   - membership action visibility
+   - completed event review summary
+   - event full and registration closed states
    - join and leave callbacks
-   - accessible image links
-   - accessible event labels
    - public profile navigation
+   - accessible links, labels and images
 
    Notes:
    - uses reusable event render helper
@@ -143,14 +139,6 @@ describe("EventCard", () => {
         expect(image).toHaveClass("event-card-image");
     });
 
-    it("should expose accessible image link label", () => {
-        renderCard();
-
-        expect(screen.getByRole("link", {
-            name: /view details for test event/i
-        })).toBeInTheDocument();
-    });
-
     it("should display default event image when event has no image", () => {
         renderCard({
             event: {
@@ -162,6 +150,16 @@ describe("EventCard", () => {
 
         expect(image).toBeInTheDocument();
         expect(image).toHaveAttribute("src", "event_image_per_default.jpg");
+    });
+
+    it("should expose generic event image alt text when title is missing", () => {
+        renderCard({
+            event: {
+                title: ""
+            }
+        });
+
+        expect(screen.getByAltText("Event cover for No title provided.")).toBeInTheDocument();
     });
 
     it("should fall back to default event image when image fails to load", () => {
@@ -244,6 +242,22 @@ describe("EventCard", () => {
         expect(screen.getByRole("link", {
             name: /alice/i
         })).toHaveAttribute("href", "/users/42");
+    });
+
+    it("should render organizer badge without profile link when creator id is missing", () => {
+        renderCard({
+            role: null,
+            event: {
+                creatorId: null,
+                creatorName: "Alice"
+            }
+        });
+
+        expect(screen.getByText("Alice")).toBeInTheDocument();
+
+        expect(screen.queryByRole("link", {
+            name: /alice/i
+        })).not.toBeInTheDocument();
     });
 
     /* =============================
@@ -449,5 +463,31 @@ describe("EventCard", () => {
         }));
 
         expect(onLeave).toHaveBeenCalledWith(1);
+    });
+
+    /* =============================
+       ACCESSIBILITY
+    ============================= */
+
+    it("should expose accessible image link label", () => {
+        renderCard();
+
+        expect(screen.getByRole("link", {
+            name: /view details for test event/i
+        })).toBeInTheDocument();
+    });
+
+    it("should expose accessible event details list", () => {
+        renderCard();
+
+        expect(
+            screen.getByLabelText(/event details/i)
+        ).toBeInTheDocument();
+    });
+
+    it("should expose accessible event cover image", () => {
+        renderCard();
+
+        expect(screen.getByAltText("Event cover for Test Event")).toBeInTheDocument();
     });
 });

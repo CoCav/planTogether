@@ -14,6 +14,8 @@ import EventReviewRating from "../../../components/eventReviews/EventReviewRatin
    - rating change callback
    - disabled rating controls
    - custom accessible label
+   - accessible description forwarding
+   - disabled radiogroup state
 
    Notes:
    - rating values range from 1 to 5
@@ -122,6 +124,26 @@ describe("EventReviewRating", () => {
         screen.getAllByRole("radio").forEach((starButton) => {
             expect(starButton).toBeDisabled();
         });
+    });
+
+    it("should mark radiogroup as disabled when disabled", () => {
+        renderEventReviewRating({
+            disabled: true
+        });
+
+        expect(screen.getByRole("radiogroup", {
+            name: /rating/i
+        })).toHaveAttribute("aria-disabled", "true");
+    });
+
+    it("should forward accessible description id", () => {
+        renderEventReviewRating({
+            describedBy: "rating-error"
+        });
+
+        expect(screen.getByRole("radiogroup", {
+            name: /rating/i
+        })).toHaveAttribute("aria-describedby", "rating-error");
     });
 
     it("should support custom accessible label", () => {

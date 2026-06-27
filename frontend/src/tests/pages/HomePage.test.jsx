@@ -1,6 +1,7 @@
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 import HomePage from "../../pages/HomePage";
 
@@ -13,15 +14,16 @@ import { EVENT_ROLES } from "../../features/shared/constants/eventRoles";
    Handles:
    - hero section rendering
    - feature section rendering
-   - guest and authenticated actions
+   - guest and authenticated hero actions
    - latest events loading state with contextual feedback
    - latest events empty state
    - latest events rendering
    - event role forwarding
    - membership action integration
+   - toast forwarding
    - accessible homepage sections
-   - decorative hero and feature icons
    - auth-ready initial loading guard
+   - decorative hero and feature icons
 
    Notes:
    - mocks authenticated user state
@@ -208,6 +210,13 @@ describe("HomePage", () => {
         expect(screen.getByText("Smart filtering")).toBeInTheDocument();
     });
 
+    it("renders feature cards as accessible list items", () => {
+        renderPage();
+
+        expect(screen.getByRole("list")).toHaveClass("home-features-grid");
+        expect(screen.getAllByRole("listitem")).toHaveLength(4);
+    });
+
     /* =============================
        DATA LOADING
     ============================= */
@@ -255,6 +264,19 @@ describe("HomePage", () => {
         })).toBeInTheDocument();
 
         expect(screen.getByText("Discover the most recently created events on PlanTogether.")).toBeInTheDocument();
+    });
+
+    it("marks latest events section as busy while loading", () => {
+        mockHomeEventsState = {
+            ...mockHomeEventsState,
+            isLoading: true
+        };
+
+        renderPage();
+
+        expect(screen.getByRole("region", {
+            name: "Latest Events"
+        })).toHaveAttribute("aria-busy", "true");
     });
 
     it("displays empty state when no events are returned", () => {
@@ -309,6 +331,8 @@ describe("HomePage", () => {
     ============================= */
 
     it("passes join and leave actions to event cards", async () => {
+        const user = userEvent.setup();
+
         mockHomeEventsState = {
             ...mockHomeEventsState,
             events: [
@@ -321,8 +345,8 @@ describe("HomePage", () => {
 
         renderPage();
 
-        screen.getByRole("button", { name: "Join" }).click();
-        screen.getByRole("button", { name: "Leave" }).click();
+        await user.click(screen.getByRole("button", { name: "Join" }));
+        await user.click(screen.getByRole("button", { name: "Leave" }));
 
         expect(mockHandleJoinEvent).toHaveBeenCalledWith(1);
         expect(mockHandleLeaveEvent).toHaveBeenCalledWith(1);
@@ -356,5 +380,11 @@ describe("HomePage", () => {
         expect(screen.getByRole("region", {
             name: "Latest Events"
         })).toHaveClass("home-section");
+    });
+
+    it("hides decorative hero and feature icons from assistive technologies", () => {
+        renderPage();
+
+        expect(document.querySelectorAll("[aria-hidden='true'] svg").length).toBeGreaterThan(0);
     });
 });

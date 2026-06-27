@@ -8,13 +8,15 @@ import EventReviewForm from "../../../components/eventReviews/EventReviewForm";
    Tests event review form rendering and interactions
 
    Handles:
-   - comment field rendering
-   - comment updates
-   - rating selection
+   - comment field rendering and updates
+   - rating field rendering and selection
    - submit flow
    - loading state
-   - form reset after submit
-   - cancel button (optional)
+   - form reset after successful submit
+   - validation error rendering
+   - accessible invalid states
+   - accessible validation descriptions
+   - optional cancel button
 
    Notes:
    - form state and validation are handled by useEventReviewForm
@@ -22,9 +24,9 @@ import EventReviewForm from "../../../components/eventReviews/EventReviewForm";
 ================================================== */
 
 vi.mock("../../../components/eventReviews/EventReviewRating", () => ({
-    default: ({ value, onChange }) => (
-        <div>
-            <button onClick={() => onChange?.(5)}>
+    default: ({ value, onChange, disabled }) => (
+        <div role="radiogroup" aria-label="Rating" aria-disabled={disabled ? "true" : undefined}>
+            <button type="button" disabled={disabled} onClick={() => onChange?.(5)}>
                 5 stars
             </button>
 
@@ -124,14 +126,14 @@ describe("EventReviewForm", () => {
         })).toBeInTheDocument();
     });
 
-    it("should disable submit action while submitting", () => {
+    it("should disable form controls while submitting", () => {
         renderEventReviewForm({
             isSubmitting: true
         });
 
-        expect(screen.getByText(/saving/i)).toBeInTheDocument();
-
+        expect(screen.getByRole("button", { name: /saving/i })).toBeDisabled();
         expect(screen.getByLabelText(/comment/i)).toBeDisabled();
+        expect(screen.getByRole("button", { name: /5 stars/i })).toBeDisabled();
     });
 
     it("should call onSubmit when form is valid and submitted", () => {
@@ -247,14 +249,23 @@ describe("EventReviewForm", () => {
     it("should associate comment field with validation description", () => {
         renderEventReviewForm();
 
+        fireEvent.click(screen.getByText("5 stars"));
+
+        fireEvent.change(screen.getByLabelText(/comment/i), {
+            target: {
+                name: "comment",
+                value: "bad"
+            }
+        });
+
         fireEvent.submit(screen.getByRole("button", {
             name: /submit review/i
         }).closest("form"));
 
-        expect(screen.getByLabelText(/comment/i)).toHaveAttribute(
-            "aria-describedby",
-            "review-comment-error"
-        );
+        const commentField = screen.getByLabelText(/comment/i);
+        const commentError = screen.getByText(/between 5 and 1000 characters/i);
+
+        expect(commentField).toHaveAttribute("aria-describedby", commentError.id);
     });
 
     it("should mark comment field as invalid when validation fails", () => {
@@ -264,19 +275,6 @@ describe("EventReviewForm", () => {
             name: /submit review/i
         }).closest("form"));
 
-        expect(screen.getByLabelText(/comment/i)).toHaveAttribute(
-            "aria-invalid",
-            "true"
-        );
-    });
-
-    it("should associate rating field with validation description", () => {
-        renderEventReviewForm();
-
-        fireEvent.submit(screen.getByRole("button", {
-            name: /submit review/i
-        }).closest("form"));
-
-        expect(screen.getByText("Rating").closest("div"));
+        expect(screen.getByLabelText(/comment/i)).toHaveAttribute("aria-invalid", "true");
     });
 });

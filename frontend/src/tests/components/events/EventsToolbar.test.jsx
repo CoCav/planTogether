@@ -18,11 +18,9 @@ import {
    Handles:
    - results title and subtitle rendering
    - optional total event count display
-   - missing count fallback behavior
-   - accessible live results metadata
    - pagination info display
+   - accessible live results metadata
    - view tab integration
-   - accessible view tabs
    - quick date filter visibility
    - quick filter button group
    - quick date filter callbacks
@@ -252,6 +250,14 @@ describe("EventsToolbar", () => {
         expect(screen.getByRole("button", {
             name: "Today"
         })).toHaveClass("btn-filter-active");
+    });
+
+    it("should keep Today quick filter inactive when date filter is empty", () => {
+        renderEventsToolbar();
+
+        expect(screen.getByRole("button", {
+            name: "Today"
+        })).not.toHaveClass("btn-filter-active");
     });
 
     it("should mark This Weekend quick filter as active when weekend filter is active", () => {

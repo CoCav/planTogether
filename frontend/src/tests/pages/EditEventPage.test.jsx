@@ -24,7 +24,7 @@ import EditEventPage from "../../pages/EditEventPage";
    - online mode location clearing
    - started event start date lock
    - validation feedback
-   - API error feedback
+   - loading and update API error feedback
    - cancel navigation
    - auth-ready protected loading guard
 
@@ -292,6 +292,20 @@ describe("EditEventPage", () => {
         expect(screen.getByRole("region", {
             name: /edit event form/i
         })).toHaveClass("event-form-section");
+    });
+
+    it("renders update and cancel actions", async () => {
+        renderPage();
+
+        await screen.findByDisplayValue("Original Event");
+
+        expect(screen.getByRole("button", {
+            name: /update event/i
+        })).toBeInTheDocument();
+
+        expect(screen.getByRole("button", {
+            name: /cancel/i
+        })).toBeInTheDocument();
     });
 
     it("shows current event image preview", async () => {

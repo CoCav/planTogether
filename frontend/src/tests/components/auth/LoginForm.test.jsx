@@ -9,15 +9,16 @@ import LoginForm from "../../../components/auth/LoginForm";
    Tests authentication login form rendering
 
    Handles:
-   - email field rendering
-   - password field rendering
-   - remember me state
+   - email and password field rendering
+   - autocomplete attributes
+   - field change handlers
+   - remember me checked and disabled states
    - password visibility toggle
    - form submission
-   - register navigation link and decorative icon
-   - registration redirect state forwarding
-   - validation error display
-   - accessible form field descriptions
+   - submit loading state
+   - register navigation link
+   - validation error rendering
+   - accessible validation descriptions
 ================================================== */
 
 describe("LoginForm", () => {
@@ -170,6 +171,15 @@ describe("LoginForm", () => {
         expect(defaultProps.onRememberMeChange).toHaveBeenCalledTimes(1);
     });
 
+    it("disables remember me checkbox while submitting", () => {
+        renderComponent({
+            isSubmitting: true
+        });
+
+        expect(screen.getByLabelText(/remember me/i)).toBeDisabled();
+    });
+
+
     /* =============================
        FORM ACTIONS
     ============================= */
@@ -195,7 +205,7 @@ describe("LoginForm", () => {
             isSubmitting: true
         });
 
-        expect(screen.getByRole("button", { busy: true })).toBeDisabled();
+        expect(screen.getByRole("button", { name: /loading/i })).toBeDisabled();
     });
 
     /* =============================
@@ -236,5 +246,17 @@ describe("LoginForm", () => {
         });
 
         expect(screen.getByLabelText(/email/i)).toHaveAttribute("aria-describedby", "email-error");
+    });
+
+    it("marks invalid fields as invalid when validation errors are provided", () => {
+        renderComponent({
+            fieldErrors: {
+                email: "Email is required",
+                password: "Password is required"
+            }
+        });
+
+        expect(screen.getByLabelText(/email/i)).toHaveAttribute("aria-invalid", "true");
+        expect(screen.getByLabelText(/^password$/i)).toHaveAttribute("aria-invalid", "true");
     });
 });

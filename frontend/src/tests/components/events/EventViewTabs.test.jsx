@@ -16,11 +16,14 @@ import {
    Tests event view tab navigation
 
    Handles:
+   - tablist rendering
    - view tab rendering
    - active tab state
-   - mobile scroll wrapper
-   - accessible tab navigation
+   - inactive tab state
    - view change callback
+   - accessible tab navigation
+   - decorative tab icons
+   - mobile horizontal scroll wrapper
 ================================================== */
 
 describe("EventViewTabs", () => {
@@ -132,5 +135,17 @@ describe("EventViewTabs", () => {
         }));
 
         expect(onChange).toHaveBeenCalledWith(EVENT_STATUS.UPCOMING);
+    });
+
+    it("should not fail when onChange is missing", () => {
+        renderEventViewTabs({
+            onChange: undefined
+        });
+
+        expect(() => {
+            fireEvent.click(screen.getByRole("tab", {
+                name: /upcoming/i
+            }));
+        }).not.toThrow();
     });
 });

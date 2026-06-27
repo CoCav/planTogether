@@ -18,6 +18,8 @@ import CreateEventPage from "../../pages/CreateEventPage";
    - event creation FormData payload
    - online event location normalization
    - image upload payload
+   - custom registration deadline payload
+   - automatic registration deadline payload
    - location autocomplete suggestion selection
    - API error feedback
    - cancel navigation

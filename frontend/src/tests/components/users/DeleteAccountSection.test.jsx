@@ -8,11 +8,12 @@ import DeleteAccountSection from "../../../components/users/DeleteAccountSection
    Tests destructive account deletion section rendering
 
    Handles:
-   - section heading
+   - section heading and description rendering
    - deletion warning copy
    - delete account action callback
    - disabled delete state while submitting
-   - accessible section semantics
+   - accessible section heading association
+   - accessible warning association
    - decorative trash icon
 ================================================== */
 
@@ -67,14 +68,13 @@ describe("DeleteAccountSection", () => {
     it("should associate delete action with deletion warning", () => {
         renderDeleteAccountSection();
 
-        expect(
-            screen.getByRole("button", {
-                name: "Delete Account"
-            })
-        ).toHaveAttribute(
-            "aria-describedby",
-            "delete-account-warning"
-        );
+        const button = screen.getByRole("button", {
+            name: "Delete Account"
+        });
+
+        const warning = screen.getByText(/this action cannot be undone/i);
+
+        expect(button).toHaveAttribute("aria-describedby", warning.id);
     });
 
     it("should associate section with its heading", () => {
@@ -84,11 +84,9 @@ describe("DeleteAccountSection", () => {
             name: "Delete Account"
         });
 
-        expect(heading).toHaveAttribute("id", "delete-account-title");
+        const section = heading.closest("section");
 
-        expect(screen.getByRole("region", {
-            name: "Delete Account"
-        })).toBeInTheDocument();
+        expect(section).toHaveAttribute("aria-labelledby", heading.id);
     });
 
     /* =============================

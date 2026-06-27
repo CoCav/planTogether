@@ -10,6 +10,7 @@ import Select from "../../../components/ui/Select";
    Handles:
    - option rendering
    - wrapper and select classes
+   - custom wrapper classes
    - error state
    - accessible invalid state
    - native select props forwarding
@@ -99,12 +100,6 @@ describe("Select", () => {
     /* =============================
        ACCESSIBILITY
     ============================= */
-
-    it("should render decorative icon as hidden from assistive technologies", () => {
-        renderSelect();
-
-        expect(document.querySelector(".select-icon")).toHaveAttribute("aria-hidden", "true");
-    });
 
     it("should hide decorative icon from assistive technologies", () => {
         renderSelect();

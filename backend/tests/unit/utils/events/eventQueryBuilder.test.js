@@ -12,6 +12,8 @@
    - review stats include builder
    - review count attribute builder
    - average rating attribute builder
+   - like stats include builder
+   - like count attribute builder
 
    Ensures:
    - upcoming, ongoing and past filters generate correct date conditions
@@ -23,6 +25,8 @@
    - review includes support aggregated rating stats
    - review count attributes use COUNT DISTINCT
    - average rating attributes use review ratings
+   - like includes support aggregated like stats
+   - like count attributes use COUNT DISTINCT
    - shared event status and role constants are used correctly
 ================================================== */
 
@@ -45,7 +49,9 @@ const {
     countActiveParticipantsByEventIds,
     buildEventReviewInclude,
     buildReviewCountAttribute,
-    buildAverageRatingAttribute
+    buildAverageRatingAttribute,
+    buildEventLikeInclude,
+    buildLikeCountAttribute
 } = require("../../../../src/utils/events/eventQueryBuilder");
 
 describe("eventQueryBuilder utils", () => {
@@ -362,6 +368,36 @@ describe("eventQueryBuilder utils", () => {
             );
 
             expect(result[1]).toBe("averageRating");
+        });
+    });
+
+    /* =============================
+       LIKE STATS HELPERS
+    ============================= */
+
+    describe("buildEventLikeInclude", () => {
+        const EventLike = {
+            name: "EventLikeModel"
+        };
+
+        it("should build like include for like stats", () => {
+            expect(buildEventLikeInclude(EventLike)).toEqual({
+                model: EventLike,
+                as: "likes",
+                attributes: [],
+                required: false
+            });
+        });
+    });
+
+    describe("buildLikeCountAttribute", () => {
+        it("should build DISTINCT like count attribute", () => {
+            const result = buildLikeCountAttribute(
+                sequelize,
+                "likes.id"
+            );
+
+            expect(result[1]).toBe("likesCount");
         });
     });
 

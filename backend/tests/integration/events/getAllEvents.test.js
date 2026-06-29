@@ -6,19 +6,14 @@
    - active participant count enrichment
    - inactive membership exclusion from participant count
    - event status enrichment
-   - filtering by type
-   - filtering by theme
-   - filtering by mode
-   - filtering by location
-   - filtering by creatorId
-   - filtering by creator name
-   - filtering by search
-   - filtering by status
+   - filtering by (type, theme, mode, location, creatorId, creator name, search, status)
    - pagination
    - sorting
    - invalid query validation
    - review count enrichment
    - average rating enrichment
+   - like count enrichment
+   - current user like state enrichment
 
    Ensures:
    - public event listing works correctly
@@ -27,13 +22,15 @@
    - validators protect query params
    - participant counts only include active memberships
    - review stats are enriched in event listings
+   - like stats are enriched in event listings
+   - current user like state is enriched in event listings
    - shared event status constants are used for expected statuses
 ================================================== */
 
 const request = require("supertest");
 const app = require("../../../src/app");
 
-const { EventReview } = require("../../../src/models");
+const { EventReview, EventLike } = require("../../../src/models");
 
 const { EVENT_STATUS } = require("../../../src/constants/eventStatus");
 const { EVENT_MODES } = require("../../../src/constants/eventModes");
@@ -242,6 +239,106 @@ describe("Get All Events API", () => {
 
         expect(Number(foundEvent.reviewCount)).toBe(0);
         expect(foundEvent.averageRating).toBeNull();
+    });
+
+    /* =============================
+       LIKE METADATA
+    ============================= */
+
+    it("should include like count in events", async () => {
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Listing Like Stats Creator",
+                email: `listinglikestats${Date.now()}@test.com`
+            },
+            event: {
+                title: "Listing Like Stats Event"
+            }
+        });
+
+        const likerAuthA = await registerAndGetToken({
+            name: "Listing Liker A",
+            email: `listinglikera${Date.now()}@test.com`
+        });
+
+        const likerAuthB = await registerAndGetToken({
+            name: "Listing Liker B",
+            email: `listinglikerb${Date.now()}@test.com`
+        });
+
+        await EventLike.create({
+            eventId: event.id,
+            userId: likerAuthA.user.userId
+        });
+
+        await EventLike.create({
+            eventId: event.id,
+            userId: likerAuthB.user.userId
+        });
+
+        const res = await request(app).get("/api/events");
+
+        const foundEvent = res.body.events.find(
+            (item) => item.title === "Listing Like Stats Event"
+        );
+
+        expect(foundEvent).toBeDefined();
+        expect(foundEvent).toHaveProperty("likesCount");
+        expect(Number(foundEvent.likesCount)).toBe(2);
+    });
+
+    it("should include false current user like state for anonymous event listings", async () => {
+        await createEventWithOrganizer({
+            organizer: {
+                name: "Anonymous Like State Creator",
+                email: `anonymouslikestate${Date.now()}@test.com`
+            },
+            event: {
+                title: "Anonymous Like State Event"
+            }
+        });
+
+        const res = await request(app).get("/api/events");
+
+        const foundEvent = res.body.events.find(
+            (item) => item.title === "Anonymous Like State Event"
+        );
+
+        expect(foundEvent).toBeDefined();
+        expect(foundEvent.isLikedByCurrentUser).toBe(false);
+    });
+
+    it("should include current user like state for authenticated event listings", async () => {
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Liked Listing Creator",
+                email: `likedlistingcreator${Date.now()}@test.com`
+            },
+            event: {
+                title: "Liked Listing Event"
+            }
+        });
+
+        const likerAuth = await registerAndGetToken({
+            name: "Listing Current Liker",
+            email: `listingcurrentliker${Date.now()}@test.com`
+        });
+
+        await EventLike.create({
+            eventId: event.id,
+            userId: likerAuth.user.userId
+        });
+
+        const res = await request(app)
+            .get("/api/events")
+            .set(likerAuth.headers);
+
+        const foundEvent = res.body.events.find(
+            (item) => item.title === "Liked Listing Event"
+        );
+
+        expect(foundEvent).toBeDefined();
+        expect(foundEvent.isLikedByCurrentUser).toBe(true);
     });
 
     /* =============================

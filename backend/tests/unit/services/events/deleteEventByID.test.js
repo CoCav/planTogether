@@ -36,6 +36,11 @@ jest.mock("../../../../src/models/relations/eventReviewModel", () => ({
     name: "EventReviewModel"
 }));
 
+jest.mock("../../../../src/models/relations/eventLikeModel", () => ({
+    findOne: jest.fn(),
+    count: jest.fn()
+}));
+
 jest.mock("../../../../src/services/locationService", () => ({
     resolveEventLocation: jest.fn()
 }));

@@ -8,11 +8,13 @@
    - single event retrieval
    - event update
    - event image preservation, replacement and removal
+   - current user like state forwarding
    - event deletion
 
    Ensures:
    - controller calls service correctly
    - uploaded event images are preserved, replaced and cleared correctly
+   - current user ID is forwarded for user-specific event state
    - event access responses are properly formatted
    - HTTP responses are properly formatted
    - errors are forwarded to next()
@@ -133,7 +135,10 @@ describe("eventController", () => {
 
             await eventController.getAllEvents(req, res, next);
 
-            expect(eventService.getAllEvents).toHaveBeenCalledWith({ page: "1" });
+            expect(eventService.getAllEvents).toHaveBeenCalledWith(
+                { page: "1" },
+                10
+            );
 
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
@@ -153,6 +158,30 @@ describe("eventController", () => {
 
             expect(next).toHaveBeenCalledWith(error);
         });
+    });
+
+    it("should pass current user ID when getting all events", async () => {
+        const { req, res, next } = createEventControllerMocks({
+            query: { page: "1" },
+            user: { userId: 10 }
+        });
+
+        const result = {
+            page: 1,
+            pageSize: 4,
+            totalEvents: 1,
+            totalPages: 1,
+            events: [createEventResponse()]
+        };
+
+        eventService.getAllEvents.mockResolvedValue(result);
+
+        await eventController.getAllEvents(req, res, next);
+
+        expect(eventService.getAllEvents).toHaveBeenCalledWith(
+            { page: "1" },
+            10
+        );
     });
 
     /* =============================
@@ -225,7 +254,7 @@ describe("eventController", () => {
 
             await eventController.getEvent(req, res, next);
 
-            expect(eventService.getEventByID).toHaveBeenCalledWith("42");
+            expect(eventService.getEventByID).toHaveBeenCalledWith("42", 10);
 
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
@@ -245,6 +274,24 @@ describe("eventController", () => {
 
             expect(next).toHaveBeenCalledWith(error);
         });
+    });
+
+    it("should pass current user ID when getting an event by ID", async () => {
+        const { req, res, next } = createEventControllerMocks({
+            params: { eventId: "42" },
+            user: { userId: 10 }
+        });
+
+        const event = createEventResponse({
+            id: 42,
+            title: "Event"
+        });
+
+        eventService.getEventByID.mockResolvedValue(event);
+
+        await eventController.getEvent(req, res, next);
+
+        expect(eventService.getEventByID).toHaveBeenCalledWith("42", 10);
     });
 
     /* =============================

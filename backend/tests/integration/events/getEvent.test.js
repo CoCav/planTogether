@@ -11,6 +11,8 @@
    - creator data enrichment
    - review count enrichment
    - average rating enrichment
+   - like stats are enriched in the event response
+   - current user like state is enriched in the event response
 
    Ensures:
    - a single event can be retrieved publicly by ID
@@ -18,13 +20,15 @@
    - event metadata is enriched in the response
    - participant counts only include active memberships
    - review stats are enriched in the response
+   - like stats are enriched in the event response
+   - current user like state is enriched in the event response
    - shared event status constants are used for expected statuses
 =============================================== */
 
 const request = require("supertest");
 const app = require("../../../src/app");
 
-const { EventReview } = require("../../../src/models");
+const { EventReview, EventLike } = require("../../../src/models");
 
 const { EVENT_STATUS } = require("../../../src/constants/eventStatus");
 
@@ -255,6 +259,94 @@ describe("Get Event API", () => {
 
         expect(Number(res.body.event.reviewCount)).toBe(0);
         expect(res.body.event.averageRating).toBeNull();
+    });
+
+    it("should include like count", async () => {
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Like Stats Creator",
+                email: `likestats${Date.now()}@test.com`
+            },
+            event: {
+                title: "Like Stats Event"
+            }
+        });
+
+        const likerAuthA = await registerAndGetToken({
+            name: "Liker A",
+            email: `likera${Date.now()}@test.com`
+        });
+
+        const likerAuthB = await registerAndGetToken({
+            name: "Liker B",
+            email: `likerb${Date.now()}@test.com`
+        });
+
+        await EventLike.create({
+            eventId: event.id,
+            userId: likerAuthA.user.userId
+        });
+
+        await EventLike.create({
+            eventId: event.id,
+            userId: likerAuthB.user.userId
+        });
+
+        const res = await request(app).get(`/api/events/${event.id}`);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.event).toHaveProperty("likesCount");
+        expect(Number(res.body.event.likesCount)).toBe(2);
+    });
+
+    /* =============================
+       LIKE METADATA
+    ============================= */
+
+    it("should include current user like state for anonymous requests", async () => {
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Anonymous Like Creator",
+                email: `anonymouslikecreator${Date.now()}@test.com`
+            },
+            event: {
+                title: "Anonymous Like Event"
+            }
+        });
+
+        const res = await request(app).get(`/api/events/${event.id}`);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.event.isLikedByCurrentUser).toBe(false);
+    });
+
+    it("should include current user like state for authenticated requests", async () => {
+        const { event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Liked Event Creator",
+                email: `likedeventcreator${Date.now()}@test.com`
+            },
+            event: {
+                title: "Liked Event"
+            }
+        });
+
+        const likerAuth = await registerAndGetToken({
+            name: "Current Liker",
+            email: `currentliker${Date.now()}@test.com`
+        });
+
+        await EventLike.create({
+            eventId: event.id,
+            userId: likerAuth.user.userId
+        });
+
+        const res = await request(app)
+            .get(`/api/events/${event.id}`)
+            .set(likerAuth.headers);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.event.isLikedByCurrentUser).toBe(true);
     });
 
     /* =============================

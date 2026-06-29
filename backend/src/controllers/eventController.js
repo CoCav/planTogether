@@ -5,8 +5,8 @@ const eventService = require("../services/eventService");
 
    Handles:
    - event creation
-   - event listing with optional filters, pagination and review stats
-   - single event retrieval with participant and review stats
+   - event listing with optional filters, pagination, review stats and like stats
+   - single event retrieval with participant, review and like stats
    - current authenticated user event access
    - event update with image preservation, replacement and removal
    - event deletion
@@ -15,7 +15,7 @@ const eventService = require("../services/eventService");
    Notes:
    - business logic is delegated to eventService
    - uploaded event image paths and clear-image requests are formatted here
-   - event listing/detail responses may include participant count, review count and average rating
+   - event listing/detail responses may include participant count, review count, average rating, like count and current user like state
    - event access responses support frontend UI guards
    - successful responses include success, message and top-level payload fields when needed
 ================================================== */
@@ -55,7 +55,10 @@ const createEvent = async (req, res, next) => {
 // Get all events with optional filters and pagination
 const getAllEvents = async (req, res, next) => {
     try {
-        const events = await eventService.getAllEvents(req.query);
+        const events = await eventService.getAllEvents(
+            req.query,
+            req.user?.userId
+        );
 
         return res.status(200).json({
             success: true,
@@ -90,7 +93,10 @@ const getCurrentUserEventAccess = async (req, res, next) => {
 // Get one event by ID
 const getEvent = async (req, res, next) => {
     try {
-        const event = await eventService.getEventByID(req.params.eventId);
+        const event = await eventService.getEventByID(
+            req.params.eventId,
+            req.user?.userId
+        );
 
         return res.status(200).json({
             success: true,

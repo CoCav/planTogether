@@ -2,8 +2,10 @@ const sequelize = require("../config/database");
 
 const Event = require("../models/eventModel");
 const User = require("../models/userModel");
+
 const EventUserRole = require("../models/relations/eventUserRoleModel");
 const EventReview = require("../models/relations/eventReviewModel");
+const EventLike = require("../models/relations/eventLikeModel");
 
 const locationService = require("./locationService");
 
@@ -20,7 +22,9 @@ const {
     buildActiveParticipantInclude,
     buildEventReviewInclude,
     buildReviewCountAttribute,
-    buildAverageRatingAttribute
+    buildAverageRatingAttribute,
+    buildEventLikeInclude,
+    buildLikeCountAttribute
 } = require("../utils/events/eventQueryBuilder");
 
 const { buildEventCreateData, buildEventUpdateData } = require("../utils/events/eventDataBuilder");
@@ -46,15 +50,17 @@ const { getPaginationOptions, getTotalCount, getTotalPages } = require("../utils
    - event update and deletion
    - event geolocation resolution and persistence
    - event image replacement and removal
-   - participant count, review stats and status enrichment
+   - participant count, review stats, like stats and current user state enrichment
 
    Notes:
    - critical write operations use Sequelize transactions
    - creator is automatically added as organizer
    - event listings count active participants with COUNT DISTINCT
    - event listings expose review count and average rating
+   - event listings expose like counts
    - participant count queries ignore soft-deleted memberships
    - review stats are built from event review ratings
+   - like stats are built from event likes
    - getAllEvents supports filters through query params
    - physical event locations are resolved through locationService
    - online events never persist geolocation data
@@ -78,6 +84,28 @@ const resolveEventLocationData = async (mode, location) => {
     }
 
     return locationService.resolveEventLocation(location);
+};
+
+/* =============================
+   EVENT LIKE
+============================= */
+
+// Checks whether the current user liked one event
+const getIsLikedByCurrentUser = async (eventId, currentUserId) => {
+
+    // Anonymous users cannot have liked events
+    if (!currentUserId) {
+        return false;
+    }
+
+    const like = await EventLike.findOne({
+        where: {
+            eventId,
+            userId: currentUserId
+        }
+    });
+
+    return Boolean(like);
 };
 
 /* =============================
@@ -126,7 +154,7 @@ const createEvent = async (data, userId) => {
 ============================= */
 
 // Get all events with optional filters and pagination
-const getAllEvents = async (query = {}) => {
+const getAllEvents = async (query = {}, currentUserId = null) => {
     const whereConditions = {};
 
     // Apply filters to Sequelize where conditions
@@ -155,13 +183,15 @@ const getAllEvents = async (query = {}) => {
             include: [
                 buildParticipantCountAttribute(sequelize, "participants.id"),
                 buildReviewCountAttribute(sequelize, "reviews.id"),
-                buildAverageRatingAttribute(sequelize, "reviews.rating")
+                buildAverageRatingAttribute(sequelize, "reviews.rating"),
+                buildLikeCountAttribute(sequelize, "likes.id")
             ]
         },
         include: [
             buildEventCreatorInclude(User, query.creator),
             buildActiveParticipantInclude(User),
-            buildEventReviewInclude(EventReview)
+            buildEventReviewInclude(EventReview),
+            buildEventLikeInclude(EventLike)
         ],
         group: ["Event.id", "creator.id"],
         subQuery: false
@@ -169,16 +199,24 @@ const getAllEvents = async (query = {}) => {
 
     const totalEvents = getTotalCount(count);
 
+    // Enrich events with status and current user's like state
+    const events = await Promise.all(
+        rows.map(async (event) => ({
+            ...event.toJSON(),
+            status: getEventStatus(event),
+            isLikedByCurrentUser: await getIsLikedByCurrentUser(
+                event.id,
+                currentUserId
+            )
+        }))
+    );
+
     return {
         page,
         pageSize,
         totalEvents,
         totalPages: getTotalPages(totalEvents, pageSize),
-
-        events: rows.map((event) => ({
-            ...event.toJSON(),
-            status: getEventStatus(event)
-        }))
+        events
     };
 };
 
@@ -227,20 +265,22 @@ const getCurrentUserEventAccess = async (eventId, userId) => {
 };
 
 // Get a single event by ID
-const getEventByID = async (id) => {
+const getEventByID = async (id, currentUserId = null) => {
     const event = await Event.findOne({
         where: { id },
         attributes: {
             include: [
                 buildParticipantCountAttribute(sequelize, "participants.id"),
                 buildReviewCountAttribute(sequelize, "reviews.id"),
-                buildAverageRatingAttribute(sequelize, "reviews.rating")
+                buildAverageRatingAttribute(sequelize, "reviews.rating"),
+                buildLikeCountAttribute(sequelize, "likes.id")
             ]
         },
         include: [
             buildEventCreatorInclude(User),
             buildActiveParticipantInclude(User),
-            buildEventReviewInclude(EventReview)
+            buildEventReviewInclude(EventReview),
+            buildEventLikeInclude(EventLike)
         ],
         group: ["Event.id", "creator.id"]
     });
@@ -249,9 +289,14 @@ const getEventByID = async (id) => {
         throwHttpError(404, "Event not found");
     }
 
+    // Enrich event with status and current user's like state
     return {
         ...event.toJSON(),
-        status: getEventStatus(event)
+        status: getEventStatus(event),
+        isLikedByCurrentUser: await getIsLikedByCurrentUser(
+            event.id,
+            currentUserId
+        )
     };
 };
 

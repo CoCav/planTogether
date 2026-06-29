@@ -17,6 +17,8 @@ const { EVENT_ROLES } = require("../../constants/eventRoles");
    - review stats include building
    - review count and average rating attributes
    - grouped active participant count queries
+   - like stats include building
+   - like count attribute
 
    Notes:
    - designed to be reused across services
@@ -27,6 +29,7 @@ const { EVENT_ROLES } = require("../../constants/eventRoles");
    - review stats use event review ratings
    - keeps controllers/services clean
    - mutates the provided whereConditions object
+   - like count attributes use COUNT DISTINCT
 ================================================== */
 
 /* =============================
@@ -292,6 +295,30 @@ const buildAverageRatingAttribute = (sequelize, ratingPath) => ([
     "averageRating"
 ]);
 
+/* =============================
+   LIKE STATS HELPERS
+============================= */
+
+// Build like include used for like stats
+const buildEventLikeInclude = (EventLike) => ({
+    model: EventLike,
+    as: "likes",
+    attributes: [],
+    required: false
+});
+
+// Build like count attribute with DISTINCT to avoid duplicate counts
+const buildLikeCountAttribute = (sequelize, likeIdPath) => ([
+    sequelize.fn(
+        "COUNT",
+        sequelize.fn(
+            "DISTINCT",
+            sequelize.col(likeIdPath)
+        )
+    ),
+    "likesCount"
+]);
+
 module.exports = {
     addAndCondition,
     buildEventCreatorInclude,
@@ -310,5 +337,8 @@ module.exports = {
 
     buildEventReviewInclude,
     buildReviewCountAttribute,
-    buildAverageRatingAttribute
+    buildAverageRatingAttribute,
+
+    buildEventLikeInclude,
+    buildLikeCountAttribute
 };

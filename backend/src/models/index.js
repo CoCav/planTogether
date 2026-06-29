@@ -4,8 +4,10 @@ const logger = require("../config/logger");
 const User = require("./userModel");
 const Event = require("./eventModel");
 const Location = require("./locationModel");
+
 const EventUserRole = require("./relations/eventUserRoleModel");
 const EventReview = require("./relations/eventReviewModel");
+const EventLike = require("./relations/eventLikeModel");
 
 /* ==================================================
    DATABASE INITIALIZATION
@@ -60,12 +62,14 @@ const initDB = async () => {
    - event creators
    - event participants
    - event reviews
+   - event likes
    - direct membership queries
 
    Notes:
    - EventUserRole stores role and joinedAt
    - EventUserRole → Event uses alias "event"
    - EventReview stores user comments on completed events
+   - EventLike stores user likes on events
 ================================================== */
 
 /* =============================
@@ -105,6 +109,7 @@ Event.belongsToMany(User, {
     as: "participants"
 });
 
+
 /* =============================
    REVIEW RELATIONSHIPS
 ============================= */
@@ -120,6 +125,24 @@ Event.hasMany(EventReview, { foreignKey: "eventId", as: "reviews" });
 
 // Each review belongs to one event
 EventReview.belongsTo(Event, { foreignKey: "eventId", as: "event" });
+
+
+/* =============================
+   LIKE RELATIONSHIPS
+============================= */
+
+// A user can like multiple events
+User.hasMany(EventLike, { foreignKey: "userId", as: "likes" });
+
+// Each like belongs to one user
+EventLike.belongsTo(User, { foreignKey: "userId", as: "user" });
+
+// An event can have multiple likes
+Event.hasMany(EventLike, { foreignKey: "eventId", as: "likes" });
+
+// Each like belongs to one event
+EventLike.belongsTo(Event, { foreignKey: "eventId", as: "event" });
+
 
 /* =============================
    DIRECT MEMBERSHIP RELATIONSHIPS
@@ -144,5 +167,6 @@ module.exports = {
     Event,
     Location,
     EventUserRole,
-    EventReview
+    EventReview,
+    EventLike
 };

@@ -4,6 +4,7 @@ const router = express.Router();
 const userController = require("../controllers/userController");
 
 const { authenticateToken } = require("../middlewares/auth/authenticateToken");
+const { currentUserContext } = require("../middlewares/request/currentUserContext");
 const { uploadAvatar } = require("../middlewares/uploadFiles");
 
 const {
@@ -32,6 +33,7 @@ const handleValidationErrors = require("../middlewares/errors/handleValidationEr
    - /me routes use authenticated userId from JWT
    - /:id routes are public and use user ID route params
    - /:id/events validates public listing filters and pagination
+   - /:id/events supports optional current user context for like state
    - public profile responses hide sensitive user fields
 ================================================== */
 
@@ -89,6 +91,7 @@ router.get("/:id",
 
 // Get paginated public events of a user
 router.get("/:id/events",
+    currentUserContext,
     userIdParamValidator,
     getPublicUserEventsValidator,
     handleValidationErrors,

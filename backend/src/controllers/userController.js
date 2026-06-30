@@ -13,6 +13,7 @@ const { formatAuthenticatedUser } = require("../utils/formatting/userFormatter")
    - authenticated account deletion
    - public user profile retrieval
    - public user events retrieval with filters and pagination
+   - public user event listings may include current user like state
    - API response formatting
 
    Notes:
@@ -154,7 +155,11 @@ const getPublicUserProfile = async (req, res, next) => {
 // Get paginated public events created or joined by a user
 const getPublicUserEvents = async (req, res, next) => {
     try {
-        const events = await userService.getPublicUserEventsByID(req.params.id, req.query);
+        const events = await userService.getPublicUserEventsByID(
+            req.params.id,
+            req.query,
+            req.user?.userId
+        );
 
         return res.status(200).json({
             success: true,

@@ -6,6 +6,7 @@ const sequelize = require("../config/database");
 const User = require("../models/userModel");
 const Event = require("../models/eventModel");
 const EventUserRole = require("../models/relations/eventUserRoleModel");
+const EventLike = require("../models/relations/eventLikeModel");
 
 const { EVENT_ROLES } = require("../constants/eventRoles");
 
@@ -17,7 +18,9 @@ const { normalizeEmail } = require("../utils/formatting/stringFormatter");
 const {
     buildEventWhereConditions,
     buildEventCreatorInclude,
-    countActiveParticipantsByEventIds
+    countActiveParticipantsByEventIds,
+    findLikedEventIdsByUser,
+    countEventLikesByEventIds,
 } = require("../utils/events/eventQueryBuilder");
 
 const { getEventStatus } = require("../utils/events/eventStatus");
@@ -38,13 +41,14 @@ const { getPaginationOptions, getTotalCount, getTotalPages } = require("../utils
    - authenticated current user password update
    - authenticated current user account deletion
    - public user profile retrieval
-   - public user events retrieval
+   - public user events retrieval with participant, status and like enrichment
    - public profile statistics
 
    Notes:
-   - current user event listings avoid per-event participant count queries
+   - current user event listings expose like counts and current user like state
    - grouped participant count queries exclude soft-deleted memberships
    - critical profile update flow uses Sequelize transactions
+   - public user event listings expose like counts and optional current user like state
    - public profiles never expose id, email, password or dates
    - public joined event stats and lists exclude organizer memberships
    - EventUserRole includes events with alias "event"
@@ -68,7 +72,7 @@ const getCurrentUserEventsByID = async (userId, query = {}) => {
     }
 
     /* =========================
-       View-based filters
+       VIEW-BASED FILTERS
     ========================= */
 
     const isHistoryView = view === "createdHistory" || view === "joinedHistory";
@@ -92,7 +96,7 @@ const getCurrentUserEventsByID = async (userId, query = {}) => {
 
 
     /* =========================
-       Event filters
+       EVENT FILTERS
     ========================= */
 
     const { creator, ...eventQuery } = query;
@@ -102,7 +106,7 @@ const getCurrentUserEventsByID = async (userId, query = {}) => {
 
 
     /* =========================
-       Pagination
+       PAGINATION
     ========================= */
 
     const paginationQuery = {
@@ -127,7 +131,7 @@ const getCurrentUserEventsByID = async (userId, query = {}) => {
 
 
     /* =========================
-       Query database
+       QUERY DATABASE
     ========================= */
 
     const { count, rows } = await EventUserRole.findAndCountAll({
@@ -150,32 +154,59 @@ const getCurrentUserEventsByID = async (userId, query = {}) => {
         subQuery: false
     });
 
+    // Collect event IDs from the current page
     const eventIds = rows.map((membership) => membership.toJSON().event.id);
 
+    // Count active participants for all current page events in one query
     const participantCountByEventId = await countActiveParticipantsByEventIds(
         EventUserRole,
         sequelize,
         eventIds
     );
 
+    /* =========================
+       LIKE COUNTS
+    ========================= */
+
+    // Count likes for all events in one query
+    const likesCountByEventId =
+        await countEventLikesByEventIds(
+            EventLike,
+            sequelize,
+            eventIds
+        );
 
     /* =========================
-       Data enrichment
+       AUTHENTICATED USER LIKES
+    ========================= */
+
+    // Fetch liked events for the authenticated user in one query
+    const likedEventIds = await findLikedEventIdsByUser(
+        EventLike,
+        eventIds,
+        userId
+    );
+
+    /* =========================
+       DATA ENRICHMENT
     ========================= */
 
     const events = rows.map((membership) => {
         const data = membership.toJSON();
 
+        // Add computed event values inside the membership payload
         const event = {
             ...data.event,
-            participantCount: participantCountByEventId[data.event.id] || 0
+            participantCount: participantCountByEventId[data.event.id] || 0,
+            likesCount: likesCountByEventId[data.event.id] || 0
         };
 
         return {
             ...data,
             event: {
                 ...event,
-                status: getEventStatus(event)
+                status: getEventStatus(event),
+                isLikedByCurrentUser: likedEventIds.has(event.id)
             }
         };
     });
@@ -384,7 +415,7 @@ const getPublicUserProfileByID = async (userId) => {
 };
 
 // Get paginated public events created or joined by a user
-const getPublicUserEventsByID = async (userId, query = {}) => {
+const getPublicUserEventsByID = async (userId, query = {}, currentUserId = null) => {
 
     /* =========================
        USER VALIDATION
@@ -442,6 +473,7 @@ const getPublicUserEventsByID = async (userId, query = {}) => {
        QUERY DATABASE
     ========================= */
 
+    // Load either created or joined events depending on the selected view
     const result = view === "joined"
         ? await getPublicJoinedEvents({
             Event,
@@ -481,8 +513,10 @@ const getPublicUserEventsByID = async (userId, query = {}) => {
        PARTICIPANT COUNTS
     ========================= */
 
+    // Collect event ids from the current page
     const eventIds = rows.map((event) => event.id);
 
+    // Count active participants for all events in one query
     const participantCountByEventId =
         await countActiveParticipantsByEventIds(
             EventUserRole,
@@ -491,20 +525,47 @@ const getPublicUserEventsByID = async (userId, query = {}) => {
         );
 
     /* =========================
+       LIKE COUNTS
+    ========================= */
+
+    // Count likes for all events in one query
+    const likesCountByEventId =
+        await countEventLikesByEventIds(
+            EventLike,
+            sequelize,
+            eventIds
+        );
+
+
+    /* =========================
+       CURRENT USER LIKES
+    ========================= */
+
+    // Fetch liked events for the current user in one query
+    const likedEventIds = await findLikedEventIdsByUser(
+        EventLike,
+        eventIds,
+        currentUserId
+    );
+
+    /* =========================
        DATA ENRICHMENT
     ========================= */
 
+    // Add computed values used by the frontend
     const events = rows.map((event) => {
         const data = event.toJSON();
 
         const eventWithParticipants = {
             ...data,
-            participantCount: participantCountByEventId[data.id] || 0
+            participantCount: participantCountByEventId[data.id] || 0,
+            likesCount: likesCountByEventId[data.id] || 0
         };
 
         return {
             ...eventWithParticipants,
-            status: getEventStatus(eventWithParticipants)
+            status: getEventStatus(eventWithParticipants),
+            isLikedByCurrentUser: likedEventIds.has(data.id)
         };
     });
 

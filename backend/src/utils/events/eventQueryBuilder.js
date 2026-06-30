@@ -341,6 +341,39 @@ const findLikedEventIdsByUser = async (EventLike, eventIds, currentUserId) => {
     );
 };
 
+/* =============================
+   LIKE COUNT HELPERS
+============================= */
+
+// Count likes for multiple events in one grouped query
+const countEventLikesByEventIds = async (EventLike, sequelize, eventIds) => {
+    if (!eventIds.length) {
+        return {};
+    }
+
+    const likeCounts = await EventLike.findAll({
+        attributes: [
+            "eventId",
+            [
+                sequelize.fn("COUNT", sequelize.col("eventId")),
+                "likesCount"
+            ]
+        ],
+        where: {
+            eventId: {
+                [Op.in]: eventIds
+            }
+        },
+        group: ["eventId"],
+        raw: true
+    });
+
+    return likeCounts.reduce((acc, item) => {
+        acc[item.eventId] = Number(item.likesCount);
+        return acc;
+    }, {});
+};
+
 module.exports = {
     addAndCondition,
     buildEventCreatorInclude,
@@ -363,5 +396,6 @@ module.exports = {
 
     buildEventLikeInclude,
     buildLikeCountAttribute,
-    findLikedEventIdsByUser
+    findLikedEventIdsByUser,
+    countEventLikesByEventIds,
 };

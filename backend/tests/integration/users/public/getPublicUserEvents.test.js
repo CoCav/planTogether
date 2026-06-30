@@ -13,6 +13,7 @@
    - invalid user ID validation
    - invalid query validation
    - nonexistent user handling
+   - like count enrichment
 
    Ensures:
    - public user events are retrieved through view-based pagination
@@ -24,6 +25,8 @@
 
 const request = require("supertest");
 const app = require("../../../../src/app");
+
+const { EventLike } = require("../../../../src/models");
 
 const { initDB, resetDB, closeDB } = require("../../../helpers/database/dbTestHelper");
 
@@ -59,10 +62,7 @@ describe("Get Public User Events API", () => {
 
         expect(res.statusCode).toBe(200);
 
-        expect(res.body).toHaveProperty(
-            "message",
-            "Public user events retrieved successfully"
-        );
+        expect(res.body).toHaveProperty("message", "Public user events retrieved successfully");
 
         expect(res.body).toHaveProperty("view", "created");
         expect(res.body).toHaveProperty("page", 1);
@@ -185,6 +185,77 @@ describe("Get Public User Events API", () => {
         expect(res.body.events.some(
             (event) => event.title === "Created Only Event"
         )).toBe(false);
+    });
+
+    /* ============================
+       EVENT METADATA
+    ============================= */
+
+    it("should include like count and false current user like state for anonymous public user events", async () => {
+        const targetUserAuth = await registerAndGetToken({
+            name: "Public Like Target",
+            email: `publicliketarget${Date.now()}@test.com`
+        });
+
+        const likerAuth = await registerAndGetToken({
+            name: "Public Liker",
+            email: `publicliker${Date.now()}@test.com`
+        });
+
+        const eventRes = await createAuthenticatedEvent(targetUserAuth.headers, {
+            title: "Public Like Stats Event"
+        });
+
+        await EventLike.create({
+            eventId: eventRes.body.event.id,
+            userId: likerAuth.user.userId
+        });
+
+        const res = await request(app)
+            .get(`/api/users/${targetUserAuth.user.userId}/events`)
+            .query({ view: "created" });
+
+        expect(res.statusCode).toBe(200);
+
+        const event = res.body.events.find((item) => item.id === eventRes.body.event.id);
+
+        expect(event).toBeDefined();
+        expect(Number(event.likesCount)).toBe(1);
+        expect(event.isLikedByCurrentUser).toBe(false);
+    });
+
+    it("should include current user like state for authenticated public user events", async () => {
+        const targetUserAuth = await registerAndGetToken({
+            name: "Liked Public Target",
+            email: `likedpublictarget${Date.now()}@test.com`
+        });
+
+        const viewerAuth = await registerAndGetToken({
+            name: "Public Viewer",
+            email: `publicviewer${Date.now()}@test.com`
+        });
+
+        const eventRes = await createAuthenticatedEvent(targetUserAuth.headers, {
+            title: "Liked Public Event"
+        });
+
+        await EventLike.create({
+            eventId: eventRes.body.event.id,
+            userId: viewerAuth.user.userId
+        });
+
+        const res = await request(app)
+            .get(`/api/users/${targetUserAuth.user.userId}/events`)
+            .query({ view: "created" })
+            .set(viewerAuth.headers);
+
+        expect(res.statusCode).toBe(200);
+
+        const event = res.body.events.find((item) => item.id === eventRes.body.event.id);
+
+        expect(event).toBeDefined();
+        expect(Number(event.likesCount)).toBe(1);
+        expect(event.isLikedByCurrentUser).toBe(true);
     });
 
     /* ============================

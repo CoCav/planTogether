@@ -14,6 +14,7 @@
    - created history filtering
    - joined history filtering
    - invalid query validation
+   - like count enrichment
 
    Ensures:
    - authenticated users can retrieve their active related events
@@ -21,6 +22,7 @@
    - response includes event metadata including images
    - participant counts only include active memberships
    - view filters and pagination work correctly
+   - like count and current user like state are enriched
    - query validators protect the route
    - shared event role constants are used for valid role scenarios
    - shared event status constants are used for expected statuses
@@ -29,7 +31,7 @@
 const request = require("supertest");
 const app = require("../../../../src/app");
 
-const { EventUserRole } = require("../../../../src/models");
+const { EventUserRole, EventLike } = require("../../../../src/models");
 
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
@@ -191,6 +193,46 @@ describe("Get Current User Events API", () => {
         expect(eventMembership).toBeDefined();
 
         expect(eventMembership.event.image).toMatch(/^\/uploads\/events\/event-/);
+    });
+
+    it("should include like count and current user like state in current user events", async () => {
+        const { organizerAuth, event } = await createEventWithOrganizer({
+            organizer: {
+                name: "Like Stats Creator",
+                email: `likestatscreator${Date.now()}@test.com`
+            },
+            event: {
+                title: "Current User Like Stats Event"
+            }
+        });
+
+        const likerAuth = await registerAndGetToken({
+            name: "Liker",
+            email: `liker${Date.now()}@test.com`
+        });
+
+        await EventLike.create({
+            eventId: event.id,
+            userId: organizerAuth.user.userId
+        });
+
+        await EventLike.create({
+            eventId: event.id,
+            userId: likerAuth.user.userId
+        });
+
+        const res = await request(app)
+            .get("/api/users/me/events")
+            .set(organizerAuth.headers);
+
+        expect(res.statusCode).toBe(200);
+
+        const eventMembership = res.body.events.find((item) => item.event.id === event.id);
+
+        expect(eventMembership).toBeDefined();
+
+        expect(Number(eventMembership.event.likesCount)).toBe(2);
+        expect(eventMembership.event.isLikedByCurrentUser).toBe(true);
     });
 
     /* =============================

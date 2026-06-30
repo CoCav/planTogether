@@ -4,6 +4,8 @@
    Tests:
    - paginated active current user events retrieval
    - optimized participant count enrichment
+   - like count enrichment
+   - current user like state enrichment
    - event status enrichment
    - created / joined / history views
    - creator filter handling
@@ -16,6 +18,8 @@
    - pagination metadata is returned correctly
    - event metadata is added before response
    - participant counts are retrieved through optimized grouped queries
+   - like counts are retrieved through optimized grouped queries
+   - current user liked event IDs are fetched in one query
    - shared event role constants are used for role-based filters
    - shared event status constants are used for expected statuses
    - missing users and database errors are handled safely
@@ -24,6 +28,8 @@
 jest.mock("../../../../../src/models/relations/eventUserRoleModel", () => ({
     findAndCountAll: jest.fn()
 }));
+
+jest.mock("../../../../../src/models/relations/eventLikeModel", () => ({}));
 
 jest.mock("../../../../../src/models/userModel", () => ({
     findByPk: jest.fn()
@@ -44,13 +50,15 @@ jest.mock("../../../../../src/utils/events/eventStatus");
 jest.mock("../../../../../src/utils/events/eventQueryBuilder", () => ({
     buildEventWhereConditions: jest.fn(),
     buildEventCreatorInclude: jest.fn(),
-    countActiveParticipantsByEventIds: jest.fn()
+    countActiveParticipantsByEventIds: jest.fn(),
+    findLikedEventIdsByUser: jest.fn(),
+    countEventLikesByEventIds: jest.fn()
 }));
 
 const { Op } = require("sequelize");
 
 const EventUserRole = require("../../../../../src/models/relations/eventUserRoleModel");
-const Event = require("../../../../../src/models/eventModel");
+const EventLike = require("../../../../../src/models/relations/eventLikeModel");
 const User = require("../../../../../src/models/userModel");
 
 const userService = require("../../../../../src/services/userService");
@@ -63,7 +71,9 @@ const { getEventStatus } = require("../../../../../src/utils/events/eventStatus"
 const {
     buildEventWhereConditions,
     buildEventCreatorInclude,
-    countActiveParticipantsByEventIds
+    countActiveParticipantsByEventIds,
+    findLikedEventIdsByUser,
+    countEventLikesByEventIds
 } = require("../../../../../src/utils/events/eventQueryBuilder");
 
 const { getPaginationOptions, getTotalCount, getTotalPages } = require("../../../../../src/utils/pagination");
@@ -81,6 +91,7 @@ describe("userService - getCurrentUserEventsByID", () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+
         buildEventWhereConditions.mockImplementation((where) => where);
 
         buildEventCreatorInclude.mockReturnValue({
@@ -92,6 +103,12 @@ describe("userService - getCurrentUserEventsByID", () => {
         countActiveParticipantsByEventIds.mockResolvedValue({
             100: 5
         });
+
+        countEventLikesByEventIds.mockResolvedValue({
+            100: 2
+        });
+
+        findLikedEventIdsByUser.mockResolvedValue(new Set([100]));
 
         getPaginationOptions.mockReturnValue(pagination);
     });
@@ -106,8 +123,7 @@ describe("userService - getCurrentUserEventsByID", () => {
                 id: 1,
                 event: {
                     id: 100,
-                    title: "Event",
-                    participantCount: 5
+                    title: "Event"
                 }
             })
         };
@@ -144,7 +160,9 @@ describe("userService - getCurrentUserEventsByID", () => {
                         id: 100,
                         title: "Event",
                         participantCount: 5,
-                        status: EVENT_STATUS.UPCOMING
+                        likesCount: 2,
+                        status: EVENT_STATUS.UPCOMING,
+                        isLikedByCurrentUser: true
                     }
                 }
             ]
@@ -261,8 +279,7 @@ describe("userService - getCurrentUserEventsByID", () => {
                 id: 1,
                 event: {
                     id: 100,
-                    title: "Metadata Event",
-                    participantCount: 5
+                    title: "Metadata Event"
                 }
             })
         };
@@ -281,12 +298,99 @@ describe("userService - getCurrentUserEventsByID", () => {
         expect(getEventStatus).toHaveBeenCalledWith({
             id: 100,
             title: "Metadata Event",
-            participantCount: 5
+            participantCount: 5,
+            likesCount: 2
         });
 
         expect(result.events[0].event).toMatchObject({
             participantCount: 5,
             status: EVENT_STATUS.PAST
+        });
+    });
+
+    it("should enrich each event with like count and current user like state", async () => {
+        const membership = {
+            toJSON: () => ({
+                id: 1,
+                event: {
+                    id: 100,
+                    title: "Liked Event"
+                }
+            })
+        };
+
+        User.findByPk.mockResolvedValue({ id: 1 });
+
+        EventUserRole.findAndCountAll.mockResolvedValue({
+            count: 1,
+            rows: [membership]
+        });
+
+        countActiveParticipantsByEventIds.mockResolvedValue({
+            100: 3
+        });
+
+        countEventLikesByEventIds.mockResolvedValue({
+            100: 2
+        });
+
+        findLikedEventIdsByUser.mockResolvedValue(new Set([100]));
+
+        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
+
+        const result = await userService.getCurrentUserEventsByID(1, {});
+
+        expect(countEventLikesByEventIds).toHaveBeenCalledWith(
+            EventLike,
+            expect.any(Object),
+            [100]
+        );
+
+        expect(findLikedEventIdsByUser).toHaveBeenCalledWith(
+            EventLike,
+            [100],
+            1
+        );
+
+        expect(result.events[0].event).toMatchObject({
+            id: 100,
+            title: "Liked Event",
+            participantCount: 3,
+            likesCount: 2,
+            isLikedByCurrentUser: true,
+            status: EVENT_STATUS.UPCOMING
+        });
+    });
+
+    it("should fallback like count to zero and liked state to false when missing", async () => {
+        const membership = {
+            toJSON: () => ({
+                id: 1,
+                event: {
+                    id: 999,
+                    title: "Unliked Event"
+                }
+            })
+        };
+
+        User.findByPk.mockResolvedValue({ id: 1 });
+
+        EventUserRole.findAndCountAll.mockResolvedValue({
+            count: 1,
+            rows: [membership]
+        });
+
+        countActiveParticipantsByEventIds.mockResolvedValue({});
+        countEventLikesByEventIds.mockResolvedValue({});
+        findLikedEventIdsByUser.mockResolvedValue(new Set());
+
+        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
+
+        const result = await userService.getCurrentUserEventsByID(1, {});
+
+        expect(result.events[0].event).toMatchObject({
+            likesCount: 0,
+            isLikedByCurrentUser: false
         });
     });
 

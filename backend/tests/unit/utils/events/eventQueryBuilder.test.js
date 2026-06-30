@@ -15,6 +15,7 @@
    - like stats include builder
    - like count attribute builder
    - liked event IDs lookup for current user
+   - grouped like count queries
 
    Ensures:
    - upcoming, ongoing and past filters generate correct date conditions
@@ -29,6 +30,7 @@
    - like includes support aggregated like stats
    - like count attributes use COUNT DISTINCT
    - liked event IDs are fetched in one query
+   - grouped like counts avoid N+1 queries
    - shared event status and role constants are used correctly
 ================================================== */
 
@@ -54,7 +56,8 @@ const {
     buildAverageRatingAttribute,
     buildEventLikeInclude,
     buildLikeCountAttribute,
-    findLikedEventIdsByUser
+    findLikedEventIdsByUser,
+    countEventLikesByEventIds
 } = require("../../../../src/utils/events/eventQueryBuilder");
 
 describe("eventQueryBuilder utils", () => {
@@ -404,6 +407,10 @@ describe("eventQueryBuilder utils", () => {
         });
     });
 
+    /* =============================
+       FIND LIKED EVENT IDS BY USER
+    ============================= */
+
     describe("findLikedEventIdsByUser", () => {
         const EventLike = {
             findAll: jest.fn()
@@ -459,6 +466,73 @@ describe("eventQueryBuilder utils", () => {
             });
 
             expect(result).toEqual(new Set([1, 3]));
+        });
+    });
+
+    /* =============================
+       LIKE COUNT HELPERS
+    ============================= */
+
+    describe("countEventLikesByEventIds", () => {
+
+        const EventLike = {
+            findAll: jest.fn()
+        };
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+        });
+
+        it("should return empty object when eventIds is empty", async () => {
+            const result = await countEventLikesByEventIds(
+                EventLike,
+                sequelize,
+                []
+            );
+
+            expect(result).toEqual({});
+            expect(EventLike.findAll).not.toHaveBeenCalled();
+        });
+
+        it("should build grouped like counts", async () => {
+            EventLike.findAll.mockResolvedValue([
+                {
+                    eventId: 1,
+                    likesCount: "3"
+                },
+                {
+                    eventId: 2,
+                    likesCount: "5"
+                }
+            ]);
+
+            const result = await countEventLikesByEventIds(
+                EventLike,
+                sequelize,
+                [1, 2]
+            );
+
+            expect(EventLike.findAll).toHaveBeenCalledWith({
+                attributes: [
+                    "eventId",
+                    [
+                        sequelize.fn("COUNT", sequelize.col("eventId")),
+                        "likesCount"
+                    ]
+                ],
+                where: {
+                    eventId: {
+                        [Op.in]: [1, 2]
+                    }
+                },
+                group: ["eventId"],
+                raw: true
+            });
+
+            expect(result).toEqual({
+                1: 3,
+                2: 5
+            });
         });
     });
 

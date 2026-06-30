@@ -6,6 +6,8 @@
    - paginated joined events retrieval
    - empty paginated event results
    - participant count enrichment
+   - like count enrichment
+   - current user like state enrichment
    - missing user rejection
    - database error propagation
 
@@ -13,6 +15,8 @@
    - public user events use view-based pagination
    - created and joined event queries are delegated correctly
    - participant counts and statuses are enriched safely
+   - like counts are retrieved through optimized grouped queries
+   - optional current user liked event IDs are fetched in one query
    - missing users and database errors are handled safely
 ================================================== */
 
@@ -24,13 +28,17 @@ jest.mock("../../../../../src/models/eventModel", () => ({}));
 
 jest.mock("../../../../../src/models/relations/eventUserRoleModel", () => ({}));
 
+jest.mock("../../../../../src/models/relations/eventLikeModel", () => ({}));
+
 jest.mock("../../../../../src/utils/events/eventQueryBuilder", () => ({
     buildEventWhereConditions: jest.fn(),
     buildEventCreatorInclude: jest.fn(() => ({
         model: "User",
         as: "creator"
     })),
-    countActiveParticipantsByEventIds: jest.fn()
+    countActiveParticipantsByEventIds: jest.fn(),
+    findLikedEventIdsByUser: jest.fn(),
+    countEventLikesByEventIds: jest.fn()
 }));
 
 jest.mock("../../../../../src/utils/users/publicUserEventQueryBuilder", () => ({
@@ -39,16 +47,22 @@ jest.mock("../../../../../src/utils/users/publicUserEventQueryBuilder", () => ({
 }));
 
 const User = require("../../../../../src/models/userModel");
+const EventLike = require("../../../../../src/models/relations/eventLikeModel");
 
 const userService = require("../../../../../src/services/userService");
 
 const {
     buildEventWhereConditions,
     buildEventCreatorInclude,
-    countActiveParticipantsByEventIds
+    countActiveParticipantsByEventIds,
+    findLikedEventIdsByUser,
+    countEventLikesByEventIds
 } = require("../../../../../src/utils/events/eventQueryBuilder");
 
-const { getPublicCreatedEvents, getPublicJoinedEvents } = require("../../../../../src/utils/users/publicUserEventQueryBuilder");
+const {
+    getPublicCreatedEvents,
+    getPublicJoinedEvents
+} = require("../../../../../src/utils/users/publicUserEventQueryBuilder");
 
 const { createMockUser } = require("../../../../factories/userFactory");
 
@@ -56,6 +70,10 @@ describe("userService - getPublicUserEventsByID", () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+
+        countActiveParticipantsByEventIds.mockResolvedValue({});
+        countEventLikesByEventIds.mockResolvedValue({});
+        findLikedEventIdsByUser.mockResolvedValue(new Set());
     });
 
     /* =============================
@@ -101,6 +119,10 @@ describe("userService - getPublicUserEventsByID", () => {
             1: 2
         });
 
+        countEventLikesByEventIds.mockResolvedValue({
+            1: 3
+        });
+
         const result = await userService.getPublicUserEventsByID(1);
 
         expect(User.findByPk).toHaveBeenCalledWith(1);
@@ -132,6 +154,8 @@ describe("userService - getPublicUserEventsByID", () => {
                     id: 1,
                     title: "Created Event",
                     participantCount: 2,
+                    likesCount: 3,
+                    isLikedByCurrentUser: false,
                     status: expect.any(String)
                 })
             ]
@@ -156,6 +180,10 @@ describe("userService - getPublicUserEventsByID", () => {
 
         countActiveParticipantsByEventIds.mockResolvedValue({
             2: 4
+        });
+
+        countEventLikesByEventIds.mockResolvedValue({
+            2: 1
         });
 
         const result = await userService.getPublicUserEventsByID(1, {
@@ -185,6 +213,8 @@ describe("userService - getPublicUserEventsByID", () => {
                     title: "Joined Event",
                     creatorId: 3,
                     participantCount: 4,
+                    likesCount: 1,
+                    isLikedByCurrentUser: false,
                     status: expect.any(String)
                 })
             ]
@@ -200,8 +230,6 @@ describe("userService - getPublicUserEventsByID", () => {
             count: 0,
             rows: []
         });
-
-        countActiveParticipantsByEventIds.mockResolvedValue({});
 
         const result = await userService.getPublicUserEventsByID(1);
 
@@ -228,8 +256,6 @@ describe("userService - getPublicUserEventsByID", () => {
             count: 0,
             rows: []
         });
-
-        countActiveParticipantsByEventIds.mockResolvedValue({});
 
         await userService.getPublicUserEventsByID(1, {
             view: "created",
@@ -285,8 +311,6 @@ describe("userService - getPublicUserEventsByID", () => {
             rows: [eventA, eventB]
         });
 
-        countActiveParticipantsByEventIds.mockResolvedValue({});
-
         const result = await userService.getPublicUserEventsByID(1, {
             page: 1,
             pageSize: 2
@@ -322,8 +346,6 @@ describe("userService - getPublicUserEventsByID", () => {
             rows: [eventA, eventB]
         });
 
-        countActiveParticipantsByEventIds.mockResolvedValue({});
-
         const result = await userService.getPublicUserEventsByID(1, {
             pageSize: 2
         });
@@ -354,8 +376,6 @@ describe("userService - getPublicUserEventsByID", () => {
             rows: [eventA, eventB]
         });
 
-        countActiveParticipantsByEventIds.mockResolvedValue({});
-
         await userService.getPublicUserEventsByID(1);
 
         expect(countActiveParticipantsByEventIds).toHaveBeenCalledWith(
@@ -363,6 +383,115 @@ describe("userService - getPublicUserEventsByID", () => {
             expect.anything(),
             [1, 2]
         );
+    });
+
+    /* =============================
+       LIKE METADATA
+    ============================= */
+
+    it("should call countEventLikesByEventIds with public event ids", async () => {
+        const user = createMockUser();
+
+        const eventA = createMockEvent({
+            id: 1
+        });
+
+        const eventB = createMockEvent({
+            id: 2
+        });
+
+        User.findByPk.mockResolvedValue(user);
+
+        getPublicCreatedEvents.mockResolvedValue({
+            count: 2,
+            rows: [eventA, eventB]
+        });
+
+        await userService.getPublicUserEventsByID(1);
+
+        expect(countEventLikesByEventIds).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.anything(),
+            [1, 2]
+        );
+    });
+
+    it("should enrich public events with like count and current user like state", async () => {
+        const user = createMockUser();
+
+        const event = createMockEvent({
+            id: 1,
+            title: "Public Liked Event"
+        });
+
+        User.findByPk.mockResolvedValue(user);
+
+        getPublicCreatedEvents.mockResolvedValue({
+            count: 1,
+            rows: [event]
+        });
+
+        countActiveParticipantsByEventIds.mockResolvedValue({
+            1: 2
+        });
+
+        countEventLikesByEventIds.mockResolvedValue({
+            1: 4
+        });
+
+        findLikedEventIdsByUser.mockResolvedValue(new Set([1]));
+
+        const result = await userService.getPublicUserEventsByID(
+            1,
+            { view: "created" },
+            10
+        );
+
+        expect(countEventLikesByEventIds).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.anything(),
+            [1]
+        );
+
+        expect(findLikedEventIdsByUser).toHaveBeenCalledWith(
+            EventLike,
+            [1],
+            10
+        );
+
+        expect(result.events[0]).toMatchObject({
+            id: 1,
+            title: "Public Liked Event",
+            participantCount: 2,
+            likesCount: 4,
+            isLikedByCurrentUser: true
+        });
+    });
+
+    it("should fallback like count to zero and liked state to false when missing", async () => {
+        const user = createMockUser();
+
+        const event = createMockEvent({
+            id: 9,
+            title: "Unliked Public Event"
+        });
+
+        User.findByPk.mockResolvedValue(user);
+
+        getPublicCreatedEvents.mockResolvedValue({
+            count: 1,
+            rows: [event]
+        });
+
+        countEventLikesByEventIds.mockResolvedValue({});
+        findLikedEventIdsByUser.mockResolvedValue(new Set());
+
+        const result = await userService.getPublicUserEventsByID(1);
+
+        expect(result.events[0]).toMatchObject({
+            likesCount: 0,
+            isLikedByCurrentUser: false
+        });
     });
 
     /* =============================

@@ -50,6 +50,14 @@ const createEventResponse = (overrides = {}) => ({
     registrationDeadline: null,
     image: null,
 
+    participantCount: 0,
+
+    likesCount: 0,
+    isLikedByCurrentUser: false,
+
+    reviewCount: 0,
+    averageRating: null,
+
     ...overrides
 });
 

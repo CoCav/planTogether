@@ -373,13 +373,66 @@ describe("userController", () => {
 
             await userController.getPublicUserEvents(req, res, next);
 
-            expect(userService.getPublicUserEventsByID).toHaveBeenCalledWith(1, {
-                view: "joined",
-                page: "2"
-            });
+            expect(userService.getPublicUserEventsByID).toHaveBeenCalledWith(
+                1,
+                {
+                    view: "joined",
+                    page: "2"
+                },
+                10
+            );
 
             expect(res.status).toHaveBeenCalledWith(200);
 
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: "Public user events retrieved successfully",
+                ...mockEvents
+            });
+        });
+
+        it("should pass current user ID when available for public user events", async () => {
+            const { req, res, next } = createUserControllerMocks({
+                params: {
+                    id: 1
+                },
+                query: {
+                    view: "created"
+                },
+                user: {
+                    userId: 10
+                }
+            });
+
+            const mockEvents = {
+                view: "created",
+                page: 1,
+                pageSize: 10,
+                totalEvents: 1,
+                totalPages: 1,
+                events: [
+                    {
+                        id: 1,
+                        title: "Created Event",
+                        likesCount: 2,
+                        isLikedByCurrentUser: true
+                    }
+                ]
+            };
+
+            userService.getPublicUserEventsByID.mockResolvedValue(mockEvents);
+
+            await userController.getPublicUserEvents(req, res, next);
+
+            expect(userService.getPublicUserEventsByID).toHaveBeenCalledWith(
+                1,
+                {
+                    view: "created"
+                },
+                10
+            );
+
+            expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
                 success: true,
                 message: "Public user events retrieved successfully",

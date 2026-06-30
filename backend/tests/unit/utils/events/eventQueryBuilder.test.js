@@ -14,6 +14,7 @@
    - average rating attribute builder
    - like stats include builder
    - like count attribute builder
+   - liked event IDs lookup for current user
 
    Ensures:
    - upcoming, ongoing and past filters generate correct date conditions
@@ -27,6 +28,7 @@
    - average rating attributes use review ratings
    - like includes support aggregated like stats
    - like count attributes use COUNT DISTINCT
+   - liked event IDs are fetched in one query
    - shared event status and role constants are used correctly
 ================================================== */
 
@@ -51,7 +53,8 @@ const {
     buildReviewCountAttribute,
     buildAverageRatingAttribute,
     buildEventLikeInclude,
-    buildLikeCountAttribute
+    buildLikeCountAttribute,
+    findLikedEventIdsByUser
 } = require("../../../../src/utils/events/eventQueryBuilder");
 
 describe("eventQueryBuilder utils", () => {
@@ -398,6 +401,64 @@ describe("eventQueryBuilder utils", () => {
             );
 
             expect(result[1]).toBe("likesCount");
+        });
+    });
+
+    describe("findLikedEventIdsByUser", () => {
+        const EventLike = {
+            findAll: jest.fn()
+        };
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+        });
+
+        it("should return empty Set when currentUserId is missing", async () => {
+            const result = await findLikedEventIdsByUser(
+                EventLike,
+                [1, 2],
+                null
+            );
+
+            expect(result).toEqual(new Set());
+            expect(EventLike.findAll).not.toHaveBeenCalled();
+        });
+
+        it("should return empty Set when eventIds is empty", async () => {
+            const result = await findLikedEventIdsByUser(
+                EventLike,
+                [],
+                10
+            );
+
+            expect(result).toEqual(new Set());
+            expect(EventLike.findAll).not.toHaveBeenCalled();
+        });
+
+        it("should find liked event IDs for the current user", async () => {
+            EventLike.findAll.mockResolvedValue([
+                { eventId: 1 },
+                { eventId: 3 }
+            ]);
+
+            const result = await findLikedEventIdsByUser(
+                EventLike,
+                [1, 2, 3],
+                10
+            );
+
+            expect(EventLike.findAll).toHaveBeenCalledWith({
+                attributes: ["eventId"],
+                where: {
+                    userId: 10,
+                    eventId: {
+                        [Op.in]: [1, 2, 3]
+                    }
+                },
+                raw: true
+            });
+
+            expect(result).toEqual(new Set([1, 3]));
         });
     });
 

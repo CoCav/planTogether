@@ -31,10 +31,6 @@ jest.mock("../../../../src/models/eventModel", () => ({
     findAndCountAll: jest.fn()
 }));
 
-jest.mock("../../../../src/models/relations/eventLikeModel", () => ({
-    findOne: jest.fn()
-}));
-
 jest.mock("../../../../src/utils/events/eventQueryBuilder", () => ({
     buildEventWhereConditions: jest.fn(),
     buildEventCreatorInclude: jest.fn(),
@@ -44,7 +40,8 @@ jest.mock("../../../../src/utils/events/eventQueryBuilder", () => ({
     buildReviewCountAttribute: jest.fn(),
     buildAverageRatingAttribute: jest.fn(),
     buildEventLikeInclude: jest.fn(),
-    buildLikeCountAttribute: jest.fn()
+    buildLikeCountAttribute: jest.fn(),
+    findLikedEventIdsByUser: jest.fn()
 }));
 
 jest.mock("../../../../src/utils/events/eventStatus", () => ({
@@ -81,7 +78,8 @@ const {
     buildReviewCountAttribute,
     buildAverageRatingAttribute,
     buildEventLikeInclude,
-    buildLikeCountAttribute
+    buildLikeCountAttribute,
+    findLikedEventIdsByUser
 } = require("../../../../src/utils/events/eventQueryBuilder");
 
 const { getPaginationOptions, getTotalCount, getTotalPages } = require("../../../../src/utils/pagination");
@@ -128,7 +126,7 @@ describe("eventService - getAllEvents", () => {
             "likesCount"
         ]);
 
-        EventLike.findOne.mockResolvedValue(null);
+        findLikedEventIdsByUser.mockResolvedValue(new Set());
     });
 
     /* =============================
@@ -372,26 +370,22 @@ describe("eventService - getAllEvents", () => {
             rows: [mockEvent]
         });
 
-        EventLike.findOne.mockResolvedValue({
-            eventId: 1,
-            userId: 10
-        });
+        findLikedEventIdsByUser.mockResolvedValue(new Set([1]));
 
         getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
 
         const result = await eventService.getAllEvents({}, 10);
 
-        expect(EventLike.findOne).toHaveBeenCalledWith({
-            where: {
-                eventId: 1,
-                userId: 10
-            }
-        });
+        expect(findLikedEventIdsByUser).toHaveBeenCalledWith(
+            EventLike,
+            [1],
+            10
+        );
 
         expect(result.events[0].isLikedByCurrentUser).toBe(true);
     });
 
-    it("should return false like state without querying likes for anonymous users", async () => {
+    it("should return false like state for anonymous users", async () => {
         const mockEvent = createMockEventModel({
             id: 1,
             title: "Anonymous Event"
@@ -420,7 +414,12 @@ describe("eventService - getAllEvents", () => {
 
         const result = await eventService.getAllEvents({});
 
-        expect(EventLike.findOne).not.toHaveBeenCalled();
+        expect(findLikedEventIdsByUser).toHaveBeenCalledWith(
+            EventLike,
+            [1],
+            null
+        );
+
         expect(result.events[0].isLikedByCurrentUser).toBe(false);
     });
 

@@ -319,6 +319,28 @@ const buildLikeCountAttribute = (sequelize, likeIdPath) => ([
     "likesCount"
 ]);
 
+// Find all event IDs liked by the current user
+const findLikedEventIdsByUser = async (EventLike, eventIds, currentUserId) => {
+    if (!currentUserId || !eventIds.length) {
+        return new Set();
+    }
+
+    const likes = await EventLike.findAll({
+        attributes: ["eventId"],
+        where: {
+            userId: currentUserId,
+            eventId: {
+                [Op.in]: eventIds
+            }
+        },
+        raw: true
+    });
+
+    return new Set(
+        likes.map((like) => Number(like.eventId))
+    );
+};
+
 module.exports = {
     addAndCondition,
     buildEventCreatorInclude,
@@ -340,5 +362,6 @@ module.exports = {
     buildAverageRatingAttribute,
 
     buildEventLikeInclude,
-    buildLikeCountAttribute
+    buildLikeCountAttribute,
+    findLikedEventIdsByUser
 };

@@ -24,7 +24,8 @@ const {
     buildReviewCountAttribute,
     buildAverageRatingAttribute,
     buildEventLikeInclude,
-    buildLikeCountAttribute
+    buildLikeCountAttribute,
+    findLikedEventIdsByUser
 } = require("../utils/events/eventQueryBuilder");
 
 const { buildEventCreateData, buildEventUpdateData } = require("../utils/events/eventDataBuilder");
@@ -199,17 +200,22 @@ const getAllEvents = async (query = {}, currentUserId = null) => {
 
     const totalEvents = getTotalCount(count);
 
-    // Enrich events with status and current user's like state
-    const events = await Promise.all(
-        rows.map(async (event) => ({
-            ...event.toJSON(),
-            status: getEventStatus(event),
-            isLikedByCurrentUser: await getIsLikedByCurrentUser(
-                event.id,
-                currentUserId
-            )
-        }))
+    // Collect event IDs for the current page
+    const eventIds = rows.map((event) => event.id);
+
+    // Fetch all likes for the current user in a single query
+    const likedEventIds = await findLikedEventIdsByUser(
+        EventLike,
+        eventIds,
+        currentUserId
     );
+
+    // Enrich events with computed status and current user's like state
+    const events = rows.map((event) => ({
+        ...event.toJSON(),
+        status: getEventStatus(event),
+        isLikedByCurrentUser: likedEventIds.has(event.id)
+    }));
 
     return {
         page,

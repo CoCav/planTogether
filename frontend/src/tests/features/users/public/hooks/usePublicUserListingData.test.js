@@ -18,7 +18,11 @@ import { getPublicUserProfile, getPublicUserEvents } from "../../../../../api/us
    - paginated event payload normalization
    - pagination state updates
    - event-only refresh behavior
+   - local event like state update
    - loading and error callbacks
+
+    Notes:
+    - like mutation logic is tested in useEventLike
 ================================================== */
 
 vi.mock("../../../../../api/users/userApi", () => ({
@@ -279,6 +283,66 @@ describe("usePublicUserListingData", () => {
         });
 
         expect(result.current.events).toEqual([]);
+    });
+
+    /* =============================
+       LIKE STATE UPDATE
+    ============================= */
+
+    it("should update one public user event like state after like change", async () => {
+        const { result } = renderUsePublicUserListingData();
+
+        await act(async () => {
+            await result.current.loadInitialData();
+        });
+
+        act(() => {
+            result.current.handleEventLikeChange({
+                eventId: 1,
+                liked: true,
+                likesCount: 6
+            });
+        });
+
+        expect(result.current.events).toEqual([
+            expect.objectContaining({
+                id: 1,
+                title: "Created event",
+                likesCount: 6,
+                isLikedByCurrentUser: true
+            }),
+            expect.objectContaining({
+                id: 2,
+                title: "Another created event"
+            })
+        ]);
+    });
+
+    it("should not update public user events when like event id does not match", async () => {
+        const { result } = renderUsePublicUserListingData();
+
+        await act(async () => {
+            await result.current.loadInitialData();
+        });
+
+        act(() => {
+            result.current.handleEventLikeChange({
+                eventId: 999,
+                liked: true,
+                likesCount: 10
+            });
+        });
+
+        expect(result.current.events).toEqual([
+            expect.objectContaining({
+                id: 1,
+                title: "Created event"
+            }),
+            expect.objectContaining({
+                id: 2,
+                title: "Another created event"
+            })
+        ]);
     });
 
     /* =============================

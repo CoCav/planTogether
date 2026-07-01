@@ -12,12 +12,14 @@ import EventDetailsActions from "../../../components/events/EventDetailsActions"
    - leave action visibility and callback
    - edit action visibility and callback
    - delete action visibility and callback
+   - event like toggle rendering
    - default empty action state
    - decorative action icons
 
    Notes:
    - focuses on action visibility and callbacks
    - event statuses and business states are tested in EventDetailsPage
+   - event like behavior is delegated to EventLikeToggle
 ================================================== */
 
 describe("EventDetailsActions", () => {
@@ -28,10 +30,23 @@ describe("EventDetailsActions", () => {
     const baseProps = {
         eventId: 1,
 
+        user: {
+            userId: 10
+        },
+
         canJoin: false,
         canLeave: false,
         canEdit: false,
         canDelete: false,
+
+        liked: false,
+        likesCount: 0,
+        toast: {
+            info: vi.fn(),
+            success: vi.fn(),
+            danger: vi.fn()
+        },
+        onLikeChange: vi.fn(),
 
         onJoin: vi.fn(),
         onLeave: vi.fn(),
@@ -173,13 +188,55 @@ describe("EventDetailsActions", () => {
     });
 
     /* =============================
+       LIKE ACTION
+    ============================= */
+
+    it("should display event like action", () => {
+        renderEventDetailsActions({
+            likesCount: 4
+        });
+
+        expect(screen.getByRole("button", {
+            name: /like event\. 4 likes/i
+        })).toBeInTheDocument();
+    });
+
+    it("should display liked event state", () => {
+        renderEventDetailsActions({
+            liked: true,
+            likesCount: 5
+        });
+
+        expect(screen.getByRole("button", {
+            name: /unlike event\. 5 likes/i
+        })).toBeInTheDocument();
+    });
+
+    /* =============================
        DEFAULT STATE
     ============================= */
 
-    it("should not display actions by default", () => {
+    it("should not display membership or management actions by default", () => {
         renderEventDetailsActions();
 
-        expect(screen.queryByRole("button")).not.toBeInTheDocument();
-        expect(screen.queryByText(/login to join/i)).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", {
+            name: /join the event/i
+        })).not.toBeInTheDocument();
+
+        expect(screen.queryByRole("button", {
+            name: /leave the event/i
+        })).not.toBeInTheDocument();
+
+        expect(screen.queryByRole("button", {
+            name: /edit event/i
+        })).not.toBeInTheDocument();
+
+        expect(screen.queryByRole("button", {
+            name: /delete event/i
+        })).not.toBeInTheDocument();
+
+        expect(screen.getByRole("button", {
+            name: /like event\. 0 likes/i
+        })).toBeInTheDocument();
     });
 });

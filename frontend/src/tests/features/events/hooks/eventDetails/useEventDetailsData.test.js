@@ -26,6 +26,7 @@ import {
    - event details loading
    - staff loading
    - participant loading
+   - local event like state update
    - response normalization
    - loading state updates
    - eventId changes
@@ -35,6 +36,7 @@ import {
    - mocks API modules
    - mocks normalizers
    - normalizer logic is tested separately
+   - like mutation logic is tested in useEventLike
 ================================================== */
 
 /* =============================
@@ -212,6 +214,64 @@ describe("useEventDetailsData", () => {
 
         expect(setLoading).toHaveBeenCalledWith(true);
         expect(setLoading).toHaveBeenCalledWith(false);
+    });
+
+    /* =============================
+       LIKE STATE UPDATE
+    ============================= */
+
+    it("updates current event like state", async () => {
+        const { result } = renderUseEventDetailsData();
+
+        await act(async () => {
+            await result.current.loadData();
+        });
+
+        act(() => {
+            result.current.handleEventLikeChange({
+                eventId: 1,
+                liked: true,
+                likesCount: 7
+            });
+        });
+
+        expect(result.current.event).toEqual({
+            ...mockEvent,
+            likesCount: 7,
+            isLikedByCurrentUser: true
+        });
+    });
+
+    it("does not update like state when event id does not match", async () => {
+        const { result } = renderUseEventDetailsData();
+
+        await act(async () => {
+            await result.current.loadData();
+        });
+
+        act(() => {
+            result.current.handleEventLikeChange({
+                eventId: 999,
+                liked: true,
+                likesCount: 7
+            });
+        });
+
+        expect(result.current.event).toEqual(mockEvent);
+    });
+
+    it("does not update like state when event is not loaded", () => {
+        const { result } = renderUseEventDetailsData();
+
+        act(() => {
+            result.current.handleEventLikeChange({
+                eventId: 1,
+                liked: true,
+                likesCount: 7
+            });
+        });
+
+        expect(result.current.event).toBeNull();
     });
 
     /* =============================

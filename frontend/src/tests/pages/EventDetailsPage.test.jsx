@@ -41,6 +41,9 @@ import {
    - authenticated and guest states
    - started and past event restrictions
    - completed event reviews section display
+   - event like action forwarding
+   - local event like state update
+   - toast feedback forwarding for event likes
 
    Notes:
    - mocks API modules
@@ -48,6 +51,7 @@ import {
    - mocks extracted event display components
    - mocks react-leaflet dependent map component
    - uses MemoryRouter for route context
+   - EventDetailsActions like UI is tested separately
 ================================================== */
 
 /* =============================
@@ -73,6 +77,10 @@ const mockEvent = createEvent({
     description: "Test description",
     image: "/uploads/events/event-test.png",
     maxParticipants: null,
+
+    likesCount: 4,
+    isLikedByCurrentUser: false,
+
     status: EVENT_STATUS.UPCOMING,
 
     location: "Agora du Vieux-Port",
@@ -185,12 +193,35 @@ vi.mock("../../components/events/EventDetailsActions", () => ({
         canLeave,
         canEdit,
         canDelete,
+
+        liked,
+        likesCount,
+        toast,
+        onLikeChange,
+
         onJoin,
         onLeave,
         onEdit,
         onDelete
     }) => (
         <div data-testid="event-details-actions">
+            <span>Likes: {likesCount ?? 0}</span>
+            <span>{liked ? "Liked" : "Not liked"}</span>
+            {toast && <span>Toast forwarded</span>}
+
+            <button
+                type="button"
+                onClick={() =>
+                    onLikeChange?.({
+                        eventId,
+                        liked: true,
+                        likesCount: 9
+                    })
+                }
+            >
+                Mock Like
+            </button>
+
             {canJoin && (
                 <button type="button" onClick={() => onJoin(eventId)}>
                     Join the event
@@ -831,6 +862,36 @@ describe("EventDetailsPage", () => {
         renderPage();
 
         expect(await screen.findByTestId("event-location-map")).toHaveTextContent("Public map lookup");
+    });
+
+    /* =============================
+       EVENT LIKES
+    ============================= */
+
+    it("should forward like metadata to event details actions", async () => {
+        renderPage();
+
+        expect(await screen.findByText("Likes: 4")).toBeInTheDocument();
+        expect(screen.getByText("Not liked")).toBeInTheDocument();
+    });
+
+    it("should forward toast to event details actions", async () => {
+        renderPage();
+
+        expect(await screen.findByText("Toast forwarded")).toBeInTheDocument();
+    });
+
+    it("should update local like state when actions report like change", async () => {
+        const user = userEvent.setup();
+
+        renderPage();
+
+        expect(await screen.findByText("Likes: 4")).toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", { name: /mock like/i }));
+
+        expect(await screen.findByText("Likes: 9")).toBeInTheDocument();
+        expect(screen.getByText("Liked")).toBeInTheDocument();
     });
 
     /* =============================

@@ -27,11 +27,14 @@ import {
    - fallback values
    - participant count normalization
    - review stats normalization
+   - like count normalization
+   - current user like state normalization
 
    Notes:
    - uses reusable event test factories
    - review stats are normalized for event cards and details pages
    - shared pagination metadata normalization
+   - like metadata is normalized for event cards and details pages
 ================================================== */
 
 describe("eventNormalizer", () => {
@@ -62,6 +65,8 @@ describe("eventNormalizer", () => {
             maxParticipants: null,
             registrationDeadline: null,
             participantCount: 0,
+            likesCount: 0,
+            isLikedByCurrentUser: false,
             reviewCount: 0,
             averageRating: null,
             status: EVENT_STATUS.UPCOMING,
@@ -91,6 +96,8 @@ describe("eventNormalizer", () => {
             createEvent({
                 participantCount: "3",
                 maxParticipants: "10",
+                likesCount: "6",
+                isLikedByCurrentUser: true,
                 reviewCount: "2",
                 averageRating: "4.5"
             })
@@ -98,6 +105,9 @@ describe("eventNormalizer", () => {
 
         expect(event.participantCount).toBe(3);
         expect(event.maxParticipants).toBe(10);
+
+        expect(event.likesCount).toBe(6);
+        expect(event.isLikedByCurrentUser).toBe(true);
 
         expect(event.reviewCount).toBe(2);
         expect(event.averageRating).toBe(4.5);
@@ -154,6 +164,27 @@ describe("eventNormalizer", () => {
         expect(normalizeEvent({
             averageRating: undefined
         }).averageRating).toBeNull();
+    });
+
+    /* =============================
+       LIKE METADATA
+    ============================= */
+
+    it("should normalize like metadata", () => {
+        const event = normalizeEvent({
+            likesCount: "12",
+            isLikedByCurrentUser: true
+        });
+
+        expect(event.likesCount).toBe(12);
+        expect(event.isLikedByCurrentUser).toBe(true);
+    });
+
+    it("should use fallback like metadata when missing", () => {
+        const event = normalizeEvent({});
+
+        expect(event.likesCount).toBe(0);
+        expect(event.isLikedByCurrentUser).toBe(false);
     });
 
     /* =============================

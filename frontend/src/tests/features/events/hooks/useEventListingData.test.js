@@ -24,12 +24,14 @@ import { DEFAULT_EVENT_LISTING_FILTERS } from "../../../../features/shared/event
    - paginated payload normalization
    - pagination updates
    - membership role loading integration
+   - local event like state update
    - loading and error states
 
    Notes:
    - mocks API modules
    - mocks membership role hook
    - uses shared default event listing filters
+   - like mutation logic is tested in useEventLike
 ================================================== */
 
 /* =============================
@@ -466,6 +468,97 @@ describe("useEventListingData", () => {
             totalPages: 4,
             totalEvents: 16
         });
+    });
+
+    /* =============================
+       LIKE STATE UPDATE
+    ============================= */
+
+    it("updates one event like state after like change", async () => {
+        getAllEvents.mockResolvedValue(
+            createPaginatedEventResponse({
+                events: [
+                    {
+                        id: 1,
+                        title: "React meetup",
+                        likesCount: 2,
+                        isLikedByCurrentUser: false
+                    },
+                    {
+                        id: 2,
+                        title: "Vue meetup",
+                        likesCount: 5,
+                        isLikedByCurrentUser: false
+                    }
+                ]
+            })
+        );
+
+        const { result } = renderUseEventListingData();
+
+        await act(async () => {
+            await result.current.loadData(createFilters(), 1, EVENT_STATUS.ONGOING);
+        });
+
+        act(() => {
+            result.current.handleEventLikeChange({
+                eventId: 1,
+                liked: true,
+                likesCount: 3
+            });
+        });
+
+        expect(result.current.events).toEqual([
+            expect.objectContaining({
+                id: 1,
+                likesCount: 3,
+                isLikedByCurrentUser: true
+            }),
+            expect.objectContaining({
+                id: 2,
+                likesCount: 5,
+                isLikedByCurrentUser: false
+            })
+        ]);
+    });
+
+    it("does not update events when like event id does not match", async () => {
+        const initialEvents = [
+            {
+                id: 1,
+                title: "React meetup",
+                likesCount: 2,
+                isLikedByCurrentUser: false
+            }
+        ];
+
+        getAllEvents.mockResolvedValue(
+            createPaginatedEventResponse({
+                events: initialEvents
+            })
+        );
+
+        const { result } = renderUseEventListingData();
+
+        await act(async () => {
+            await result.current.loadData(createFilters(), 1, EVENT_STATUS.ONGOING);
+        });
+
+        act(() => {
+            result.current.handleEventLikeChange({
+                eventId: 999,
+                liked: true,
+                likesCount: 10
+            });
+        });
+
+        expect(result.current.events).toEqual([
+            expect.objectContaining({
+                id: 1,
+                likesCount: 2,
+                isLikedByCurrentUser: false
+            })
+        ]);
     });
 
     /* =============================

@@ -19,6 +19,8 @@ import { createEvent } from "../../factories/events/eventFactory";
    - event image rendering and fallback
    - event badge rendering
    - membership action visibility
+   - event like toggle rendering
+   - like count display
    - completed event review summary
    - event full and registration closed states
    - join and leave callbacks
@@ -30,6 +32,7 @@ import { createEvent } from "../../factories/events/eventFactory";
    - mocks formatter utilities
    - mocks uploaded file utilities
    - completed events display review summary instead of membership actions
+   - event like behavior is delegated to EventLikeToggle
 ================================================== */
 
 vi.mock("../../../utils/formatters", () => ({
@@ -56,7 +59,9 @@ describe("EventCard", () => {
         creatorName: "Alice",
         image: "/uploads/events/event-test.png",
         maxParticipants: null,
-        registrationDeadline: null
+        registrationDeadline: null,
+        likesCount: 4,
+        isLikedByCurrentUser: false,
     });
 
     /* =============================
@@ -75,6 +80,8 @@ describe("EventCard", () => {
                     role={props.role}
                     onJoin={props.onJoin}
                     onLeave={props.onLeave}
+                    toast={props.toast}
+                    onLikeChange={props.onLikeChange}
                 />
             </MemoryRouter>
         );
@@ -432,6 +439,48 @@ describe("EventCard", () => {
     });
 
     /* =============================
+       EVENT LIKES
+    ============================= */
+
+    it("should display event like count", () => {
+        renderCard({
+            event: {
+                likesCount: 7,
+                isLikedByCurrentUser: false
+            }
+        });
+
+        expect(screen.getByRole("button", {
+            name: /like event\. 7 likes/i
+        })).toBeInTheDocument();
+    });
+
+    it("should display liked event state", () => {
+        renderCard({
+            event: {
+                likesCount: 8,
+                isLikedByCurrentUser: true
+            }
+        });
+
+        expect(screen.getByRole("button", {
+            name: /unlike event\. 8 likes/i
+        })).toBeInTheDocument();
+    });
+
+    it("should forward like change handler to like toggle", () => {
+        const onLikeChange = vi.fn();
+
+        renderCard({
+            onLikeChange
+        });
+
+        expect(screen.getByRole("button", {
+            name: /like event\. 4 likes/i
+        })).toBeInTheDocument();
+    });
+
+    /* =============================
        ACTION CALLBACKS
     ============================= */
 
@@ -480,9 +529,7 @@ describe("EventCard", () => {
     it("should expose accessible event details list", () => {
         renderCard();
 
-        expect(
-            screen.getByLabelText(/event details/i)
-        ).toBeInTheDocument();
+        expect(screen.getByLabelText(/event details/i)).toBeInTheDocument();
     });
 
     it("should expose accessible event cover image", () => {

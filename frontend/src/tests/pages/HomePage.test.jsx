@@ -21,6 +21,8 @@ import { EVENT_ROLES } from "../../features/shared/constants/eventRoles";
    - event role forwarding
    - membership action integration
    - toast forwarding
+   - event like callback forwarding
+   - toast feedback forwarding for event likes
    - accessible homepage sections
    - auth-ready initial loading guard
    - decorative hero and feature icons
@@ -31,6 +33,7 @@ import { EVENT_ROLES } from "../../features/shared/constants/eventRoles";
    - mocks membership actions hook
    - mocks EventCard for page-level behavior focus
    - uses MemoryRouter for navigation links
+   - EventCard like UI is tested separately
 ================================================== */
 
 /* =============================
@@ -43,6 +46,8 @@ const mockGetCurrentUserRoleByEvent = vi.fn();
 const mockHandleJoinEvent = vi.fn();
 const mockHandleLeaveEvent = vi.fn();
 
+const mockHandleEventLikeChange = vi.fn();
+
 let mockAuthState = {
     user: null,
     loading: false
@@ -52,7 +57,8 @@ let mockHomeEventsState = {
     events: [],
     isLoading: false,
     loadData: mockLoadData,
-    getCurrentUserRoleByEvent: mockGetCurrentUserRoleByEvent
+    getCurrentUserRoleByEvent: mockGetCurrentUserRoleByEvent,
+    handleEventLikeChange: mockHandleEventLikeChange
 };
 
 const mockToast = {
@@ -84,13 +90,28 @@ vi.mock("../../features/eventMemberships/hooks/useMembershipActions", () => ({
 }));
 
 vi.mock("../../components/events/EventCard", () => ({
-    default: ({ event, role, onJoin, onLeave }) => (
+    default: ({ event, role, onJoin, onLeave, toast, onLikeChange }) => (
         <article>
             <h3>{event.title}</h3>
 
             <span data-testid={`event-role-${event.id}`}>
                 {role || "none"}
             </span>
+
+            <button
+                type="button"
+                onClick={() =>
+                    onLikeChange?.({
+                        eventId: event.id,
+                        liked: true,
+                        likesCount: 7
+                    })
+                }
+            >
+                Mock Like
+            </button>
+
+            {toast && <span>Toast forwarded</span>}
 
             <button type="button" onClick={() => onJoin(event.id)}>
                 Join
@@ -136,7 +157,8 @@ describe("HomePage", () => {
             events: [],
             isLoading: false,
             loadData: mockLoadData,
-            getCurrentUserRoleByEvent: mockGetCurrentUserRoleByEvent
+            getCurrentUserRoleByEvent: mockGetCurrentUserRoleByEvent,
+            handleEventLikeChange: mockHandleEventLikeChange
         };
 
         mockGetCurrentUserRoleByEvent.mockReturnValue(null);
@@ -324,6 +346,51 @@ describe("HomePage", () => {
         expect(mockGetCurrentUserRoleByEvent).toHaveBeenCalledWith(1);
 
         expect(screen.getByTestId("event-role-1")).toHaveTextContent(EVENT_ROLES.PARTICIPANT);
+    });
+
+    /* =============================
+       EVENT LIKES
+    ============================= */
+
+    it("passes toast to event cards for like feedback", () => {
+        mockHomeEventsState = {
+            ...mockHomeEventsState,
+            events: [
+                {
+                    id: 1,
+                    title: "Liked Home Event"
+                }
+            ]
+        };
+
+        renderPage();
+
+        expect(screen.getByText("Liked Home Event")).toBeInTheDocument();
+        expect(screen.getByText("Toast forwarded")).toBeInTheDocument();
+    });
+
+    it("forwards like change events from event cards", async () => {
+        const user = userEvent.setup();
+
+        mockHomeEventsState = {
+            ...mockHomeEventsState,
+            events: [
+                {
+                    id: 1,
+                    title: "Liked Home Event"
+                }
+            ]
+        };
+
+        renderPage();
+
+        await user.click(screen.getByRole("button", { name: /mock like/i }));
+
+        expect(mockHandleEventLikeChange).toHaveBeenCalledWith({
+            eventId: 1,
+            liked: true,
+            likesCount: 7
+        });
     });
 
     /* =============================

@@ -7,6 +7,8 @@ import PublicUserPage from "../../../../pages/users/public/PublicUserPage";
 
 import { getPublicUserProfile, getPublicUserEvents } from "../../../../api/users/userApi";
 
+import useToast from "../../../../hooks/useToast";
+
 /* ==================================================
    PUBLIC USER PAGE TESTS
    Tests public user profile and event listing page behavior
@@ -24,13 +26,34 @@ import { getPublicUserProfile, getPublicUserEvents } from "../../../../api/users
    - accessible profile and listing sections
    - public profile statistics semantics
    - total public event statistic rendering
+   - event like callback forwarding
+   - toast feedback forwarding for event likes
    - decorative profile metadata icons
 
    Notes:
    - mocks public user API
    - mocks EventCard for page-level behavior focus
    - uses MemoryRouter for route params and URL query behavior
+   - EventCard like UI is tested separately
 ================================================== */
+
+/* =============================
+   MOCK DATA
+============================= */
+
+const mockToast = {
+    success: vi.fn(),
+    danger: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn()
+};
+
+let mockAuthState = {
+    user: {
+        userId: 1
+    }
+};
+
 
 /* =============================
    MOCKS
@@ -42,9 +65,25 @@ vi.mock("../../../../api/users/userApi", () => ({
 }));
 
 vi.mock("../../../../components/events/EventCard", () => ({
-    default: ({ event }) => (
+    default: ({ event, toast, onLikeChange }) => (
         <article>
             <h3>{event.title}</h3>
+            <span>Likes: {event.likesCount ?? 0}</span>
+
+            <button
+                type="button"
+                onClick={() =>
+                    onLikeChange?.({
+                        eventId: event.id,
+                        liked: true,
+                        likesCount: 7
+                    })
+                }
+            >
+                Mock Like
+            </button>
+
+            {toast && <span>Toast forwarded</span>}
         </article>
     )
 }));
@@ -57,6 +96,14 @@ vi.mock("../../../../components/users/UserAvatar", () => ({
             className={`user-avatar ${className}`.trim()}
         />
     )
+}));
+
+vi.mock("../../../../features/auth/hooks/useAuth", () => ({
+    useAuth: () => mockAuthState
+}));
+
+vi.mock("../../../../hooks/useToast", () => ({
+    default: vi.fn()
 }));
 
 vi.mock("../../../../utils/uploadedFiles", () => ({
@@ -147,6 +194,8 @@ describe("PublicUserPage", () => {
 
         getPublicUserProfile.mockResolvedValue(createProfileResponse());
         getPublicUserEvents.mockResolvedValue(createEventsResponse());
+
+        useToast.mockReturnValue(mockToast);
     });
 
     /* =============================
@@ -410,6 +459,57 @@ describe("PublicUserPage", () => {
         await waitFor(() => {
             expect(screen.getByTestId("location-search")).toHaveTextContent("page=2");
         });
+    });
+
+    /* =============================
+       EVENT LIKES
+    ============================= */
+
+    it("passes toast to event cards for like feedback", async () => {
+        getPublicUserEvents.mockResolvedValue(
+            createEventsResponse({
+                events: [
+                    {
+                        id: 1,
+                        title: "Liked Public Event",
+                        likesCount: 2,
+                        isLikedByCurrentUser: false
+                    }
+                ],
+                totalEvents: 1
+            })
+        );
+
+        renderPage();
+
+        expect(await screen.findByText("Liked Public Event")).toBeInTheDocument();
+        expect(screen.getByText("Toast forwarded")).toBeInTheDocument();
+    });
+
+    it("updates local like state when event card reports like change", async () => {
+        const user = userEvent.setup();
+
+        getPublicUserEvents.mockResolvedValue(
+            createEventsResponse({
+                events: [
+                    {
+                        id: 1,
+                        title: "Liked Public Event",
+                        likesCount: 2,
+                        isLikedByCurrentUser: false
+                    }
+                ],
+                totalEvents: 1
+            })
+        );
+
+        renderPage();
+
+        expect(await screen.findByText("Likes: 2")).toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", { name: /mock like/i }));
+
+        expect(await screen.findByText("Likes: 7")).toBeInTheDocument();
     });
 
     /* =============================

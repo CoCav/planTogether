@@ -20,11 +20,13 @@ import useEventMembershipRoles from "../../../../features/eventMemberships/hooks
    - loading state updates
    - authenticated membership role refresh
    - unauthenticated membership role skip
+   - local event like state update
    - error handling
 
    Notes:
    - mocks event API requests
    - mocks membership role hook
+   - like mutation logic is tested in useEventLike
 ================================================== */
 
 /* =============================
@@ -208,6 +210,95 @@ describe("useHomeEvents", () => {
         });
 
         expect(mockLoadMembershipRoles).not.toHaveBeenCalled();
+    });
+
+    /* =============================
+       LIKE STATE UPDATE
+    ============================= */
+
+    it("updates one home event like state after like change", async () => {
+        getAllEvents.mockResolvedValue(
+            createEventResponse({
+                events: [
+                    {
+                        id: 1,
+                        title: "React meetup",
+                        likesCount: 2,
+                        isLikedByCurrentUser: false
+                    },
+                    {
+                        id: 2,
+                        title: "Vue meetup",
+                        likesCount: 5,
+                        isLikedByCurrentUser: false
+                    }
+                ]
+            })
+        );
+
+        const { result } = createHook();
+
+        await act(async () => {
+            await result.current.loadData();
+        });
+
+        act(() => {
+            result.current.handleEventLikeChange({
+                eventId: 1,
+                liked: true,
+                likesCount: 3
+            });
+        });
+
+        expect(result.current.events).toEqual([
+            expect.objectContaining({
+                id: 1,
+                likesCount: 3,
+                isLikedByCurrentUser: true
+            }),
+            expect.objectContaining({
+                id: 2,
+                likesCount: 5,
+                isLikedByCurrentUser: false
+            })
+        ]);
+    });
+
+    it("does not update home events when like event id does not match", async () => {
+        getAllEvents.mockResolvedValue(
+            createEventResponse({
+                events: [
+                    {
+                        id: 1,
+                        title: "React meetup",
+                        likesCount: 2,
+                        isLikedByCurrentUser: false
+                    }
+                ]
+            })
+        );
+
+        const { result } = createHook();
+
+        await act(async () => {
+            await result.current.loadData();
+        });
+
+        act(() => {
+            result.current.handleEventLikeChange({
+                eventId: 999,
+                liked: true,
+                likesCount: 10
+            });
+        });
+
+        expect(result.current.events).toEqual([
+            expect.objectContaining({
+                id: 1,
+                likesCount: 2,
+                isLikedByCurrentUser: false
+            })
+        ]);
     });
 
     /* =============================

@@ -33,6 +33,8 @@ import {
    - membership action integration
    - current user role forwarding
    - guest and authenticated states
+   - event like callback forwarding
+   - toast feedback forwarding for event likes
    - accessible page sections
 
    Notes:
@@ -40,6 +42,7 @@ import {
    - mocks authenticated user state
    - mocks EventCard for role assertions
    - uses MemoryRouter for route query testing
+   - EventCard like UI is tested separately
 ================================================== */
 
 /* =============================
@@ -90,12 +93,30 @@ vi.mock("../../features/events/eventNormalizer", () => ({
 }));
 
 vi.mock("../../components/events/EventCard", () => ({
-    default: ({ event, role, onJoin, onLeave }) => (
+    default: ({ event, role, onJoin, onLeave, toast, onLikeChange }) => (
         <div>
             <span>{event.title}</span>
+
             <span data-testid={`event-role-${event.id}`}>
                 {role || "none"}
             </span>
+
+            <span>Likes: {event.likesCount ?? 0}</span>
+
+            <button
+                type="button"
+                onClick={() =>
+                    onLikeChange?.({
+                        eventId: event.id,
+                        liked: true,
+                        likesCount: 7
+                    })
+                }
+            >
+                Mock Like
+            </button>
+
+            {toast && <span>Toast forwarded</span>}
 
             <button type="button" onClick={() => onJoin(event.id)}>
                 Join
@@ -747,6 +768,59 @@ describe("EventsPage", () => {
         expect(await screen.findByText("Joined Event")).toBeInTheDocument();
 
         expect(screen.getByTestId("event-role-20")).toHaveTextContent(EVENT_ROLES.PARTICIPANT);
+    });
+
+    /* =============================
+       EVENT LIKES
+    ============================= */
+
+    it("passes toast to event cards for like feedback", async () => {
+        mockGetAllEvents.mockResolvedValue(
+            createEventsPageResponse({
+                events: [
+                    {
+                        id: 1,
+                        title: "Liked Event",
+                        creatorId: 2,
+                        likesCount: 2,
+                        isLikedByCurrentUser: false
+                    }
+                ],
+                totalEvents: 1
+            })
+        );
+
+        renderPage();
+
+        expect(await screen.findByText("Liked Event")).toBeInTheDocument();
+        expect(screen.getByText("Toast forwarded")).toBeInTheDocument();
+    });
+
+    it("updates local like state when event card reports like change", async () => {
+        const user = userEvent.setup();
+
+        mockGetAllEvents.mockResolvedValue(
+            createEventsPageResponse({
+                events: [
+                    {
+                        id: 1,
+                        title: "Liked Event",
+                        creatorId: 2,
+                        likesCount: 2,
+                        isLikedByCurrentUser: false
+                    }
+                ],
+                totalEvents: 1
+            })
+        );
+
+        renderPage();
+
+        expect(await screen.findByText("Likes: 2")).toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", { name: /mock like/i }));
+
+        expect(await screen.findByText("Likes: 7")).toBeInTheDocument();
     });
 
     /* =============================

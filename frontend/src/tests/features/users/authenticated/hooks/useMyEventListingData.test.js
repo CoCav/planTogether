@@ -19,6 +19,7 @@ import { createMyEventFilters } from "../../../../factories/users/authenticated/
    - view-based default sorting
    - paginated payload normalization
    - pagination updates
+   - local event like state update
    - current user role resolution
    - loading and error states
 
@@ -272,6 +273,98 @@ describe("useMyEventListingData", () => {
     });
 
     /* =============================
+       LIKE STATE UPDATE
+    ============================= */
+
+    it("updates one current user event like state after like change", async () => {
+        getCurrentUserEvents.mockResolvedValue(
+            createPaginatedMyEventResponse({
+                events: [
+                    {
+                        id: 1,
+                        title: "Created event",
+                        role: EVENT_ROLES.ORGANIZER,
+                        likesCount: 2,
+                        isLikedByCurrentUser: false
+                    },
+                    {
+                        id: 2,
+                        title: "Joined event",
+                        role: EVENT_ROLES.PARTICIPANT,
+                        likesCount: 5,
+                        isLikedByCurrentUser: false
+                    }
+                ]
+            })
+        );
+
+        const { result } = renderUseMyEventListingData();
+
+        await act(async () => {
+            await result.current.loadData(createMyEventFilters(), 1, "created");
+        });
+
+        act(() => {
+            result.current.handleEventLikeChange({
+                eventId: 1,
+                liked: true,
+                likesCount: 3
+            });
+        });
+
+        expect(result.current.events).toEqual([
+            expect.objectContaining({
+                id: 1,
+                likesCount: 3,
+                isLikedByCurrentUser: true
+            }),
+            expect.objectContaining({
+                id: 2,
+                likesCount: 5,
+                isLikedByCurrentUser: false
+            })
+        ]);
+    });
+
+    it("does not update current user events when like event id does not match", async () => {
+        getCurrentUserEvents.mockResolvedValue(
+            createPaginatedMyEventResponse({
+                events: [
+                    {
+                        id: 1,
+                        title: "Created event",
+                        role: EVENT_ROLES.ORGANIZER,
+                        likesCount: 2,
+                        isLikedByCurrentUser: false
+                    }
+                ]
+            })
+        );
+
+        const { result } = renderUseMyEventListingData();
+
+        await act(async () => {
+            await result.current.loadData(createMyEventFilters(), 1, "created");
+        });
+
+        act(() => {
+            result.current.handleEventLikeChange({
+                eventId: 999,
+                liked: true,
+                likesCount: 10
+            });
+        });
+
+        expect(result.current.events).toEqual([
+            expect.objectContaining({
+                id: 1,
+                likesCount: 2,
+                isLikedByCurrentUser: false
+            })
+        ]);
+    });
+
+    /* =============================
        ROLE RESOLUTION
     ============================= */
 
@@ -294,7 +387,7 @@ describe("useMyEventListingData", () => {
             await result.current.loadData(createMyEventFilters(), 1, "joined");
         });
 
-        expect(result.current.getRoleByEventId(1)).toBe(EVENT_ROLES.PARTICIPANT);
+        expect(result.current.getCurrentUserRoleByEvent(1)).toBe(EVENT_ROLES.PARTICIPANT);
     });
 
     it("returns null when event id is unknown", async () => {
@@ -316,7 +409,7 @@ describe("useMyEventListingData", () => {
             await result.current.loadData(createMyEventFilters(), 1, "joined");
         });
 
-        expect(result.current.getRoleByEventId(999)).toBeNull();
+        expect(result.current.getCurrentUserRoleByEvent(999)).toBeNull();
     });
 
     /* =============================

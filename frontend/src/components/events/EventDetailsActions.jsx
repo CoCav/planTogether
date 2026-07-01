@@ -1,5 +1,7 @@
 import { LogOut, Pencil, Trash2, UserPlus } from "lucide-react";
 
+import EventLikeToggle from "../eventLikes/EventLikeToggle";
+
 import Button from "../ui/Button";
 
 /* ==================================================
@@ -11,20 +13,29 @@ import Button from "../ui/Button";
    - leave action visibility and callback
    - edit action visibility and callback
    - delete action visibility and callback
+   - event like toggle display
    - safe optional action handlers
    - decorative action icons
 
    Notes:
    - event statuses and business states are displayed as badges in EventDetailsPage
+   - event like interactions are delegated to EventLikeToggle
 ================================================== */
 
 export default function EventDetailsActions({
     eventId,
 
+    user,
+
     canJoin,
     canLeave,
     canEdit,
     canDelete,
+
+    liked,
+    likesCount,
+    toast,
+    onLikeChange,
 
     onJoin,
     onLeave,
@@ -77,6 +88,15 @@ export default function EventDetailsActions({
                     Delete Event
                 </Button>
             )}
+
+            <EventLikeToggle
+                eventId={eventId}
+                user={user}
+                liked={liked}
+                likesCount={likesCount}
+                toast={toast}
+                onLikeChange={onLikeChange}
+            />
         </div>
     );
 }

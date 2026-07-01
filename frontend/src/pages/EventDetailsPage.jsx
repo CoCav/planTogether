@@ -93,7 +93,13 @@ export default function EventDetailsPage() {
        PAGE DATA
     ============================= */
 
-    const { event, members, staff, loadData } = useEventDetailsData({
+    const {
+        event,
+        members,
+        staff,
+        loadData,
+        handleEventLikeChange
+    } = useEventDetailsData({
         eventId,
         setError,
         setLoading
@@ -301,10 +307,19 @@ export default function EventDetailsPage() {
                         <div className="event-details-actions">
                             <EventDetailsActions
                                 eventId={event.id}
+                                user={user}
+
                                 canJoin={canJoin}
                                 canLeave={canLeave}
                                 canEdit={canEdit}
                                 canDelete={canDelete}
+
+                                liked={event.isLikedByCurrentUser}
+                                likesCount={event.likesCount}
+
+                                toast={toast}
+                                onLikeChange={handleEventLikeChange}
+
                                 onJoin={handleJoinEvent}
                                 onLeave={handleLeaveEvent}
                                 onEdit={() => navigate(`/events/${event.id}/edit`)}

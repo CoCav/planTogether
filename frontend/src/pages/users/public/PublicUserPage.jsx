@@ -2,18 +2,22 @@ import { useCallback, useEffect, useRef } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { Bookmark, CalendarDays, FolderOpen } from "lucide-react";
 
+import { useAuth } from "../../../features/auth/hooks/useAuth";
+
 import usePublicUserListingData from "../../../features/users/public/hooks/usePublicUserListingData";
 import usePublicUserListingState from "../../../features/users/public/hooks/usePublicUserListingState";
 
 import { getPublicUserEventViewContent, PUBLIC_USER_EVENT_VIEWS } from "../../../features/users/public/publicUserEventViewConfig";
 
 import usePagination from "../../../hooks/usePagination";
+import useToast from "../../../hooks/useToast";
+
+import { getAvatar } from "../../../utils/uploadedFiles";
 
 import EventCard from "../../../components/events/EventCard";
 import EventsToolbar from "../../../components/events/EventsToolbar";
 
 import UserAvatar from "../../../components/users/UserAvatar";
-import { getAvatar } from "../../../utils/uploadedFiles";
 
 import Alert from "../../../components/ui/Alert";
 import Card from "../../../components/ui/Card";
@@ -39,8 +43,17 @@ import Pagination from "../../../components/ui/Pagination";
 ================================================== */
 
 export default function PublicUserPage() {
+    const { user } = useAuth();
     const { userId } = useParams();
     const [searchParams, setSearchParams] = useSearchParams();
+
+
+    /* =============================
+       TOAST FEEDBACK
+    ============================= */
+
+    const toast = useToast();
+
 
     /* =============================
        PAGE STATE
@@ -74,6 +87,7 @@ export default function PublicUserPage() {
     // Pagination data and setters
     const { pagination, setPagination, initialPage } = paginationState;
 
+
     /* =============================
        PUBLIC USER DATA
     ============================= */
@@ -83,7 +97,8 @@ export default function PublicUserPage() {
         events,
         totalPublicEvents,
         loadInitialData,
-        refreshEvents
+        refreshEvents,
+        handleEventLikeChange
     } = usePublicUserListingData({
         userId,
         filters,
@@ -97,6 +112,7 @@ export default function PublicUserPage() {
     });
 
     const avatar = getAvatar(profile.user.avatar);
+
 
     /* =============================
        DATA LOADING / URL SYNC
@@ -120,6 +136,7 @@ export default function PublicUserPage() {
         syncUrl
     ]);
 
+
     /* =============================
        PAGINATION CONTROLS
     ============================= */
@@ -133,6 +150,7 @@ export default function PublicUserPage() {
             activeView
         )
     });
+
 
     /* =============================
        VIEW SWITCHING
@@ -153,6 +171,7 @@ export default function PublicUserPage() {
 
         await loadDataAndSyncUrl(nextFilters, 1, nextView);
     };
+
 
     /* =============================
        INITIAL DATA LOADING
@@ -177,11 +196,13 @@ export default function PublicUserPage() {
         initialView
     ]);
 
+
     /* =============================
        DISPLAY STATE
     ============================= */
 
     const showPaginationInfo = pagination.totalPages > 1;
+
 
     /* =============================
        INITIAL LOADING STATE
@@ -195,6 +216,7 @@ export default function PublicUserPage() {
             />
         );
     }
+
 
     /* =============================
        MAIN RENDER
@@ -292,7 +314,11 @@ export default function PublicUserPage() {
                         {events.map((event) => (
                             <EventCard
                                 key={event.id}
+                                user={user}
                                 event={event}
+
+                                toast={toast}
+                                onLikeChange={handleEventLikeChange}
                             />
                         ))}
                     </div>

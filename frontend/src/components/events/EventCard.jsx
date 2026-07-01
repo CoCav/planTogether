@@ -13,6 +13,8 @@ import { EVENT_ROLES } from "../../features/shared/constants/eventRoles";
 
 import EventCardActions from "./EventCardActions";
 
+import EventLikeToggle from "../eventLikes/EventLikeToggle";
+
 import Badge from "../ui/Badge";
 
 /* ==================================================
@@ -23,6 +25,7 @@ import Badge from "../ui/Badge";
    - event title, image and description display
    - status, type, creator and membership badge display
    - event metadata display
+   - event like toggle display
    - completed event review summary display
    - membership action visibility
    - image fallback handling
@@ -32,9 +35,18 @@ import Badge from "../ui/Badge";
    Notes:
    - completed events show review stats instead of join/leave actions
    - membership actions are delegated to EventCardActions
+   - event like interactions are delegated to EventLikeToggle
 ================================================== */
 
-export default function EventCard({ event, user, role = null, onJoin, onLeave }) {
+export default function EventCard({
+    event,
+    user,
+    role = null,
+    toast,
+    onJoin,
+    onLeave,
+    onLikeChange
+}) {
 
     /* =========================
        EVENT STATE
@@ -181,7 +193,9 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                     <p className="event-card-description">
                         {eventDisplayData.description}
                     </p>
+                </div>
 
+                <div className="event-card-footer">
                     <ul className="event-card-meta-list" aria-label="Event details">
 
                         <li className={isEventFull ? "event-card-meta-item text-danger" : "event-card-meta-item"}>
@@ -227,6 +241,15 @@ export default function EventCard({ event, user, role = null, onJoin, onLeave })
                         </li>
 
                     </ul>
+
+                    <EventLikeToggle
+                        eventId={event.id}
+                        user={user}
+                        liked={event.isLikedByCurrentUser}
+                        likesCount={event.likesCount}
+                        toast={toast}
+                        onLikeChange={onLikeChange}
+                    />
                 </div>
             </div>
         </article>

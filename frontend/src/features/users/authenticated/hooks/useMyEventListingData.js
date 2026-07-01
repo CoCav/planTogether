@@ -18,6 +18,7 @@ import { normalizePaginatedMyEvents } from "../myEventNormalizer";
    - paginated payload normalization
    - pagination state updates
    - current user role resolution
+   - local event like state update after like/unlike mutation
 ================================================== */
 
 export default function useMyEventListingData({
@@ -39,6 +40,25 @@ export default function useMyEventListingData({
             })
         );
     };
+
+    /* =============================
+       LIKE STATE UPDATE
+    ============================= */
+
+    // Updates one event like state after like/unlike mutation
+    const handleEventLikeChange = useCallback((likeState) => {
+        setEvents((previousEvents) =>
+            previousEvents.map((event) =>
+                event.id === likeState.eventId
+                    ? {
+                        ...event,
+                        likesCount: likeState.likesCount,
+                        isLikedByCurrentUser: likeState.liked
+                    }
+                    : event
+            )
+        );
+    }, []);
 
     /* =============================
        STATE
@@ -137,6 +157,7 @@ export default function useMyEventListingData({
     return {
         events,
         loadData,
-        getRoleByEventId
+        getCurrentUserRoleByEvent: getRoleByEventId,
+        handleEventLikeChange
     };
 }

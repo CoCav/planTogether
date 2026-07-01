@@ -24,6 +24,8 @@ import "./styles/pages/public-user-page.css";
 
 import "./styles/components/auth/login-form.css";
 
+import "./styles/components/eventLikes/event-like-button.css";
+
 import "./styles/components/eventMemberships/event-members-section.css";
 import "./styles/components/eventMemberships/event-actions-menu.css";
 

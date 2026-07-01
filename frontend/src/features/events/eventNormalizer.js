@@ -13,6 +13,11 @@ import { EVENT_MODES } from "../shared/constants/eventModes";
    - paginated public event payloads
    - participant count normalization
    - review stats normalization
+   - like count normalization
+   - current user like state normalization
+
+   Notes:
+   - like metadata is normalized for event cards and details pages
 ================================================== */
 
 /* =============================
@@ -45,6 +50,10 @@ export const normalizeEvent = (event = {}) => ({
 
     registrationDeadline: event.registrationDeadline ?? null,
     participantCount: Number(event.participantCount ?? 0),
+
+    likesCount: Number(event.likesCount ?? 0),
+
+    isLikedByCurrentUser: Boolean(event.isLikedByCurrentUser),
 
     reviewCount: Number(event.reviewCount ?? 0),
     averageRating: event.averageRating === null || event.averageRating === undefined

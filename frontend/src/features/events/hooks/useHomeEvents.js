@@ -18,6 +18,7 @@ import { getNormalizedEvents } from "../eventNormalizer";
    - loading and error state
    - event card role lookup
    - authenticated membership role refresh
+   - local event like state update after like/unlike mutation
 
    Notes:
    - used by HomePage event preview section
@@ -32,6 +33,25 @@ import { getNormalizedEvents } from "../eventNormalizer";
 const MAX_HOME_EVENTS = 4;
 
 export default function useHomeEvents({ user, setError }) {
+
+    /* =============================
+       LIKE STATE UPDATE
+    ============================= */
+
+    // Updates one event like state after like/unlike mutation
+    const handleEventLikeChange = useCallback((likeState) => {
+        setEvents((previousEvents) =>
+            previousEvents.map((event) =>
+                event.id === likeState.eventId
+                    ? {
+                        ...event,
+                        likesCount: likeState.likesCount,
+                        isLikedByCurrentUser: likeState.liked
+                    }
+                    : event
+            )
+        );
+    }, []);
 
     /* =============================
        STATE
@@ -92,6 +112,7 @@ export default function useHomeEvents({ user, setError }) {
         events,
         isLoading,
         loadData,
-        getCurrentUserRoleByEvent
+        getCurrentUserRoleByEvent,
+        handleEventLikeChange
     };
 }

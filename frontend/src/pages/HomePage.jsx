@@ -56,7 +56,13 @@ export default function HomePage() {
        HOME EVENTS
     ============================= */
 
-    const { events, isLoading, loadData, getCurrentUserRoleByEvent } = useHomeEvents({
+    const {
+        events,
+        isLoading,
+        loadData,
+        getCurrentUserRoleByEvent,
+        handleEventLikeChange
+    } = useHomeEvents({
         user,
         setError
     });
@@ -69,7 +75,7 @@ export default function HomePage() {
     const { handleJoinEvent, handleLeaveEvent } = useMembershipActions({
         loadData,
         toast,
-        getCurrentUserRoleByEvent
+        getCurrentUserRoleByEvent,
     });
 
 
@@ -256,6 +262,8 @@ export default function HomePage() {
                                 role={getCurrentUserRoleByEvent(event.id)}
                                 onJoin={handleJoinEvent}
                                 onLeave={handleLeaveEvent}
+                                toast={toast}
+                                onLikeChange={handleEventLikeChange}
                             />
                         ))}
                     </div>

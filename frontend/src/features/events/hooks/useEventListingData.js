@@ -22,6 +22,7 @@ import { getEventViewContent } from "../eventViewConfig";
    - event listing pagination
    - current user role resolution for event cards
    - forced membership role refresh after event loading
+   - local event like state update after like/unlike mutation
 ================================================== */
 
 export default function useEventListingData({
@@ -44,6 +45,25 @@ export default function useEventListingData({
             })
         );
     };
+
+    /* =============================
+       LIKE STATE UPDATE
+    ============================= */
+
+    // Updates one event like state after like/unlike mutation
+    const handleEventLikeChange = useCallback((likeState) => {
+        setEvents((previousEvents) =>
+            previousEvents.map((event) =>
+                event.id === likeState.eventId
+                    ? {
+                        ...event,
+                        likesCount: likeState.likesCount,
+                        isLikedByCurrentUser: likeState.liked
+                    }
+                    : event
+            )
+        );
+    }, []);
 
     /* =============================
        STATE
@@ -154,6 +174,7 @@ export default function useEventListingData({
     return {
         events,
         loadData,
-        getCurrentUserRoleByEvent
+        getCurrentUserRoleByEvent,
+        handleEventLikeChange
     };
 }

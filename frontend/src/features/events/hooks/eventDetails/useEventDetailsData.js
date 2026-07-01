@@ -20,9 +20,29 @@ import { getNormalizedEventStaff, getNormalizedMembers } from "../../../eventMem
    - staff list loading
    - response normalization
    - data refresh after mutations
+   - local event like state update after like/unlike mutation
 ================================================== */
 
 export default function useEventDetailsData({ eventId, setError, setLoading }) {
+
+    /* =============================
+       LIKE STATE UPDATE
+    ============================= */
+
+    // Updates current event like state after like/unlike mutation
+    const handleEventLikeChange = useCallback((likeState) => {
+        setEvent((previousEvent) => {
+            if (!previousEvent || previousEvent.id !== likeState.eventId) {
+                return previousEvent;
+            }
+
+            return {
+                ...previousEvent,
+                likesCount: likeState.likesCount,
+                isLikedByCurrentUser: likeState.liked
+            };
+        });
+    }, []);
 
     /* =============================
        DATA STATE
@@ -67,6 +87,7 @@ export default function useEventDetailsData({ eventId, setError, setLoading }) {
         event,
         members,
         staff,
-        loadData
+        loadData,
+        handleEventLikeChange
     };
 }

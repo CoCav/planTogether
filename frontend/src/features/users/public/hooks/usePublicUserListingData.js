@@ -20,6 +20,7 @@ import { getNormalizedPublicUserEvents } from "../publicUserEventNormalizer";
    - public user payload normalization
    - paginated event payload normalization
    - pagination state updates
+   - local event like state update after like/unlike mutation
 ================================================== */
 
 /* =============================
@@ -46,6 +47,25 @@ export default function usePublicUserListingData({
     setIsLoading,
     setError
 }) {
+
+    /* =============================
+       LIKE STATE UPDATE
+    ============================= */
+
+    // Updates one public event like state
+    const handleEventLikeChange = useCallback((likeState) => {
+        setEvents((previousEvents) =>
+            previousEvents.map((event) =>
+                event.id === likeState.eventId
+                    ? {
+                        ...event,
+                        likesCount: likeState.likesCount,
+                        isLikedByCurrentUser: likeState.liked
+                    }
+                    : event
+            )
+        );
+    }, []);
 
     /* =============================
        STATE
@@ -200,6 +220,7 @@ export default function usePublicUserListingData({
         events,
         totalPublicEvents,
         loadInitialData,
-        refreshEvents
+        refreshEvents,
+        handleEventLikeChange
     };
 }

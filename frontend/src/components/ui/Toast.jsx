@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { CircleAlert, CircleCheck, OctagonAlert, TriangleAlert, X } from "lucide-react";
 
 /* ==================================================
@@ -27,8 +28,16 @@ const TOAST_ICONS = {
 export default function Toast({
     message,
     type = "info",
+    duration = 5000,
     onClose
 }) {
+
+    /* =========================
+       ANIMATION STATE
+    ========================= */
+
+    // Triggers the exit animation before the toast is removed
+    const [isLeaving, setIsLeaving] = useState(false);
 
     const ToastIcon = TOAST_ICONS[type] || CircleAlert;
 
@@ -36,7 +45,10 @@ export default function Toast({
        CSS CLASSES
     ========================= */
 
-    const toastClasses = `toast toast-${type}`;
+    // Adds the exit animation class shortly before removal
+    const toastClasses = isLeaving
+        ? `toast toast-${type} toast-leaving`
+        : `toast toast-${type}`;
 
     /* =========================
        ACCESSIBILITY
@@ -44,6 +56,23 @@ export default function Toast({
 
     // Uses assertive alerts for danger messages and polite status updates otherwise
     const toastRole = type === "danger" ? "alert" : "status";
+
+    /* =========================
+       EXIT ANIMATION
+    ========================= */
+
+    // Starts the exit animation shortly before the toast is automatically removed
+    useEffect(() => {
+        if (duration <= 250) return undefined;
+
+        const leaveTimer = window.setTimeout(() => {
+            setIsLeaving(true);
+        }, duration - 250);
+
+        return () => {
+            window.clearTimeout(leaveTimer);
+        };
+    }, [duration]);
 
     return (
         <div className={toastClasses} role={toastRole}>
@@ -63,6 +92,14 @@ export default function Toast({
             >
                 <X aria-hidden="true" />
             </button>
+
+            {duration > 0 && (
+                <span
+                    className="toast-progress"
+                    style={{ animationDuration: `${duration}ms` }}
+                    aria-hidden="true"
+                />
+            )}
         </div>
     );
 }

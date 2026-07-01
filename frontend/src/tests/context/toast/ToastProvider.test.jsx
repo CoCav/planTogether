@@ -17,6 +17,7 @@ import ToastContext from "../../../context/toast/ToastContext";
    - persistent toast duration
    - toast helper methods
    - toast id return value
+   - maximum visible toast limit
 
    Notes:
    - uses a test consumer to access toast context
@@ -141,6 +142,20 @@ describe("ToastProvider", () => {
         expect(screen.getByTestId("toast-count")).toHaveTextContent("2");
         expect(screen.getByTestId("toast-messages")).toHaveTextContent("Added toast,Success toast");
         expect(screen.getByTestId("toast-types")).toHaveTextContent("info,success");
+    });
+
+    it("should keep only the latest visible toasts", () => {
+        renderToastProvider();
+
+        fireEvent.click(screen.getByRole("button", { name: "add" }));
+        fireEvent.click(screen.getByRole("button", { name: "info" }));
+        fireEvent.click(screen.getByRole("button", { name: "success" }));
+        fireEvent.click(screen.getByRole("button", { name: "warning" }));
+        fireEvent.click(screen.getByRole("button", { name: "danger" }));
+
+        expect(screen.getByTestId("toast-count")).toHaveTextContent("4");
+
+        expect(screen.getByTestId("toast-messages")).toHaveTextContent("Info toast,Success toast,Warning toast,Danger toast");
     });
 
     it("should return created toast id", () => {

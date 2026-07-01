@@ -22,6 +22,9 @@
     font-size: var(--font-size-sm);
 
     animation: toast-slide-in var(--transition-fast);
+
+    position: relative;
+    overflow: hidden;
 }
 
 .toast-icon {
@@ -64,6 +67,47 @@
 .toast-close-button:focus-visible {
     outline: 2px solid currentColor;
     outline-offset: 2px;
+}
+
+.toast-progress {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+
+    height: 3px;
+
+    background: currentColor;
+    opacity: 0.35;
+
+    transform-origin: left;
+    animation: toast-progress-shrink linear forwards;
+}
+
+@keyframes toast-progress-shrink {
+    from {
+        transform: scaleX(1);
+    }
+
+    to {
+        transform: scaleX(0);
+    }
+}
+
+.toast-leaving {
+    animation: toast-slide-out 250ms ease forwards;
+}
+
+@keyframes toast-slide-out {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(16px);
+    }
 }
 
 /* =========================================
@@ -134,6 +178,14 @@
 
 @media (prefers-reduced-motion: reduce) {
     .toast {
+        animation: none;
+    }
+
+    .toast-progress {
+        animation: none;
+    }
+
+    .toast-leaving {
         animation: none;
     }
 }

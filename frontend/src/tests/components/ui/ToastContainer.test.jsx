@@ -15,6 +15,7 @@ import useToast from "../../../hooks/useToast";
    - toast list rendering
    - toast variant forwarding
    - toast dismissal forwarding
+   - toast duration forwarding
 
    Notes:
    - useToast is mocked to isolate container orchestration
@@ -35,12 +36,14 @@ describe("ToastContainer", () => {
         {
             id: "toast-1",
             message: "First toast",
-            type: "success"
+            type: "success",
+            duration: 3000
         },
         {
             id: "toast-2",
             message: "Second toast",
-            type: "danger"
+            type: "danger",
+            duration: 5000
         }
     ];
 
@@ -103,6 +106,20 @@ describe("ToastContainer", () => {
 
         expect(screen.getByText("First toast").closest(".toast")).toHaveClass("toast-success");
         expect(screen.getByText("Second toast").closest(".toast")).toHaveClass("toast-danger");
+    });
+
+    it("should forward toast durations", () => {
+        const { container } = renderComp();
+
+        const progressBars = container.querySelectorAll(".toast-progress");
+
+        expect(progressBars[0]).toHaveStyle({
+            animationDuration: "3000ms"
+        });
+
+        expect(progressBars[1]).toHaveStyle({
+            animationDuration: "5000ms"
+        });
     });
 
     /* =============================

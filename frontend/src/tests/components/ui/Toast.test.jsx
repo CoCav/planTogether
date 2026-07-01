@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 
 import Toast from "../../../components/ui/Toast";
 
@@ -11,6 +11,8 @@ import Toast from "../../../components/ui/Toast";
    - default info toast rendering
    - success, warning and danger variants
    - default variant icons
+   - progress bar rendering
+   - exit animation trigger
    - manual dismissal action
    - accessibility roles
    - decorative icon accessibility
@@ -27,6 +29,7 @@ describe("Toast", () => {
             <Toast
                 message={props.message || "Toast message"}
                 type={props.type}
+                duration={props.duration}
                 onClose={props.onClose || vi.fn()}
             />
         );
@@ -84,6 +87,55 @@ describe("Toast", () => {
         });
 
         expect(screen.getByText("Custom toast message")).toBeInTheDocument();
+    });
+
+    /* =============================
+       PROGRESS
+    ============================= */
+
+    it("should render progress bar when duration is greater than zero", () => {
+        const { container } = renderToast({
+            duration: 3000
+        });
+
+        const progress = container.querySelector(".toast-progress");
+
+        expect(progress).toBeInTheDocument();
+        expect(progress).toHaveStyle({
+            animationDuration: "3000ms"
+        });
+    });
+
+    it("should not render progress bar when duration is zero", () => {
+        const { container } = renderToast({
+            duration: 0
+        });
+
+        expect(container.querySelector(".toast-progress")).not.toBeInTheDocument();
+    });
+
+    /* =============================
+       EXIT ANIMATION
+    ============================= */
+
+    it("should apply leaving class shortly before automatic dismissal", () => {
+        vi.useFakeTimers();
+
+        try {
+            const { container } = renderToast({
+                duration: 1000
+            });
+
+            act(() => {
+                vi.advanceTimersByTime(750);
+            });
+
+            expect(
+                container.querySelector(".toast")
+            ).toHaveClass("toast-leaving");
+        } finally {
+            vi.useRealTimers();
+        }
     });
 
     /* =============================

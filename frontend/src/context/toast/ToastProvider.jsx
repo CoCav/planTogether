@@ -16,6 +16,7 @@ import ToastContext from "./ToastContext";
 ================================================== */
 
 const DEFAULT_DURATION = 5000;
+const MAX_TOASTS = 4;
 
 export default function ToastProvider({ children }) {
 
@@ -47,7 +48,7 @@ export default function ToastProvider({ children }) {
                     type,
                     duration
                 }
-            ]);
+            ].slice(-MAX_TOASTS));
 
             // Automatically remove toast after its duration
             if (duration > 0) {

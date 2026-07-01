@@ -47,7 +47,7 @@ export default function EventLikeToggle({
        DISPLAY
     ========================= */
 
-    // Guests are prompted to log
+    // Guests are prompted to log in
     if (!user) {
         return (
             <EventLikeButton

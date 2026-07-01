@@ -214,8 +214,22 @@
     }
 
     .event-details-heading {
+        display: flex;
         flex-direction: column;
         align-items: flex-start;
+        width: 100%;
+        gap: var(--space-3);
+    }
+
+    .event-details-badges {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+        width: 100%;
+        gap: var(--space-2);
+    }
+
+    .event-details-badges .badge {
+        justify-content: center;
         width: 100%;
     }
 
@@ -231,7 +245,8 @@
         width: 100%;
     }
 
-    .event-details-actions .btn {
+    .event-details-actions .btn,
+    .event-details-actions .event-like-control {
         width: 100%;
     }
 

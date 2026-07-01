@@ -87,3 +87,21 @@
     background: var(--color-danger-subtle);
     color: var(--color-danger-text);
 }
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+    .event-details-badges {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+        width: 100%;
+        gap: var(--space-2);
+    }
+
+    .event-details-badges .badge {
+        justify-content: center;
+        width: 100%;
+    }
+}

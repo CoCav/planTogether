@@ -304,28 +304,26 @@ export default function EventDetailsPage() {
                             </div>
                         </div>
 
-                        <div className="event-details-actions">
-                            <EventDetailsActions
-                                eventId={event.id}
-                                user={user}
+                        <EventDetailsActions
+                            eventId={event.id}
+                            user={user}
 
-                                canJoin={canJoin}
-                                canLeave={canLeave}
-                                canEdit={canEdit}
-                                canDelete={canDelete}
+                            canJoin={canJoin}
+                            canLeave={canLeave}
+                            canEdit={canEdit}
+                            canDelete={canDelete}
 
-                                liked={event.isLikedByCurrentUser}
-                                likesCount={event.likesCount}
+                            liked={event.isLikedByCurrentUser}
+                            likesCount={event.likesCount}
 
-                                toast={toast}
-                                onLikeChange={handleEventLikeChange}
+                            toast={toast}
+                            onLikeChange={handleEventLikeChange}
 
-                                onJoin={handleJoinEvent}
-                                onLeave={handleLeaveEvent}
-                                onEdit={() => navigate(`/events/${event.id}/edit`)}
-                                onDelete={handleDeleteEvent}
-                            />
-                        </div>
+                            onJoin={handleJoinEvent}
+                            onLeave={handleLeaveEvent}
+                            onEdit={() => navigate(`/events/${event.id}/edit`)}
+                            onDelete={handleDeleteEvent}
+                        />
                     </div>
 
                     <div className="event-details-image-wrapper">

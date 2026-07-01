@@ -273,8 +273,13 @@
         align-items: stretch;
     }
 
+    .event-card-footer .event-card-meta-list {
+        width: 100%;
+        min-width: 0;
+    }
+
     .event-card-footer .event-like-control {
+        width: 100%;
         margin-left: 0;
-        align-self: flex-start;
     }
 }

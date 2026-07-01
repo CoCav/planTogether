@@ -43,3 +43,35 @@
 .event-like-control-active {
     color: var(--color-surface);
 }
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+    .event-like-control {
+        min-width: 52px;
+        height: 36px;
+        padding-inline: var(--space-3);
+        font-size: var(--font-size-xs);
+    }
+
+    .event-like-control svg {
+        width: 15px;
+        height: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .event-like-control {
+        min-width: 48px;
+        height: 34px;
+        padding-inline: var(--space-2);
+        gap: var(--space-1);
+    }
+
+    .event-like-control svg {
+        width: 14px;
+        height: 14px;
+    }
+}

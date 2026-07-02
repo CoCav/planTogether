@@ -37,7 +37,15 @@ describe("Location API - Integration Tests", () => {
                 {
                     lat: "45.5031824",
                     lon: "-73.5698065",
-                    display_name: "Montréal, Québec, Canada"
+                    display_name: "Montréal, Québec, Canada",
+                    address: {
+                        road: "Rue Sainte-Catherine O",
+                        house_number: "1500",
+                        city: "Montréal",
+                        state: "Québec",
+                        postcode: "H3G 1S8",
+                        country: "Canada"
+                    }
                 }
             ])
         });
@@ -150,6 +158,19 @@ describe("Location API - Integration Tests", () => {
             });
 
             expect(cached).toBeDefined();
+
+            expect(cached).toMatchObject({
+                query: "montreal",
+                label: "Montréal, Québec, Canada",
+                streetAddress: "1500 Rue Sainte-Catherine O",
+                city: "Montréal",
+                region: "Québec",
+                postalCode: "H3G 1S8",
+                country: "Canada",
+                latitude: 45.5031824,
+                longitude: -73.5698065,
+                provider: "nominatim"
+            });
         });
 
         it("should reuse cache instead of calling provider", async () => {

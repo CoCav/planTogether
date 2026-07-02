@@ -54,7 +54,15 @@ describe("Update Event API", () => {
                 {
                     lat: "45.5031824",
                     lon: "-73.5698065",
-                    display_name: "Montréal, Québec, Canada"
+                    display_name: "Montréal, Québec, Canada",
+                    address: {
+                        road: "Rue Sainte-Catherine O",
+                        house_number: "1500",
+                        city: "Montréal",
+                        state: "Québec",
+                        postcode: "H3G 1S8",
+                        country: "Canada"
+                    }
                 }
             ])
         });
@@ -140,9 +148,17 @@ describe("Update Event API", () => {
 
         expect(res.body.event).toMatchObject({
             location: "Quebec City",
+
+            locationLabel: "Montréal, Québec, Canada",
+
+            streetAddress: "1500 Rue Sainte-Catherine O",
+            city: "Montréal",
+            region: "Québec",
+            postalCode: "H3G 1S8",
+            country: "Canada",
+
             latitude: 45.5031824,
-            longitude: -73.5698065,
-            locationLabel: "Montréal, Québec, Canada"
+            longitude: -73.5698065
         });
     });
 
@@ -161,9 +177,16 @@ describe("Update Event API", () => {
         expect(global.fetch).not.toHaveBeenCalled();
 
         expect(res.body.event.location).toBeNull();
+        expect(res.body.event.locationLabel).toBeNull();
+
+        expect(res.body.event.streetAddress).toBeNull();
+        expect(res.body.event.city).toBeNull();
+        expect(res.body.event.region).toBeNull();
+        expect(res.body.event.postalCode).toBeNull();
+        expect(res.body.event.country).toBeNull();
+
         expect(res.body.event.latitude).toBeNull();
         expect(res.body.event.longitude).toBeNull();
-        expect(res.body.event.locationLabel).toBeNull();
     });
 
     it("should update event image", async () => {

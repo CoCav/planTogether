@@ -49,7 +49,15 @@ describe("locationService - searchLocations", () => {
                 {
                     lat: "45.5031824",
                     lon: "-73.5698065",
-                    display_name: "Montréal, Québec, Canada"
+                    display_name: "Montréal, Québec, Canada",
+                    address: {
+                        road: "Rue Sainte-Catherine O",
+                        house_number: "1500",
+                        city: "Montréal",
+                        state: "Québec",
+                        postcode: "H3G 1S8",
+                        country: "Canada"
+                    }
                 }
             ])
         });
@@ -118,6 +126,11 @@ describe("locationService - searchLocations", () => {
             id: 1,
             query: "montreal",
             label: "Montréal, Québec, Canada",
+            streetAddress: "1500 Rue Sainte-Catherine O",
+            city: "Montréal",
+            region: "Québec",
+            postalCode: "H3G 1S8",
+            country: "Canada",
             latitude: 45.5031824,
             longitude: -73.5698065,
             provider: "nominatim"
@@ -128,7 +141,7 @@ describe("locationService - searchLocations", () => {
         const result = await locationService.searchLocations("Montreal");
 
         expect(global.fetch).toHaveBeenCalledWith(
-            "https://nominatim.test/search?q=Montreal&format=json&limit=5",
+            "https://nominatim.test/search?q=Montreal&format=json&addressdetails=1&limit=5",
             {
                 headers: {
                     Accept: "application/json",
@@ -147,6 +160,11 @@ describe("locationService - searchLocations", () => {
             defaults: {
                 query: "montreal",
                 label: "Montréal, Québec, Canada",
+                streetAddress: "1500 Rue Sainte-Catherine O",
+                city: "Montréal",
+                region: "Québec",
+                postalCode: "H3G 1S8",
+                country: "Canada",
                 latitude: 45.5031824,
                 longitude: -73.5698065,
                 provider: "nominatim"
@@ -188,15 +206,12 @@ describe("locationService - searchLocations", () => {
 
         Location.findOrCreate.mockResolvedValue([savedLocation]);
 
-        const result = await locationService.searchLocations(
-            "179 Grande Allée O, Québec, QC G1R 2H1, Canada"
-        );
+        const result = await locationService.searchLocations("179 Grande Allée O, Québec, QC G1R 2H1, Canada");
 
         expect(global.fetch).toHaveBeenCalledTimes(2);
 
-        expect(global.fetch.mock.calls[0][0]).toContain("q=179+Grande+All%C3%A9e+O%2C+Qu%C3%A9bec%2C+QC+G1R+2H1%2C+Canada");
-
-        expect(global.fetch.mock.calls[1][0]).toContain("q=179+Grande+All%C3%A9e+O%2C+Qu%C3%A9bec%2C+QC%2C+Canada");
+        expect(global.fetch.mock.calls[0][0]).toContain("addressdetails=1");
+        expect(global.fetch.mock.calls[1][0]).toContain("addressdetails=1");
 
         expect(Location.findOrCreate).toHaveBeenCalledWith({
             where: {
@@ -208,6 +223,11 @@ describe("locationService - searchLocations", () => {
             defaults: {
                 query: "179 grande allée o, québec, qc g1r 2h1, canada",
                 label: "Québec, Capitale-Nationale, Québec, Canada",
+                streetAddress: null,
+                city: null,
+                region: null,
+                postalCode: null,
+                country: null,
                 latitude: 46.8137431,
                 longitude: -71.2084061,
                 provider: "nominatim"

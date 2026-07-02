@@ -80,7 +80,12 @@ describe("eventService - createEvent", () => {
         locationService.resolveEventLocation.mockResolvedValue({
             latitude: 45.5031824,
             longitude: -73.5698065,
-            label: "Montréal, Québec, Canada"
+            label: "Montréal, Québec, Canada",
+            streetAddress: "1500 Rue Sainte-Catherine O",
+            city: "Montréal",
+            region: "Québec",
+            postalCode: "H3G 1S8",
+            country: "Canada"
         });
     });
 
@@ -127,7 +132,12 @@ describe("eventService - createEvent", () => {
             {
                 latitude: 45.5031824,
                 longitude: -73.5698065,
-                label: "Montréal, Québec, Canada"
+                label: "Montréal, Québec, Canada",
+                streetAddress: "1500 Rue Sainte-Catherine O",
+                city: "Montréal",
+                region: "Québec",
+                postalCode: "H3G 1S8",
+                country: "Canada"
             }
         );
 
@@ -161,7 +171,12 @@ describe("eventService - createEvent", () => {
             location: null,
             latitude: null,
             longitude: null,
-            locationLabel: null
+            locationLabel: null,
+            streetAddress: null,
+            city: null,
+            region: null,
+            postalCode: null,
+            country: null
         };
 
         const event = {

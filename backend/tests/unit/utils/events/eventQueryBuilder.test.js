@@ -156,6 +156,58 @@ describe("eventQueryBuilder utils", () => {
 
             expect(whereConditions[Op.or]).toHaveLength(2);
         });
+
+        it("should filter by structured location search", () => {
+            const whereConditions = {};
+
+            applyEventBasicFilters(whereConditions, {
+                location: "Montréal"
+            });
+
+            expect(whereConditions[Op.and]).toEqual([
+                {
+                    [Op.or]: [
+                        { location: { [Op.iLike]: "%Montréal%" } },
+                        { locationLabel: { [Op.iLike]: "%Montréal%" } },
+                        { streetAddress: { [Op.iLike]: "%Montréal%" } },
+                        { city: { [Op.iLike]: "%Montréal%" } },
+                        { region: { [Op.iLike]: "%Montréal%" } },
+                        { country: { [Op.iLike]: "%Montréal%" } }
+                    ]
+                }
+            ]);
+        });
+
+        it("should filter by city region and country", () => {
+            const whereConditions = {};
+
+            applyEventBasicFilters(whereConditions, {
+                city: "Montréal",
+                region: "Québec",
+                country: "Canada"
+            });
+
+            expect(whereConditions.city).toEqual({
+                [Op.iLike]: "%Montréal%"
+            });
+
+            expect(whereConditions.region).toEqual({
+                [Op.iLike]: "%Québec%"
+            });
+
+            expect(whereConditions.country).toEqual({
+                [Op.iLike]: "%Canada%"
+            });
+        });
+
+        it("should not add location filter when location is missing", () => {
+            const whereConditions = {};
+
+            applyEventBasicFilters(whereConditions, {});
+
+            expect(whereConditions[Op.and]).toBeUndefined();
+        });
+
     });
 
     /* =============================
@@ -263,6 +315,31 @@ describe("eventQueryBuilder utils", () => {
             const result = buildEventWhereConditions(whereConditions, {});
 
             expect(result).toBe(whereConditions);
+        });
+
+        it("should build where conditions with structured location filters", () => {
+            const whereConditions = {};
+
+            buildEventWhereConditions(whereConditions, {
+                location: "Montréal",
+                city: "Montréal",
+                region: "Québec",
+                country: "Canada"
+            });
+
+            expect(whereConditions.city).toEqual({
+                [Op.iLike]: "%Montréal%"
+            });
+
+            expect(whereConditions.region).toEqual({
+                [Op.iLike]: "%Québec%"
+            });
+
+            expect(whereConditions.country).toEqual({
+                [Op.iLike]: "%Canada%"
+            });
+
+            expect(whereConditions[Op.and]).toHaveLength(1);
         });
     });
 

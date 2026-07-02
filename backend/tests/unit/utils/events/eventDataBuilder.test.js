@@ -2,21 +2,22 @@
    EVENT DATA BUILDER TESTS
 
    Tests:
+   - empty structured location data
+   - structured location persistence
    - event creation payload building
-   - physical event geolocation persistence
    - online event creation location normalization
    - nullable create fields normalization
    - partial event update payload building
-   - online event update location and geolocation clearing
-   - physical event location and geolocation update
+   - online event update location normalization
+   - physical event structured location update
    - existing image preservation
    - image replacement and clearing
 
    Ensures:
-   - event create payloads are normalized before persistence
+   - structured address fields are normalized before persistence
    - partial update payloads preserve omitted fields
-   - online events never keep physical location or geolocation data
-   - physical events persist resolved coordinates when available
+   - online events never keep physical location data
+   - physical events persist structured address and coordinates
    - existing images are preserved unless explicitly updated or cleared
 ================================================== */
 
@@ -37,9 +38,15 @@ describe("eventDataBuilder utils", () => {
 
     it("should build empty location data", () => {
         expect(buildEmptyLocationData()).toEqual({
+            location: null,
+            locationLabel: null,
+            streetAddress: null,
+            city: null,
+            region: null,
+            postalCode: null,
+            country: null,
             latitude: null,
-            longitude: null,
-            locationLabel: null
+            longitude: null
         });
     });
 
@@ -47,11 +54,21 @@ describe("eventDataBuilder utils", () => {
         expect(buildLocationData({
             latitude: 45.5031824,
             longitude: -73.5698065,
-            label: "Montréal, Québec, Canada"
+            label: "Montréal, Québec, Canada",
+            streetAddress: "123 Rue Sainte-Catherine",
+            city: "Montréal",
+            region: "Québec",
+            postalCode: "H2X 1Y4",
+            country: "Canada"
         })).toEqual({
+            locationLabel: "Montréal, Québec, Canada",
+            streetAddress: "123 Rue Sainte-Catherine",
+            city: "Montréal",
+            region: "Québec",
+            postalCode: "H2X 1Y4",
+            country: "Canada",
             latitude: 45.5031824,
-            longitude: -73.5698065,
-            locationLabel: "Montréal, Québec, Canada"
+            longitude: -73.5698065
         });
     });
 
@@ -61,9 +78,14 @@ describe("eventDataBuilder utils", () => {
             longitude: -73.5698065,
             locationLabel: "Montréal, Québec, Canada"
         })).toEqual({
+            locationLabel: "Montréal, Québec, Canada",
+            streetAddress: null,
+            city: null,
+            region: null,
+            postalCode: null,
+            country: null,
             latitude: 45.5031824,
-            longitude: -73.5698065,
-            locationLabel: "Montréal, Québec, Canada"
+            longitude: -73.5698065
         });
     });
 
@@ -79,6 +101,11 @@ describe("eventDataBuilder utils", () => {
             theme: "Technology",
             mode: EVENT_MODES.IN_PERSON,
             location: "Montreal",
+            streetAddress: "123 Rue Sainte-Catherine",
+            city: "Montréal",
+            region: "Québec",
+            postalCode: "H2X 1Y4",
+            country: "Canada",
             startDateTime: "2026-12-31T10:00:00.000Z",
             endDateTime: "2026-12-31T12:00:00.000Z",
             maxParticipants: 20,
@@ -87,7 +114,12 @@ describe("eventDataBuilder utils", () => {
         }, 10, {
             latitude: 45.5031824,
             longitude: -73.5698065,
-            label: "Montréal, Québec, Canada"
+            label: "Montréal, Québec, Canada",
+            streetAddress: "123 Rue Sainte-Catherine",
+            city: "Montréal",
+            region: "Québec",
+            postalCode: "H2X 1Y4",
+            country: "Canada"
         });
 
         expect(result).toEqual({
@@ -97,12 +129,21 @@ describe("eventDataBuilder utils", () => {
             type: "Meetup",
             theme: "Technology",
             mode: EVENT_MODES.IN_PERSON,
+
             location: "Montreal",
+            locationLabel: "Montréal, Québec, Canada",
+            streetAddress: "123 Rue Sainte-Catherine",
+            city: "Montréal",
+            region: "Québec",
+            postalCode: "H2X 1Y4",
+            country: "Canada",
+
             latitude: 45.5031824,
             longitude: -73.5698065,
-            locationLabel: "Montréal, Québec, Canada",
+
             startDateTime: "2026-12-31T10:00:00.000Z",
             endDateTime: "2026-12-31T12:00:00.000Z",
+
             maxParticipants: 20,
             registrationDeadline: "2026-12-30T10:00:00.000Z",
             image: "/uploads/events/event.png"
@@ -129,6 +170,11 @@ describe("eventDataBuilder utils", () => {
         expect(result.latitude).toBeNull();
         expect(result.longitude).toBeNull();
         expect(result.locationLabel).toBeNull();
+        expect(result.streetAddress).toBeNull();
+        expect(result.city).toBeNull();
+        expect(result.region).toBeNull();
+        expect(result.postalCode).toBeNull();
+        expect(result.country).toBeNull();
     });
 
     it("should normalize nullable create fields to null", () => {
@@ -150,6 +196,11 @@ describe("eventDataBuilder utils", () => {
         expect(result.latitude).toBeNull();
         expect(result.longitude).toBeNull();
         expect(result.locationLabel).toBeNull();
+        expect(result.streetAddress).toBeNull();
+        expect(result.city).toBeNull();
+        expect(result.region).toBeNull();
+        expect(result.postalCode).toBeNull();
+        expect(result.country).toBeNull();
     });
 
     /* =============================
@@ -187,10 +238,17 @@ describe("eventDataBuilder utils", () => {
 
         expect(result).toMatchObject({
             mode: EVENT_MODES.ONLINE,
+
             location: null,
+            locationLabel: null,
+            streetAddress: null,
+            city: null,
+            region: null,
+            postalCode: null,
+            country: null,
+
             latitude: null,
-            longitude: null,
-            locationLabel: null
+            longitude: null
         });
     });
 
@@ -206,15 +264,27 @@ describe("eventDataBuilder utils", () => {
         }, {
             latitude: 46.8137431,
             longitude: -71.2084061,
-            label: "Québec, Canada"
+            label: "Québec, Canada",
+            streetAddress: "2 Rue des Jardins",
+            city: "Québec",
+            region: "Québec",
+            postalCode: "G1R 4L5",
+            country: "Canada"
         });
 
         expect(result).toMatchObject({
             mode: EVENT_MODES.IN_PERSON,
+
             location: "Quebec City",
+            locationLabel: "Québec, Canada",
+            streetAddress: "2 Rue des Jardins",
+            city: "Québec",
+            region: "Québec",
+            postalCode: "G1R 4L5",
+            country: "Canada",
+
             latitude: 46.8137431,
-            longitude: -71.2084061,
-            locationLabel: "Québec, Canada"
+            longitude: -71.2084061
         });
     });
 
@@ -231,10 +301,17 @@ describe("eventDataBuilder utils", () => {
 
         expect(result).toMatchObject({
             mode: EVENT_MODES.IN_PERSON,
+
             location: "Unknown place",
+            locationLabel: null,
+            streetAddress: null,
+            city: null,
+            region: null,
+            postalCode: null,
+            country: null,
+
             latitude: null,
-            longitude: null,
-            locationLabel: null
+            longitude: null
         });
     });
 

@@ -132,6 +132,58 @@ describe("eventValidator", () => {
 
             expect(result.isEmpty()).toBe(true);
         });
+
+        it("should allow structured location fields", async () => {
+            const result = await runValidation(createEventValidator, {
+                body: {
+                    ...createValidEventBody(),
+                    locationLabel: "Montréal, Québec, Canada",
+                    streetAddress: "123 Rue Sainte-Catherine",
+                    city: "Montréal",
+                    region: "Québec",
+                    postalCode: "H2X 1Y4",
+                    country: "Canada",
+                    latitude: "45.5017",
+                    longitude: "-73.5673"
+                }
+            });
+
+            expect(result.isEmpty()).toBe(true);
+        });
+
+        it("should fail when latitude is out of range", async () => {
+            const result = await runValidation(createEventValidator, {
+                body: {
+                    ...createValidEventBody(),
+                    latitude: "120"
+                }
+            });
+
+            expect(result.array()).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        msg: "Latitude must be between -90 and 90"
+                    })
+                ])
+            );
+        });
+
+        it("should fail when longitude is out of range", async () => {
+            const result = await runValidation(createEventValidator, {
+                body: {
+                    ...createValidEventBody(),
+                    longitude: "-200"
+                }
+            });
+
+            expect(result.array()).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        msg: "Longitude must be between -180 and 180"
+                    })
+                ])
+            );
+        });
     });
 
     /* =============================
@@ -163,6 +215,24 @@ describe("eventValidator", () => {
                     expect.objectContaining({ msg: "End date and time must be after start date and time" })
                 ])
             );
+        });
+
+        it("should allow structured location fields on update", async () => {
+            const result = await runValidation(updateEventValidator, {
+                params: { eventId: "1" },
+                body: {
+                    locationLabel: "Paris, Île-de-France, France",
+                    streetAddress: "10 Rue de Rivoli",
+                    city: "Paris",
+                    region: "Île-de-France",
+                    postalCode: "75001",
+                    country: "France",
+                    latitude: "48.8566",
+                    longitude: "2.3522"
+                }
+            });
+
+            expect(result.isEmpty()).toBe(true);
         });
     });
 
@@ -267,10 +337,26 @@ describe("eventValidator", () => {
                 query: {
                     status: EVENT_STATUS.UPCOMING,
                     mode: EVENT_MODES.ONLINE,
+                    city: "Montréal",
+                    region: "Québec",
+                    country: "Canada",
                     page: "1",
                     pageSize: "10",
                     sortBy: "creatorId",
                     order: "desc"
+                }
+            });
+
+            expect(result.isEmpty()).toBe(true);
+        });
+
+        it("should allow structured location query params", async () => {
+            const result = await runValidation(getAllEventsValidator, {
+                query: {
+                    location: "Montréal",
+                    city: "Montréal",
+                    region: "Québec",
+                    country: "Canada"
                 }
             });
 

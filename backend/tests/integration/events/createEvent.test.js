@@ -50,7 +50,15 @@ describe("Create Event API", () => {
                 {
                     lat: "45.5031824",
                     lon: "-73.5698065",
-                    display_name: "Montréal, Québec, Canada"
+                    display_name: "Montréal, Québec, Canada",
+                    address: {
+                        road: "Rue Sainte-Catherine O",
+                        house_number: "1500",
+                        city: "Montréal",
+                        state: "Québec",
+                        postcode: "H3G 1S8",
+                        country: "Canada"
+                    }
                 }
             ])
         });
@@ -94,9 +102,16 @@ describe("Create Event API", () => {
             title: "Tech Meetup",
             mode: EVENT_MODES.IN_PERSON,
             location: "Montreal",
+
+            locationLabel: "Montréal, Québec, Canada",
+            streetAddress: "1500 Rue Sainte-Catherine O",
+            city: "Montréal",
+            region: "Québec",
+            postalCode: "H3G 1S8",
+            country: "Canada",
+
             latitude: 45.5031824,
-            longitude: -73.5698065,
-            locationLabel: "Montréal, Québec, Canada"
+            longitude: -73.5698065
         });
 
         expect(global.fetch.mock.calls[0][0]).toContain("q=Montreal");
@@ -173,9 +188,17 @@ describe("Create Event API", () => {
         expect(res.body).toHaveProperty("message", "Event created successfully");
 
         expect(res.body.event.location).toBeNull();
+        expect(res.body.event.locationLabel).toBeNull();
+
+        expect(res.body.event.streetAddress).toBeNull();
+        expect(res.body.event.city).toBeNull();
+        expect(res.body.event.region).toBeNull();
+        expect(res.body.event.postalCode).toBeNull();
+        expect(res.body.event.country).toBeNull();
+
         expect(res.body.event.latitude).toBeNull();
         expect(res.body.event.longitude).toBeNull();
-        expect(res.body.event.locationLabel).toBeNull();
+
         expect(global.fetch).not.toHaveBeenCalled();
     });
 

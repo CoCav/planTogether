@@ -96,7 +96,12 @@ describe("eventService - updateEventByID", () => {
         locationService.resolveEventLocation.mockResolvedValue({
             latitude: 46.8137431,
             longitude: -71.2084061,
-            label: "Québec, Canada"
+            label: "Québec, Canada",
+            streetAddress: "2 Rue des Jardins",
+            city: "Québec",
+            region: "Québec",
+            postalCode: "G1R 4L5",
+            country: "Canada"
         });
     });
 
@@ -258,7 +263,12 @@ describe("eventService - updateEventByID", () => {
             location: "Quebec City",
             latitude: 46.8137431,
             longitude: -71.2084061,
-            locationLabel: "Québec, Canada"
+            locationLabel: "Québec, Canada",
+            streetAddress: "2 Rue des Jardins",
+            city: "Québec",
+            region: "Québec",
+            postalCode: "G1R 4L5",
+            country: "Canada"
         };
 
         Event.findByPk.mockResolvedValue(event);
@@ -276,7 +286,12 @@ describe("eventService - updateEventByID", () => {
         }, {
             latitude: 46.8137431,
             longitude: -71.2084061,
-            label: "Québec, Canada"
+            label: "Québec, Canada",
+            streetAddress: "2 Rue des Jardins",
+            city: "Québec",
+            region: "Québec",
+            postalCode: "G1R 4L5",
+            country: "Canada"
         });
 
         expect(event.update).toHaveBeenCalledWith(updateData, { transaction });
@@ -293,6 +308,7 @@ describe("eventService - updateEventByID", () => {
 
         const updateData = {
             title: "Updated Event"
+
         };
 
         Event.findByPk.mockResolvedValue(event);
@@ -326,7 +342,12 @@ describe("eventService - updateEventByID", () => {
             location: null,
             latitude: null,
             longitude: null,
-            locationLabel: null
+            locationLabel: null,
+            streetAddress: null,
+            city: null,
+            region: null,
+            postalCode: null,
+            country: null
         };
 
         Event.findByPk.mockResolvedValue(event);

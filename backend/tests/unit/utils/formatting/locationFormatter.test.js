@@ -29,6 +29,9 @@ const {
     LOCATION_PROVIDER,
     buildNominatimSearchParams,
     buildLocationSearchQueries,
+    pickAddressValue,
+    buildStreetAddress,
+    formatProviderAddress,
     formatProviderLocation
 } = require("../../../../src/utils/formatting/locationFormatter");
 
@@ -49,7 +52,7 @@ describe("locationFormatter utils", () => {
     it("should build Nominatim search params", () => {
         const params = buildNominatimSearchParams("Montreal");
 
-        expect(params.toString()).toBe("q=Montreal&format=json&limit=5");
+        expect(params.toString()).toBe("q=Montreal&format=json&addressdetails=1&limit=5");
     });
 
     /* =============================
@@ -85,6 +88,59 @@ describe("locationFormatter utils", () => {
     });
 
     /* =============================
+       STRUCTURED ADDRESS FORMAT
+    ============================= */
+
+    it("should pick first available address value", () => {
+        expect(
+            pickAddressValue({
+                town: "Québec",
+                city: "Montréal"
+            }, ["city", "town"])
+        ).toBe("Montréal");
+    });
+
+    it("should build street address with house number", () => {
+        expect(
+            buildStreetAddress({
+                house_number: "123",
+                road: "Rue Sainte-Catherine"
+            })
+        ).toBe("123 Rue Sainte-Catherine");
+    });
+
+    it("should build street address without house number", () => {
+        expect(
+            buildStreetAddress({
+                road: "Rue Sainte-Catherine"
+            })
+        ).toBe("Rue Sainte-Catherine");
+    });
+
+    it("should return null street address when road is missing", () => {
+        expect(buildStreetAddress({})).toBeNull();
+    });
+
+    it("should format structured provider address", () => {
+        const result = formatProviderAddress({
+            house_number: "123",
+            road: "Rue Sainte-Catherine",
+            city: "Montréal",
+            state: "Québec",
+            postcode: "H2X 1Y4",
+            country: "Canada"
+        });
+
+        expect(result).toEqual({
+            streetAddress: "123 Rue Sainte-Catherine",
+            city: "Montréal",
+            region: "Québec",
+            postalCode: "H2X 1Y4",
+            country: "Canada"
+        });
+    });
+
+    /* =============================
        PROVIDER LOCATION FORMAT
     ============================= */
 
@@ -92,12 +148,23 @@ describe("locationFormatter utils", () => {
         const result = formatProviderLocation("Montreal", {
             lat: "45.5031824",
             lon: "-73.5698065",
-            display_name: "Montréal, Québec, Canada"
+            display_name: "Montréal, Québec, Canada",
+            address: {
+                city: "Montréal",
+                state: "Québec",
+                postcode: "H2X 1Y4",
+                country: "Canada"
+            }
         });
 
         expect(result).toEqual({
             query: "montreal",
             label: "Montréal, Québec, Canada",
+            streetAddress: null,
+            city: "Montréal",
+            region: "Québec",
+            postalCode: "H2X 1Y4",
+            country: "Canada",
             latitude: 45.5031824,
             longitude: -73.5698065,
             provider: "nominatim"

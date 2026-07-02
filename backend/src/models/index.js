@@ -27,12 +27,12 @@ const EventLike = require("./relations/eventLikeModel");
 // Initialize database connection and synchronize models
 const initDB = async () => {
     try {
-        logger.info("👉 Attempting connection to the database...");
+        logger.info("Connecting to database...");
         await sequelize.authenticate();
 
-        logger.info("✅ Database connection has been established successfully!");
+        logger.info("Database connection established.");
 
-        logger.info("👉 Synchronizing models...");
+        logger.info("Synchronizing database models...");
 
         if (process.env.NODE_ENV === "development") {
             // Safely update schema during development
@@ -47,7 +47,7 @@ const initDB = async () => {
             await sequelize.sync();
         }
 
-        logger.info("✅ Database synchronized successfully!");
+        logger.info("Database synchronized.");
 
     } catch (error) {
         logger.error({ error }, "Error initializing the database");

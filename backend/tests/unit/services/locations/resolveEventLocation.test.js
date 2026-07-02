@@ -48,13 +48,13 @@ describe("locationService - resolveEventLocation", () => {
                 id: 1,
                 query: "montreal",
                 label: "Montréal, Québec, Canada",
-                latitude: 45.5031824,
-                longitude: -73.5698065,
                 streetAddress: "1500 Rue Sainte-Catherine O",
                 city: "Montréal",
                 region: "Québec",
                 postalCode: "H3G 1S8",
                 country: "Canada",
+                latitude: 45.5031824,
+                longitude: -73.5698065,
                 provider: "nominatim"
             },
             {

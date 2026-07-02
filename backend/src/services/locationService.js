@@ -34,6 +34,21 @@ const {
 ================================================== */
 
 /* =============================
+   CACHE HELPERS
+============================= */
+
+// Checks if a cached location already contains structured address fields
+const hasStructuredAddressData = (location = {}) => {
+    return Boolean(
+        location.streetAddress ||
+        location.city ||
+        location.region ||
+        location.postalCode ||
+        location.country
+    );
+};
+
+/* =============================
    CACHE LOOKUP
 ============================= */
 
@@ -53,7 +68,7 @@ const saveLocationsToCache = async (locations = []) => {
     const savedLocations = [];
 
     for (const location of locations) {
-        const [savedLocation] = await Location.findOrCreate({
+        const [savedLocation, created] = await Location.findOrCreate({
             where: {
                 query: location.query,
                 provider: location.provider,
@@ -62,6 +77,18 @@ const saveLocationsToCache = async (locations = []) => {
             },
             defaults: location
         });
+
+        // Refresh old cached rows that were created before structured address fields existed
+        if (!created) {
+            await savedLocation.update({
+                label: location.label,
+                streetAddress: location.streetAddress,
+                city: location.city,
+                region: location.region,
+                postalCode: location.postalCode,
+                country: location.country
+            });
+        }
 
         savedLocations.push(savedLocation);
     }
@@ -139,7 +166,7 @@ const searchLocations = async (query) => {
 
     const cachedLocations = await findCachedLocations(cleanQuery);
 
-    if (cachedLocations.length > 0) {
+    if (cachedLocations.length > 0 && cachedLocations.some(hasStructuredAddressData)) {
         return cachedLocations;
     }
 

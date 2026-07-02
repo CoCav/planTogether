@@ -6,6 +6,7 @@
    - cached location lookup
    - provider search when cache is empty
    - fallback provider search when first query has no result
+   - stale cache refresh when structured address data is missing
    - provider result persistence
    - provider rate limit handling
    - provider unavailable handling
@@ -15,6 +16,7 @@
    - empty location queries are rejected early
    - cached locations avoid external provider calls
    - fallback queries improve detailed address matching
+   - stale cached locations are refreshed with structured address data
    - provider results are normalized and persisted
    - provider errors are converted into HTTP errors
 ================================================== */
@@ -88,16 +90,19 @@ describe("locationService - searchLocations", () => {
     ============================= */
 
     it("should return cached locations when available", async () => {
-        const cachedLocations = [
-            {
-                id: 1,
-                query: "montreal",
-                label: "Montréal, Québec, Canada",
-                latitude: 45.5031824,
-                longitude: -73.5698065,
-                provider: "nominatim"
-            }
-        ];
+        const cachedLocations = [{
+            id: 1,
+            query: "montreal",
+            label: "Montréal, Québec, Canada",
+            streetAddress: "1500 Rue Sainte-Catherine O",
+            city: "Montréal",
+            region: "Québec",
+            postalCode: "H3G 1S8",
+            country: "Canada",
+            latitude: 45.5031824,
+            longitude: -73.5698065,
+            provider: "nominatim"
+        }];
 
         Location.findAll.mockResolvedValue(cachedLocations);
 
@@ -136,7 +141,7 @@ describe("locationService - searchLocations", () => {
             provider: "nominatim"
         };
 
-        Location.findOrCreate.mockResolvedValue([savedLocation]);
+        Location.findOrCreate.mockResolvedValue([savedLocation, true]);
 
         const result = await locationService.searchLocations("Montreal");
 
@@ -204,7 +209,7 @@ describe("locationService - searchLocations", () => {
             provider: "nominatim"
         };
 
-        Location.findOrCreate.mockResolvedValue([savedLocation]);
+        Location.findOrCreate.mockResolvedValue([savedLocation, true]);
 
         const result = await locationService.searchLocations("179 Grande Allée O, Québec, QC G1R 2H1, Canada");
 
@@ -232,6 +237,47 @@ describe("locationService - searchLocations", () => {
                 longitude: -71.2084061,
                 provider: "nominatim"
             }
+        });
+
+        expect(result).toEqual([savedLocation]);
+    });
+
+    it("should refresh stale cached locations without structured address data", async () => {
+        const staleCachedLocations = [
+            {
+                id: 1,
+                query: "montreal",
+                label: "Old Montréal label",
+                latitude: 45.5031824,
+                longitude: -73.5698065,
+                provider: "nominatim"
+            }
+        ];
+
+        const savedLocation = {
+            id: 1,
+            query: "montreal",
+            label: "Old Montréal label",
+            latitude: 45.5031824,
+            longitude: -73.5698065,
+            provider: "nominatim",
+            update: jest.fn().mockResolvedValue()
+        };
+
+        Location.findAll.mockResolvedValue(staleCachedLocations);
+        Location.findOrCreate.mockResolvedValue([savedLocation, false]);
+
+        const result = await locationService.searchLocations("Montreal");
+
+        expect(global.fetch).toHaveBeenCalled();
+
+        expect(savedLocation.update).toHaveBeenCalledWith({
+            label: "Montréal, Québec, Canada",
+            streetAddress: "1500 Rue Sainte-Catherine O",
+            city: "Montréal",
+            region: "Québec",
+            postalCode: "H3G 1S8",
+            country: "Canada"
         });
 
         expect(result).toEqual([savedLocation]);

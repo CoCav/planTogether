@@ -4,7 +4,7 @@
    Tests:
    - development database selection
    - test database selection
-   - SQL logging configuration
+   - disabled Sequelize SQL logging
    - SSL configuration
    - default PostgreSQL port
 
@@ -122,30 +122,12 @@ describe("database config", () => {
     });
 
     /* =============================
-       SQL LOGGING
+       SEQUELIZE LOGGING
     ============================= */
 
-    it("should enable SQL logging when DB_LOGGING=true", () => {
+    it("should disable SQL logging", () => {
         process.env.NODE_ENV = "development";
         process.env.DB_NAME = "main_db";
-        process.env.DB_LOGGING = "true";
-
-        loadDatabaseConfig();
-
-        expect(mockSequelize).toHaveBeenCalledWith(
-            expect.any(String),
-            expect.any(String),
-            expect.any(String),
-            expect.objectContaining({
-                logging: expect.any(Function)
-            })
-        );
-    });
-
-    it("should disable SQL logging by default", () => {
-        process.env.NODE_ENV = "development";
-        process.env.DB_NAME = "main_db";
-        process.env.DB_LOGGING = "false";
 
         loadDatabaseConfig();
 
@@ -197,9 +179,7 @@ describe("database config", () => {
 
         const logger = require("../../../src/config/logger");
 
-        expect(logger.info).toHaveBeenCalledWith(
-            "📡 Connecting to development DB: main_db"
-        );
+        expect(logger.info).toHaveBeenCalledWith("Connecting to development database: main_db");
     });
 
     it("should not log target database in production", () => {

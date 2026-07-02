@@ -4,7 +4,7 @@ const eventService = require("../services/eventService");
    EVENT CONTROLLER
 
    Handles:
-   - event creation
+   - event creation and update with structured location data
    - event listing with optional filters, pagination, review stats and like stats
    - single event retrieval with participant, review and like stats
    - current authenticated user event access

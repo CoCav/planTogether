@@ -78,7 +78,7 @@ const { getPaginationOptions, getTotalCount, getTotalPages } = require("../utils
    EVENT LOCATION
 ============================= */
 
-// Resolves persisted location coordinates for physical events
+// Resolves persisted structured location data for physical events
 const resolveEventLocationData = async (mode, location) => {
     if (mode === EVENT_MODES.ONLINE || !String(location ?? "").trim()) {
         return null;

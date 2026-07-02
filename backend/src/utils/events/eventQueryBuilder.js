@@ -151,13 +151,16 @@ const applyEventDateFilters = (whereConditions, { date, startDate, endDate }) =>
    BASIC EVENT FILTERS
 ============================= */
 
-// Apply basic event filters (search, type, theme, etc.)
+// Apply event filters (search, categories and location)
 const applyEventBasicFilters = (whereConditions, query = {}) => {
     const {
         creatorId,
         type,
         theme,
         location,
+        city,
+        region,
+        country,
         mode,
         search
     } = query;
@@ -166,7 +169,25 @@ const applyEventBasicFilters = (whereConditions, query = {}) => {
     if (mode) whereConditions.mode = String(mode).trim();
     if (type) whereConditions.type = { [Op.iLike]: `%${type}%` };
     if (theme) whereConditions.theme = { [Op.iLike]: `%${theme}%` };
-    if (location) whereConditions.location = { [Op.iLike]: `%${location}%` };
+
+    const locationSearch = String(location ?? "").trim();
+
+    if (locationSearch) {
+        addAndCondition(whereConditions, {
+            [Op.or]: [
+                { location: { [Op.iLike]: `%${locationSearch}%` } },
+                { locationLabel: { [Op.iLike]: `%${locationSearch}%` } },
+                { streetAddress: { [Op.iLike]: `%${locationSearch}%` } },
+                { city: { [Op.iLike]: `%${locationSearch}%` } },
+                { region: { [Op.iLike]: `%${locationSearch}%` } },
+                { country: { [Op.iLike]: `%${locationSearch}%` } }
+            ]
+        });
+    }
+
+    if (city) whereConditions.city = { [Op.iLike]: `%${city}%` };
+    if (region) whereConditions.region = { [Op.iLike]: `%${region}%` };
+    if (country) whereConditions.country = { [Op.iLike]: `%${country}%` };
 
     // Search on title + description
     if (search) {

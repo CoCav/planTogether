@@ -22,21 +22,32 @@ const { EVENT_MODES } = require("../../constants/eventModes");
    LOCATION DATA
 ============================= */
 
-// Builds empty geolocation data
+// Builds empty structured location data
 const buildEmptyLocationData = () => ({
+    location: null,
+    locationLabel: null,
+    streetAddress: null,
+    city: null,
+    region: null,
+    postalCode: null,
+    country: null,
     latitude: null,
-    longitude: null,
-    locationLabel: null
+    longitude: null
 });
 
-// Builds persisted geolocation data from a resolved location
+// Builds persisted structured location data from a resolved location
 const buildLocationData = (locationData) => {
     const location = locationData ?? {};
 
     return {
+        locationLabel: location.label ?? location.locationLabel ?? null,
+        streetAddress: location.streetAddress ?? null,
+        city: location.city ?? null,
+        region: location.region ?? null,
+        postalCode: location.postalCode ?? null,
+        country: location.country ?? null,
         latitude: location.latitude ?? null,
-        longitude: location.longitude ?? null,
-        locationLabel: location.label ?? location.locationLabel ?? null
+        longitude: location.longitude ?? null
     };
 };
 
@@ -55,11 +66,13 @@ const buildEventCreateData = (data, creatorId, locationData = {}) => {
         type: data.type,
         theme: data.theme,
         mode: data.mode,
-        location: isOnlineEvent ? null : data.location,
 
         ...(isOnlineEvent
             ? buildEmptyLocationData()
-            : buildLocationData(locationData)),
+            : {
+                location: data.location,
+                ...buildLocationData(locationData)
+            }),
 
         startDateTime: data.startDateTime,
         endDateTime: data.endDateTime,
@@ -100,7 +113,6 @@ const buildEventUpdateData = (event, data, locationData = null) => {
 
     // Online events never keep physical location or geolocation data
     if (nextMode === EVENT_MODES.ONLINE) {
-        updatedData.location = null;
         Object.assign(updatedData, buildEmptyLocationData());
 
     } else if (data.location !== undefined) {

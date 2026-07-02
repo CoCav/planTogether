@@ -12,6 +12,7 @@ const { EVENT_MODES } = require("../constants/eventModes");
    - event schedule
    - participant limits
    - event image path
+   - physical event location and structured address data
    - physical event geolocation data
    - query indexes for filtering and sorting
 
@@ -65,6 +66,36 @@ const Event = sequelize.define("Event", {
         allowNull: true
     },
 
+    locationLabel: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+
+    streetAddress: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+
+    city: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+
+    region: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+
+    postalCode: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+
+    country: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+
     latitude: {
         type: DataTypes.DOUBLE,
         allowNull: true
@@ -72,11 +103,6 @@ const Event = sequelize.define("Event", {
 
     longitude: {
         type: DataTypes.DOUBLE,
-        allowNull: true
-    },
-
-    locationLabel: {
-        type: DataTypes.STRING,
         allowNull: true
     },
 
@@ -121,6 +147,11 @@ const Event = sequelize.define("Event", {
         { fields: ["mode"] },
         { fields: ["type"] },
         { fields: ["theme"] },
+        { fields: ["location"] },
+        { fields: ["locationLabel"] },
+        { fields: ["city"] },
+        { fields: ["region"] },
+        { fields: ["country"] },
         { fields: ["latitude", "longitude"] }
     ]
 });

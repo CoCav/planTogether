@@ -19,16 +19,17 @@ const {
 
    Handles:
    - location query validation
-   - cached location lookup
+   - cached structured location lookup
    - fallback location search queries
    - OpenStreetMap Nominatim provider search
-   - location result persistence
+   - structured address persistence
    - provider error and rate limit handling
-   - reusable coordinates for events and future map features
+   - reusable event location data
 
    Notes:
    - cached locations reduce repeated provider requests
    - searchLocations returns multiple results for future autocomplete support
+   - cached locations preserve structured address fields
    - resolveEventLocation returns the best matching location for event persistence
 ================================================== */
 

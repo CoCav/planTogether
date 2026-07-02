@@ -10,6 +10,7 @@ const { VALID_EVENT_STATUS } = require("../constants/eventStatus");
    - event ID param validation
    - event creation validation
    - event update validation
+   - structured location payload validation
    - event filtering and pagination query validation
 
    Notes:
@@ -29,6 +30,49 @@ const eventIdParamValidator = [
     param("eventId")
         .isInt({ min: 1 }).withMessage("Event ID must be a positive integer")
         .toInt()
+];
+
+/* =============================
+   LOCATION FIELDS
+============================= */
+
+// Shared optional structured location fields
+const structuredLocationValidators = [
+    body("locationLabel")
+        .optional({ nullable: true })
+        .trim(),
+
+    body("streetAddress")
+        .optional({ nullable: true })
+        .trim(),
+
+    body("city")
+        .optional({ nullable: true })
+        .trim(),
+
+    body("region")
+        .optional({ nullable: true })
+        .trim(),
+
+    body("postalCode")
+        .optional({ nullable: true })
+        .trim(),
+
+    body("country")
+        .optional({ nullable: true })
+        .trim(),
+
+    body("latitude")
+        .optional({ nullable: true })
+        .isFloat({ min: -90, max: 90 })
+        .withMessage("Latitude must be between -90 and 90")
+        .toFloat(),
+
+    body("longitude")
+        .optional({ nullable: true })
+        .isFloat({ min: -180, max: 180 })
+        .withMessage("Longitude must be between -180 and 180")
+        .toFloat()
 ];
 
 /* =============================
@@ -68,6 +112,8 @@ const createEventValidator = [
 
             return true;
         }),
+
+    ...structuredLocationValidators,
 
     body("startDateTime")
         .notEmpty().withMessage("Start date and time is required")
@@ -145,6 +191,8 @@ const updateEventValidator = [
 
             return true;
         }),
+
+    ...structuredLocationValidators,
 
     body("startDateTime")
         .optional()
@@ -232,6 +280,18 @@ const getAllEventsValidator = [
         .isIn(VALID_EVENT_MODES).withMessage("Mode must be online or in_person"),
 
     query("location")
+        .optional()
+        .trim(),
+
+    query("city")
+        .optional()
+        .trim(),
+
+    query("region")
+        .optional()
+        .trim(),
+
+    query("country")
         .optional()
         .trim(),
 

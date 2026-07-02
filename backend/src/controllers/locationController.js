@@ -5,7 +5,7 @@ const locationService = require("../services/locationService");
 
    Handles:
    - location search API requests
-   - location response formatting
+   - location response formatting with structured address fields
 
    Notes:
    - business logic is delegated to locationService

@@ -2,9 +2,9 @@ import { useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import { Check, Copy, ExternalLink, Navigation } from "lucide-react";
 
-import useEventMapLocation from "../../features/events/hooks/form/useEventMapLocation";
+import useEventMapLocation from "../../features/locations/hooks/useEventMapLocation";
 
-import { formatLocationDisplayLabel, buildGoogleMapsUrl } from "../../utils/formatters";
+import { formatLocationDisplayLabel, formatLocationInlineLabel, buildGoogleMapsUrl } from "../../utils/formatters";
 
 import EmptyState from "../ui/EmptyState";
 import LoadingState from "../ui/LoadingState";
@@ -73,11 +73,25 @@ export default function EventLocationMap({
         ? {
             lat: Number(selectedLocation.latitude),
             lng: Number(selectedLocation.longitude),
-            label: selectedLocation.label
+            label: selectedLocation.label,
+            streetAddress: selectedLocation.streetAddress,
+            city: selectedLocation.city,
+            region: selectedLocation.region,
+            postalCode: selectedLocation.postalCode,
+            country: selectedLocation.country
         }
         : searchedCoordinates;
 
-    const displayLocation = selectedLocation?.label || location;
+    // Best available location text for display
+    const displayLocation =
+        selectedLocation?.streetAddress ||
+        selectedLocation?.label ||
+        location;
+
+    // Preferred label for Google Maps links and copy action
+    const formattedLocationLabel = coordinates
+        ? coordinates.label || formatLocationInlineLabel(coordinates)
+        : displayLocation;
 
     /* =============================
        DISPLAY STATES
@@ -137,7 +151,6 @@ export default function EventLocationMap({
                     <Popup>
                         <div className="event-location-popup">
                             <div className="event-location-popup-header">
-
                                 {eventTitle && (
                                     <p className="event-location-popup-title">
                                         {eventTitle}
@@ -145,7 +158,7 @@ export default function EventLocationMap({
                                 )}
 
                                 <p className="event-location-popup-address">
-                                    {formatLocationDisplayLabel(coordinates.label)}
+                                    {formatLocationDisplayLabel(coordinates)}
                                 </p>
                             </div>
 
@@ -155,7 +168,7 @@ export default function EventLocationMap({
                                     target="_blank"
                                     rel="noreferrer"
                                     className="popup-btn"
-                                    aria-label={`Open ${coordinates.label} in Google Maps (opens new tab)`}
+                                    aria-label={`Open ${formattedLocationLabel} in Google Maps (opens new tab)`}
                                 >
                                     <ExternalLink />
                                     Open in Google Maps
@@ -166,7 +179,7 @@ export default function EventLocationMap({
                                     className="popup-btn secondary"
                                     target="_blank"
                                     rel="noreferrer"
-                                    aria-label={`Get directions to ${coordinates.label} (opens new tab)`}
+                                    aria-label={`Get directions to ${formattedLocationLabel} (opens new tab)`}
                                 >
                                     <Navigation />
                                     Get directions
@@ -179,7 +192,7 @@ export default function EventLocationMap({
                                     aria-label={copied ? "Address copied to clipboard" : "Copy address to clipboard"}
                                     onClick={async () => {
                                         try {
-                                            await navigator.clipboard.writeText(coordinates.label);
+                                            await navigator.clipboard.writeText(formattedLocationLabel);
                                             setCopied(true);
                                             setTimeout(() => setCopied(false), 1500);
                                         } catch {

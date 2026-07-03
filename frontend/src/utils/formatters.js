@@ -70,8 +70,18 @@ export const formatBe = (count) => {
    LOCATION HELPERS
 ============================= */
 
-// Extracts useful location parts from a provider label
-const getLocationDisplayParts = (label = "") => {
+// Builds readable address parts from structured location fields
+export const getStructuredLocationParts = (location = {}) => {
+    return [
+        location.streetAddress,
+        location.city,
+        location.region,
+        location.country
+    ].filter(Boolean);
+};
+
+// Extracts useful parts from provider labels when structured fields are missing
+const getProviderLocationParts = (label = "") => {
     if (!label) return [];
 
     const parts = String(label)
@@ -81,23 +91,42 @@ const getLocationDisplayParts = (label = "") => {
 
     if (parts.length <= 3) return parts;
 
-    const placeName = parts[0];
-    const streetOrArea = parts[1];
-    const lastParts = parts.slice(-3).join(", ");
-
-    return [placeName, streetOrArea, lastParts].filter(Boolean);
+    return [
+        parts[0],
+        parts[1],
+        parts.slice(-3).join(", ")
+    ].filter(Boolean);
 };
 
-// Formats provider location labels for multi-line display
-export const formatLocationDisplayLabel = (label = "") => {
-    if (!label) return "";
-    return getLocationDisplayParts(label).join("\n");
+// Resolves display-ready location parts from structured fields or provider label
+export const getLocationDisplayParts = (location = {}) => {
+    const structuredParts = getStructuredLocationParts(location);
+
+    if (structuredParts.length > 0) {
+        return structuredParts;
+    }
+
+    return getProviderLocationParts(
+        location.locationLabel ||
+        location.label ||
+        location.location ||
+        ""
+    );
 };
 
-// Formats provider location labels for inline display
-export const formatLocationInlineLabel = (label = "") => {
-    if (!label) return "";
-    return getLocationDisplayParts(label).join(", ");
+// Formats location for inline display
+export const formatLocationInlineLabel = (location = {}) => {
+    return getLocationDisplayParts(location).join(", ");
+};
+
+// Formats location for multi-line display
+export const formatLocationDisplayLabel = (location = {}) => {
+    return getLocationDisplayParts(location).join("\n");
+};
+
+// Formats the value stored in the input after selecting a suggestion
+export const formatLocationSelectionLabel = (location = {}) => {
+    return location.label || formatLocationInlineLabel(location);
 };
 
 // Builds a Google Maps URL from coordinates

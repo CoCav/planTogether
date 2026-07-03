@@ -15,6 +15,7 @@ import { EVENT_MODES, getEventModeLabel } from "../shared/constants/eventModes";
    - fallback text values
    - formatted date and time
    - inline location display formatting
+   - structured location display formatting
    - selected location map data
    - online/in-person mode display
    - participant and capacity display
@@ -30,12 +31,8 @@ import { EVENT_MODES, getEventModeLabel } from "../shared/constants/eventModes";
 export function getEventDisplayData(event = {}) {
     const isOnline = event.mode === EVENT_MODES.ONLINE;
 
-    // Prefer persisted provider label before fallback event location
-    const locationLabel =
-        event.locationLabel ||
-        event.selectedLocation?.label ||
-        event.location ||
-        "N/A";
+    // Prefer persisted provider label before formatted location fallback
+    const locationLabel = event.locationLabel || formatLocationInlineLabel(event);
 
     // Review statistics used by event cards and details pages
     const reviewCount = event.reviewCount ?? 0;
@@ -58,12 +55,17 @@ export function getEventDisplayData(event = {}) {
 
         location: isOnline
             ? getEventModeLabel(EVENT_MODES.ONLINE)
-            : formatLocationInlineLabel(locationLabel),
+            : locationLabel || "N/A",
 
         // Build map-ready location data only for physical events
         selectedLocation: !isOnline && event.latitude && event.longitude
             ? {
-                label: locationLabel,
+                label: locationLabel || event.locationLabel || event.location || "",
+                streetAddress: event.streetAddress || null,
+                city: event.city || null,
+                region: event.region || null,
+                postalCode: event.postalCode || null,
+                country: event.country || null,
                 latitude: event.latitude,
                 longitude: event.longitude,
                 provider: "nominatim"

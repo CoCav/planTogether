@@ -10,6 +10,7 @@ import { createDefaultEventFormValues } from "./eventFormConfig";
    Handles:
    - edit event form prefill values
    - datetime-local value formatting
+   - structured location prefill
    - existing image mapping
    - unchanged image state preservation
    - registration deadline option resolution
@@ -112,15 +113,29 @@ export const createEventFormValuesFromEvent = (event = {}) => {
         theme: event.theme || "",
 
         mode: event.mode || EVENT_MODES.IN_PERSON,
+
         location: event.location || "",
         selectedLocation: event.latitude && event.longitude
             ? {
                 label: event.locationLabel || event.location || "",
+                streetAddress: event.streetAddress || null,
+                city: event.city || null,
+                region: event.region || null,
+                postalCode: event.postalCode || null,
+                country: event.country || null,
                 latitude: event.latitude,
                 longitude: event.longitude,
                 provider: "nominatim"
             }
             : null,
+        locationLabel: event.locationLabel || "",
+        streetAddress: event.streetAddress || "",
+        city: event.city || "",
+        region: event.region || "",
+        postalCode: event.postalCode || "",
+        country: event.country || "",
+        latitude: event.latitude ?? null,
+        longitude: event.longitude ?? null,
 
         startDateTime: toDateTimeLocalValue(event.startDateTime),
         endDateTime: toDateTimeLocalValue(event.endDateTime),

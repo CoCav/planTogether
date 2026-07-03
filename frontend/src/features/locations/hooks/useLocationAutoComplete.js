@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-import { normalizeApiError } from "../../../../api/apiError";
-import { searchLocations } from "../../../../api/locations/locationApi";
+import { normalizeApiError } from "../../../api/apiError";
+import { searchLocations } from "../../../api/locations/locationApi";
 
 /* ==================================================
    USE LOCATION AUTOCOMPLETE
@@ -9,17 +9,23 @@ import { searchLocations } from "../../../../api/locations/locationApi";
 
    Handles:
    - debounced backend location search
-   - suggestion list state
+   - suggestion state
    - loading state
    - error state
    - no-results state
-   - selected suggestion index
+   - highlighted suggestion state
    - keyboard navigation
+   - suggestion selection
    - click outside dropdown closing
    - stale request cancellation
+
+   Notes:
+   - backend search uses cached locations before provider lookup
+   - dropdown opens after successful searches and user-facing errors
+   - selected suggestion is owned by the parent form
 ================================================== */
 
-export default function useLocationAutocomplete({
+export default function useLocationAutoComplete({
     value,
     onSelectLocation,
     debounceDelay = 350,
@@ -66,7 +72,7 @@ export default function useLocationAutocomplete({
                 setIsLoading(true);
                 setError("");
 
-                // Search locations through backend cache/provider endpoint
+                // Search matching locations through the backend
                 const data = await searchLocations(cleanValue);
 
                 if (isCancelled) return;
@@ -121,7 +127,7 @@ export default function useLocationAutocomplete({
        SELECTION
     ============================= */
 
-    // Selects a suggestion and closes dropdown
+    // Selects a suggestion and closes the autocomplete
     const selectSuggestion = (suggestion) => {
         if (!suggestion) return;
 
@@ -192,7 +198,7 @@ export default function useLocationAutocomplete({
     }, []);
 
     return {
-        autocompleteState: {
+        autoCompleteState: {
             suggestions,
             isLoading,
             error,
@@ -200,11 +206,11 @@ export default function useLocationAutocomplete({
             highlightedIndex
         },
 
-        autocompleteRefs: {
+        autoCompleteRefs: {
             containerRef
         },
 
-        autocompleteActions: {
+        autoCompleteActions: {
             setIsOpen,
             setHighlightedIndex,
             selectSuggestion,

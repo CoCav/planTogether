@@ -11,6 +11,8 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../shared/constants/eventRegist
    - online event location normalization
    - nullable event field normalization
    - autocomplete UI state exclusion
+   - structured location payload building
+   - online structured location clearing
    - unchanged image omission
    - explicit image clearing for updates
    - multipart form data support
@@ -19,6 +21,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../shared/constants/eventRegist
    - aligned with backend eventDataBuilder
    - event forms use datetime-local values
    - selectedLocation is UI-only and is not submitted
+   - structured location fields are submitted separately
    - online events always use null location
    - create payloads omit null optional fields
    - update payloads preserve explicit null field clearing
@@ -38,13 +41,40 @@ const toNullableValue = (value) => {
     return value;
 };
 
-// Normalizes event location based on mode
-const getNormalizedLocation = ({ mode, location }) => {
+// Normalizes event location text based on mode
+const getNormalizedLocation = ({ mode, location } = {}) => {
     if (mode === EVENT_MODES.ONLINE) {
         return null;
     }
 
     return toNullableValue(location);
+};
+
+// Normalizes structured location fields based on mode
+const getNormalizedStructuredLocation = (data = {}) => {
+    if (data.mode === EVENT_MODES.ONLINE) {
+        return {
+            locationLabel: null,
+            streetAddress: null,
+            city: null,
+            region: null,
+            postalCode: null,
+            country: null,
+            latitude: null,
+            longitude: null
+        };
+    }
+
+    return {
+        locationLabel: toNullableValue(data.locationLabel),
+        streetAddress: toNullableValue(data.streetAddress),
+        city: toNullableValue(data.city),
+        region: toNullableValue(data.region),
+        postalCode: toNullableValue(data.postalCode),
+        country: toNullableValue(data.country),
+        latitude: toNullableValue(data.latitude),
+        longitude: toNullableValue(data.longitude)
+    };
 };
 
 /* =============================
@@ -97,7 +127,16 @@ export const buildEventFormPayload = (values = {}) => ({
     theme: values.theme,
 
     mode: values.mode,
+
     location: values.location,
+    locationLabel: values.locationLabel,
+    streetAddress: values.streetAddress,
+    city: values.city,
+    region: values.region,
+    postalCode: values.postalCode,
+    country: values.country,
+    latitude: values.latitude,
+    longitude: values.longitude,
 
     startDateTime: values.startDateTime,
     endDateTime: values.endDateTime,
@@ -122,7 +161,9 @@ export const buildEventPayload = (data = {}) => ({
     theme: data.theme,
 
     mode: data.mode,
+
     location: getNormalizedLocation(data),
+    ...getNormalizedStructuredLocation(data),
 
     startDateTime: data.startDateTime,
     endDateTime: data.endDateTime,

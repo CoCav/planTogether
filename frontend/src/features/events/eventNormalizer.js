@@ -9,7 +9,7 @@ import { EVENT_MODES } from "../shared/constants/eventModes";
 
    Handles:
    - single event normalization
-   - event list normalization
+   - structured location normalization
    - paginated public event payloads
    - participant count normalization
    - review stats normalization
@@ -34,7 +34,16 @@ export const normalizeEvent = (event = {}) => ({
     type: event.type ?? "",
 
     mode: event.mode ?? EVENT_MODES.IN_PERSON,
+
     location: event.location ?? "",
+    locationLabel: event.locationLabel ?? "",
+    streetAddress: event.streetAddress ?? "",
+    city: event.city ?? "",
+    region: event.region ?? "",
+    postalCode: event.postalCode ?? "",
+    country: event.country ?? "",
+    latitude: event.latitude ?? null,
+    longitude: event.longitude ?? null,
 
     startDateTime: event.startDateTime ?? null,
     endDateTime: event.endDateTime ?? null,

@@ -381,7 +381,7 @@ export default function EventDetailsPage() {
                                     </h3>
 
                                     <p className="event-location-description">
-                                        View this event on the map.
+                                        View this event address on the map.
                                     </p>
                                 </div>
 

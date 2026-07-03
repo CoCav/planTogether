@@ -7,7 +7,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../shared/constants/eventReg
 
 import { isOnlineEventForm, shouldShowCustomDeadline } from "../../form/eventFormConfig";
 
-import { formatLocationInlineLabel } from "../../../../utils/formatters";
+import { formatLocationSelectionLabel } from "../../../../utils/formatters";
 
 import { validateEventForm } from "../../form/eventValidation";
 
@@ -17,14 +17,14 @@ import { validateEventForm } from "../../form/eventValidation";
 
    Handles:
    - event form values
-   - selected location suggestion state
+   - structured location state
+   - structured location reset
    - field validation errors
    - page-level errors
    - submit loading state
    - field changes
    - dependent field resets
    - image changes
-   - location suggestion selection
    - shared submit validation flow
    - configurable validation options
 
@@ -83,15 +83,31 @@ export default function useEventForm({
                     ...prev,
                     mode: value,
                     location: "",
+                    locationLabel: "",
+                    streetAddress: "",
+                    city: "",
+                    region: "",
+                    postalCode: "",
+                    country: "",
+                    latitude: null,
+                    longitude: null,
                     selectedLocation: null
                 };
             }
 
-            // Clear selected location when user manually edits the location text
+            // Clear structured location data when user manually edits the location text
             if (name === "location") {
                 return {
                     ...prev,
                     location: value,
+                    locationLabel: "",
+                    streetAddress: "",
+                    city: "",
+                    region: "",
+                    postalCode: "",
+                    country: "",
+                    latitude: null,
+                    longitude: null,
                     selectedLocation: null
                 };
             }
@@ -158,8 +174,16 @@ export default function useEventForm({
         setValues((prev) => ({
             ...prev,
 
-            // Store a readable inline provider label inside the form state
-            location: formatLocationInlineLabel(location.label),
+            // Store readable location text and structured address fields
+            location: formatLocationSelectionLabel(location),
+            locationLabel: location.label ?? "",
+            streetAddress: location.streetAddress ?? "",
+            city: location.city ?? "",
+            region: location.region ?? "",
+            postalCode: location.postalCode ?? "",
+            country: location.country ?? "",
+            latitude: location.latitude ?? null,
+            longitude: location.longitude ?? null,
             selectedLocation: location
         }));
 

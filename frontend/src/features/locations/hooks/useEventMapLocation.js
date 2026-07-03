@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
-import { normalizeApiError } from "../../../../api/apiError";
+import { normalizeApiError } from "../../../api/apiError";
 
-import { searchLocations, searchPublicLocations } from "../../../../api/locations/locationApi";
+import { searchLocations, searchPublicLocations } from "../../../api/locations/locationApi";
 
 /* ==================================================
    USE EVENT MAP LOCATION
@@ -10,6 +10,8 @@ import { searchLocations, searchPublicLocations } from "../../../../api/location
 
    Handles:
    - authenticated or public backend location search
+   - coordinate normalization
+   - structured location normalization
    - cached/provider geocoding through API
    - loading state
    - completed search tracking
@@ -69,7 +71,7 @@ export default function useEventMapLocation(location, options = {}) {
 
                 if (isCancelled) return;
 
-                // Uses the best matching location result
+                // Uses the first matching location returned by the backend
                 const locationResult = data.locations?.[0];
 
                 if (!locationResult) {
@@ -78,11 +80,16 @@ export default function useEventMapLocation(location, options = {}) {
                     return;
                 }
 
-                // Normalize backend coordinates for Leaflet map usage
+                // Normalizes backend location data for Leaflet and popup display
                 setCoordinates({
                     lat: Number(locationResult.latitude),
                     lng: Number(locationResult.longitude),
-                    label: locationResult.label ?? cleanLocation
+                    label: locationResult.label ?? cleanLocation,
+                    streetAddress: locationResult.streetAddress ?? null,
+                    city: locationResult.city ?? null,
+                    region: locationResult.region ?? null,
+                    postalCode: locationResult.postalCode ?? null,
+                    country: locationResult.country ?? null
                 });
 
             } catch (error) {

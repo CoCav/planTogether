@@ -1,6 +1,6 @@
 import { MapPin } from "lucide-react";
 
-import useLocationAutocomplete from "../../features/events/hooks/form/useLocationAutocomplete";
+import useLocationAutoComplete from "../../features/locations/hooks/useLocationAutoComplete";
 
 import { formatLocationInlineLabel } from "../../utils/formatters";
 
@@ -45,10 +45,10 @@ export default function EventLocationField({
     ============================= */
 
     const {
-        autocompleteState,
-        autocompleteRefs,
-        autocompleteActions
-    } = useLocationAutocomplete({
+        autoCompleteState,
+        autoCompleteRefs,
+        autoCompleteActions
+    } = useLocationAutoComplete({
         value,
         onSelectLocation
     });
@@ -59,17 +59,17 @@ export default function EventLocationField({
         error: autocompleteError,
         isOpen,
         highlightedIndex
-    } = autocompleteState;
+    } = autoCompleteState;
 
     const {
         containerRef
-    } = autocompleteRefs;
+    } = autoCompleteRefs;
 
     const {
         setIsOpen,
         selectSuggestion,
         handleKeyDown
-    } = autocompleteActions;
+    } = autoCompleteActions;
 
     /* =============================
        DERIVED VALUES
@@ -140,6 +140,9 @@ export default function EventLocationField({
                     {!isLoading && !autocompleteError && suggestions.map((suggestion, index) => {
                         const isHighlighted = index === highlightedIndex;
 
+                        const primaryLabel = suggestion.label?.split(",")[0] || formatLocationInlineLabel(suggestion);
+                        const secondaryLabel = formatLocationInlineLabel(suggestion);
+
                         return (
                             <button
                                 id={`${listboxId}-option-${index}`}
@@ -155,9 +158,17 @@ export default function EventLocationField({
                             >
                                 <MapPin aria-hidden="true" />
 
-                                <span>
-                                    {formatLocationInlineLabel(suggestion.label)}
-                                </span>
+                                <div className="location-autocomplete-option-content">
+                                    <span className="location-title">
+                                        {primaryLabel}
+                                    </span>
+
+                                    {secondaryLabel && secondaryLabel !== primaryLabel && (
+                                        <small className="location-subtitle">
+                                            {secondaryLabel}
+                                        </small>
+                                    )}
+                                </div>
                             </button>
                         );
                     })}

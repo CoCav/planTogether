@@ -7,18 +7,18 @@ import { unwrapApiResponse } from "../apiResponse";
    Handles:
    - authenticated location search
    - public location search
+   - structured location responses
 
    Routes:
    - GET /locations/search
    - GET /locations/public-search
 
    Notes:
-   - authenticated search is used for internal app features
-     (event forms, dashboard, protected pages)
+   - authenticated search is used for internal app features (event forms, dashboard, protected pages)
    - public search is used for public event pages and maps
    - results come from backend cache or provider
+   - location results include structured address fields (streetAddress, city, region, postalCode, country)
 ================================================== */
-
 /* =============================
    AUTHENTICATED LOCATION SEARCH
 ============================= */

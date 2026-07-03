@@ -32,8 +32,17 @@ export const createDefaultEventFormValues = () => ({
     theme: "",
 
     mode: EVENT_MODES.IN_PERSON,
+
     location: "",
     selectedLocation: null,
+    locationLabel: "",
+    streetAddress: "",
+    city: "",
+    region: "",
+    postalCode: "",
+    country: "",
+    latitude: null,
+    longitude: null,
 
     startDateTime: "",
     endDateTime: "",

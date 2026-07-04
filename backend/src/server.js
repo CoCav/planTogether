@@ -3,37 +3,36 @@ const { initDB } = require("./models");
 
 const logger = require("./config/logger");
 
-/* ==================================================
-   SERVER ENTRY POINT
+/* ==========================================================================
+   Server Entry Point
 
-   Handles:
-   - environment initialization
-   - database initialization
-   - HTTP server startup
-   - centralized startup logging
+   Starts the backend application.
 
-   Notes:
-   - server starts only if database initialization succeeds
-   - startup errors use centralized structured logging
-================================================== */
+   Startup sequence
+   - Initialize the database connection
+   - Register Sequelize models and associations
+   - Start the HTTP server
+   - Log startup information
 
-const PORT = process.env.PORT || 3000;
+   Notes
+   - The server starts only if database initialization succeeds.
+   - Startup failures are logged with the centralized logger.
+   - A startup failure exits the process with code 1.
+=========================================================================== */
 
-// Start Express server
+const DEFAULT_PORT = 3000;
+const PORT = process.env.PORT || DEFAULT_PORT;
+
 async function startServer() {
     try {
-        // Initialize database connection and models
         await initDB();
 
-        // Start HTTP server
         app.listen(PORT, () => {
             logger.info(`Server listening on http://localhost:${PORT}`);
         });
-
     } catch (error) {
         logger.error({ error }, "Failed to start server");
 
-        // Exit process if startup fails
         process.exit(1);
     }
 }

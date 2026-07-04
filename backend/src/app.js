@@ -2,13 +2,12 @@ const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
 
-// Load environment variables for app config and tests
+// Load environment variables for application configuration.
 require("dotenv").config();
 
 const path = require("path");
 
 const corsOptions = require("./config/cors");
-
 const errorHandler = require("./middlewares/errors/errorHandler");
 
 const authRoutes = require("./routes/authRoutes");
@@ -19,62 +18,47 @@ const userRoutes = require("./routes/userRoutes");
 const eventReviewRoutes = require("./routes/eventReviewRoutes");
 const eventLikeRoutes = require("./routes/eventLikeRoutes");
 
-/* ==================================================
-   EXPRESS APPLICATION SETUP
+/* ==========================================================================
+   Express Application
 
-   Handles:
-   - Express app initialization
-   - security middlewares
-   - global middlewares
-   - static uploads access
-   - API route registration
-   - fallback 404 handling
-   - global error handling
+   Builds and configures the Express application.
 
-   Notes:
-   - uploaded files are exposed through /uploads
-   - CORS origins are configurable via environment variables
-   - Helmet adds common HTTP security protections
-================================================== */
+   Responsibilities
+   - Register global middlewares
+   - Configure security
+   - Parse incoming request bodies
+   - Expose uploaded files
+   - Register API routes
+   - Handle unknown routes
+   - Register the global error handler
+
+   Notes
+   - The HTTP server is started in server.js.
+   - Database initialization is handled in server.js.
+   - The global error handler must always be registered last.
+=========================================================================== */
 
 const app = express();
 
-/* =============================
-   GLOBAL MIDDLEWARES
-============================= */
+const helmetOptions = {
+    // Allows uploaded avatars and event images to be displayed by the frontend.
+    crossOriginResourcePolicy: false
+};
 
-// Add common security-related HTTP headers
-// Disable cross-origin resource policy to allow frontend access to uploaded files
-app.use(
-    helmet({
-        crossOriginResourcePolicy: false
-    })
-);
+/* Global middlewares */
 
-// Configure CORS for frontend access
+app.use(helmet(helmetOptions));
 app.use(cors(corsOptions));
 
-// Parse JSON request bodies
 app.use(express.json());
-
-// Parse URL-encoded request bodies
 app.use(express.urlencoded({ extended: true }));
 
+/* Static files */
 
-/* =============================
-   STATIC FILES
-============================= */
-
-// Serve uploaded files publicly
-// Example: /uploads/avatars/avatar-123.png
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
+/* Health routes */
 
-/* =============================
-   HEALTH / ROOT ROUTES
-============================= */
-
-// Health check endpoint
 app.get("/api/health", (req, res) => {
     return res.json({
         ok: true,
@@ -83,43 +67,25 @@ app.get("/api/health", (req, res) => {
     });
 });
 
-// Root API message
 app.get("/", (req, res) => {
-    res.send("PlanTogether is online !");
+    res.send("PlanTogether is online!");
 });
 
+/* API routes */
 
-/* =============================
-   API ROUTES
-============================= */
-
-// Authentication routes
 app.use("/api/auth", authRoutes);
 
-// Location search routes
 app.use("/api/locations", locationRoutes);
 
-// Event membership routes
 app.use("/api/events", eventMembershipRoutes);
-
-// Event review routes
 app.use("/api/events", eventReviewRoutes);
-
-// Event like routes
 app.use("/api/events", eventLikeRoutes);
-
-// Event CRUD routes
 app.use("/api/events", eventRoutes);
 
-// Public user routes
 app.use("/api/users", userRoutes);
 
+/* Fallback handlers */
 
-/* =============================
-   FALLBACK HANDLERS
-============================= */
-
-// Handle unknown routes
 app.use((req, res) => {
     res.status(404).json({
         success: false,
@@ -127,7 +93,6 @@ app.use((req, res) => {
     });
 });
 
-// Global error handler
 app.use(errorHandler);
 
 module.exports = app;

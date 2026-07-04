@@ -17,7 +17,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../../features/shared/consta
 
    Handles:
    - default event form values
-   - selected location default state
+   - structured location default state
    - event mode select options
    - registration deadline select options
    - event form display helpers
@@ -44,6 +44,14 @@ describe("eventFormConfig", () => {
             mode: EVENT_MODES.IN_PERSON,
             location: "",
             selectedLocation: null,
+            locationLabel: "",
+            streetAddress: "",
+            city: "",
+            region: "",
+            postalCode: "",
+            country: "",
+            latitude: null,
+            longitude: null,
 
             startDateTime: "",
             endDateTime: "",

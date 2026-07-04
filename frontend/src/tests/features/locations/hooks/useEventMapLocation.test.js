@@ -1,11 +1,11 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import useEventMapLocation from "../../../../../features/events/hooks/form/useEventMapLocation";
+import useEventMapLocation from "../../../../features/locations/hooks/useEventMapLocation";
 
-import { normalizeApiError } from "../../../../../api/apiError";
+import { normalizeApiError } from "../../../../api/apiError";
 
-import { searchLocations, searchPublicLocations } from "../../../../../api/locations/locationApi";
+import { searchLocations, searchPublicLocations } from "../../../../api/locations/locationApi";
 
 /* ==================================================
    USE EVENT MAP LOCATION TESTS
@@ -34,12 +34,12 @@ import { searchLocations, searchPublicLocations } from "../../../../../api/locat
    - stale async updates are ignored after unmount
 ================================================== */
 
-vi.mock("../../../../../api/locations/locationApi", () => ({
+vi.mock("../../../../api/locations/locationApi", () => ({
     searchLocations: vi.fn(),
     searchPublicLocations: vi.fn()
 }));
 
-vi.mock("../../../../../api/apiError", () => ({
+vi.mock("../../../../api/apiError", () => ({
     normalizeApiError: vi.fn()
 }));
 
@@ -54,10 +54,16 @@ describe("useEventMapLocation", () => {
             {
                 latitude: 45.5017,
                 longitude: -73.5673,
-                label: "Montréal, Québec, Canada"
+                label: "Montréal, Québec, Canada",
+
+                streetAddress: "1500 Rue Sainte-Catherine O",
+                city: "Montréal",
+                region: "Québec",
+                postalCode: "H3G 1S8",
+                country: "Canada"
             }
         ]
-    };
+    }
 
     /* =============================
        TEST SETUP
@@ -146,7 +152,13 @@ describe("useEventMapLocation", () => {
             expect(result.current.coordinates).toEqual({
                 lat: 45.5017,
                 lng: -73.5673,
-                label: "Montréal, Québec, Canada"
+                label: "Montréal, Québec, Canada",
+
+                streetAddress: "1500 Rue Sainte-Catherine O",
+                city: "Montréal",
+                region: "Québec",
+                postalCode: "H3G 1S8",
+                country: "Canada"
             });
         });
 
@@ -169,7 +181,13 @@ describe("useEventMapLocation", () => {
             expect(result.current.coordinates).toEqual({
                 lat: 45.5017,
                 lng: -73.5673,
-                label: "Montréal, Québec, Canada"
+                label: "Montréal, Québec, Canada",
+
+                streetAddress: "1500 Rue Sainte-Catherine O",
+                city: "Montréal",
+                region: "Québec",
+                postalCode: "H3G 1S8",
+                country: "Canada"
             });
         });
 
@@ -177,6 +195,22 @@ describe("useEventMapLocation", () => {
         expect(searchLocations).not.toHaveBeenCalled();
 
         expect(result.current.hasSearched).toBe(true);
+    });
+
+    it("should normalize structured location fields", async () => {
+        const { result } = renderHook(() =>
+            useEventMapLocation("Montréal")
+        );
+
+        await waitForDebounce();
+
+        await waitFor(() => {
+            expect(result.current.coordinates.streetAddress).toBe("1500 Rue Sainte-Catherine O");
+            expect(result.current.coordinates.city).toBe("Montréal");
+            expect(result.current.coordinates.region).toBe("Québec");
+            expect(result.current.coordinates.postalCode).toBe("H3G 1S8");
+            expect(result.current.coordinates.country).toBe("Canada");
+        });
     });
 
     it("should use original location as label when backend label is missing", async () => {
@@ -199,7 +233,12 @@ describe("useEventMapLocation", () => {
             expect(result.current.coordinates).toEqual({
                 lat: 45.5017,
                 lng: -73.5673,
-                label: "Montréal"
+                label: "Montréal",
+                streetAddress: null,
+                city: null,
+                region: null,
+                postalCode: null,
+                country: null
             });
         });
     });

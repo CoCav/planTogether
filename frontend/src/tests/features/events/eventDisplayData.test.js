@@ -17,6 +17,7 @@ import { createEvent } from "../../factories/events/eventFactory";
    - online and in-person display modes
    - inline location display formatting
    - selected location map data
+   - structured location display data
    - participant and capacity display
    - registration deadline display
    - nullable display fields
@@ -152,8 +153,40 @@ describe("getEventDisplayData", () => {
 
         expect(data.selectedLocation).toEqual({
             label: "Central Park, New York, USA",
+            streetAddress: null,
+            city: null,
+            region: null,
+            postalCode: null,
+            country: null,
             latitude: 40.785091,
             longitude: -73.968285,
+            provider: "nominatim"
+        });
+    });
+
+    it("should include structured location fields in selected location", () => {
+        const data = getDisplayData({
+            mode: EVENT_MODES.IN_PERSON,
+            location: "Agora du Vieux-Port",
+            locationLabel: "Agora du Vieux-Port, Rue de Quercy, Québec, Canada",
+            streetAddress: "Rue de Quercy",
+            city: "Québec",
+            region: "Québec",
+            postalCode: "G1K 4B9",
+            country: "Canada",
+            latitude: 46.8176197,
+            longitude: -71.2004237
+        });
+
+        expect(data.selectedLocation).toEqual({
+            label: "Agora du Vieux-Port, Rue de Quercy, Québec, Canada",
+            streetAddress: "Rue de Quercy",
+            city: "Québec",
+            region: "Québec",
+            postalCode: "G1K 4B9",
+            country: "Canada",
+            latitude: 46.8176197,
+            longitude: -71.2004237,
             provider: "nominatim"
         });
     });
@@ -169,6 +202,11 @@ describe("getEventDisplayData", () => {
 
         expect(data.selectedLocation).toEqual({
             label: "Central Park",
+            streetAddress: null,
+            city: null,
+            region: null,
+            postalCode: null,
+            country: null,
             latitude: 40.785091,
             longitude: -73.968285,
             provider: "nominatim"
@@ -204,22 +242,6 @@ describe("getEventDisplayData", () => {
             location: "Montreal",
             locationLabel:
                 "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"
-        });
-
-        expect(data.location).toBe("Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada");
-    });
-
-    it("should fallback to selected location label when persisted label is missing", () => {
-        const data = getDisplayData({
-            mode: EVENT_MODES.IN_PERSON,
-            location: "Montreal",
-
-            locationLabel: "",
-
-            selectedLocation: {
-                label:
-                    "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"
-            }
         });
 
         expect(data.location).toBe("Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada");

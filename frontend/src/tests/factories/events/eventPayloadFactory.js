@@ -30,6 +30,14 @@ export const createEventPayload = (overrides = {}) => ({
 
     mode: EVENT_MODES.IN_PERSON,
     location: "Montreal",
+    locationLabel: "Agora du Vieux-Port, Rue de Quercy, Québec, Canada",
+    streetAddress: "Rue de Quercy",
+    city: "Québec",
+    region: "Québec",
+    postalCode: "G1K 4B9",
+    country: "Canada",
+    latitude: 46.8176197,
+    longitude: -71.2004237,
 
     startDateTime: "2026-12-20T10:00",
     endDateTime: "2026-12-20T12:00",
@@ -47,6 +55,14 @@ export const createOnlineEventPayload = (overrides = {}) => (
     createEventPayload({
         mode: EVENT_MODES.ONLINE,
         location: "Online",
+        locationLabel: null,
+        streetAddress: null,
+        city: null,
+        region: null,
+        postalCode: null,
+        country: null,
+        latitude: null,
+        longitude: null,
 
         ...overrides
     })

@@ -31,6 +31,8 @@ import {
    - online location normalization
    - nullable optional fields
    - image field handling
+   - structured location payload fields
+   - online structured location clearing
    - autocomplete UI state exclusion
    - unchanged image omission
    - explicit image clearing in update payloads
@@ -108,7 +110,17 @@ describe("eventPayloadBuilder", () => {
             type: "Meetup",
             theme: "Tech",
             mode: EVENT_MODES.IN_PERSON,
+
             location: "Montreal",
+            locationLabel: "Agora du Vieux-Port, Rue de Quercy, Québec, Canada",
+            streetAddress: "Rue de Quercy",
+            city: "Québec",
+            region: "Québec",
+            postalCode: "G1K 4B9",
+            country: "Canada",
+            latitude: 46.8176197,
+            longitude: -71.2004237,
+
             startDateTime: "2026-12-20T10:00",
             endDateTime: "2026-12-20T12:00",
             maxParticipants: "10",
@@ -124,6 +136,14 @@ describe("eventPayloadBuilder", () => {
             theme: "Tech",
             mode: EVENT_MODES.IN_PERSON,
             location: "Montreal",
+            locationLabel: "Agora du Vieux-Port, Rue de Quercy, Québec, Canada",
+            streetAddress: "Rue de Quercy",
+            city: "Québec",
+            region: "Québec",
+            postalCode: "G1K 4B9",
+            country: "Canada",
+            latitude: 46.8176197,
+            longitude: -71.2004237,
             startDateTime: "2026-12-20T10:00",
             endDateTime: "2026-12-20T12:00",
             maxParticipants: "10",
@@ -193,6 +213,63 @@ describe("eventPayloadBuilder", () => {
         expect(payload.location).toBe("Montreal");
     });
 
+    it("should include structured location fields for in-person events", () => {
+        const payload = buildEventPayload(
+            createEventPayload({
+                mode: EVENT_MODES.IN_PERSON,
+                location: "Agora du Vieux-Port",
+                locationLabel: "Agora du Vieux-Port, Rue de Quercy, Québec, Canada",
+                streetAddress: "Rue de Quercy",
+                city: "Québec",
+                region: "Québec",
+                postalCode: "G1K 4B9",
+                country: "Canada",
+                latitude: 46.8176197,
+                longitude: -71.2004237
+            })
+        );
+
+        expect(payload).toMatchObject({
+            location: "Agora du Vieux-Port",
+            locationLabel: "Agora du Vieux-Port, Rue de Quercy, Québec, Canada",
+            streetAddress: "Rue de Quercy",
+            city: "Québec",
+            region: "Québec",
+            postalCode: "G1K 4B9",
+            country: "Canada",
+            latitude: 46.8176197,
+            longitude: -71.2004237
+        });
+    });
+
+    it("should clear structured location fields for online events", () => {
+        const payload = buildEventPayload(
+            createOnlineEventPayload({
+                location: "Agora du Vieux-Port",
+                locationLabel: "Agora du Vieux-Port, Rue de Quercy, Québec, Canada",
+                streetAddress: "Rue de Quercy",
+                city: "Québec",
+                region: "Québec",
+                postalCode: "G1K 4B9",
+                country: "Canada",
+                latitude: 46.8176197,
+                longitude: -71.2004237
+            })
+        );
+
+        expect(payload).toMatchObject({
+            location: null,
+            locationLabel: null,
+            streetAddress: null,
+            city: null,
+            region: null,
+            postalCode: null,
+            country: null,
+            latitude: null,
+            longitude: null
+        });
+    });
+
     it("should normalize empty in-person location to null", () => {
         const payload = buildEventPayload(
             createEventPayload({
@@ -246,7 +323,12 @@ describe("eventPayloadBuilder", () => {
         expect(formData.get("type")).toBe("Meetup");
         expect(formData.get("theme")).toBe("Tech");
         expect(formData.get("mode")).toBe(EVENT_MODES.IN_PERSON);
+
         expect(formData.get("location")).toBe("Montreal");
+        expect(formData.get("locationLabel")).toBe("Agora du Vieux-Port, Rue de Quercy, Québec, Canada");
+        expect(formData.get("city")).toBe("Québec");
+        expect(formData.get("country")).toBe("Canada");
+
         expect(formData.get("startDateTime")).toBe("2026-12-20T10:00");
         expect(formData.get("endDateTime")).toBe("2026-12-20T12:00");
         expect(formData.get("maxParticipants")).toBe("10");
@@ -262,7 +344,17 @@ describe("eventPayloadBuilder", () => {
             type: "Meetup",
             theme: "Tech",
             mode: EVENT_MODES.IN_PERSON,
+
             location: "Montreal",
+            locationLabel: "Agora du Vieux-Port, Rue de Quercy, Québec, Canada",
+            streetAddress: "Rue de Quercy",
+            city: "Québec",
+            region: "Québec",
+            postalCode: "G1K 4B9",
+            country: "Canada",
+            latitude: 46.8176197,
+            longitude: -71.2004237,
+
             startDateTime: "2026-12-20T10:00",
             endDateTime: "2026-12-20T12:00",
             maxParticipants: "10",
@@ -272,6 +364,9 @@ describe("eventPayloadBuilder", () => {
         });
 
         expect(formData.get("title")).toBe("Test Event");
+        expect(formData.get("locationLabel")).toBe("Agora du Vieux-Port, Rue de Quercy, Québec, Canada");
+        expect(formData.get("city")).toBe("Québec");
+        expect(formData.get("country")).toBe("Canada");
         expect(formData.get("startDateTime")).toBe("2026-12-20T10:00");
         expect(formData.get("endDateTime")).toBe("2026-12-20T12:00");
         expect(formData.get("registrationDeadline")).toBe(

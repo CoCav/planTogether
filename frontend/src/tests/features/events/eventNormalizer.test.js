@@ -23,6 +23,7 @@ import {
    Handles:
    - single event normalization
    - event list normalization
+   - structured location normalization
    - paginated event payload normalization
    - fallback values
    - participant count normalization
@@ -56,19 +57,33 @@ describe("eventNormalizer", () => {
             theme: "",
             type: "",
             mode: EVENT_MODES.IN_PERSON,
+
             location: "",
+            locationLabel: "",
+            streetAddress: "",
+            city: "",
+            region: "",
+            postalCode: "",
+            country: "",
+            latitude: null,
+            longitude: null,
+
             startDateTime: null,
             endDateTime: null,
+
             creatorId: null,
             creatorName: "",
+
             image: null,
             maxParticipants: null,
             registrationDeadline: null,
             participantCount: 0,
+
             likesCount: 0,
             isLikedByCurrentUser: false,
             reviewCount: 0,
             averageRating: null,
+
             status: EVENT_STATUS.UPCOMING,
             createdAt: null,
             updatedAt: null
@@ -111,6 +126,32 @@ describe("eventNormalizer", () => {
 
         expect(event.reviewCount).toBe(2);
         expect(event.averageRating).toBe(4.5);
+    });
+
+    it("should normalize structured location fields", () => {
+        const event = normalizeEvent({
+            location: "Agora du Vieux-Port",
+            locationLabel: "Agora du Vieux-Port, Rue de Quercy, Québec, Canada",
+            streetAddress: "Rue de Quercy",
+            city: "Québec",
+            region: "Québec",
+            postalCode: "G1K 4B9",
+            country: "Canada",
+            latitude: 46.8176197,
+            longitude: -71.2004237
+        });
+
+        expect(event).toMatchObject({
+            location: "Agora du Vieux-Port",
+            locationLabel: "Agora du Vieux-Port, Rue de Quercy, Québec, Canada",
+            streetAddress: "Rue de Quercy",
+            city: "Québec",
+            region: "Québec",
+            postalCode: "G1K 4B9",
+            country: "Canada",
+            latitude: 46.8176197,
+            longitude: -71.2004237
+        });
     });
 
     it("should keep maxParticipants as null when missing", () => {

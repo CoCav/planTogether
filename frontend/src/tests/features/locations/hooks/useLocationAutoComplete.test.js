@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 
-import useLocationAutocomplete from "../../../../../features/events/hooks/form/useLocationAutoComplete";
+import useLocationAutoComplete from "../../../../features/locations/hooks/useLocationAutoComplete";
 
-import { searchLocations } from "../../../../../api/locations/locationApi";
+import { searchLocations } from "../../../../api/locations/locationApi";
 
 /* ==================================================
    USE LOCATION AUTOCOMPLETE TESTS
@@ -21,6 +21,8 @@ import { searchLocations } from "../../../../../api/locations/locationApi";
    - keyboard navigation
    - dropdown closing
    - stale request cancellation
+   - highlighted suggestion wrapping
+   - click outside handling
 
    Notes:
    - mocks backend location search API
@@ -28,11 +30,11 @@ import { searchLocations } from "../../../../../api/locations/locationApi";
    - focuses on hook state and actions only
 ================================================== */
 
-vi.mock("../../../../../api/locations/locationApi", () => ({
+vi.mock("../../../../api/locations/locationApi", () => ({
     searchLocations: vi.fn()
 }));
 
-describe("useLocationAutocomplete", () => {
+describe("useLocationAutoComplete", () => {
 
     /* =============================
        TEST DATA
@@ -41,12 +43,25 @@ describe("useLocationAutocomplete", () => {
     const locationSuggestions = [
         {
             label: "Central Park, Manhattan, New York, USA",
+
+            streetAddress: "Central Park",
+            city: "New York",
+            region: "New York",
+            postalCode: "10022",
+            country: "USA",
+
             latitude: 40.785091,
             longitude: -73.968285,
             provider: "nominatim"
         },
         {
             label: "Central Park Zoo, Manhattan, New York, USA",
+            streetAddress: "Central Park Zoo",
+            city: "New York",
+            region: "New York",
+            postalCode: "10022",
+            country: "USA",
+
             latitude: 40.7678,
             longitude: -73.9718,
             provider: "nominatim"
@@ -64,7 +79,7 @@ describe("useLocationAutocomplete", () => {
         minQueryLength = 2
     } = {}) => {
         const hook = renderHook((props) =>
-            useLocationAutocomplete(props),
+            useLocationAutoComplete(props),
             {
                 initialProps: {
                     value,
@@ -108,17 +123,17 @@ describe("useLocationAutocomplete", () => {
        SEARCH STATE
     ============================= */
 
-    it("should reset autocomplete state when query is too short", () => {
+    it("should reset autoComplete state when query is too short", () => {
         const { result } = setupHook({
             value: "C",
             minQueryLength: 2
         });
 
-        expect(result.current.autocompleteState.suggestions).toEqual([]);
-        expect(result.current.autocompleteState.error).toBe("");
-        expect(result.current.autocompleteState.isLoading).toBe(false);
-        expect(result.current.autocompleteState.isOpen).toBe(false);
-        expect(result.current.autocompleteState.highlightedIndex).toBe(-1);
+        expect(result.current.autoCompleteState.suggestions).toEqual([]);
+        expect(result.current.autoCompleteState.error).toBe("");
+        expect(result.current.autoCompleteState.isLoading).toBe(false);
+        expect(result.current.autoCompleteState.isOpen).toBe(false);
+        expect(result.current.autoCompleteState.highlightedIndex).toBe(-1);
 
         expect(searchLocations).not.toHaveBeenCalled();
     });
@@ -134,9 +149,9 @@ describe("useLocationAutocomplete", () => {
 
         expect(searchLocations).toHaveBeenCalledWith("Central Park");
 
-        expect(result.current.autocompleteState.suggestions).toEqual(locationSuggestions);
-        expect(result.current.autocompleteState.isOpen).toBe(true);
-        expect(result.current.autocompleteState.highlightedIndex).toBe(0);
+        expect(result.current.autoCompleteState.suggestions).toEqual(locationSuggestions);
+        expect(result.current.autoCompleteState.isOpen).toBe(true);
+        expect(result.current.autoCompleteState.highlightedIndex).toBe(0);
     });
 
     it("should trim query before searching", async () => {
@@ -172,7 +187,7 @@ describe("useLocationAutocomplete", () => {
             await Promise.resolve();
         });
 
-        expect(result.current.autocompleteState.isLoading).toBe(true);
+        expect(result.current.autoCompleteState.isLoading).toBe(true);
 
         await act(async () => {
             resolveSearch({
@@ -182,7 +197,7 @@ describe("useLocationAutocomplete", () => {
             await Promise.resolve();
         });
 
-        expect(result.current.autocompleteState.isLoading).toBe(false);
+        expect(result.current.autoCompleteState.isLoading).toBe(false);
     });
 
     it("should open dropdown with no highlighted option when search returns no suggestions", async () => {
@@ -200,9 +215,9 @@ describe("useLocationAutocomplete", () => {
             await Promise.resolve();
         });
 
-        expect(result.current.autocompleteState.suggestions).toEqual([]);
-        expect(result.current.autocompleteState.isOpen).toBe(true);
-        expect(result.current.autocompleteState.highlightedIndex).toBe(-1);
+        expect(result.current.autoCompleteState.suggestions).toEqual([]);
+        expect(result.current.autoCompleteState.isOpen).toBe(true);
+        expect(result.current.autoCompleteState.highlightedIndex).toBe(-1);
     });
 
     /* =============================
@@ -229,11 +244,11 @@ describe("useLocationAutocomplete", () => {
             await Promise.resolve();
         });
 
-        expect(result.current.autocompleteState.error).toBe("No matching location found");
+        expect(result.current.autoCompleteState.error).toBe("No matching location found");
 
-        expect(result.current.autocompleteState.suggestions).toEqual([]);
-        expect(result.current.autocompleteState.isOpen).toBe(true);
-        expect(result.current.autocompleteState.highlightedIndex).toBe(-1);
+        expect(result.current.autoCompleteState.suggestions).toEqual([]);
+        expect(result.current.autoCompleteState.isOpen).toBe(true);
+        expect(result.current.autoCompleteState.highlightedIndex).toBe(-1);
     });
 
     it("should expose rate limit error when backend returns 429", async () => {
@@ -256,7 +271,7 @@ describe("useLocationAutocomplete", () => {
             await Promise.resolve();
         });
 
-        expect(result.current.autocompleteState.error).toBe("Location search is temporarily limited. Please try again later.");
+        expect(result.current.autoCompleteState.error).toBe("Location search is temporarily limited. Please try again later.");
     });
 
     it("should expose generic error when backend search fails", async () => {
@@ -272,7 +287,7 @@ describe("useLocationAutocomplete", () => {
             await Promise.resolve();
         });
 
-        expect(result.current.autocompleteState.error).toBe("Location suggestions could not be loaded");
+        expect(result.current.autoCompleteState.error).toBe("Location suggestions could not be loaded");
     });
 
     /* =============================
@@ -288,25 +303,52 @@ describe("useLocationAutocomplete", () => {
             await Promise.resolve();
         });
 
-        expect(result.current.autocompleteState.suggestions.length).toBe(2);
+        expect(result.current.autoCompleteState.suggestions.length).toBe(2);
 
         act(() => {
-            result.current.autocompleteActions.selectSuggestion(locationSuggestions[0]);
+            result.current.autoCompleteActions.selectSuggestion(locationSuggestions[0]);
         });
 
         expect(onSelectLocation).toHaveBeenCalledWith(locationSuggestions[0]);
-        expect(result.current.autocompleteState.isOpen).toBe(false);
-        expect(result.current.autocompleteState.highlightedIndex).toBe(-1);
+        expect(result.current.autoCompleteState.isOpen).toBe(false);
+        expect(result.current.autoCompleteState.highlightedIndex).toBe(-1);
     });
 
     it("should ignore empty suggestion selection", () => {
         const { result, onSelectLocation } = setupHook();
 
         act(() => {
-            result.current.autocompleteActions.selectSuggestion(null);
+            result.current.autoCompleteActions.selectSuggestion(null);
         });
 
         expect(onSelectLocation).not.toHaveBeenCalled();
+    });
+
+    it("should pass the complete selected location to the parent", async () => {
+        const { result, onSelectLocation } = setupHook();
+
+        await flushDebounce();
+
+        await act(async () => {
+            await Promise.resolve();
+        });
+
+        act(() => {
+            result.current.autoCompleteActions.selectSuggestion(
+                locationSuggestions[0]
+            );
+        });
+
+        expect(onSelectLocation).toHaveBeenCalledWith(
+            expect.objectContaining({
+                label: "Central Park, Manhattan, New York, USA",
+                streetAddress: "Central Park",
+                city: "New York",
+                region: "New York",
+                postalCode: "10022",
+                country: "USA"
+            })
+        );
     });
 
     /* =============================
@@ -322,7 +364,7 @@ describe("useLocationAutocomplete", () => {
             await Promise.resolve();
         });
 
-        expect(result.current.autocompleteState.highlightedIndex).toBe(0);
+        expect(result.current.autoCompleteState.highlightedIndex).toBe(0);
 
         const event = {
             key: "ArrowDown",
@@ -330,11 +372,11 @@ describe("useLocationAutocomplete", () => {
         };
 
         act(() => {
-            result.current.autocompleteActions.handleKeyDown(event);
+            result.current.autoCompleteActions.handleKeyDown(event);
         });
 
         expect(event.preventDefault).toHaveBeenCalledTimes(1);
-        expect(result.current.autocompleteState.highlightedIndex).toBe(1);
+        expect(result.current.autoCompleteState.highlightedIndex).toBe(1);
     });
 
     it("should move highlight up with ArrowUp", async () => {
@@ -346,7 +388,7 @@ describe("useLocationAutocomplete", () => {
             await Promise.resolve();
         });
 
-        expect(result.current.autocompleteState.highlightedIndex).toBe(0);
+        expect(result.current.autoCompleteState.highlightedIndex).toBe(0);
 
         const event = {
             key: "ArrowUp",
@@ -354,11 +396,11 @@ describe("useLocationAutocomplete", () => {
         };
 
         act(() => {
-            result.current.autocompleteActions.handleKeyDown(event);
+            result.current.autoCompleteActions.handleKeyDown(event);
         });
 
         expect(event.preventDefault).toHaveBeenCalledTimes(1);
-        expect(result.current.autocompleteState.highlightedIndex).toBe(1);
+        expect(result.current.autoCompleteState.highlightedIndex).toBe(1);
     });
 
     it("should select highlighted suggestion with Enter", async () => {
@@ -370,7 +412,7 @@ describe("useLocationAutocomplete", () => {
             await Promise.resolve();
         });
 
-        expect(result.current.autocompleteState.highlightedIndex).toBe(0);
+        expect(result.current.autoCompleteState.highlightedIndex).toBe(0);
 
         const event = {
             key: "Enter",
@@ -378,7 +420,7 @@ describe("useLocationAutocomplete", () => {
         };
 
         act(() => {
-            result.current.autocompleteActions.handleKeyDown(event);
+            result.current.autoCompleteActions.handleKeyDown(event);
         });
 
         expect(event.preventDefault).toHaveBeenCalledTimes(1);
@@ -391,7 +433,7 @@ describe("useLocationAutocomplete", () => {
         });
 
         act(() => {
-            result.current.autocompleteActions.handleKeyDown({
+            result.current.autoCompleteActions.handleKeyDown({
                 key: "Enter",
                 preventDefault: vi.fn()
             });
@@ -409,17 +451,17 @@ describe("useLocationAutocomplete", () => {
             await Promise.resolve();
         });
 
-        expect(result.current.autocompleteState.highlightedIndex).toBe(0);
+        expect(result.current.autoCompleteState.highlightedIndex).toBe(0);
 
         act(() => {
-            result.current.autocompleteActions.handleKeyDown({
+            result.current.autoCompleteActions.handleKeyDown({
                 key: "Escape",
                 preventDefault: vi.fn()
             });
         });
 
-        expect(result.current.autocompleteState.isOpen).toBe(false);
-        expect(result.current.autocompleteState.highlightedIndex).toBe(-1);
+        expect(result.current.autoCompleteState.isOpen).toBe(false);
+        expect(result.current.autoCompleteState.highlightedIndex).toBe(-1);
     });
 
     it("should ignore keyboard navigation when dropdown is closed", () => {
@@ -433,11 +475,11 @@ describe("useLocationAutocomplete", () => {
         };
 
         act(() => {
-            result.current.autocompleteActions.handleKeyDown(event);
+            result.current.autoCompleteActions.handleKeyDown(event);
         });
 
         expect(event.preventDefault).not.toHaveBeenCalled();
-        expect(result.current.autocompleteState.highlightedIndex).toBe(-1);
+        expect(result.current.autoCompleteState.highlightedIndex).toBe(-1);
     });
 
     it("should loop highlight to first suggestion with ArrowDown", async () => {
@@ -449,23 +491,23 @@ describe("useLocationAutocomplete", () => {
             await Promise.resolve();
         });
 
-        expect(result.current.autocompleteState.highlightedIndex).toBe(0);
+        expect(result.current.autoCompleteState.highlightedIndex).toBe(0);
 
         act(() => {
-            result.current.autocompleteActions.handleKeyDown({
+            result.current.autoCompleteActions.handleKeyDown({
                 key: "ArrowDown",
                 preventDefault: vi.fn()
             });
         });
 
         act(() => {
-            result.current.autocompleteActions.handleKeyDown({
+            result.current.autoCompleteActions.handleKeyDown({
                 key: "ArrowDown",
                 preventDefault: vi.fn()
             });
         });
 
-        expect(result.current.autocompleteState.highlightedIndex).toBe(0);
+        expect(result.current.autoCompleteState.highlightedIndex).toBe(0);
     });
 
     it("should loop highlight back to first suggestion after last suggestion", async () => {
@@ -477,25 +519,25 @@ describe("useLocationAutocomplete", () => {
             await Promise.resolve();
         });
 
-        expect(result.current.autocompleteState.highlightedIndex).toBe(0);
+        expect(result.current.autoCompleteState.highlightedIndex).toBe(0);
 
         act(() => {
-            result.current.autocompleteActions.handleKeyDown({
+            result.current.autoCompleteActions.handleKeyDown({
                 key: "ArrowDown",
                 preventDefault: vi.fn()
             });
         });
 
-        expect(result.current.autocompleteState.highlightedIndex).toBe(1);
+        expect(result.current.autoCompleteState.highlightedIndex).toBe(1);
 
         act(() => {
-            result.current.autocompleteActions.handleKeyDown({
+            result.current.autoCompleteActions.handleKeyDown({
                 key: "ArrowDown",
                 preventDefault: vi.fn()
             });
         });
 
-        expect(result.current.autocompleteState.highlightedIndex).toBe(0);
+        expect(result.current.autoCompleteState.highlightedIndex).toBe(0);
     });
 
     /* =============================
@@ -526,7 +568,7 @@ describe("useLocationAutocomplete", () => {
             await Promise.resolve();
         });
 
-        expect(result.current.autocompleteState.suggestions).toEqual([
+        expect(result.current.autoCompleteState.suggestions).toEqual([
             locationSuggestions[1]
         ]);
     });

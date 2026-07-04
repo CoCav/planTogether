@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import EventLocationField from "../../../components/events/EventLocationField";
-import useLocationAutocomplete from "../../../features/events/hooks/form/useLocationAutocomplete";
+import useLocationAutoComplete from "../../../features/locations/hooks/useLocationAutoComplete";
 
 /* ==================================================
    EVENT LOCATION FIELD TESTS
@@ -25,24 +25,24 @@ import useLocationAutocomplete from "../../../features/events/hooks/form/useLoca
    - ensures UI stays predictable and accessible
 ================================================== */
 
-vi.mock("../../../features/events/hooks/form/useLocationAutocomplete", () => ({
+vi.mock("../../../features/locations/hooks/useLocationAutoComplete", () => ({
     default: vi.fn()
 }));
 
 describe("EventLocationField", () => {
 
     const defaultHookState = {
-        autocompleteState: {
+        autoCompleteState: {
             suggestions: [],
             isLoading: false,
             error: "",
             isOpen: false,
             highlightedIndex: -1
         },
-        autocompleteRefs: {
+        autoCompleteRefs: {
             containerRef: { current: null }
         },
-        autocompleteActions: {
+        autoCompleteActions: {
             setIsOpen: vi.fn(),
             selectSuggestion: vi.fn(),
             handleKeyDown: vi.fn()
@@ -64,20 +64,20 @@ describe("EventLocationField", () => {
         props = {},
         hookState = {}
     } = {}) => {
-        useLocationAutocomplete.mockReturnValue({
+        useLocationAutoComplete.mockReturnValue({
             ...defaultHookState,
             ...hookState,
-            autocompleteState: {
-                ...defaultHookState.autocompleteState,
-                ...(hookState.autocompleteState || {})
+            autoCompleteState: {
+                ...defaultHookState.autoCompleteState,
+                ...(hookState.autoCompleteState || {})
             },
-            autocompleteRefs: {
-                ...defaultHookState.autocompleteRefs,
-                ...(hookState.autocompleteRefs || {})
+            autoCompleteRefs: {
+                ...defaultHookState.autoCompleteRefs,
+                ...(hookState.autoCompleteRefs || {})
             },
-            autocompleteActions: {
-                ...defaultHookState.autocompleteActions,
-                ...(hookState.autocompleteActions || {})
+            autoCompleteActions: {
+                ...defaultHookState.autoCompleteActions,
+                ...(hookState.autoCompleteActions || {})
             }
         });
 
@@ -105,16 +105,14 @@ describe("EventLocationField", () => {
     it("should expose accessible combobox attributes", () => {
         renderComponent({
             hookState: {
-                autocompleteState: {
+                autoCompleteState: {
                     isOpen: true,
-                    suggestions: [
-                        {
-                            label: "Montréal, Québec, Canada",
-                            latitude: 45.5017,
-                            longitude: -73.5673,
-                            provider: "nominatim"
-                        }
-                    ]
+                    suggestions: [{
+                        label: "Montréal, Québec, Canada",
+                        latitude: 45.5017,
+                        longitude: -73.5673,
+                        provider: "nominatim"
+                    }]
                 }
             }
         });
@@ -130,7 +128,7 @@ describe("EventLocationField", () => {
     it("should expose active descendant when a suggestion is highlighted", () => {
         renderComponent({
             hookState: {
-                autocompleteState: {
+                autoCompleteState: {
                     isOpen: true,
                     highlightedIndex: 0,
                     suggestions: [
@@ -162,7 +160,7 @@ describe("EventLocationField", () => {
             props: { value: "Montreal" }
         });
 
-        expect(useLocationAutocomplete).toHaveBeenCalledWith({
+        expect(useLocationAutoComplete).toHaveBeenCalledWith({
             value: "Montreal",
             onSelectLocation: defaultProps.onSelectLocation
         });
@@ -183,7 +181,7 @@ describe("EventLocationField", () => {
 
         renderComponent({
             hookState: {
-                autocompleteActions: {
+                autoCompleteActions: {
                     handleKeyDown
                 }
             }
@@ -201,7 +199,7 @@ describe("EventLocationField", () => {
 
         renderComponent({
             hookState: {
-                autocompleteActions: {
+                autoCompleteActions: {
                     handleKeyDown
                 }
             }
@@ -221,7 +219,7 @@ describe("EventLocationField", () => {
     it("should render loading dropdown state", () => {
         renderComponent({
             hookState: {
-                autocompleteState: {
+                autoCompleteState: {
                     isOpen: true,
                     isLoading: true
                 }
@@ -234,7 +232,7 @@ describe("EventLocationField", () => {
     it("should render error dropdown state", () => {
         renderComponent({
             hookState: {
-                autocompleteState: {
+                autoCompleteState: {
                     isOpen: true,
                     error: "No matching location found"
                 }
@@ -247,7 +245,7 @@ describe("EventLocationField", () => {
     it("should render formatted inline location suggestions", () => {
         renderComponent({
             hookState: {
-                autocompleteState: {
+                autoCompleteState: {
                     isOpen: true,
                     suggestions: [
                         {
@@ -261,13 +259,39 @@ describe("EventLocationField", () => {
             }
         });
 
-        expect(screen.getByRole("option")).toHaveTextContent("Agora du Vieux-Port");
+        expect(screen.getByText("Agora du Vieux-Port")).toHaveClass("location-title");
+        expect(screen.getByText("Agora du Vieux-Port")).toBeInTheDocument();
+
+        expect(
+            screen.getByText("Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada")
+        ).toHaveClass("location-subtitle");
+    });
+
+    it("should not render location subtitle when it matches the primary label", () => {
+        renderComponent({
+            hookState: {
+                autoCompleteState: {
+                    isOpen: true,
+                    suggestions: [
+                        {
+                            label: "Montréal",
+                            latitude: 45.5017,
+                            longitude: -73.5673,
+                            provider: "nominatim"
+                        }
+                    ]
+                }
+            }
+        });
+
+        expect(screen.getByText("Montréal")).toHaveClass("location-title");
+        expect(screen.queryByText("Montréal", { selector: ".location-subtitle" })).not.toBeInTheDocument();
     });
 
     it("should mark highlighted suggestion as selected", () => {
         renderComponent({
             hookState: {
-                autocompleteState: {
+                autoCompleteState: {
                     isOpen: true,
                     highlightedIndex: 0,
                     suggestions: [
@@ -300,11 +324,11 @@ describe("EventLocationField", () => {
 
         renderComponent({
             hookState: {
-                autocompleteState: {
+                autoCompleteState: {
                     isOpen: true,
                     suggestions: [suggestion]
                 },
-                autocompleteActions: {
+                autoCompleteActions: {
                     selectSuggestion
                 }
             }
@@ -328,7 +352,7 @@ describe("EventLocationField", () => {
     it("should not expose dropdown relationships when dropdown is closed", () => {
         renderComponent({
             hookState: {
-                autocompleteState: {
+                autoCompleteState: {
                     isOpen: false,
                     highlightedIndex: 0,
                     suggestions: [

@@ -800,7 +800,7 @@ describe("EventDetailsPage", () => {
             name: /event location/i
         })).toBeInTheDocument();
 
-        expect(screen.getByText("View this event on the map.")).toBeInTheDocument();
+        expect(screen.getByText("View this event address on the map.")).toBeInTheDocument();
 
         expect(screen.getByTestId("event-location-map")).toHaveTextContent(
             "Event map for Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"

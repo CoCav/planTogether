@@ -8,8 +8,11 @@ import {
     formatEventDateRange,
     formatLocationDisplayLabel,
     formatLocationInlineLabel,
+    formatLocationSelectionLabel,
     formatReviewDate,
-    formatTime
+    formatTime,
+    getLocationDisplayParts,
+    getStructuredLocationParts
 } from "../../utils/formatters";
 
 /* ==================================================
@@ -26,6 +29,8 @@ import {
    - multi-line location label formatting
    - Google Maps URL generation
    - review date formatting
+   - structured location parts
+   - selected location input label formatting
 
    Notes:
    - focuses on pure display helpers
@@ -114,58 +119,100 @@ describe("formatters", () => {
        LOCATION HELPERS
     ============================= */
 
-    it("should format short location labels inline", () => {
-        expect(formatLocationInlineLabel(
-            "Central Park, New York, USA"
-        )).toBe("Central Park, New York, USA");
+    it("should format provider location inline", () => {
+        expect(formatLocationInlineLabel({
+            label: "Agora du Vieux-Port, Rue de Quercy, Vieux-Québec, Québec, G1K 4B9, Canada"
+        })).toBe(
+            "Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada"
+        );
     });
 
-    it("should format long provider location labels inline", () => {
-        expect(formatLocationInlineLabel(
-            "Agora du Vieux-Port, Rue de Quercy, Vieux-Québec, Québec, G1K 4B9, Canada"
-        )).toBe("Agora du Vieux-Port, Rue de Quercy, Québec, G1K 4B9, Canada");
+    it("should format provider location as multi-line display", () => {
+        expect(formatLocationDisplayLabel({
+            label: "Agora du Vieux-Port, Rue de Quercy, Vieux-Québec, Québec, G1K 4B9, Canada"
+        })).toBe(
+            "Agora du Vieux-Port\nRue de Quercy\nQuébec, G1K 4B9, Canada"
+        );
     });
 
-    it("should trim empty location label parts inline", () => {
-        expect(formatLocationInlineLabel(
-            "Central Park, , New York, USA"
-        )).toBe("Central Park, New York, USA");
+    it("should build structured location parts", () => {
+        expect(getStructuredLocationParts({
+            streetAddress: "1500 Rue Sainte-Catherine O",
+            city: "Montréal",
+            region: "Québec",
+            country: "Canada"
+        })).toEqual([
+            "1500 Rue Sainte-Catherine O",
+            "Montréal",
+            "Québec",
+            "Canada"
+        ]);
     });
 
-    it("should return empty string for missing inline location label", () => {
+    it("should prefer structured location parts for display", () => {
+        expect(getLocationDisplayParts({
+            label: "Long provider label",
+            streetAddress: "1500 Rue Sainte-Catherine O",
+            city: "Montréal",
+            region: "Québec",
+            country: "Canada"
+        })).toEqual([
+            "1500 Rue Sainte-Catherine O",
+            "Montréal",
+            "Québec",
+            "Canada"
+        ]);
+    });
+
+    it("should fallback to provider label parts when structured fields are missing", () => {
+        expect(getLocationDisplayParts({
+            label: "Agora du Vieux-Port, Rue de Quercy, Vieux-Québec, Québec, G1K 4B9, Canada"
+        })).toEqual([
+            "Agora du Vieux-Port",
+            "Rue de Quercy",
+            "Québec, G1K 4B9, Canada"
+        ]);
+    });
+
+    it("should format structured location inline", () => {
+        expect(formatLocationInlineLabel({
+            streetAddress: "1500 Rue Sainte-Catherine O",
+            city: "Montréal",
+            region: "Québec",
+            country: "Canada"
+        })).toBe("1500 Rue Sainte-Catherine O, Montréal, Québec, Canada");
+    });
+
+    it("should format structured location as multi-line display", () => {
+        expect(formatLocationDisplayLabel({
+            streetAddress: "1500 Rue Sainte-Catherine O",
+            city: "Montréal",
+            region: "Québec",
+            country: "Canada"
+        })).toBe("1500 Rue Sainte-Catherine O\nMontréal\nQuébec\nCanada");
+    });
+
+    it("should format selected location using provider label first", () => {
+        expect(formatLocationSelectionLabel({
+            label: "Agora du Vieux-Port, Rue de Quercy, Québec, Canada",
+            streetAddress: "Rue de Quercy",
+            city: "Québec",
+            country: "Canada"
+        })).toBe("Agora du Vieux-Port, Rue de Quercy, Québec, Canada");
+    });
+
+    it("should fallback selected location to inline label", () => {
+        expect(formatLocationSelectionLabel({
+            streetAddress: "Rue de Quercy",
+            city: "Québec",
+            country: "Canada"
+        })).toBe("Rue de Quercy, Québec, Canada");
+    });
+
+    it("should return empty string for missing location data", () => {
         expect(formatLocationInlineLabel()).toBe("");
-    });
-
-    it("should handle null location safely", () => {
-        expect(formatLocationInlineLabel(null)).toBe("");
-        expect(formatLocationDisplayLabel(null)).toBe("");
-    });
-
-    it("should handle malformed location input safely", () => {
-        expect(formatLocationInlineLabel(",,,")).toBe("");
-        expect(formatLocationDisplayLabel(",,,")).toBe("");
-    });
-
-    it("should format short location labels as multi-line display", () => {
-        expect(formatLocationDisplayLabel(
-            "Central Park, New York, USA"
-        )).toBe("Central Park\nNew York\nUSA");
-    });
-
-    it("should format long provider location labels as multi-line display", () => {
-        expect(formatLocationDisplayLabel(
-            "Agora du Vieux-Port, Rue de Quercy, Vieux-Québec, Québec, G1K 4B9, Canada"
-        )).toBe("Agora du Vieux-Port\nRue de Quercy\nQuébec, G1K 4B9, Canada");
-    });
-
-    it("should trim empty location label parts for multi-line display", () => {
-        expect(formatLocationDisplayLabel(
-            "Central Park, , New York, USA"
-        )).toBe("Central Park\nNew York\nUSA");
-    });
-
-    it("should return empty string for missing multi-line location label", () => {
         expect(formatLocationDisplayLabel()).toBe("");
+        expect(formatLocationSelectionLabel()).toBe("");
     });
 
     /* =============================

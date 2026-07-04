@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import EventLocationMap from "../../../components/events/EventLocationMap";
-import useEventMapLocation from "../../../features/events/hooks/form/useEventMapLocation";
+import useEventMapLocation from "../../../features/locations/hooks/useEventMapLocation";
 
 /* ==================================================
    EVENT LOCATION MAP TESTS
@@ -14,6 +14,8 @@ import useEventMapLocation from "../../../features/events/hooks/form/useEventMap
    - failed geocoding state
    - map rendering with backend coordinates
    - selected location rendering without backend lookup
+   - structured selected location rendering
+   - formatted action label fallbacks
    - public/private location lookup option
    - optional popup title display
    - formatted popup address display
@@ -26,7 +28,7 @@ import useEventMapLocation from "../../../features/events/hooks/form/useEventMap
    - useEventMapLocation is mocked for deterministic states
 ================================================== */
 
-vi.mock("../../../features/events/hooks/form/useEventMapLocation", () => ({
+vi.mock("../../../features/locations/hooks/useEventMapLocation", () => ({
     default: vi.fn()
 }));
 
@@ -252,6 +254,11 @@ describe("EventLocationMap", () => {
                 eventTitle="Test Event"
                 selectedLocation={{
                     label: "Central Park, New York, USA",
+                    streetAddress: "Central Park",
+                    city: "New York",
+                    region: "New York",
+                    postalCode: "10022",
+                    country: "USA",
                     latitude: 40.7,
                     longitude: -73.9,
                     provider: "nominatim"
@@ -259,22 +266,28 @@ describe("EventLocationMap", () => {
             />
         );
 
-        expect(useEventMapLocation).toHaveBeenCalledWith(
-            "",
-            { isPublic: false }
-        );
+        expect(useEventMapLocation).toHaveBeenCalledWith("", { isPublic: false });
 
-        expect(screen.getByTestId("map-container")).toHaveAttribute(
-            "data-center",
-            JSON.stringify([40.7, -73.9])
-        );
+        expect(screen.getByTestId("map-container")).toHaveAttribute("data-center", JSON.stringify([40.7, -73.9]));
+        expect(screen.getByTestId("map-marker")).toHaveAttribute("data-position", JSON.stringify([40.7, -73.9]));
 
-        expect(screen.getByTestId("map-marker")).toHaveAttribute(
-            "data-position",
-            JSON.stringify([40.7, -73.9])
-        );
+        expect(screen.getByTestId("map-popup")).toHaveTextContent("Central Park");
+        expect(screen.getByTestId("map-popup")).toHaveTextContent("New York");
+        expect(screen.getByTestId("map-popup")).toHaveTextContent("USA");
 
         expect(screen.queryByText("Loading map...")).not.toBeInTheDocument();
+    });
+
+    it("should use display location fallback while coordinates are missing", () => {
+        mockHook({
+            hasSearched: false,
+            isLoading: false,
+            coordinates: null
+        });
+
+        render(<EventLocationMap location="Montréal" />);
+
+        expect(screen.getByText("Loading map...")).toBeInTheDocument();
     });
 
     /* =============================

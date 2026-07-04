@@ -20,6 +20,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../../features/shared/consta
    - default event form values
    - API event prefill values
    - selected location prefill values
+   - structured location prefill values
    - registration deadline option resolution
    - existing image mapping
    - unchanged image state preservation
@@ -119,7 +120,17 @@ describe("eventFormValues", () => {
             type: "Meetup",
             theme: "Web",
             mode: EVENT_MODES.IN_PERSON,
+
             location: "Montreal",
+            locationLabel: "",
+            streetAddress: "",
+            city: "",
+            region: "",
+            postalCode: "",
+            country: "",
+            latitude: null,
+            longitude: null,
+
             startDateTime: "2026-12-20T10:00:00.000Z",
             endDateTime: "2026-12-20T12:00:00.000Z",
             maxParticipants: 20,
@@ -139,6 +150,14 @@ describe("eventFormValues", () => {
             mode: EVENT_MODES.IN_PERSON,
             location: "Montreal",
             selectedLocation: null,
+            locationLabel: "",
+            streetAddress: "",
+            city: "",
+            region: "",
+            postalCode: "",
+            country: "",
+            latitude: null,
+            longitude: null,
 
             startDateTime: toDateTimeLocalValue(event.startDateTime),
             endDateTime: toDateTimeLocalValue(event.endDateTime),
@@ -231,9 +250,51 @@ describe("eventFormValues", () => {
 
         expect(values.selectedLocation).toEqual({
             label: "Montréal, Québec, Canada",
+            streetAddress: null,
+            city: null,
+            region: null,
+            postalCode: null,
+            country: null,
             latitude: 45.5017,
             longitude: -73.5673,
             provider: "nominatim"
+        });
+    });
+
+    it("should hydrate structured location fields from API event", () => {
+        const values = createEventFormValuesFromEvent({
+            location: "Agora du Vieux-Port",
+            locationLabel: "Agora du Vieux-Port, Rue de Quercy, Québec, Canada",
+            streetAddress: "Rue de Quercy",
+            city: "Québec",
+            region: "Québec",
+            postalCode: "G1K 4B9",
+            country: "Canada",
+            latitude: 46.8176197,
+            longitude: -71.2004237
+        });
+
+        expect(values).toMatchObject({
+            location: "Agora du Vieux-Port",
+            locationLabel: "Agora du Vieux-Port, Rue de Quercy, Québec, Canada",
+            streetAddress: "Rue de Quercy",
+            city: "Québec",
+            region: "Québec",
+            postalCode: "G1K 4B9",
+            country: "Canada",
+            latitude: 46.8176197,
+            longitude: -71.2004237,
+            selectedLocation: {
+                label: "Agora du Vieux-Port, Rue de Quercy, Québec, Canada",
+                streetAddress: "Rue de Quercy",
+                city: "Québec",
+                region: "Québec",
+                postalCode: "G1K 4B9",
+                country: "Canada",
+                latitude: 46.8176197,
+                longitude: -71.2004237,
+                provider: "nominatim"
+            }
         });
     });
 
@@ -246,6 +307,11 @@ describe("eventFormValues", () => {
 
         expect(values.selectedLocation).toEqual({
             label: "Montreal",
+            streetAddress: null,
+            city: null,
+            region: null,
+            postalCode: null,
+            country: null,
             latitude: 45.5017,
             longitude: -73.5673,
             provider: "nominatim"

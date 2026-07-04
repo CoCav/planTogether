@@ -14,7 +14,7 @@ import { EVENT_REGISTRATION_DEADLINES } from "../../../../../features/shared/con
    Handles:
    - initial form state
    - field changes
-   - selected location state
+   - selected and structured location state
    - dependent field resets
    - online mode location reset
    - formatted selected location state
@@ -241,6 +241,50 @@ describe("useEventForm", () => {
         expect(result.current.formState.values.selectedLocation).toBeNull();
     });
 
+    it("should clear structured location fields when location text changes", () => {
+        const { result } = setupHook({
+            initialValues: createValidValues({
+                location: "Central Park",
+                locationLabel: "Central Park, New York, USA",
+                streetAddress: "Central Park",
+                city: "New York",
+                region: "New York",
+                postalCode: "10022",
+                country: "USA",
+                latitude: 40.785091,
+                longitude: -73.968285,
+                selectedLocation: {
+                    label: "Central Park, New York, USA",
+                    latitude: 40.785091,
+                    longitude: -73.968285,
+                    provider: "nominatim"
+                }
+            })
+        });
+
+        act(() => {
+            result.current.formActions.handleFieldChange(
+                createChangeEvent({
+                    name: "location",
+                    value: "New manual value"
+                })
+            );
+        });
+
+        expect(result.current.formState.values).toMatchObject({
+            location: "New manual value",
+            locationLabel: "",
+            streetAddress: "",
+            city: "",
+            region: "",
+            postalCode: "",
+            country: "",
+            latitude: null,
+            longitude: null,
+            selectedLocation: null
+        });
+    });
+
     it("should clear custom registration deadline when switching to no deadline", () => {
         const { result } = setupHook({
             initialValues: createValidValues({
@@ -285,7 +329,7 @@ describe("useEventForm", () => {
         expect(result.current.formState.values.registrationDeadlineCustom).toBe("");
     });
 
-    /* =============================v
+    /* =============================
        LOCATION SELECTION
     ============================= */
 
@@ -294,13 +338,31 @@ describe("useEventForm", () => {
 
         const selectedLocation = {
             label: "Central Park, New York, USA",
+            streetAddress: "Central Park",
+            city: "New York",
+            region: "New York",
+            postalCode: "10022",
+            country: "USA",
             latitude: 40.785091,
             longitude: -73.968285,
             provider: "nominatim"
-        };;
+        };
 
         act(() => {
             result.current.formActions.handleLocationSelect(selectedLocation);
+        });
+
+        expect(result.current.formState.values).toMatchObject({
+            location: "Central Park, New York, USA",
+            locationLabel: "Central Park, New York, USA",
+            streetAddress: "Central Park",
+            city: "New York",
+            region: "New York",
+            postalCode: "10022",
+            country: "USA",
+            latitude: 40.785091,
+            longitude: -73.968285,
+            selectedLocation
         });
 
         expect(result.current.formState.values.selectedLocation).toBe(selectedLocation);

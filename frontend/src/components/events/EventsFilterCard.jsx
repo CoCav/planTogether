@@ -178,7 +178,7 @@ export default function EventsFilterCard({
                                         name="location"
                                         value={filters.location}
                                         onChange={onFilterChange}
-                                        placeholder="e.g. Montreal"
+                                        placeholder="Venue, city, region or country"
                                         aria-describedby={errorId}
                                     />
                                 )}

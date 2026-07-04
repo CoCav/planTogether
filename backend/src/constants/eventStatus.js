@@ -1,14 +1,15 @@
-/* ==================================================
-   EVENT STATUS CONSTANTS
+/* ==========================================================================
+   Event Status Constants
 
-   Handles:
-   - shared event status values
-   - valid event status allowlist
+   Defines the available event lifecycle statuses.
 
-   Notes:
-   - centralizes reusable event status strings
-   - prevents duplicated status values across services, validators and tests
-================================================== */
+   Responsibilities
+   - Centralize event status values
+   - Expose the list of valid event statuses
+
+   Notes
+   - Shared across services, validators and tests.
+=========================================================================== */
 
 const EVENT_STATUS = {
     UPCOMING: "upcoming",

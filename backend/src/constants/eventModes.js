@@ -1,14 +1,15 @@
-/* ==================================================
-   EVENT MODE CONSTANTS
+/* ==========================================================================
+   Event Mode Constants
 
-   Handles:
-   - shared event mode values
-   - valid event mode allowlist
+   Defines the available event participation modes.
 
-   Notes:
-   - centralizes reusable event mode strings
-   - prevents duplicated mode values across validators and services
-================================================== */
+   Responsibilities
+   - Centralize event mode values
+   - Expose the list of valid event modes
+
+   Notes
+   - Shared across validators, services and tests.
+=========================================================================== */
 
 const EVENT_MODES = {
     ONLINE: "online",

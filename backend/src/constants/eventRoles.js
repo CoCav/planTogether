@@ -1,14 +1,15 @@
-/* ==================================================
-   EVENT ROLE CONSTANTS
+/* ==========================================================================
+   Event Role Constants
 
-   Handles:
-   - shared event role values
-   - valid event role allowlist
+   Defines the available event participation roles.
 
-   Notes:
-   - prevents duplicated role strings across services, validators and tests
-   - keeps role names consistent across the backend
-================================================== */
+   Responsibilities
+   - Centralize event role values
+   - Expose the list of valid event roles
+
+   Notes
+   - Shared across services, validators and tests.
+=========================================================================== */
 
 const EVENT_ROLES = {
     ORGANIZER: "organizer",

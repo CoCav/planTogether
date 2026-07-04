@@ -1,19 +1,25 @@
-/* ==================================================
-   CORS CONFIGURATION
+/* ==========================================================================
+   CORS Configuration
 
-   Handles:
-   - allowed frontend origins
-   - credentials support
-   - non-browser requests without origin
+   Configures which frontend origins can access the API.
 
-   Notes:
-   - CORS_ORIGIN accepts comma-separated origins
-   - requests without origin are allowed for tools/tests like Postman or Supertest
-   - defaults to Vite dev server in local development
-================================================== */
+   Responsibilities
+   - Read allowed origins from environment variables
+   - Support multiple comma-separated origins
+   - Allow non-browser requests without an origin
+   - Enable credential-based requests
+
+   Notes
+   - CORS_ORIGIN accepts comma-separated origins.
+   - Requests without origin are allowed for tools and tests like Postman or Supertest.
+   - Local development defaults to the Vite dev server.
+=========================================================================== */
+
+const DEFAULT_CORS_ORIGIN = "http://localhost:5173";
+const CORS_ORIGIN_NOT_ALLOWED_MESSAGE = "CORS origin not allowed";
 
 const allowedOrigins = (
-    process.env.CORS_ORIGIN?.split(",") ?? ["http://localhost:5173"]
+    process.env.CORS_ORIGIN?.split(",") ?? [DEFAULT_CORS_ORIGIN]
 ).map((origin) => origin.trim());
 
 const corsOptions = {
@@ -22,7 +28,7 @@ const corsOptions = {
             return callback(null, true);
         }
 
-        return callback(new Error("CORS origin not allowed"));
+        return callback(new Error(CORS_ORIGIN_NOT_ALLOWED_MESSAGE));
     },
 
     credentials: true

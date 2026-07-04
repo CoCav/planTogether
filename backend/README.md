@@ -158,7 +158,7 @@ backend/
 │   │   ├── database.js
 │   │   ├── cors.js
 │   │   ├── logger.js
-│   │   ├── location.js
+│   │   ├── geocoding.js
 │   │   └── security/
 │   │       ├── passwordPolicy.js
 │   │       └── uploadPolicy.js

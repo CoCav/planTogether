@@ -18,7 +18,7 @@
    - invalid provider coordinates are rejected early
 ================================================== */
 
-jest.mock("../../../../src/config/location", () => ({
+jest.mock("../../../../src/config/geocoding.js", () => ({
     provider: "nominatim",
     nominatim: {
         resultLimit: 5

@@ -1,4 +1,4 @@
-const locationConfig = require("../../config/location");
+const locationConfig = require("../../config/geocoding");
 
 const { throwHttpError } = require("../errors/httpError");
 const { normalizeString, normalizeSearchKey } = require("./stringFormatter");

@@ -2,38 +2,45 @@ const { Sequelize } = require("sequelize");
 
 const logger = require("./logger");
 
-/* ==================================================
-   DATABASE CONFIGURATION
+/* ==========================================================================
+   Database Configuration
 
-   Handles:
-   - Sequelize PostgreSQL connection
-   - environment-specific database selection
-   - optional SSL configuration
+   Creates the Sequelize PostgreSQL connection.
 
-   Notes:
-   - test environment uses DB_NAME_TEST
-   - other environments use DB_NAME
-   - SSL is enabled only when DB_SSL=true
-================================================== */
+   Responsibilities
+   - Select the correct database for the current environment
+   - Configure the PostgreSQL connection
+   - Configure optional SSL support
+   - Disable SQL logging by default
 
-// Use a dedicated database for automated tests
-const databaseName = process.env.NODE_ENV === "test" ? process.env.DB_NAME_TEST : process.env.DB_NAME;
+   Notes
+   - Test environment uses DB_NAME_TEST.
+   - Other environments use DB_NAME.
+   - SSL is enabled only when DB_SSL=true.
+=========================================================================== */
 
-// Create Sequelize connection instance
+const TEST_ENV = "test";
+const PRODUCTION_ENV = "production";
+const POSTGRES_DIALECT = "postgres";
+const DEFAULT_DB_PORT = 5432;
+
+const isTest = process.env.NODE_ENV === TEST_ENV;
+const isProduction = process.env.NODE_ENV === PRODUCTION_ENV;
+const isSslEnabled = process.env.DB_SSL === "true";
+
+const databaseName = isTest ? process.env.DB_NAME_TEST : process.env.DB_NAME;
+
 const sequelize = new Sequelize(
     databaseName,
     process.env.DB_USER,
     process.env.DB_PASSWORD,
     {
         host: process.env.DB_HOST,
-        port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
-        dialect: "postgres",
-
-        // Enable SQL logs only when explicitly requested
+        port: process.env.DB_PORT ? Number(process.env.DB_PORT) : DEFAULT_DB_PORT,
+        dialect: POSTGRES_DIALECT,
         logging: false,
 
-        // Enable SSL for production-like hosted databases
-        ...(process.env.DB_SSL === "true"
+        ...(isSslEnabled
             ? {
                 dialectOptions: {
                     ssl: {
@@ -46,8 +53,7 @@ const sequelize = new Sequelize(
     }
 );
 
-// Log target database outside production for debugging
-if (process.env.NODE_ENV !== "production") {
+if (!isProduction) {
     logger.info(`Connecting to development database: ${databaseName}`);
 }
 

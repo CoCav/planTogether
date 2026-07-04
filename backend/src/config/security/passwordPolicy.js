@@ -1,15 +1,16 @@
-/* ==================================================
-   PASSWORD POLICY
+/* ==========================================================================
+   Password Policy
 
-   Handles:
-   - shared password validation rules
-   - password security requirements
-   - reusable validation messages
+   Defines shared password validation rules.
 
-   Notes:
-   - shared across auth and user validators
-   - keeps password requirements centralized
-================================================== */
+   Responsibilities
+   - Define password security requirements
+   - Centralize password validation messages
+   - Share password rules across auth and user validators
+
+   Notes
+   - Keep these rules synchronized with frontend password validation.
+=========================================================================== */
 
 const PASSWORD_MIN_LENGTH = 8;
 

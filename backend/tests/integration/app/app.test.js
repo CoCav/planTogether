@@ -41,7 +41,7 @@ describe("App API", () => {
         const res = await request(app).get("/");
 
         expect(res.statusCode).toBe(200);
-        expect(res.text).toBe("PlanTogether is online !");
+        expect(res.text).toBe("PlanTogether is online!");
     });
 
 

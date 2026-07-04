@@ -18,10 +18,10 @@
 
 const loadLocationConfig = () => {
     jest.resetModules();
-    return require("../../../src/config/location");
+    return require("../../../src/config/geocoding");
 };
 
-describe("location config", () => {
+describe("geocoding config", () => {
     const originalEnv = { ...process.env };
 
     afterEach(() => {
@@ -36,17 +36,17 @@ describe("location config", () => {
     it("should use nominatim as default provider", () => {
         delete process.env.LOCATION_PROVIDER;
 
-        const locationConfig = loadLocationConfig();
+        const geocodingConfig = loadLocationConfig();
 
-        expect(locationConfig.provider).toBe("nominatim");
+        expect(geocodingConfig.provider).toBe("nominatim");
     });
 
     it("should use configured location provider", () => {
         process.env.LOCATION_PROVIDER = "mapbox";
 
-        const locationConfig = loadLocationConfig();
+        const geocodingConfig = loadLocationConfig();
 
-        expect(locationConfig.provider).toBe("mapbox");
+        expect(geocodingConfig.provider).toBe("mapbox");
     });
 
     /* =============================
@@ -56,9 +56,9 @@ describe("location config", () => {
     it("should use default Nominatim search URL", () => {
         delete process.env.NOMINATIM_SEARCH_URL;
 
-        const locationConfig = loadLocationConfig();
+        const geocodingConfig = loadLocationConfig();
 
-        expect(locationConfig.nominatim.searchUrl).toBe(
+        expect(geocodingConfig.nominatim.searchUrl).toBe(
             "https://nominatim.openstreetmap.org/search"
         );
     });
@@ -66,9 +66,9 @@ describe("location config", () => {
     it("should use configured Nominatim search URL", () => {
         process.env.NOMINATIM_SEARCH_URL = "https://example.com/search";
 
-        const locationConfig = loadLocationConfig();
+        const geocodingConfig = loadLocationConfig();
 
-        expect(locationConfig.nominatim.searchUrl).toBe("https://example.com/search");
+        expect(geocodingConfig.nominatim.searchUrl).toBe("https://example.com/search");
     });
 
     /* =============================
@@ -78,17 +78,17 @@ describe("location config", () => {
     it("should use default geocoding user agent", () => {
         delete process.env.GEOCODING_USER_AGENT;
 
-        const locationConfig = loadLocationConfig();
+        const geocodingConfig = loadLocationConfig();
 
-        expect(locationConfig.nominatim.userAgent).toBe("PlanTogether/1.0");
+        expect(geocodingConfig.nominatim.userAgent).toBe("PlanTogether/1.0");
     });
 
     it("should use configured geocoding user agent", () => {
         process.env.GEOCODING_USER_AGENT = "PlanTogetherTest/1.0";
 
-        const locationConfig = loadLocationConfig();
+        const geocodingConfig = loadLocationConfig();
 
-        expect(locationConfig.nominatim.userAgent).toBe("PlanTogetherTest/1.0");
+        expect(geocodingConfig.nominatim.userAgent).toBe("PlanTogetherTest/1.0");
     });
 
     /* =============================
@@ -98,16 +98,16 @@ describe("location config", () => {
     it("should use default geocoding result limit", () => {
         delete process.env.GEOCODING_RESULT_LIMIT;
 
-        const locationConfig = loadLocationConfig();
+        const geocodingConfig = loadLocationConfig();
 
-        expect(locationConfig.nominatim.resultLimit).toBe(5);
+        expect(geocodingConfig.nominatim.resultLimit).toBe(5);
     });
 
     it("should use configured geocoding result limit", () => {
         process.env.GEOCODING_RESULT_LIMIT = "8";
 
-        const locationConfig = loadLocationConfig();
+        const geocodingConfig = loadLocationConfig();
 
-        expect(locationConfig.nominatim.resultLimit).toBe(8);
+        expect(geocodingConfig.nominatim.resultLimit).toBe(8);
     });
 });

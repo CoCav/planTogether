@@ -1,6 +1,6 @@
 const Location = require("../models/locationModel");
 
-const locationConfig = require("../config/location");
+const geocodingConfig = require("../config/geocoding");
 
 const { throwHttpError } = require("../utils/errors/httpError");
 
@@ -105,11 +105,11 @@ const searchNominatimLocations = async (query, originalQuery = query) => {
     const params = buildNominatimSearchParams(query);
 
     const response = await fetch(
-        `${locationConfig.nominatim.searchUrl}?${params.toString()}`,
+        `${geocodingConfig.nominatim.searchUrl}?${params.toString()}`,
         {
             headers: {
                 Accept: "application/json",
-                "User-Agent": locationConfig.nominatim.userAgent
+                "User-Agent": geocodingConfig.nominatim.userAgent
             }
         }
     );

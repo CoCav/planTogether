@@ -1,15 +1,17 @@
-/* ==================================================
-   UPLOAD SECURITY POLICY
+/* ==========================================================================
+   Upload Security Policy
 
-   Handles:
-   - allowed image MIME types
-   - allowed image file extensions
-   - upload size limits
+   Defines shared upload security rules.
 
-   Notes:
-   - shared by upload middlewares
-   - keeps upload security rules centralized
-================================================== */
+   Responsibilities
+   - Define allowed image MIME types
+   - Define allowed image file extensions
+   - Define upload size limits
+
+   Notes
+   - Shared by upload middlewares.
+   - Keep these rules synchronized with frontend upload validation.
+=========================================================================== */
 
 const ALLOWED_IMAGE_MIME_TYPES = [
     "image/jpeg",

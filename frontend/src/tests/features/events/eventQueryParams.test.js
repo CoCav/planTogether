@@ -62,6 +62,9 @@ describe("eventQueryParams", () => {
             "theme",
             "mode",
             "location",
+            "city",
+            "region",
+            "country",
             "status",
             "date",
             "startDate",
@@ -150,9 +153,7 @@ describe("eventQueryParams", () => {
             "search=music&creator=John%20Doe&creatorId=2&type=Meetup&mode=online&status=upcoming&sortBy=title&order=desc"
         );
 
-        expect(
-            getInitialEventFiltersFromUrl(searchParams)
-        ).toMatchObject(
+        expect(getInitialEventFiltersFromUrl(searchParams)).toMatchObject(
             createEventFilters({
                 search: "music",
                 creator: "John Doe",
@@ -166,14 +167,25 @@ describe("eventQueryParams", () => {
         );
     });
 
-    it("should keep default values for missing filters", () => {
+    it("should return location detail filters from URL", () => {
         const searchParams = new URLSearchParams(
-            "creator=John%20Doe"
+            "location=Agora&city=Montreal&region=Quebec&country=Canada"
         );
 
-        expect(
-            getInitialEventFiltersFromUrl(searchParams)
-        ).toMatchObject(
+        expect(getInitialEventFiltersFromUrl(searchParams)).toMatchObject(
+            createEventFilters({
+                location: "Agora",
+                city: "Montreal",
+                region: "Quebec",
+                country: "Canada"
+            })
+        );
+    });
+
+    it("should keep default values for missing filters", () => {
+        const searchParams = new URLSearchParams("creator=John%20Doe");
+
+        expect(getInitialEventFiltersFromUrl(searchParams)).toMatchObject(
             createEventFilters({
                 creator: "John Doe"
             })
@@ -214,6 +226,22 @@ describe("eventQueryParams", () => {
         expect(params.get("order")).toBe("desc");
 
         expect(params.has("type")).toBe(false);
+    });
+
+    it("should build location detail search params", () => {
+        const params = buildEventSearchParams({
+            filters: createEventFilters({
+                location: "Agora",
+                city: "Montreal",
+                region: "Quebec",
+                country: "Canada"
+            })
+        });
+
+        expect(params.get("location")).toBe("Agora");
+        expect(params.get("city")).toBe("Montreal");
+        expect(params.get("region")).toBe("Quebec");
+        expect(params.get("country")).toBe("Canada");
     });
 
     it("should not include fallback view or first page in URL params", () => {

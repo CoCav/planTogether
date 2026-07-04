@@ -23,6 +23,9 @@ export const createEventListingFilters = (overrides = {}) => ({
 
     mode: "",
     location: "",
+    city: "",
+    region: "",
+    country: "",
 
     status: "",
 

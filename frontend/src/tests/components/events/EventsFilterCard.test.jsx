@@ -132,6 +132,14 @@ describe("EventsFilterCard", () => {
         expect(screen.getByText("Soonest first")).toBeInTheDocument();
     });
 
+    it("renders the location filter with the unified placeholder", () => {
+        renderFilterCard({
+            showFilters: true
+        });
+
+        expect(screen.getByPlaceholderText(/venue, city, region or country/i)).toBeInTheDocument();
+    });
+
     it("associates visible filter controls with their labels", () => {
         renderFilterCard({
             showFilters: true

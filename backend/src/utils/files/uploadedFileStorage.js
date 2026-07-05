@@ -3,48 +3,62 @@ const path = require("path");
 
 const logger = require("../../config/logger");
 
-/* ==================================================
-   UPLOADED FILE STORAGE
+/* ==========================================================================
+   Uploaded File Storage
 
-   Handles:
-   - safe deletion of uploaded files
-   - path normalization
-   - protection against directory traversal
-   - file deletion warnings use centralized structured logging
+   Provides helpers for managing uploaded files.
 
-   Notes:
-   - only files inside UPLOAD_DIR can be deleted
-   - silently fails if file does not exist
-================================================== */
+   Responsibilities
+   - Delete uploaded files safely
+   - Normalize upload paths
+   - Prevent directory traversal
+   - Log file deletion failures
 
-const baseUploadDir = process.env.UPLOAD_DIR || "uploads";
+   Notes
+   - Only files inside the upload directory can be deleted.
+   - Missing files are ignored silently.
+=========================================================================== */
 
-// Delete a file from the uploads directory
+const DEFAULT_UPLOAD_DIRECTORY = "uploads";
+
+const uploadDirectory = process.env.UPLOAD_DIR || DEFAULT_UPLOAD_DIRECTORY;
+
+// Delete an uploaded file safely.
 const deleteUploadedFile = async (filePath) => {
     if (!filePath) return;
 
     try {
-        // Remove leading slash for consistency (/uploads/... → uploads/...)
+        // Normalize the stored path by removing the leading slash.
         const normalizedPath = filePath.startsWith("/")
             ? filePath.slice(1)
             : filePath;
 
-        // Prevent deleting files outside upload directory
-        if (!normalizedPath.startsWith(baseUploadDir)) {
-            logger.warn("Invalid file path, outside upload directory");
+        // Prevent deleting files outside the configured upload directory.
+        const isInsideUploadDirectory =
+            normalizedPath === uploadDirectory ||
+            normalizedPath.startsWith(`${uploadDirectory}/`);
+
+        if (!isInsideUploadDirectory) {
+            logger.warn(
+                { filePath },
+                "Attempted to delete a file outside the upload directory"
+            );
             return;
         }
 
-        // Resolve absolute path from project root
+        // Resolve the absolute file path from the project root.
         const absolutePath = path.join(__dirname, "..", "..", "..", normalizedPath);
 
-        // Delete file only if it exists
+        // Delete the file only if it still exists.
         if (fs.existsSync(absolutePath)) {
             await fs.promises.unlink(absolutePath);
         }
 
     } catch (error) {
-        logger.warn({ error }, "Failed to delete uploaded file");
+        logger.warn(
+            { error, filePath },
+            "Failed to delete uploaded file"
+        );
     }
 };
 

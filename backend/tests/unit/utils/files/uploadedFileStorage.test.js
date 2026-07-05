@@ -85,7 +85,10 @@ describe("uploadedFileStorage utils", () => {
         expect(fs.existsSync).not.toHaveBeenCalled();
         expect(fs.promises.unlink).not.toHaveBeenCalled();
 
-        expect(logger.warn).toHaveBeenCalledWith("Invalid file path, outside upload directory");
+        expect(logger.warn).toHaveBeenCalledWith(
+            { filePath: "/other-folder/file.png" },
+            "Attempted to delete a file outside the upload directory"
+        );
     });
 
     /* =============================
@@ -100,7 +103,8 @@ describe("uploadedFileStorage utils", () => {
 
         expect(logger.warn).toHaveBeenCalledWith(
             expect.objectContaining({
-                error: expect.any(Error)
+                error: expect.any(Error),
+                filePath: "/uploads/events/event-test.png"
             }),
             "Failed to delete uploaded file"
         );

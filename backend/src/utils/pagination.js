@@ -1,48 +1,67 @@
-/* ==================================================
-   PAGINATION
+/* ==========================================================================
+   Pagination Utilities
 
-   Handles:
-   - page and pageSize normalization
-   - offset calculation
-   - sorting validation
-   - grouped count normalization
-   - total page calculation
+   Builds pagination, sorting and count helpers for list endpoints.
 
-   Notes:
-   - pageSize is capped to prevent abuse
-   - sort fields must be explicitly allowed
-   - grouped Sequelize counts can return arrays
-================================================== */
+   Responsibilities
+   - Normalize page and page size query parameters
+   - Calculate Sequelize offset and limit values
+   - Validate allowed sorting fields
+   - Normalize grouped and non-grouped Sequelize counts
+   - Calculate total pages
 
-/* =============================
-   PAGINATION OPTIONS
-============================= */
+   Notes
+   - Page size is capped to prevent heavy queries.
+   - Sort fields must be explicitly allowed by the caller.
+   - Grouped Sequelize counts can return arrays.
+=========================================================================== */
 
-// Build pagination and sorting options from query params
-const getPaginationOptions = (query = {}, allowedSortFields = [], defaultSortField = "createdAt", defaultOrder = "DESC") => {
+const DEFAULT_PAGE = 1;
+const DEFAULT_PAGE_SIZE = 10;
+const MAX_PAGE_SIZE = 100;
+
+const DEFAULT_SORT_FIELD = "createdAt";
+const DEFAULT_SORT_ORDER = "DESC";
+const ASC_SORT_ORDER = "ASC";
+const DESC_SORT_ORDER = "DESC";
+
+const getPaginationOptions = (
+    query = {},
+    allowedSortFields = [],
+    defaultSortField = DEFAULT_SORT_FIELD,
+    defaultOrder = DEFAULT_SORT_ORDER
+) => {
 
     const {
-        page = 1,
-        pageSize = 10,
+        page = DEFAULT_PAGE,
+        pageSize = DEFAULT_PAGE_SIZE,
         sortBy = defaultSortField,
         order = defaultOrder
     } = query;
 
-    // Limit page size to prevent heavy queries
-    const limit = Math.min(parseInt(pageSize, 10) || 10, 100);
+    // Normalize pagination values.
+    const limit = Math.min(
+        parseInt(pageSize, 10) || DEFAULT_PAGE_SIZE,
+        MAX_PAGE_SIZE
+    );
 
-    // Ensure page is always greater than or equal to 1
-    const currentPage = Math.max(parseInt(page, 10) || 1, 1);
+    const currentPage = Math.max(
+        parseInt(page, 10) || DEFAULT_PAGE,
+        DEFAULT_PAGE
+    );
 
-    const offset = (currentPage - 1) * limit;
+    // Calculate the SQL offset for the requested page.
+    const offset = (currentPage - DEFAULT_PAGE) * limit;
 
-    // Only allow safe sorting fields
+    // Prevent sorting by unsupported database fields.
     const orderField = allowedSortFields.includes(sortBy)
         ? sortBy
         : defaultSortField;
 
-    const orderDirection =
-        String(order).toLowerCase() === "asc" ? "ASC" : "DESC";
+    // Normalize the requested sort direction.
+    const orderDirection = String(order).toLowerCase() === "asc"
+        ? ASC_SORT_ORDER
+        : DESC_SORT_ORDER;
 
     return {
         page: currentPage,
@@ -54,20 +73,10 @@ const getPaginationOptions = (query = {}, allowedSortFields = [], defaultSortFie
     };
 };
 
-/* =============================
-   COUNT HELPERS
-============================= */
-
-// Normalize Sequelize count results from grouped and non-grouped queries
 const getTotalCount = (count) => {
     return Array.isArray(count) ? count.length : count;
 };
 
-/* =============================
-   PAGE HELPERS
-============================= */
-
-// Calculate total pages from total items and page size
 const getTotalPages = (totalItems, pageSize) => {
     return Math.ceil(totalItems / pageSize);
 };

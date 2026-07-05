@@ -1,25 +1,27 @@
-/* ==================================================
-   HTTP ERROR UTILITIES
+/* ==========================================================================
+   HTTP Error Utilities
 
-   Handles:
-   - reusable HTTP error creation
-   - custom application error throwing
-   - statusCode attachment for API responses
+   Creates reusable HTTP errors for services, controllers and middlewares.
 
-   Notes:
-   - designed to work with global errorHandler middleware
-   - avoids repeating custom Error boilerplate
-   - keeps services/controllers cleaner and more consistent
-================================================== */
+   Responsibilities
+   - Create Error objects with an HTTP status code
+   - Throw HTTP errors directly when needed
+   - Keep error handling consistent with the global error handler
 
-// Create reusable HTTP error objects
+   Notes
+   - Designed to work with the global errorHandler middleware.
+   - Avoids repeating custom Error boilerplate.
+=========================================================================== */
+
+// Create a standard Error object with an attached HTTP status code.
 const createHttpError = (statusCode, message) => {
     const error = new Error(message);
     error.statusCode = statusCode;
+
     return error;
 };
 
-// Throw reusable HTTP errors directly
+// Convenience helper for early returns inside services and controllers.
 const throwHttpError = (statusCode, message) => {
     throw createHttpError(statusCode, message);
 };

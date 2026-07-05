@@ -22,11 +22,11 @@
 ================================================== */
 
 const {
-    buildEventCreateData,
-    buildEventUpdateData,
-    buildEmptyLocationData,
-    buildLocationData
-} = require("../../../../src/utils/events/eventDataBuilder");
+    buildCreateEventPayload,
+    buildUpdateEventPayload,
+    buildEmptyStructuredLocationData,
+    buildStructuredLocationData
+} = require("../../../../src/utils/events/eventPayploadBuilder");
 
 const { EVENT_MODES } = require("../../../../src/constants/eventModes");
 
@@ -37,7 +37,7 @@ describe("eventDataBuilder utils", () => {
     ============================= */
 
     it("should build empty location data", () => {
-        expect(buildEmptyLocationData()).toEqual({
+        expect(buildEmptyStructuredLocationData()).toEqual({
             location: null,
             locationLabel: null,
             streetAddress: null,
@@ -51,7 +51,7 @@ describe("eventDataBuilder utils", () => {
     });
 
     it("should build persisted location data from resolved location", () => {
-        expect(buildLocationData({
+        expect(buildStructuredLocationData({
             latitude: 45.5031824,
             longitude: -73.5698065,
             label: "Montréal, Québec, Canada",
@@ -73,7 +73,7 @@ describe("eventDataBuilder utils", () => {
     });
 
     it("should support locationLabel as fallback location label source", () => {
-        expect(buildLocationData({
+        expect(buildStructuredLocationData({
             latitude: 45.5031824,
             longitude: -73.5698065,
             locationLabel: "Montréal, Québec, Canada"
@@ -94,7 +94,7 @@ describe("eventDataBuilder utils", () => {
     ============================= */
 
     it("should build event creation data", () => {
-        const result = buildEventCreateData({
+        const result = buildCreateEventPayload({
             title: "Test Event",
             description: "Description",
             type: "Meetup",
@@ -151,7 +151,7 @@ describe("eventDataBuilder utils", () => {
     });
 
     it("should normalize online event creation location and geolocation to null", () => {
-        const result = buildEventCreateData({
+        const result = buildCreateEventPayload({
             title: "Online Event",
             description: "Description",
             type: "Workshop",
@@ -178,7 +178,7 @@ describe("eventDataBuilder utils", () => {
     });
 
     it("should normalize nullable create fields to null", () => {
-        const result = buildEventCreateData({
+        const result = buildCreateEventPayload({
             title: "Nullable Event",
             description: "Description",
             type: "Meetup",
@@ -213,7 +213,7 @@ describe("eventDataBuilder utils", () => {
             mode: EVENT_MODES.IN_PERSON
         };
 
-        const result = buildEventUpdateData(event, {
+        const result = buildUpdateEventPayload(event, {
             title: "Updated Title",
             theme: "Design"
         });
@@ -231,7 +231,7 @@ describe("eventDataBuilder utils", () => {
             mode: EVENT_MODES.IN_PERSON
         };
 
-        const result = buildEventUpdateData(event, {
+        const result = buildUpdateEventPayload(event, {
             mode: EVENT_MODES.ONLINE,
             location: "Montreal"
         });
@@ -258,7 +258,7 @@ describe("eventDataBuilder utils", () => {
             mode: EVENT_MODES.IN_PERSON
         };
 
-        const result = buildEventUpdateData(event, {
+        const result = buildUpdateEventPayload(event, {
             mode: EVENT_MODES.IN_PERSON,
             location: "Quebec City"
         }, {
@@ -294,7 +294,7 @@ describe("eventDataBuilder utils", () => {
             mode: EVENT_MODES.IN_PERSON
         };
 
-        const result = buildEventUpdateData(event, {
+        const result = buildUpdateEventPayload(event, {
             mode: EVENT_MODES.IN_PERSON,
             location: "Unknown place"
         });
@@ -321,7 +321,7 @@ describe("eventDataBuilder utils", () => {
             mode: EVENT_MODES.IN_PERSON
         };
 
-        const result = buildEventUpdateData(event, {
+        const result = buildUpdateEventPayload(event, {
             title: "Updated Title"
         });
 
@@ -334,7 +334,7 @@ describe("eventDataBuilder utils", () => {
             mode: EVENT_MODES.IN_PERSON
         };
 
-        const result = buildEventUpdateData(event, {
+        const result = buildUpdateEventPayload(event, {
             image: "/uploads/events/new.png"
         });
 
@@ -347,7 +347,7 @@ describe("eventDataBuilder utils", () => {
             mode: EVENT_MODES.IN_PERSON
         };
 
-        const result = buildEventUpdateData(event, {
+        const result = buildUpdateEventPayload(event, {
             image: null
         });
 
@@ -360,7 +360,7 @@ describe("eventDataBuilder utils", () => {
             mode: EVENT_MODES.IN_PERSON
         };
 
-        const result = buildEventUpdateData(event, {
+        const result = buildUpdateEventPayload(event, {
             image: ""
         });
 

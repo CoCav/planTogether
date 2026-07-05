@@ -1,38 +1,38 @@
 const { EVENT_STATUS } = require("../../constants/eventStatus");
 const { throwHttpError } = require("../errors/httpError");
 
-/* ==================================================
-   EVENT STATUS
+/* ==========================================================================
+   Event Status
 
-   Handles:
-   - event status computation (upcoming / ongoing / past)
-   - event start and end time checks
-   - time-based business rules enforcement
+   Provides event status helpers and time-based business rules.
 
-   Notes:
-   - centralizes all time logic to avoid duplication
-   - event statuses are centralized through shared constants
-================================================== */
+   Responsibilities
+   - Determine the current event status
+   - Check whether an event has started or ended
+   - Enforce time-based business rules
 
-/* =============================
-   STATUS HELPERS
-============================= */
+   Notes
+   - All event time comparisons are centralized here.
+   - Event statuses use shared constants.
+=========================================================================== */
 
-// Check if event has already started
+/* Status helpers */
+
+// Return true when the event start date has been reached.
 const hasEventStarted = (event) => {
     if (!event || !event.startDateTime) return false;
 
     return new Date(event.startDateTime) <= new Date();
 };
 
-// Check if event has already ended
+// Return true when the event end date has passed.
 const isEventPast = (event) => {
     if (!event || !event.endDateTime) return false;
 
     return new Date(event.endDateTime) < new Date();
 };
 
-// Get event status
+// Determine the current lifecycle status of an event.
 const getEventStatus = (event) => {
     if (isEventPast(event)) {
         return EVENT_STATUS.PAST;
@@ -45,18 +45,16 @@ const getEventStatus = (event) => {
     return EVENT_STATUS.UPCOMING;
 };
 
-/* =============================
-   BUSINESS RULES
-============================= */
+/* Business rules */
 
-// Prevent actions on past events
+// Prevent modifications on past events.
 const assertEventNotPast = (event) => {
     if (isEventPast(event)) {
         throwHttpError(403, "No action is allowed on a past event");
     }
 };
 
-// Prevent deleting events that already started
+// Prevent deleting events that have already started.
 const assertEventNotStarted = (event) => {
     if (hasEventStarted(event)) {
         throwHttpError(

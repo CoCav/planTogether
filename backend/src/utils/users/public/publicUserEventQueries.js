@@ -1,23 +1,23 @@
+const { Op } = require("sequelize");
 
-/* ==================================================
-   PUBLIC USER EVENT QUERY BUILDER
+const { EVENT_ROLES } = require("../../../constants/eventRoles");
 
-   Handles:
-   - public created event queries
-   - public joined event queries
-   - pagination-compatible event retrieval
+/* ==========================================================================
+   Public User Event Queries
 
-   Notes:
-   - created view queries Event directly
-   - joined view queries EventUserRole then extracts events
-   - participant count enrichment stays in userService
-================================================== */
+   Executes public event queries for user profiles.
 
-/* =============================
-   CREATED EVENTS
-============================= */
+   Responsibilities
+   - Fetch public events created by a user
+   - Fetch public events joined by a user
+   - Support pagination-compatible results
 
-// Fetch paginated public events created by a user
+   Notes
+   - Created events are queried directly from Event.
+   - Joined events are queried through EventUserRole.
+   - Participant count enrichment stays in the user service.
+=========================================================================== */
+
 const getPublicCreatedEvents = async ({
     Event,
     User,
@@ -34,7 +34,6 @@ const getPublicCreatedEvents = async ({
         orderDirection
     } = pagination;
 
-    // Query events created by the user with applied filters and pagination
     return Event.findAndCountAll({
         where: {
             creatorId: userId,
@@ -50,17 +49,10 @@ const getPublicCreatedEvents = async ({
     });
 };
 
-/* =============================
-   JOINED EVENTS
-============================= */
-
-// Fetch paginated public events joined by a user
 const getPublicJoinedEvents = async ({
     Event,
     User,
     EventUserRole,
-    EVENT_ROLES,
-    Op,
     userId,
     eventFilter,
     creator,
@@ -74,11 +66,12 @@ const getPublicJoinedEvents = async ({
         orderDirection
     } = pagination;
 
-    // Query joined events through membership, applying filters and pagination
     const { count, rows } = await EventUserRole.findAndCountAll({
         where: {
             userId,
             deletedAt: null,
+
+            // Organizer memberships are already covered by created events.
             role: {
                 [Op.ne]: EVENT_ROLES.ORGANIZER
             }
@@ -97,7 +90,6 @@ const getPublicJoinedEvents = async ({
         subQuery: false
     });
 
-    // Extract events from membership rows and return with count for pagination
     return {
         count,
         rows: rows.map((membership) => membership.event)

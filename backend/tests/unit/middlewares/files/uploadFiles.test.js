@@ -16,9 +16,9 @@
    - image MIME types and extensions are validated
 ================================================== */
 
-const { uploadAvatar, uploadEventImage } = require("../../../src/middlewares/uploadFiles");
+const { uploadAvatar, uploadEventImage } = require("../../../../src/middlewares/files/uploadFiles");
 
-const { MAX_AVATAR_SIZE, MAX_EVENT_IMAGE_SIZE } = require("../../../src/config/security/uploadPolicy");
+const { MAX_AVATAR_SIZE, MAX_EVENT_IMAGE_SIZE } = require("../../../../src/config/security/uploadPolicy");
 
 describe("uploadFiles middleware", () => {
 

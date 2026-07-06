@@ -53,8 +53,8 @@ jest.mock("../../../../src/services/locationService", () => ({
     resolveEventLocation: jest.fn()
 }));
 
-jest.mock("../../../../src/utils/events/eventDataBuilder", () => ({
-    buildEventUpdateData: jest.fn()
+jest.mock("../../../../src/utils/events/eventPayploadBuilder.js", () => ({
+    buildUpdateEventPayload: jest.fn()
 }));
 
 jest.mock("../../../../src/utils/events/eventStatus", () => ({
@@ -73,7 +73,8 @@ const locationService = require("../../../../src/services/locationService");
 
 const { EVENT_MODES } = require("../../../../src/constants/eventModes");
 
-const { buildEventUpdateData } = require("../../../../src/utils/events/eventDataBuilder");
+const { buildUpdateEventPayload } = require("../../../../src/utils/events/eventPayploadBuilder");
+
 const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
 const { deleteUploadedFile } = require("../../../../src/utils/files/uploadedFileStorage");
 
@@ -122,7 +123,7 @@ describe("eventService - updateEventByID", () => {
 
         Event.findByPk.mockResolvedValue(event);
         assertEventNotPast.mockImplementation(() => { });
-        buildEventUpdateData.mockReturnValue(updateData);
+        buildUpdateEventPayload.mockReturnValue(updateData);
 
         const result = await eventService.updateEventByID(1, {
             title: "Updated Event"
@@ -134,7 +135,7 @@ describe("eventService - updateEventByID", () => {
 
         expect(assertEventNotPast).toHaveBeenCalledWith(event);
 
-        expect(buildEventUpdateData).toHaveBeenCalledWith(event, {
+        expect(buildUpdateEventPayload).toHaveBeenCalledWith(event, {
             title: "Updated Event"
         }, null);
 
@@ -164,7 +165,7 @@ describe("eventService - updateEventByID", () => {
 
         Event.findByPk.mockResolvedValue(event);
         assertEventNotPast.mockImplementation(() => { });
-        buildEventUpdateData.mockReturnValue(updateData);
+        buildUpdateEventPayload.mockReturnValue(updateData);
 
         await eventService.updateEventByID(1, {
             title: "Updated Event"
@@ -174,7 +175,7 @@ describe("eventService - updateEventByID", () => {
 
         expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
 
-        expect(buildEventUpdateData).toHaveBeenCalledWith(event, {
+        expect(buildUpdateEventPayload).toHaveBeenCalledWith(event, {
             title: "Updated Event"
         }, null);
 
@@ -199,13 +200,13 @@ describe("eventService - updateEventByID", () => {
 
         Event.findByPk.mockResolvedValue(event);
         assertEventNotPast.mockImplementation(() => { });
-        buildEventUpdateData.mockReturnValue(updateData);
+        buildUpdateEventPayload.mockReturnValue(updateData);
 
         await eventService.updateEventByID(1, {
             image: "/uploads/events/new-event.png"
         });
 
-        expect(buildEventUpdateData).toHaveBeenCalledWith(event, {
+        expect(buildUpdateEventPayload).toHaveBeenCalledWith(event, {
             image: "/uploads/events/new-event.png"
         }, null);
 
@@ -233,13 +234,13 @@ describe("eventService - updateEventByID", () => {
 
         Event.findByPk.mockResolvedValue(event);
         assertEventNotPast.mockImplementation(() => { });
-        buildEventUpdateData.mockReturnValue(updateData);
+        buildUpdateEventPayload.mockReturnValue(updateData);
 
         await eventService.updateEventByID(1, {
             image: null
         });
 
-        expect(buildEventUpdateData).toHaveBeenCalledWith(event, {
+        expect(buildUpdateEventPayload).toHaveBeenCalledWith(event, {
             image: null
         }, null);
 
@@ -273,7 +274,7 @@ describe("eventService - updateEventByID", () => {
 
         Event.findByPk.mockResolvedValue(event);
         assertEventNotPast.mockImplementation(() => { });
-        buildEventUpdateData.mockReturnValue(updateData);
+        buildUpdateEventPayload.mockReturnValue(updateData);
 
         await eventService.updateEventByID(1, {
             location: "Quebec City"
@@ -281,7 +282,7 @@ describe("eventService - updateEventByID", () => {
 
         expect(locationService.resolveEventLocation).toHaveBeenCalledWith("Quebec City");
 
-        expect(buildEventUpdateData).toHaveBeenCalledWith(event, {
+        expect(buildUpdateEventPayload).toHaveBeenCalledWith(event, {
             location: "Quebec City"
         }, {
             latitude: 46.8137431,
@@ -313,7 +314,7 @@ describe("eventService - updateEventByID", () => {
 
         Event.findByPk.mockResolvedValue(event);
         assertEventNotPast.mockImplementation(() => { });
-        buildEventUpdateData.mockReturnValue(updateData);
+        buildUpdateEventPayload.mockReturnValue(updateData);
 
         await eventService.updateEventByID(1, {
             title: "Updated Event"
@@ -323,7 +324,7 @@ describe("eventService - updateEventByID", () => {
 
         expect(locationService.resolveEventLocation).not.toHaveBeenCalled();
 
-        expect(buildEventUpdateData).toHaveBeenCalledWith(event, {
+        expect(buildUpdateEventPayload).toHaveBeenCalledWith(event, {
             title: "Updated Event"
         }, null);
     });
@@ -352,7 +353,7 @@ describe("eventService - updateEventByID", () => {
 
         Event.findByPk.mockResolvedValue(event);
         assertEventNotPast.mockImplementation(() => { });
-        buildEventUpdateData.mockReturnValue(updateData);
+        buildUpdateEventPayload.mockReturnValue(updateData);
 
         await eventService.updateEventByID(1, {
             mode: EVENT_MODES.ONLINE
@@ -360,7 +361,7 @@ describe("eventService - updateEventByID", () => {
 
         expect(locationService.resolveEventLocation).not.toHaveBeenCalled();
 
-        expect(buildEventUpdateData).toHaveBeenCalledWith(event, {
+        expect(buildUpdateEventPayload).toHaveBeenCalledWith(event, {
             mode: EVENT_MODES.ONLINE
         }, null);
 
@@ -387,7 +388,7 @@ describe("eventService - updateEventByID", () => {
         });
 
         expect(locationService.resolveEventLocation).not.toHaveBeenCalled();
-        expect(buildEventUpdateData).not.toHaveBeenCalled();
+        expect(buildUpdateEventPayload).not.toHaveBeenCalled();
         expect(event.update).not.toHaveBeenCalled();
 
         expect(transaction.rollback).toHaveBeenCalled();
@@ -420,7 +421,7 @@ describe("eventService - updateEventByID", () => {
         expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
         expect(assertEventNotPast).toHaveBeenCalledWith(event);
 
-        expect(buildEventUpdateData).not.toHaveBeenCalled();
+        expect(buildUpdateEventPayload).not.toHaveBeenCalled();
         expect(event.update).not.toHaveBeenCalled();
 
         expect(transaction.rollback).toHaveBeenCalled();
@@ -456,7 +457,7 @@ describe("eventService - updateEventByID", () => {
         expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
         expect(assertEventNotPast).toHaveBeenCalledWith(event);
 
-        expect(buildEventUpdateData).not.toHaveBeenCalled();
+        expect(buildUpdateEventPayload).not.toHaveBeenCalled();
         expect(event.update).not.toHaveBeenCalled();
 
         expect(transaction.rollback).toHaveBeenCalled();
@@ -483,7 +484,7 @@ describe("eventService - updateEventByID", () => {
 
         expect(Event.findByPk).toHaveBeenCalledWith(999, { transaction });
 
-        expect(buildEventUpdateData).not.toHaveBeenCalled();
+        expect(buildUpdateEventPayload).not.toHaveBeenCalled();
 
         expect(transaction.rollback).toHaveBeenCalled();
         expect(transaction.commit).not.toHaveBeenCalled();
@@ -506,7 +507,7 @@ describe("eventService - updateEventByID", () => {
 
         assertEventNotPast.mockImplementation(() => { });
 
-        buildEventUpdateData.mockReturnValue({
+        buildUpdateEventPayload.mockReturnValue({
             title: "Updated Event"
         });
 
@@ -516,7 +517,7 @@ describe("eventService - updateEventByID", () => {
 
         expect(sequelize.transaction).toHaveBeenCalled();
 
-        expect(buildEventUpdateData).toHaveBeenCalledWith(event, {
+        expect(buildUpdateEventPayload).toHaveBeenCalledWith(event, {
             title: "Updated Event"
         }, null);
 

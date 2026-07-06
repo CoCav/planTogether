@@ -47,10 +47,19 @@ jest.mock("../../../../../src/utils/pagination", () => ({
 
 jest.mock("../../../../../src/utils/events/eventStatus");
 
-jest.mock("../../../../../src/utils/events/eventQueryBuilder", () => ({
-    buildEventWhereConditions: jest.fn(),
-    buildEventCreatorInclude: jest.fn(),
-    countActiveParticipantsByEventIds: jest.fn(),
+jest.mock("../../../../../src/utils/events/eventFilters.js", () => ({
+    buildEventWhereConditions: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/events/eventCreator.js", () => ({
+    buildEventCreatorInclude: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/eventMemberships/eventParticipants.js", () => ({
+    countActiveParticipantsByEventIds: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/eventLikes/eventLikes.js", () => ({
     findLikedEventIdsByUser: jest.fn(),
     countEventLikesByEventIds: jest.fn()
 }));
@@ -68,13 +77,15 @@ const { EVENT_STATUS } = require("../../../../../src/constants/eventStatus");
 
 const { getEventStatus } = require("../../../../../src/utils/events/eventStatus");
 
+const { buildEventWhereConditions } = require("../../../../../src/utils/events/eventFilters");
+const { buildEventCreatorInclude } = require("../../../../../src/utils/events/eventCreator");
+const { countActiveParticipantsByEventIds } = require("../../../../../src/utils/eventMemberships/eventParticipants");
+
 const {
-    buildEventWhereConditions,
-    buildEventCreatorInclude,
-    countActiveParticipantsByEventIds,
     findLikedEventIdsByUser,
     countEventLikesByEventIds
-} = require("../../../../../src/utils/events/eventQueryBuilder");
+} = require("../../../../../src/utils/eventLikes/eventLikes");
+
 
 const { getPaginationOptions, getTotalCount, getTotalPages } = require("../../../../../src/utils/pagination");
 

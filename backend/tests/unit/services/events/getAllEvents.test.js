@@ -31,16 +31,28 @@ jest.mock("../../../../src/models/eventModel", () => ({
     findAndCountAll: jest.fn()
 }));
 
-jest.mock("../../../../src/utils/events/eventQueryBuilder", () => ({
-    buildEventWhereConditions: jest.fn(),
-    buildEventCreatorInclude: jest.fn(),
+jest.mock("../../../../src/utils/events/eventFilters.js", () => ({
+    buildEventWhereConditions: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/events/eventCreator.js", () => ({
+    buildEventCreatorInclude: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventMemberships/eventParticipants.js", () => ({
     buildActiveParticipantInclude: jest.fn(),
-    buildParticipantCountAttribute: jest.fn(),
+    buildEventParticipantCountAttribute: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventReviews/eventReviews.js", () => ({
     buildEventReviewInclude: jest.fn(),
-    buildReviewCountAttribute: jest.fn(),
-    buildAverageRatingAttribute: jest.fn(),
+    buildEventReviewCountAttribute: jest.fn(),
+    buildEventAverageRatingAttribute: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventLikes/eventLikes.js", () => ({
     buildEventLikeInclude: jest.fn(),
-    buildLikeCountAttribute: jest.fn(),
+    buildEventLikeCountAttribute: jest.fn(),
     findLikedEventIdsByUser: jest.fn()
 }));
 
@@ -69,18 +81,25 @@ const { EVENT_MODES } = require("../../../../src/constants/eventModes");
 const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
 const { getEventStatus } = require("../../../../src/utils/events/eventStatus");
 
+const { buildEventWhereConditions } = require("../../../../src/utils/events/eventFilters");
+const { buildEventCreatorInclude } = require("../../../../src/utils/events/eventCreator");
+
 const {
-    buildEventWhereConditions,
-    buildEventCreatorInclude,
     buildActiveParticipantInclude,
-    buildParticipantCountAttribute,
+    buildEventParticipantCountAttribute
+} = require("../../../../src/utils/eventMemberships/eventParticipants");
+
+const {
     buildEventReviewInclude,
-    buildReviewCountAttribute,
-    buildAverageRatingAttribute,
+    buildEventReviewCountAttribute,
+    buildEventAverageRatingAttribute
+} = require("../../../../src/utils/eventReviews/eventReviews");
+
+const {
     buildEventLikeInclude,
-    buildLikeCountAttribute,
+    buildEventLikeCountAttribute,
     findLikedEventIdsByUser
-} = require("../../../../src/utils/events/eventQueryBuilder");
+} = require("../../../../src/utils/eventLikes/eventLikes");
 
 const { getPaginationOptions, getTotalCount, getTotalPages } = require("../../../../src/utils/pagination");
 
@@ -91,7 +110,7 @@ describe("eventService - getAllEvents", () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        buildParticipantCountAttribute.mockReturnValue(["COUNT_DISTINCT_PARTICIPANTS", "participantCount"]);
+        buildEventParticipantCountAttribute.mockReturnValue(["COUNT_DISTINCT_PARTICIPANTS", "participantCount"]);
 
         buildActiveParticipantInclude.mockReturnValue({
             model: User,
@@ -105,12 +124,12 @@ describe("eventService - getAllEvents", () => {
             attributes: []
         });
 
-        buildReviewCountAttribute.mockReturnValue([
+        buildEventReviewCountAttribute.mockReturnValue([
             "COUNT_DISTINCT_REVIEWS",
             "reviewCount"
         ]);
 
-        buildAverageRatingAttribute.mockReturnValue([
+        buildEventAverageRatingAttribute.mockReturnValue([
             "AVG_REVIEWS_RATING",
             "averageRating"
         ]);
@@ -121,7 +140,7 @@ describe("eventService - getAllEvents", () => {
             attributes: []
         });
 
-        buildLikeCountAttribute.mockReturnValue([
+        buildEventLikeCountAttribute.mockReturnValue([
             "COUNT_DISTINCT_LIKES",
             "likesCount"
         ]);
@@ -302,12 +321,12 @@ describe("eventService - getAllEvents", () => {
 
         await eventService.getAllEvents({});
 
-        expect(buildReviewCountAttribute).toHaveBeenCalledWith(
+        expect(buildEventReviewCountAttribute).toHaveBeenCalledWith(
             expect.any(Object),
             "reviews.id"
         );
 
-        expect(buildAverageRatingAttribute).toHaveBeenCalledWith(
+        expect(buildEventAverageRatingAttribute).toHaveBeenCalledWith(
             expect.any(Object),
             "reviews.rating"
         );
@@ -337,7 +356,7 @@ describe("eventService - getAllEvents", () => {
 
         await eventService.getAllEvents({});
 
-        expect(buildLikeCountAttribute).toHaveBeenCalledWith(
+        expect(buildEventLikeCountAttribute).toHaveBeenCalledWith(
             expect.any(Object),
             "likes.id"
         );
@@ -449,7 +468,7 @@ describe("eventService - getAllEvents", () => {
 
         await eventService.getAllEvents({});
 
-        expect(buildParticipantCountAttribute).toHaveBeenCalledWith(
+        expect(buildEventParticipantCountAttribute).toHaveBeenCalledWith(
             expect.any(Object),
             "participants.id"
         );

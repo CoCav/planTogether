@@ -15,20 +15,27 @@ const { EVENT_MODES } = require("../constants/eventModes");
 
 const { throwHttpError } = require("../utils/errors/httpError");
 
-const {
-    buildEventWhereConditions,
-    buildEventCreatorInclude,
-    buildParticipantCountAttribute,
-    buildActiveParticipantInclude,
-    buildEventReviewInclude,
-    buildReviewCountAttribute,
-    buildAverageRatingAttribute,
-    buildEventLikeInclude,
-    buildLikeCountAttribute,
-    findLikedEventIdsByUser
-} = require("../utils/events/eventQueryBuilder");
+const { buildEventWhereConditions } = require("../utils/events/eventFilters");
+const { buildEventCreatorInclude } = require("../utils/events/eventCreator");
 
-const { buildEventCreateData, buildEventUpdateData } = require("../utils/events/eventDataBuilder");
+const {
+    buildActiveParticipantInclude,
+    buildEventParticipantCountAttribute
+} = require("../utils/eventMemberships/eventParticipants");
+
+const {
+    buildEventReviewInclude,
+    buildEventReviewCountAttribute,
+    buildEventAverageRatingAttribute
+} = require("../utils/eventReviews/eventReviews");
+
+const {
+    buildEventLikeInclude,
+    buildEventLikeCountAttribute,
+    findLikedEventIdsByUser
+} = require("../utils/eventLikes/eventLikes");
+
+const { buildCreateEventPayload, buildUpdateEventPayload } = require("../utils/events/eventPayploadBuilder");
 
 const {
     assertEventNotPast,
@@ -127,7 +134,7 @@ const createEvent = async (data, userId) => {
 
         const locationData = await resolveEventLocationData(data.mode, data.location);
 
-        const eventData = buildEventCreateData(data, userId, locationData);
+        const eventData = buildCreateEventPayload(data, userId, locationData);
 
         const event = await Event.create(eventData, { transaction });
 
@@ -182,10 +189,10 @@ const getAllEvents = async (query = {}, currentUserId = null) => {
         order: [[orderField, orderDirection]],
         attributes: {
             include: [
-                buildParticipantCountAttribute(sequelize, "participants.id"),
-                buildReviewCountAttribute(sequelize, "reviews.id"),
-                buildAverageRatingAttribute(sequelize, "reviews.rating"),
-                buildLikeCountAttribute(sequelize, "likes.id")
+                buildEventParticipantCountAttribute(sequelize, "participants.id"),
+                buildEventReviewCountAttribute(sequelize, "reviews.id"),
+                buildEventAverageRatingAttribute(sequelize, "reviews.rating"),
+                buildEventLikeCountAttribute(sequelize, "likes.id")
             ]
         },
         include: [
@@ -276,10 +283,10 @@ const getEventByID = async (id, currentUserId = null) => {
         where: { id },
         attributes: {
             include: [
-                buildParticipantCountAttribute(sequelize, "participants.id"),
-                buildReviewCountAttribute(sequelize, "reviews.id"),
-                buildAverageRatingAttribute(sequelize, "reviews.rating"),
-                buildLikeCountAttribute(sequelize, "likes.id")
+                buildEventParticipantCountAttribute(sequelize, "participants.id"),
+                buildEventReviewCountAttribute(sequelize, "reviews.id"),
+                buildEventAverageRatingAttribute(sequelize, "reviews.rating"),
+                buildEventLikeCountAttribute(sequelize, "likes.id")
             ]
         },
         include: [
@@ -357,7 +364,7 @@ const updateEventByID = async (id, data) => {
             ? await resolveEventLocationData(nextMode, nextLocation)
             : null;
 
-        const updatedData = buildEventUpdateData(event, data, locationData);
+        const updatedData = buildUpdateEventPayload(event, data, locationData);
 
         await event.update(updatedData, { transaction });
 

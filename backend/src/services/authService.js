@@ -5,7 +5,7 @@ const User = require("../models/userModel");
 const { throwHttpError } = require("../utils/errors/httpError");
 
 const { generateAuthToken } = require("../utils/auth/authToken");
-const { normalizeEmail } = require("../utils/formatting/stringFormatter");
+const { normalizeEmail } = require("../utils/stringNormalizer");
 
 /* ==================================================
    AUTH SERVICE

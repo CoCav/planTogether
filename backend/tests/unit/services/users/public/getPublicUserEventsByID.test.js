@@ -30,18 +30,27 @@ jest.mock("../../../../../src/models/relations/eventUserRoleModel", () => ({}));
 
 jest.mock("../../../../../src/models/relations/eventLikeModel", () => ({}));
 
-jest.mock("../../../../../src/utils/events/eventQueryBuilder", () => ({
-    buildEventWhereConditions: jest.fn(),
+jest.mock("../../../../../src/utils/events/eventFilters.js", () => ({
+    buildEventWhereConditions: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/events/eventCreator.js", () => ({
     buildEventCreatorInclude: jest.fn(() => ({
         model: "User",
         as: "creator"
-    })),
-    countActiveParticipantsByEventIds: jest.fn(),
+    }))
+}));
+
+jest.mock("../../../../../src/utils/eventMemberships/eventParticipants.js", () => ({
+    countActiveParticipantsByEventIds: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/eventLikes/eventLikes.js", () => ({
     findLikedEventIdsByUser: jest.fn(),
     countEventLikesByEventIds: jest.fn()
 }));
 
-jest.mock("../../../../../src/utils/users/publicUserEventQueryBuilder", () => ({
+jest.mock("../../../../../src/utils/users/public/publicUserEventQueries.js", () => ({
     getPublicCreatedEvents: jest.fn(),
     getPublicJoinedEvents: jest.fn()
 }));
@@ -51,18 +60,19 @@ const EventLike = require("../../../../../src/models/relations/eventLikeModel");
 
 const userService = require("../../../../../src/services/userService");
 
+const { buildEventWhereConditions } = require("../../../../../src/utils/events/eventFilters");
+const { buildEventCreatorInclude } = require("../../../../../src/utils/events/eventCreator");
+const { countActiveParticipantsByEventIds } = require("../../../../../src/utils/eventMemberships/eventParticipants");
+
 const {
-    buildEventWhereConditions,
-    buildEventCreatorInclude,
-    countActiveParticipantsByEventIds,
     findLikedEventIdsByUser,
     countEventLikesByEventIds
-} = require("../../../../../src/utils/events/eventQueryBuilder");
+} = require("../../../../../src/utils/eventLikes/eventLikes");
 
 const {
     getPublicCreatedEvents,
     getPublicJoinedEvents
-} = require("../../../../../src/utils/users/publicUserEventQueryBuilder");
+} = require("../../../../../src/utils/users/public/publicUserEventQueries");
 
 const { createMockUser } = require("../../../../factories/userFactory");
 

@@ -45,8 +45,8 @@ jest.mock("../../../../src/services/locationService", () => ({
     resolveEventLocation: jest.fn()
 }));
 
-jest.mock("../../../../src/utils/events/eventDataBuilder", () => ({
-    buildEventCreateData: jest.fn()
+jest.mock("../../../../src/utils/events/eventPayploadBuilder.js", () => ({
+    buildCreateEventPayload: jest.fn()
 }));
 
 const sequelize = require("../../../../src/config/database");
@@ -59,7 +59,7 @@ const locationService = require("../../../../src/services/locationService");
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 const { EVENT_MODES } = require("../../../../src/constants/eventModes");
 
-const { buildEventCreateData } = require("../../../../src/utils/events/eventDataBuilder");
+const { buildCreateEventPayload } = require("../../../../src/utils/events/eventPayploadBuilder");
 
 const { createEventPayload } = require("../../../factories/eventFactory");
 
@@ -115,7 +115,7 @@ describe("eventService - createEvent", () => {
             title: "Test Event"
         };
 
-        buildEventCreateData.mockReturnValue(builtEventData);
+        buildCreateEventPayload.mockReturnValue(builtEventData);
 
         Event.create.mockResolvedValue(event);
         EventUserRole.create.mockResolvedValue({});
@@ -126,7 +126,7 @@ describe("eventService - createEvent", () => {
 
         expect(locationService.resolveEventLocation).toHaveBeenCalledWith("Montreal");
 
-        expect(buildEventCreateData).toHaveBeenCalledWith(
+        expect(buildCreateEventPayload).toHaveBeenCalledWith(
             eventInput,
             10,
             {
@@ -184,7 +184,7 @@ describe("eventService - createEvent", () => {
             title: "Online Event"
         };
 
-        buildEventCreateData.mockReturnValue(builtEventData);
+        buildCreateEventPayload.mockReturnValue(builtEventData);
 
         Event.create.mockResolvedValue(event);
         EventUserRole.create.mockResolvedValue({});
@@ -193,7 +193,7 @@ describe("eventService - createEvent", () => {
 
         expect(locationService.resolveEventLocation).not.toHaveBeenCalled();
 
-        expect(buildEventCreateData).toHaveBeenCalledWith(
+        expect(buildCreateEventPayload).toHaveBeenCalledWith(
             eventInput,
             10,
             null
@@ -228,7 +228,7 @@ describe("eventService - createEvent", () => {
 
         expect(locationService.resolveEventLocation).not.toHaveBeenCalled();
 
-        expect(buildEventCreateData).not.toHaveBeenCalled();
+        expect(buildCreateEventPayload).not.toHaveBeenCalled();
         expect(Event.create).not.toHaveBeenCalled();
         expect(EventUserRole.create).not.toHaveBeenCalled();
     });
@@ -251,7 +251,7 @@ describe("eventService - createEvent", () => {
             title: "Test Event"
         };
 
-        buildEventCreateData.mockReturnValue(builtEventData);
+        buildCreateEventPayload.mockReturnValue(builtEventData);
 
         Event.create.mockRejectedValue(new Error("DB error"));
 
@@ -263,7 +263,7 @@ describe("eventService - createEvent", () => {
 
         expect(locationService.resolveEventLocation).not.toHaveBeenCalled();
 
-        expect(buildEventCreateData).toHaveBeenCalledWith(
+        expect(buildCreateEventPayload).toHaveBeenCalledWith(
             eventInput,
             10,
             null

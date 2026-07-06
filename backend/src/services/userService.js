@@ -12,20 +12,21 @@ const { EVENT_ROLES } = require("../constants/eventRoles");
 
 const { throwHttpError } = require("../utils/errors/httpError");
 
-const { formatPublicUser } = require("../utils/formatting/userFormatter");
-const { normalizeEmail } = require("../utils/formatting/stringFormatter");
+const { formatPublicUser } = require("../utils/users/public/publicUserFormatter");
+const { normalizeEmail } = require("../utils/stringNormalizer");
+
+const { buildEventWhereConditions } = require("../utils/events/eventFilters");
+const { buildEventCreatorInclude } = require("../utils/events/eventCreator");
+const { countActiveParticipantsByEventIds } = require("../utils/eventMemberships/eventParticipants");
 
 const {
-    buildEventWhereConditions,
-    buildEventCreatorInclude,
-    countActiveParticipantsByEventIds,
     findLikedEventIdsByUser,
-    countEventLikesByEventIds,
-} = require("../utils/events/eventQueryBuilder");
+    countEventLikesByEventIds
+} = require("../utils/eventLikes/eventLikes");
 
 const { getEventStatus } = require("../utils/events/eventStatus");
 
-const { getPublicCreatedEvents, getPublicJoinedEvents } = require("../utils/users/publicUserEventQueryBuilder");
+const { getPublicCreatedEvents, getPublicJoinedEvents } = require("../utils/users/public/publicUserEventQueries");
 
 const { deleteUploadedFile } = require("../utils/files/uploadedFileStorage");
 

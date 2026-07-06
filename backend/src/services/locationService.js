@@ -4,14 +4,11 @@ const geocodingConfig = require("../config/geocoding");
 
 const { throwHttpError } = require("../utils/errors/httpError");
 
-const { normalizeString, normalizeSearchKey } = require("../utils/formatting/stringFormatter");
+const { normalizeString, normalizeSearchKey } = require("../utils/stringNormalizer");
 
-const {
-    LOCATION_PROVIDER,
-    buildNominatimSearchParams,
-    buildLocationSearchQueries,
-    formatProviderLocation
-} = require("../utils/formatting/locationFormatter");
+const { buildNominatimSearchParams } = require("../utils/geocoding/geocodingParams");
+const { buildLocationSearchQueries } = require("../utils/geocoding/geocodingSearchQueries");
+const { GEOCODING_PROVIDER, normalizeLocation } = require("../utils/geocoding/geocodingNormalizer");
 
 /* ==================================================
    LOCATION SERVICE
@@ -57,7 +54,7 @@ const findCachedLocations = async (query) => {
     return Location.findAll({
         where: {
             query: normalizeSearchKey(query),
-            provider: LOCATION_PROVIDER
+            provider: GEOCODING_PROVIDER
         },
         order: [["createdAt", "ASC"]]
     });
@@ -133,7 +130,7 @@ const searchNominatimLocations = async (query, originalQuery = query) => {
 
     // Cache results under the original user query, even if a fallback query worked
     return results.map((result) =>
-        formatProviderLocation(originalQuery, result)
+        normalizeLocation(originalQuery, result)
     );
 };
 

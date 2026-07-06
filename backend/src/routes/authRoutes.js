@@ -4,7 +4,7 @@ const router = express.Router();
 const authController = require("../controllers/authController");
 
 const { authenticateToken } = require("../middlewares/auth/authenticateToken");
-const { uploadAvatar } = require("../middlewares/uploadFiles");
+const { uploadAvatar } = require("../middlewares/files/uploadFiles");
 
 const authRateLimiter = require("../middlewares/rateLimiters/authRateLimiter");
 

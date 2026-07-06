@@ -2,49 +2,53 @@ const jwt = require("jsonwebtoken");
 
 const { createHttpError } = require("../../utils/errors/httpError");
 
-/* ==================================================
-   AUTHENTICATE TOKEN MIDDLEWARE
+/* ==========================================================================
+   Authenticate Token Middleware
 
-   Handles:
-   - JWT extraction from Authorization header
-   - token verification
-   - authenticated user injection into req.user
+   Verifies JWT access tokens and injects authenticated user data.
 
-   Notes:
-   - expected header format is: Bearer <token>
-   - decoded token should contain userId
-   - authentication errors are forwarded to the global errorHandler
-================================================== */
+   Responsibilities
+   - Read the Authorization header
+   - Validate the Bearer token format
+   - Verify the JWT access token
+   - Attach decoded user data to req.user
 
-// Verify JWT access token
+   Notes
+   - Expected header format is: Bearer <token>.
+   - Decoded tokens should contain userId.
+   - Authentication errors are forwarded to the global error handler.
+=========================================================================== */
+
+const BEARER_PREFIX = "Bearer ";
+
+const AUTH_HEADER_ERROR = "Authorization header missing or malformed";
+const MISSING_TOKEN_ERROR = "No token provided";
+const INVALID_TOKEN_ERROR = "Invalid or expired token";
+
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
 
-    // Require Authorization: Bearer <token>
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return next(createHttpError(401, "Authorization header missing or malformed"));
+    if (!authHeader || !authHeader.startsWith(BEARER_PREFIX)) {
+        return next(createHttpError(401, AUTH_HEADER_ERROR));
     }
 
     const token = authHeader
-        .slice("Bearer ".length)
+        .slice(BEARER_PREFIX.length)
         .trim();
 
-    // Reject empty Bearer token
     if (!token) {
-        return next(createHttpError(401, "No token provided"));
+        return next(createHttpError(401, MISSING_TOKEN_ERROR));
     }
 
-    // Verify token signature and expiration
     jwt.verify(
         token,
         process.env.JWT_SECRET,
         (error, decodedToken) => {
-
             if (error) {
-                return next(createHttpError(401, "Invalid or expired token"));
+                return next(createHttpError(401, INVALID_TOKEN_ERROR));
             }
 
-            // Make authenticated user data available downstream
+            // Make authenticated user data available to downstream middlewares.
             req.user = decodedToken;
 
             return next();

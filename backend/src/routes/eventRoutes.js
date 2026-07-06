@@ -6,8 +6,8 @@ const eventController = require("../controllers/eventController");
 const { EVENT_ROLES } = require("../constants/eventRoles");
 
 const { authenticateToken } = require("../middlewares/auth/authenticateToken");
-const { currentUserContext } = require("../middlewares/request/currentUserContext");
-const { uploadEventImage } = require("../middlewares/uploadFiles");
+const { resolveCurentUser } = require("../middlewares/auth/resolveCurrentUser");
+const { uploadEventImage } = require("../middlewares/files/uploadFiles");
 const authorizeEventRole = require("../middlewares/authorization/authorizeEventRole");
 
 const {
@@ -45,7 +45,7 @@ const handleValidationErrors = require("../middlewares/errors/handleValidationEr
 
 // Get all events with optional filters and pagination
 router.get("/",
-    currentUserContext,
+    resolveCurentUser,
     getAllEventsValidator,
     handleValidationErrors,
     eventController.getAllEvents
@@ -61,7 +61,7 @@ router.get("/:eventId/me",
 
 // Get one event by ID
 router.get("/:eventId",
-    currentUserContext,
+    resolveCurentUser,
     eventIdParamValidator,
     handleValidationErrors,
     eventController.getEvent

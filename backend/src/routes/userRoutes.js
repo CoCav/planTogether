@@ -4,8 +4,8 @@ const router = express.Router();
 const userController = require("../controllers/userController");
 
 const { authenticateToken } = require("../middlewares/auth/authenticateToken");
-const { currentUserContext } = require("../middlewares/request/currentUserContext");
-const { uploadAvatar } = require("../middlewares/uploadFiles");
+const { resolveCurrentUser } = require("../middlewares/auth/resolveCurrentUser");
+const { uploadAvatar } = require("../middlewares/files/uploadFiles");
 
 const {
     userIdParamValidator,
@@ -91,7 +91,7 @@ router.get("/:id",
 
 // Get paginated public events of a user
 router.get("/:id/events",
-    currentUserContext,
+    resolveCurrentUser,
     userIdParamValidator,
     getPublicUserEventsValidator,
     handleValidationErrors,

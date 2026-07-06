@@ -11,12 +11,15 @@ const corsOptions = require("./config/cors");
 const errorHandler = require("./middlewares/errors/errorHandler");
 
 const authRoutes = require("./routes/authRoutes");
-const locationRoutes = require("./routes/locationRoutes");
-const eventRoutes = require("./routes/eventRoutes");
-const eventMembershipRoutes = require("./routes/eventMembershipRoutes");
-const userRoutes = require("./routes/userRoutes");
-const eventReviewRoutes = require("./routes/eventReviewRoutes");
+
 const eventLikeRoutes = require("./routes/eventLikeRoutes");
+const eventMembershipRoutes = require("./routes/eventMembershipRoutes");
+const eventReviewRoutes = require("./routes/eventReviewRoutes");
+const eventRoutes = require("./routes/eventRoutes");
+
+const geocodingRoutes = require("./routes/geocodingRoutes");
+
+const userRoutes = require("./routes/userRoutes");
 
 /* ==========================================================================
    Express Application
@@ -57,7 +60,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
-/* Health routes */
+/* Health and root routes */
 
 app.get("/api/health", (req, res) => {
     return res.json({
@@ -75,12 +78,12 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 
-app.use("/api/locations", locationRoutes);
-
 app.use("/api/events", eventMembershipRoutes);
 app.use("/api/events", eventReviewRoutes);
 app.use("/api/events", eventLikeRoutes);
 app.use("/api/events", eventRoutes);
+
+app.use("/api/locations", geocodingRoutes);
 
 app.use("/api/users", userRoutes);
 

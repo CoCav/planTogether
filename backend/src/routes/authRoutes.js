@@ -5,27 +5,30 @@ const authController = require("../controllers/authController");
 
 const { authenticateToken } = require("../middlewares/auth/authenticateToken");
 const { uploadAvatar } = require("../middlewares/files/uploadFiles");
-
 const authRateLimiter = require("../middlewares/rateLimiters/authRateLimiter");
-
-const { registerValidator, loginValidator } = require("../validators/authValidator");
 const handleValidationErrors = require("../middlewares/errors/handleValidationErrors");
 
-/* ==================================================
-   AUTH ROUTES
+const { registerValidator, loginValidator } = require("../validators/authValidator");
 
-   Handles:
-   - user registration
-   - user login
-   - logout endpoint
+/* ==========================================================================
+   Auth Routes
 
-   Notes:
-   - avatar upload is handled before registration validation
-   - logout is protected because it requires a valid token
-   - profile and password routes belong to userRoutes
-================================================== */
+   Defines authentication endpoints.
 
-// Register user
+   Responsibilities
+   - Register users
+   - Log users in
+   - Log users out
+
+   Notes
+   - Avatar upload runs before registration validation.
+   - Auth rate limiting protects register and login endpoints.
+   - Logout is protected because it requires a valid token.
+   - Profile and password routes belong to userRoutes.
+=========================================================================== */
+
+/* Registration */
+
 router.post(
     "/register",
     authRateLimiter,
@@ -35,7 +38,8 @@ router.post(
     authController.register
 );
 
-// Login user
+/* Login */
+
 router.post(
     "/login",
     authRateLimiter,
@@ -44,7 +48,12 @@ router.post(
     authController.login
 );
 
-// Logout user
-router.post("/logout", authenticateToken, authController.logout);
+/* Logout */
+
+router.post(
+    "/logout",
+    authenticateToken,
+    authController.logout
+);
 
 module.exports = router;

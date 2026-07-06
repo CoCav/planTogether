@@ -1,32 +1,34 @@
 const { validationResult } = require("express-validator");
 
 const logger = require("../../config/logger");
-
 const { createHttpError } = require("../../utils/errors/httpError");
 
-/* ==================================================
-   HANDLE VALIDATION ERRORS MIDDLEWARE
+/* ==========================================================================
+   Handle Validation Errors Middleware
 
-   Handles:
-   - express-validator result checking
-   - validation error formatting
-   - forwarding validation errors to errorHandler
-   - centralized validation warning logging
+   Formats express-validator errors and forwards them to the error handler.
 
-   Notes:
-   - validators run before this middleware
-   - this middleware does not validate by itself
-   - formatted errors are forwarded with status 400
-================================================== */
+   Responsibilities
+   - Read express-validator results
+   - Format validation errors
+   - Attach formatted errors to an HTTP 400 error
+   - Forward validation errors to the global error handler
 
-// Handle validation errors after express-validator rules
+   Notes
+   - Validators run before this middleware.
+   - This middleware does not validate by itself.
+=========================================================================== */
+
+const PRODUCTION_ENV = "production";
+const VALIDATION_FAILED_MESSAGE = "Validation failed";
+
 const handleValidationErrors = (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
         const rawErrors = errors.array();
 
-        if (process.env.NODE_ENV !== "production") {
+        if (process.env.NODE_ENV !== PRODUCTION_ENV) {
             logger.warn({ errors: rawErrors }, "Validation errors");
         }
 
@@ -35,8 +37,7 @@ const handleValidationErrors = (req, res, next) => {
             message: err.msg
         }));
 
-        const error = createHttpError(400, "Validation failed");
-
+        const error = createHttpError(400, VALIDATION_FAILED_MESSAGE);
         error.errors = formattedErrors;
 
         return next(error);

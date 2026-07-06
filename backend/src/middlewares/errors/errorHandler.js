@@ -2,30 +2,39 @@ const multer = require("multer");
 
 const logger = require("../../config/logger");
 
-/* ==================================================
-   ERROR HANDLER MIDDLEWARE
+/* ==========================================================================
+   Error Handler Middleware
 
-   Handles:
-   - Multer upload errors
-   - Sequelize validation and constraint errors
-   - custom application errors
-   - unexpected server errors
+   Centralizes API error responses.
 
-   Notes:
-   - returns consistent JSON responses
-   - hides stack trace in production
-   - uses centralized structured logging
-================================================== */
+   Responsibilities
+   - Handle Multer upload errors
+   - Handle Sequelize validation and constraint errors
+   - Handle custom application errors
+   - Handle unexpected server errors
 
-// Centralize API error responses
+   Notes
+   - Returns consistent JSON responses.
+   - Hides stack traces in production.
+   - Uses centralized structured logging.
+=========================================================================== */
+
+const PRODUCTION_ENV = "production";
+
+const MULTER_FILE_SIZE_ERROR_CODE = "LIMIT_FILE_SIZE";
+
+const SEQUELIZE_VALIDATION_ERROR = "SequelizeValidationError";
+const SEQUELIZE_UNIQUE_CONSTRAINT_ERROR = "SequelizeUniqueConstraintError";
+
+const VALIDATION_ERROR_MESSAGE = "Validation error";
+const FILE_TOO_LARGE_MESSAGE = "File too large. Maximum size exceeded.";
+const INTERNAL_SERVER_ERROR_MESSAGE =
+    "Internal Server Error. Please try again later.";
+
 function errorHandler(error, req, res, next) {
-    const isProd = process.env.NODE_ENV === "production";
+    const isProduction = process.env.NODE_ENV === PRODUCTION_ENV;
 
-    /* =============================
-       LOGGING
-    ============================= */
-
-    if (!isProd) {
+    if (!isProduction) {
         logger.error(
             { error },
             "Error caught by error middleware"
@@ -37,17 +46,10 @@ function errorHandler(error, req, res, next) {
         );
     }
 
-    /* =============================
-       MULTER ERRORS
-    ============================= */
-
     if (error instanceof multer.MulterError) {
-        let message = error.message;
-
-        // Provide clearer message for upload size errors
-        if (error.code === "LIMIT_FILE_SIZE") {
-            message = "File too large. Maximum size exceeded.";
-        }
+        const message = error.code === MULTER_FILE_SIZE_ERROR_CODE
+            ? FILE_TOO_LARGE_MESSAGE
+            : error.message;
 
         return res.status(400).json({
             success: false,
@@ -55,17 +57,13 @@ function errorHandler(error, req, res, next) {
         });
     }
 
-    /* =============================
-       SEQUELIZE ERRORS
-    ============================= */
-
     if (
-        error.name === "SequelizeValidationError" ||
-        error.name === "SequelizeUniqueConstraintError"
+        error.name === SEQUELIZE_VALIDATION_ERROR ||
+        error.name === SEQUELIZE_UNIQUE_CONSTRAINT_ERROR
     ) {
         return res.status(400).json({
             success: false,
-            message: "Validation error",
+            message: VALIDATION_ERROR_MESSAGE,
             errors: error.errors?.map((err) => ({
                 field: err.path,
                 message: err.message
@@ -73,18 +71,14 @@ function errorHandler(error, req, res, next) {
         });
     }
 
-    /* =============================
-       DEFAULT / CUSTOM ERRORS
-    ============================= */
-
     const statusCode = error.statusCode || 500;
-    const message = error.message || "Internal Server Error. Please try again later.";
+    const message = error.message || INTERNAL_SERVER_ERROR_MESSAGE;
 
     return res.status(statusCode).json({
         success: false,
         message,
         ...(error.errors && { errors: error.errors }),
-        ...(!isProd && { stack: error.stack })
+        ...(!isProduction && { stack: error.stack })
     });
 }
 

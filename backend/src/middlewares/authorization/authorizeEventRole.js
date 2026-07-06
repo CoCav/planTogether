@@ -1,23 +1,26 @@
 const EventUserRole = require("../../models/relations/eventUserRoleModel");
+
 const { createHttpError } = require("../../utils/errors/httpError");
 
-/* ==================================================
-   AUTHORIZE EVENT ROLE MIDDLEWARE
+/* ==========================================================================
+   Authorize Event Role Middleware
 
-   Handles:
-   - event role-based access control
-   - organizer / co-organizer / participant permissions
-   - authenticated user's event membership lookup
+   Authorizes authenticated users based on their event membership role.
 
-   Notes:
-   - used as a middleware factory
-   - allowedRoles is defined per route
-   - attaches membership to req.eventMembership
-   - returns 403 when no matching membership is found
-   - nonexistent events may be rejected before reaching the service layer
-================================================== */
+   Responsibilities
+   - Check the authenticated user's active event membership
+   - Validate allowed roles for the current route
+   - Attach the membership to req.eventMembership
 
-// Authorize authenticated user based on event role
+   Notes
+   - Used as a middleware factory.
+   - allowedRoles is defined per route.
+   - Returns 403 when no matching allowed membership is found.
+=========================================================================== */
+
+const EVENT_ID_REQUIRED_ERROR = "Event ID is required";
+const INSUFFICIENT_EVENT_ROLE_ERROR = "Forbidden: insufficient event role";
+
 const authorizeEventRole = (allowedRoles) => {
     return async (req, res, next) => {
         try {
@@ -25,10 +28,9 @@ const authorizeEventRole = (allowedRoles) => {
             const userId = req.user.userId;
 
             if (eventId == null) {
-                return next(createHttpError(400, "Event ID is required"));
+                return next(createHttpError(400, EVENT_ID_REQUIRED_ERROR));
             }
 
-            // Find authenticated user's active membership for this event
             const membership = await EventUserRole.findOne({
                 where: {
                     eventId,
@@ -37,13 +39,11 @@ const authorizeEventRole = (allowedRoles) => {
                 }
             });
 
-            // Block users without required event role
-            // Also covers nonexistent events when no membership exists for eventId
             if (!membership || !allowedRoles.includes(membership.role)) {
-                return next(createHttpError(403, "Forbidden: insufficient event role"));
+                return next(createHttpError(403, INSUFFICIENT_EVENT_ROLE_ERROR));
             }
 
-            // Reuse membership in downstream handlers if needed
+            // Reuse membership in downstream handlers.
             req.eventMembership = membership;
 
             return next();

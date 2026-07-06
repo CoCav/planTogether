@@ -2,32 +2,48 @@ const Event = require("../../models/eventModel");
 const EventUserRole = require("../../models/relations/eventUserRoleModel");
 
 const { EVENT_ROLES } = require("../../constants/eventRoles");
-
 const { createHttpError } = require("../../utils/errors/httpError");
 
-/* ==================================================
-   EVENT MEMBER AUTHORIZATION MIDDLEWARE
+/* ==========================================================================
+   Event Member Authorization Middleware
 
-   Handles:
-   - event member role update authorization
-   - event member removal authorization
-   - organizer / co-organizer permission checks
-   - protected event creator rules
+   Authorizes event member role updates and removals.
 
-   Notes:
-   - organizer can update participant/co-organizer roles
-   - organizer and co-organizer can remove participants
-   - event creator cannot be demoted or removed
-   - authorization errors are forwarded to the global errorHandler
-   - event roles are centralized through shared constants
-================================================== */
+   Responsibilities
+   - Check organizer and co-organizer permissions
+   - Protect the event creator from demotion or removal
+   - Validate target memberships before member actions
+   - Attach target membership to req.targetMembership
 
-/* =============================
-   HELPERS
-============================= */
+   Notes
+   - Organizer can update participant and co-organizer roles.
+   - Organizer and co-organizer can remove participants.
+   - Event creator cannot be demoted or removed.
+=========================================================================== */
 
-// Retrieve active event membership for a specific user
-const getMembership = (eventId, userId) => {
+const ONLY_ORGANIZER_CAN_UPDATE_ERROR = "Only the organizer can update member roles";
+
+const TARGET_MEMBERSHIP_NOT_FOUND_ERROR = "Target membership not found";
+
+const EVENT_NOT_FOUND_ERROR = "Event not found";
+
+const CANNOT_CHANGE_CREATOR_ROLE_ERROR = "You cannot change the role of the event creator";
+
+const ONLY_ONE_ORGANIZER_ERROR = "Only one organizer is allowed per event";
+
+const ONLY_MANAGERS_CAN_REMOVE_ERROR = "Only organizers and co-organizers can remove members";
+
+const CANNOT_REMOVE_CREATOR_ERROR = "You cannot remove the event creator";
+
+const CANNOT_REMOVE_SELF_ERROR = "You cannot remove yourself from the event";
+
+const CANNOT_REMOVE_ORGANIZER_ERROR = "Organizer cannot be removed";
+
+const CO_ORGANIZER_CANNOT_REMOVE_CO_ORGANIZER_ERROR = "Co-organizers cannot remove other co-organizers";
+
+/* Helpers */
+
+const findActiveEventMembership = (eventId, userId) => {
     return EventUserRole.findOne({
         where: {
             eventId,
@@ -37,77 +53,63 @@ const getMembership = (eventId, userId) => {
     });
 };
 
-// Check if membership belongs to organizer
 const isOrganizer = (membership) => {
     return membership?.role === EVENT_ROLES.ORGANIZER;
 };
 
-// Check if membership can remove members
-const canRemoveMembers = (membership) => {
+const canManageMemberRemoval = (membership) => {
     return [
         EVENT_ROLES.ORGANIZER,
         EVENT_ROLES.CO_ORGANIZER
     ].includes(membership?.role);
 };
 
-// Check if membership belongs to event creator
 const isEventCreator = (event, membership) => {
     return event.creatorId === membership.userId;
 };
 
+/* Role update authorization */
 
-/* =============================
-   ROLE UPDATE AUTHORIZATION
-============================= */
-
-// Authorize event member role updates
 const authorizeEventMemberRoleUpdate = async (req, res, next) => {
     try {
         const eventId = req.params.eventId;
         const requestingUserId = req.user.userId;
         const targetUserId = parseInt(req.params.userId, 10);
-
         const { newRole } = req.body;
 
-        // Retrieve requester membership
-        const requesterMembership = await getMembership(
+        const requesterMembership = await findActiveEventMembership(
             eventId,
             requestingUserId
         );
 
-        // Only organizer can update member roles
         if (!isOrganizer(requesterMembership)) {
-            return next(createHttpError(403, "Only the organizer can update member roles"));
+            return next(createHttpError(403, ONLY_ORGANIZER_CAN_UPDATE_ERROR));
         }
 
-        // Retrieve target membership
-        const targetMembership = await getMembership(
+        const targetMembership = await findActiveEventMembership(
             eventId,
             targetUserId
         );
 
         if (!targetMembership) {
-            return next(createHttpError(404, "Target membership not found"));
+            return next(createHttpError(404, TARGET_MEMBERSHIP_NOT_FOUND_ERROR));
         }
 
-        // Retrieve event
         const event = await Event.findByPk(eventId);
 
         if (!event) {
-            return next(createHttpError(404, "Event not found"));
+            return next(createHttpError(404, EVENT_NOT_FOUND_ERROR));
         }
 
-        // Event creator keeps organizer ownership role
         if (isEventCreator(event, targetMembership)) {
-            return next(createHttpError(403, "You cannot change the role of the event creator"));
+            return next(createHttpError(403, CANNOT_CHANGE_CREATOR_ROLE_ERROR));
         }
 
-        // Prevent assigning a second organizer
         if (newRole === EVENT_ROLES.ORGANIZER) {
-            return next(createHttpError(403, "Only one organizer is allowed per event"));
+            return next(createHttpError(403, ONLY_ONE_ORGANIZER_ERROR));
         }
 
-        // Reuse target membership downstream if needed
+        // Reuse target membership downstream.
         req.targetMembership = targetMembership;
 
         return next();
@@ -117,70 +119,61 @@ const authorizeEventMemberRoleUpdate = async (req, res, next) => {
     }
 };
 
+/* Member removal authorization */
 
-/* =============================
-   MEMBER REMOVAL AUTHORIZATION
-============================= */
-
-// Authorize event member removal
 const authorizeEventMemberRemoval = async (req, res, next) => {
     try {
         const eventId = req.params.eventId;
         const requestingUserId = req.user.userId;
         const targetUserId = parseInt(req.params.userId, 10);
 
-        // Retrieve requester membership
-        const requesterMembership = await getMembership(
+        const requesterMembership = await findActiveEventMembership(
             eventId,
             requestingUserId
         );
 
-        // Only organizer or co-organizer can remove members
-        if (!canRemoveMembers(requesterMembership)) {
-            return next(createHttpError(403, "Only organizers and co-organizers can remove members"));
+        if (!canManageMemberRemoval(requesterMembership)) {
+            return next(createHttpError(403, ONLY_MANAGERS_CAN_REMOVE_ERROR));
         }
 
-        // Retrieve target membership
-        const targetMembership = await getMembership(
+        const targetMembership = await findActiveEventMembership(
             eventId,
             targetUserId
         );
 
         if (!targetMembership) {
-            return next(createHttpError(404, "Target membership not found"));
+            return next(createHttpError(404, TARGET_MEMBERSHIP_NOT_FOUND_ERROR));
         }
 
-        // Retrieve event
         const event = await Event.findByPk(eventId);
 
         if (!event) {
-            return next(createHttpError(404, "Event not found"));
+            return next(createHttpError(404, EVENT_NOT_FOUND_ERROR));
         }
 
-        // Event creator cannot be removed
         if (isEventCreator(event, targetMembership)) {
-            return next(createHttpError(403, "You cannot remove the event creator"));
+            return next(createHttpError(403, CANNOT_REMOVE_CREATOR_ERROR));
         }
 
-        // Prevent self-removal through admin removal route
         if (requesterMembership.userId === targetMembership.userId) {
-            return next(createHttpError(403, "You cannot remove yourself from the event"));
+            return next(createHttpError(403, CANNOT_REMOVE_SELF_ERROR));
         }
 
-        // Organizer cannot be removed
         if (targetMembership.role === EVENT_ROLES.ORGANIZER) {
-            return next(createHttpError(403, "Organizer cannot be removed"));
+            return next(createHttpError(403, CANNOT_REMOVE_ORGANIZER_ERROR));
         }
 
-        // Co-organizers cannot remove other co-organizers
         if (
             targetMembership.role === EVENT_ROLES.CO_ORGANIZER &&
             requesterMembership.role === EVENT_ROLES.CO_ORGANIZER
         ) {
-            return next(createHttpError(403, "Co-organizers cannot remove other co-organizers"));
+            return next(createHttpError(
+                403,
+                CO_ORGANIZER_CANNOT_REMOVE_CO_ORGANIZER_ERROR
+            ));
         }
 
-        // Reuse target membership downstream if needed
+        // Reuse target membership downstream.
         req.targetMembership = targetMembership;
 
         return next();
@@ -190,4 +183,7 @@ const authorizeEventMemberRemoval = async (req, res, next) => {
     }
 };
 
-module.exports = { authorizeEventMemberRoleUpdate, authorizeEventMemberRemoval };
+module.exports = {
+    authorizeEventMemberRoleUpdate,
+    authorizeEventMemberRemoval
+};

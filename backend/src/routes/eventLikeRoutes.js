@@ -4,39 +4,37 @@ const router = express.Router();
 const eventLikeController = require("../controllers/eventLikeController");
 
 const { authenticateToken } = require("../middlewares/auth/authenticateToken");
+const handleValidationErrors = require("../middlewares/errors/handleValidationErrors");
 
 const { eventIdParamValidator } = require("../validators/eventLikeValidator");
 
-const handleValidationErrors = require("../middlewares/errors/handleValidationErrors");
+/* ==========================================================================
+   Event Like Routes
 
-/* ==================================================
-   EVENT LIKE ROUTES
+   Defines event like endpoints.
 
-   Handles:
-   - liking events
-   - unliking events
+   Responsibilities
+   - Like events
+   - Unlike events
 
-   Notes:
-   - like and unlike actions require authentication
-   - one user can like one event once
-   - event existence and duplicate likes are handled in eventLikeService
-   - validators run before controller logic
-================================================== */
+   Notes
+   - Like and unlike actions require authentication.
+   - Event ID params are validated before controller logic.
+   - Event existence and duplicate likes are handled in eventLikeService.
+=========================================================================== */
 
-/* =============================
-   EVENT LIKES
-============================= */
+/* Event likes */
 
-// Like an event
-router.post("/:eventId/likes",
+router.post(
+    "/:eventId/likes",
     authenticateToken,
     eventIdParamValidator,
     handleValidationErrors,
     eventLikeController.likeEvent
 );
 
-// Unlike an event
-router.delete("/:eventId/likes",
+router.delete(
+    "/:eventId/likes",
     authenticateToken,
     eventIdParamValidator,
     handleValidationErrors,

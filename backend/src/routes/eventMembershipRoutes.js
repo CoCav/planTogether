@@ -3,77 +3,81 @@ const router = express.Router();
 
 const eventMembershipController = require("../controllers/eventMembershipController");
 
-const { authenticateToken } = require("../middlewares/auth/authenticateToken");
-
 const { EVENT_ROLES } = require("../constants/eventRoles");
-const authorizeEventRole = require("../middlewares/authorization/authorizeEventRole");
-const { authorizeEventMemberRoleUpdate, authorizeEventMemberRemoval } = require("../middlewares/authorization/eventMemberAuthorization");
 
-const { eventIdParamValidator, updateEventMemberRoleValidator, removeEventMemberValidator, transferEventOwnershipValidator } = require("../validators/eventMembershipValidator");
+const { authenticateToken } = require("../middlewares/auth/authenticateToken");
+const authorizeEventRole = require("../middlewares/authorization/authorizeEventRole");
+
+const {
+    authorizeEventMemberRoleUpdate,
+    authorizeEventMemberRemoval
+} = require("../middlewares/authorization/eventMemberAuthorization");
+
 const handleValidationErrors = require("../middlewares/errors/handleValidationErrors");
 
-/* ==================================================
-   EVENT MEMBERSHIP ROUTES
+const {
+    eventIdParamValidator,
+    updateEventMemberRoleValidator,
+    removeEventMemberValidator,
+    transferEventOwnershipValidator
+} = require("../validators/eventMembershipValidator");
 
-   Handles:
-   - joining and leaving events
-   - event members and organizer / co_organizer retrieval
-   - event member role management
-   - event member removal
-   - event ownership transfer
+/* ==========================================================================
+   Event Membership Routes
 
-   Notes:
-   - protected routes require authentication
-   - role management routes require additional authorization
-   - validators run before authorization middlewares
-================================================== */
+   Defines event membership endpoints.
 
-/* =============================
-   JOIN / LEAVE EVENTS
-============================= */
+   Responsibilities
+   - Join and leave events
+   - Retrieve event members and staff
+   - Update member roles
+   - Remove event members
+   - Transfer event ownership
 
-// Join an event
-router.post("/:eventId/members/join",
+   Notes
+   - Protected routes require authentication.
+   - Role management routes require additional authorization.
+   - Validators run before authorization middlewares.
+=========================================================================== */
+
+/* Join / leave events */
+
+router.post(
+    "/:eventId/members/join",
     authenticateToken,
     eventIdParamValidator,
     handleValidationErrors,
     eventMembershipController.joinEvent
 );
 
-// Leave an event
-router.delete("/:eventId/members/leave",
+router.delete(
+    "/:eventId/members/leave",
     authenticateToken,
     eventIdParamValidator,
     handleValidationErrors,
     eventMembershipController.leaveEvent
 );
 
+/* Members and staff */
 
-/* ==================================================
-   MEMBERS / ORGANIZER / CO-ORGANIZERS
-================================================== */
-
-// Get all members of an event
-router.get("/:eventId/members",
+router.get(
+    "/:eventId/members",
     eventIdParamValidator,
     handleValidationErrors,
     eventMembershipController.getEventMembers
 );
 
-// Get all organizers and co-organizers of an event
-router.get("/:eventId/staff",
+router.get(
+    "/:eventId/staff",
     eventIdParamValidator,
     handleValidationErrors,
     eventMembershipController.getEventStaff
 );
 
+/* Role management */
 
-/* =============================
-   ROLE MANAGEMENT
-============================= */
-
-// Update a member role
-router.put("/:eventId/members/:userId/role",
+router.put(
+    "/:eventId/members/:userId/role",
     authenticateToken,
     updateEventMemberRoleValidator,
     handleValidationErrors,
@@ -82,8 +86,8 @@ router.put("/:eventId/members/:userId/role",
     eventMembershipController.updateEventMemberRole
 );
 
-// Remove a member from an event
-router.delete("/:eventId/members/:userId",
+router.delete(
+    "/:eventId/members/:userId",
     authenticateToken,
     removeEventMemberValidator,
     handleValidationErrors,
@@ -92,7 +96,6 @@ router.delete("/:eventId/members/:userId",
     eventMembershipController.removeEventMember
 );
 
-// Transfer event ownership to another member
 router.put(
     "/:eventId/ownership",
     authenticateToken,

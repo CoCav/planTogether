@@ -4,6 +4,7 @@ const router = express.Router();
 const eventReviewController = require("../controllers/eventReviewController");
 
 const { authenticateToken } = require("../middlewares/auth/authenticateToken");
+const handleValidationErrors = require("../middlewares/errors/handleValidationErrors");
 
 const {
     eventIdParamValidator,
@@ -13,38 +14,35 @@ const {
     updateReviewValidator
 } = require("../validators/eventReviewValidator");
 
-const handleValidationErrors = require("../middlewares/errors/handleValidationErrors");
+/* ==========================================================================
+   Event Review Routes
 
-/* ==================================================
-   EVENT REVIEW ROUTES
+   Defines event review endpoints.
 
-   Handles:
-   - creating reviews for completed events
-   - retrieving paginated event reviews
-   - updating current user's own reviews
-   - deleting current user's own reviews
+   Responsibilities
+   - Retrieve event reviews
+   - Create reviews
+   - Update reviews
+   - Delete reviews
 
-   Notes:
-   - review creation, update and deletion require authentication
-   - review retrieval is public and supports pagination query params
-   - review permissions are enforced in eventReviewService
-   - validators run before controller logic
-================================================== */
+   Notes
+   - Review retrieval is public.
+   - Creating, updating and deleting reviews require authentication.
+   - Review permissions are enforced by the service layer.
+=========================================================================== */
 
-/* =============================
-   EVENT REVIEWS
-============================= */
+/* Event reviews */
 
-// Get paginated reviews for an event
-router.get("/:eventId/reviews",
+router.get(
+    "/:eventId/reviews",
     eventIdParamValidator,
     getEventReviewsValidator,
     handleValidationErrors,
     eventReviewController.getEventReviews
 );
 
-// Create a review for an event
-router.post("/:eventId/reviews",
+router.post(
+    "/:eventId/reviews",
     authenticateToken,
     eventIdParamValidator,
     createReviewValidator,
@@ -52,12 +50,10 @@ router.post("/:eventId/reviews",
     eventReviewController.createEventReview
 );
 
-/* =============================
-   REVIEW MANAGEMENT
-============================= */
+/* Review management */
 
-// Update current user's review
-router.put("/reviews/:reviewId",
+router.put(
+    "/reviews/:reviewId",
     authenticateToken,
     reviewIdParamValidator,
     updateReviewValidator,
@@ -65,8 +61,8 @@ router.put("/reviews/:reviewId",
     eventReviewController.updateEventReview
 );
 
-// Delete current user's review
-router.delete("/reviews/:reviewId",
+router.delete(
+    "/reviews/:reviewId",
     authenticateToken,
     reviewIdParamValidator,
     handleValidationErrors,

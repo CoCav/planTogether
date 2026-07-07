@@ -1,28 +1,18 @@
-const { param } = require("express-validator");
+const { eventIdParamValidator } = require("./shared/paramValidators");
 
-/* ==================================================
-   EVENT LIKE VALIDATORS
+/* ==========================================================================
+   Event Like Validators
 
-   Handles:
-   - event ID param validation for like actions
+   Validates event like requests.
 
-   Notes:
-   - handleValidationErrors must run after these validators
-   - authentication is handled separately by route middleware
-   - event existence is handled by the service layer
-================================================== */
+   Responsibilities
+   - Validate event identifier for like actions
 
-/* =============================
-   LIKE PARAMS
-============================= */
-
-// Validate event ID route param
-const eventIdParamValidator = [
-    param("eventId")
-        .isInt({ min: 1 })
-        .withMessage("Event ID must be a positive integer")
-        .toInt()
-];
+   Notes
+   - handleValidationErrors must run after these validators.
+   - Authentication is handled by route middleware.
+   - Event existence is handled by the service layer.
+=========================================================================== */
 
 module.exports = {
     eventIdParamValidator

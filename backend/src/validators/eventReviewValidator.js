@@ -1,48 +1,30 @@
-const { body, param, query } = require("express-validator");
+const { body } = require("express-validator");
 
-/* ==================================================
-   EVENT REVIEW VALIDATORS
+const { eventIdParamValidator, reviewIdParamValidator } = require("./shared/paramValidators");
+const { pageQueryValidator, pageSizeQueryValidator } = require("./shared/paginationValidators");
+const { orderQueryValidator, createSortByValidator } = require("./shared/sortValidators");
 
-   Handles:
-   - event ID param validation
-   - review ID param validation
-   - review creation rating validation
-   - review creation comment validation
-   - review update rating validation
-   - review update comment validation
+/* ==========================================================================
+   Event Review Validators
 
-   Notes:
-   - handleValidationErrors must run after these validators
-   - review permissions are handled separately by services/controllers
-================================================== */
+   Validates event review requests.
 
-/* =============================
-   REVIEW PARAMS
-============================= */
+   Responsibilities
+   - Validate review listing query params
+   - Validate review creation payloads
+   - Validate review update payloads
+   - Validate event and review identifiers
 
-// Validate event ID route param
-const eventIdParamValidator = [
-    param("eventId")
-        .isInt({ min: 1 })
-        .withMessage("Event ID must be a positive integer")
-        .toInt()
-];
+   Notes
+   - handleValidationErrors must run after these validators.
+   - Review permissions are handled by the service layer.
+=========================================================================== */
 
-// Validate review ID route param
-const reviewIdParamValidator = [
-    param("reviewId")
-        .isInt({ min: 1 })
-        .withMessage("Review ID must be a positive integer")
-        .toInt()
-];
+const REVIEW_SORT_FIELDS = ["createdAt", "rating"];
 
-/* =============================
-   REVIEW PAYLOAD
-============================= */
+/* Review payload */
 
-// Validate event review creation payload
 const createReviewValidator = [
-
     body("rating")
         .notEmpty()
         .withMessage("Rating is required")
@@ -60,51 +42,15 @@ const createReviewValidator = [
         .withMessage("Comment must be between 5 and 1000 characters")
 ];
 
-/* =============================
-   REVIEW QUERY
-============================= */
+const updateReviewValidator = createReviewValidator;
 
-// Validate event review listing query params
+/* Review query */
+
 const getEventReviewsValidator = [
-    query("sortBy")
-        .optional()
-        .isIn(["createdAt", "rating"])
-        .withMessage("Invalid sort field"),
-
-    query("page")
-        .optional()
-        .isInt({ min: 1 })
-        .withMessage("Page must be a positive integer"),
-
-    query("pageSize")
-        .optional()
-        .isInt({ min: 1, max: 100 })
-        .withMessage("Page size must be between 1 and 100"),
-
-    query("order")
-        .optional()
-        .isIn(["asc", "desc"])
-        .withMessage("Order must be asc or desc")
-];
-
-// Validate event review update payload
-const updateReviewValidator = [
-
-    body("rating")
-        .notEmpty()
-        .withMessage("Rating is required")
-        .bail()
-        .isInt({ min: 1, max: 5 })
-        .withMessage("Rating must be an integer between 1 and 5")
-        .toInt(),
-
-    body("comment")
-        .trim()
-        .notEmpty()
-        .withMessage("Comment is required")
-        .bail()
-        .isLength({ min: 5, max: 1000 })
-        .withMessage("Comment must be between 5 and 1000 characters")
+    createSortByValidator(REVIEW_SORT_FIELDS),
+    pageQueryValidator,
+    pageSizeQueryValidator,
+    orderQueryValidator
 ];
 
 module.exports = {

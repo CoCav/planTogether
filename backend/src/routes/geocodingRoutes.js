@@ -7,7 +7,7 @@ const { authenticateToken } = require("../middlewares/auth/authenticateToken");
 const locationRateLimiter = require("../middlewares/rateLimiters/locationRateLimiter");
 const handleValidationErrors = require("../middlewares/errors/handleValidationErrors");
 
-const { searchLocationValidator } = require("../validators/locationValidator");
+const { searchLocationValidator } = require("../validators/geocodingValidator");
 
 /* ==========================================================================
    Geocoding Routes

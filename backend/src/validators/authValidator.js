@@ -2,34 +2,36 @@ const { body } = require("express-validator");
 
 const { PASSWORD_REQUIREMENTS, PASSWORD_MESSAGES } = require("../config/security/passwordPolicy");
 
-/* ==================================================
-   AUTH VALIDATORS
+/* ==========================================================================
+   Auth Validators
 
-   Handles:
-   - registration validation
-   - login validation
+   Validates authentication request payloads.
 
-   Notes:
-   - handleValidationErrors must run after these validators
-   - email values are normalized before reaching controllers
-   - password rules are centralized in utils/auth/passwordRules
-   - user profile/password validators belong to userValidator
-================================================== */
+   Responsibilities
+   - Validate user registration
+   - Validate user login
+   - Normalize email addresses
 
-/* =============================
-   REGISTER / LOGIN
-============================= */
+   Notes
+   - handleValidationErrors must run after these validators.
+   - Password rules are centralized in passwordPolicy.
+   - User profile and password update validators belong to user validators.
+=========================================================================== */
 
-// Validate user registration data
+/* Registration */
+
 const registerValidator = [
     body("name")
         .trim()
-        .notEmpty().withMessage("Name is required"),
+        .notEmpty()
+        .withMessage("Name is required"),
 
     body("email")
         .trim()
-        .notEmpty().withMessage("Email is required")
-        .isEmail().withMessage("Invalid email")
+        .notEmpty()
+        .withMessage("Email is required")
+        .isEmail()
+        .withMessage("Invalid email")
         .normalizeEmail(),
 
     body("password")
@@ -43,16 +45,23 @@ const registerValidator = [
         .withMessage(PASSWORD_MESSAGES.lowercase)
 ];
 
-// Validate user login data
+/* Login */
+
 const loginValidator = [
     body("email")
         .trim()
-        .notEmpty().withMessage("Email is required")
-        .isEmail().withMessage("Invalid email")
+        .notEmpty()
+        .withMessage("Email is required")
+        .isEmail()
+        .withMessage("Invalid email")
         .normalizeEmail(),
 
     body("password")
-        .notEmpty().withMessage("Password is required")
+        .notEmpty()
+        .withMessage("Password is required")
 ];
 
-module.exports = { registerValidator, loginValidator };
+module.exports = {
+    registerValidator,
+    loginValidator
+};

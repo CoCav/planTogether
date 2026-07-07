@@ -1,72 +1,48 @@
-const { body, param } = require("express-validator");
+const { body } = require("express-validator");
 
 const { VALID_EVENT_ROLES } = require("../constants/eventRoles");
 
-/* ==================================================
-   EVENT MEMBERSHIP VALIDATORS
+const { eventIdParamValidator, userIdParamValidator } = require("./shared/paramValidators");
 
-   Handles:
-   - event ID param validation
-   - event member role update validation
-   - event member removal validation
-   - event ownership transfer validation
+/* ==========================================================================
+   Event Membership Validators
 
-   Notes:
-   - handleValidationErrors must run after these validators
-   - role authorization is handled separately by middlewares
-   - event roles are centralized through shared constants
-================================================== */
+   Validates event membership requests.
 
-/* =============================
-   EVENT PARAMS
-============================= */
+   Responsibilities
+   - Validate member role updates
+   - Validate member removal
+   - Validate event ownership transfer
 
-// Validate event ID route param
-const eventIdParamValidator = [
-    param("eventId")
-        .isInt({ min: 1 }).withMessage("Event ID must be a positive integer")
-        .toInt()
-];
+   Notes
+   - handleValidationErrors must run after these validators.
+   - Authorization is handled by dedicated middlewares.
+=========================================================================== */
 
-/* =============================
-   ROLE MANAGEMENT
-============================= */
+/* Role management */
 
-// Validate member role update data
 const updateEventMemberRoleValidator = [
-    param("eventId")
-        .isInt({ min: 1 }).withMessage("Event ID must be a positive integer")
-        .toInt(),
+    ...eventIdParamValidator,
 
-    param("userId")
-        .isInt({ min: 1 }).withMessage("User ID must be a positive integer")
-        .toInt(),
+    ...userIdParamValidator,
 
     body("newRole")
         .trim()
-        .notEmpty().withMessage("newRole is required")
+        .notEmpty()
+        .withMessage("newRole is required")
         .bail()
         .isIn(VALID_EVENT_ROLES)
         .withMessage("newRole must be one of: organizer, co_organizer, participant")
 ];
 
-// Validate member removal params
 const removeEventMemberValidator = [
-    param("eventId")
-        .isInt({ min: 1 }).withMessage("Event ID must be a positive integer")
-        .toInt(),
+    ...eventIdParamValidator,
 
-    param("userId")
-        .isInt({ min: 1 }).withMessage("User ID must be a positive integer")
-        .toInt()
+    ...userIdParamValidator
 ];
 
-// Validate transfer event ownership data
 const transferEventOwnershipValidator = [
-    param("eventId")
-        .isInt({ min: 1 })
-        .withMessage("Event ID must be a positive integer")
-        .toInt(),
+    ...eventIdParamValidator,
 
     body("targetUserId")
         .notEmpty()
@@ -77,4 +53,9 @@ const transferEventOwnershipValidator = [
         .toInt()
 ];
 
-module.exports = { eventIdParamValidator, updateEventMemberRoleValidator, removeEventMemberValidator, transferEventOwnershipValidator };
+module.exports = {
+    eventIdParamValidator,
+    updateEventMemberRoleValidator,
+    removeEventMemberValidator,
+    transferEventOwnershipValidator
+};

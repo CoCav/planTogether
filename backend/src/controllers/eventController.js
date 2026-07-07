@@ -1,33 +1,34 @@
 const eventService = require("../services/eventService");
 
-/* ==================================================
-   EVENT CONTROLLER
+/* ==========================================================================
+   Event Controller
 
-   Handles:
-   - event creation and update with structured location data
-   - event listing with optional filters, pagination, review stats and like stats
-   - single event retrieval with participant, review and like stats
-   - current authenticated user event access
-   - event update with image preservation, replacement and removal
-   - event deletion
-   - API response formatting
+   Handles event responses.
 
-   Notes:
-   - business logic is delegated to eventService
-   - uploaded event image paths and clear-image requests are formatted here
-   - event listing/detail responses may include participant count, review count, average rating, like count and current user like state
-   - event access responses support frontend UI guards
-   - successful responses include success, message and top-level payload fields when needed
-================================================== */
+   Responsibilities
+   - Create events
+   - Retrieve event listings
+   - Retrieve event details
+   - Retrieve current user event access
+   - Update events
+   - Delete events
+   - Format event API responses
 
-/* =============================
-   CREATE EVENT
-============================= */
+   Notes
+   - Business logic is delegated to eventService.
+   - Uploaded event image paths are prepared here.
+   - Event listing and detail responses may include participant, review and like stats.
+=========================================================================== */
 
-// Create a new event
+const EVENT_IMAGE_UPLOAD_PATH = "/uploads/events";
+
+/* Create event */
+
 const createEvent = async (req, res, next) => {
     try {
-        const image = req.file ? `/uploads/events/${req.file.filename}` : null;
+        const image = req.file
+            ? `${EVENT_IMAGE_UPLOAD_PATH}/${req.file.filename}`
+            : null;
 
         const event = await eventService.createEvent(
             {
@@ -48,11 +49,8 @@ const createEvent = async (req, res, next) => {
     }
 };
 
-/* =============================
-   GET EVENTS
-============================= */
+/* Read events */
 
-// Get all events with optional filters and pagination
 const getAllEvents = async (req, res, next) => {
     try {
         const events = await eventService.getAllEvents(
@@ -71,7 +69,6 @@ const getAllEvents = async (req, res, next) => {
     }
 };
 
-// Get current authenticated user's access for one event
 const getCurrentUserEventAccess = async (req, res, next) => {
     try {
         const access = await eventService.getCurrentUserEventAccess(
@@ -90,7 +87,6 @@ const getCurrentUserEventAccess = async (req, res, next) => {
     }
 };
 
-// Get one event by ID
 const getEvent = async (req, res, next) => {
     try {
         const event = await eventService.getEventByID(
@@ -109,18 +105,15 @@ const getEvent = async (req, res, next) => {
     }
 };
 
-/* =============================
-   UPDATE / DELETE EVENT
-============================= */
+/* Update event */
 
-// Update an event
 const updateEvent = async (req, res, next) => {
     try {
         // Uploaded file replaces the existing image.
         // Empty image field clears the existing image.
         // Missing image field keeps the existing image unchanged.
         const image = req.file
-            ? `/uploads/events/${req.file.filename}`
+            ? `${EVENT_IMAGE_UPLOAD_PATH}/${req.file.filename}`
             : req.body.image !== undefined
                 ? req.body.image || null
                 : undefined;
@@ -144,7 +137,8 @@ const updateEvent = async (req, res, next) => {
     }
 };
 
-// Delete an event
+/* Delete event */
+
 const deleteEvent = async (req, res, next) => {
     try {
         await eventService.deleteEventByID(req.params.eventId);

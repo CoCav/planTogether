@@ -1,33 +1,35 @@
 const eventMembershipService = require("../services/eventMembershipService");
 
-/* ==================================================
-   EVENT MEMBERSHIP CONTROLLER
+/* ==========================================================================
+   Event Membership Controller
 
-   Handles:
-   - joining and leaving events
-   - retrieving event members
-   - retrieving organizer and co_organizer members
-   - updating member roles
-   - removing members from events
-   - transferring event ownership
+   Handles event membership responses.
 
-   Notes:
-   - current user event listing belongs to userController
-   - authorization is handled by route middlewares
-   - business logic is delegated to eventMembershipService
-   - successful responses include success, message and top-level payload fields when needed
-================================================== */
-/* =============================
-   JOIN / LEAVE EVENTS
-============================= */
+   Responsibilities
+   - Join and leave events
+   - Retrieve event members and staff
+   - Update member roles
+   - Remove members
+   - Transfer event ownership
+   - Return API responses
 
-// Join an event
+   Notes
+   - Business logic is delegated to eventMembershipService.
+   - Authorization is handled by route middlewares.
+   - Current user event listings belong to userController.
+=========================================================================== */
+
+/* Join / leave events */
+
 const joinEvent = async (req, res, next) => {
     try {
         const userId = req.user.userId;
         const eventId = req.params.eventId;
 
-        const membership = await eventMembershipService.joinEvent({ eventId, userId });
+        const membership = await eventMembershipService.joinEvent({
+            eventId,
+            userId
+        });
 
         return res.status(200).json({
             success: true,
@@ -40,14 +42,15 @@ const joinEvent = async (req, res, next) => {
     }
 };
 
-
-// Leave an event
 const leaveEvent = async (req, res, next) => {
     try {
         const userId = req.user.userId;
         const eventId = req.params.eventId;
 
-        await eventMembershipService.leaveEvent({ eventId, userId });
+        await eventMembershipService.leaveEvent({
+            eventId,
+            userId
+        });
 
         return res.status(200).json({
             success: true,
@@ -59,16 +62,13 @@ const leaveEvent = async (req, res, next) => {
     }
 };
 
-/* ==================================================
-   MEMBERS / ORGANIZER / CO-ORGANIZERS
-================================================== */
+/* Members and staff */
 
-// Get all members of an event
 const getEventMembers = async (req, res, next) => {
     try {
-        const eventId = req.params.eventId;
-
-        const members = await eventMembershipService.getEventMembers(eventId);
+        const members = await eventMembershipService.getEventMembers(
+            req.params.eventId
+        );
 
         return res.status(200).json({
             success: true,
@@ -81,13 +81,11 @@ const getEventMembers = async (req, res, next) => {
     }
 };
 
-
-// Get organizer / co-organizer(s) of an event
 const getEventStaff = async (req, res, next) => {
     try {
-        const eventId = req.params.eventId;
-
-        const eventStaff = await eventMembershipService.getEventStaff(eventId);
+        const eventStaff = await eventMembershipService.getEventStaff(
+            req.params.eventId
+        );
 
         return res.status(200).json({
             success: true,
@@ -100,22 +98,14 @@ const getEventStaff = async (req, res, next) => {
     }
 };
 
+/* Role management */
 
-/* =============================
-   ROLE MANAGEMENT
-============================= */
-
-// Update a member's role in an event
 const updateEventMemberRole = async (req, res, next) => {
     try {
-        const eventId = req.params.eventId;
-        const userId = req.params.userId;
-        const { newRole } = req.body;
-
         const membership = await eventMembershipService.updateEventMemberRole({
-            eventId,
-            userId,
-            newRole
+            eventId: req.params.eventId,
+            userId: req.params.userId,
+            newRole: req.body.newRole
         });
 
         return res.status(200).json({
@@ -129,16 +119,11 @@ const updateEventMemberRole = async (req, res, next) => {
     }
 };
 
-
-// Remove a member from an event
 const removeEventMember = async (req, res, next) => {
     try {
-        const eventId = req.params.eventId;
-        const userId = req.params.userId;
-
         await eventMembershipService.removeEventMember({
-            eventId,
-            userId
+            eventId: req.params.eventId,
+            userId: req.params.userId
         });
 
         return res.status(200).json({
@@ -151,16 +136,12 @@ const removeEventMember = async (req, res, next) => {
     }
 };
 
-// Transfer event ownership to another member
 const transferEventOwnership = async (req, res, next) => {
     try {
-        const { eventId } = req.params;
-        const { targetUserId } = req.body;
-
         const result = await eventMembershipService.transferEventOwnership({
-            eventId,
+            eventId: req.params.eventId,
             currentUserId: req.user.userId,
-            targetUserId
+            targetUserId: req.body.targetUserId
         });
 
         return res.status(200).json({
@@ -170,7 +151,7 @@ const transferEventOwnership = async (req, res, next) => {
         });
 
     } catch (error) {
-        next(error);
+        return next(error);
     }
 };
 

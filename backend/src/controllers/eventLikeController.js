@@ -1,25 +1,22 @@
 const eventLikeService = require("../services/eventLikeService");
 
-/* ==================================================
-   EVENT LIKE CONTROLLER
+/* ==========================================================================
+   Event Like Controller
 
-   Handles:
-   - liking events
-   - unliking events
-   - API response formatting
+   Handles event like responses.
 
-   Notes:
-   - business logic is delegated to eventLikeService
-   - current user routes use req.user.userId
-   - like permissions are enforced through authentication and service checks
-   - successful responses include current liked state and likes count
-================================================== */
+   Responsibilities
+   - Like events
+   - Unlike events
+   - Return API responses
 
-/* =============================
-   LIKE EVENT
-============================= */
+   Notes
+   - Business logic is delegated to eventLikeService.
+   - Authenticated user IDs are provided by authenticateToken.
+=========================================================================== */
 
-// Like an event
+/* Like event */
+
 const likeEvent = async (req, res, next) => {
     try {
         const result = await eventLikeService.likeEvent({
@@ -38,11 +35,8 @@ const likeEvent = async (req, res, next) => {
     }
 };
 
-/* =============================
-   UNLIKE EVENT
-============================= */
+/* Unlike event */
 
-// Unlike an event
 const unlikeEvent = async (req, res, next) => {
     try {
         const result = await eventLikeService.unlikeEvent({

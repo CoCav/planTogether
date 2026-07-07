@@ -1,27 +1,25 @@
 const eventReviewService = require("../services/eventReviewService");
 
-/* ==================================================
-   EVENT REVIEW CONTROLLER
+/* ==========================================================================
+   Event Review Controller
 
-   Handles:
-   - creating event reviews
-   - paginated event reviews retrieval
-   - updating authenticated user's own reviews
-   - deleting authenticated user's own reviews
-   - API response formatting
+   Handles event review responses.
 
-   Notes:
-   - business logic is delegated to eventReviewService
-   - current user routes use req.user.userId
-   - review permissions are enforced in the service layer
-   - successful responses include success, message and top-level payload fields when needed
-================================================== */
+   Responsibilities
+   - Create event reviews
+   - Retrieve paginated event reviews
+   - Update authenticated user's own reviews
+   - Delete authenticated user's own reviews
+   - Return API responses
 
-/* =============================
-   CREATE REVIEW
-============================= */
+   Notes
+   - Business logic is delegated to eventReviewService.
+   - Authenticated user IDs are provided by authenticateToken.
+   - Review permissions are enforced in the service layer.
+=========================================================================== */
 
-// Create a review for an event
+/* Create review */
+
 const createEventReview = async (req, res, next) => {
     try {
         const review = await eventReviewService.createEventReview({
@@ -42,11 +40,8 @@ const createEventReview = async (req, res, next) => {
     }
 };
 
-/* =============================
-   GET REVIEWS
-============================= */
+/* Get reviews */
 
-// Get paginated reviews for an event
 const getEventReviews = async (req, res, next) => {
     try {
         const reviews = await eventReviewService.getEventReviews(
@@ -65,11 +60,8 @@ const getEventReviews = async (req, res, next) => {
     }
 };
 
-/* =============================
-   UPDATE REVIEW
-============================= */
+/* Update review */
 
-// Update current user's review
 const updateEventReview = async (req, res, next) => {
     try {
         const review = await eventReviewService.updateEventReviewByID({
@@ -90,11 +82,8 @@ const updateEventReview = async (req, res, next) => {
     }
 };
 
-/* =============================
-   DELETE REVIEW
-============================= */
+/* Delete review */
 
-// Delete current user's review
 const deleteEventReview = async (req, res, next) => {
     try {
         await eventReviewService.deleteEventReviewByID({

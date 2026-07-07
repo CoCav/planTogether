@@ -2,33 +2,32 @@ const authService = require("../services/authService");
 
 const { formatAuthenticatedUser } = require("../utils/users/authenticated/authenticatedUserFormatter");
 
-/* ==================================================
-   AUTH CONTROLLER
+/* ==========================================================================
+   Auth Controller
 
-   Handles:
-   - user registration
-   - user login
-   - logout response
+   Handles authentication responses.
 
-   Notes:
-   - business logic is delegated to authService
-   - uploaded avatar paths are formatted here
-   - user profile logic belongs to userController
-   - user response payloads are centralized through shared formatter utilities
-   - successful responses include success, message and top-level payload fields when needed
-================================================== */
+   Responsibilities
+   - Register users
+   - Log users in
+   - Return logout responses
+   - Format authenticated user payloads
 
-/* =============================
-   REGISTER / LOGIN
-============================= */
+   Notes
+   - Business logic is delegated to authService.
+   - Uploaded avatar paths are prepared here.
+   - User profile logic belongs to userController.
+=========================================================================== */
 
-// Register a new user
+/* Registration */
+
 const register = async (req, res, next) => {
     try {
         const { name, email, password } = req.body;
 
-        // Build avatar path only when a file was uploaded
-        const avatar = req.file ? `/uploads/avatars/${req.file.filename}` : null;
+        const avatar = req.file
+            ? `/uploads/avatars/${req.file.filename}`
+            : null;
 
         const { user, token } = await authService.registerUser({
             name,
@@ -49,13 +48,16 @@ const register = async (req, res, next) => {
     }
 };
 
+/* Login */
 
-// Login an existing user
 const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
-        const { user, token } = await authService.loginUser({ email, password });
+        const { user, token } = await authService.loginUser({
+            email,
+            password
+        });
 
         return res.status(200).json({
             success: true,
@@ -69,12 +71,8 @@ const login = async (req, res, next) => {
     }
 };
 
+/* Logout */
 
-/* =============================
-   LOGOUT
-============================= */
-
-// Logout authenticated user
 const logout = (req, res) => {
     return res.status(200).json({
         success: true,
@@ -82,4 +80,8 @@ const logout = (req, res) => {
     });
 };
 
-module.exports = { register, login, logout };
+module.exports = {
+    register,
+    login,
+    logout
+};

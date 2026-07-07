@@ -56,7 +56,7 @@ describe("userService - changeCurrentUserPasswordByID", () => {
 
         bcrypt.hash.mockResolvedValue("new-hash");
 
-        await userService.changeCurrentUserPasswordByID(1, "old", "new");
+        await userService.changeCurrentUserPasswordById(1, "old", "new");
 
         expect(user.password).toBe("new-hash");
         expect(user.save).toHaveBeenCalled();
@@ -89,7 +89,7 @@ describe("userService - changeCurrentUserPasswordByID", () => {
 
         bcrypt.compare.mockResolvedValueOnce(false);
 
-        await expect(userService.changeCurrentUserPasswordByID(1, "wrong", "new")).rejects.toMatchObject({
+        await expect(userService.changeCurrentUserPasswordById(1, "wrong", "new")).rejects.toMatchObject({
             message: "Current password is incorrect",
             statusCode: 401
         });
@@ -104,7 +104,7 @@ describe("userService - changeCurrentUserPasswordByID", () => {
             .mockResolvedValueOnce(true)
             .mockResolvedValueOnce(true);
 
-        await expect(userService.changeCurrentUserPasswordByID(1, "same", "same")).rejects.toMatchObject({
+        await expect(userService.changeCurrentUserPasswordById(1, "same", "same")).rejects.toMatchObject({
             message: "New password must be different from the current password",
             statusCode: 400
         });
@@ -119,7 +119,7 @@ describe("userService - changeCurrentUserPasswordByID", () => {
             findByPk: jest.fn().mockResolvedValue(null)
         });
 
-        await expect(userService.changeCurrentUserPasswordByID(1, "old", "new")).rejects.toMatchObject({
+        await expect(userService.changeCurrentUserPasswordById(1, "old", "new")).rejects.toMatchObject({
             message: "User not found",
             statusCode: 404
         });
@@ -134,6 +134,6 @@ describe("userService - changeCurrentUserPasswordByID", () => {
             findByPk: jest.fn().mockRejectedValue(new Error("DB error"))
         });
 
-        await expect(userService.changeCurrentUserPasswordByID(1, "old", "new")).rejects.toThrow("DB error");
+        await expect(userService.changeCurrentUserPasswordById(1, "old", "new")).rejects.toThrow("DB error");
     });
 });

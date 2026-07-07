@@ -78,7 +78,7 @@ const { EVENT_STATUS } = require("../../../../../src/constants/eventStatus");
 const { getEventStatus } = require("../../../../../src/utils/events/eventStatus");
 
 const { buildEventWhereConditions } = require("../../../../../src/utils/events/eventFilters");
-const { buildEventCreatorInclude } = require("../../../../../src/utils/events/eventCreator");
+const { buildEventCreatorInclude } = require("../../../../../src/utils/events/eventCreatorInclude");
 const { countActiveParticipantsByEventIds } = require("../../../../../src/utils/eventMemberships/eventParticipants");
 
 const {
@@ -89,7 +89,7 @@ const {
 
 const { getPaginationOptions, getTotalCount, getTotalPages } = require("../../../../../src/utils/pagination");
 
-describe("userService - getCurrentUserEventsByID", () => {
+describe("userService - getCurrentUserEventsById", () => {
 
     const pagination = {
         page: 1,
@@ -148,7 +148,7 @@ describe("userService - getCurrentUserEventsByID", () => {
 
         getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
 
-        const result = await userService.getCurrentUserEventsByID(1, {});
+        const result = await userService.getCurrentUserEventsById(1, {});
 
         expect(User.findByPk).toHaveBeenCalledWith(1);
 
@@ -192,7 +192,7 @@ describe("userService - getCurrentUserEventsByID", () => {
             rows: []
         });
 
-        await userService.getCurrentUserEventsByID(1, {
+        await userService.getCurrentUserEventsById(1, {
             view: "joined",
             creator: "john"
         });
@@ -211,7 +211,7 @@ describe("userService - getCurrentUserEventsByID", () => {
             rows: []
         });
 
-        await userService.getCurrentUserEventsByID(1, {
+        await userService.getCurrentUserEventsById(1, {
             view: "created"
         });
 
@@ -228,7 +228,7 @@ describe("userService - getCurrentUserEventsByID", () => {
             rows: []
         });
 
-        await userService.getCurrentUserEventsByID(1, {
+        await userService.getCurrentUserEventsById(1, {
             view: "joined"
         });
 
@@ -248,7 +248,7 @@ describe("userService - getCurrentUserEventsByID", () => {
             rows: []
         });
 
-        await userService.getCurrentUserEventsByID(1, {
+        await userService.getCurrentUserEventsById(1, {
             view: "createdHistory"
         });
 
@@ -265,7 +265,7 @@ describe("userService - getCurrentUserEventsByID", () => {
             rows: []
         });
 
-        await userService.getCurrentUserEventsByID(1, {
+        await userService.getCurrentUserEventsById(1, {
             view: "joined",
             creator: "john",
             search: "music"
@@ -304,7 +304,7 @@ describe("userService - getCurrentUserEventsByID", () => {
 
         getEventStatus.mockReturnValue(EVENT_STATUS.PAST);
 
-        const result = await userService.getCurrentUserEventsByID(1, {});
+        const result = await userService.getCurrentUserEventsById(1, {});
 
         expect(getEventStatus).toHaveBeenCalledWith({
             id: 100,
@@ -349,7 +349,7 @@ describe("userService - getCurrentUserEventsByID", () => {
 
         getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
 
-        const result = await userService.getCurrentUserEventsByID(1, {});
+        const result = await userService.getCurrentUserEventsById(1, {});
 
         expect(countEventLikesByEventIds).toHaveBeenCalledWith(
             EventLike,
@@ -397,7 +397,7 @@ describe("userService - getCurrentUserEventsByID", () => {
 
         getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
 
-        const result = await userService.getCurrentUserEventsByID(1, {});
+        const result = await userService.getCurrentUserEventsById(1, {});
 
         expect(result.events[0].event).toMatchObject({
             likesCount: 0,
@@ -426,7 +426,7 @@ describe("userService - getCurrentUserEventsByID", () => {
 
         getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
 
-        const result = await userService.getCurrentUserEventsByID(1, {});
+        const result = await userService.getCurrentUserEventsById(1, {});
 
         expect(result.events[0].event.image).toBe("/uploads/events/image.jpg");
     });
@@ -443,7 +443,7 @@ describe("userService - getCurrentUserEventsByID", () => {
             rows: []
         });
 
-        await userService.getCurrentUserEventsByID(1, {});
+        await userService.getCurrentUserEventsById(1, {});
 
         expect(countActiveParticipantsByEventIds).toHaveBeenCalledWith(
             EventUserRole,
@@ -474,7 +474,7 @@ describe("userService - getCurrentUserEventsByID", () => {
 
         getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
 
-        const result = await userService.getCurrentUserEventsByID(1, {});
+        const result = await userService.getCurrentUserEventsById(1, {});
 
         expect(result.events[0].event.participantCount).toBe(0);
     });
@@ -494,7 +494,7 @@ describe("userService - getCurrentUserEventsByID", () => {
             rows: []
         });
 
-        await userService.getCurrentUserEventsByID(1, {});
+        await userService.getCurrentUserEventsById(1, {});
 
         expect(getTotalCount).toHaveBeenCalledWith([
             { count: 1 },
@@ -511,7 +511,7 @@ describe("userService - getCurrentUserEventsByID", () => {
     it("should throw 404 when user is not found", async () => {
         User.findByPk.mockResolvedValue(null);
 
-        await expect(userService.getCurrentUserEventsByID(999, {})).rejects.toMatchObject({
+        await expect(userService.getCurrentUserEventsById(999, {})).rejects.toMatchObject({
             message: "User not found",
             statusCode: 404
         });
@@ -526,6 +526,6 @@ describe("userService - getCurrentUserEventsByID", () => {
     it("should forward database errors", async () => {
         User.findByPk.mockRejectedValue(new Error("DB error"));
 
-        await expect(userService.getCurrentUserEventsByID(1, {})).rejects.toThrow("DB error");
+        await expect(userService.getCurrentUserEventsById(1, {})).rejects.toThrow("DB error");
     });
 });

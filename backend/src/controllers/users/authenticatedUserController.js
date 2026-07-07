@@ -26,7 +26,7 @@ const AVATAR_UPLOAD_PATH = "/uploads/avatars";
 
 const getCurrentUserEvents = async (req, res, next) => {
     try {
-        const result = await userService.getCurrentUserEventsByID(
+        const result = await userService.getCurrentUserEventsById(
             req.user.userId,
             req.query
         );
@@ -46,7 +46,7 @@ const getCurrentUserEvents = async (req, res, next) => {
 
 const getCurrentUserProfile = async (req, res, next) => {
     try {
-        const user = await userService.getCurrentUserProfileByID(
+        const user = await userService.getCurrentUserProfileById(
             req.user.userId
         );
 
@@ -71,7 +71,7 @@ const updateCurrentUserProfile = async (req, res, next) => {
             updatedData.avatar = `${AVATAR_UPLOAD_PATH}/${req.file.filename}`;
         }
 
-        const user = await userService.updateCurrentUserProfileByID(
+        const user = await userService.updateCurrentUserProfileById(
             req.user.userId,
             updatedData
         );
@@ -91,7 +91,7 @@ const updateCurrentUserProfile = async (req, res, next) => {
 
 const changeCurrentUserPassword = async (req, res, next) => {
     try {
-        await userService.changeCurrentUserPasswordByID(
+        await userService.changeCurrentUserPasswordById(
             req.user.userId,
             req.body.currentPassword,
             req.body.newPassword
@@ -111,7 +111,7 @@ const changeCurrentUserPassword = async (req, res, next) => {
 
 const deleteCurrentUser = async (req, res, next) => {
     try {
-        await userService.deleteCurrentUserByID(req.user.userId);
+        await userService.deleteCurrentUserById(req.user.userId);
 
         return res.status(200).json({
             success: true,

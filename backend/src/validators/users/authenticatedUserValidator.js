@@ -2,6 +2,8 @@ const { body, query } = require("express-validator");
 
 const { PASSWORD_REQUIREMENTS, PASSWORD_MESSAGES } = require("../../config/security/passwordPolicy");
 
+const { EVENT_SORT_FIELDS } = require("../../constants/eventSortFields");
+
 const { pageQueryValidator, pageSizeQueryValidator } = require("../shared/paginationValidators");
 const { orderQueryValidator, createSortByValidator } = require("../shared/sortValidators");
 const {
@@ -40,12 +42,6 @@ const CURRENT_USER_EVENT_VIEWS = [
     "joinedHistory"
 ];
 
-const CURRENT_USER_EVENT_SORT_FIELDS = [
-    "startDateTime",
-    "title",
-    "createdAt"
-];
-
 const getCurrentUserEventsValidator = [
     query("view")
         .optional()
@@ -68,7 +64,7 @@ const getCurrentUserEventsValidator = [
     pageSizeQueryValidator,
 
     createSortByValidator(
-        CURRENT_USER_EVENT_SORT_FIELDS,
+        EVENT_SORT_FIELDS,
         "Sort field must be one of: startDateTime, title, createdAt"
     ),
 

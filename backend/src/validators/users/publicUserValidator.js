@@ -1,5 +1,7 @@
 const { query } = require("express-validator");
 
+const { EVENT_SORT_FIELDS } = require("../../constants/eventSortFields");
+
 const { publicUserIdParamValidator } = require("../shared/paramValidators");
 const { pageQueryValidator, pageSizeQueryValidator } = require("../shared/paginationValidators");
 const { orderQueryValidator, createSortByValidator } = require("../shared/sortValidators");
@@ -35,12 +37,6 @@ const PUBLIC_USER_EVENT_VIEWS = [
     "joined"
 ];
 
-const PUBLIC_USER_EVENT_SORT_FIELDS = [
-    "startDateTime",
-    "title",
-    "createdAt"
-];
-
 const getPublicUserEventsValidator = [
     query("view")
         .optional()
@@ -62,7 +58,7 @@ const getPublicUserEventsValidator = [
     pageSizeQueryValidator,
 
     createSortByValidator(
-        PUBLIC_USER_EVENT_SORT_FIELDS,
+        EVENT_SORT_FIELDS,
         "Sort field must be one of: startDateTime, title, createdAt"
     ),
 

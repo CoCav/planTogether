@@ -20,7 +20,7 @@ const userService = require("../../services/userService");
 
 const getPublicUserProfile = async (req, res, next) => {
     try {
-        const profile = await userService.getPublicUserProfileByID(
+        const profile = await userService.getPublicUserProfileById(
             req.params.id
         );
 
@@ -39,7 +39,7 @@ const getPublicUserProfile = async (req, res, next) => {
 
 const getPublicUserEvents = async (req, res, next) => {
     try {
-        const events = await userService.getPublicUserEventsByID(
+        const events = await userService.getPublicUserEventsById(
             req.params.id,
             req.query,
             req.user?.userId

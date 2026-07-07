@@ -56,7 +56,7 @@ const { deleteUploadedFile } = require("../../../../../src/utils/files/uploadedF
 
 const { createMockUserWithPassword } = require("../../../../factories/userFactory");
 
-describe("userService - deleteCurrentUserByID", () => {
+describe("userService - deleteCurrentUserById", () => {
     let transaction;
     let user;
 
@@ -89,7 +89,7 @@ describe("userService - deleteCurrentUserByID", () => {
         User.findByPk.mockResolvedValue(user);
         EventUserRole.findOne.mockResolvedValue(null);
 
-        const result = await userService.deleteCurrentUserByID(1);
+        const result = await userService.deleteCurrentUserById(1);
 
         expect(sequelize.transaction).toHaveBeenCalled();
 
@@ -119,7 +119,7 @@ describe("userService - deleteCurrentUserByID", () => {
         User.findByPk.mockResolvedValue(user);
         EventUserRole.findOne.mockResolvedValue(null);
 
-        await userService.deleteCurrentUserByID(1);
+        await userService.deleteCurrentUserById(1);
 
         expect(EventUserRole.findOne).toHaveBeenCalled();
 
@@ -133,7 +133,7 @@ describe("userService - deleteCurrentUserByID", () => {
         User.findByPk.mockResolvedValue(user);
         EventUserRole.findOne.mockResolvedValue(null);
 
-        await userService.deleteCurrentUserByID(1);
+        await userService.deleteCurrentUserById(1);
 
         expect(EventUserRole.findOne).toHaveBeenCalledWith(expect.objectContaining({
             where: {
@@ -156,7 +156,7 @@ describe("userService - deleteCurrentUserByID", () => {
         User.findByPk.mockResolvedValue(user);
         EventUserRole.findOne.mockResolvedValue(null);
 
-        await userService.deleteCurrentUserByID(1);
+        await userService.deleteCurrentUserById(1);
 
         expect(deleteUploadedFile).not.toHaveBeenCalled();
 
@@ -177,7 +177,7 @@ describe("userService - deleteCurrentUserByID", () => {
             eventId: 1
         });
 
-        await expect(userService.deleteCurrentUserByID(1)).rejects.toMatchObject({
+        await expect(userService.deleteCurrentUserById(1)).rejects.toMatchObject({
             message: "You must transfer ownership of your active or upcoming events before deleting your account",
             statusCode: 403
         });
@@ -196,7 +196,7 @@ describe("userService - deleteCurrentUserByID", () => {
     it("should throw 404 when user is not found", async () => {
         User.findByPk.mockResolvedValue(null);
 
-        await expect(userService.deleteCurrentUserByID(1)).rejects.toMatchObject({
+        await expect(userService.deleteCurrentUserById(1)).rejects.toMatchObject({
             message: "User not found",
             statusCode: 404
         });
@@ -215,7 +215,7 @@ describe("userService - deleteCurrentUserByID", () => {
     it("should rollback transaction when database error occurs", async () => {
         User.findByPk.mockRejectedValue(new Error("DB error"));
 
-        await expect(userService.deleteCurrentUserByID(1)).rejects.toThrow("DB error");
+        await expect(userService.deleteCurrentUserById(1)).rejects.toThrow("DB error");
 
         expect(transaction.rollback).toHaveBeenCalled();
         expect(transaction.commit).not.toHaveBeenCalled();

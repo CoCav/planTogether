@@ -41,7 +41,7 @@ const { EVENT_ROLES } = require("../../../../../src/constants/eventRoles");
 
 const { createMockUser } = require("../../../../factories/userFactory");
 
-describe("userService - getPublicUserProfileByID", () => {
+describe("userService - getPublicUserProfileById", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -60,7 +60,7 @@ describe("userService - getPublicUserProfileByID", () => {
         Event.count.mockResolvedValue(3);
         EventUserRole.count.mockResolvedValue(5);
 
-        const result = await userService.getPublicUserProfileByID(1);
+        const result = await userService.getPublicUserProfileById(1);
 
         expect(User.findByPk).toHaveBeenCalledWith(1, {
             attributes: ["name", "avatar"]
@@ -92,7 +92,7 @@ describe("userService - getPublicUserProfileByID", () => {
         Event.count.mockResolvedValue(2);
         EventUserRole.count.mockResolvedValue(4);
 
-        const result = await userService.getPublicUserProfileByID(1);
+        const result = await userService.getPublicUserProfileById(1);
 
         expect(Event.count).toHaveBeenCalledWith({
             where: { creatorId: 1 }
@@ -124,7 +124,7 @@ describe("userService - getPublicUserProfileByID", () => {
         Event.count.mockResolvedValue(2);
         EventUserRole.count.mockResolvedValue(3);
 
-        await userService.getPublicUserProfileByID(1);
+        await userService.getPublicUserProfileById(1);
 
         expect(EventUserRole.count).toHaveBeenCalledWith({
             where: {
@@ -147,7 +147,7 @@ describe("userService - getPublicUserProfileByID", () => {
         Event.count.mockResolvedValue(0);
         EventUserRole.count.mockResolvedValue(0);
 
-        const result = await userService.getPublicUserProfileByID(1);
+        const result = await userService.getPublicUserProfileById(1);
 
         expect(result.user).toMatchObject({
             name: "John",
@@ -167,7 +167,7 @@ describe("userService - getPublicUserProfileByID", () => {
     it("should throw 404 when user is not found", async () => {
         User.findByPk.mockResolvedValue(null);
 
-        await expect(userService.getPublicUserProfileByID(1)).rejects.toMatchObject({
+        await expect(userService.getPublicUserProfileById(1)).rejects.toMatchObject({
             statusCode: 404,
             message: "User not found"
         });
@@ -183,6 +183,6 @@ describe("userService - getPublicUserProfileByID", () => {
     it("should forward database errors", async () => {
         User.findByPk.mockRejectedValue(new Error("DB error"));
 
-        await expect(userService.getPublicUserProfileByID(1)).rejects.toThrow("DB error");
+        await expect(userService.getPublicUserProfileById(1)).rejects.toThrow("DB error");
     });
 });

@@ -21,7 +21,7 @@ const userService = require("../../../../../src/services/userService");
 
 const { createMockUser } = require("../../../../factories/userFactory");
 
-describe("userService - getCurrentUserProfileByID", () => {
+describe("userService - getCurrentUserProfileById", () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -38,7 +38,7 @@ describe("userService - getCurrentUserProfileByID", () => {
 
         User.findByPk.mockResolvedValue(user);
 
-        const result = await userService.getCurrentUserProfileByID(1);
+        const result = await userService.getCurrentUserProfileById(1);
 
         expect(User.findByPk).toHaveBeenCalledWith(1);
         expect(result).toBe(user);
@@ -51,7 +51,7 @@ describe("userService - getCurrentUserProfileByID", () => {
     it("should throw 404 when user profile is not found", async () => {
         User.findByPk.mockResolvedValue(null);
 
-        await expect(userService.getCurrentUserProfileByID(1)).rejects.toMatchObject({
+        await expect(userService.getCurrentUserProfileById(1)).rejects.toMatchObject({
             message: "User not found",
             statusCode: 404
         });
@@ -64,6 +64,6 @@ describe("userService - getCurrentUserProfileByID", () => {
     it("should forward profile retrieval database errors", async () => {
         User.findByPk.mockRejectedValue(new Error("DB error"));
 
-        await expect(userService.getCurrentUserProfileByID(1)).rejects.toThrow("DB error");
+        await expect(userService.getCurrentUserProfileById(1)).rejects.toThrow("DB error");
     });
 });

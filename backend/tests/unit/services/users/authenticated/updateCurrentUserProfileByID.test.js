@@ -46,7 +46,7 @@ const { deleteUploadedFile } = require("../../../../../src/utils/files/uploadedF
 
 const { createMockUser } = require("../../../../factories/userFactory");
 
-describe("userService - updateCurrentUserProfileByID", () => {
+describe("userService - updateCurrentUserProfileById", () => {
 
     let user;
     let transaction;
@@ -76,7 +76,7 @@ describe("userService - updateCurrentUserProfileByID", () => {
 
         User.findByPk.mockResolvedValue(user);
 
-        const result = await userService.updateCurrentUserProfileByID(1, {
+        const result = await userService.updateCurrentUserProfileById(1, {
             name: "Updated",
             email: " UPDATED@TEST.COM "
         });
@@ -100,7 +100,7 @@ describe("userService - updateCurrentUserProfileByID", () => {
 
         User.findByPk.mockResolvedValue(user);
 
-        const result = await userService.updateCurrentUserProfileByID(1, {
+        const result = await userService.updateCurrentUserProfileById(1, {
             avatar: "/uploads/avatars/avatar-test.png"
         });
 
@@ -124,7 +124,7 @@ describe("userService - updateCurrentUserProfileByID", () => {
 
         User.findByPk.mockResolvedValue(user);
 
-        const result = await userService.updateCurrentUserProfileByID(1, {
+        const result = await userService.updateCurrentUserProfileById(1, {
             avatar: ""
         });
 
@@ -148,7 +148,7 @@ describe("userService - updateCurrentUserProfileByID", () => {
 
         User.findByPk.mockResolvedValue(user);
 
-        await userService.updateCurrentUserProfileByID(1, {
+        await userService.updateCurrentUserProfileById(1, {
             avatar: "/uploads/avatars/new-avatar.png"
         });
 
@@ -165,7 +165,7 @@ describe("userService - updateCurrentUserProfileByID", () => {
 
         User.findByPk.mockResolvedValue(user);
 
-        await userService.updateCurrentUserProfileByID(1, {
+        await userService.updateCurrentUserProfileById(1, {
             avatar: "/uploads/avatars/avatar-test.png"
         });
 
@@ -178,7 +178,7 @@ describe("userService - updateCurrentUserProfileByID", () => {
 
         User.findByPk.mockResolvedValue(user);
 
-        await userService.updateCurrentUserProfileByID(1, {
+        await userService.updateCurrentUserProfileById(1, {
             avatar: ""
         });
 
@@ -200,7 +200,7 @@ describe("userService - updateCurrentUserProfileByID", () => {
 
         user.save.mockRejectedValue(duplicateEmailError);
 
-        await expect(userService.updateCurrentUserProfileByID(1, {
+        await expect(userService.updateCurrentUserProfileById(1, {
             email: "taken@test.com"
         })).rejects.toMatchObject({
             message: "Email already in use",
@@ -220,7 +220,7 @@ describe("userService - updateCurrentUserProfileByID", () => {
         User.findByPk.mockResolvedValue(null);
 
         await expect(
-            userService.updateCurrentUserProfileByID(1, {})
+            userService.updateCurrentUserProfileById(1, {})
         ).rejects.toMatchObject({
             message: "User not found",
             statusCode: 404
@@ -244,7 +244,7 @@ describe("userService - updateCurrentUserProfileByID", () => {
 
         user.save.mockRejectedValue(new Error("DB error"));
 
-        await expect(userService.updateCurrentUserProfileByID(1, {
+        await expect(userService.updateCurrentUserProfileById(1, {
             name: "Updated"
         })).rejects.toThrow("DB error");
 

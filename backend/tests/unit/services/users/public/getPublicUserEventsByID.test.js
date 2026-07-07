@@ -61,7 +61,7 @@ const EventLike = require("../../../../../src/models/relations/eventLikeModel");
 const userService = require("../../../../../src/services/userService");
 
 const { buildEventWhereConditions } = require("../../../../../src/utils/events/eventFilters");
-const { buildEventCreatorInclude } = require("../../../../../src/utils/events/eventCreator");
+const { buildEventCreatorInclude } = require("../../../../../src/utils/events/eventCreatorInclude");
 const { countActiveParticipantsByEventIds } = require("../../../../../src/utils/eventMemberships/eventParticipants");
 
 const {
@@ -76,7 +76,7 @@ const {
 
 const { createMockUser } = require("../../../../factories/userFactory");
 
-describe("userService - getPublicUserEventsByID", () => {
+describe("userService - getPublicUserEventsById", () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -133,7 +133,7 @@ describe("userService - getPublicUserEventsByID", () => {
             1: 3
         });
 
-        const result = await userService.getPublicUserEventsByID(1);
+        const result = await userService.getPublicUserEventsById(1);
 
         expect(User.findByPk).toHaveBeenCalledWith(1);
 
@@ -196,7 +196,7 @@ describe("userService - getPublicUserEventsByID", () => {
             2: 1
         });
 
-        const result = await userService.getPublicUserEventsByID(1, {
+        const result = await userService.getPublicUserEventsById(1, {
             view: "joined"
         });
 
@@ -241,7 +241,7 @@ describe("userService - getPublicUserEventsByID", () => {
             rows: []
         });
 
-        const result = await userService.getPublicUserEventsByID(1);
+        const result = await userService.getPublicUserEventsById(1);
 
         expect(result).toEqual({
             view: "created",
@@ -267,7 +267,7 @@ describe("userService - getPublicUserEventsByID", () => {
             rows: []
         });
 
-        await userService.getPublicUserEventsByID(1, {
+        await userService.getPublicUserEventsById(1, {
             view: "created",
             creator: "Alice",
             search: "React",
@@ -321,7 +321,7 @@ describe("userService - getPublicUserEventsByID", () => {
             rows: [eventA, eventB]
         });
 
-        const result = await userService.getPublicUserEventsByID(1, {
+        const result = await userService.getPublicUserEventsById(1, {
             page: 1,
             pageSize: 2
         });
@@ -356,7 +356,7 @@ describe("userService - getPublicUserEventsByID", () => {
             rows: [eventA, eventB]
         });
 
-        const result = await userService.getPublicUserEventsByID(1, {
+        const result = await userService.getPublicUserEventsById(1, {
             pageSize: 2
         });
 
@@ -386,7 +386,7 @@ describe("userService - getPublicUserEventsByID", () => {
             rows: [eventA, eventB]
         });
 
-        await userService.getPublicUserEventsByID(1);
+        await userService.getPublicUserEventsById(1);
 
         expect(countActiveParticipantsByEventIds).toHaveBeenCalledWith(
             expect.anything(),
@@ -417,7 +417,7 @@ describe("userService - getPublicUserEventsByID", () => {
             rows: [eventA, eventB]
         });
 
-        await userService.getPublicUserEventsByID(1);
+        await userService.getPublicUserEventsById(1);
 
         expect(countEventLikesByEventIds).toHaveBeenCalledWith(
             expect.anything(),
@@ -451,7 +451,7 @@ describe("userService - getPublicUserEventsByID", () => {
 
         findLikedEventIdsByUser.mockResolvedValue(new Set([1]));
 
-        const result = await userService.getPublicUserEventsByID(
+        const result = await userService.getPublicUserEventsById(
             1,
             { view: "created" },
             10
@@ -496,7 +496,7 @@ describe("userService - getPublicUserEventsByID", () => {
         countEventLikesByEventIds.mockResolvedValue({});
         findLikedEventIdsByUser.mockResolvedValue(new Set());
 
-        const result = await userService.getPublicUserEventsByID(1);
+        const result = await userService.getPublicUserEventsById(1);
 
         expect(result.events[0]).toMatchObject({
             likesCount: 0,
@@ -511,7 +511,7 @@ describe("userService - getPublicUserEventsByID", () => {
     it("should throw 404 when user is not found", async () => {
         User.findByPk.mockResolvedValue(null);
 
-        await expect(userService.getPublicUserEventsByID(1)).rejects.toMatchObject({
+        await expect(userService.getPublicUserEventsById(1)).rejects.toMatchObject({
             statusCode: 404,
             message: "User not found"
         });
@@ -527,6 +527,6 @@ describe("userService - getPublicUserEventsByID", () => {
     it("should forward database errors", async () => {
         User.findByPk.mockRejectedValue(new Error("DB error"));
 
-        await expect(userService.getPublicUserEventsByID(1)).rejects.toThrow("DB error");
+        await expect(userService.getPublicUserEventsById(1)).rejects.toThrow("DB error");
     });
 });

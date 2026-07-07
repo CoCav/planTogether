@@ -13,12 +13,12 @@
 
 jest.mock("../../../src/services/locationService");
 
-const locationController = require("../../../src/controllers/locationController");
+const locationController = require("../../../src/controllers/geocodingController");
 const locationService = require("../../../src/services/locationService");
 
 const { createEventControllerMocks } = require("../../helpers/express/mockExpress");
 
-describe("locationController", () => {
+describe("geocodingController", () => {
 
     beforeEach(() => {
         jest.clearAllMocks();

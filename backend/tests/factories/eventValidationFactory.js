@@ -1,18 +1,20 @@
 const { EVENT_MODES } = require("../../src/constants/eventModes");
 
-/* ==================================================
-   EVENT VALIDATION FACTORY
+/* ==========================================================================
+   Event Validation Test Factory
 
-   Handles:
-   - valid event validator payload generation
-   - reusable validator test payloads
+   Builds reusable event validation payloads.
 
-   Notes:
-   - shared across validator tests
-   - focuses on API validation payloads only
-================================================== */
+   Responsibilities
+   - Build valid event request bodies
+   - Support validator test scenarios
+   - Support flexible test overrides
 
-// Generate valid event validator payload
+   Notes
+   - Shared across validator unit tests.
+   - Generates API-valid request payloads.
+=========================================================================== */
+
 const createValidEventBody = (overrides = {}) => ({
     title: "Tech Meetup",
     description: "This is a test event description",
@@ -26,8 +28,11 @@ const createValidEventBody = (overrides = {}) => ({
     endDateTime: "2026-12-31T12:00:00.000Z",
 
     maxParticipants: 10,
+    registrationDeadline: "2026-12-30T12:00:00.000Z",
 
     ...overrides
 });
 
-module.exports = { createValidEventBody };
+module.exports = {
+    createValidEventBody
+};

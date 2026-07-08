@@ -1,22 +1,23 @@
 const { EVENT_MODES } = require("../../src/constants/eventModes");
 
-/* ==================================================
-   EVENT TEST FACTORY
+/* ==========================================================================
+   Event Test Factory
 
-   Handles:
-   - valid event payload generation
-   - serialized event response generation
-   - mock Sequelize-like event model generation
+   Builds reusable event test data.
 
-   Notes:
-   - shared across unit and integration tests
-   - accepts overrides for flexible scenarios
-   - createEventPayload returns API-valid request data
-   - createEventResponse returns serialized event data
-   - createMockEventModel simulates Sequelize model instances
-================================================== */
+   Responsibilities
+   - Build valid event request payloads
+   - Build serialized event responses
+   - Build Sequelize-like event model mocks
+   - Support structured location test fields
+   - Support flexible test overrides
 
-// Generate a valid API event payload
+   Notes
+   - Shared across unit and integration tests.
+   - createEventPayload returns API-valid request data.
+   - createEventResponse returns serialized event data.
+=========================================================================== */
+
 const createEventPayload = (overrides = {}) => ({
     title: "Test Event",
     description: "This is a test event",
@@ -32,9 +33,10 @@ const createEventPayload = (overrides = {}) => ({
     ...overrides
 });
 
-// Generate serialized event response data
 const createEventResponse = (overrides = {}) => ({
     id: 1,
+    creatorId: 1,
+
     title: "Test Event",
     description: "This is a test event",
     type: "Meetup",
@@ -42,6 +44,15 @@ const createEventResponse = (overrides = {}) => ({
 
     mode: EVENT_MODES.IN_PERSON,
     location: "Montreal",
+
+    locationLabel: null,
+    streetAddress: null,
+    city: null,
+    region: null,
+    postalCode: null,
+    country: null,
+    latitude: null,
+    longitude: null,
 
     startDateTime: "2026-12-31T10:00:00.000Z",
     endDateTime: "2026-12-31T12:00:00.000Z",
@@ -51,30 +62,44 @@ const createEventResponse = (overrides = {}) => ({
     image: null,
 
     participantCount: 0,
-
     likesCount: 0,
     isLikedByCurrentUser: false,
-
     reviewCount: 0,
     averageRating: null,
 
-    ...overrides
-});
-
-// Generate a mock Sequelize-like event model instance
-const createMockEventModel = (overrides = {}) => ({
-    ...createEventResponse(),
-
-    update: jest.fn(),
-    destroy: jest.fn(),
-
-    toJSON() {
-        return createEventResponse({
-            ...this
-        });
-    },
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
 
     ...overrides
 });
 
-module.exports = { createEventPayload, createEventResponse, createMockEventModel };
+const createMockEventModel = (overrides = {}) => {
+    const event = {
+        ...createEventResponse(),
+        update: jest.fn(),
+        save: jest.fn(),
+        destroy: jest.fn(),
+
+        toJSON() {
+            const {
+                update,
+                save,
+                destroy,
+                toJSON,
+                ...data
+            } = this;
+
+            return data;
+        },
+
+        ...overrides
+    };
+
+    return event;
+};
+
+module.exports = {
+    createEventPayload,
+    createEventResponse,
+    createMockEventModel
+};

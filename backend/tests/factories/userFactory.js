@@ -1,16 +1,19 @@
-/* ==================================================
-   USER TEST FACTORY
+/* ==========================================================================
+   User Test Factory
 
-   Handles:
-   - mock user generation
-   - reusable authenticated user test data
+   Builds reusable user test data.
 
-   Notes:
-   - shared across unit and integration tests
-   - accepts overrides for flexible scenarios
-================================================== */
+   Responsibilities
+   - Build mock public user data
+   - Build mock authenticated user data
+   - Build mock users with passwords
+   - Support flexible test overrides
 
-// Generate a mock user object
+   Notes
+   - Shared across unit and integration tests.
+   - Password is included only when explicitly needed.
+=========================================================================== */
+
 const createMockUser = (overrides = {}) => ({
     id: 1,
     name: "John Doe",
@@ -19,11 +22,20 @@ const createMockUser = (overrides = {}) => ({
     ...overrides
 });
 
-// Generate a mock user object including password
+const createMockPublicUser = (overrides = {}) => ({
+    name: "John Doe",
+    avatar: null,
+    ...overrides
+});
+
 const createMockUserWithPassword = (overrides = {}) => ({
     ...createMockUser(),
     password: "hashed-password",
     ...overrides
 });
 
-module.exports = { createMockUser, createMockUserWithPassword };
+module.exports = {
+    createMockUser,
+    createMockPublicUser,
+    createMockUserWithPassword
+};

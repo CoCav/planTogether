@@ -1,15 +1,16 @@
 /* ==========================================================================
    Event Role Constants
 
-   Defines the available event participation roles.
+   Defines event participation roles.
 
    Responsibilities
-   - Centralize event role values
+   - Define available event roles
+   - Expose reusable role values
    - Expose valid event roles
    - Expose staff event roles
 
    Notes
-   - Shared across services, validators and tests.
+   - Shared across models, services, validators and tests.
 =========================================================================== */
 
 const EVENT_ROLES = {
@@ -18,7 +19,9 @@ const EVENT_ROLES = {
     PARTICIPANT: "participant"
 };
 
-const VALID_EVENT_ROLES = Object.values(EVENT_ROLES);
+const EVENT_ROLE_VALUES = Object.values(EVENT_ROLES);
+
+const VALID_EVENT_ROLES = EVENT_ROLE_VALUES;
 
 const STAFF_EVENT_ROLES = [
     EVENT_ROLES.ORGANIZER,
@@ -27,6 +30,7 @@ const STAFF_EVENT_ROLES = [
 
 module.exports = {
     EVENT_ROLES,
+    EVENT_ROLE_VALUES,
     VALID_EVENT_ROLES,
     STAFF_EVENT_ROLES
 };

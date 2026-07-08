@@ -1,22 +1,22 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
 
-/* ==================================================
-   USER MODEL
+/* ==========================================================================
+   User Model
 
-   Handles:
-   - user account data
-   - email normalization before persistence
-   - email uniqueness for authentication
-   - avatar path storage
-   - password field protection
-   - account deletion support
+   Defines the user database model.
 
-   Notes:
-   - password is excluded by default
-   - withPassword scope is used only for authentication
-   - deletedAt is used for deleted accounts
-================================================== */
+   Responsibilities
+   - Store user account information
+   - Normalize email addresses
+   - Store avatar paths
+   - Protect password visibility
+   - Support soft-deleted accounts
+
+   Notes
+   - Passwords are excluded from the default scope.
+   - The withPassword scope is intended for authentication only.
+=========================================================================== */
 
 const User = sequelize.define("User", {
     id: {

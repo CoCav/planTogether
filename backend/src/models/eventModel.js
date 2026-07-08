@@ -3,25 +3,24 @@ const sequelize = require("../config/database");
 
 const { EVENT_MODES } = require("../constants/eventModes");
 
-/* ==================================================
-   EVENT MODEL
+/* ==========================================================================
+   Event Model
 
-   Handles:
-   - event data structure
-   - creator reference
-   - event schedule
-   - participant limits
-   - event image path
-   - physical event location and structured address data
-   - physical event geolocation data
-   - query indexes for filtering and sorting
+   Defines the event database model.
 
-   Notes:
-   - creator relationship is defined in models/index.js
-   - null maxParticipants means unlimited participants
-   - null registrationDeadline means users can join until event starts
-   - online events should keep location and geolocation fields null
-================================================== */
+   Responsibilities
+   - Store event metadata
+   - Store scheduling information
+   - Store participant limits
+   - Store physical location data
+   - Store structured address fields
+   - Define event indexes
+
+   Notes
+   - Associations are defined in models/index.js.
+   - Online events should keep location fields null.
+   - Null maxParticipants means unlimited capacity.
+=========================================================================== */
 
 const Event = sequelize.define("Event", {
     id: {

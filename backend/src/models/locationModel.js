@@ -1,24 +1,21 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
 
-/* ==================================================
-   MODEL ASSOCIATIONS
+/* ==========================================================================
+   Location Model
 
-   Handles:
-   - event creators
-   - event participants
-   - event reviews
-   - event likes
-   - cached location search results
-   - direct membership queries
+   Defines cached geocoding locations.
 
-   Notes:
-   - EventUserRole stores role and joinedAt
-   - EventUserRole → Event uses alias "event"
-   - EventReview stores user comments on completed events
-   - EventLike stores user likes on events
-   - Location currently stores cached geocoding results without a direct event relation
-================================================== */
+   Responsibilities
+   - Store cached provider results
+   - Store structured address fields
+   - Store geographic coordinates
+   - Define cache lookup indexes
+
+   Notes
+   - Used as a geocoding cache.
+   - Does not represent an event location directly.
+=========================================================================== */
 
 const Location = sequelize.define("Location", {
     id: {

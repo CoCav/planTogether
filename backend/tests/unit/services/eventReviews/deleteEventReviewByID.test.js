@@ -19,7 +19,7 @@ const EventReview = require("../../../../src/models/relations/eventReviewModel")
 
 const eventReviewService = require("../../../../src/services/eventReviewService");
 
-describe("eventReviewService - deleteEventReviewByID", () => {
+describe("eventReviewService - deleteEventReviewById", () => {
 
     /* =============================
        TEST SETUP
@@ -42,7 +42,7 @@ describe("eventReviewService - deleteEventReviewByID", () => {
 
         EventReview.findByPk.mockResolvedValue(review);
 
-        await eventReviewService.deleteEventReviewByID({
+        await eventReviewService.deleteEventReviewById({
             reviewId: 1,
             userId: 10
         });
@@ -58,7 +58,7 @@ describe("eventReviewService - deleteEventReviewByID", () => {
     it("should throw 404 when review does not exist", async () => {
         EventReview.findByPk.mockResolvedValue(null);
 
-        await expect(eventReviewService.deleteEventReviewByID({
+        await expect(eventReviewService.deleteEventReviewById({
             reviewId: 999,
             userId: 10
         })).rejects.toMatchObject({
@@ -80,7 +80,7 @@ describe("eventReviewService - deleteEventReviewByID", () => {
 
         EventReview.findByPk.mockResolvedValue(review);
 
-        await expect(eventReviewService.deleteEventReviewByID({
+        await expect(eventReviewService.deleteEventReviewById({
             reviewId: 1,
             userId: 10
         })).rejects.toMatchObject({

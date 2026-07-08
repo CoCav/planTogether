@@ -64,7 +64,7 @@ const getEventReviews = async (req, res, next) => {
 
 const updateEventReview = async (req, res, next) => {
     try {
-        const review = await eventReviewService.updateEventReviewByID({
+        const review = await eventReviewService.updateEventReviewById({
             reviewId: req.params.reviewId,
             userId: req.user.userId,
             rating: req.body.rating,
@@ -86,7 +86,7 @@ const updateEventReview = async (req, res, next) => {
 
 const deleteEventReview = async (req, res, next) => {
     try {
-        await eventReviewService.deleteEventReviewByID({
+        await eventReviewService.deleteEventReviewById({
             reviewId: req.params.reviewId,
             userId: req.user.userId
         });

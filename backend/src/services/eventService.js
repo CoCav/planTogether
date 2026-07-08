@@ -7,16 +7,18 @@ const EventUserRole = require("../models/relations/eventUserRoleModel");
 const EventReview = require("../models/relations/eventReviewModel");
 const EventLike = require("../models/relations/eventLikeModel");
 
-const locationService = require("./locationService");
+const geocodingService = require("./geocodingService");
 
 const { EVENT_ROLES } = require("../constants/eventRoles");
 const { EVENT_STATUS } = require("../constants/eventStatus");
 const { EVENT_MODES } = require("../constants/eventModes");
+const { EVENT_SORT_FIELDS } = require("../constants/eventSortFields");
 
 const { throwHttpError } = require("../utils/errors/httpError");
 
 const { buildEventWhereConditions } = require("../utils/events/eventFilters");
-const { buildEventCreatorInclude } = require("../utils/events/eventCreator");
+const { buildEventCreatorInclude } = require("../utils/events/eventCreatorInclude");
+const { findEventByIdOrFail } = require("../utils/events/eventQueries");
 
 const {
     buildActiveParticipantInclude,
@@ -32,10 +34,14 @@ const {
 const {
     buildEventLikeInclude,
     buildEventLikeCountAttribute,
-    findLikedEventIdsByUser
+    findLikedEventIdsByUser,
+    findEventLike
 } = require("../utils/eventLikes/eventLikes");
 
-const { buildCreateEventPayload, buildUpdateEventPayload } = require("../utils/events/eventPayploadBuilder");
+const {
+    buildCreateEventPayload,
+    buildUpdateEventPayload
+} = require("../utils/events/eventPayloadBuilder");
 
 const {
     assertEventNotPast,
@@ -45,100 +51,104 @@ const {
 } = require("../utils/events/eventStatus");
 
 const { deleteUploadedFile } = require("../utils/files/uploadedFileStorage");
-const { getPaginationOptions, getTotalCount, getTotalPages } = require("../utils/pagination");
 
-/* ==================================================
-   EVENT SERVICE
+const {
+    getPaginationOptions,
+    getTotalCount,
+    getTotalPages
+} = require("../utils/pagination");
 
-   Handles:
-   - event creation
-   - optimized event listing with optional filters and pagination
-   - single event retrieval and access resolution
-   - current authenticated user event access
-   - event update and deletion
-   - event geolocation resolution and persistence
-   - event image replacement and removal
-   - participant count, review stats, like stats and current user state enrichment
+/* ==========================================================================
+   Event Service
 
-   Notes:
-   - critical write operations use Sequelize transactions
-   - creator is automatically added as organizer
-   - event listings count active participants with COUNT DISTINCT
-   - event listings expose review count and average rating
-   - event listings expose like counts
-   - participant count queries ignore soft-deleted memberships
-   - review stats are built from event review ratings
-   - like stats are built from event likes
-   - getAllEvents supports filters through query params
-   - physical event locations are resolved through locationService
-   - online events never persist geolocation data
-   - past events cannot be updated
-   - started events cannot be deleted
-   - event images are preserved when omitted from updates
-   - event images can be replaced or removed explicitly
-   - event images are cleaned only after successful DB commits
-   - event roles are centralized through shared constants
-   - uses shared HTTP error utilities
-================================================== */
+   Handles event business logic.
 
-/* =============================
-   EVENT LOCATION
-============================= */
+   Responsibilities
+   - Create events
+   - Retrieve event listings and details
+   - Resolve current user event access
+   - Update and delete events
+   - Resolve event geocoding data
+   - Manage event image cleanup
+   - Enrich events with participant, review and like stats
 
-// Resolves persisted structured location data for physical events
+   Notes
+   - Critical write operations use Sequelize transactions.
+   - Creator is automatically added as organizer.
+   - Online events never persist geocoding data.
+   - Event images are cleaned only after successful database commits.
+=========================================================================== */
+
+const EVENT_NOT_FOUND_ERROR = "Event not found";
+const END_DATE_AFTER_START_ERROR = "End date must be after start date";
+const LOCATION_REQUIRED_ERROR = "Location is required for in-person events";
+
+const DEFAULT_EVENT_SORT_FIELD = "createdAt";
+const DEFAULT_EVENT_SORT_ORDER = "DESC";
+
+/* Helpers */
+
+/* Event location */
+
 const resolveEventLocationData = async (mode, location) => {
-    if (mode === EVENT_MODES.ONLINE || !String(location ?? "").trim()) {
+    if (
+        mode === EVENT_MODES.ONLINE ||
+        !String(location ?? "").trim()
+    ) {
         return null;
     }
 
-    return locationService.resolveEventLocation(location);
+    return geocodingService.resolveEventLocation(location);
 };
 
-/* =============================
-   EVENT LIKE
-============================= */
+/* Event likes */
 
-// Checks whether the current user liked one event
-const getIsLikedByCurrentUser = async (eventId, currentUserId) => {
-
-    // Anonymous users cannot have liked events
+const getIsLikedByCurrentUser = async (
+    eventId,
+    currentUserId
+) => {
     if (!currentUserId) {
         return false;
     }
 
-    const like = await EventLike.findOne({
-        where: {
+    const like = await findEventLike(
+        EventLike,
+        {
             eventId,
             userId: currentUserId
         }
-    });
+    );
 
     return Boolean(like);
 };
 
-/* =============================
-   CREATE EVENT
-============================= */
+/* Create event */
 
-// Create a new event
 const createEvent = async (data, userId) => {
     const transaction = await sequelize.transaction();
 
     try {
         const { startDateTime, endDateTime } = data;
 
-        // Ensure event dates are coherent before persistence
         if (new Date(endDateTime) < new Date(startDateTime)) {
-            throwHttpError(400, "End date must be after start date");
+            throwHttpError(400, END_DATE_AFTER_START_ERROR);
         }
 
-        const locationData = await resolveEventLocationData(data.mode, data.location);
+        const locationData = await resolveEventLocationData(
+            data.mode,
+            data.location
+        );
 
-        const eventData = buildCreateEventPayload(data, userId, locationData);
+        const eventData = buildCreateEventPayload(
+            data,
+            userId,
+            locationData
+        );
 
-        const event = await Event.create(eventData, { transaction });
+        const event = await Event.create(eventData, {
+            transaction
+        });
 
-        // Creator automatically becomes organizer
         await EventUserRole.create({
             eventId: event.id,
             userId,
@@ -157,15 +167,11 @@ const createEvent = async (data, userId) => {
     }
 };
 
-/* =============================
-   GET EVENTS
-============================= */
+/* Read events */
 
-// Get all events with optional filters and pagination
 const getAllEvents = async (query = {}, currentUserId = null) => {
     const whereConditions = {};
 
-    // Apply filters to Sequelize where conditions
     buildEventWhereConditions(whereConditions, query);
 
     const {
@@ -177,9 +183,9 @@ const getAllEvents = async (query = {}, currentUserId = null) => {
         orderDirection
     } = getPaginationOptions(
         query,
-        ["startDateTime", "title", "creatorId", "createdAt"],
-        "createdAt",
-        "DESC"
+        EVENT_SORT_FIELDS,
+        DEFAULT_EVENT_SORT_FIELD,
+        DEFAULT_EVENT_SORT_ORDER
     );
 
     const { count, rows } = await Event.findAndCountAll({
@@ -187,6 +193,7 @@ const getAllEvents = async (query = {}, currentUserId = null) => {
         limit,
         offset,
         order: [[orderField, orderDirection]],
+
         attributes: {
             include: [
                 buildEventParticipantCountAttribute(sequelize, "participants.id"),
@@ -195,29 +202,27 @@ const getAllEvents = async (query = {}, currentUserId = null) => {
                 buildEventLikeCountAttribute(sequelize, "likes.id")
             ]
         },
+
         include: [
             buildEventCreatorInclude(User, query.creator),
             buildActiveParticipantInclude(User),
             buildEventReviewInclude(EventReview),
             buildEventLikeInclude(EventLike)
         ],
+
         group: ["Event.id", "creator.id"],
         subQuery: false
     });
 
     const totalEvents = getTotalCount(count);
-
-    // Collect event IDs for the current page
     const eventIds = rows.map((event) => event.id);
 
-    // Fetch all likes for the current user in a single query
     const likedEventIds = await findLikedEventIdsByUser(
         EventLike,
         eventIds,
         currentUserId
     );
 
-    // Enrich events with computed status and current user's like state
     const events = rows.map((event) => ({
         ...event.toJSON(),
         status: getEventStatus(event),
@@ -233,15 +238,9 @@ const getAllEvents = async (query = {}, currentUserId = null) => {
     };
 };
 
-// Get current authenticated user's access permissions for one event
 const getCurrentUserEventAccess = async (eventId, userId) => {
-    const event = await Event.findByPk(eventId);
+    const event = await findEventByIdOrFail(Event, eventId);
 
-    if (!event) {
-        throwHttpError(404, "Event not found");
-    }
-
-    // Look for the user's active membership on this event
     const membership = await EventUserRole.findOne({
         where: {
             eventId,
@@ -251,19 +250,15 @@ const getCurrentUserEventAccess = async (eventId, userId) => {
     });
 
     const role = membership?.role || null;
-
-    // Access rules depend on event lifecycle state
     const status = getEventStatus(event);
     const isPast = status === EVENT_STATUS.PAST;
     const isStarted = hasEventStarted(event);
 
-    // Organizers and co-organizers can edit events until they end
     const canEdit = !isPast && (
         role === EVENT_ROLES.ORGANIZER ||
         role === EVENT_ROLES.CO_ORGANIZER
     );
 
-    // Only organizers can delete events that have not started
     const canDelete =
         role === EVENT_ROLES.ORGANIZER &&
         !isPast &&
@@ -277,10 +272,12 @@ const getCurrentUserEventAccess = async (eventId, userId) => {
     };
 };
 
-// Get a single event by ID
-const getEventByID = async (id, currentUserId = null) => {
+const getEventById = async (id, currentUserId = null) => {
     const event = await Event.findOne({
-        where: { id },
+        where: {
+            id
+        },
+
         attributes: {
             include: [
                 buildEventParticipantCountAttribute(sequelize, "participants.id"),
@@ -289,20 +286,21 @@ const getEventByID = async (id, currentUserId = null) => {
                 buildEventLikeCountAttribute(sequelize, "likes.id")
             ]
         },
+
         include: [
             buildEventCreatorInclude(User),
             buildActiveParticipantInclude(User),
             buildEventReviewInclude(EventReview),
             buildEventLikeInclude(EventLike)
         ],
+
         group: ["Event.id", "creator.id"]
     });
 
     if (!event) {
-        throwHttpError(404, "Event not found");
+        throwHttpError(404, EVENT_NOT_FOUND_ERROR);
     }
 
-    // Enrich event with status and current user's like state
     return {
         ...event.toJSON(),
         status: getEventStatus(event),
@@ -313,23 +311,16 @@ const getEventByID = async (id, currentUserId = null) => {
     };
 };
 
+/* Update event */
 
-/* =============================
-   UPDATE / DELETE EVENT
-============================= */
-
-// Update an existing event
-const updateEventByID = async (id, data) => {
+const updateEventById = async (id, data) => {
     const transaction = await sequelize.transaction();
 
     try {
-        const event = await Event.findByPk(id, { transaction });
+        const event = await findEventByIdOrFail(Event, id, {
+            transaction
+        });
 
-        if (!event) {
-            throwHttpError(404, "Event not found");
-        }
-
-        // Past events cannot be updated
         assertEventNotPast(event);
 
         const oldImage = event.image;
@@ -338,24 +329,23 @@ const updateEventByID = async (id, data) => {
         const hasBothDates = startDateTime && endDateTime;
 
         if (hasBothDates && new Date(endDateTime) < new Date(startDateTime)) {
-            throwHttpError(400, "End date must be after start date");
+            throwHttpError(400, END_DATE_AFTER_START_ERROR);
         }
 
-        // Resolve the next persisted mode after partial updates
         const nextMode = data.mode ?? event.mode;
 
-        // Resolve the next persisted location after partial updates
         const nextLocation = data.location !== undefined
             ? data.location
             : event.location;
 
-
-        // Physical events must always keep a valid location
-        if (nextMode === EVENT_MODES.IN_PERSON && data.location !== undefined && !String(nextLocation ?? "").trim()) {
-            throwHttpError(400, "Location is required for in-person events");
+        if (
+            nextMode === EVENT_MODES.IN_PERSON &&
+            data.location !== undefined &&
+            !String(nextLocation ?? "").trim()
+        ) {
+            throwHttpError(400, LOCATION_REQUIRED_ERROR);
         }
 
-        // Re-geocode only when the physical location changes
         const shouldRefreshLocationData =
             nextMode === EVENT_MODES.IN_PERSON &&
             data.location !== undefined;
@@ -364,14 +354,18 @@ const updateEventByID = async (id, data) => {
             ? await resolveEventLocationData(nextMode, nextLocation)
             : null;
 
-        const updatedData = buildUpdateEventPayload(event, data, locationData);
+        const updatedData = buildUpdateEventPayload(
+            event,
+            data,
+            locationData
+        );
 
-        await event.update(updatedData, { transaction });
+        await event.update(updatedData, {
+            transaction
+        });
 
         await transaction.commit();
 
-
-        // Delete old image only after successful DB commit
         const shouldDeleteOldImage =
             image !== undefined &&
             oldImage &&
@@ -389,33 +383,33 @@ const updateEventByID = async (id, data) => {
     }
 };
 
+/* Delete event */
 
-// Delete an event
-const deleteEventByID = async (id) => {
+const deleteEventById = async (id) => {
     const transaction = await sequelize.transaction();
 
     try {
-        const event = await Event.findByPk(id, { transaction });
+        const event = await findEventByIdOrFail(Event, id, {
+            transaction
+        });
 
-        if (!event) {
-            throwHttpError(404, "Event not found");
-        }
-
-        // Events cannot be deleted after they have started
         assertEventNotStarted(event);
 
         const oldImage = event.image;
 
         await EventUserRole.destroy({
-            where: { eventId: id },
+            where: {
+                eventId: id
+            },
             transaction
         });
 
-        await event.destroy({ transaction });
+        await event.destroy({
+            transaction
+        });
 
         await transaction.commit();
 
-        // Delete event image only after successful DB commit
         if (oldImage) {
             await deleteUploadedFile(oldImage);
         }
@@ -430,7 +424,7 @@ module.exports = {
     createEvent,
     getAllEvents,
     getCurrentUserEventAccess,
-    getEventByID,
-    updateEventByID,
-    deleteEventByID
+    getEventById,
+    updateEventById,
+    deleteEventById
 };

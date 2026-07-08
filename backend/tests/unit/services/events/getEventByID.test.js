@@ -86,7 +86,7 @@ const {
 
 const { createMockEventModel } = require("../../../factories/eventFactory");
 
-describe("eventService - getEventByID", () => {
+describe("eventService - getEventById", () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -147,7 +147,7 @@ describe("eventService - getEventByID", () => {
 
         getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
 
-        const result = await eventService.getEventByID(1);
+        const result = await eventService.getEventById(1);
 
         expect(Event.findOne).toHaveBeenCalled();
 
@@ -172,7 +172,7 @@ describe("eventService - getEventByID", () => {
 
         getEventStatus.mockReturnValue(EVENT_STATUS.PAST);
 
-        const result = await eventService.getEventByID(1);
+        const result = await eventService.getEventById(1);
 
         expect(getEventStatus).toHaveBeenCalledWith(mockEvent);
 
@@ -190,7 +190,7 @@ describe("eventService - getEventByID", () => {
 
         getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
 
-        await eventService.getEventByID(1);
+        await eventService.getEventById(1);
 
         expect(buildEventParticipantCountAttribute).toHaveBeenCalledWith(
             expect.any(Object),
@@ -206,7 +206,7 @@ describe("eventService - getEventByID", () => {
 
         getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
 
-        await eventService.getEventByID(1);
+        await eventService.getEventById(1);
 
         expect(buildEventReviewCountAttribute).toHaveBeenCalledWith(
             expect.any(Object),
@@ -226,7 +226,7 @@ describe("eventService - getEventByID", () => {
 
         getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
 
-        await eventService.getEventByID(1);
+        await eventService.getEventById(1);
 
         expect(buildEventLikeCountAttribute).toHaveBeenCalledWith(
             expect.any(Object),
@@ -251,7 +251,7 @@ describe("eventService - getEventByID", () => {
 
         getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
 
-        const result = await eventService.getEventByID(1, 10);
+        const result = await eventService.getEventById(1, 10);
 
         expect(EventLike.findOne).toHaveBeenCalledWith({
             where: {
@@ -268,7 +268,7 @@ describe("eventService - getEventByID", () => {
 
         getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
 
-        const result = await eventService.getEventByID(1);
+        const result = await eventService.getEventById(1);
 
         expect(EventLike.findOne).not.toHaveBeenCalled();
         expect(result.isLikedByCurrentUser).toBe(false);
@@ -281,7 +281,7 @@ describe("eventService - getEventByID", () => {
     it("should throw 404 when event is not found", async () => {
         Event.findOne.mockResolvedValue(null);
 
-        await expect(eventService.getEventByID(999)).rejects.toMatchObject({
+        await expect(eventService.getEventById(999)).rejects.toMatchObject({
             message: "Event not found",
             statusCode: 404
         });
@@ -294,6 +294,6 @@ describe("eventService - getEventByID", () => {
     it("should forward database errors", async () => {
         Event.findOne.mockRejectedValue(new Error("DB error"));
 
-        await expect(eventService.getEventByID(1)).rejects.toThrow("DB error");
+        await expect(eventService.getEventById(1)).rejects.toThrow("DB error");
     });
 });

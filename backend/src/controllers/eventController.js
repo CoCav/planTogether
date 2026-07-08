@@ -89,7 +89,7 @@ const getCurrentUserEventAccess = async (req, res, next) => {
 
 const getEvent = async (req, res, next) => {
     try {
-        const event = await eventService.getEventByID(
+        const event = await eventService.getEventById(
             req.params.eventId,
             req.user?.userId
         );
@@ -118,7 +118,7 @@ const updateEvent = async (req, res, next) => {
                 ? req.body.image || null
                 : undefined;
 
-        const event = await eventService.updateEventByID(
+        const event = await eventService.updateEventById(
             req.params.eventId,
             {
                 ...req.body,
@@ -141,7 +141,7 @@ const updateEvent = async (req, res, next) => {
 
 const deleteEvent = async (req, res, next) => {
     try {
-        await eventService.deleteEventByID(req.params.eventId);
+        await eventService.deleteEventById(req.params.eventId);
 
         return res.status(200).json({
             success: true,

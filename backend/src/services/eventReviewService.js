@@ -6,57 +6,61 @@ const User = require("../models/userModel");
 const EventUserRole = require("../models/relations/eventUserRoleModel");
 const EventReview = require("../models/relations/eventReviewModel");
 
+const { PUBLIC_USER_ATTRIBUTES } = require("../constants/userAttributes");
+
 const { throwHttpError } = require("../utils/errors/httpError");
 const { isEventPast } = require("../utils/events/eventStatus");
+const { findEventByIdOrFail } = require("../utils/events/eventQueries");
 
-const { getPaginationOptions, getTotalCount, getTotalPages } = require("../utils/pagination");
+const { findReviewByIdOrFail } = require("../utils/eventReviews/eventReviewQueries");
 
-/* ==================================================
-   EVENT REVIEW SERVICE
-   Handles event review business logic
+const {
+    getPaginationOptions,
+    getTotalCount,
+    getTotalPages
+} = require("../utils/pagination");
 
-   Handles:
-   - review creation
-   - rating and comment persistence
-   - completed event review restrictions
-   - participant-only review permissions
-   - duplicate review prevention
-   - paginated event review retrieval
-   - global average rating calculation
-   - review update
-   - review deletion
+/* ==========================================================================
+   Event Review Service
 
-   Notes:
-   - users can only review completed events they joined
-   - one user can only leave one review per event
-   - users can only update or delete their own reviews
-   - deleted memberships cannot create reviews
-   - review retrieval supports pagination and global rating stats
-================================================== */
+   Handles event review business logic.
 
-/* =============================
-   HELPERS
-============================= */
+   Responsibilities
+   - Create event reviews
+   - Restrict reviews to completed events
+   - Restrict reviews to event participants
+   - Prevent duplicate reviews
+   - Retrieve paginated event reviews
+   - Calculate average ratings
+   - Update and delete owned reviews
 
-// Finds an event or throws a 404 error
-const findEventOrFail = async (eventId, options = {}) => {
-    const event = await Event.findByPk(eventId, options);
+   Notes
+   - Users can only review completed events they joined.
+   - One user can only leave one review per event.
+   - Users can only update or delete their own reviews.
+=========================================================================== */
 
-    if (!event) {
-        throwHttpError(404, "Event not found");
-    }
+const EVENT_NOT_COMPLETED_ERROR = "Only completed events can be reviewed";
+const USER_CANNOT_REVIEW_ERROR = "Only event participants can leave a review";
+const REVIEW_ALREADY_EXISTS_ERROR = "You have already reviewed this event";
+const REVIEW_OWNER_ERROR = "You can only manage your own review";
 
-    return event;
+const REVIEW_SORT_FIELDS = ["createdAt", "rating"];
+const DEFAULT_REVIEW_SORT_FIELD = "createdAt";
+const DEFAULT_REVIEW_SORT_ORDER = "DESC";
+
+/* Helpers */
+
+const normalizeReviewComment = (comment) => {
+    return String(comment ?? "").trim();
 };
 
-// Ensures the event is completed before allowing reviews
 const assertEventIsCompleted = (event) => {
     if (!isEventPast(event)) {
-        throwHttpError(403, "Only completed events can be reviewed");
+        throwHttpError(403, EVENT_NOT_COMPLETED_ERROR);
     }
 };
 
-// Ensures the user actively joined the event
 const assertUserCanReviewEvent = async ({ eventId, userId, transaction }) => {
     const membership = await EventUserRole.findOne({
         where: {
@@ -68,11 +72,10 @@ const assertUserCanReviewEvent = async ({ eventId, userId, transaction }) => {
     });
 
     if (!membership) {
-        throwHttpError(403, "Only event participants can leave a review");
+        throwHttpError(403, USER_CANNOT_REVIEW_ERROR);
     }
 };
 
-// Ensures one review per user per event
 const assertUserHasNotReviewedEvent = async ({ eventId, userId, transaction }) => {
     const existingReview = await EventReview.findOne({
         where: {
@@ -83,29 +86,28 @@ const assertUserHasNotReviewedEvent = async ({ eventId, userId, transaction }) =
     });
 
     if (existingReview) {
-        throwHttpError(409, "You have already reviewed this event");
+        throwHttpError(409, REVIEW_ALREADY_EXISTS_ERROR);
     }
 };
 
-// Finds a review or throws a 404 error
-const findReviewOrFail = async (reviewId, options = {}) => {
-    const review = await EventReview.findByPk(reviewId, options);
-
-    if (!review) {
-        throwHttpError(404, "Review not found");
-    }
-
-    return review;
-};
-
-// Ensures the review belongs to the current user
 const assertReviewOwner = (review, userId) => {
     if (review.userId !== userId) {
-        throwHttpError(403, "You can only manage your own review");
+        throwHttpError(403, REVIEW_OWNER_ERROR);
     }
 };
 
-// Calculates the global average rating for one event
+const buildReviewUserInclude = () => ({
+    model: User,
+    as: "user",
+    attributes: PUBLIC_USER_ATTRIBUTES
+});
+
+const findReviewWithUserById = (reviewId) => {
+    return EventReview.findByPk(reviewId, {
+        include: [buildReviewUserInclude()]
+    });
+};
+
 const getEventAverageRating = async (eventId) => {
     const result = await EventReview.findOne({
         where: {
@@ -124,16 +126,15 @@ const getEventAverageRating = async (eventId) => {
         : Number(Number(averageRating).toFixed(1));
 };
 
-/* =============================
-   CREATE REVIEW
-============================= */
+/* Create review */
 
-// Creates a review for a completed event
 const createEventReview = async ({ eventId, userId, rating, comment }) => {
     const transaction = await sequelize.transaction();
 
     try {
-        const event = await findEventOrFail(eventId, { transaction });
+        const event = await findEventByIdOrFail(Event, eventId, {
+            transaction
+        });
 
         assertEventIsCompleted(event);
 
@@ -153,20 +154,14 @@ const createEventReview = async ({ eventId, userId, rating, comment }) => {
             eventId,
             userId,
             rating,
-            comment: String(comment ?? "").trim()
+            comment: normalizeReviewComment(comment)
         }, {
             transaction
         });
 
         await transaction.commit();
 
-        return EventReview.findByPk(review.id, {
-            include: [{
-                model: User,
-                as: "user",
-                attributes: ["id", "name", "avatar"]
-            }]
-        });
+        return findReviewWithUserById(review.id);
 
     } catch (error) {
         await transaction.rollback();
@@ -174,13 +169,10 @@ const createEventReview = async ({ eventId, userId, rating, comment }) => {
     }
 };
 
-/* =============================
-   GET REVIEWS
-============================= */
+/* Get reviews */
 
-// Gets paginated reviews for one event
 const getEventReviews = async (eventId, query = {}) => {
-    await findEventOrFail(eventId);
+    await findEventByIdOrFail(Event, eventId);
 
     const {
         page,
@@ -191,20 +183,16 @@ const getEventReviews = async (eventId, query = {}) => {
         orderDirection
     } = getPaginationOptions(
         query,
-        ["createdAt", "rating"],
-        "createdAt",
-        "DESC"
+        REVIEW_SORT_FIELDS,
+        DEFAULT_REVIEW_SORT_FIELD,
+        DEFAULT_REVIEW_SORT_ORDER
     );
 
     const { count, rows } = await EventReview.findAndCountAll({
         where: {
             eventId
         },
-        include: [{
-            model: User,
-            as: "user",
-            attributes: ["id", "name", "avatar"]
-        }],
+        include: [buildReviewUserInclude()],
         order: [[orderField, orderDirection]],
         limit,
         offset
@@ -223,37 +211,31 @@ const getEventReviews = async (eventId, query = {}) => {
     };
 };
 
-/* =============================
-   UPDATE REVIEW
-============================= */
+/* Update review */
 
-// Updates a review owned by the current user
-const updateEventReviewByID = async ({ reviewId, userId, rating, comment }) => {
-    const review = await findReviewOrFail(reviewId);
+const updateEventReviewById = async ({ reviewId, userId, rating, comment }) => {
+    const review = await findReviewByIdOrFail(
+        EventReview,
+        reviewId
+    );
 
     assertReviewOwner(review, userId);
 
     await review.update({
         rating,
-        comment: String(comment ?? "").trim()
+        comment: normalizeReviewComment(comment)
     });
 
-    return EventReview.findByPk(review.id, {
-        include: [{
-            model: User,
-            as: "user",
-            attributes: ["id", "name", "avatar"]
-        }]
-    });
+    return findReviewWithUserById(review.id);
 };
 
-/* =============================
-   DELETE REVIEW
-============================= */
+/* Delete review */
 
-// Deletes a review owned by the current user
-const deleteEventReviewByID = async ({ reviewId, userId }) => {
-    const review = await findReviewOrFail(reviewId);
+const deleteEventReviewById = async ({ reviewId, userId }) => {
+    const review = await findReviewByIdOrFail(
+        EventReview,
+        reviewId
+    );
 
     assertReviewOwner(review, userId);
 
@@ -263,6 +245,6 @@ const deleteEventReviewByID = async ({ reviewId, userId }) => {
 module.exports = {
     createEventReview,
     getEventReviews,
-    updateEventReviewByID,
-    deleteEventReviewByID
+    updateEventReviewById,
+    deleteEventReviewById
 };

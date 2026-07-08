@@ -1,7 +1,9 @@
 const { Op } = require("sequelize");
 
+const { EVENT_CREATOR_ATTRIBUTES } = require("../../constants/userAttributes");
+
 /* ==========================================================================
-   Event Creator Utilities
+   Event Creator Include Utilities
 
    Builds Sequelize includes for event creator data.
 
@@ -13,12 +15,10 @@ const { Op } = require("sequelize");
    - Creator filtering uses an INNER JOIN when a creator name is provided.
 =========================================================================== */
 
-const USER_PUBLIC_ATTRIBUTES = ["id", "name"];
-
 const buildEventCreatorInclude = (User, creator) => ({
     model: User,
     as: "creator",
-    attributes: USER_PUBLIC_ATTRIBUTES,
+    attributes: EVENT_CREATOR_ATTRIBUTES,
 
     ...(creator && {
         where: {
@@ -26,10 +26,10 @@ const buildEventCreatorInclude = (User, creator) => ({
                 [Op.iLike]: `%${String(creator).trim()}%`
             }
         },
-
-        // Required forces INNER JOIN so creator name filtering works correctly.
         required: true
     })
 });
 
-module.exports = { buildEventCreatorInclude };
+module.exports = {
+    buildEventCreatorInclude
+};

@@ -67,7 +67,7 @@ const { deleteUploadedFile } = require("../../../../src/utils/files/uploadedFile
 
 const { createMockEventModel } = require("../../../factories/eventFactory");
 
-describe("eventService - deleteEventByID", () => {
+describe("eventService - deleteEventById", () => {
     let transaction;
 
     beforeEach(() => {
@@ -96,7 +96,7 @@ describe("eventService - deleteEventByID", () => {
         assertEventNotStarted.mockImplementation(() => { });
         EventUserRole.destroy.mockResolvedValue(1);
 
-        await eventService.deleteEventByID(1);
+        await eventService.deleteEventById(1);
 
         expect(sequelize.transaction).toHaveBeenCalled();
 
@@ -128,7 +128,7 @@ describe("eventService - deleteEventByID", () => {
         assertEventNotStarted.mockImplementation(() => { });
         EventUserRole.destroy.mockResolvedValue(1);
 
-        await eventService.deleteEventByID(1);
+        await eventService.deleteEventById(1);
 
         expect(sequelize.transaction).toHaveBeenCalled();
 
@@ -171,7 +171,7 @@ describe("eventService - deleteEventByID", () => {
             throw error;
         });
 
-        await expect(eventService.deleteEventByID(1)).rejects.toMatchObject({
+        await expect(eventService.deleteEventById(1)).rejects.toMatchObject({
             message: "An event that has already started cannot be deleted",
             statusCode: 403
         });
@@ -198,7 +198,7 @@ describe("eventService - deleteEventByID", () => {
     it("should throw 404 when event is not found", async () => {
         Event.findByPk.mockResolvedValue(null);
 
-        await expect(eventService.deleteEventByID(999)).rejects.toMatchObject({
+        await expect(eventService.deleteEventById(999)).rejects.toMatchObject({
             message: "Event not found",
             statusCode: 404
         });
@@ -223,7 +223,7 @@ describe("eventService - deleteEventByID", () => {
     it("should rollback transaction when database error occurs", async () => {
         Event.findByPk.mockRejectedValue(new Error("DB error"));
 
-        await expect(eventService.deleteEventByID(1)).rejects.toThrow("DB error");
+        await expect(eventService.deleteEventById(1)).rejects.toThrow("DB error");
 
         expect(sequelize.transaction).toHaveBeenCalled();
 

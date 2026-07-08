@@ -24,7 +24,7 @@ const EventReview = require("../../../../src/models/relations/eventReviewModel")
 
 const eventReviewService = require("../../../../src/services/eventReviewService");
 
-describe("eventReviewService - updateEventReviewByID", () => {
+describe("eventReviewService - updateEventReviewById", () => {
 
     /* =============================
        TEST SETUP
@@ -61,7 +61,7 @@ describe("eventReviewService - updateEventReviewByID", () => {
             .mockResolvedValueOnce(review)
             .mockResolvedValueOnce(updatedReview);
 
-        const result = await eventReviewService.updateEventReviewByID({
+        const result = await eventReviewService.updateEventReviewById({
             reviewId: 1,
             userId: 10,
             rating: 4,
@@ -95,7 +95,7 @@ describe("eventReviewService - updateEventReviewByID", () => {
     it("should throw 404 when review does not exist", async () => {
         EventReview.findByPk.mockResolvedValue(null);
 
-        await expect(eventReviewService.updateEventReviewByID({
+        await expect(eventReviewService.updateEventReviewById({
             reviewId: 999,
             userId: 10,
             rating: 4,
@@ -121,7 +121,7 @@ describe("eventReviewService - updateEventReviewByID", () => {
 
         EventReview.findByPk.mockResolvedValue(review);
 
-        await expect(eventReviewService.updateEventReviewByID({
+        await expect(eventReviewService.updateEventReviewById({
             reviewId: 1,
             userId: 10,
             rating: 4,

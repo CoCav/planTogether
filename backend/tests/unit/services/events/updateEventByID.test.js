@@ -80,7 +80,7 @@ const { deleteUploadedFile } = require("../../../../src/utils/files/uploadedFile
 
 const { createMockEventModel } = require("../../../factories/eventFactory");
 
-describe("eventService - updateEventByID", () => {
+describe("eventService - updateEventById", () => {
 
     let transaction;
 
@@ -125,7 +125,7 @@ describe("eventService - updateEventByID", () => {
         assertEventNotPast.mockImplementation(() => { });
         buildUpdateEventPayload.mockReturnValue(updateData);
 
-        const result = await eventService.updateEventByID(1, {
+        const result = await eventService.updateEventById(1, {
             title: "Updated Event"
         });
 
@@ -167,7 +167,7 @@ describe("eventService - updateEventByID", () => {
         assertEventNotPast.mockImplementation(() => { });
         buildUpdateEventPayload.mockReturnValue(updateData);
 
-        await eventService.updateEventByID(1, {
+        await eventService.updateEventById(1, {
             title: "Updated Event"
         });
 
@@ -202,7 +202,7 @@ describe("eventService - updateEventByID", () => {
         assertEventNotPast.mockImplementation(() => { });
         buildUpdateEventPayload.mockReturnValue(updateData);
 
-        await eventService.updateEventByID(1, {
+        await eventService.updateEventById(1, {
             image: "/uploads/events/new-event.png"
         });
 
@@ -236,7 +236,7 @@ describe("eventService - updateEventByID", () => {
         assertEventNotPast.mockImplementation(() => { });
         buildUpdateEventPayload.mockReturnValue(updateData);
 
-        await eventService.updateEventByID(1, {
+        await eventService.updateEventById(1, {
             image: null
         });
 
@@ -276,7 +276,7 @@ describe("eventService - updateEventByID", () => {
         assertEventNotPast.mockImplementation(() => { });
         buildUpdateEventPayload.mockReturnValue(updateData);
 
-        await eventService.updateEventByID(1, {
+        await eventService.updateEventById(1, {
             location: "Quebec City"
         });
 
@@ -316,7 +316,7 @@ describe("eventService - updateEventByID", () => {
         assertEventNotPast.mockImplementation(() => { });
         buildUpdateEventPayload.mockReturnValue(updateData);
 
-        await eventService.updateEventByID(1, {
+        await eventService.updateEventById(1, {
             title: "Updated Event"
         });
 
@@ -355,7 +355,7 @@ describe("eventService - updateEventByID", () => {
         assertEventNotPast.mockImplementation(() => { });
         buildUpdateEventPayload.mockReturnValue(updateData);
 
-        await eventService.updateEventByID(1, {
+        await eventService.updateEventById(1, {
             mode: EVENT_MODES.ONLINE
         });
 
@@ -380,7 +380,7 @@ describe("eventService - updateEventByID", () => {
         Event.findByPk.mockResolvedValue(event);
         assertEventNotPast.mockImplementation(() => { });
 
-        await expect(eventService.updateEventByID(1, {
+        await expect(eventService.updateEventById(1, {
             location: ""
         })).rejects.toMatchObject({
             message: "Location is required for in-person events",
@@ -408,7 +408,7 @@ describe("eventService - updateEventByID", () => {
         Event.findByPk.mockResolvedValue(event);
         assertEventNotPast.mockImplementation(() => { });
 
-        await expect(eventService.updateEventByID(1, {
+        await expect(eventService.updateEventById(1, {
             startDateTime: "2026-12-20T12:00:00.000Z",
             endDateTime: "2026-12-20T10:00:00.000Z"
         })).rejects.toMatchObject({
@@ -445,7 +445,7 @@ describe("eventService - updateEventByID", () => {
             throw error;
         });
 
-        await expect(eventService.updateEventByID(1, {
+        await expect(eventService.updateEventById(1, {
             title: "Updated Event"
         })).rejects.toMatchObject({
             message: "No action is allowed on a past event",
@@ -473,7 +473,7 @@ describe("eventService - updateEventByID", () => {
     it("should throw 404 when event is not found", async () => {
         Event.findByPk.mockResolvedValue(null);
 
-        await expect(eventService.updateEventByID(999, {
+        await expect(eventService.updateEventById(999, {
             title: "Updated Event"
         })).rejects.toMatchObject({
             message: "Event not found",
@@ -511,7 +511,7 @@ describe("eventService - updateEventByID", () => {
             title: "Updated Event"
         });
 
-        await expect(eventService.updateEventByID(1, {
+        await expect(eventService.updateEventById(1, {
             title: "Updated Event"
         })).rejects.toThrow("DB error");
 

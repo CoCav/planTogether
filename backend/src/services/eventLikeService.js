@@ -4,106 +4,86 @@ const Event = require("../models/eventModel");
 const EventLike = require("../models/relations/eventLikeModel");
 
 const { throwHttpError } = require("../utils/errors/httpError");
+const { findEventByIdOrFail } = require("../utils/events/eventQueries");
 
-/* ==================================================
-   EVENT LIKE SERVICE
-   Handles event like business logic
+const {
+    findEventLike,
+    getEventLikesCount
+} = require("../utils/eventLikes/eventLikes");
 
-   Handles:
-   - event existence checks
-   - like creation
-   - duplicate like prevention
-   - like deletion
-   - event like count
-   - current user like lookup
+/* ==========================================================================
+   Event Like Service
 
-   Notes:
-   - users can like an event once
-   - users can unlike their own like
-   - likes are created by authenticated users
-   - unlike is idempotent
-   - event access remains handled by routes/controllers
-================================================== */
+   Handles event like business logic.
 
-/* =============================
-   HELPERS
-============================= */
+   Responsibilities
+   - Check event existence
+   - Create event likes
+   - Prevent duplicate likes
+   - Delete event likes
+   - Count event likes
+   - Check current user like state
 
-// Finds an event or throws a 404 error
-const findEventOrFail = async (eventId, options = {}) => {
-    const event = await Event.findByPk(eventId, options);
+   Notes
+   - Users can like an event once.
+   - Users can unlike their own like.
+   - Unlike is idempotent.
+=========================================================================== */
 
-    if (!event) {
-        throwHttpError(404, "Event not found");
-    }
+const EVENT_ALREADY_LIKED_ERROR = "You have already liked this event";
 
-    return event;
+/* Helpers */
+
+const countEventLikes = (eventId, options = {}) => {
+    return getEventLikesCount(EventLike, eventId, options);
 };
 
-// Finds whether a user already liked an event
-const findEventLike = async ({ eventId, userId, transaction } = {}) => {
-    return EventLike.findOne({
-        where: {
-            eventId,
-            userId
-        },
-        transaction
-    });
-};
-
-// Counts likes for one event
-const getEventLikesCount = async (eventId, options = {}) => {
-    return EventLike.count({
-        where: {
-            eventId
-        },
-        ...options
-    });
-};
-
-// Checks if the current user liked one event
 const getIsEventLikedByUser = async ({ eventId, userId }) => {
     if (!userId) {
         return false;
     }
 
-    const like = await findEventLike({ eventId, userId });
+    const like = await findEventLike(EventLike, {
+        eventId,
+        userId
+    });
 
     return Boolean(like);
 };
 
-/* =============================
-   LIKE EVENT
-============================= */
+/* Like event */
 
-// Likes an event for the current user
 const likeEvent = async ({ eventId, userId }) => {
     const transaction = await sequelize.transaction();
 
     try {
-        await findEventOrFail(eventId, { transaction });
+        await findEventByIdOrFail(Event, eventId, {
+            transaction
+        });
 
-        const existingLike = await findEventLike({
+        const existingLike = await findEventLike(EventLike, {
             eventId,
             userId,
             transaction
         });
 
-        // Prevent duplicate likes
         if (existingLike) {
-            throwHttpError(409, "You have already liked this event");
+            throwHttpError(409, EVENT_ALREADY_LIKED_ERROR);
         }
 
-        // Create the user's like
-        await EventLike.create({
-            eventId,
-            userId
-        }, {
+        await EventLike.create(
+            {
+                eventId,
+                userId
+            },
+            {
+                transaction
+            }
+        );
+
+        const likesCount = await countEventLikes(eventId, {
             transaction
         });
-
-        // Return the updated likes count
-        const likesCount = await getEventLikesCount(eventId, { transaction });
 
         await transaction.commit();
 
@@ -120,30 +100,31 @@ const likeEvent = async ({ eventId, userId }) => {
     }
 };
 
-/* =============================
-   UNLIKE EVENT
-============================= */
+/* Unlike event */
 
-// Removes the current user's like from an event
 const unlikeEvent = async ({ eventId, userId }) => {
     const transaction = await sequelize.transaction();
 
     try {
-        await findEventOrFail(eventId, { transaction });
+        await findEventByIdOrFail(Event, eventId, {
+            transaction
+        });
 
-        const existingLike = await findEventLike({
+        const existingLike = await findEventLike(EventLike, {
             eventId,
             userId,
             transaction
         });
 
-        // Remove the user's existing like
         if (existingLike) {
-            await existingLike.destroy({ transaction });
+            await existingLike.destroy({
+                transaction
+            });
         }
 
-        // Return the updated likes count
-        const likesCount = await getEventLikesCount(eventId, { transaction });
+        const likesCount = await countEventLikes(eventId, {
+            transaction
+        });
 
         await transaction.commit();
 
@@ -163,6 +144,6 @@ const unlikeEvent = async ({ eventId, userId }) => {
 module.exports = {
     likeEvent,
     unlikeEvent,
-    getEventLikesCount,
+    getEventLikesCount: countEventLikes,
     getIsEventLikedByUser
 };

@@ -1,47 +1,50 @@
-const bcrypt = require("bcrypt");
-
 const User = require("../models/userModel");
 
 const { throwHttpError } = require("../utils/errors/httpError");
-
 const { generateAuthToken } = require("../utils/auth/authToken");
 const { normalizeEmail } = require("../utils/stringNormalizer");
 
-/* ==================================================
-   AUTH SERVICE
+const {
+    hashPassword,
+    comparePassword
+} = require("../utils/auth/passwordHasher");
 
-   Handles:
-   - user registration
-   - user login
-   - JWT token generation
+/* ==========================================================================
+   Auth Service
 
-   Notes:
-   - passwords are hashed with bcrypt
-   - JWT payload stores userId only
-   - user profile logic belongs to userService
-   - authentication tokens are generated through shared auth utilities
-   - uses shared HTTP error and normalization utilities
-================================================== */
+   Handles authentication business logic.
 
-/* =============================
-   REGISTER / LOGIN
-============================= */
+   Responsibilities
+   - Register users
+   - Log users in
+   - Hash passwords
+   - Generate authentication tokens
 
-// Register a new user
+   Notes
+   - Passwords are hashed with bcrypt.
+   - BCRYPT_SALT_ROUNDS can be configured in .env.
+   - JWT payload generation is delegated to auth utilities.
+   - User profile logic belongs to userService.
+=========================================================================== */
+
+const EMAIL_ALREADY_IN_USE_ERROR = "Email already in use";
+const INVALID_CREDENTIALS_ERROR = "Invalid email or invalid password";
+const ACCOUNT_DELETED_ERROR = "Account has been deleted";
+
+/* Register / login */
+
 const registerUser = async ({ name, email, password, avatar }) => {
     const normalizedEmail = normalizeEmail(email);
 
-    // Prevent duplicate email registration
     const existingUser = await User.findOne({
         where: { email: normalizedEmail }
     });
 
     if (existingUser) {
-        throwHttpError(409, "Email already in use");
+        throwHttpError(409, EMAIL_ALREADY_IN_USE_ERROR);
     }
 
-    // Hash password before saving user
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
 
     const user = await User.create({
         name,
@@ -50,35 +53,30 @@ const registerUser = async ({ name, email, password, avatar }) => {
         avatar: avatar || null
     });
 
-    // Generate authentication token
     const token = generateAuthToken(user.id);
 
     return { user, token };
 };
 
-// Login an existing user
 const loginUser = async ({ email, password }) => {
     const normalizedEmail = normalizeEmail(email);
 
-    // Password is included only for login verification
     const user = await User.scope("withPassword").findOne({
         where: { email: normalizedEmail }
     });
 
     if (!user) {
-        throwHttpError(401, "Invalid email or invalid password");
+        throwHttpError(401, INVALID_CREDENTIALS_ERROR);
     }
 
-    // Prevent login for deleted accounts
     if (user.deletedAt) {
-        throwHttpError(403, "Account has been deleted");
+        throwHttpError(403, ACCOUNT_DELETED_ERROR);
     }
 
-    // Compare provided password with hashed password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
-        throwHttpError(401, "Invalid email or invalid password");
+        throwHttpError(401, INVALID_CREDENTIALS_ERROR);
     }
 
     const token = generateAuthToken(user.id);
@@ -86,4 +84,7 @@ const loginUser = async ({ email, password }) => {
     return { user, token };
 };
 
-module.exports = { registerUser, loginUser };
+module.exports = {
+    registerUser,
+    loginUser
+};

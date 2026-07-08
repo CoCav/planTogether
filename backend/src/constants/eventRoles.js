@@ -5,7 +5,8 @@
 
    Responsibilities
    - Centralize event role values
-   - Expose the list of valid event roles
+   - Expose valid event roles
+   - Expose staff event roles
 
    Notes
    - Shared across services, validators and tests.
@@ -19,4 +20,13 @@ const EVENT_ROLES = {
 
 const VALID_EVENT_ROLES = Object.values(EVENT_ROLES);
 
-module.exports = { EVENT_ROLES, VALID_EVENT_ROLES };
+const STAFF_EVENT_ROLES = [
+    EVENT_ROLES.ORGANIZER,
+    EVENT_ROLES.CO_ORGANIZER
+];
+
+module.exports = {
+    EVENT_ROLES,
+    VALID_EVENT_ROLES,
+    STAFF_EVENT_ROLES
+};

@@ -1,6 +1,7 @@
 const { body } = require("express-validator");
 
 const { EVENT_MODES, VALID_EVENT_MODES } = require("../constants/eventModes");
+const { EVENT_ADMIN_SORT_FIELDS } = require("../constants/eventSortFields");
 
 const { eventIdParamValidator } = require("./shared/paramValidators");
 const { pageQueryValidator, pageSizeQueryValidator } = require("./shared/paginationValidators");
@@ -39,13 +40,6 @@ const {
    - Update validators allow clearing nullable optional fields.
    - Event-specific business validation stays in this file.
 =========================================================================== */
-
-const EVENT_SORT_FIELDS = [
-    "startDateTime",
-    "title",
-    "creatorId",
-    "createdAt"
-];
 
 const LOCATION_REQUIRED_MESSAGE = "Location is required for in-person events";
 const END_AFTER_START_MESSAGE = "End date and time must be after start date and time";
@@ -221,7 +215,7 @@ const getAllEventsValidator = [
     startDateQueryValidator,
     endDateQueryValidator,
 
-    createSortByValidator(EVENT_SORT_FIELDS),
+    createSortByValidator(EVENT_ADMIN_SORT_FIELDS),
     statusQueryValidator,
     pageQueryValidator,
     pageSizeQueryValidator,

@@ -8,6 +8,8 @@ const { Op } = require("sequelize");
    Responsibilities
    - Build event like includes
    - Build event like count attributes
+   - Find one event like
+   - Count likes for one event
    - Count likes for multiple events
    - Find events liked by the current user
 
@@ -35,6 +37,25 @@ const buildEventLikeCountAttribute = (sequelize, likeIdPath) => ([
     ),
     LIKES_COUNT_ALIAS
 ]);
+
+const findEventLike = (EventLike, { eventId, userId, transaction } = {}) => {
+    return EventLike.findOne({
+        where: {
+            eventId,
+            userId
+        },
+        transaction
+    });
+};
+
+const getEventLikesCount = (EventLike, eventId, options = {}) => {
+    return EventLike.count({
+        where: {
+            eventId
+        },
+        ...options
+    });
+};
 
 const findLikedEventIdsByUser = async (EventLike, eventIds, currentUserId) => {
     if (!currentUserId || !eventIds.length) {
@@ -88,6 +109,8 @@ const countEventLikesByEventIds = async (EventLike, sequelize, eventIds) => {
 module.exports = {
     buildEventLikeInclude,
     buildEventLikeCountAttribute,
+    findEventLike,
+    getEventLikesCount,
     findLikedEventIdsByUser,
     countEventLikesByEventIds
 };

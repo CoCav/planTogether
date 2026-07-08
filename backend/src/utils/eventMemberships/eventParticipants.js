@@ -10,6 +10,7 @@ const { EVENT_ROLES } = require("../../constants/eventRoles");
    Responsibilities
    - Build active participant includes
    - Build participant count attributes
+   - Count active participants for one event
    - Count active participants for multiple events
 
    Notes
@@ -27,8 +28,6 @@ const buildActiveParticipantInclude = (User) => ({
         attributes: [],
         where: {
             role: EVENT_ROLES.PARTICIPANT,
-
-            // Only active memberships are counted as participants.
             deletedAt: null
         }
     },
@@ -46,7 +45,25 @@ const buildEventParticipantCountAttribute = (sequelize, participantIdPath) => ([
     PARTICIPANT_COUNT_ALIAS
 ]);
 
-const countActiveParticipantsByEventIds = async (EventUserRole, sequelize, eventIds) => {
+const countActiveParticipants = async (
+    EventUserRole,
+    { eventId, transaction } = {}
+) => {
+    return EventUserRole.count({
+        where: {
+            eventId,
+            role: EVENT_ROLES.PARTICIPANT,
+            deletedAt: null
+        },
+        transaction
+    });
+};
+
+const countActiveParticipantsByEventIds = async (
+    EventUserRole,
+    sequelize,
+    eventIds
+) => {
     if (!eventIds.length) {
         return {};
     }
@@ -64,8 +81,6 @@ const countActiveParticipantsByEventIds = async (EventUserRole, sequelize, event
                 [Op.in]: eventIds
             },
             role: EVENT_ROLES.PARTICIPANT,
-
-            // Soft-deleted memberships are ignored in active participant counts.
             deletedAt: null
         },
         group: ["eventId"],
@@ -81,5 +96,6 @@ const countActiveParticipantsByEventIds = async (EventUserRole, sequelize, event
 module.exports = {
     buildActiveParticipantInclude,
     buildEventParticipantCountAttribute,
+    countActiveParticipants,
     countActiveParticipantsByEventIds
 };

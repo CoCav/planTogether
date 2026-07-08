@@ -17,14 +17,14 @@
    - authorization errors are forwarded to the global errorHandler
 ================================================== */
 
-const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
+const EventUserRole = require("../../../../src/models/associations/eventUserRoleModel");
 
 const authorizeEventRole = require("../../../../src/middlewares/authorization/authorizeEventRole");
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 
 const { createEventRoleMocks } = require("../../../helpers/express/mockExpress");
 
-jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
+jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
     findOne: jest.fn()
 }));
 

@@ -1,4 +1,4 @@
-const EventUserRole = require("../../models/relations/eventUserRoleModel");
+const EventUserRole = require("../../models/associations/eventUserRoleModel");
 
 const { createHttpError } = require("../../utils/errors/httpError");
 

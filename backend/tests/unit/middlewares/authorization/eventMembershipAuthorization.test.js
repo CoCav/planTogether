@@ -22,7 +22,7 @@
 ================================================== */
 
 const Event = require("../../../../src/models/eventModel");
-const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
+const EventUserRole = require("../../../../src/models/associations/eventUserRoleModel");
 
 const { authorizeEventMemberRoleUpdate, authorizeEventMemberRemoval } = require("../../../../src/middlewares/authorization/eventMemberAuthorization");
 
@@ -35,7 +35,7 @@ jest.mock("../../../../src/models/eventModel.js", () => ({
     findByPk: jest.fn()
 }));
 
-jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
+jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
     findOne: jest.fn()
 }));
 

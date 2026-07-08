@@ -3,38 +3,43 @@ const Location = require("../models/locationModel");
 const geocodingConfig = require("../config/geocoding");
 
 const { throwHttpError } = require("../utils/errors/httpError");
-
-const { normalizeString, normalizeSearchKey } = require("../utils/stringNormalizer");
+const {
+    normalizeString,
+    normalizeSearchKey
+} = require("../utils/stringNormalizer");
 
 const { buildNominatimSearchParams } = require("../utils/geocoding/geocodingParams");
 const { buildLocationSearchQueries } = require("../utils/geocoding/geocodingSearchQueries");
-const { GEOCODING_PROVIDER, normalizeLocation } = require("../utils/geocoding/geocodingNormalizer");
+const {
+    GEOCODING_PROVIDER,
+    normalizeLocation
+} = require("../utils/geocoding/geocodingNormalizer");
 
-/* ==================================================
-   LOCATION SERVICE
-   Handles location search and geocoding
+/* ==========================================================================
+   Geocoding Service
 
-   Handles:
-   - location query validation
-   - cached structured location lookup
-   - fallback location search queries
-   - OpenStreetMap Nominatim provider search
-   - structured address persistence
-   - provider error and rate limit handling
-   - reusable event location data
+   Handles geocoding business logic.
 
-   Notes:
-   - cached locations reduce repeated provider requests
-   - searchLocations returns multiple results for future autocomplete support
-   - cached locations preserve structured address fields
-   - resolveEventLocation returns the best matching location for event persistence
-================================================== */
+   Responsibilities
+   - Validate location search queries
+   - Read cached geocoding results
+   - Search the configured geocoding provider
+   - Save provider results to cache
+   - Resolve event location data
 
-/* =============================
-   CACHE HELPERS
-============================= */
+   Notes
+   - Cached locations reduce repeated provider requests.
+   - searchLocations returns multiple results for autocomplete support.
+   - resolveEventLocation returns the best matching location for event persistence.
+=========================================================================== */
 
-// Checks if a cached location already contains structured address fields
+const LOCATION_QUERY_REQUIRED_ERROR = "Location query is required";
+const LOCATION_NOT_FOUND_ERROR = "Location not found";
+const GEOCODING_RATE_LIMIT_ERROR = "Location search rate limit exceeded. Please try again later.";
+const GEOCODING_SERVICE_UNAVAILABLE_ERROR = "Location search service unavailable";
+
+const HTTP_TOO_MANY_REQUESTS = 429;
+
 const hasStructuredAddressData = (location = {}) => {
     return Boolean(
         location.streetAddress ||
@@ -45,11 +50,6 @@ const hasStructuredAddressData = (location = {}) => {
     );
 };
 
-/* =============================
-   CACHE LOOKUP
-============================= */
-
-// Finds cached locations for a normalized query
 const findCachedLocations = async (query) => {
     return Location.findAll({
         where: {
@@ -60,7 +60,6 @@ const findCachedLocations = async (query) => {
     });
 };
 
-// Saves provider results into the location cache
 const saveLocationsToCache = async (locations = []) => {
     const savedLocations = [];
 
@@ -75,7 +74,6 @@ const saveLocationsToCache = async (locations = []) => {
             defaults: location
         });
 
-        // Refresh old cached rows that were created before structured address fields existed
         if (!created) {
             await savedLocation.update({
                 label: location.label,
@@ -93,11 +91,6 @@ const saveLocationsToCache = async (locations = []) => {
     return savedLocations;
 };
 
-/* =============================
-   PROVIDER SEARCH
-============================= */
-
-// Searches matching locations from Nominatim for one query
 const searchNominatimLocations = async (query, originalQuery = query) => {
     const params = buildNominatimSearchParams(query);
 
@@ -111,15 +104,12 @@ const searchNominatimLocations = async (query, originalQuery = query) => {
         }
     );
 
-    if (response.status === 429) {
-        throwHttpError(
-            429,
-            "Location search rate limit exceeded. Please try again later."
-        );
+    if (response.status === HTTP_TOO_MANY_REQUESTS) {
+        throwHttpError(429, GEOCODING_RATE_LIMIT_ERROR);
     }
 
     if (!response.ok) {
-        throwHttpError(502, "Location search service unavailable");
+        throwHttpError(502, GEOCODING_SERVICE_UNAVAILABLE_ERROR);
     }
 
     const results = await response.json();
@@ -128,13 +118,12 @@ const searchNominatimLocations = async (query, originalQuery = query) => {
         return [];
     }
 
-    // Cache results under the original user query, even if a fallback query worked
+    // Cache fallback results under the original user query.
     return results.map((result) =>
         normalizeLocation(originalQuery, result)
     );
 };
 
-// Searches provider with progressively broader fallback queries
 const searchProviderLocationsWithFallbacks = async (query) => {
     const searchQueries = buildLocationSearchQueries(query);
 
@@ -146,24 +135,22 @@ const searchProviderLocationsWithFallbacks = async (query) => {
         }
     }
 
-    throwHttpError(404, "Location not found");
+    throwHttpError(404, LOCATION_NOT_FOUND_ERROR);
 };
 
-/* =============================
-   LOCATION SEARCH
-============================= */
-
-// Searches locations from cache first, then provider
 const searchLocations = async (query) => {
     const cleanQuery = normalizeString(query);
 
     if (!cleanQuery) {
-        throwHttpError(400, "Location query is required");
+        throwHttpError(400, LOCATION_QUERY_REQUIRED_ERROR);
     }
 
     const cachedLocations = await findCachedLocations(cleanQuery);
 
-    if (cachedLocations.length > 0 && cachedLocations.some(hasStructuredAddressData)) {
+    if (
+        cachedLocations.length > 0 &&
+        cachedLocations.some(hasStructuredAddressData)
+    ) {
         return cachedLocations;
     }
 
@@ -172,11 +159,13 @@ const searchLocations = async (query) => {
     return saveLocationsToCache(providerLocations);
 };
 
-// Resolves the best matching location for event persistence
 const resolveEventLocation = async (query) => {
     const locations = await searchLocations(query);
 
     return locations[0] ?? null;
 };
 
-module.exports = { searchLocations, resolveEventLocation };
+module.exports = {
+    searchLocations,
+    resolveEventLocation
+};

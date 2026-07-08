@@ -1,4 +1,4 @@
-const geocodingService = require("../services/locationService");
+const geocodingService = require("../services/geocodingService");
 
 /* ==========================================================================
    Geocoding Controller

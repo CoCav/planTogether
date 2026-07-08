@@ -16,8 +16,7 @@ const createRateLimiter = require("./createRateLimiter");
 const DEFAULT_AUTH_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const DEFAULT_AUTH_RATE_LIMIT_MAX = 10;
 
-const AUTH_RATE_LIMIT_MESSAGE =
-    "Too many authentication attempts. Please try again later.";
+const AUTH_RATE_LIMIT_MESSAGE = "Too many authentication attempts. Please try again later.";
 
 const authRateLimiter = createRateLimiter({
     windowMs: Number(

@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
 
-const geocodingController = require("../controllers/locationController");
+const geocodingController = require("../controllers/geocodingController");
 
 const { authenticateToken } = require("../middlewares/auth/authenticateToken");
-const locationRateLimiter = require("../middlewares/rateLimiters/locationRateLimiter");
+const geocodingRateLimiter = require("../middlewares/rateLimiters/geocodingRateLimiter");
 const handleValidationErrors = require("../middlewares/errors/handleValidationErrors");
 
-const { searchLocationValidator } = require("../validators/geocodingValidator");
+const { searchLocationsValidator } = require("../validators/geocodingValidator");
 
 /* ==========================================================================
    Geocoding Routes
@@ -30,8 +30,8 @@ const { searchLocationValidator } = require("../validators/geocodingValidator");
 router.get(
     "/search",
     authenticateToken,
-    locationRateLimiter,
-    searchLocationValidator,
+    geocodingRateLimiter,
+    searchLocationsValidator,
     handleValidationErrors,
     geocodingController.searchLocations
 );
@@ -40,8 +40,8 @@ router.get(
 
 router.get(
     "/public-search",
-    locationRateLimiter,
-    searchLocationValidator,
+    geocodingRateLimiter,
+    searchLocationsValidator,
     handleValidationErrors,
     geocodingController.searchLocations
 );

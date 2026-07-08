@@ -13,7 +13,7 @@ const { query } = require("express-validator");
    - Search queries support autocomplete and geocoding requests.
 =========================================================================== */
 
-const searchLocationValidator = [
+const searchLocationsValidator = [
     query("q")
         .trim()
         .notEmpty()
@@ -23,5 +23,5 @@ const searchLocationValidator = [
 ];
 
 module.exports = {
-    searchLocationValidator
+    searchLocationsValidator
 };

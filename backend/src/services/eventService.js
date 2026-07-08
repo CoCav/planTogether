@@ -3,9 +3,9 @@ const sequelize = require("../config/database");
 const Event = require("../models/eventModel");
 const User = require("../models/userModel");
 
-const EventUserRole = require("../models/relations/eventUserRoleModel");
-const EventReview = require("../models/relations/eventReviewModel");
-const EventLike = require("../models/relations/eventLikeModel");
+const EventUserRole = require("../models/associations/eventUserRoleModel");
+const EventReview = require("../models/associations/eventReviewModel");
+const EventLike = require("../models/associations/eventLikeModel");
 
 const geocodingService = require("./geocodingService");
 

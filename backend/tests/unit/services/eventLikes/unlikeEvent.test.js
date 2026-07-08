@@ -27,7 +27,7 @@ jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
 }));
 
-jest.mock("../../../../src/models/relations/eventLikeModel", () => ({
+jest.mock("../../../../src/models/associations/eventLikeModel", () => ({
     findOne: jest.fn(),
     count: jest.fn()
 }));
@@ -35,7 +35,7 @@ jest.mock("../../../../src/models/relations/eventLikeModel", () => ({
 const sequelize = require("../../../../src/config/database");
 
 const Event = require("../../../../src/models/eventModel");
-const EventLike = require("../../../../src/models/relations/eventLikeModel");
+const EventLike = require("../../../../src/models/associations/eventLikeModel");
 
 const eventLikeService = require("../../../../src/services/eventLikeService");
 

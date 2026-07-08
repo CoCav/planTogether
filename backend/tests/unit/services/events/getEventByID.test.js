@@ -28,7 +28,7 @@ jest.mock("../../../../src/models/eventModel", () => ({
     findOne: jest.fn()
 }));
 
-jest.mock("../../../../src/models/relations/eventLikeModel", () => ({
+jest.mock("../../../../src/models/associations/eventLikeModel", () => ({
     findOne: jest.fn()
 }));
 
@@ -58,10 +58,10 @@ jest.mock("../../../../src/utils/events/eventStatus", () => ({
 
 const Event = require("../../../../src/models/eventModel");
 const User = require("../../../../src/models/userModel");
-const EventLike = require("../../../../src/models/relations/eventLikeModel");
+const EventLike = require("../../../../src/models/associations/eventLikeModel");
 
 const eventService = require("../../../../src/services/eventService");
-const EventReview = require("../../../../src/models/relations/eventReviewModel");
+const EventReview = require("../../../../src/models/associations/eventReviewModel");
 
 const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
 const { getEventStatus } = require("../../../../src/utils/events/eventStatus");

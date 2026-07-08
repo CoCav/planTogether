@@ -74,8 +74,8 @@ const Event = require("../../../../src/models/eventModel");
 const User = require("../../../../src/models/userModel");
 
 const eventService = require("../../../../src/services/eventService");
-const EventReview = require("../../../../src/models/relations/eventReviewModel");
-const EventLike = require("../../../../src/models/relations/eventLikeModel");
+const EventReview = require("../../../../src/models/associations/eventReviewModel");
+const EventLike = require("../../../../src/models/associations/eventLikeModel");
 
 const { EVENT_MODES } = require("../../../../src/constants/eventModes");
 const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");

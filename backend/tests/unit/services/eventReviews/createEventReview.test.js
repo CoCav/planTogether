@@ -20,8 +20,8 @@
 
 jest.mock("../../../../src/models/eventModel");
 jest.mock("../../../../src/models/userModel");
-jest.mock("../../../../src/models/relations/eventUserRoleModel");
-jest.mock("../../../../src/models/relations/eventReviewModel");
+jest.mock("../../../../src/models/associations/eventUserRoleModel");
+jest.mock("../../../../src/models/associations/eventReviewModel");
 
 jest.mock("../../../../src/utils/events/eventStatus", () => ({
     isEventPast: jest.fn()
@@ -31,8 +31,8 @@ const sequelize = require("../../../../src/config/database");
 
 const Event = require("../../../../src/models/eventModel");
 const User = require("../../../../src/models/userModel");
-const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
-const EventReview = require("../../../../src/models/relations/eventReviewModel");
+const EventUserRole = require("../../../../src/models/associations/eventUserRoleModel");
+const EventReview = require("../../../../src/models/associations/eventReviewModel");
 
 const { isEventPast } = require("../../../../src/utils/events/eventStatus");
 

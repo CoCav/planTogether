@@ -3,8 +3,8 @@ const { fn, col } = require("sequelize");
 
 const Event = require("../models/eventModel");
 const User = require("../models/userModel");
-const EventUserRole = require("../models/relations/eventUserRoleModel");
-const EventReview = require("../models/relations/eventReviewModel");
+const EventUserRole = require("../models/associations/eventUserRoleModel");
+const EventReview = require("../models/associations/eventReviewModel");
 
 const { PUBLIC_USER_ATTRIBUTES } = require("../constants/userAttributes");
 

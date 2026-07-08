@@ -4,8 +4,8 @@ const sequelize = require("../../config/database");
 
 const User = require("../../models/userModel");
 const Event = require("../../models/eventModel");
-const EventUserRole = require("../../models/relations/eventUserRoleModel");
-const EventLike = require("../../models/relations/eventLikeModel");
+const EventUserRole = require("../../models/associations/eventUserRoleModel");
+const EventLike = require("../../models/associations/eventLikeModel");
 
 const { EVENT_ROLES } = require("../../constants/eventRoles");
 const { EVENT_SORT_FIELDS } = require("../../constants/eventSortFields");

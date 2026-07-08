@@ -28,15 +28,15 @@ jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
 }));
 
-jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
+jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
     destroy: jest.fn()
 }));
 
-jest.mock("../../../../src/models/relations/eventReviewModel", () => ({
+jest.mock("../../../../src/models/associations/eventReviewModel", () => ({
     name: "EventReviewModel"
 }));
 
-jest.mock("../../../../src/models/relations/eventLikeModel", () => ({
+jest.mock("../../../../src/models/associations/eventLikeModel", () => ({
     findOne: jest.fn(),
     count: jest.fn()
 }));
@@ -58,7 +58,7 @@ jest.mock("../../../../src/utils/files/uploadedFileStorage", () => ({
 
 const sequelize = require("../../../../src/config/database");
 const Event = require("../../../../src/models/eventModel");
-const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
+const EventUserRole = require("../../../../src/models/associations/eventUserRoleModel");
 
 const eventService = require("../../../../src/services/eventService");
 

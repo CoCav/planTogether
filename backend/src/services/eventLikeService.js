@@ -1,7 +1,7 @@
 const sequelize = require("../config/database");
 
 const Event = require("../models/eventModel");
-const EventLike = require("../models/relations/eventLikeModel");
+const EventLike = require("../models/associations/eventLikeModel");
 
 const { throwHttpError } = require("../utils/errors/httpError");
 const { findEventByIdOrFail } = require("../utils/events/eventQueries");

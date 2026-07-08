@@ -17,10 +17,10 @@
 ================================================== */
 
 jest.mock("../../../../src/models/userModel");
-jest.mock("../../../../src/models/relations/eventReviewModel");
+jest.mock("../../../../src/models/associations/eventReviewModel");
 
 const User = require("../../../../src/models/userModel");
-const EventReview = require("../../../../src/models/relations/eventReviewModel");
+const EventReview = require("../../../../src/models/associations/eventReviewModel");
 
 const eventReviewService = require("../../../../src/services/eventReviewService");
 

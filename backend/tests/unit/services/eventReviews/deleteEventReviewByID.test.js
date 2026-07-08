@@ -13,9 +13,9 @@
    - valid reviews are destroyed
 ================================================== */
 
-jest.mock("../../../../src/models/relations/eventReviewModel");
+jest.mock("../../../../src/models/associations/eventReviewModel");
 
-const EventReview = require("../../../../src/models/relations/eventReviewModel");
+const EventReview = require("../../../../src/models/associations/eventReviewModel");
 
 const eventReviewService = require("../../../../src/services/eventReviewService");
 

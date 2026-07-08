@@ -26,9 +26,9 @@ jest.mock("../../../../../src/models/userModel", () => ({
 
 jest.mock("../../../../../src/models/eventModel", () => ({}));
 
-jest.mock("../../../../../src/models/relations/eventUserRoleModel", () => ({}));
+jest.mock("../../../../../src/models/associations/eventUserRoleModel", () => ({}));
 
-jest.mock("../../../../../src/models/relations/eventLikeModel", () => ({}));
+jest.mock("../../../../../src/models/associations/eventLikeModel", () => ({}));
 
 jest.mock("../../../../../src/utils/events/eventFilters.js", () => ({
     buildEventWhereConditions: jest.fn()
@@ -56,7 +56,7 @@ jest.mock("../../../../../src/utils/users/public/publicUserEventQueries.js", () 
 }));
 
 const User = require("../../../../../src/models/userModel");
-const EventLike = require("../../../../../src/models/relations/eventLikeModel");
+const EventLike = require("../../../../../src/models/associations/eventLikeModel");
 
 const userService = require("../../../../../src/services/userService");
 

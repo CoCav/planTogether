@@ -20,7 +20,7 @@ jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
 }));
 
-jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
+jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
     findAll: jest.fn()
 }));
 
@@ -28,7 +28,7 @@ const { Op } = require("sequelize");
 
 const Event = require("../../../../src/models/eventModel");
 const User = require("../../../../src/models/userModel");
-const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
+const EventUserRole = require("../../../../src/models/associations/eventUserRoleModel");
 
 const eventMembershipService = require("../../../../src/services/eventMembershipService");
 

@@ -32,7 +32,7 @@ const { registerAndGetToken } = require("../../helpers/api/authHelper");
 const { createEventWithOrganizer, getAuthenticatedEventAccess } = require("../../helpers/api/eventHelper");
 const { joinEvent } = require("../../helpers/api/eventMembershipHelper");
 
-const EventUserRole = require("../../../src/models/relations/eventUserRoleModel");
+const EventUserRole = require("../../../src/models/associations/eventUserRoleModel");
 
 describe("Get Current User Event Access API", () => {
 

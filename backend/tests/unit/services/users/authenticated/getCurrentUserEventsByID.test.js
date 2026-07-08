@@ -25,11 +25,11 @@
    - missing users and database errors are handled safely
 ================================================== */
 
-jest.mock("../../../../../src/models/relations/eventUserRoleModel", () => ({
+jest.mock("../../../../../src/models/associations/eventUserRoleModel", () => ({
     findAndCountAll: jest.fn()
 }));
 
-jest.mock("../../../../../src/models/relations/eventLikeModel", () => ({}));
+jest.mock("../../../../../src/models/associations/eventLikeModel", () => ({}));
 
 jest.mock("../../../../../src/models/userModel", () => ({
     findByPk: jest.fn()
@@ -66,8 +66,8 @@ jest.mock("../../../../../src/utils/eventLikes/eventLikes.js", () => ({
 
 const { Op } = require("sequelize");
 
-const EventUserRole = require("../../../../../src/models/relations/eventUserRoleModel");
-const EventLike = require("../../../../../src/models/relations/eventLikeModel");
+const EventUserRole = require("../../../../../src/models/associations/eventUserRoleModel");
+const EventLike = require("../../../../../src/models/associations/eventLikeModel");
 const User = require("../../../../../src/models/userModel");
 
 const userService = require("../../../../../src/services/userService");

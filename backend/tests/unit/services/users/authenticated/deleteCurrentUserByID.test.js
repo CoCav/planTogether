@@ -28,13 +28,13 @@ jest.mock("../../../../../src/config/database", () => ({
 
 jest.mock("../../../../../src/models/eventModel", () => ({}));
 
-jest.mock("../../../../../src/models/relations/eventLikeModel", () => ({}));
+jest.mock("../../../../../src/models/associations/eventLikeModel", () => ({}));
 
 jest.mock("../../../../../src/models/userModel", () => ({
     findByPk: jest.fn()
 }));
 
-jest.mock("../../../../../src/models/relations/eventUserRoleModel", () => ({
+jest.mock("../../../../../src/models/associations/eventUserRoleModel", () => ({
     findOne: jest.fn()
 }));
 
@@ -46,7 +46,7 @@ const bcrypt = require("bcrypt");
 
 const sequelize = require("../../../../../src/config/database");
 const User = require("../../../../../src/models/userModel");
-const EventUserRole = require("../../../../../src/models/relations/eventUserRoleModel");
+const EventUserRole = require("../../../../../src/models/associations/eventUserRoleModel");
 
 const userService = require("../../../../../src/services/userService");
 

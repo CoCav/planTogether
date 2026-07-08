@@ -24,7 +24,7 @@ jest.mock("../../../../src/models/eventModel", () => ({
     findByPk: jest.fn()
 }));
 
-jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({
+jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
     findOne: jest.fn()
 }));
 
@@ -34,7 +34,7 @@ jest.mock("../../../../src/utils/events/eventStatus", () => ({
 }));
 
 const Event = require("../../../../src/models/eventModel");
-const EventUserRole = require("../../../../src/models/relations/eventUserRoleModel");
+const EventUserRole = require("../../../../src/models/associations/eventUserRoleModel");
 
 const eventService = require("../../../../src/services/eventService");
 

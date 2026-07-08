@@ -34,13 +34,13 @@ jest.mock("../../../../src/config/database", () => ({
 
 jest.mock("../../../../src/models/userModel", () => ({}));
 
-jest.mock("../../../../src/models/relations/eventUserRoleModel", () => ({}));
+jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({}));
 
-jest.mock("../../../../src/models/relations/eventReviewModel", () => ({
+jest.mock("../../../../src/models/associations/eventReviewModel", () => ({
     name: "EventReviewModel"
 }));
 
-jest.mock("../../../../src/models/relations/eventLikeModel", () => ({
+jest.mock("../../../../src/models/associations/eventLikeModel", () => ({
     findOne: jest.fn(),
     count: jest.fn()
 }));

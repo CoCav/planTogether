@@ -25,7 +25,7 @@ jest.mock("../../../../../src/models/eventModel", () => ({
     count: jest.fn()
 }));
 
-jest.mock("../../../../../src/models/relations/eventUserRoleModel", () => ({
+jest.mock("../../../../../src/models/associations/eventUserRoleModel", () => ({
     count: jest.fn()
 }));
 
@@ -33,7 +33,7 @@ const { Op } = require("sequelize");
 
 const User = require("../../../../../src/models/userModel");
 const Event = require("../../../../../src/models/eventModel");
-const EventUserRole = require("../../../../../src/models/relations/eventUserRoleModel");
+const EventUserRole = require("../../../../../src/models/associations/eventUserRoleModel");
 
 const userService = require("../../../../../src/services/userService");
 

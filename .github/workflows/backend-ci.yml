@@ -41,21 +41,33 @@ jobs:
       NODE_ENV: test
 
       PORT: 3000
-
       JWT_SECRET: test_secret_key
+
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
 
       DB_NAME: plantogether_db
       DB_NAME_TEST: plantogether_test_db
 
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_HOST: localhost
-      DB_PORT: 5432
-
-      DB_LOGGING: false
       DB_SSL: false
 
       LOG_LEVEL: silent
+
+      UPLOAD_DIR: uploads
+
+      BCRYPT_SALT_ROUNDS: 4
+
+      AUTH_RATE_LIMIT_WINDOW_MS: 900000
+      AUTH_RATE_LIMIT_MAX: 1000
+
+      GEOCODING_PROVIDER: nominatim
+      GEOCODING_USER_AGENT: PlanTogetherTest/1.0
+      NOMINATIM_SEARCH_URL: https://nominatim.openstreetmap.org/search
+      GEOCODING_RESULT_LIMIT: 5
+      GEOCODING_RATE_LIMIT_WINDOW_MS: 60000
+      GEOCODING_RATE_LIMIT_MAX: 1000
 
       CORS_ORIGIN: http://localhost:5173
 
@@ -71,7 +83,7 @@ jobs:
           cache-dependency-path: backend/package-lock.json
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run tests
         run: npm test

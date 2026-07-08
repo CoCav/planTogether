@@ -174,7 +174,7 @@ backend/
 │   │   ├── authorization/
 │   │   ├── errors/
 │   │   ├── rateLimiters/
-│   │   └── uploadFiles.js
+│   │   └── files/
 │   │
 │   ├── models/
 │   │   ├── relations/
@@ -211,7 +211,7 @@ backend/
 │   │   ├── eventMemberships/
 │   │   ├── eventReviews/
 │   │   ├── users/
-│   │   └── locations/
+│   │   └── geocoding/
 │   │
 │   └── unit/
 │       ├── config/

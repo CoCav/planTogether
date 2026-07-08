@@ -5,24 +5,26 @@ const User = require("./userModel");
 const Event = require("./eventModel");
 const Location = require("./locationModel");
 
-const EventUserRole = require("./relations/eventUserRoleModel");
-const EventReview = require("./relations/eventReviewModel");
-const EventLike = require("./relations/eventLikeModel");
+const EventUserRole = require("./associations/eventUserRoleModel");
+const EventReview = require("./associations/eventReviewModel");
+const EventLike = require("./associations/eventLikeModel");
 
-/* ==================================================
-   DATABASE INITIALIZATION
+/* ==========================================================================
+   Database Initialization
 
-   Handles:
-   - database connection
-   - model synchronization by environment
-   - centralized database initialization logging
+   Initializes the Sequelize connection and model associations.
 
-   Notes:
-   - development uses alter sync for safer schema updates
-   - test environment resets database with force sync
-   - production uses safe synchronization
-   - initialization logs use centralized structured logging
-================================================== */
+   Responsibilities
+   - Authenticate the database connection
+   - Synchronize models
+   - Register model associations
+   - Log initialization progress
+
+   Notes
+   - Development uses alter synchronization.
+   - Tests recreate the schema.
+   - Production uses safe synchronization.
+=========================================================================== */
 
 // Initialize database connection and synchronize models
 const initDB = async () => {
@@ -55,22 +57,20 @@ const initDB = async () => {
     }
 };
 
-/* ==================================================
-   MODEL ASSOCIATIONS
+/* ==========================================================================
+   Model Associations
 
-   Handles:
-   - event creators
-   - event participants
-   - event reviews
-   - event likes
-   - direct membership queries
+   Registers relationships between database models.
 
-   Notes:
-   - EventUserRole stores role and joinedAt
-   - EventUserRole → Event uses alias "event"
-   - EventReview stores user comments on completed events
-   - EventLike stores user likes on events
-================================================== */
+   Responsibilities
+   - Creator relationships
+   - Membership relationships
+   - Review relationships
+   - Like relationships
+
+   Notes
+   - Associations are centralized here.
+=========================================================================== */
 
 /* =============================
    CREATOR RELATIONSHIPS
@@ -145,7 +145,7 @@ EventLike.belongsTo(Event, { foreignKey: "eventId", as: "event" });
 
 
 /* =============================
-   DIRECT MEMBERSHIP RELATIONSHIPS
+   EVENT MEMBERSHIP RELATIONSHIPS
 ============================= */
 
 // Each membership belongs to one user

@@ -1,40 +1,49 @@
-/* ==================================================
-   DATABASE TEST HELPERS
-
-   Handles:
-   - test database initialization
-   - test database cleanup
-   - test database connection closing
-
-   Notes:
-   - shared across integration tests
-   - cleanup order respects model relations
-   - keeps integration test lifecycle consistent
-================================================== */
-
 const {
-    initDB: initializeDB,
+    initDB: initializeDatabase,
     sequelize,
     User,
     Event,
-    EventUserRole
+    Location,
+    EventUserRole,
+    EventReview,
+    EventLike
 } = require("../../../src/models");
 
-// Initialize test database
-const initDB = async () => {
-    await initializeDB();
+/* ==========================================================================
+   Database Test Helper
+
+   Builds reusable database lifecycle helpers.
+
+   Responsibilities
+   - Initialize the test database
+   - Reset database data
+   - Close the database connection
+
+   Notes
+   - Shared across integration tests.
+   - Cleanup order respects model relationships.
+=========================================================================== */
+
+const initializeTestDatabase = async () => {
+    await initializeDatabase();
 };
 
-// Reset test database between tests
-const resetDB = async () => {
+const resetTestDatabase = async () => {
+    await EventLike.destroy({ where: {} });
+    await EventReview.destroy({ where: {} });
     await EventUserRole.destroy({ where: {} });
+
     await Event.destroy({ where: {} });
+    await Location.destroy({ where: {} });
     await User.destroy({ where: {} });
 };
 
-// Close test database connection
-const closeDB = async () => {
+const closeTestDatabase = async () => {
     await sequelize.close();
 };
 
-module.exports = { initDB, resetDB, closeDB };
+module.exports = {
+    initializeTestDatabase,
+    resetTestDatabase,
+    closeTestDatabase
+};

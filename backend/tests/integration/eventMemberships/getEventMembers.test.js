@@ -1,152 +1,179 @@
-/* =======================================================
-   EVENT MEMBERSHIP INTEGRATION - GET EVENT MEMBERS TESTS
-
-   Tests:
-   - event members retrieval
-   - participant membership retrieval
-   - inactive membership exclusion
-   - public access to event members endpoint
-   - nonexistent event handling
-   - invalid event ID validation
-
-   Ensures:
-   - event members are returned correctly
-   - joined participants are included in the response
-   - inactive memberships are excluded from public member listings
-   - public users can access event members endpoint
-   - invalid requests are rejected correctly
-======================================================== */
-
-const request = require("supertest");
-const app = require("../../../src/app");
-
-const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
+const {
+    initializeTestDatabase,
+    resetTestDatabase,
+    closeTestDatabase
+} = require("../../helpers/database/dbTestHelper");
 
 const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
 const { createOrganizerAndEvent } = require("../../helpers/http/eventTestHelper");
-const { joinEventAsAuthenticatedUser } = require("../../helpers/http/eventMembershipTestHelper");
+const {
+    getEventMembers,
+    joinEventAsAuthenticatedUser,
+    leaveEventAsAuthenticatedUser
+} = require("../../helpers/http/eventMembershipTestHelper");
+
+/* ==========================================================================
+   Event Membership Integration Tests - Get Event Members
+
+   Tests event member listing behavior.
+
+   Responsibilities
+   - Test successful member retrieval
+   - Test public access to event members
+   - Test inactive membership exclusion
+   - Test validation errors
+   - Test missing event handling
+
+   Notes
+   - Event members can be viewed publicly.
+   - Inactive memberships must not appear in member listings.
+=========================================================================== */
+
+const getMemberEmail = (member) => {
+    return member.email || member.User?.email;
+};
 
 describe("Get Event Members API", () => {
-
     beforeAll(initializeTestDatabase);
     afterEach(resetTestDatabase);
     afterAll(closeTestDatabase);
 
     /* =============================
-       EVENT MEMBERS RETRIEVAL
+       MEMBERS SUCCESS
     ============================= */
 
-    it("should retrieve event members", async () => {
-        const { event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Event Creator",
-                email: `creator${Date.now()}@test.com`
-            }
+    describe("Members success", () => {
+        it("retrieves event members", async () => {
+            const { event } = await createOrganizerAndEvent({
+                organizer: {
+                    name: "Member List Creator",
+                    email: `memberlistcreator${Date.now()}@test.com`
+                },
+                event: {
+                    title: "Community Meetup"
+                }
+            });
+
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Listed Participant",
+                email: `listedparticipant${Date.now()}@test.com`
+            });
+
+            await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
+
+            const response = await getEventMembers(event.id);
+
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "Event members retrieved successfully");
+            expect(response.body).toHaveProperty("members");
+            expect(Array.isArray(response.body.members)).toBe(true);
+
+            const memberEmails = response.body.members.map(getMemberEmail);
+
+            expect(memberEmails).toContain(participantAuth.email);
         });
 
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Participant",
-            email: `participant${Date.now()}@test.com`
+        it("includes member avatars in event members response", async () => {
+            const { event } = await createOrganizerAndEvent({
+                organizer: {
+                    name: "Member Avatar Creator",
+                    email: `memberavatarcreator${Date.now()}@test.com`
+                },
+                event: {
+                    title: "Photography Workshop"
+                }
+            });
+
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Avatar Participant",
+                email: `avatarparticipant${Date.now()}@test.com`
+            });
+
+            await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
+
+            const response = await getEventMembers(event.id);
+
+            expect(response.statusCode).toBe(200);
+
+            const participant = response.body.members.find(
+                (member) => getMemberEmail(member) === participantAuth.email
+            );
+
+            expect(participant).toBeDefined();
+            expect(participant.User).toHaveProperty("avatar");
         });
 
-        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
+        it("allows public access to event members", async () => {
+            const { event } = await createOrganizerAndEvent({
+                organizer: {
+                    name: "Public Members Creator",
+                    email: `publicmemberscreator${Date.now()}@test.com`
+                },
+                event: {
+                    title: "Board Game Night"
+                }
+            });
 
-        const res = await request(app).get(`/api/events/${event.id}/members`);
+            const response = await getEventMembers(event.id);
 
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "Event members retrieved successfully");
-        expect(res.body).toHaveProperty("members");
-
-        expect(Array.isArray(res.body.members)).toBe(true);
-
-        const memberEmails = res.body.members.map((member) => member.email || member.User?.email);
-
-        expect(memberEmails).toContain(participantAuth.email);
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "Event members retrieved successfully");
+            expect(response.body).toHaveProperty("members");
+        });
     });
 
-    it("should include member avatars in event members response", async () => {
-        const { event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Event Creator",
-                email: `creator${Date.now()}@test.com`
-            }
+    /* =============================
+       BUSINESS RULES
+    ============================= */
+
+    describe("Business rules", () => {
+        it("excludes inactive memberships from event members", async () => {
+            const { event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Coffee Meetup"
+                }
+            });
+
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Inactive Participant",
+                email: `inactiveparticipant${Date.now()}@test.com`
+            });
+
+            await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
+            await leaveEventAsAuthenticatedUser(event.id, participantAuth.headers);
+
+            const response = await getEventMembers(event.id);
+
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "Event members retrieved successfully");
+
+            const memberEmails = response.body.members.map(getMemberEmail);
+
+            expect(memberEmails).not.toContain(participantAuth.email);
         });
-
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Participant Avatar",
-            email: `participantavatar${Date.now()}@test.com`
-        });
-
-        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
-
-        const res = await request(app).get(`/api/events/${event.id}/members`);
-
-        expect(res.statusCode).toBe(200);
-
-        const participant = res.body.members.find(
-            (member) => (member.email || member.User?.email) === participantAuth.email
-        );
-
-        expect(participant).toBeDefined();
-        expect(participant.User).toHaveProperty("avatar");
-    });
-
-    it("should allow public access to event members endpoint", async () => {
-        const { event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Event Creator",
-                email: `creator${Date.now()}@test.com`
-            }
-        });
-
-        const res = await request(app).get(`/api/events/${event.id}/members`);
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "Event members retrieved successfully");
-        expect(res.body).toHaveProperty("members");
-    });
-
-    it("should exclude inactive memberships from event members", async () => {
-        const { event } = await createOrganizerAndEvent();
-
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Inactive Participant",
-            email: `inactive${Date.now()}@test.com`
-        });
-
-        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
-
-        await request(app)
-            .delete(`/api/events/${event.id}/members/leave`)
-            .set(participantAuth.headers);
-
-        const res = await request(app).get(`/api/events/${event.id}/members`);
-
-        const memberEmails = res.body.members.map((member) => member.email || member.User?.email);
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "Event members retrieved successfully");
-
-        expect(memberEmails).not.toContain(participantAuth.email);
     });
 
     /* =============================
        VALIDATION ERRORS
     ============================= */
 
-    it("should reject invalid eventId", async () => {
-        const res = await request(app).get("/api/events/abc/members");
+    describe("Validation errors", () => {
+        it("rejects invalid event identifiers", async () => {
+            const response = await getEventMembers("abc");
 
-        expect(res.statusCode).toBe(400);
+            expect(response.statusCode).toBe(400);
+        });
     });
 
     /* =============================
-       EDGE CASES
+       NOT FOUND
     ============================= */
 
-    it("should return 404 for nonexistent event", async () => {
-        const res = await request(app).get("/api/events/999999/members");
+    describe("Not found", () => {
+        it("returns 404 when the event does not exist", async () => {
+            const response = await getEventMembers(999999);
 
-        expect(res.statusCode).toBe(404);
+            expect(response.statusCode).toBe(404);
+        });
     });
 });

@@ -1,215 +1,266 @@
-/* =======================================================
-   EVENT MEMBERSHIP INTEGRATION - GET EVENT STAFF TESTS
-
-   Tests:
-   - event staff retrieval
-   - participant exclusion from staff
-   - inactive staff exclusion
-   - public access to event staff endpoint
-   - organizer assignment to event creator
-   - nonexistent event handling
-   - invalid event ID validation
-
-   Ensures:
-   - organizers and co-organizers are returned correctly
-   - participants are excluded from event staff
-   - inactive organizer/co_organizer memberships are excluded from staff listings
-   - public users can access event staff endpoint
-   - event creator is automatically assigned organizer role
-   - invalid requests are rejected correctly
-========================================================== */
-
-const request = require("supertest");
-const app = require("../../../src/app");
-
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
-const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
+const {
+    initializeTestDatabase,
+    resetTestDatabase,
+    closeTestDatabase
+} = require("../../helpers/database/dbTestHelper");
 
 const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
 const { createOrganizerAndEvent } = require("../../helpers/http/eventTestHelper");
 const {
+    getEventStaff,
     joinEventAsAuthenticatedUser,
-    updateEventMemberRole
+    updateEventMemberRole,
+    removeEventMember
 } = require("../../helpers/http/eventMembershipTestHelper");
+
 const { findUserIdByEmail } = require("../../helpers/http/userTestHelper");
 
-describe("Get Event Staff API", () => {
+/* ==========================================================================
+   Event Membership Integration Tests - Get Event Staff
 
+   Tests event staff listing behavior.
+
+   Responsibilities
+   - Test successful staff retrieval
+   - Test public access to event staff
+   - Test participant exclusion
+   - Test inactive staff exclusion
+   - Test organizer role assignment
+   - Test validation errors
+   - Test missing event handling
+
+   Notes
+   - Event staff can be viewed publicly.
+   - Staff includes organizers and co-organizers.
+   - Participants and inactive memberships must not appear in staff listings.
+=========================================================================== */
+
+const getStaffEmail = (staffMember) => {
+    return staffMember.email || staffMember.User?.email;
+};
+
+describe("Get Event Staff API", () => {
     beforeAll(initializeTestDatabase);
     afterEach(resetTestDatabase);
     afterAll(closeTestDatabase);
 
     /* =============================
-       EVENT STAFF RETRIEVAL
+       STAFF SUCCESS
     ============================= */
 
-    it("should retrieve event staff", async () => {
-        const { organizerAuth, event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Event Creator",
-                email: `creator${Date.now()}@test.com`
-            }
+    describe("Staff success", () => {
+        it("retrieves event staff", async () => {
+            const { organizerAuth, event } = await createOrganizerAndEvent({
+                organizer: {
+                    name: "Staff List Creator",
+                    email: `stafflistcreator${Date.now()}@test.com`
+                },
+                event: {
+                    title: "Community Meetup"
+                }
+            });
+
+            const coOrganizerAuth = await registerAndAuthenticateUser({
+                name: "Listed Co Organizer",
+                email: `listedcoorganizer${Date.now()}@test.com`
+            });
+
+            await joinEventAsAuthenticatedUser(
+                event.id,
+                coOrganizerAuth.headers
+            );
+
+            const coOrganizerId = await findUserIdByEmail(coOrganizerAuth.email);
+
+            await updateEventMemberRole(
+                event.id,
+                coOrganizerId,
+                organizerAuth.headers,
+                EVENT_ROLES.CO_ORGANIZER
+            );
+
+            const response = await getEventStaff(event.id);
+
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "Event staff retrieved successfully");
+            expect(response.body).toHaveProperty("eventStaff");
+            expect(Array.isArray(response.body.eventStaff)).toBe(true);
+
+            const staffEmails = response.body.eventStaff.map(getStaffEmail);
+
+            expect(staffEmails).toContain(organizerAuth.email);
+            expect(staffEmails).toContain(coOrganizerAuth.email);
         });
 
-        const coOrganizerAuth = await registerAndAuthenticateUser({
-            name: "Co Organizer",
-            email: `coorg${Date.now()}@test.com`
+        it("includes staff avatars in event staff response", async () => {
+            const { organizerAuth, event } = await createOrganizerAndEvent({
+                organizer: {
+                    name: "Staff Avatar Creator",
+                    email: `staffavatarcreator${Date.now()}@test.com`
+                },
+                event: {
+                    title: "Photography Workshop"
+                }
+            });
+
+            const response = await getEventStaff(event.id);
+
+            expect(response.statusCode).toBe(200);
+
+            const organizer = response.body.eventStaff.find(
+                (staffMember) => getStaffEmail(staffMember) === organizerAuth.email
+            );
+
+            expect(organizer).toBeDefined();
+            expect(organizer.User).toHaveProperty("avatar");
         });
 
-        await joinEventAsAuthenticatedUser(event.id, coOrganizerAuth.headers);
+        it("allows public access to event staff", async () => {
+            const { event } = await createOrganizerAndEvent({
+                organizer: {
+                    name: "Public Staff Creator",
+                    email: `publicstaffcreator${Date.now()}@test.com`
+                },
+                event: {
+                    title: "Board Game Night"
+                }
+            });
 
-        const coOrganizerId = await findUserIdByEmail(coOrganizerAuth.email);
+            const response = await getEventStaff(event.id);
 
-        await updateEventMemberRole(event.id, coOrganizerId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
-
-        const res = await request(app).get(`/api/events/${event.id}/staff`);
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "Event staff retrieved successfully");
-        expect(res.body).toHaveProperty("eventStaff");
-
-        expect(Array.isArray(res.body.eventStaff)).toBe(true);
-
-        const staffEmails = res.body.eventStaff.map((staffMember) => staffMember.email || staffMember.User?.email);
-
-        expect(staffEmails).toContain(organizerAuth.email);
-        expect(staffEmails).toContain(coOrganizerAuth.email);
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "Event staff retrieved successfully");
+            expect(response.body).toHaveProperty("eventStaff");
+        });
     });
 
-    it("should include staff avatars in event staff response", async () => {
-        const { organizerAuth, event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Event Creator",
-                email: `creatoravatar${Date.now()}@test.com`
-            }
+    /* =============================
+       BUSINESS RULES
+    ============================= */
+
+    describe("Business rules", () => {
+        it("does not include participants in event staff", async () => {
+            const { event } = await createOrganizerAndEvent({
+                organizer: {
+                    name: "Participant Exclusion Creator",
+                    email: `participantexclusioncreator${Date.now()}@test.com`
+                },
+                event: {
+                    title: "Coffee Meetup"
+                }
+            });
+
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Staff Excluded Participant",
+                email: `staffexcludedparticipant${Date.now()}@test.com`
+            });
+
+            await joinEventAsAuthenticatedUser(
+                event.id,
+                participantAuth.headers
+            );
+
+            const response = await getEventStaff(event.id);
+
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "Event staff retrieved successfully");
+
+            const staffEmails = response.body.eventStaff.map(getStaffEmail);
+
+            expect(staffEmails).not.toContain(participantAuth.email);
         });
 
-        const res = await request(app).get(`/api/events/${event.id}/staff`);
+        it("assigns organizer role to the event creator", async () => {
+            const { organizerAuth, event } = await createOrganizerAndEvent({
+                organizer: {
+                    name: "Main Organizer",
+                    email: `mainorganizer${Date.now()}@test.com`
+                },
+                event: {
+                    title: "Tech Meetup"
+                }
+            });
 
-        expect(res.statusCode).toBe(200);
+            const response = await getEventStaff(event.id);
 
-        const organizer = res.body.eventStaff.find(
-            (staffMember) => (staffMember.email || staffMember.User?.email) === organizerAuth.email
-        );
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "Event staff retrieved successfully");
+            expect(Array.isArray(response.body.eventStaff)).toBe(true);
 
-        expect(organizer).toBeDefined();
-        expect(organizer.User).toHaveProperty("avatar");
-    });
+            const creatorStaffMember = response.body.eventStaff.find(
+                (staffMember) => getStaffEmail(staffMember) === organizerAuth.email
+            );
 
-    it("should not include participants in event staff", async () => {
-        const { event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Event Creator",
-                email: `creator${Date.now()}@test.com`
-            }
+            expect(creatorStaffMember).toBeDefined();
+            expect(creatorStaffMember.role).toBe(EVENT_ROLES.ORGANIZER);
         });
 
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Participant",
-            email: `participant${Date.now()}@test.com`
+        it("excludes inactive co-organizer memberships from event staff", async () => {
+            const { organizerAuth, event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Hiking Trip"
+                }
+            });
+
+            const coOrganizerAuth = await registerAndAuthenticateUser({
+                name: "Inactive Co Organizer",
+                email: `inactivecoorganizer${Date.now()}@test.com`
+            });
+
+            await joinEventAsAuthenticatedUser(
+                event.id,
+                coOrganizerAuth.headers
+            );
+
+            const coOrganizerId = await findUserIdByEmail(coOrganizerAuth.email);
+
+            await updateEventMemberRole(
+                event.id,
+                coOrganizerId,
+                organizerAuth.headers,
+                EVENT_ROLES.CO_ORGANIZER
+            );
+
+            await removeEventMember(
+                event.id,
+                coOrganizerId,
+                organizerAuth.headers
+            );
+
+            const response = await getEventStaff(event.id);
+
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "Event staff retrieved successfully");
+
+            const staffEmails = response.body.eventStaff.map(getStaffEmail);
+
+            expect(staffEmails).not.toContain(coOrganizerAuth.email);
         });
-
-        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
-
-        const res = await request(app).get(`/api/events/${event.id}/staff`);
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "Event staff retrieved successfully");
-
-        const staffEmails = res.body.eventStaff.map((staffMember) => staffMember.email || staffMember.User?.email);
-
-        expect(staffEmails).not.toContain(participantAuth.email);
-    });
-
-    it("should allow public access to event staff endpoint", async () => {
-        const { event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Event Creator",
-                email: `creator${Date.now()}@test.com`
-            }
-        });
-
-        const res = await request(app).get(`/api/events/${event.id}/staff`);
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "Event staff retrieved successfully");
-        expect(res.body).toHaveProperty("eventStaff");
-    });
-
-    it("should assign organizer role to the event creator", async () => {
-        const { organizerAuth, event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Main Organizer",
-                email: `mainorganizer${Date.now()}@test.com`
-            }
-        });
-
-        const res = await request(app).get(`/api/events/${event.id}/staff`);
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "Event staff retrieved successfully");
-
-        expect(Array.isArray(res.body.eventStaff)).toBe(true);
-
-        const creatorStaffMember = res.body.eventStaff.find(
-            (staffMember) => (staffMember.email || staffMember.User?.email) === organizerAuth.email
-        );
-
-        expect(creatorStaffMember).toBeDefined();
-        expect(creatorStaffMember.role).toBe(EVENT_ROLES.ORGANIZER);
-    });
-
-    it("should exclude inactive co_organizer memberships from event staff", async () => {
-        const { organizerAuth, event } = await createOrganizerAndEvent();
-
-        const coOrganizerAuth = await registerAndAuthenticateUser({
-            name: "Inactive Co Organizer",
-            email: `inactivecoorg${Date.now()}@test.com`
-        });
-
-        const coOrganizerId = await findUserIdByEmail(coOrganizerAuth.email);
-
-        await joinEventAsAuthenticatedUser(event.id, coOrganizerAuth.headers);
-
-        await updateEventMemberRole(
-            event.id,
-            coOrganizerId,
-            organizerAuth.headers,
-            EVENT_ROLES.CO_ORGANIZER
-        );
-
-        await request(app)
-            .delete(`/api/events/${event.id}/members/${coOrganizerId}`)
-            .set(organizerAuth.headers);
-
-        const res = await request(app).get(`/api/events/${event.id}/staff`);
-
-        const staffEmails = res.body.eventStaff.map((staffMember) => staffMember.email || staffMember.User?.email);
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "Event staff retrieved successfully");
-
-        expect(staffEmails).not.toContain(coOrganizerAuth.email);
     });
 
     /* =============================
        VALIDATION ERRORS
     ============================= */
 
-    it("should reject invalid eventId", async () => {
-        const res = await request(app).get("/api/events/abc/staff");
+    describe("Validation errors", () => {
+        it("rejects invalid event identifiers", async () => {
+            const response = await getEventStaff("abc");
 
-        expect(res.statusCode).toBe(400);
+            expect(response.statusCode).toBe(400);
+        });
     });
 
     /* =============================
-       EDGE CASES
+       NOT FOUND
     ============================= */
 
-    it("should return 404 for nonexistent event", async () => {
-        const res = await request(app).get("/api/events/999999/staff");
+    describe("Not found", () => {
+        it("returns 404 when the event does not exist", async () => {
+            const response = await getEventStaff(999999);
 
-        expect(res.statusCode).toBe(404);
+            expect(response.statusCode).toBe(404);
+        });
     });
 });

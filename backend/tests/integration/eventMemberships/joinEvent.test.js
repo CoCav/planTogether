@@ -1,237 +1,279 @@
-/* ==================================================
-   EVENT MEMBERSHIP INTEGRATION - JOIN EVENT TESTS
-
-   Tests:
-   - joining an event
-   - authentication requirement
-   - duplicate join rejection
-   - membership restoration after leave
-   - nonexistent event handling
-   - past event restriction
-   - registration deadline restriction
-   - max participants restriction
-   - invalid event ID validation
-
-   Ensures:
-   - authenticated users can join events
-   - duplicate memberships are prevented
-   - inactive memberships can be restored
-   - expired or full events reject new members
-   - invalid join requests are rejected correctly
-================================================== */
-
-const request = require("supertest");
-const app = require("../../../src/app");
-
-const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
+const {
+    initializeTestDatabase,
+    resetTestDatabase,
+    closeTestDatabase
+} = require("../../helpers/database/dbTestHelper");
 
 const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
 const { createOrganizerAndEvent } = require("../../helpers/http/eventTestHelper");
-const { joinEventAsAuthenticatedUser } = require("../../helpers/http/eventMembershipTestHelper");
+const {
+    joinEventAsAuthenticatedUser,
+    leaveEventAsAuthenticatedUser
+} = require("../../helpers/http/eventMembershipTestHelper");
+
+/* ==========================================================================
+   Event Membership Integration Tests - Join Event
+
+   Tests event join behavior.
+
+   Responsibilities
+   - Test successful joins
+   - Test authentication errors
+   - Test validation errors
+   - Test join business rules
+   - Test missing event handling
+
+   Notes
+   - Authenticated users can join events.
+   - Duplicate active memberships are rejected.
+   - Inactive memberships can be restored by rejoining.
+=========================================================================== */
 
 describe("Join Event API", () => {
-
     beforeAll(initializeTestDatabase);
     afterEach(resetTestDatabase);
     afterAll(closeTestDatabase);
 
     /* =============================
-       JOIN EVENT SUCCESS
+       JOIN SUCCESS
     ============================= */
 
-    it("should allow an authenticated user to join an event", async () => {
-        const { event } = await createOrganizerAndEvent();
+    describe("Join success", () => {
+        it("allows an authenticated user to join an event", async () => {
+            const { event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Community Meetup"
+                }
+            });
 
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Participant",
-            email: `participant${Date.now()}@test.com`
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Joining Participant",
+                email: `joiningparticipant${Date.now()}@test.com`
+            });
+
+            const response = await joinEventAsAuthenticatedUser(
+                event.id,
+                participantAuth.headers
+            );
+
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "User successfully joined the event");
         });
-
-        const res = await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "User successfully joined the event");
     });
 
     /* =============================
        AUTHENTICATION ERRORS
     ============================= */
 
-    it("should reject joining without token", async () => {
-        const { event } = await createOrganizerAndEvent();
+    describe("Authentication errors", () => {
+        it("rejects joining without token", async () => {
+            const { event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Board Game Night"
+                }
+            });
 
-        const res = await request(app).post(`/api/events/${event.id}/members/join`);
+            const response = await joinEventAsAuthenticatedUser(event.id);
 
-        expect(res.statusCode).toBe(401);
+            expect(response.statusCode).toBe(401);
+        });
     });
 
     /* =============================
        VALIDATION ERRORS
     ============================= */
 
-    it("should reject invalid eventId", async () => {
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Participant",
-            email: `participant${Date.now()}@test.com`
+    describe("Validation errors", () => {
+        it("rejects invalid event identifiers", async () => {
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Invalid Join Participant",
+                email: `invalidjoinparticipant${Date.now()}@test.com`
+            });
+
+            const response = await joinEventAsAuthenticatedUser(
+                "abc",
+                participantAuth.headers
+            );
+
+            expect(response.statusCode).toBe(400);
         });
-
-        const res = await request(app)
-            .post("/api/events/abc/members/join")
-            .set(participantAuth.headers);
-
-        expect(res.statusCode).toBe(400);
     });
 
     /* =============================
        BUSINESS RULES
     ============================= */
 
-    it("should reject joining the same event twice", async () => {
-        const { event } = await createOrganizerAndEvent();
+    describe("Business rules", () => {
+        it("rejects joining the same event twice", async () => {
+            const { event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Coffee Meetup"
+                }
+            });
 
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Participant",
-            email: `participant${Date.now()}@test.com`
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Duplicate Join Participant",
+                email: `duplicatejoinparticipant${Date.now()}@test.com`
+            });
+
+            await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
+
+            const response = await joinEventAsAuthenticatedUser(
+                event.id,
+                participantAuth.headers
+            );
+
+            expect(response.statusCode).toBe(409);
         });
 
-        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
+        it("rejects joining a past event", async () => {
+            const { event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Past Meetup",
+                    startDateTime: "2020-01-01T10:00:00.000Z",
+                    endDateTime: "2020-01-01T12:00:00.000Z"
+                }
+            });
 
-        const res = await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Past Event Participant",
+                email: `pasteventparticipant${Date.now()}@test.com`
+            });
 
-        expect(res.statusCode).toBe(409);
-    });
+            const response = await joinEventAsAuthenticatedUser(
+                event.id,
+                participantAuth.headers
+            );
 
-    it("should reject joining a past event", async () => {
-        const { event } = await createOrganizerAndEvent({
-            event: {
-                startDateTime: "2020-01-01T10:00:00.000Z",
-                endDateTime: "2020-01-01T12:00:00.000Z"
-            }
+            expect(response.statusCode).toBe(403);
         });
 
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Participant",
-            email: `participant${Date.now()}@test.com`
+        it("rejects joining after registration deadline", async () => {
+            const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+            const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+            const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+            const { event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Registration Closed Meetup",
+                    registrationDeadline: yesterday,
+                    startDateTime: tomorrow,
+                    endDateTime: nextWeek
+                }
+            });
+
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Late Join Participant",
+                email: `latejoinparticipant${Date.now()}@test.com`
+            });
+
+            const response = await joinEventAsAuthenticatedUser(
+                event.id,
+                participantAuth.headers
+            );
+
+            expect(response.statusCode).toBe(409);
         });
 
-        const res = await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
+        it("rejects joining when event is full", async () => {
+            const { event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Small Workshop",
+                    maxParticipants: 1
+                }
+            });
 
-        expect(res.statusCode).toBe(403);
-    });
+            const firstParticipantAuth = await registerAndAuthenticateUser({
+                name: "First Full Event Participant",
+                email: `firstfulleventparticipant${Date.now()}@test.com`
+            });
 
-    it("should reject joining after registration deadline", async () => {
-        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-        const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+            await joinEventAsAuthenticatedUser(event.id, firstParticipantAuth.headers);
 
-        const { event } = await createOrganizerAndEvent({
-            event: {
-                registrationDeadline: yesterday,
-                startDateTime: tomorrow,
-                endDateTime: nextWeek
-            }
+            const secondParticipantAuth = await registerAndAuthenticateUser({
+                name: "Second Full Event Participant",
+                email: `secondfulleventparticipant${Date.now()}@test.com`
+            });
+
+            const response = await joinEventAsAuthenticatedUser(
+                event.id,
+                secondParticipantAuth.headers
+            );
+
+            expect(response.statusCode).toBe(409);
         });
 
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Participant",
-            email: `participant${Date.now()}@test.com`
+        it("restores inactive membership when user rejoins event", async () => {
+            const { event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Returning Members Meetup"
+                }
+            });
+
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Returning Participant",
+                email: `returningparticipant${Date.now()}@test.com`
+            });
+
+            await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
+            await leaveEventAsAuthenticatedUser(event.id, participantAuth.headers);
+
+            const response = await joinEventAsAuthenticatedUser(
+                event.id,
+                participantAuth.headers
+            );
+
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "User successfully joined the event");
         });
 
-        const res = await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
+        it("allows joining when inactive memberships exist", async () => {
+            const { event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Limited Seats Meetup",
+                    maxParticipants: 1
+                }
+            });
 
-        expect(res.statusCode).toBe(409);
-    });
+            const firstParticipantAuth = await registerAndAuthenticateUser({
+                name: "Inactive Seat Participant",
+                email: `inactiveseatparticipant${Date.now()}@test.com`
+            });
 
-    it("should reject joining when event is full", async () => {
-        const { event } = await createOrganizerAndEvent({
-            event: {
-                maxParticipants: 1
-            }
+            await joinEventAsAuthenticatedUser(event.id, firstParticipantAuth.headers);
+            await leaveEventAsAuthenticatedUser(event.id, firstParticipantAuth.headers);
+
+            const secondParticipantAuth = await registerAndAuthenticateUser({
+                name: "New Seat Participant",
+                email: `newseatparticipant${Date.now()}@test.com`
+            });
+
+            const response = await joinEventAsAuthenticatedUser(
+                event.id,
+                secondParticipantAuth.headers
+            );
+
+            expect(response.statusCode).toBe(200);
         });
-
-        const firstParticipantAuth = await registerAndAuthenticateUser({
-            name: "First Participant",
-            email: `firstparticipant${Date.now()}@test.com`
-        });
-
-        await joinEventAsAuthenticatedUser(event.id, firstParticipantAuth.headers);
-
-        const secondParticipantAuth = await registerAndAuthenticateUser({
-            name: "Second Participant",
-            email: `secondparticipant${Date.now()}@test.com`
-        });
-
-        const res = await joinEventAsAuthenticatedUser(event.id, secondParticipantAuth.headers);
-
-        expect(res.statusCode).toBe(409);
-    });
-
-    it("should restore inactive membership when user rejoins event", async () => {
-        const { event } = await createOrganizerAndEvent();
-
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Returning Participant",
-            email: `returning${Date.now()}@test.com`
-        });
-
-        // Initial join
-        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
-
-        // Leave event
-        await request(app)
-            .delete(`/api/events/${event.id}/members/leave`)
-            .set(participantAuth.headers);
-
-        // Rejoin event
-        const res = await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "User successfully joined the event");
-    });
-
-    it("should allow joining when inactive memberships exist", async () => {
-        const { event } = await createOrganizerAndEvent({
-            event: {
-                maxParticipants: 1
-            }
-        });
-
-        const firstParticipantAuth = await registerAndAuthenticateUser({
-            name: "First Participant",
-            email: `first${Date.now()}@test.com`
-        });
-
-        await joinEventAsAuthenticatedUser(event.id, firstParticipantAuth.headers);
-
-        // Leave event -> membership becomes inactive
-        await request(app)
-            .delete(`/api/events/${event.id}/members/leave`)
-            .set(firstParticipantAuth.headers);
-
-        const secondParticipantAuth = await registerAndAuthenticateUser({
-            name: "Second Participant",
-            email: `second${Date.now()}@test.com`
-        });
-
-        const res = await joinEventAsAuthenticatedUser(event.id, secondParticipantAuth.headers);
-
-        expect(res.statusCode).toBe(200);
     });
 
     /* =============================
-       EDGE CASES
+       NOT FOUND
     ============================= */
 
-    it("should reject joining a nonexistent event", async () => {
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Participant",
-            email: `missingjoin${Date.now()}@test.com`
+    describe("Not found", () => {
+        it("returns 404 when the event does not exist", async () => {
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Missing Join Participant",
+                email: `missingjoinparticipant${Date.now()}@test.com`
+            });
+
+            const response = await joinEventAsAuthenticatedUser(
+                999999,
+                participantAuth.headers
+            );
+
+            expect(response.statusCode).toBe(404);
         });
-
-        const res = await request(app)
-            .post("/api/events/999999/members/join")
-            .set(participantAuth.headers);
-
-        expect(res.statusCode).toBe(404);
     });
 });

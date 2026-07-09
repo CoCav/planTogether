@@ -1,166 +1,200 @@
-/* ==================================================
-   EVENT MEMBERSHIP INTEGRATION - LEAVE EVENT TESTS
-
-   Tests:
-   - leaving an event
-   - authentication requirement
-   - leave without membership rejection
-   - organizer leave restriction
-   - nonexistent event handling
-   - past event restriction
-   - invalid event ID validation
-
-   Ensures:
-   - authenticated members can leave events
-   - leaving an event keeps membership history
-   - memberships are soft-deleted instead of permanently removed
-   - organizers cannot leave their own events
-   - invalid leave requests are rejected correctly
-================================================== */
-
-const request = require("supertest");
-const app = require("../../../src/app");
-
 const { EventUserRole } = require("../../../src/models");
 
-const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
+const {
+    initializeTestDatabase,
+    resetTestDatabase,
+    closeTestDatabase
+} = require("../../helpers/database/dbTestHelper");
 
 const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
 const { createOrganizerAndEvent } = require("../../helpers/http/eventTestHelper");
-const { joinEventAsAuthenticatedUser } = require("../../helpers/http/eventMembershipTestHelper");
+const {
+    joinEventAsAuthenticatedUser,
+    leaveEventAsAuthenticatedUser
+} = require("../../helpers/http/eventMembershipTestHelper");
+
+/* ==========================================================================
+   Event Membership Integration Tests - Leave Event
+
+   Tests event leave behavior.
+
+   Responsibilities
+   - Test successful leave
+   - Test authentication errors
+   - Test validation errors
+   - Test leave business rules
+   - Test missing event handling
+
+   Notes
+   - Members can leave events.
+   - Leaving an event soft-deletes the membership.
+   - Organizers cannot leave their own events.
+=========================================================================== */
 
 describe("Leave Event API", () => {
-
     beforeAll(initializeTestDatabase);
     afterEach(resetTestDatabase);
     afterAll(closeTestDatabase);
 
     /* =============================
-       LEAVE EVENT SUCCESS
+       LEAVE SUCCESS
     ============================= */
 
-    it("should allow a user to leave an event", async () => {
-        const { event } = await createOrganizerAndEvent();
+    describe("Leave success", () => {
+        it("allows a member to leave an event", async () => {
+            const { event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Community Meetup"
+                }
+            });
 
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Participant",
-            email: `participant${Date.now()}@test.com`
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Leaving Participant",
+                email: `leavingparticipant${Date.now()}@test.com`
+            });
+
+            await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
+
+            const response = await leaveEventAsAuthenticatedUser(
+                event.id,
+                participantAuth.headers
+            );
+
+            const membership = await EventUserRole.findOne({
+                where: {
+                    eventId: event.id,
+                    userId: participantAuth.user.userId
+                }
+            });
+
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "User successfully left the event");
+
+            expect(membership).not.toBeNull();
+            expect(membership.deletedAt).not.toBeNull();
         });
-
-        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
-
-        const res = await request(app)
-            .delete(`/api/events/${event.id}/members/leave`)
-            .set(participantAuth.headers);
-
-        const membership = await EventUserRole.findOne({
-            where: {
-                eventId: event.id,
-                userId: participantAuth.user.userId
-            }
-        });
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "User successfully left the event");
-
-        expect(membership).not.toBeNull();
-        expect(membership.deletedAt).not.toBeNull();
     });
 
     /* =============================
        AUTHENTICATION ERRORS
     ============================= */
 
-    it("should reject leaving without token", async () => {
-        const { event } = await createOrganizerAndEvent();
+    describe("Authentication errors", () => {
+        it("rejects leaving without token", async () => {
+            const { event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Board Game Night"
+                }
+            });
 
-        const res = await request(app).delete(`/api/events/${event.id}/members/leave`);
+            const response = await leaveEventAsAuthenticatedUser(event.id);
 
-        expect(res.statusCode).toBe(401);
+            expect(response.statusCode).toBe(401);
+        });
     });
 
     /* =============================
        VALIDATION ERRORS
     ============================= */
 
-    it("should reject invalid eventId", async () => {
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Participant",
-            email: `participant${Date.now()}@test.com`
+    describe("Validation errors", () => {
+        it("rejects invalid event identifiers", async () => {
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Invalid Leave Participant",
+                email: `invalidleaveparticipant${Date.now()}@test.com`
+            });
+
+            const response = await leaveEventAsAuthenticatedUser(
+                "abc",
+                participantAuth.headers
+            );
+
+            expect(response.statusCode).toBe(400);
         });
-
-        const res = await request(app)
-            .delete("/api/events/abc/members/leave")
-            .set(participantAuth.headers);
-
-        expect(res.statusCode).toBe(400);
     });
 
     /* =============================
        BUSINESS RULES
     ============================= */
 
-    it("should reject leaving an event without being a member", async () => {
-        const { event } = await createOrganizerAndEvent();
+    describe("Business rules", () => {
+        it("rejects leaving an event without being a member", async () => {
+            const { event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Coffee Meetup"
+                }
+            });
 
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Participant",
-            email: `participant${Date.now()}@test.com`
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Non Member Participant",
+                email: `nonmemberparticipant${Date.now()}@test.com`
+            });
+
+            const response = await leaveEventAsAuthenticatedUser(
+                event.id,
+                participantAuth.headers
+            );
+
+            expect(response.statusCode).toBe(404);
         });
 
-        const res = await request(app)
-            .delete(`/api/events/${event.id}/members/leave`)
-            .set(participantAuth.headers);
+        it("rejects organizer leaving own event", async () => {
+            const { organizerAuth, event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Tech Meetup"
+                }
+            });
 
-        expect(res.statusCode).toBe(404);
-    });
+            const response = await leaveEventAsAuthenticatedUser(
+                event.id,
+                organizerAuth.headers
+            );
 
-    it("should reject organizer leaving own event", async () => {
-        const { organizerAuth, event } = await createOrganizerAndEvent();
-
-        const res = await request(app)
-            .delete(`/api/events/${event.id}/members/leave`)
-            .set(organizerAuth.headers);
-
-        expect(res.statusCode).toBe(403);
-    });
-
-    it("should reject leaving a past event", async () => {
-        const { event } = await createOrganizerAndEvent({
-            event: {
-                startDateTime: "2020-01-01T10:00:00.000Z",
-                endDateTime: "2020-01-01T12:00:00.000Z"
-            }
+            expect(response.statusCode).toBe(403);
         });
 
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Participant",
-            email: `participant${Date.now()}@test.com`
+        it("rejects leaving a past event", async () => {
+            const { event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Past Meetup",
+                    startDateTime: "2020-01-01T10:00:00.000Z",
+                    endDateTime: "2020-01-01T12:00:00.000Z"
+                }
+            });
+
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Past Leave Participant",
+                email: `pastleaveparticipant${Date.now()}@test.com`
+            });
+
+            await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
+
+            const response = await leaveEventAsAuthenticatedUser(
+                event.id,
+                participantAuth.headers
+            );
+
+            expect(response.statusCode).toBe(403);
         });
-
-        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
-
-        const res = await request(app)
-            .delete(`/api/events/${event.id}/members/leave`)
-            .set(participantAuth.headers);
-
-        expect(res.statusCode).toBe(403);
     });
 
     /* =============================
-       EDGE CASES
+       NOT FOUND
     ============================= */
 
-    it("should reject leaving a nonexistent event", async () => {
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Participant",
-            email: `missingleave${Date.now()}@test.com`
+    describe("Not found", () => {
+        it("returns 404 when the event does not exist", async () => {
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Missing Leave Participant",
+                email: `missingleaveparticipant${Date.now()}@test.com`
+            });
+
+            const response = await leaveEventAsAuthenticatedUser(
+                999999,
+                participantAuth.headers
+            );
+
+            expect(response.statusCode).toBe(404);
         });
-
-        const res = await request(app)
-            .delete("/api/events/999999/members/leave")
-            .set(participantAuth.headers);
-
-        expect(res.statusCode).toBe(404);
     });
 });

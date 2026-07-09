@@ -5,9 +5,11 @@ const app = require("../../../src/app");
 /* ==========================================================================
    Event Membership Test Helper
 
-   Builds reusable event membership HTTP test helpers.
+   Builds reusable event membership HTTP helpers.
 
    Responsibilities
+   - Retrieve event members
+   - Retrieve event staff
    - Join events
    - Leave events
    - Update member roles
@@ -16,28 +18,48 @@ const app = require("../../../src/app");
 
    Notes
    - Shared across integration tests.
-   - Auth headers can be passed directly to Supertest `.set()`.
+   - Authentication headers can be passed directly to Supertest `.set()`.
 =========================================================================== */
 
-const joinEventAsAuthenticatedUser = async (
+/* =============================
+   RETRIEVAL
+============================= */
+
+const getEventMembers = (eventId) => {
+    return request(app).get(`/api/events/${eventId}/members`);
+};
+
+const getEventStaff = (eventId) => {
+    return request(app).get(`/api/events/${eventId}/staff`);
+};
+
+/* =============================
+   MEMBERSHIP ACTIONS
+============================= */
+
+const joinEventAsAuthenticatedUser = (
     eventId,
-    headers
+    headers = {}
 ) => {
     return request(app)
         .post(`/api/events/${eventId}/members/join`)
         .set(headers);
 };
 
-const leaveEventAsAuthenticatedUser = async (
+const leaveEventAsAuthenticatedUser = (
     eventId,
-    headers
+    headers = {}
 ) => {
     return request(app)
-        .post(`/api/events/${eventId}/members/leave`)
+        .delete(`/api/events/${eventId}/members/leave`)
         .set(headers);
 };
 
-const updateEventMemberRole = async (
+/* =============================
+   MEMBERSHIP MANAGEMENT
+============================= */
+
+const updateEventMemberRole = (
     eventId,
     userId,
     headers,
@@ -45,26 +67,26 @@ const updateEventMemberRole = async (
 ) => {
     return request(app)
         .put(`/api/events/${eventId}/members/${userId}/role`)
-        .set(headers)
+        .set(headers || {})
         .send({
             newRole
         });
 };
 
-const removeEventMember = async (
+const removeEventMember = (
     eventId,
     userId,
-    headers
+    headers = {}
 ) => {
     return request(app)
         .delete(`/api/events/${eventId}/members/${userId}`)
         .set(headers);
 };
 
-const transferEventOwnership = async (
+const transferEventOwnership = (
     eventId,
     targetUserId,
-    headers
+    headers = {}
 ) => {
     return request(app)
         .put(`/api/events/${eventId}/ownership`)
@@ -75,6 +97,8 @@ const transferEventOwnership = async (
 };
 
 module.exports = {
+    getEventMembers,
+    getEventStaff,
     joinEventAsAuthenticatedUser,
     leaveEventAsAuthenticatedUser,
     updateEventMemberRole,

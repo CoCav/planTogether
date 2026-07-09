@@ -2,49 +2,99 @@ const request = require("supertest");
 
 const app = require("../../../src/app");
 
-/* ==========================================================================
-   Auth Test Helper
+const {
+    createRegistrationPayload,
+    createLoginPayload
+} = require("../../factories/userFactory");
 
-   Builds reusable authenticated HTTP test setup.
+/* ==========================================================================
+   Authentication Test Helper
+
+   Builds reusable authentication HTTP helpers.
 
    Responsibilities
-   - Register test users
-   - Retrieve authentication tokens
-   - Build authorization headers
-   - Return reusable authentication data
+   - Register users
+   - Log users in
+   - Log users out
+   - Delete the authenticated user
+   - Update the authenticated user's password
+   - Register and authenticate users
 
    Notes
    - Shared across integration tests.
-   - Headers can be passed directly to Supertest `.set()`.
 =========================================================================== */
 
-const registerAndAuthenticateUser = async ({
-    name = "Test User",
-    email = `user${Date.now()}@test.com`,
-    password = "Password123"
-} = {}) => {
+/* =============================
+   AUTH ACTIONS
+============================= */
+
+const registerUser = async (overrides = {}) => {
+    const payload = createRegistrationPayload(overrides);
+
     const response = await request(app)
         .post("/api/auth/register")
-        .send({
-            name,
-            email,
-            password
-        });
-
-    const { token, user } = response.body;
+        .send(payload);
 
     return {
-        token,
-        user,
-        email,
-        password,
+        response,
+        payload
+    };
+};
+
+const loginUser = async (overrides = {}) => {
+    const payload = createLoginPayload(overrides);
+
+    return request(app)
+        .post("/api/auth/login")
+        .send(payload);
+};
+
+const logoutUser = (headers = {}) => {
+    return request(app)
+        .post("/api/auth/logout")
+        .set(headers);
+};
+
+const deleteCurrentUser = (headers = {}) => {
+    return request(app)
+        .delete("/api/users/me")
+        .set(headers);
+};
+
+const updateCurrentUserPassword = (
+    headers = {},
+    payload = {}
+) => {
+    return request(app)
+        .put("/api/users/me/password")
+        .set(headers)
+        .send(payload);
+};
+
+/* =============================
+   AUTH SCENARIOS
+============================= */
+
+const registerAndAuthenticateUser = async (overrides = {}) => {
+    const { response, payload } = await registerUser(overrides);
+
+    return {
+        token: response.body.token,
+        user: response.body.user,
         headers: {
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${response.body.token}`
         },
+        email: payload.email,
+        password: payload.password,
         response
     };
 };
 
 module.exports = {
+    registerUser,
+    loginUser,
+    logoutUser,
+    deleteCurrentUser,
+    updateCurrentUserPassword,
     registerAndAuthenticateUser
 };

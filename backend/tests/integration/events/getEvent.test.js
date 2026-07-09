@@ -32,24 +32,24 @@ const { EventReview, EventLike } = require("../../../src/models");
 
 const { EVENT_STATUS } = require("../../../src/constants/eventStatus");
 
-const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../helpers/api/authHelper");
-const { createEventWithOrganizer } = require("../../helpers/api/eventHelper");
-const { joinEvent } = require("../../helpers/api/eventMembershipHelper");
+const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
+const { createOrganizerAndEvent } = require("../../helpers/http/eventTestHelper");
+const { joinEventAsAuthenticatedUser } = require("../../helpers/http/eventMembershipTestHelper");
 
 describe("Get Event API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* =============================
        EVENT RETRIEVAL SUCCESS
     ============================= */
 
     it("should retrieve a single event by ID", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Single Event User",
                 email: `single${Date.now()}@test.com`
@@ -76,7 +76,7 @@ describe("Get Event API", () => {
     ============================= */
 
     it("should include participant count", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Count Creator",
                 email: `countcreator${Date.now()}@test.com`
@@ -86,12 +86,12 @@ describe("Get Event API", () => {
             }
         });
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Participant",
             email: `participant${Date.now()}@test.com`
         });
 
-        await joinEvent(event.id, participantAuth.headers);
+        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
         const res = await request(app).get(`/api/events/${event.id}`);
 
@@ -102,7 +102,7 @@ describe("Get Event API", () => {
     });
 
     it("should exclude inactive memberships from participant count", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Inactive Count Creator",
                 email: `inactivecountcreator${Date.now()}@test.com`
@@ -112,12 +112,12 @@ describe("Get Event API", () => {
             }
         });
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Inactive Participant",
             email: `inactiveparticipant${Date.now()}@test.com`
         });
 
-        await joinEvent(event.id, participantAuth.headers);
+        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
         await request(app)
             .delete(`/api/events/${event.id}/members/leave`)
@@ -132,7 +132,7 @@ describe("Get Event API", () => {
     });
 
     it("should include creator data", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer({
+        const { organizerAuth, event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Creator Data User",
                 email: `creatordata${Date.now()}@test.com`
@@ -155,7 +155,7 @@ describe("Get Event API", () => {
     });
 
     it("should include upcoming status for future event", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Upcoming User",
                 email: `upcoming${Date.now()}@test.com`
@@ -175,7 +175,7 @@ describe("Get Event API", () => {
     });
 
     it("should include past status for past event", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Past User",
                 email: `past${Date.now()}@test.com`
@@ -195,7 +195,7 @@ describe("Get Event API", () => {
     });
 
     it("should include review count and average rating", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Review Stats Creator",
                 email: `reviewstatscreator${Date.now()}@test.com`
@@ -207,12 +207,12 @@ describe("Get Event API", () => {
             }
         });
 
-        const reviewerAuthA = await registerAndGetToken({
+        const reviewerAuthA = await registerAndAuthenticateUser({
             name: "Reviewer A",
             email: `reviewera${Date.now()}@test.com`
         });
 
-        const reviewerAuthB = await registerAndGetToken({
+        const reviewerAuthB = await registerAndAuthenticateUser({
             name: "Reviewer B",
             email: `reviewerb${Date.now()}@test.com`
         });
@@ -243,7 +243,7 @@ describe("Get Event API", () => {
     });
 
     it("should return empty review stats when event has no reviews", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "No Review Stats Creator",
                 email: `noreviewstats${Date.now()}@test.com`
@@ -262,7 +262,7 @@ describe("Get Event API", () => {
     });
 
     it("should include like count", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Like Stats Creator",
                 email: `likestats${Date.now()}@test.com`
@@ -272,12 +272,12 @@ describe("Get Event API", () => {
             }
         });
 
-        const likerAuthA = await registerAndGetToken({
+        const likerAuthA = await registerAndAuthenticateUser({
             name: "Liker A",
             email: `likera${Date.now()}@test.com`
         });
 
-        const likerAuthB = await registerAndGetToken({
+        const likerAuthB = await registerAndAuthenticateUser({
             name: "Liker B",
             email: `likerb${Date.now()}@test.com`
         });
@@ -304,7 +304,7 @@ describe("Get Event API", () => {
     ============================= */
 
     it("should include current user like state for anonymous requests", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Anonymous Like Creator",
                 email: `anonymouslikecreator${Date.now()}@test.com`
@@ -321,7 +321,7 @@ describe("Get Event API", () => {
     });
 
     it("should include current user like state for authenticated requests", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Liked Event Creator",
                 email: `likedeventcreator${Date.now()}@test.com`
@@ -331,7 +331,7 @@ describe("Get Event API", () => {
             }
         });
 
-        const likerAuth = await registerAndGetToken({
+        const likerAuth = await registerAndAuthenticateUser({
             name: "Current Liker",
             email: `currentliker${Date.now()}@test.com`
         });

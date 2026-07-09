@@ -28,29 +28,29 @@ const app = require("../../../../src/app");
 
 const { EventLike } = require("../../../../src/models");
 
-const { initDB, resetDB, closeDB } = require("../../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../../helpers/api/authHelper");
-const { createAuthenticatedEvent } = require("../../../helpers/api/eventHelper");
-const { joinEvent } = require("../../../helpers/api/eventMembershipHelper");
+const { registerAndAuthenticateUser } = require("../../../helpers/http/authTestHelper");
+const { createEventAsAuthenticatedUser } = require("../../../helpers/http/eventTestHelper");
+const { joinEventAsAuthenticatedUser } = require("../../../helpers/http/eventMembershipTestHelper");
 
 describe("Get Public User Events API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* ============================
        PUBLIC USER EVENTS SUCCESS
     ============================= */
 
     it("should retrieve paginated public user events", async () => {
-        const targetUserAuth = await registerAndGetToken({
+        const targetUserAuth = await registerAndAuthenticateUser({
             name: "Target User",
             email: `target${Date.now()}@test.com`
         });
 
-        await createAuthenticatedEvent(targetUserAuth.headers, {
+        await createEventAsAuthenticatedUser(targetUserAuth.headers, {
             title: "Created Event"
         });
 
@@ -74,12 +74,12 @@ describe("Get Public User Events API", () => {
     });
 
     it("should retrieve created public user events", async () => {
-        const targetUserAuth = await registerAndGetToken({
+        const targetUserAuth = await registerAndAuthenticateUser({
             name: "Creator",
             email: `createdtarget${Date.now()}@test.com`
         });
 
-        await createAuthenticatedEvent(targetUserAuth.headers, {
+        await createEventAsAuthenticatedUser(targetUserAuth.headers, {
             title: "Created Public Event"
         });
 
@@ -98,21 +98,21 @@ describe("Get Public User Events API", () => {
     });
 
     it("should retrieve joined public user events", async () => {
-        const targetUserAuth = await registerAndGetToken({
+        const targetUserAuth = await registerAndAuthenticateUser({
             name: "Participant",
             email: `joinedtarget${Date.now()}@test.com`
         });
 
-        const eventCreatorAuth = await registerAndGetToken({
+        const eventCreatorAuth = await registerAndAuthenticateUser({
             name: "Event Creator",
             email: `eventcreator${Date.now()}@test.com`
         });
 
-        const eventRes = await createAuthenticatedEvent(eventCreatorAuth.headers, {
+        const eventRes = await createEventAsAuthenticatedUser(eventCreatorAuth.headers, {
             title: "Joined Public Event"
         });
 
-        await joinEvent(eventRes.body.event.id, targetUserAuth.headers);
+        await joinEventAsAuthenticatedUser(eventRes.body.event.id, targetUserAuth.headers);
 
         const res = await request(app)
             .get(`/api/users/${targetUserAuth.user.userId}/events`)
@@ -129,21 +129,21 @@ describe("Get Public User Events API", () => {
     });
 
     it("should exclude inactive memberships from joined public user events", async () => {
-        const targetUserAuth = await registerAndGetToken({
+        const targetUserAuth = await registerAndAuthenticateUser({
             name: "Inactive Participant",
             email: `inactiveparticipant${Date.now()}@test.com`
         });
 
-        const eventCreatorAuth = await registerAndGetToken({
+        const eventCreatorAuth = await registerAndAuthenticateUser({
             name: "Event Creator",
             email: `inactivecreator${Date.now()}@test.com`
         });
 
-        const eventRes = await createAuthenticatedEvent(eventCreatorAuth.headers, {
+        const eventRes = await createEventAsAuthenticatedUser(eventCreatorAuth.headers, {
             title: "Inactive Joined Public Event"
         });
 
-        await joinEvent(eventRes.body.event.id, targetUserAuth.headers);
+        await joinEventAsAuthenticatedUser(eventRes.body.event.id, targetUserAuth.headers);
 
         await request(app)
             .delete(`/api/events/${eventRes.body.event.id}/members/leave`)
@@ -164,12 +164,12 @@ describe("Get Public User Events API", () => {
     });
 
     it("should not return created events in joined view", async () => {
-        const targetUserAuth = await registerAndGetToken({
+        const targetUserAuth = await registerAndAuthenticateUser({
             name: "Target User",
             email: `creatednotjoined${Date.now()}@test.com`
         });
 
-        await createAuthenticatedEvent(targetUserAuth.headers, {
+        await createEventAsAuthenticatedUser(targetUserAuth.headers, {
             title: "Created Only Event"
         });
 
@@ -192,17 +192,17 @@ describe("Get Public User Events API", () => {
     ============================= */
 
     it("should include like count and false current user like state for anonymous public user events", async () => {
-        const targetUserAuth = await registerAndGetToken({
+        const targetUserAuth = await registerAndAuthenticateUser({
             name: "Public Like Target",
             email: `publicliketarget${Date.now()}@test.com`
         });
 
-        const likerAuth = await registerAndGetToken({
+        const likerAuth = await registerAndAuthenticateUser({
             name: "Public Liker",
             email: `publicliker${Date.now()}@test.com`
         });
 
-        const eventRes = await createAuthenticatedEvent(targetUserAuth.headers, {
+        const eventRes = await createEventAsAuthenticatedUser(targetUserAuth.headers, {
             title: "Public Like Stats Event"
         });
 
@@ -225,17 +225,17 @@ describe("Get Public User Events API", () => {
     });
 
     it("should include current user like state for authenticated public user events", async () => {
-        const targetUserAuth = await registerAndGetToken({
+        const targetUserAuth = await registerAndAuthenticateUser({
             name: "Liked Public Target",
             email: `likedpublictarget${Date.now()}@test.com`
         });
 
-        const viewerAuth = await registerAndGetToken({
+        const viewerAuth = await registerAndAuthenticateUser({
             name: "Public Viewer",
             email: `publicviewer${Date.now()}@test.com`
         });
 
-        const eventRes = await createAuthenticatedEvent(targetUserAuth.headers, {
+        const eventRes = await createEventAsAuthenticatedUser(targetUserAuth.headers, {
             title: "Liked Public Event"
         });
 
@@ -263,20 +263,20 @@ describe("Get Public User Events API", () => {
     ============================= */
 
     it("should paginate public user events by view", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Pagination User",
             email: `pagination${Date.now()}@test.com`
         });
 
-        await createAuthenticatedEvent(userAuth.headers, {
+        await createEventAsAuthenticatedUser(userAuth.headers, {
             title: "Event A"
         });
 
-        await createAuthenticatedEvent(userAuth.headers, {
+        await createEventAsAuthenticatedUser(userAuth.headers, {
             title: "Event B"
         });
 
-        await createAuthenticatedEvent(userAuth.headers, {
+        await createEventAsAuthenticatedUser(userAuth.headers, {
             title: "Event C"
         });
 
@@ -296,16 +296,16 @@ describe("Get Public User Events API", () => {
     });
 
     it("should sort public user events by title", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Sorting User",
             email: `sorting${Date.now()}@test.com`
         });
 
-        await createAuthenticatedEvent(userAuth.headers, {
+        await createEventAsAuthenticatedUser(userAuth.headers, {
             title: "Zulu Event"
         });
 
-        await createAuthenticatedEvent(userAuth.headers, {
+        await createEventAsAuthenticatedUser(userAuth.headers, {
             title: "Alpha Event"
         });
 

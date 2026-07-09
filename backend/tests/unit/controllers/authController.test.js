@@ -18,7 +18,7 @@ jest.mock("../../../src/services/authService");
 const authController = require("../../../src/controllers/authController");
 const authService = require("../../../src/services/authService");
 
-const { createAuthControllerMocks } = require("../../helpers/express/mockExpress");
+const { createAuthControllerMocks } = require("../../helpers/express/expressTestHelper");
 
 const { createMockUser } = require("../../factories/userFactory");
 

@@ -19,22 +19,22 @@
 const request = require("supertest");
 const app = require("../../../src/app");
 
-const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../helpers/api/authHelper");
+const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
 
 describe("Logout API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* =============================
        LOGOUT SUCCESS
     ============================= */
 
     it("should logout authenticated user", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Logout User",
             email: `logout${Date.now()}@test.com`
         });

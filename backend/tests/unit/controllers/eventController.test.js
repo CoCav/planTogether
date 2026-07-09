@@ -28,7 +28,7 @@ const eventService = require("../../../src/services/eventService");
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 const { EVENT_STATUS } = require("../../../src/constants/eventStatus");
 
-const { createEventControllerMocks } = require("../../helpers/express/mockExpress");
+const { createEventControllerMocks } = require("../../helpers/express/expressTestHelper");
 
 const { createEventResponse } = require("../../factories/eventFactory");
 

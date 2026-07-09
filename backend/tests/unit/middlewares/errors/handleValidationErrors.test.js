@@ -26,7 +26,7 @@ const logger = require("../../../../src/config/logger");
 
 const handleValidationErrors = require("../../../../src/middlewares/errors/handleValidationErrors");
 
-const { createMockReqResNext } = require("../../../helpers/express/mockExpress");
+const { createMockReqResNext } = require("../../../helpers/express/expressTestHelper");
 
 describe("handleValidationErrors middleware", () => {
 

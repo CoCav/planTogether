@@ -22,24 +22,23 @@ const app = require("../../../src/app");
 
 const { EventLike } = require("../../../src/models");
 
-const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../helpers/api/authHelper");
-
-const { createEventWithOrganizer } = require("../../helpers/api/eventHelper");
+const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
+const { createOrganizerAndEvent } = require("../../helpers/http/eventTestHelper");
 
 describe("Unlike Event API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* =============================
        UNLIKE EVENT SUCCESS
     ============================= */
 
     it("should allow authenticated user to unlike an event", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Unlike Creator",
                 email: `unlikecreator${Date.now()}@test.com`
@@ -49,7 +48,7 @@ describe("Unlike Event API", () => {
             }
         });
 
-        const likerAuth = await registerAndGetToken({
+        const likerAuth = await registerAndAuthenticateUser({
             name: "Unlike User",
             email: `unlikeuser${Date.now()}@test.com`
         });
@@ -85,7 +84,7 @@ describe("Unlike Event API", () => {
     });
 
     it("should return updated likes count after unlike", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Unlike Count Creator",
                 email: `unlikecountcreator${Date.now()}@test.com`
@@ -95,12 +94,12 @@ describe("Unlike Event API", () => {
             }
         });
 
-        const likerAuthA = await registerAndGetToken({
+        const likerAuthA = await registerAndAuthenticateUser({
             name: "Unlike A",
             email: `unlikea${Date.now()}@test.com`
         });
 
-        const likerAuthB = await registerAndGetToken({
+        const likerAuthB = await registerAndAuthenticateUser({
             name: "Unlike B",
             email: `unlikeb${Date.now()}@test.com`
         });
@@ -122,7 +121,7 @@ describe("Unlike Event API", () => {
     });
 
     it("should allow unliking an event that was never liked", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Idempotent Creator",
                 email: `idempotentcreator${Date.now()}@test.com`
@@ -132,7 +131,7 @@ describe("Unlike Event API", () => {
             }
         });
 
-        const likerAuth = await registerAndGetToken({
+        const likerAuth = await registerAndAuthenticateUser({
             name: "Idempotent User",
             email: `idempotentuser${Date.now()}@test.com`
         });
@@ -155,7 +154,7 @@ describe("Unlike Event API", () => {
     ============================= */
 
     it("should reject unauthenticated request", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Unauth Unlike Creator",
                 email: `unauthunlikecreator${Date.now()}@test.com`
@@ -172,7 +171,7 @@ describe("Unlike Event API", () => {
     });
 
     it("should reject invalid eventId", async () => {
-        const likerAuth = await registerAndGetToken({
+        const likerAuth = await registerAndAuthenticateUser({
             name: "Invalid Unlike User",
             email: `invalidunlike${Date.now()}@test.com`
         });
@@ -185,7 +184,7 @@ describe("Unlike Event API", () => {
     });
 
     it("should return 404 for nonexistent event", async () => {
-        const likerAuth = await registerAndGetToken({
+        const likerAuth = await registerAndAuthenticateUser({
             name: "Missing Unlike User",
             email: `missingunlike${Date.now()}@test.com`
         });

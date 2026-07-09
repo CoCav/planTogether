@@ -14,22 +14,22 @@
 const request = require("supertest");
 const app = require("../../../../src/app");
 
-const { initDB, resetDB, closeDB } = require("../../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../../helpers/api/authHelper");
+const { registerAndAuthenticateUser } = require("../../../helpers/http/authTestHelper");
 
 describe("Get Current User Profile API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* =============================
        CURRENT USER PROFILE SUCCESS
     ============================= */
 
     it("should get current authenticated user profile", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Profile User",
             email: `profile${Date.now()}@test.com`
         });

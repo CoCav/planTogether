@@ -28,11 +28,11 @@ const {
     assertEventNotStarted
 } = require("../../../../src/utils/events/eventStatus");
 
-const { mockSystemDate } = require("../../../helpers/mocks/dateMocks");
+const { mockSystemTime } = require("../../../helpers/mocks/systemTimeMockHelper");
 
 describe("eventStatus utils", () => {
 
-    mockSystemDate("2026-04-25T12:00:00.000Z");
+    mockSystemTime("2026-04-25T12:00:00.000Z");
 
     /* =============================
        STARTED EVENT DETECTION

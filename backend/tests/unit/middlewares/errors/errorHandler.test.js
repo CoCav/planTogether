@@ -19,7 +19,7 @@
 const multer = require("multer");
 const errorHandler = require("../../../../src/middlewares/errors/errorHandler");
 
-const { createMockReqResNext } = require("../../../helpers/express/mockExpress");
+const { createMockReqResNext } = require("../../../helpers/express/expressTestHelper");
 
 describe("errorHandler middleware", () => {
 

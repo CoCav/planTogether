@@ -28,35 +28,39 @@ const { EventUserRole } = require("../../../src/models");
 
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
-const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../helpers/api/authHelper");
-const { createEventWithOrganizer } = require("../../helpers/api/eventHelper");
-const { joinEvent, updateMemberRole, transferEventOwnership } = require("../../helpers/api/eventMembershipHelper");
-const { getUserIdByEmail } = require("../../helpers/api/userHelper");
+const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
+const { createOrganizerAndEvent } = require("../../helpers/http/eventTestHelper");
+const {
+    joinEventAsAuthenticatedUser,
+    updateEventMemberRole,
+    transferEventOwnership
+} = require("../../helpers/http/eventMembershipTestHelper");
+const { findUserIdByEmail } = require("../../helpers/http/userTestHelper");
 
 describe("Transfer Event Ownership API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* =============================
        OWNERSHIP TRANSFER SUCCESS
     ============================= */
 
     it("should allow organizer to transfer ownership to participant", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer();
+        const { organizerAuth, event } = await createOrganizerAndEvent();
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Participant",
             email: `participant${Date.now()}@test.com`
         });
 
-        const organizerId = await getUserIdByEmail(organizerAuth.email);
-        const participantId = await getUserIdByEmail(participantAuth.email);
+        const organizerId = await findUserIdByEmail(organizerAuth.email);
+        const participantId = await findUserIdByEmail(participantAuth.email);
 
-        await joinEvent(event.id, participantAuth.headers);
+        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
         const res = await transferEventOwnership(event.id, participantId, organizerAuth.headers);
 
@@ -82,19 +86,19 @@ describe("Transfer Event Ownership API", () => {
     });
 
     it("should allow organizer to transfer ownership to co_organizer", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer();
+        const { organizerAuth, event } = await createOrganizerAndEvent();
 
-        const coOrganizerAuth = await registerAndGetToken({
+        const coOrganizerAuth = await registerAndAuthenticateUser({
             name: "Co Organizer",
             email: `coorg${Date.now()}@test.com`
         });
 
-        const organizerId = await getUserIdByEmail(organizerAuth.email);
-        const coOrganizerId = await getUserIdByEmail(coOrganizerAuth.email);
+        const organizerId = await findUserIdByEmail(organizerAuth.email);
+        const coOrganizerId = await findUserIdByEmail(coOrganizerAuth.email);
 
-        await joinEvent(event.id, coOrganizerAuth.headers);
+        await joinEventAsAuthenticatedUser(event.id, coOrganizerAuth.headers);
 
-        await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
+        await updateEventMemberRole(event.id, coOrganizerId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
 
         const res = await transferEventOwnership(event.id, coOrganizerId, organizerAuth.headers);
 
@@ -124,7 +128,7 @@ describe("Transfer Event Ownership API", () => {
     ============================= */
 
     it("should reject ownership transfer without token", async () => {
-        const { event } = await createEventWithOrganizer();
+        const { event } = await createOrganizerAndEvent();
 
         const res = await request(app)
             .put(`/api/events/${event.id}/ownership`)
@@ -140,25 +144,25 @@ describe("Transfer Event Ownership API", () => {
     ============================= */
 
     it("should reject ownership transfer by co_organizer", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer();
+        const { organizerAuth, event } = await createOrganizerAndEvent();
 
-        const coOrganizerAuth = await registerAndGetToken({
+        const coOrganizerAuth = await registerAndAuthenticateUser({
             name: "Co Organizer",
             email: `coorg${Date.now()}@test.com`
         });
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Participant",
             email: `participant${Date.now()}@test.com`
         });
 
-        const coOrganizerId = await getUserIdByEmail(coOrganizerAuth.email);
-        const participantId = await getUserIdByEmail(participantAuth.email);
+        const coOrganizerId = await findUserIdByEmail(coOrganizerAuth.email);
+        const participantId = await findUserIdByEmail(participantAuth.email);
 
-        await joinEvent(event.id, coOrganizerAuth.headers);
-        await joinEvent(event.id, participantAuth.headers);
+        await joinEventAsAuthenticatedUser(event.id, coOrganizerAuth.headers);
+        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
-        await updateMemberRole(
+        await updateEventMemberRole(
             event.id,
             coOrganizerId,
             organizerAuth.headers,
@@ -175,22 +179,22 @@ describe("Transfer Event Ownership API", () => {
     });
 
     it("should reject ownership transfer by participant", async () => {
-        const { event } = await createEventWithOrganizer();
+        const { event } = await createOrganizerAndEvent();
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Participant",
             email: `participant${Date.now()}@test.com`
         });
 
-        const targetParticipantAuth = await registerAndGetToken({
+        const targetParticipantAuth = await registerAndAuthenticateUser({
             name: "Target Participant",
             email: `target${Date.now()}@test.com`
         });
 
-        const targetParticipantId = await getUserIdByEmail(targetParticipantAuth.email);
+        const targetParticipantId = await findUserIdByEmail(targetParticipantAuth.email);
 
-        await joinEvent(event.id, participantAuth.headers);
-        await joinEvent(event.id, targetParticipantAuth.headers);
+        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
+        await joinEventAsAuthenticatedUser(event.id, targetParticipantAuth.headers);
 
         const res = await transferEventOwnership(
             event.id,
@@ -206,7 +210,7 @@ describe("Transfer Event Ownership API", () => {
     ============================= */
 
     it("should reject missing targetUserId", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer();
+        const { organizerAuth, event } = await createOrganizerAndEvent();
 
         const res = await request(app)
             .put(`/api/events/${event.id}/ownership`)
@@ -217,7 +221,7 @@ describe("Transfer Event Ownership API", () => {
     });
 
     it("should reject invalid targetUserId", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer();
+        const { organizerAuth, event } = await createOrganizerAndEvent();
 
         const res = await request(app)
             .put(`/api/events/${event.id}/ownership`)
@@ -230,7 +234,7 @@ describe("Transfer Event Ownership API", () => {
     });
 
     it("should reject invalid eventId", async () => {
-        const { organizerAuth } = await createEventWithOrganizer();
+        const { organizerAuth } = await createOrganizerAndEvent();
 
         const res = await request(app)
             .put("/api/events/abc/ownership")
@@ -247,9 +251,9 @@ describe("Transfer Event Ownership API", () => {
     ============================= */
 
     it("should reject ownership transfer to self", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer();
+        const { organizerAuth, event } = await createOrganizerAndEvent();
 
-        const organizerId = await getUserIdByEmail(organizerAuth.email);
+        const organizerId = await findUserIdByEmail(organizerAuth.email);
 
         const res = await transferEventOwnership(event.id, organizerId, organizerAuth.headers);
 
@@ -257,14 +261,14 @@ describe("Transfer Event Ownership API", () => {
     });
 
     it("should reject ownership transfer to non-member", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer();
+        const { organizerAuth, event } = await createOrganizerAndEvent();
 
-        const outsiderAuth = await registerAndGetToken({
+        const outsiderAuth = await registerAndAuthenticateUser({
             name: "Outsider",
             email: `outsider${Date.now()}@test.com`
         });
 
-        const outsiderId = await getUserIdByEmail(outsiderAuth.email);
+        const outsiderId = await findUserIdByEmail(outsiderAuth.email);
 
         const res = await transferEventOwnership(event.id, outsiderId, organizerAuth.headers);
 
@@ -272,19 +276,19 @@ describe("Transfer Event Ownership API", () => {
     });
 
     it("should reject ownership transfer for past event", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer({
+        const { organizerAuth, event } = await createOrganizerAndEvent({
             event: {
                 startDateTime: "2020-01-01T10:00:00.000Z",
                 endDateTime: "2020-01-01T12:00:00.000Z"
             }
         });
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Participant",
             email: `participant${Date.now()}@test.com`
         });
 
-        const participantId = await getUserIdByEmail(participantAuth.email);
+        const participantId = await findUserIdByEmail(participantAuth.email);
 
         await EventUserRole.create({
             eventId: event.id,
@@ -298,16 +302,16 @@ describe("Transfer Event Ownership API", () => {
     });
 
     it("should reject ownership transfer to inactive member", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer();
+        const { organizerAuth, event } = await createOrganizerAndEvent();
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Inactive Participant",
             email: `inactive${Date.now()}@test.com`
         });
 
-        const participantId = await getUserIdByEmail(participantAuth.email);
+        const participantId = await findUserIdByEmail(participantAuth.email);
 
-        await joinEvent(event.id, participantAuth.headers);
+        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
         await request(app)
             .delete(`/api/events/${event.id}/members/leave`)
@@ -323,7 +327,7 @@ describe("Transfer Event Ownership API", () => {
     ============================= */
 
     it("should reject ownership transfer for nonexistent event", async () => {
-        const organizerAuth = await registerAndGetToken({
+        const organizerAuth = await registerAndAuthenticateUser({
             name: "Organizer",
             email: `organizer${Date.now()}@test.com`
         });

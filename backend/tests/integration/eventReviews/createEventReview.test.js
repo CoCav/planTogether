@@ -25,23 +25,23 @@ const { EventUserRole } = require("../../../src/models");
 
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
-const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../helpers/api/authHelper");
-const { createEventWithOrganizer } = require("../../helpers/api/eventHelper");
+const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
+const { createOrganizerAndEvent } = require("../../helpers/http/eventTestHelper");
 
 describe("Create Event Review API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* =============================
        TEST HELPERS
     ============================= */
 
     const createPastEventWithParticipant = async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Review Organizer",
                 email: `revieworganizer${Date.now()}@test.com`
@@ -53,7 +53,7 @@ describe("Create Event Review API", () => {
             }
         });
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Review Participant",
             email: `reviewparticipant${Date.now()}@test.com`
         });
@@ -106,7 +106,7 @@ describe("Create Event Review API", () => {
     it("should allow different users to review the same event", async () => {
         const { event, participantAuth } = await createPastEventWithParticipant();
 
-        const secondParticipantAuth = await registerAndGetToken({
+        const secondParticipantAuth = await registerAndAuthenticateUser({
             name: "Second Reviewer",
             email: `secondreviewer${Date.now()}@test.com`
         });
@@ -157,7 +157,7 @@ describe("Create Event Review API", () => {
     ============================= */
 
     it("should reject review from inactive member", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Inactive Review Organizer",
                 email: `inactiverevieworganizer${Date.now()}@test.com`
@@ -169,7 +169,7 @@ describe("Create Event Review API", () => {
             }
         });
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Inactive Reviewer",
             email: `inactivereviewer${Date.now()}@test.com`
         });
@@ -194,7 +194,7 @@ describe("Create Event Review API", () => {
     });
 
     it("should reject review from non-participant", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "No Participant Organizer",
                 email: `noparticipantorganizer${Date.now()}@test.com`
@@ -206,7 +206,7 @@ describe("Create Event Review API", () => {
             }
         });
 
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Non Participant Review User",
             email: `nonparticipant${Date.now()}@test.com`
         });
@@ -245,7 +245,7 @@ describe("Create Event Review API", () => {
     ============================= */
 
     it("should reject invalid eventId", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Invalid Review User",
             email: `invalidreview${Date.now()}@test.com`
         });
@@ -334,7 +334,7 @@ describe("Create Event Review API", () => {
     ============================= */
 
     it("should reject review for nonexistent event", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Missing Event Reviewer",
             email: `missingevent${Date.now()}@test.com`
         });
@@ -352,7 +352,7 @@ describe("Create Event Review API", () => {
     });
 
     it("should reject review for upcoming event", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Upcoming Review Organizer",
                 email: `upcomingreview${Date.now()}@test.com`
@@ -364,7 +364,7 @@ describe("Create Event Review API", () => {
             }
         });
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Upcoming Review Participant",
             email: `upcomingparticipant${Date.now()}@test.com`
         });

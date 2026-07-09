@@ -22,7 +22,7 @@ const EventUserRole = require("../../../../src/models/associations/eventUserRole
 const authorizeEventRole = require("../../../../src/middlewares/authorization/authorizeEventRole");
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 
-const { createEventRoleMocks } = require("../../../helpers/express/mockExpress");
+const { createEventRoleMocks } = require("../../../helpers/express/expressTestHelper");
 
 jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
     findOne: jest.fn()

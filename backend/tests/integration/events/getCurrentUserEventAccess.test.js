@@ -26,26 +26,29 @@ const app = require("../../../src/app");
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 const { EVENT_STATUS } = require("../../../src/constants/eventStatus");
 
-const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../helpers/api/authHelper");
-const { createEventWithOrganizer, getAuthenticatedEventAccess } = require("../../helpers/api/eventHelper");
-const { joinEvent } = require("../../helpers/api/eventMembershipHelper");
+const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
+const {
+    createOrganizerAndEvent,
+    getAuthenticatedEventAccess
+} = require("../../helpers/http/eventTestHelper");
+const { joinEventAsAuthenticatedUser } = require("../../helpers/http/eventMembershipTestHelper");
 
 const EventUserRole = require("../../../src/models/associations/eventUserRoleModel");
 
 describe("Get Current User Event Access API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* =============================
        ORGANIZER ACCESS
     ============================= */
 
     it("should return organizer access for event organizer", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer({
+        const { organizerAuth, event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Access Organizer",
                 email: `accessorganizer${Date.now()}@test.com`
@@ -69,7 +72,7 @@ describe("Get Current User Event Access API", () => {
     });
 
     it("should disable delete access for organizer when event has already started", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer({
+        const { organizerAuth, event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Started Access Organizer",
                 email: `startedaccess${Date.now()}@test.com`
@@ -97,7 +100,7 @@ describe("Get Current User Event Access API", () => {
     ============================= */
 
     it("should return co-organizer access for event co-organizer", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer({
+        const { organizerAuth, event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Co Organizer Owner",
                 email: `coowner${Date.now()}@test.com`
@@ -107,12 +110,12 @@ describe("Get Current User Event Access API", () => {
             }
         });
 
-        const coOrganizerAuth = await registerAndGetToken({
+        const coOrganizerAuth = await registerAndAuthenticateUser({
             name: "Co Organizer",
             email: `coorganizer${Date.now()}@test.com`
         });
 
-        await joinEvent(event.id, coOrganizerAuth.headers);
+        await joinEventAsAuthenticatedUser(event.id, coOrganizerAuth.headers);
 
         await EventUserRole.update(
             {
@@ -142,7 +145,7 @@ describe("Get Current User Event Access API", () => {
     ============================= */
 
     it("should return participant access without edit or delete permissions", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Participant Access Owner",
                 email: `participantowner${Date.now()}@test.com`
@@ -152,12 +155,12 @@ describe("Get Current User Event Access API", () => {
             }
         });
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Participant Access User",
             email: `participantaccess${Date.now()}@test.com`
         });
 
-        await joinEvent(event.id, participantAuth.headers);
+        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
         const res = await getAuthenticatedEventAccess(event.id, participantAuth.headers);
 
@@ -175,7 +178,7 @@ describe("Get Current User Event Access API", () => {
     ============================= */
 
     it("should return null role for authenticated non-member", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Non Member Access Owner",
                 email: `nonmemberowner${Date.now()}@test.com`
@@ -185,7 +188,7 @@ describe("Get Current User Event Access API", () => {
             }
         });
 
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Non Member User",
             email: `nonmember${Date.now()}@test.com`
         });
@@ -206,7 +209,7 @@ describe("Get Current User Event Access API", () => {
     ============================= */
 
     it("should disable edit and delete access for past events", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer({
+        const { organizerAuth, event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Past Access Organizer",
                 email: `pastaccess${Date.now()}@test.com`
@@ -234,7 +237,7 @@ describe("Get Current User Event Access API", () => {
     ============================= */
 
     it("should reject unauthenticated requests", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Auth Required Owner",
                 email: `authrequired${Date.now()}@test.com`
@@ -250,7 +253,7 @@ describe("Get Current User Event Access API", () => {
     });
 
     it("should reject invalid token", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Invalid Token Owner",
                 email: `invalidtoken${Date.now()}@test.com`
@@ -277,7 +280,7 @@ describe("Get Current User Event Access API", () => {
     ============================= */
 
     it("should return 404 for nonexistent event", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Missing Event User",
             email: `missingevent${Date.now()}@test.com`
         });
@@ -292,7 +295,7 @@ describe("Get Current User Event Access API", () => {
     ============================= */
 
     it("should reject invalid eventId", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Invalid Event User",
             email: `invalidevent${Date.now()}@test.com`
         });

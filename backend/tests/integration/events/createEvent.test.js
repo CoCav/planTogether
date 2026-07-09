@@ -34,9 +34,9 @@ const { EventUserRole } = require("../../../src/models");
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 const { EVENT_MODES } = require("../../../src/constants/eventModes");
 
-const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../helpers/api/authHelper");
+const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
 
 const { createEventPayload } = require("../../factories/eventFactory");
 
@@ -63,16 +63,16 @@ describe("Create Event API", () => {
             ])
         });
 
-        await initDB();
+        await initializeTestDatabase();
     });
 
     afterEach(async () => {
-        await resetDB();
+        await resetTestDatabase();
         jest.clearAllMocks();
     });
 
     afterAll(async () => {
-        await closeDB();
+        await closeTestDatabase();
         delete global.fetch;
     });
 
@@ -81,7 +81,7 @@ describe("Create Event API", () => {
     ============================= */
 
     it("should create an event when authenticated", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Event Creator",
             email: `creator${Date.now()}@test.com`
         });
@@ -118,7 +118,7 @@ describe("Create Event API", () => {
     });
 
     it("should create an event with image upload", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Image Creator",
             email: `image${Date.now()}@test.com`
         });
@@ -146,7 +146,7 @@ describe("Create Event API", () => {
     });
 
     it("should call location provider when creating an in-person event", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Geo Creator",
             email: `geo${Date.now()}@test.com`
         });
@@ -168,7 +168,7 @@ describe("Create Event API", () => {
     });
 
     it("should create an online event without geolocation data", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Online Creator",
             email: `online${Date.now()}@test.com`
         });
@@ -203,7 +203,7 @@ describe("Create Event API", () => {
     });
 
     it("should assign organizer role to event creator", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Organizer Creator",
             email: `organizer${Date.now()}@test.com`
         });
@@ -249,7 +249,7 @@ describe("Create Event API", () => {
     ============================= */
 
     it("should reject missing required fields", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Validation User",
             email: `validation${Date.now()}@test.com`
         });
@@ -269,7 +269,7 @@ describe("Create Event API", () => {
     });
 
     it("should reject invalid mode", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Invalid Mode User",
             email: `invalidmode${Date.now()}@test.com`
         });
@@ -287,7 +287,7 @@ describe("Create Event API", () => {
     });
 
     it("should reject invalid date order", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Date User",
             email: `date${Date.now()}@test.com`
         });
@@ -306,7 +306,7 @@ describe("Create Event API", () => {
     });
 
     it("should reject invalid registration deadline", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Deadline User",
             email: `deadline${Date.now()}@test.com`
         });
@@ -324,7 +324,7 @@ describe("Create Event API", () => {
     });
 
     it("should reject invalid image type", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Invalid Image User",
             email: `invalidimage${Date.now()}@test.com`
         });
@@ -349,7 +349,7 @@ describe("Create Event API", () => {
     });
 
     it("should reject invalid image extension even with image mimetype", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Invalid Extension User",
             email: `invalidext${Date.now()}@test.com`
         });
@@ -374,7 +374,7 @@ describe("Create Event API", () => {
     });
 
     it("should reject oversized image upload", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Oversized Image User",
             email: `oversized${Date.now()}@test.com`
         });

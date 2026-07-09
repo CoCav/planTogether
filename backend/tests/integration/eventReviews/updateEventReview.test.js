@@ -25,23 +25,23 @@ const { EventReview, EventUserRole } = require("../../../src/models");
 
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
-const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../helpers/api/authHelper");
-const { createEventWithOrganizer } = require("../../helpers/api/eventHelper");
+const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
+const { createOrganizerAndEvent } = require("../../helpers/http/eventTestHelper");
 
 describe("Update Event Review API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* =============================
        TEST HELPERS
     ============================= */
 
     const createReviewScenario = async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Review Organizer",
                 email: `revieworganizer${Date.now()}@test.com`
@@ -53,7 +53,7 @@ describe("Update Event Review API", () => {
             }
         });
 
-        const reviewerAuth = await registerAndGetToken({
+        const reviewerAuth = await registerAndAuthenticateUser({
             name: "Reviewer",
             email: `reviewer${Date.now()}@test.com`
         });
@@ -177,7 +177,7 @@ describe("Update Event Review API", () => {
     it("should reject updating another user's review", async () => {
         const { review } = await createReviewScenario();
 
-        const otherUserAuth = await registerAndGetToken({
+        const otherUserAuth = await registerAndAuthenticateUser({
             name: "Other User",
             email: `otheruser${Date.now()}@test.com`
         });
@@ -200,7 +200,7 @@ describe("Update Event Review API", () => {
     ============================= */
 
     it("should return 404 when review does not exist", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Update User",
             email: `updateuser${Date.now()}@test.com`
         });
@@ -223,7 +223,7 @@ describe("Update Event Review API", () => {
     ============================= */
 
     it("should reject invalid reviewId", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Validation User",
             email: `validation${Date.now()}@test.com`
         });

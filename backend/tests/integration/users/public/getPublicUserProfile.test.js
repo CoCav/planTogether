@@ -21,17 +21,17 @@ const app = require("../../../../src/app");
 
 const { User } = require("../../../../src/models");
 
-const { initDB, resetDB, closeDB } = require("../../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../../helpers/api/authHelper");
-const { createAuthenticatedEvent } = require("../../../helpers/api/eventHelper");
-const { joinEvent } = require("../../../helpers/api/eventMembershipHelper");
+const { registerAndAuthenticateUser } = require("../../../helpers/http/authTestHelper");
+const { createEventAsAuthenticatedUser } = require("../../../helpers/http/eventTestHelper");
+const { joinEventAsAuthenticatedUser } = require("../../../helpers/http/eventMembershipTestHelper");
 
 describe("Get Public User Profile API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* =================================
        PUBLIC PROFILE RETRIEVAL SUCCESS
@@ -59,23 +59,23 @@ describe("Get Public User Profile API", () => {
     });
 
     it("should include public user stats", async () => {
-        const targetUserAuth = await registerAndGetToken({
+        const targetUserAuth = await registerAndAuthenticateUser({
             name: "Target User",
             email: `targetstats${Date.now()}@test.com`
         });
 
-        await createAuthenticatedEvent(targetUserAuth.headers, { title: "Created Event" });
+        await createEventAsAuthenticatedUser(targetUserAuth.headers, { title: "Created Event" });
 
-        const joinedEventCreatorAuth = await registerAndGetToken({
+        const joinedEventCreatorAuth = await registerAndAuthenticateUser({
             name: "Joined Event Creator",
             email: `joinedcreator${Date.now()}@test.com`
         });
 
-        const joinedEventRes = await createAuthenticatedEvent(joinedEventCreatorAuth.headers, {
+        const joinedEventRes = await createEventAsAuthenticatedUser(joinedEventCreatorAuth.headers, {
             title: "Joined Event"
         });
 
-        await joinEvent(joinedEventRes.body.event.id, targetUserAuth.headers);
+        await joinEventAsAuthenticatedUser(joinedEventRes.body.event.id, targetUserAuth.headers);
 
         const res = await request(app).get(`/api/users/${targetUserAuth.user.userId}`);
 
@@ -87,21 +87,21 @@ describe("Get Public User Profile API", () => {
     });
 
     it("should exclude inactive memberships from public user stats", async () => {
-        const targetUserAuth = await registerAndGetToken({
+        const targetUserAuth = await registerAndAuthenticateUser({
             name: "Inactive Stats User",
             email: `inactivestats${Date.now()}@test.com`
         });
 
-        const eventCreatorAuth = await registerAndGetToken({
+        const eventCreatorAuth = await registerAndAuthenticateUser({
             name: "Event Creator",
             email: `inactiveprofilecreator${Date.now()}@test.com`
         });
 
-        const eventRes = await createAuthenticatedEvent(eventCreatorAuth.headers, {
+        const eventRes = await createEventAsAuthenticatedUser(eventCreatorAuth.headers, {
             title: "Inactive Stats Event"
         });
 
-        await joinEvent(eventRes.body.event.id, targetUserAuth.headers);
+        await joinEventAsAuthenticatedUser(eventRes.body.event.id, targetUserAuth.headers);
 
         await request(app)
             .delete(`/api/events/${eventRes.body.event.id}/members/leave`)

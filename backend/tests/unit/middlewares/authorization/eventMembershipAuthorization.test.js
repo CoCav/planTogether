@@ -28,7 +28,7 @@ const { authorizeEventMemberRoleUpdate, authorizeEventMemberRemoval } = require(
 
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 
-const { createEventMemberAuthorizationMocks } = require("../../../helpers/express/mockExpress");
+const { createEventMemberAuthorizationMocks } = require("../../../helpers/express/expressTestHelper");
 const { createMockMembershipEvent, createMockMembership } = require("../../../factories/eventMembershipFactory");
 
 jest.mock("../../../../src/models/eventModel.js", () => ({

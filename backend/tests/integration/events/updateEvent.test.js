@@ -37,12 +37,15 @@ const path = require("path");
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 const { EVENT_MODES } = require("../../../src/constants/eventModes");
 
-const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../helpers/api/authHelper");
-const { createEventWithOrganizer } = require("../../helpers/api/eventHelper");
-const { joinEvent, updateMemberRole } = require("../../helpers/api/eventMembershipHelper");
-const { getUserIdByEmail } = require("../../helpers/api/userHelper");
+const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
+const { createOrganizerAndEvent } = require("../../helpers/http/eventTestHelper");
+const {
+    joinEventAsAuthenticatedUser,
+    updateEventMemberRole
+} = require("../../helpers/http/eventMembershipTestHelper");
+const { findUserIdByEmail } = require("../../helpers/http/userTestHelper");
 
 describe("Update Event API", () => {
 
@@ -67,16 +70,16 @@ describe("Update Event API", () => {
             ])
         });
 
-        await initDB();
+        await initializeTestDatabase();
     });
 
     afterEach(async () => {
-        await resetDB();
+        await resetTestDatabase();
         jest.clearAllMocks();
     });
 
     afterAll(async () => {
-        await closeDB();
+        await closeTestDatabase();
         delete global.fetch;
     });
 
@@ -85,7 +88,7 @@ describe("Update Event API", () => {
     ============================= */
 
     it("should allow organizer to update event", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer();
+        const { organizerAuth, event } = await createOrganizerAndEvent();
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)
@@ -101,23 +104,23 @@ describe("Update Event API", () => {
     });
 
     it("should allow co-organizer to update event", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer({
+        const { organizerAuth, event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Organizer",
                 email: `mainorganizer${Date.now()}@test.com`
             }
         });
 
-        const coOrganizerAuth = await registerAndGetToken({
+        const coOrganizerAuth = await registerAndAuthenticateUser({
             name: "Co Organizer",
             email: `coorganizer${Date.now()}@test.com`
         });
 
-        await joinEvent(event.id, coOrganizerAuth.headers);
+        await joinEventAsAuthenticatedUser(event.id, coOrganizerAuth.headers);
 
-        const coOrganizerId = await getUserIdByEmail(coOrganizerAuth.email);
+        const coOrganizerId = await findUserIdByEmail(coOrganizerAuth.email);
 
-        await updateMemberRole(event.id, coOrganizerId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
+        await updateEventMemberRole(event.id, coOrganizerId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)
@@ -133,7 +136,7 @@ describe("Update Event API", () => {
     });
 
     it("should update event geolocation data", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer();
+        const { organizerAuth, event } = await createOrganizerAndEvent();
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)
@@ -163,7 +166,7 @@ describe("Update Event API", () => {
     });
 
     it("should clear geolocation data when updating event to online", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer();
+        const { organizerAuth, event } = await createOrganizerAndEvent();
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)
@@ -190,7 +193,7 @@ describe("Update Event API", () => {
     });
 
     it("should update event image", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer({
+        const { organizerAuth, event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Image Organizer",
                 email: `imageorganizer${Date.now()}@test.com`
@@ -213,7 +216,7 @@ describe("Update Event API", () => {
     });
 
     it("should delete old image when replacing event image", async () => {
-        const { organizerAuth } = await createEventWithOrganizer({
+        const { organizerAuth } = await createOrganizerAndEvent({
             organizer: {
                 name: "Cleanup Organizer",
                 email: `cleanup${Date.now()}@test.com`
@@ -261,7 +264,7 @@ describe("Update Event API", () => {
     });
 
     it("should remove event image and fallback to default image", async () => {
-        const { organizerAuth } = await createEventWithOrganizer({
+        const { organizerAuth } = await createOrganizerAndEvent({
             organizer: {
                 name: "Remove Image Organizer",
                 email: `removeimage${Date.now()}@test.com`
@@ -310,7 +313,7 @@ describe("Update Event API", () => {
     ============================= */
 
     it("should reject update without token", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Organizer",
                 email: `unauth${Date.now()}@test.com`
@@ -331,19 +334,19 @@ describe("Update Event API", () => {
     ============================= */
 
     it("should reject update by participant", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Organizer",
                 email: `authorganizer${Date.now()}@test.com`
             }
         });
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Participant",
             email: `participant${Date.now()}@test.com`
         });
 
-        await joinEvent(event.id, participantAuth.headers);
+        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
         const res = await request(app)
             .put(`/api/events/${event.id}`)
@@ -356,7 +359,7 @@ describe("Update Event API", () => {
     });
 
     it("should reject updating past event", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer({
+        const { organizerAuth, event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Past Organizer",
                 email: `pastorganizer${Date.now()}@test.com`
@@ -383,7 +386,7 @@ describe("Update Event API", () => {
     ============================= */
 
     it("should reject invalid eventId", async () => {
-        const { organizerAuth } = await createEventWithOrganizer({
+        const { organizerAuth } = await createOrganizerAndEvent({
             organizer: {
                 name: "Validator Organizer",
                 email: `validator${Date.now()}@test.com`
@@ -401,7 +404,7 @@ describe("Update Event API", () => {
     });
 
     it("should reject invalid payload", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer({
+        const { organizerAuth, event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Payload Organizer",
                 email: `payload${Date.now()}@test.com`
@@ -419,7 +422,7 @@ describe("Update Event API", () => {
     });
 
     it("should reject invalid image type", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer({
+        const { organizerAuth, event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Invalid Image Organizer",
                 email: `invalidimage${Date.now()}@test.com`
@@ -439,7 +442,7 @@ describe("Update Event API", () => {
     });
 
     it("should reject oversized image upload", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer({
+        const { organizerAuth, event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Oversized Organizer",
                 email: `oversized${Date.now()}@test.com`
@@ -465,7 +468,7 @@ describe("Update Event API", () => {
     ============================= */
 
     it("should reject updating inaccessible event", async () => {
-        const { organizerAuth } = await createEventWithOrganizer({
+        const { organizerAuth } = await createOrganizerAndEvent({
             organizer: {
                 name: "Organizer",
                 email: `missing${Date.now()}@test.com`

@@ -21,23 +21,23 @@ const app = require("../../../../src/app");
 
 const User = require("../../../../src/models/userModel");
 
-const { initDB, resetDB, closeDB } = require("../../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../../helpers/api/authHelper");
-const { createEventWithOrganizer } = require("../../../helpers/api/eventHelper");
+const { registerAndAuthenticateUser } = require("../../../helpers/http/authTestHelper");
+const { createOrganizerAndEvent } = require("../../../helpers/http/eventTestHelper");
 
 describe("Delete Current User API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* =============================
        ACCOUNT DELETION SUCCESS
     ============================= */
 
     it("should delete current authenticated user account", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Deleted User",
             email: `deleted${Date.now()}@test.com`,
             password: "Password123"
@@ -61,7 +61,7 @@ describe("Delete Current User API", () => {
     });
 
     it("should allow deleting account when organizer only owns past events", async () => {
-        const { organizerAuth } = await createEventWithOrganizer({
+        const { organizerAuth } = await createOrganizerAndEvent({
             organizer: {
                 name: "Past Organizer",
                 email: `pastorganizer${Date.now()}@test.com`
@@ -99,7 +99,7 @@ describe("Delete Current User API", () => {
     ============================= */
 
     it("should reject account deletion when user owns active or upcoming events", async () => {
-        const { organizerAuth } = await createEventWithOrganizer({
+        const { organizerAuth } = await createOrganizerAndEvent({
             organizer: {
                 name: "Active Organizer",
                 email: `activeorganizer${Date.now()}@test.com`
@@ -121,7 +121,7 @@ describe("Delete Current User API", () => {
     ============================= */
 
     it("should reject login after account deletion", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Deleted Login User",
             email: `deletedlogin${Date.now()}@test.com`,
             password: "Password123"

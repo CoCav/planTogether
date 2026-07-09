@@ -16,7 +16,7 @@ jest.mock("../../../src/services/eventLikeService");
 const eventLikeController = require("../../../src/controllers/eventLikeController");
 const eventLikeService = require("../../../src/services/eventLikeService");
 
-const { createEventControllerMocks } = require("../../helpers/express/mockExpress");
+const { createEventControllerMocks } = require("../../helpers/express/expressTestHelper");
 
 describe("eventLikeController", () => {
 

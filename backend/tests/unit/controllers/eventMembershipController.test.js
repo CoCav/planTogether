@@ -27,7 +27,7 @@ const eventMembershipService = require("../../../src/services/eventMembershipSer
 
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
-const { createEventControllerMocks } = require("../../helpers/express/mockExpress");
+const { createEventControllerMocks } = require("../../helpers/express/expressTestHelper");
 
 describe("eventMembershipController", () => {
 

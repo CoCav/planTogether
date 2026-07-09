@@ -20,22 +20,22 @@
 const request = require("supertest");
 const app = require("../../../../src/app");
 
-const { initDB, resetDB, closeDB } = require("../../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../../helpers/api/authHelper");
+const { registerAndAuthenticateUser } = require("../../../helpers/http/authTestHelper");
 
 describe("Change Current User Password API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* ============================
        PASSWORD UPDATE SUCCESS
     ============================= */
 
     it("should update current user password", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Password User",
             email: `password${Date.now()}@test.com`,
             password: "Password123"
@@ -56,7 +56,7 @@ describe("Change Current User Password API", () => {
     it("should allow login with new password after update", async () => {
         const email = `persist${Date.now()}@test.com`;
 
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Persistence User",
             email,
             password: "Password123"
@@ -114,7 +114,7 @@ describe("Change Current User Password API", () => {
     ============================= */
 
     it("should reject missing current password", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Validation User",
             email: `missingcurrent${Date.now()}@test.com`
         });
@@ -131,7 +131,7 @@ describe("Change Current User Password API", () => {
     });
 
     it("should reject missing new password", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Validation User",
             email: `missingnew${Date.now()}@test.com`
         });
@@ -148,7 +148,7 @@ describe("Change Current User Password API", () => {
     });
 
     it("should reject weak new password", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Weak Password User",
             email: `weak${Date.now()}@test.com`,
             password: "Password123"
@@ -170,7 +170,7 @@ describe("Change Current User Password API", () => {
     ============================= */
 
     it("should reject wrong current password", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Wrong Password User",
             email: `wrong${Date.now()}@test.com`,
             password: "Password123"
@@ -188,7 +188,7 @@ describe("Change Current User Password API", () => {
     });
 
     it("should reject updating to the same password", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Same Password User",
             email: `same${Date.now()}@test.com`,
             password: "Password123"

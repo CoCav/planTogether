@@ -29,16 +29,16 @@ const { EventReview, EventUserRole } = require("../../../src/models");
 
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
-const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../helpers/api/authHelper");
-const { createEventWithOrganizer } = require("../../helpers/api/eventHelper");
+const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
+const { createOrganizerAndEvent } = require("../../helpers/http/eventTestHelper");
 
 describe("Get Event Reviews API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* =============================
        TEST HELPERS
@@ -48,7 +48,7 @@ describe("Get Event Reviews API", () => {
         participantName = "Review Participant",
         participantEmail = `reviewparticipant${Date.now()}@test.com`
     } = {}) => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Review Organizer",
                 email: `revieworganizer${Date.now()}@test.com`
@@ -60,7 +60,7 @@ describe("Get Event Reviews API", () => {
             }
         });
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: participantName,
             email: participantEmail
         });
@@ -124,7 +124,7 @@ describe("Get Event Reviews API", () => {
     });
 
     it("should return an empty review list when event has no reviews", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Empty Reviews Organizer",
                 email: `emptyreviews${Date.now()}@test.com`
@@ -185,7 +185,7 @@ describe("Get Event Reviews API", () => {
             participantEmail: `firstreviewer${Date.now()}@test.com`
         });
 
-        const secondParticipantAuth = await registerAndGetToken({
+        const secondParticipantAuth = await registerAndAuthenticateUser({
             name: "Second Reviewer",
             email: `secondreviewer${Date.now()}@test.com`
         });
@@ -249,7 +249,7 @@ describe("Get Event Reviews API", () => {
             comment: "First rating review"
         });
 
-        const secondParticipantAuth = await registerAndGetToken({
+        const secondParticipantAuth = await registerAndAuthenticateUser({
             name: "Average Rating Reviewer",
             email: `averageratingreviewer${Date.now()}@test.com`
         });
@@ -287,7 +287,7 @@ describe("Get Event Reviews API", () => {
             comment: "First review"
         });
 
-        const secondParticipantAuth = await registerAndGetToken({
+        const secondParticipantAuth = await registerAndAuthenticateUser({
             name: "Second Pagination Reviewer",
             email: `secondpaginationreviewer${Date.now()}@test.com`
         });
@@ -330,7 +330,7 @@ describe("Get Event Reviews API", () => {
             comment: "First page review"
         });
 
-        const secondParticipantAuth = await registerAndGetToken({
+        const secondParticipantAuth = await registerAndAuthenticateUser({
             name: "Second Page Reviewer",
             email: `secondpagereviewer${Date.now()}@test.com`
         });
@@ -373,7 +373,7 @@ describe("Get Event Reviews API", () => {
             comment: "First paginated rating review"
         });
 
-        const secondParticipantAuth = await registerAndGetToken({
+        const secondParticipantAuth = await registerAndAuthenticateUser({
             name: "Paginated Average Reviewer",
             email: `paginatedaveragereviewer${Date.now()}@test.com`
         });

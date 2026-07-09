@@ -23,31 +23,31 @@ const app = require("../../../src/app");
 
 const { EventUserRole } = require("../../../src/models");
 
-const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../helpers/api/authHelper");
-const { createEventWithOrganizer } = require("../../helpers/api/eventHelper");
-const { joinEvent } = require("../../helpers/api/eventMembershipHelper");
+const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
+const { createOrganizerAndEvent } = require("../../helpers/http/eventTestHelper");
+const { joinEventAsAuthenticatedUser } = require("../../helpers/http/eventMembershipTestHelper");
 
 describe("Leave Event API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* =============================
        LEAVE EVENT SUCCESS
     ============================= */
 
     it("should allow a user to leave an event", async () => {
-        const { event } = await createEventWithOrganizer();
+        const { event } = await createOrganizerAndEvent();
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Participant",
             email: `participant${Date.now()}@test.com`
         });
 
-        await joinEvent(event.id, participantAuth.headers);
+        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
         const res = await request(app)
             .delete(`/api/events/${event.id}/members/leave`)
@@ -72,7 +72,7 @@ describe("Leave Event API", () => {
     ============================= */
 
     it("should reject leaving without token", async () => {
-        const { event } = await createEventWithOrganizer();
+        const { event } = await createOrganizerAndEvent();
 
         const res = await request(app).delete(`/api/events/${event.id}/members/leave`);
 
@@ -84,7 +84,7 @@ describe("Leave Event API", () => {
     ============================= */
 
     it("should reject invalid eventId", async () => {
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Participant",
             email: `participant${Date.now()}@test.com`
         });
@@ -101,9 +101,9 @@ describe("Leave Event API", () => {
     ============================= */
 
     it("should reject leaving an event without being a member", async () => {
-        const { event } = await createEventWithOrganizer();
+        const { event } = await createOrganizerAndEvent();
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Participant",
             email: `participant${Date.now()}@test.com`
         });
@@ -116,7 +116,7 @@ describe("Leave Event API", () => {
     });
 
     it("should reject organizer leaving own event", async () => {
-        const { organizerAuth, event } = await createEventWithOrganizer();
+        const { organizerAuth, event } = await createOrganizerAndEvent();
 
         const res = await request(app)
             .delete(`/api/events/${event.id}/members/leave`)
@@ -126,19 +126,19 @@ describe("Leave Event API", () => {
     });
 
     it("should reject leaving a past event", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             event: {
                 startDateTime: "2020-01-01T10:00:00.000Z",
                 endDateTime: "2020-01-01T12:00:00.000Z"
             }
         });
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Participant",
             email: `participant${Date.now()}@test.com`
         });
 
-        await joinEvent(event.id, participantAuth.headers);
+        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
         const res = await request(app)
             .delete(`/api/events/${event.id}/members/leave`)
@@ -152,7 +152,7 @@ describe("Leave Event API", () => {
     ============================= */
 
     it("should reject leaving a nonexistent event", async () => {
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Participant",
             email: `missingleave${Date.now()}@test.com`
         });

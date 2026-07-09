@@ -20,36 +20,36 @@
 const request = require("supertest");
 const app = require("../../../src/app");
 
-const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../helpers/api/authHelper");
-const { createEventWithOrganizer } = require("../../helpers/api/eventHelper");
-const { joinEvent } = require("../../helpers/api/eventMembershipHelper");
+const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
+const { createOrganizerAndEvent } = require("../../helpers/http/eventTestHelper");
+const { joinEventAsAuthenticatedUser } = require("../../helpers/http/eventMembershipTestHelper");
 
 describe("Get Event Members API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* =============================
        EVENT MEMBERS RETRIEVAL
     ============================= */
 
     it("should retrieve event members", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Event Creator",
                 email: `creator${Date.now()}@test.com`
             }
         });
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Participant",
             email: `participant${Date.now()}@test.com`
         });
 
-        await joinEvent(event.id, participantAuth.headers);
+        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
         const res = await request(app).get(`/api/events/${event.id}/members`);
 
@@ -65,19 +65,19 @@ describe("Get Event Members API", () => {
     });
 
     it("should include member avatars in event members response", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Event Creator",
                 email: `creator${Date.now()}@test.com`
             }
         });
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Participant Avatar",
             email: `participantavatar${Date.now()}@test.com`
         });
 
-        await joinEvent(event.id, participantAuth.headers);
+        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
         const res = await request(app).get(`/api/events/${event.id}/members`);
 
@@ -92,7 +92,7 @@ describe("Get Event Members API", () => {
     });
 
     it("should allow public access to event members endpoint", async () => {
-        const { event } = await createEventWithOrganizer({
+        const { event } = await createOrganizerAndEvent({
             organizer: {
                 name: "Event Creator",
                 email: `creator${Date.now()}@test.com`
@@ -107,14 +107,14 @@ describe("Get Event Members API", () => {
     });
 
     it("should exclude inactive memberships from event members", async () => {
-        const { event } = await createEventWithOrganizer();
+        const { event } = await createOrganizerAndEvent();
 
-        const participantAuth = await registerAndGetToken({
+        const participantAuth = await registerAndAuthenticateUser({
             name: "Inactive Participant",
             email: `inactive${Date.now()}@test.com`
         });
 
-        await joinEvent(event.id, participantAuth.headers);
+        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
         await request(app)
             .delete(`/api/events/${event.id}/members/leave`)

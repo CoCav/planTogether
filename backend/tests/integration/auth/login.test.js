@@ -23,22 +23,22 @@
 const request = require("supertest");
 const app = require("../../../src/app");
 
-const { initDB, resetDB, closeDB } = require("../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../helpers/api/authHelper");
+const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
 
 describe("Login API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* =============================
        LOGIN SUCCESS
     ============================= */
 
     it("should login an existing user", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Login User",
             email: `login${Date.now()}@test.com`,
             password: "Password123"
@@ -65,7 +65,7 @@ describe("Login API", () => {
     });
 
     it("should login with normalized email", async () => {
-        await registerAndGetToken({
+        await registerAndAuthenticateUser({
             name: "Normalized Login User",
             email: "normalized@test.com",
             password: "Password123"
@@ -113,7 +113,7 @@ describe("Login API", () => {
     ============================= */
 
     it("should reject wrong password", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Wrong Password User",
             email: `wrong${Date.now()}@test.com`,
             password: "Password123"
@@ -141,7 +141,7 @@ describe("Login API", () => {
     });
 
     it("should reject login after account deletion", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Deleted Login User",
             email: `deletedlogin${Date.now()}@test.com`,
             password: "Password123"
@@ -166,7 +166,7 @@ describe("Login API", () => {
     ============================= */
 
     it("should never expose password in login response", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Hidden Password User",
             email: `hidden${Date.now()}@test.com`,
             password: "Password123"

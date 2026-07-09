@@ -16,7 +16,7 @@ jest.mock("../../../src/services/locationService");
 const locationController = require("../../../src/controllers/geocodingController");
 const locationService = require("../../../src/services/locationService");
 
-const { createEventControllerMocks } = require("../../helpers/express/mockExpress");
+const { createEventControllerMocks } = require("../../helpers/express/expressTestHelper");
 
 describe("geocodingController", () => {
 

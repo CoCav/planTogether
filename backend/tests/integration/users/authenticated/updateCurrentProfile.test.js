@@ -28,22 +28,22 @@ const path = require("path");
 const request = require("supertest");
 const app = require("../../../../src/app");
 
-const { initDB, resetDB, closeDB } = require("../../../helpers/database/dbTestHelper");
+const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../../helpers/database/dbTestHelper");
 
-const { registerAndGetToken } = require("../../../helpers/api/authHelper");
+const { registerAndAuthenticateUser } = require("../../../helpers/http/authTestHelper");
 
 describe("Update Current User Profile API", () => {
 
-    beforeAll(initDB);
-    afterEach(resetDB);
-    afterAll(closeDB);
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* =============================
        PROFILE UPDATE SUCCESS
     ============================= */
 
     it("should update current user profile", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Old Name",
             email: `update${Date.now()}@test.com`
         });
@@ -64,7 +64,7 @@ describe("Update Current User Profile API", () => {
     });
 
     it("should update only email", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Email Update User",
             email: `emailupdate${Date.now()}@test.com`
         });
@@ -85,7 +85,7 @@ describe("Update Current User Profile API", () => {
     });
 
     it("should normalize updated email", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Normalize User",
             email: `normalize${Date.now()}@test.com`
         });
@@ -108,7 +108,7 @@ describe("Update Current User Profile API", () => {
     ============================= */
 
     it("should update current user avatar", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Avatar User",
             email: `avatar${Date.now()}@test.com`
         });
@@ -128,7 +128,7 @@ describe("Update Current User Profile API", () => {
     });
 
     it("should delete previous avatar when uploading a new one", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Cleanup User",
             email: `cleanup${Date.now()}@test.com`
         });
@@ -182,7 +182,7 @@ describe("Update Current User Profile API", () => {
     ============================= */
 
     it("should reject invalid email update", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Invalid Email User",
             email: `invalidemail${Date.now()}@test.com`
         });
@@ -198,7 +198,7 @@ describe("Update Current User Profile API", () => {
     });
 
     it("should reject too short name update", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Short Name User",
             email: `shortname${Date.now()}@test.com`
         });
@@ -214,7 +214,7 @@ describe("Update Current User Profile API", () => {
     });
 
     it("should reject invalid avatar file type", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Invalid Avatar User",
             email: `invalidavatar${Date.now()}@test.com`
         });
@@ -231,7 +231,7 @@ describe("Update Current User Profile API", () => {
     });
 
     it("should reject oversized avatar upload", async () => {
-        const userAuth = await registerAndGetToken({
+        const userAuth = await registerAndAuthenticateUser({
             name: "Oversized Avatar User",
             email: `oversized${Date.now()}@test.com`
         });
@@ -254,12 +254,12 @@ describe("Update Current User Profile API", () => {
     ============================= */
 
     it("should reject duplicate email update", async () => {
-        const firstUserAuth = await registerAndGetToken({
+        const firstUserAuth = await registerAndAuthenticateUser({
             name: "First User",
             email: `first${Date.now()}@test.com`
         });
 
-        const secondUserAuth = await registerAndGetToken({
+        const secondUserAuth = await registerAndAuthenticateUser({
             name: "Second User",
             email: `second${Date.now()}@test.com`
         });

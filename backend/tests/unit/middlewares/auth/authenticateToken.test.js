@@ -19,7 +19,7 @@ const jwt = require("jsonwebtoken");
 
 const { authenticateToken } = require("../../../../src/middlewares/auth/authenticateToken");
 
-const { createMockReqResNext } = require("../../../helpers/express/mockExpress");
+const { createMockReqResNext } = require("../../../helpers/express/expressTestHelper");
 
 jest.mock("jsonwebtoken");
 

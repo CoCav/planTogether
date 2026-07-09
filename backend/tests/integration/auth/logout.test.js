@@ -1,30 +1,30 @@
-/* ==================================================
-   AUTH INTEGRATION - LOGOUT TESTS
+const {
+    initializeTestDatabase,
+    resetTestDatabase,
+    closeTestDatabase
+} = require("../../helpers/database/dbTestHelper");
 
-   Tests:
-   - authenticated logout
-   - missing token rejection
-   - invalid token rejection
+const {
+    registerAndAuthenticateUser,
+    logoutUser
+} = require("../../helpers/http/authTestHelper");
 
-   Ensures:
-   - authentication middleware protects logout route
-   - valid tokens can access the endpoint
-   - invalid or missing tokens are rejected
-   - logout remains stateless with JWT authentication
+/* ==========================================================================
+   Auth Integration Tests - Logout
 
-   Notes:
-   - logout is stateless because authentication uses JWT
-================================================== */
+   Tests user logout behavior.
 
-const request = require("supertest");
-const app = require("../../../src/app");
+   Responsibilities
+   - Test authenticated logout
+   - Test missing token rejection
+   - Test invalid token rejection
 
-const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
-
-const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
+   Notes
+   - Logout is stateless because authentication uses JWT.
+   - Authentication middleware protects the logout route.
+=========================================================================== */
 
 describe("Logout API", () => {
-
     beforeAll(initializeTestDatabase);
     afterEach(resetTestDatabase);
     afterAll(closeTestDatabase);
@@ -33,36 +33,37 @@ describe("Logout API", () => {
        LOGOUT SUCCESS
     ============================= */
 
-    it("should logout authenticated user", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Logout User",
-            email: `logout${Date.now()}@test.com`
+    describe("Logout success", () => {
+        it("logs out an authenticated user", async () => {
+            const userAuth = await registerAndAuthenticateUser({
+                name: "Logout User",
+                email: `logout${Date.now()}@test.com`
+            });
+
+            const response = await logoutUser(userAuth.headers);
+
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "Logout successful");
         });
-
-        const res = await request(app)
-            .post("/api/auth/logout")
-            .set(userAuth.headers);
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "Logout successful");
     });
 
     /* =============================
        AUTHENTICATION ERRORS
     ============================= */
 
-    it("should reject without token", async () => {
-        const res = await request(app)
-            .post("/api/auth/logout");
+    describe("Authentication errors", () => {
+        it("rejects logout without token", async () => {
+            const response = await logoutUser();
 
-        expect(res.statusCode).toBe(401);
-    });
+            expect(response.statusCode).toBe(401);
+        });
 
-    it("should reject invalid token", async () => {
-        const res = await request(app)
-            .post("/api/auth/logout")
-            .set("Authorization", "Bearer invalid-token");
+        it("rejects logout with invalid token", async () => {
+            const response = await logoutUser({
+                Authorization: "Bearer invalid-token"
+            });
 
-        expect(res.statusCode).toBe(401);
+            expect(response.statusCode).toBe(401);
+        });
     });
 });

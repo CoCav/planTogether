@@ -1,19 +1,20 @@
-/* ==================================================
-   APP INTEGRATION TESTS
-
-   Tests:
-   - health check endpoint
-   - root endpoint
-   - unknown route handling
-
-   Ensures:
-   - global app routes respond correctly
-   - 404 fallback handler works as expected
-   - Express app can be tested without starting server
-================================================== */
-
 const request = require("supertest");
+
 const app = require("../../../src/app");
+
+/* ==========================================================================
+   App Integration Tests
+
+   Tests global application routes.
+
+   Responsibilities
+   - Test the health check endpoint
+   - Test the root endpoint
+   - Test unknown route handling
+
+   Notes
+   - The Express application is tested without starting the HTTP server.
+=========================================================================== */
 
 describe("App API", () => {
 
@@ -21,41 +22,45 @@ describe("App API", () => {
        HEALTH CHECK
     ============================= */
 
-    it("should return API health status", async () => {
-        const res = await request(app).get("/api/health");
+    describe("Health check", () => {
+        it("returns the API health status", async () => {
+            const response = await request(app).get("/api/health");
 
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toEqual({
-            ok: true,
-            success: true,
-            name: "PlanTogether API"
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toEqual({
+                ok: true,
+                success: true,
+                name: "PlanTogether API"
+            });
         });
     });
-
 
     /* =============================
        ROOT ROUTE
     ============================= */
 
-    it("should return root message", async () => {
-        const res = await request(app).get("/");
+    describe("Root route", () => {
+        it("returns the application status message", async () => {
+            const response = await request(app).get("/");
 
-        expect(res.statusCode).toBe(200);
-        expect(res.text).toBe("PlanTogether is online!");
+            expect(response.statusCode).toBe(200);
+            expect(response.text).toBe("PlanTogether is online!");
+        });
     });
 
-
     /* =============================
-       UNKNOWN ROUTE
+       UNKNOWN ROUTES
     ============================= */
 
-    it("should return 404 for unknown route", async () => {
-        const res = await request(app).get("/api/unknown");
+    describe("Unknown routes", () => {
+        it("returns 404 for unknown routes", async () => {
+            const response = await request(app).get("/api/unknown");
 
-        expect(res.statusCode).toBe(404);
-        expect(res.body).toEqual({
-            success: false,
-            message: "Route not found"
+            expect(response.statusCode).toBe(404);
+            expect(response.body).toEqual({
+                success: false,
+                message: "Route not found"
+            });
         });
     });
 });

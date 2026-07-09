@@ -1,34 +1,35 @@
-/* ==================================================
-   AUTH INTEGRATION - LOGIN TESTS
+const {
+    initializeTestDatabase,
+    resetTestDatabase,
+    closeTestDatabase
+} = require("../../helpers/database/dbTestHelper");
 
-   Tests:
-   - successful login
-   - normalized email login
-   - missing fields rejection
-   - invalid email rejection
-   - wrong password rejection
-   - unknown email rejection
-   - password exposure protection
-   - deleted account login rejection
+const {
+    registerAndAuthenticateUser,
+    loginUser
+} = require("../../helpers/http/authTestHelper");
 
-   Ensures:
-   - validators run correctly
-   - credentials are verified
-   - JWT token is returned
-   - normalized emails are supported
-   - password is never exposed
-   - deleted account cannot login
-================================================== */
+const { deleteCurrentUser } = require("../../helpers/http/authTestHelper");
 
-const request = require("supertest");
-const app = require("../../../src/app");
+/* ==========================================================================
+   Auth Integration Tests - Login
 
-const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
+   Tests user login behavior.
 
-const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
+   Responsibilities
+   - Test successful login
+   - Test normalized email login
+   - Test validation errors
+   - Test authentication errors
+   - Test response security
+
+   Notes
+   - Login must return a JWT token for valid credentials.
+   - Passwords must never be exposed in responses.
+   - Deleted accounts cannot log in.
+=========================================================================== */
 
 describe("Login API", () => {
-
     beforeAll(initializeTestDatabase);
     afterEach(resetTestDatabase);
     afterAll(closeTestDatabase);
@@ -37,150 +38,145 @@ describe("Login API", () => {
        LOGIN SUCCESS
     ============================= */
 
-    it("should login an existing user", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Login User",
-            email: `login${Date.now()}@test.com`,
-            password: "Password123"
-        });
+    describe("Login success", () => {
+        it("logs in an existing user", async () => {
+            const userAuth = await registerAndAuthenticateUser({
+                name: "Login User",
+                email: `login${Date.now()}@test.com`,
+                password: "Password123"
+            });
 
-        const res = await request(app)
-            .post("/api/auth/login")
-            .send({
+            const response = await loginUser({
                 email: userAuth.email,
                 password: userAuth.password
             });
 
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "Login successful");
-        expect(res.body).toHaveProperty("token");
-        expect(res.body).toHaveProperty("user");
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "Login successful");
+            expect(response.body).toHaveProperty("token");
+            expect(response.body).toHaveProperty("user");
 
-        expect(res.body.user).toMatchObject({
-            name: "Login User",
-            email: userAuth.email
+            expect(response.body.user).toMatchObject({
+                name: "Login User",
+                email: userAuth.email
+            });
+
+            expect(response.body.user).not.toHaveProperty("password");
         });
-
-        expect(res.body.user).not.toHaveProperty("password");
     });
 
-    it("should login with normalized email", async () => {
-        await registerAndAuthenticateUser({
-            name: "Normalized Login User",
-            email: "normalized@test.com",
-            password: "Password123"
-        });
+    /* =============================
+       EMAIL NORMALIZATION
+    ============================= */
 
-        const res = await request(app)
-            .post("/api/auth/login")
-            .send({
+    describe("Email normalization", () => {
+        it("logs in with normalized email", async () => {
+            await registerAndAuthenticateUser({
+                name: "Normalized Login User",
+                email: "normalized@test.com",
+                password: "Password123"
+            });
+
+            const response = await loginUser({
                 email: "  NORMALIZED@Test.com  ",
                 password: "Password123"
             });
 
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "Login successful");
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "Login successful");
+        });
     });
 
     /* =============================
        VALIDATION ERRORS
     ============================= */
 
-    it("should reject missing fields", async () => {
-        const res = await request(app)
-            .post("/api/auth/login")
-            .send({
+    describe("Validation errors", () => {
+        it("rejects missing fields", async () => {
+            const response = await loginUser({
                 email: "",
                 password: ""
             });
 
-        expect(res.statusCode).toBe(400);
-    });
+            expect(response.statusCode).toBe(400);
+        });
 
-    it("should reject invalid email format", async () => {
-        const res = await request(app)
-            .post("/api/auth/login")
-            .send({
+        it("rejects invalid email format", async () => {
+            const response = await loginUser({
                 email: "bad-email",
                 password: "Password123"
             });
 
-        expect(res.statusCode).toBe(400);
+            expect(response.statusCode).toBe(400);
+        });
     });
 
     /* =============================
-       BUSINESS RULES
+       AUTHENTICATION ERRORS
     ============================= */
 
-    it("should reject wrong password", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Wrong Password User",
-            email: `wrong${Date.now()}@test.com`,
-            password: "Password123"
-        });
+    describe("Authentication errors", () => {
+        it("rejects wrong password", async () => {
+            const userAuth = await registerAndAuthenticateUser({
+                name: "Wrong Password User",
+                email: `wrong${Date.now()}@test.com`,
+                password: "Password123"
+            });
 
-        const res = await request(app)
-            .post("/api/auth/login")
-            .send({
+            const response = await loginUser({
                 email: userAuth.email,
                 password: "WrongPassword"
             });
 
-        expect(res.statusCode).toBe(401);
-    });
+            expect(response.statusCode).toBe(401);
+        });
 
-    it("should reject unknown email", async () => {
-        const res = await request(app)
-            .post("/api/auth/login")
-            .send({
+        it("rejects unknown email", async () => {
+            const response = await loginUser({
                 email: `unknown${Date.now()}@test.com`,
                 password: "Password123"
             });
 
-        expect(res.statusCode).toBe(401);
-    });
-
-    it("should reject login after account deletion", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Deleted Login User",
-            email: `deletedlogin${Date.now()}@test.com`,
-            password: "Password123"
+            expect(response.statusCode).toBe(401);
         });
 
-        await request(app)
-            .delete("/api/users/me")
-            .set(userAuth.headers);
+        it("rejects login after account deletion", async () => {
+            const userAuth = await registerAndAuthenticateUser({
+                name: "Deleted Login User",
+                email: `deletedlogin${Date.now()}@test.com`,
+                password: "Password123"
+            });
 
-        const res = await request(app)
-            .post("/api/auth/login")
-            .send({
+            await deleteCurrentUser(userAuth.headers);
+
+            const response = await loginUser({
                 email: userAuth.email,
                 password: userAuth.password
             });
 
-        expect(res.statusCode).toBe(401);
+            expect(response.statusCode).toBe(401);
+        });
     });
 
     /* =============================
        RESPONSE SECURITY
     ============================= */
 
-    it("should never expose password in login response", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Hidden Password User",
-            email: `hidden${Date.now()}@test.com`,
-            password: "Password123"
-        });
+    describe("Response security", () => {
+        it("does not expose the password in login response", async () => {
+            const userAuth = await registerAndAuthenticateUser({
+                name: "Hidden Password User",
+                email: `hidden${Date.now()}@test.com`,
+                password: "Password123"
+            });
 
-        const res = await request(app)
-            .post("/api/auth/login")
-            .send({
+            const response = await loginUser({
                 email: userAuth.email,
                 password: userAuth.password
             });
 
-        expect(res.statusCode).toBe(200);
-
-        expect(res.body.user).not.toHaveProperty("password");
+            expect(response.statusCode).toBe(200);
+            expect(response.body.user).not.toHaveProperty("password");
+        });
     });
 });

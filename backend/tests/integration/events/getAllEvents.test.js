@@ -1,51 +1,47 @@
-/* ==================================================
-   EVENTS INTEGRATION - GET ALL EVENTS TESTS
-
-   Tests:
-   - public events retrieval
-   - active participant count enrichment
-   - inactive membership exclusion from participant count
-   - event status enrichment
-   - filtering by (type, theme, mode, location, creatorId, creator name, search, status)
-   - pagination
-   - sorting
-   - invalid query validation
-   - review count enrichment
-   - average rating enrichment
-   - like count enrichment
-   - current user like state enrichment
-
-   Ensures:
-   - public event listing works correctly
-   - filters and pagination behave correctly
-   - event metadata is enriched in responses
-   - validators protect query params
-   - participant counts only include active memberships
-   - review stats are enriched in event listings
-   - like stats are enriched in event listings
-   - current user like state is enriched in event listings
-   - shared event status constants are used for expected statuses
-================================================== */
-
-const request = require("supertest");
-const app = require("../../../src/app");
-
 const { EventReview, EventLike } = require("../../../src/models");
 
 const { EVENT_STATUS } = require("../../../src/constants/eventStatus");
 const { EVENT_MODES } = require("../../../src/constants/eventModes");
 
-const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
+const {
+    initializeTestDatabase,
+    resetTestDatabase,
+    closeTestDatabase
+} = require("../../helpers/database/dbTestHelper");
 
 const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
 const {
-    createEventAsAuthenticatedUser,
-    createOrganizerAndEvent
+    getEvents,
+    createOrganizer,
+    createOrganizerAndEvent,
+    createEventAsAuthenticatedUser
 } = require("../../helpers/http/eventTestHelper");
-const { joinEventAsAuthenticatedUser } = require("../../helpers/http/eventMembershipTestHelper");
+
+const {
+    joinEventAsAuthenticatedUser,
+    leaveEventAsAuthenticatedUser
+} = require("../../helpers/http/eventMembershipTestHelper");
+
+/* ==========================================================================
+   Events Integration Tests - Get All Events
+
+   Tests public event listing behavior.
+
+   Responsibilities
+   - Test public event retrieval
+   - Test event metadata enrichment
+   - Test like metadata enrichment
+   - Test event filtering
+   - Test pagination and sorting
+   - Test validation errors
+
+   Notes
+   - Public event listings include computed metadata.
+   - Participant counts only include active memberships.
+   - Review and like stats are enriched in event listings.
+=========================================================================== */
 
 describe("Get All Events API", () => {
-
     beforeAll(initializeTestDatabase);
     afterEach(resetTestDatabase);
     afterAll(closeTestDatabase);
@@ -54,629 +50,459 @@ describe("Get All Events API", () => {
        EVENTS RETRIEVAL SUCCESS
     ============================= */
 
-    it("should retrieve all public events", async () => {
-        await createOrganizerAndEvent({
-            organizer: {
-                name: "Event Creator",
-                email: `creator${Date.now()}@test.com`
-            },
-            event: {
-                title: "Public Event"
-            }
+    describe("Events retrieval success", () => {
+        it("retrieves all public events", async () => {
+            await createOrganizerAndEvent({
+                organizer: {
+                    name: "Event Creator",
+                    email: `creator${Date.now()}@test.com`
+                },
+                event: {
+                    title: "Public Event"
+                }
+            });
+
+            const response = await getEvents();
+
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "Events retrieved successfully");
+            expect(Array.isArray(response.body.events)).toBe(true);
+            expect(response.body.events.length).toBeGreaterThan(0);
         });
-
-        const res = await request(app).get("/api/events");
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "Events retrieved successfully");
-
-        expect(Array.isArray(res.body.events)).toBe(true);
-
-        expect(res.body.events.length).toBeGreaterThan(0);
     });
 
     /* =============================
        EVENT METADATA
     ============================= */
 
-    it("should include participant count in events", async () => {
-        const { event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Participant Count Creator",
-                email: `participantcount${Date.now()}@test.com`
-            },
-            event: {
-                title: "Participant Count Event"
-            }
+    describe("Event metadata", () => {
+        it("includes participant count in events", async () => {
+            const { event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Participant Count Event"
+                }
+            });
+
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Participant Count User",
+                email: `participantcountuser${Date.now()}@test.com`
+            });
+
+            await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
+
+            const response = await getEvents();
+
+            expect(response.statusCode).toBe(200);
+
+            const foundEvent = response.body.events.find(
+                (item) => item.title === "Participant Count Event"
+            );
+
+            expect(foundEvent).toBeDefined();
+            expect(foundEvent).toHaveProperty("participantCount");
+            expect(Number(foundEvent.participantCount)).toBe(1);
         });
 
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Participant",
-            email: `participant${Date.now()}@test.com`
+        it("excludes inactive memberships from participant count", async () => {
+            const { event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Inactive Count Event"
+                }
+            });
+
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Inactive Participant",
+                email: `inactiveparticipant${Date.now()}@test.com`
+            });
+
+            await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
+            await leaveEventAsAuthenticatedUser(event.id, participantAuth.headers);
+
+            const response = await getEvents();
+
+            const foundEvent = response.body.events.find(
+                (item) => item.title === "Inactive Count Event"
+            );
+
+            expect(foundEvent).toBeDefined();
+            expect(foundEvent).toHaveProperty("participantCount");
+            expect(Number(foundEvent.participantCount)).toBe(0);
         });
 
-        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
+        it("includes event status in events", async () => {
+            await createOrganizerAndEvent({
+                event: {
+                    title: "Past Event",
+                    startDateTime: "2020-01-01T10:00:00.000Z",
+                    endDateTime: "2020-01-01T12:00:00.000Z"
+                }
+            });
 
-        const res = await request(app).get("/api/events");
+            const response = await getEvents();
 
-        expect(res.statusCode).toBe(200);
+            expect(response.statusCode).toBe(200);
 
-        const foundEvent = res.body.events.find((item) => item.title === "Participant Count Event");
+            const event = response.body.events.find(
+                (item) => item.title === "Past Event"
+            );
 
-        expect(foundEvent).toBeDefined();
-
-        expect(foundEvent).toHaveProperty("participantCount");
-        expect(Number(foundEvent.participantCount)).toBe(1);
-    });
-
-    it("should exclude inactive memberships from participant count", async () => {
-        const { event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Inactive Count Creator",
-                email: `inactivecountcreator${Date.now()}@test.com`
-            },
-            event: {
-                title: "Inactive Count Event"
-            }
+            expect(event).toBeDefined();
+            expect(event.status).toBe(EVENT_STATUS.PAST);
         });
 
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Inactive Participant",
-            email: `inactiveparticipant${Date.now()}@test.com`
+        it("includes review count and average rating in events", async () => {
+            const { event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Listing Review Stats Event",
+                    startDateTime: "2020-01-01T10:00:00.000Z",
+                    endDateTime: "2020-01-01T12:00:00.000Z"
+                }
+            });
+
+            const reviewerAuthA = await registerAndAuthenticateUser({
+                name: "Listing Reviewer A",
+                email: `listingreviewera${Date.now()}@test.com`
+            });
+
+            const reviewerAuthB = await registerAndAuthenticateUser({
+                name: "Listing Reviewer B",
+                email: `listingreviewerb${Date.now()}@test.com`
+            });
+
+            await EventReview.create({
+                eventId: event.id,
+                userId: reviewerAuthA.user.userId,
+                rating: 5,
+                comment: "Great event!"
+            });
+
+            await EventReview.create({
+                eventId: event.id,
+                userId: reviewerAuthB.user.userId,
+                rating: 4,
+                comment: "Nice event!"
+            });
+
+            const response = await getEvents();
+
+            expect(response.statusCode).toBe(200);
+
+            const foundEvent = response.body.events.find(
+                (item) => item.title === "Listing Review Stats Event"
+            );
+
+            expect(foundEvent).toBeDefined();
+            expect(foundEvent).toHaveProperty("reviewCount");
+            expect(foundEvent).toHaveProperty("averageRating");
+
+            expect(Number(foundEvent.reviewCount)).toBe(2);
+            expect(Number(foundEvent.averageRating)).toBe(4.5);
         });
 
-        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
+        it("includes empty review stats for events without reviews", async () => {
+            await createOrganizerAndEvent({
+                event: {
+                    title: "Listing No Review Stats Event"
+                }
+            });
 
-        await request(app)
-            .delete(`/api/events/${event.id}/members/leave`)
-            .set(participantAuth.headers);
+            const response = await getEvents();
 
-        const res = await request(app).get("/api/events");
+            expect(response.statusCode).toBe(200);
 
-        const foundEvent = res.body.events.find(
-            (item) => item.title === "Inactive Count Event"
-        );
+            const foundEvent = response.body.events.find(
+                (item) => item.title === "Listing No Review Stats Event"
+            );
 
-        expect(foundEvent).toBeDefined();
-        expect(foundEvent).toHaveProperty("participantCount");
-        expect(Number(foundEvent.participantCount)).toBe(0);
-    });
-
-    it("should include event status in events", async () => {
-        await createOrganizerAndEvent({
-            organizer: {
-                name: "Status Creator",
-                email: `status${Date.now()}@test.com`
-            },
-            event: {
-                title: "Past Event",
-                startDateTime: "2020-01-01T10:00:00.000Z",
-                endDateTime: "2020-01-01T12:00:00.000Z"
-            }
+            expect(foundEvent).toBeDefined();
+            expect(Number(foundEvent.reviewCount)).toBe(0);
+            expect(foundEvent.averageRating).toBeNull();
         });
-
-        const res = await request(app).get("/api/events");
-
-        expect(res.statusCode).toBe(200);
-
-        const event = res.body.events.find((item) => item.title === "Past Event");
-
-        expect(event).toBeDefined();
-        expect(event.status).toBe(EVENT_STATUS.PAST);
-    });
-
-    it("should include review count and average rating in events", async () => {
-        const { event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Listing Review Stats Creator",
-                email: `listingreviewstats${Date.now()}@test.com`
-            },
-            event: {
-                title: "Listing Review Stats Event",
-                startDateTime: "2020-01-01T10:00:00.000Z",
-                endDateTime: "2020-01-01T12:00:00.000Z"
-            }
-        });
-
-        const reviewerAuthA = await registerAndAuthenticateUser({
-            name: "Listing Reviewer A",
-            email: `listingreviewera${Date.now()}@test.com`
-        });
-
-        const reviewerAuthB = await registerAndAuthenticateUser({
-            name: "Listing Reviewer B",
-            email: `listingreviewerb${Date.now()}@test.com`
-        });
-
-        await EventReview.create({
-            eventId: event.id,
-            userId: reviewerAuthA.user.userId,
-            rating: 5,
-            comment: "Great event!"
-        });
-
-        await EventReview.create({
-            eventId: event.id,
-            userId: reviewerAuthB.user.userId,
-            rating: 4,
-            comment: "Nice event!"
-        });
-
-        const res = await request(app).get("/api/events");
-
-        expect(res.statusCode).toBe(200);
-
-        const foundEvent = res.body.events.find(
-            (item) => item.title === "Listing Review Stats Event"
-        );
-
-        expect(foundEvent).toBeDefined();
-
-        expect(foundEvent).toHaveProperty("reviewCount");
-        expect(foundEvent).toHaveProperty("averageRating");
-
-        expect(Number(foundEvent.reviewCount)).toBe(2);
-        expect(Number(foundEvent.averageRating)).toBe(4.5);
-    });
-
-    it("should include empty review stats for events without reviews", async () => {
-        await createOrganizerAndEvent({
-            organizer: {
-                name: "Listing No Review Stats Creator",
-                email: `listingnoreviewstats${Date.now()}@test.com`
-            },
-            event: {
-                title: "Listing No Review Stats Event"
-            }
-        });
-
-        const res = await request(app).get("/api/events");
-
-        expect(res.statusCode).toBe(200);
-
-        const foundEvent = res.body.events.find(
-            (item) => item.title === "Listing No Review Stats Event"
-        );
-
-        expect(foundEvent).toBeDefined();
-
-        expect(Number(foundEvent.reviewCount)).toBe(0);
-        expect(foundEvent.averageRating).toBeNull();
     });
 
     /* =============================
        LIKE METADATA
     ============================= */
 
-    it("should include like count in events", async () => {
-        const { event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Listing Like Stats Creator",
-                email: `listinglikestats${Date.now()}@test.com`
-            },
-            event: {
-                title: "Listing Like Stats Event"
-            }
+    describe("Like metadata", () => {
+        it("includes like count in events", async () => {
+            const { event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Listing Like Stats Event"
+                }
+            });
+
+            const likerAuthA = await registerAndAuthenticateUser({
+                name: "Listing Liker A",
+                email: `listinglikera${Date.now()}@test.com`
+            });
+
+            const likerAuthB = await registerAndAuthenticateUser({
+                name: "Listing Liker B",
+                email: `listinglikerb${Date.now()}@test.com`
+            });
+
+            await EventLike.create({
+                eventId: event.id,
+                userId: likerAuthA.user.userId
+            });
+
+            await EventLike.create({
+                eventId: event.id,
+                userId: likerAuthB.user.userId
+            });
+
+            const response = await getEvents();
+
+            const foundEvent = response.body.events.find(
+                (item) => item.title === "Listing Like Stats Event"
+            );
+
+            expect(foundEvent).toBeDefined();
+            expect(foundEvent).toHaveProperty("likesCount");
+            expect(Number(foundEvent.likesCount)).toBe(2);
         });
 
-        const likerAuthA = await registerAndAuthenticateUser({
-            name: "Listing Liker A",
-            email: `listinglikera${Date.now()}@test.com`
+        it("includes false current user like state for anonymous event listings", async () => {
+            await createOrganizerAndEvent({
+                event: {
+                    title: "Anonymous Like State Event"
+                }
+            });
+
+            const response = await getEvents();
+
+            const foundEvent = response.body.events.find(
+                (item) => item.title === "Anonymous Like State Event"
+            );
+
+            expect(foundEvent).toBeDefined();
+            expect(foundEvent.isLikedByCurrentUser).toBe(false);
         });
 
-        const likerAuthB = await registerAndAuthenticateUser({
-            name: "Listing Liker B",
-            email: `listinglikerb${Date.now()}@test.com`
+        it("includes current user like state for authenticated event listings", async () => {
+            const { event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Liked Listing Event"
+                }
+            });
+
+            const likerAuth = await registerAndAuthenticateUser({
+                name: "Listing Current Liker",
+                email: `listingcurrentliker${Date.now()}@test.com`
+            });
+
+            await EventLike.create({
+                eventId: event.id,
+                userId: likerAuth.user.userId
+            });
+
+            const response = await getEvents({
+                headers: likerAuth.headers
+            });
+
+            const foundEvent = response.body.events.find(
+                (item) => item.title === "Liked Listing Event"
+            );
+
+            expect(foundEvent).toBeDefined();
+            expect(foundEvent.isLikedByCurrentUser).toBe(true);
         });
-
-        await EventLike.create({
-            eventId: event.id,
-            userId: likerAuthA.user.userId
-        });
-
-        await EventLike.create({
-            eventId: event.id,
-            userId: likerAuthB.user.userId
-        });
-
-        const res = await request(app).get("/api/events");
-
-        const foundEvent = res.body.events.find(
-            (item) => item.title === "Listing Like Stats Event"
-        );
-
-        expect(foundEvent).toBeDefined();
-        expect(foundEvent).toHaveProperty("likesCount");
-        expect(Number(foundEvent.likesCount)).toBe(2);
-    });
-
-    it("should include false current user like state for anonymous event listings", async () => {
-        await createOrganizerAndEvent({
-            organizer: {
-                name: "Anonymous Like State Creator",
-                email: `anonymouslikestate${Date.now()}@test.com`
-            },
-            event: {
-                title: "Anonymous Like State Event"
-            }
-        });
-
-        const res = await request(app).get("/api/events");
-
-        const foundEvent = res.body.events.find(
-            (item) => item.title === "Anonymous Like State Event"
-        );
-
-        expect(foundEvent).toBeDefined();
-        expect(foundEvent.isLikedByCurrentUser).toBe(false);
-    });
-
-    it("should include current user like state for authenticated event listings", async () => {
-        const { event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Liked Listing Creator",
-                email: `likedlistingcreator${Date.now()}@test.com`
-            },
-            event: {
-                title: "Liked Listing Event"
-            }
-        });
-
-        const likerAuth = await registerAndAuthenticateUser({
-            name: "Listing Current Liker",
-            email: `listingcurrentliker${Date.now()}@test.com`
-        });
-
-        await EventLike.create({
-            eventId: event.id,
-            userId: likerAuth.user.userId
-        });
-
-        const res = await request(app)
-            .get("/api/events")
-            .set(likerAuth.headers);
-
-        const foundEvent = res.body.events.find(
-            (item) => item.title === "Liked Listing Event"
-        );
-
-        expect(foundEvent).toBeDefined();
-        expect(foundEvent.isLikedByCurrentUser).toBe(true);
     });
 
     /* =============================
        EVENT FILTERS
     ============================= */
 
-    it("should filter events by creatorId", async () => {
-        const { organizerAuth } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Creator Filter",
-                email: `creatorfilter${Date.now()}@test.com`
-            },
-            event: {
-                title: "Creator Event"
-            }
-        });
-
-        const res = await request(app)
-            .get("/api/events")
-            .query({ creatorId: organizerAuth.user.userId });
-
-        expect(res.statusCode).toBe(200);
-
-        expect(res.body.events.every((event) => event.creatorId === organizerAuth.user.userId)).toBe(true);
-    });
-
-    it("should filter events by creator name", async () => {
-        await createOrganizerAndEvent({
-            organizer: {
-                name: "Unique Creator",
-                email: `creatorname${Date.now()}@test.com`
-            },
-            event: {
-                title: "Creator Name Event"
-            }
-        });
-
-        const res = await request(app)
-            .get("/api/events")
-            .query({ creator: "Unique Creator" });
-
-        expect(res.statusCode).toBe(200);
-
-        expect(res.body.events.every((event) => event.creator.name === "Unique Creator")).toBe(true);
-    });
-
-    it("should filter events by search", async () => {
-        await createOrganizerAndEvent({
-            organizer: {
-                name: "Search Creator",
-                email: `search${Date.now()}@test.com`
-            },
-            event: {
-                title: "JavaScript Meetup"
-            }
-        });
-
-        const res = await request(app)
-            .get("/api/events")
-            .query({ search: "JavaScript" });
-
-        expect(res.statusCode).toBe(200);
-
-        expect(res.body.events.some((event) => event.title.includes("JavaScript"))).toBe(true);
-    });
-
-    it("should filter events by type", async () => {
-        const creatorAuth = await registerAndAuthenticateUser({
-            name: "Type Creator",
-            email: `type${Date.now()}@test.com`
-        });
-
-        await createEventAsAuthenticatedUser(creatorAuth.headers, {
-            title: "Workshop Event",
-            type: "Workshop"
-        });
-
-        await createEventAsAuthenticatedUser(creatorAuth.headers, {
-            title: "Meetup Event",
-            type: "Meetup"
-        });
-
-        const res = await request(app)
-            .get("/api/events")
-            .query({ type: "Workshop" });
-
-        expect(res.statusCode).toBe(200);
-
-        expect(res.body.events.every((event) => event.type === "Workshop")).toBe(true);
-    });
-
-    it("should filter events by theme", async () => {
-        await createOrganizerAndEvent({
-            organizer: {
-                name: "Theme Creator",
-                email: `theme${Date.now()}@test.com`
-            },
-            event: {
-                title: "Gaming Event",
-                theme: "Gaming"
-            }
-        });
-
-        const res = await request(app)
-            .get("/api/events")
-            .query({ theme: "Gaming" });
-
-        expect(res.statusCode).toBe(200);
-
-        expect(res.body.events.every((event) => event.theme === "Gaming")).toBe(true);
-    });
-
-    it("should filter events by mode", async () => {
-        await createOrganizerAndEvent({
-            organizer: {
-                name: "Mode Creator",
-                email: `mode${Date.now()}@test.com`
-            },
-            event: {
-                title: "Online Event",
-                mode: EVENT_MODES.ONLINE
-            }
-        });
-
-        const res = await request(app)
-            .get("/api/events")
-            .query({ mode: EVENT_MODES.ONLINE });
-
-        expect(res.statusCode).toBe(200);
-
-        expect(res.body.events.every((event) => event.mode === EVENT_MODES.ONLINE)).toBe(true);
-    });
-
-    it("should filter events by location", async () => {
-        await createOrganizerAndEvent({
-            organizer: {
-                name: "Location Creator",
-                email: `location${Date.now()}@test.com`
-            },
-            event: {
-                title: "Montreal Event",
-                location: "Montreal"
-            }
-        });
-
-        const res = await request(app)
-            .get("/api/events")
-            .query({ location: "Montreal" });
-
-        expect(res.statusCode).toBe(200);
-
-        expect(res.body.events.every((event) => event.location === "Montreal")).toBe(true);
-    });
-
-    it("should filter events by status", async () => {
-        const creatorAuth = await registerAndAuthenticateUser({
-            name: "Status Filter Creator",
-            email: `statusfilter${Date.now()}@test.com`
-        });
-
-        await createEventAsAuthenticatedUser(creatorAuth.headers,
-            {
-                title: "Upcoming Event",
-                startDateTime: "2030-01-01T10:00:00.000Z",
-                endDateTime: "2030-01-01T12:00:00.000Z"
+    describe("Event filters", () => {
+        it("filters events by mode", async () => {
+            await createOrganizerAndEvent({
+                event: {
+                    title: "Online Event",
+                    mode: EVENT_MODES.ONLINE
+                }
             });
 
-        await createEventAsAuthenticatedUser(creatorAuth.headers, {
-            title: "Past Event",
-            startDateTime: "2020-01-01T10:00:00.000Z",
-            endDateTime: "2020-01-01T12:00:00.000Z"
-        });
-
-        const res = await request(app)
-            .get("/api/events")
-            .query({ status: EVENT_STATUS.UPCOMING });
-
-        expect(res.statusCode).toBe(200);
-
-        expect(res.body.events.every((event) => event.status === EVENT_STATUS.UPCOMING)).toBe(true);
-    });
-
-    it("should filter events by exact date", async () => {
-        await createOrganizerAndEvent({
-            organizer: {
-                name: "Date Creator",
-                email: `date${Date.now()}@test.com`
-            },
-            event: {
-                title: "Christmas Event",
-                startDateTime: "2026-12-25T10:00:00.000Z",
-                endDateTime: "2026-12-25T12:00:00.000Z"
-            }
-        });
-
-        const res = await request(app)
-            .get("/api/events")
-            .query({ date: "2026-12-25" });
-
-        expect(res.statusCode).toBe(200);
-
-        expect(res.body.events.some((event) => event.title === "Christmas Event")).toBe(true);
-    });
-
-    it("should filter events by date range", async () => {
-        await createOrganizerAndEvent({
-            organizer: {
-                name: "Range Creator",
-                email: `range${Date.now()}@test.com`
-            },
-            event: {
-                title: "Range Event",
-                startDateTime: "2026-06-15T10:00:00.000Z",
-                endDateTime: "2026-06-15T12:00:00.000Z"
-            }
-        });
-
-        const res = await request(app)
-            .get("/api/events")
-            .query({
-                startDate: "2026-06-01",
-                endDate: "2026-06-30"
+            await createOrganizerAndEvent({
+                event: {
+                    title: "In Person Event",
+                    mode: EVENT_MODES.IN_PERSON
+                }
             });
 
-        expect(res.statusCode).toBe(200);
+            const response = await getEvents({
+                query: {
+                    mode: EVENT_MODES.ONLINE
+                }
+            });
 
-        expect(res.body.events.some((event) => event.title === "Range Event")).toBe(true);
+            expect(response.statusCode).toBe(200);
+
+            expect(response.body.events.every(
+                (event) => event.mode === EVENT_MODES.ONLINE
+            )).toBe(true);
+        });
+
+        it("filters events by status", async () => {
+            await createOrganizerAndEvent({
+                event: {
+                    title: "Past Event",
+                    startDateTime: "2020-01-01T10:00:00.000Z",
+                    endDateTime: "2020-01-01T12:00:00.000Z"
+                }
+            });
+
+            await createOrganizerAndEvent({
+                event: {
+                    title: "Upcoming Event"
+                }
+            });
+
+            const response = await getEvents({
+                query: {
+                    status: EVENT_STATUS.PAST
+                }
+            });
+
+            expect(response.statusCode).toBe(200);
+
+            expect(response.body.events.every(
+                (event) => event.status === EVENT_STATUS.PAST
+            )).toBe(true);
+        });
+
+        it("filters events by search query", async () => {
+            await createOrganizerAndEvent({
+                event: {
+                    title: "React Conference"
+                }
+            });
+
+            await createOrganizerAndEvent({
+                event: {
+                    title: "Photography Meetup"
+                }
+            });
+
+            const response = await getEvents({
+                query: {
+                    search: "React"
+                }
+            });
+
+            expect(response.statusCode).toBe(200);
+
+            expect(response.body.events.some(
+                (event) => event.title === "React Conference"
+            )).toBe(true);
+        });
     });
 
     /* =============================
-       PAGINATION / SORTING
+       PAGINATION & SORTING
     ============================= */
 
-    it("should paginate events", async () => {
-        const creatorAuth = await registerAndAuthenticateUser({
-            name: "Pagination Creator",
-            email: `pagination${Date.now()}@test.com`
-        });
-
-        await createEventAsAuthenticatedUser(creatorAuth.headers, { title: "Event A" });
-        await createEventAsAuthenticatedUser(creatorAuth.headers, { title: "Event B" });
-        await createEventAsAuthenticatedUser(creatorAuth.headers, { title: "Event C" });
-
-        const res = await request(app)
-            .get("/api/events")
-            .query({
-                page: 1,
-                pageSize: 2
+    describe("Pagination and sorting", () => {
+        it("supports pagination", async () => {
+            const organizerAuth = await createOrganizer({
+                name: "Pagination Organizer",
+                email: `pagination${Date.now()}@test.com`
             });
 
-        expect(res.statusCode).toBe(200);
+            await createEventAsAuthenticatedUser(
+                organizerAuth.headers,
+                {
+                    title: "First Event"
+                }
+            );
 
-        expect(res.body.events.length).toBe(2);
+            await createEventAsAuthenticatedUser(
+                organizerAuth.headers,
+                {
+                    title: "Second Event"
+                }
+            );
 
-        expect(res.body).toHaveProperty("totalEvents");
-        expect(res.body).toHaveProperty("totalPages");
-
-        expect(res.body.totalEvents).toBe(3);
-        expect(res.body.totalPages).toBe(2);
-    });
-
-    it("should sort events by title ascending", async () => {
-        const creatorAuth = await registerAndAuthenticateUser({
-            name: "Sort Creator",
-            email: `sort${Date.now()}@test.com`
-        });
-
-        await createEventAsAuthenticatedUser(creatorAuth.headers, { title: "Z Event" });
-        await createEventAsAuthenticatedUser(creatorAuth.headers, { title: "A Event" });
-
-        const res = await request(app)
-            .get("/api/events")
-            .query({
-                sortBy: "title",
-                order: "asc"
+            const response = await getEvents({
+                query: {
+                    page: 1,
+                    pageSize: 1
+                }
             });
 
-        expect(res.statusCode).toBe(200);
+            expect(response.statusCode).toBe(200);
 
-        const titles = res.body.events.map((event) => event.title);
+            expect(response.body.events.length).toBe(1);
+            expect(response.body.pagination).toBeDefined();
+        });
 
-        const sortedTitles = [...titles].sort();
+        it("supports sorting", async () => {
+            const organizerAuth = await createOrganizer({
+                name: "Sorting Organizer",
+                email: `sorting${Date.now()}@test.com`
+            });
 
-        expect(titles).toEqual(sortedTitles);
+            await createEventAsAuthenticatedUser(
+                organizerAuth.headers,
+                {
+                    title: "B Event"
+                }
+            );
+
+            await createEventAsAuthenticatedUser(
+                organizerAuth.headers,
+                {
+                    title: "A Event"
+                }
+            );
+
+            const response = await getEvents({
+                query: {
+                    sortField: "title",
+                    sortOrder: "ASC"
+                }
+            });
+
+            expect(response.statusCode).toBe(200);
+
+            expect(response.body.events[0].title).toBe("A Event");
+        });
     });
 
     /* =============================
        VALIDATION ERRORS
     ============================= */
 
-    it("should reject invalid mode filter", async () => {
-        const res = await request(app)
-            .get("/api/events")
-            .query({ mode: "physical" });
+    describe("Validation errors", () => {
+        it("rejects invalid status filter", async () => {
+            const response = await getEvents({
+                query: {
+                    status: "invalid"
+                }
+            });
 
-        expect(res.statusCode).toBe(400);
-    });
+            expect(response.statusCode).toBe(400);
+        });
 
-    it("should reject invalid creatorId", async () => {
-        const res = await request(app)
-            .get("/api/events")
-            .query({ creatorId: "abc" });
+        it("rejects invalid mode filter", async () => {
+            const response = await getEvents({
+                query: {
+                    mode: "invalid"
+                }
+            });
 
-        expect(res.statusCode).toBe(400);
-    });
+            expect(response.statusCode).toBe(400);
+        });
 
-    it("should reject invalid status filter", async () => {
-        const res = await request(app)
-            .get("/api/events")
-            .query({ status: "active" });
+        it("rejects invalid pagination values", async () => {
+            const response = await getEvents({
+                query: {
+                    page: -1,
+                    pageSize: 0
+                }
+            });
 
-        expect(res.statusCode).toBe(400);
-    });
-
-    it("should reject invalid page", async () => {
-        const res = await request(app)
-            .get("/api/events")
-            .query({ page: 0 });
-
-        expect(res.statusCode).toBe(400);
-    });
-
-    it("should reject invalid pageSize", async () => {
-        const res = await request(app)
-            .get("/api/events")
-            .query({ pageSize: 500 });
-
-        expect(res.statusCode).toBe(400);
-    });
-
-    it("should reject invalid order", async () => {
-        const res = await request(app)
-            .get("/api/events")
-            .query({ order: "invalid" });
-
-        expect(res.statusCode).toBe(400);
+            expect(response.statusCode).toBe(400);
+        });
     });
 });

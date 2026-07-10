@@ -1,34 +1,5 @@
-/* ================================================
-   EVENTS INTEGRATION - UPDATE EVENT TESTS
-
-   Tests:
-   - organizer event update
-   - co-organizer event update
-   - event update with image upload
-   - event image removal
-   - image cleanup after replacement
-   - event geolocation update
-   - online event geolocation cleanup
-   - authentication protection
-   - participant update rejection
-   - nonexistent event handling
-   - past event update rejection
-   - invalid event ID validation
-   - invalid payload validation
-   - invalid image type rejection
-   - oversized image rejection
-
-   Ensures:
-   - organizers and co-organizers can update events
-   - participants cannot update events
-   - in-person event updates persist resolved coordinates
-   - online event updates clear geolocation data
-   - validators and authorization protect event updates
-   - uploaded event images are preserved, replaced or removed correctly
-   - shared event role constants are used for valid role scenarios
-================================================ */
-
 const request = require("supertest");
+
 const app = require("../../../src/app");
 
 const fs = require("fs");
@@ -37,18 +8,54 @@ const path = require("path");
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 const { EVENT_MODES } = require("../../../src/constants/eventModes");
 
-const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
+const {
+    initializeTestDatabase,
+    resetTestDatabase,
+    closeTestDatabase
+} = require("../../helpers/database/dbTestHelper");
 
 const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
-const { createOrganizerAndEvent } = require("../../helpers/http/eventTestHelper");
+
+const {
+    createOrganizer,
+    createOrganizerAndEvent,
+    createPastOrganizerAndEvent,
+    createEventWithImage,
+    updateEvent,
+    updateMultipartEventRequest,
+    updateEventWithImage
+} = require("../../helpers/http/eventTestHelper");
+
 const {
     joinEventAsAuthenticatedUser,
     updateEventMemberRole
 } = require("../../helpers/http/eventMembershipTestHelper");
-const { findUserIdByEmail } = require("../../helpers/http/userTestHelper");
+
+const { findCoOrganizerId } = require("../../helpers/http/userTestHelper");
+
+/* ==========================================================================
+   Events Integration Tests - Update Event
+
+   Tests event update behavior.
+
+   Responsibilities
+   - Test successful event updates
+   - Test geolocation updates
+   - Test image updates
+   - Test authentication errors
+   - Test authorization errors
+   - Test update business rules
+   - Test validation errors
+   - Test file upload errors
+
+   Notes
+   - Organizers and co-organizers can update events.
+   - Participants cannot update events.
+   - JSON updates use updateEvent().
+   - Multipart updates use multipart event helpers.
+=========================================================================== */
 
 describe("Update Event API", () => {
-
     beforeAll(async () => {
         global.fetch = jest.fn().mockResolvedValue({
             ok: true,
@@ -87,401 +94,347 @@ describe("Update Event API", () => {
        EVENT UPDATE SUCCESS
     ============================= */
 
-    it("should allow organizer to update event", async () => {
-        const { organizerAuth, event } = await createOrganizerAndEvent();
+    describe("Event update success", () => {
+        it("allows organizer to update event", async () => {
+            const { organizerAuth, event } = await createOrganizerAndEvent();
 
-        const res = await request(app)
-            .put(`/api/events/${event.id}`)
-            .set(organizerAuth.headers)
-            .send({
-                title: "Updated Event Title"
-            });
+            const response = await updateEvent(
+                event.id,
+                organizerAuth.headers,
+                { title: "Updated Event Title" }
+            );
 
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "Event updated successfully");
-
-        expect(res.body.event.title).toBe("Updated Event Title");
-    });
-
-    it("should allow co-organizer to update event", async () => {
-        const { organizerAuth, event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Organizer",
-                email: `mainorganizer${Date.now()}@test.com`
-            }
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "Event updated successfully");
+            expect(response.body.event.title).toBe("Updated Event Title");
         });
 
-        const coOrganizerAuth = await registerAndAuthenticateUser({
-            name: "Co Organizer",
-            email: `coorganizer${Date.now()}@test.com`
+        it("allows co-organizer to update event", async () => {
+            const { organizerAuth, event } = await createOrganizerAndEvent();
+
+            const coOrganizerAuth = await registerAndAuthenticateUser({
+                name: "Event Update Co Organizer",
+                email: `eventupdatecoorganizer${Date.now()}@test.com`
+            });
+
+            await joinEventAsAuthenticatedUser(event.id, coOrganizerAuth.headers);
+
+            const coOrganizerId = await findCoOrganizerId(coOrganizerAuth);
+
+            await updateEventMemberRole(
+                event.id,
+                coOrganizerId,
+                organizerAuth.headers,
+                EVENT_ROLES.CO_ORGANIZER
+            );
+
+            const response = await updateEvent(
+                event.id,
+                coOrganizerAuth.headers,
+                { title: "Co Organizer Updated Event" }
+            );
+
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "Event updated successfully");
+            expect(response.body.event.title).toBe("Co Organizer Updated Event");
         });
 
-        await joinEventAsAuthenticatedUser(event.id, coOrganizerAuth.headers);
+        it("updates event geolocation data", async () => {
+            const { organizerAuth, event } = await createOrganizerAndEvent();
 
-        const coOrganizerId = await findUserIdByEmail(coOrganizerAuth.email);
+            const response = await updateEvent(
+                event.id,
+                organizerAuth.headers,
+                { location: "Quebec City" }
+            );
 
-        await updateEventMemberRole(event.id, coOrganizerId, organizerAuth.headers, EVENT_ROLES.CO_ORGANIZER);
+            expect(response.statusCode).toBe(200);
+            expect(global.fetch).toHaveBeenCalledTimes(1);
 
-        const res = await request(app)
-            .put(`/api/events/${event.id}`)
-            .set(coOrganizerAuth.headers)
-            .send({
-                title: "Co Organizer Updated Event"
+            expect(response.body.event).toMatchObject({
+                location: "Quebec City",
+                locationLabel: "Montréal, Québec, Canada",
+                streetAddress: "1500 Rue Sainte-Catherine O",
+                city: "Montréal",
+                region: "Québec",
+                postalCode: "H3G 1S8",
+                country: "Canada",
+                latitude: 45.5031824,
+                longitude: -73.5698065
             });
+        });
 
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "Event updated successfully");
+        it("clears geolocation data when updating event to online", async () => {
+            const { organizerAuth, event } = await createOrganizerAndEvent();
 
-        expect(res.body.event.title).toBe("Co Organizer Updated Event");
-    });
+            const response = await updateEvent(
+                event.id,
+                organizerAuth.headers,
+                { mode: EVENT_MODES.ONLINE }
+            );
 
-    it("should update event geolocation data", async () => {
-        const { organizerAuth, event } = await createOrganizerAndEvent();
+            expect(response.statusCode).toBe(200);
+            expect(global.fetch).not.toHaveBeenCalled();
 
-        const res = await request(app)
-            .put(`/api/events/${event.id}`)
-            .set(organizerAuth.headers)
-            .send({
-                location: "Quebec City"
-            });
-
-        expect(res.statusCode).toBe(200);
-
-        expect(global.fetch).toHaveBeenCalledTimes(1);
-
-        expect(res.body.event).toMatchObject({
-            location: "Quebec City",
-
-            locationLabel: "Montréal, Québec, Canada",
-
-            streetAddress: "1500 Rue Sainte-Catherine O",
-            city: "Montréal",
-            region: "Québec",
-            postalCode: "H3G 1S8",
-            country: "Canada",
-
-            latitude: 45.5031824,
-            longitude: -73.5698065
+            expect(response.body.event.location).toBeNull();
+            expect(response.body.event.locationLabel).toBeNull();
+            expect(response.body.event.streetAddress).toBeNull();
+            expect(response.body.event.city).toBeNull();
+            expect(response.body.event.region).toBeNull();
+            expect(response.body.event.postalCode).toBeNull();
+            expect(response.body.event.country).toBeNull();
+            expect(response.body.event.latitude).toBeNull();
+            expect(response.body.event.longitude).toBeNull();
         });
     });
 
-    it("should clear geolocation data when updating event to online", async () => {
-        const { organizerAuth, event } = await createOrganizerAndEvent();
+    /* =============================
+       IMAGE UPDATES
+    ============================= */
 
-        const res = await request(app)
-            .put(`/api/events/${event.id}`)
-            .set(organizerAuth.headers)
-            .send({
-                mode: EVENT_MODES.ONLINE
-            });
+    describe("Image updates", () => {
+        it("updates event image", async () => {
+            const { organizerAuth, event } = await createOrganizerAndEvent();
 
-        expect(res.statusCode).toBe(200);
+            const response = await updateEventWithImage(
+                event.id,
+                organizerAuth.headers,
+                { title: "Updated Image Event" },
+                {
+                    buffer: Buffer.from("fake image"),
+                    filename: "updated.png",
+                    contentType: "image/png"
+                }
+            );
 
-        expect(global.fetch).not.toHaveBeenCalled();
-
-        expect(res.body.event.location).toBeNull();
-        expect(res.body.event.locationLabel).toBeNull();
-
-        expect(res.body.event.streetAddress).toBeNull();
-        expect(res.body.event.city).toBeNull();
-        expect(res.body.event.region).toBeNull();
-        expect(res.body.event.postalCode).toBeNull();
-        expect(res.body.event.country).toBeNull();
-
-        expect(res.body.event.latitude).toBeNull();
-        expect(res.body.event.longitude).toBeNull();
-    });
-
-    it("should update event image", async () => {
-        const { organizerAuth, event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Image Organizer",
-                email: `imageorganizer${Date.now()}@test.com`
-            }
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "Event updated successfully");
+            expect(response.body.event.image).toMatch(/^\/uploads\/events\/event-/);
         });
 
-        const res = await request(app)
-            .put(`/api/events/${event.id}`)
-            .set(organizerAuth.headers)
-            .field("title", "Updated Image Event")
-            .attach("image", Buffer.from("fake image"), {
-                filename: "updated.png",
-                contentType: "image/png"
-            });
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "Event updated successfully");
-
-        expect(res.body.event.image).toMatch(/^\/uploads\/events\/event-/);
-    });
-
-    it("should delete old image when replacing event image", async () => {
-        const { organizerAuth } = await createOrganizerAndEvent({
-            organizer: {
+        it("deletes old image when replacing event image", async () => {
+            const organizerAuth = await createOrganizer({
                 name: "Cleanup Organizer",
-                email: `cleanup${Date.now()}@test.com`
-            }
+                email: `cleanuporganizer${Date.now()}@test.com`
+            });
+
+            const createResponse = await createEventWithImage(
+                organizerAuth.headers,
+                {
+                    title: "Cleanup Event",
+                    description: "Image cleanup test"
+                },
+                {
+                    buffer: Buffer.from("old image"),
+                    filename: "old.png",
+                    contentType: "image/png"
+                }
+            );
+
+            const event = createResponse.body.event;
+            const oldImagePath = path.join(__dirname, "../../../", event.image);
+
+            expect(fs.existsSync(oldImagePath)).toBe(true);
+
+            const updateResponse = await updateEventWithImage(
+                event.id,
+                organizerAuth.headers,
+                { title: "Cleanup Event Updated" },
+                {
+                    buffer: Buffer.from("new image"),
+                    filename: "new.png",
+                    contentType: "image/png"
+                }
+            );
+
+            expect(updateResponse.statusCode).toBe(200);
+            expect(updateResponse.body).toHaveProperty("message", "Event updated successfully");
+
+            expect(fs.existsSync(oldImagePath)).toBe(false);
         });
 
-        // Create event with initial image
-        const createRes = await request(app)
-            .post("/api/events")
-            .set(organizerAuth.headers)
-            .field("title", "Cleanup Event")
-            .field("description", "Image cleanup test")
-            .field("type", "Meetup")
-            .field("theme", "Technology")
-            .field("mode", EVENT_MODES.IN_PERSON)
-            .field("location", "Montreal")
-            .field("startDateTime", "2026-12-31T10:00:00.000Z")
-            .field("endDateTime", "2026-12-31T12:00:00.000Z")
-            .attach("image", Buffer.from("old image"), {
-                filename: "old.png",
-                contentType: "image/png"
-            });
-
-        const event = createRes.body.event;
-
-        const oldImagePath = path.join(__dirname, "../../../", event.image);
-
-        expect(fs.existsSync(oldImagePath)).toBe(true);
-
-        // Replace image
-        const updateRes = await request(app)
-            .put(`/api/events/${event.id}`)
-            .set(organizerAuth.headers)
-            .field("title", "Cleanup Event Updated")
-            .attach("image", Buffer.from("new image"), {
-                filename: "new.png",
-                contentType: "image/png"
-            });
-
-        expect(updateRes.statusCode).toBe(200);
-        expect(updateRes.body).toHaveProperty("message", "Event updated successfully");
-
-        // Old image should be deleted
-        expect(fs.existsSync(oldImagePath)).toBe(false);
-    });
-
-    it("should remove event image and fallback to default image", async () => {
-        const { organizerAuth } = await createOrganizerAndEvent({
-            organizer: {
+        it("removes event image and falls back to default image", async () => {
+            const organizerAuth = await createOrganizer({
                 name: "Remove Image Organizer",
-                email: `removeimage${Date.now()}@test.com`
-            }
-        });
-
-        // Create event with image
-        const createRes = await request(app)
-            .post("/api/events")
-            .set(organizerAuth.headers)
-            .field("title", "Remove Image Event")
-            .field("description", "Image removal test")
-            .field("type", "Meetup")
-            .field("theme", "Technology")
-            .field("mode", EVENT_MODES.IN_PERSON)
-            .field("location", "Montreal")
-            .field("startDateTime", "2026-12-31T10:00:00.000Z")
-            .field("endDateTime", "2026-12-31T12:00:00.000Z")
-            .attach("image", Buffer.from("event image"), {
-                filename: "event.png",
-                contentType: "image/png"
+                email: `removeimageorganizer${Date.now()}@test.com`
             });
 
-        const event = createRes.body.event;
+            const createResponse = await createEventWithImage(
+                organizerAuth.headers,
+                {
+                    title: "Remove Image Event",
+                    description: "Image removal test"
+                },
+                {
+                    buffer: Buffer.from("event image"),
+                    filename: "event.png",
+                    contentType: "image/png"
+                }
+            );
 
-        const oldImagePath = path.join(__dirname, "../../../", event.image);
+            const event = createResponse.body.event;
+            const oldImagePath = path.join(__dirname, "../../../", event.image);
 
-        expect(fs.existsSync(oldImagePath)).toBe(true);
+            expect(fs.existsSync(oldImagePath)).toBe(true);
 
-        // Remove image
-        const updateRes = await request(app)
-            .put(`/api/events/${event.id}`)
-            .set(organizerAuth.headers)
-            .field("image", "");
+            const updateResponse = await updateMultipartEventRequest(
+                event.id,
+                organizerAuth.headers,
+                { image: "" }
+            );
 
-        expect(updateRes.statusCode).toBe(200);
+            expect(updateResponse.statusCode).toBe(200);
+            expect(updateResponse.body.event.image).toBeNull();
 
-        expect(updateRes.body.event.image).toBeNull();
-
-        // Old image should be deleted
-        expect(fs.existsSync(oldImagePath)).toBe(false);
+            expect(fs.existsSync(oldImagePath)).toBe(false);
+        });
     });
 
     /* =============================
        AUTHENTICATION ERRORS
     ============================= */
 
-    it("should reject update without token", async () => {
-        const { event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Organizer",
-                email: `unauth${Date.now()}@test.com`
-            }
+    describe("Authentication errors", () => {
+        it("rejects update without token", async () => {
+            const { event } = await createOrganizerAndEvent();
+
+            const response = await updateEvent(
+                event.id,
+                undefined,
+                { title: "Unauthorized Update" }
+            );
+
+            expect(response.statusCode).toBe(401);
         });
-
-        const res = await request(app)
-            .put(`/api/events/${event.id}`)
-            .send({
-                title: "Unauthorized Update"
-            });
-
-        expect(res.statusCode).toBe(401);
     });
 
     /* =============================
        AUTHORIZATION ERRORS
     ============================= */
 
-    it("should reject update by participant", async () => {
-        const { event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Organizer",
-                email: `authorganizer${Date.now()}@test.com`
-            }
-        });
+    describe("Authorization errors", () => {
+        it("rejects update by participant", async () => {
+            const { event } = await createOrganizerAndEvent();
 
-        const participantAuth = await registerAndAuthenticateUser({
-            name: "Participant",
-            email: `participant${Date.now()}@test.com`
-        });
-
-        await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
-
-        const res = await request(app)
-            .put(`/api/events/${event.id}`)
-            .set(participantAuth.headers)
-            .send({
-                title: "Participant Update"
+            const participantAuth = await registerAndAuthenticateUser({
+                name: "Unauthorized Event Participant",
+                email: `unauthorizedeventparticipant${Date.now()}@test.com`
             });
 
-        expect(res.statusCode).toBe(403);
+            await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
+
+            const response = await updateEvent(
+                event.id,
+                participantAuth.headers,
+                { title: "Participant Update" }
+            );
+
+            expect(response.statusCode).toBe(403);
+        });
+
+        it("rejects updating inaccessible event", async () => {
+            const organizerAuth = await createOrganizer({
+                name: "Missing Event Organizer",
+                email: `missingeventorganizer${Date.now()}@test.com`
+            });
+
+            const response = await updateEvent(
+                999999,
+                organizerAuth.headers,
+                { title: "Missing Event" }
+            );
+
+            expect(response.statusCode).toBe(403);
+        });
     });
 
-    it("should reject updating past event", async () => {
-        const { organizerAuth, event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Past Organizer",
-                email: `pastorganizer${Date.now()}@test.com`
-            },
-            event: {
-                title: "Past Event",
-                startDateTime: "2020-01-01T10:00:00.000Z",
-                endDateTime: "2020-01-01T12:00:00.000Z"
-            }
+    /* =============================
+       BUSINESS RULES
+    ============================= */
+
+    describe("Business rules", () => {
+        it("rejects updating past event", async () => {
+            const { organizerAuth, event } = await createPastOrganizerAndEvent();
+
+            const response = await updateEvent(
+                event.id,
+                organizerAuth.headers,
+                { title: "Updated Past Event" }
+            );
+
+            expect(response.statusCode).toBe(403);
         });
-
-        const res = await request(app)
-            .put(`/api/events/${event.id}`)
-            .set(organizerAuth.headers)
-            .send({
-                title: "Updated Past Event"
-            });
-
-        expect(res.statusCode).toBe(403);
     });
 
     /* =============================
        VALIDATION ERRORS
     ============================= */
 
-    it("should reject invalid eventId", async () => {
-        const { organizerAuth } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Validator Organizer",
-                email: `validator${Date.now()}@test.com`
-            }
+    describe("Validation errors", () => {
+        it("rejects invalid event identifiers", async () => {
+            const organizerAuth = await createOrganizer();
+
+            const response = await updateEvent(
+                "abc",
+                organizerAuth.headers,
+                { title: "Invalid Event ID" }
+            );
+
+            expect(response.statusCode).toBe(400);
         });
 
-        const res = await request(app)
-            .put("/api/events/abc")
-            .set(organizerAuth.headers)
-            .send({
-                title: "Invalid Event ID"
-            });
+        it("rejects invalid payload", async () => {
+            const { organizerAuth, event } = await createOrganizerAndEvent();
 
-        expect(res.statusCode).toBe(400);
-    });
+            const response = await updateEvent(
+                event.id,
+                organizerAuth.headers,
+                { mode: "physical" }
+            );
 
-    it("should reject invalid payload", async () => {
-        const { organizerAuth, event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Payload Organizer",
-                email: `payload${Date.now()}@test.com`
-            }
+            expect(response.statusCode).toBe(400);
         });
-
-        const res = await request(app)
-            .put(`/api/events/${event.id}`)
-            .set(organizerAuth.headers)
-            .send({
-                mode: "physical"
-            });
-
-        expect(res.statusCode).toBe(400);
-    });
-
-    it("should reject invalid image type", async () => {
-        const { organizerAuth, event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Invalid Image Organizer",
-                email: `invalidimage${Date.now()}@test.com`
-            }
-        });
-
-        const res = await request(app)
-            .put(`/api/events/${event.id}`)
-            .set(organizerAuth.headers)
-            .field("title", "Invalid Image Update")
-            .attach("image", Buffer.from("fake pdf"), {
-                filename: "document.pdf",
-                contentType: "application/pdf"
-            });
-
-        expect(res.statusCode).toBe(400);
-    });
-
-    it("should reject oversized image upload", async () => {
-        const { organizerAuth, event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Oversized Organizer",
-                email: `oversized${Date.now()}@test.com`
-            }
-        });
-
-        const oversizedBuffer = Buffer.alloc(4 * 1024 * 1024);
-
-        const res = await request(app)
-            .put(`/api/events/${event.id}`)
-            .set(organizerAuth.headers)
-            .field("title", "Oversized Image Update")
-            .attach("image", oversizedBuffer, {
-                filename: "huge.png",
-                contentType: "image/png"
-            });
-
-        expect(res.statusCode).toBe(400);
     });
 
     /* =============================
-       EDGE CASES
+       FILE UPLOAD ERRORS
     ============================= */
 
-    it("should reject updating inaccessible event", async () => {
-        const { organizerAuth } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Organizer",
-                email: `missing${Date.now()}@test.com`
-            }
+    describe("File upload errors", () => {
+        it("rejects invalid image type", async () => {
+            const { organizerAuth, event } = await createOrganizerAndEvent();
+
+            const response = await updateEventWithImage(
+                event.id,
+                organizerAuth.headers,
+                { title: "Invalid Image Update" },
+                {
+                    buffer: Buffer.from("fake pdf"),
+                    filename: "document.pdf",
+                    contentType: "application/pdf"
+                }
+            );
+
+            expect(response.statusCode).toBe(400);
         });
 
-        const res = await request(app)
-            .put("/api/events/999999")
-            .set(organizerAuth.headers)
-            .send({
-                title: "Missing Event"
-            });
+        it("rejects oversized image upload", async () => {
+            const { organizerAuth, event } = await createOrganizerAndEvent();
 
-        expect(res.statusCode).toBe(403);
+            const oversizedBuffer = Buffer.alloc(4 * 1024 * 1024);
+
+            const response = await updateEventWithImage(
+                event.id,
+                organizerAuth.headers,
+                { title: "Oversized Image Update" },
+                {
+                    buffer: oversizedBuffer,
+                    filename: "huge.png",
+                    contentType: "image/png"
+                }
+            );
+
+            expect(response.statusCode).toBe(400);
+        });
     });
 });

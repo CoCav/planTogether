@@ -1,47 +1,42 @@
-/* ==================================================
-   EVENTS INTEGRATION - CREATE EVENT TESTS
-
-   Tests:
-   - authenticated event creation
-   - in-person event geolocation persistence
-   - event creation with image upload
-   - online event creation without location or geolocation
-   - organizer role assignment to event creator
-   - authentication protection
-   - missing required fields validation
-   - invalid mode validation
-   - invalid date validation
-   - invalid registration deadline validation
-   - invalid image type rejection
-   - invalid image extension rejection
-   - oversized image rejection
-
-   Ensures:
-   - authenticated users can create events
-   - in-person events persist resolved coordinates
-   - online events skip geocoding and keep location data null
-   - uploaded images are stored correctly
-   - event creator automatically becomes organizer
-   - validators protect event creation payloads
-   - shared event role constants are used for valid role scenarios
-================================================== */
-
-const request = require("supertest");
-const app = require("../../../src/app");
-
 const { EventUserRole } = require("../../../src/models");
 
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 const { EVENT_MODES } = require("../../../src/constants/eventModes");
 
-const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
+const {
+    initializeTestDatabase,
+    resetTestDatabase,
+    closeTestDatabase
+} = require("../../helpers/database/dbTestHelper");
 
-const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
+const {
+    createOrganizer,
+    createEventAsAuthenticatedUser,
+    createEventWithImage,
+    createMultipartEventRequest
+} = require("../../helpers/http/eventTestHelper");
 
-const { createEventPayload } = require("../../factories/eventFactory");
+/* ==========================================================================
+   Events Integration Tests - Create Event
+
+   Tests event creation behavior.
+
+   Responsibilities
+   - Test successful event creation
+   - Test geolocation handling
+   - Test image uploads
+   - Test organizer role assignment
+   - Test authentication errors
+   - Test validation errors
+   - Test file upload errors
+
+   Notes
+   - Authenticated users can create events.
+   - In-person events persist resolved geolocation data.
+   - Online events skip geocoding and keep location data null.
+=========================================================================== */
 
 describe("Create Event API", () => {
-
     beforeAll(async () => {
         global.fetch = jest.fn().mockResolvedValue({
             ok: true,
@@ -80,323 +75,313 @@ describe("Create Event API", () => {
        EVENT CREATION SUCCESS
     ============================= */
 
-    it("should create an event when authenticated", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Event Creator",
-            email: `creator${Date.now()}@test.com`
-        });
-
-        const res = await request(app)
-            .post("/api/events")
-            .set(userAuth.headers)
-            .send(createEventPayload({
-                title: "Tech Meetup",
-                description: "A technology meetup"
-            }));
-
-        expect(res.statusCode).toBe(201);
-        expect(res.body).toHaveProperty("message", "Event created successfully");
-        expect(res.body).toHaveProperty("event");
-
-        expect(res.body.event).toMatchObject({
-            title: "Tech Meetup",
-            mode: EVENT_MODES.IN_PERSON,
-            location: "Montreal",
-
-            locationLabel: "Montréal, Québec, Canada",
-            streetAddress: "1500 Rue Sainte-Catherine O",
-            city: "Montréal",
-            region: "Québec",
-            postalCode: "H3G 1S8",
-            country: "Canada",
-
-            latitude: 45.5031824,
-            longitude: -73.5698065
-        });
-
-        expect(global.fetch.mock.calls[0][0]).toContain("q=Montreal");
-    });
-
-    it("should create an event with image upload", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Image Creator",
-            email: `image${Date.now()}@test.com`
-        });
-
-        const res = await request(app)
-            .post("/api/events")
-            .set(userAuth.headers)
-            .field("title", "Image Event")
-            .field("description", "Event with image")
-            .field("type", "Meetup")
-            .field("theme", "Technology")
-            .field("mode", EVENT_MODES.IN_PERSON)
-            .field("location", "Montreal")
-            .field("startDateTime", "2026-12-31T10:00:00.000Z")
-            .field("endDateTime", "2026-12-31T12:00:00.000Z")
-            .attach("image", Buffer.from("fake image"), {
-                filename: "event.png",
-                contentType: "image/png"
+    describe("Event creation success", () => {
+        it("creates an event when authenticated", async () => {
+            const organizerAuth = await createOrganizer({
+                name: "Event Creator",
+                email: `eventcreator${Date.now()}@test.com`
             });
 
-        expect(res.statusCode).toBe(201);
-        expect(res.body).toHaveProperty("message", "Event created successfully");
+            const response = await createEventAsAuthenticatedUser(
+                organizerAuth.headers,
+                {
+                    title: "Tech Meetup",
+                    description: "A technology meetup"
+                }
+            );
 
-        expect(res.body.event.image).toMatch(/^\/uploads\/events\/event-/);
-    });
+            expect(response.statusCode).toBe(201);
+            expect(response.body).toHaveProperty("message", "Event created successfully");
+            expect(response.body).toHaveProperty("event");
 
-    it("should call location provider when creating an in-person event", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Geo Creator",
-            email: `geo${Date.now()}@test.com`
+            expect(response.body.event).toMatchObject({
+                title: "Tech Meetup",
+                mode: EVENT_MODES.IN_PERSON,
+                location: "Montreal",
+
+                locationLabel: "Montréal, Québec, Canada",
+                streetAddress: "1500 Rue Sainte-Catherine O",
+                city: "Montréal",
+                region: "Québec",
+                postalCode: "H3G 1S8",
+                country: "Canada",
+
+                latitude: 45.5031824,
+                longitude: -73.5698065
+            });
+
+            expect(global.fetch.mock.calls[0][0]).toContain("q=Montreal");
         });
 
-        const res = await request(app)
-            .post("/api/events")
-            .set(userAuth.headers)
-            .send(createEventPayload({
-                title: "Geo Event",
-                description: "Geocoded event",
-                location: "Sherbrooke"
-            }));
+        it("creates an event with image upload", async () => {
+            const organizerAuth = await createOrganizer({
+                name: "Image Creator",
+                email: `imagecreator${Date.now()}@test.com`
+            });
 
-        expect(res.statusCode).toBe(201);
+            const response = await createEventWithImage(
+                organizerAuth.headers,
+                {
+                    title: "Image Event",
+                    description: "Event with image"
+                },
+                {
+                    buffer: Buffer.from("fake image"),
+                    filename: "event.png",
+                    contentType: "image/png"
+                }
+            );
 
-        expect(global.fetch).toHaveBeenCalledTimes(1);
-
-        expect(global.fetch.mock.calls[0][0]).toContain("q=Sherbrooke");
-    });
-
-    it("should create an online event without geolocation data", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Online Creator",
-            email: `online${Date.now()}@test.com`
+            expect(response.statusCode).toBe(201);
+            expect(response.body).toHaveProperty("message", "Event created successfully");
+            expect(response.body.event.image).toMatch(/^\/uploads\/events\/event-/);
         });
 
-        const res = await request(app)
-            .post("/api/events")
-            .set(userAuth.headers)
-            .send(createEventPayload({
-                title: "Online Event",
-                description: "Remote event",
-                type: "Workshop",
-                mode: EVENT_MODES.ONLINE,
-                location: undefined
-            }));
+        it("calls location provider when creating an in-person event", async () => {
+            const organizerAuth = await createOrganizer({
+                name: "Geo Creator",
+                email: `geocreator${Date.now()}@test.com`
+            });
 
-        expect(res.statusCode).toBe(201);
-        expect(res.body).toHaveProperty("message", "Event created successfully");
+            const response = await createEventAsAuthenticatedUser(
+                organizerAuth.headers,
+                {
+                    title: "Geo Event",
+                    description: "Geocoded event",
+                    location: "Sherbrooke"
+                }
+            );
 
-        expect(res.body.event.location).toBeNull();
-        expect(res.body.event.locationLabel).toBeNull();
-
-        expect(res.body.event.streetAddress).toBeNull();
-        expect(res.body.event.city).toBeNull();
-        expect(res.body.event.region).toBeNull();
-        expect(res.body.event.postalCode).toBeNull();
-        expect(res.body.event.country).toBeNull();
-
-        expect(res.body.event.latitude).toBeNull();
-        expect(res.body.event.longitude).toBeNull();
-
-        expect(global.fetch).not.toHaveBeenCalled();
-    });
-
-    it("should assign organizer role to event creator", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Organizer Creator",
-            email: `organizer${Date.now()}@test.com`
+            expect(response.statusCode).toBe(201);
+            expect(global.fetch).toHaveBeenCalledTimes(1);
+            expect(global.fetch.mock.calls[0][0]).toContain("q=Sherbrooke");
         });
 
-        const res = await request(app)
-            .post("/api/events")
-            .set(userAuth.headers)
-            .send(createEventPayload({
-                title: "Organizer Event",
-                description: "Organizer test"
-            }));
+        it("creates an online event without geolocation data", async () => {
+            const organizerAuth = await createOrganizer({
+                name: "Online Creator",
+                email: `onlinecreator${Date.now()}@test.com`
+            });
 
-        const membership = await EventUserRole.findOne({
-            where: {
-                eventId: res.body.event.id,
-                userId: userAuth.user.userId
-            }
+            const response = await createEventAsAuthenticatedUser(
+                organizerAuth.headers,
+                {
+                    title: "Online Event",
+                    description: "Remote event",
+                    type: "Workshop",
+                    mode: EVENT_MODES.ONLINE,
+                    location: undefined
+                }
+            );
+
+            expect(response.statusCode).toBe(201);
+            expect(response.body).toHaveProperty("message", "Event created successfully");
+
+            expect(response.body.event.location).toBeNull();
+            expect(response.body.event.locationLabel).toBeNull();
+
+            expect(response.body.event.streetAddress).toBeNull();
+            expect(response.body.event.city).toBeNull();
+            expect(response.body.event.region).toBeNull();
+            expect(response.body.event.postalCode).toBeNull();
+            expect(response.body.event.country).toBeNull();
+
+            expect(response.body.event.latitude).toBeNull();
+            expect(response.body.event.longitude).toBeNull();
+
+            expect(global.fetch).not.toHaveBeenCalled();
         });
 
-        expect(membership).toBeDefined();
+        it("assigns organizer role to event creator", async () => {
+            const organizerAuth = await createOrganizer({
+                name: "Organizer Creator",
+                email: `organizercreator${Date.now()}@test.com`
+            });
 
-        expect(res.body).toHaveProperty("message", "Event created successfully");
+            const response = await createEventAsAuthenticatedUser(
+                organizerAuth.headers,
+                {
+                    title: "Organizer Event",
+                    description: "Organizer test"
+                }
+            );
 
-        expect(membership.role).toBe(EVENT_ROLES.ORGANIZER);
+            const membership = await EventUserRole.findOne({
+                where: {
+                    eventId: response.body.event.id,
+                    userId: organizerAuth.user.userId
+                }
+            });
+
+            expect(response.body).toHaveProperty("message", "Event created successfully");
+            expect(membership).toBeDefined();
+            expect(membership.role).toBe(EVENT_ROLES.ORGANIZER);
+        });
     });
 
     /* =============================
        AUTHENTICATION ERRORS
     ============================= */
 
-    it("should reject event creation without token", async () => {
-        const res = await request(app)
-            .post("/api/events")
-            .send({
-                title: "Unauthorized Event"
-            });
+    describe("Authentication errors", () => {
+        it("rejects event creation without token", async () => {
+            const response = await createEventAsAuthenticatedUser(
+                undefined,
+                {
+                    title: "Unauthorized Event"
+                }
+            );
 
-        expect(res.statusCode).toBe(401);
+            expect(response.statusCode).toBe(401);
+        });
     });
 
     /* =============================
        VALIDATION ERRORS
     ============================= */
 
-    it("should reject missing required fields", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Validation User",
-            email: `validation${Date.now()}@test.com`
-        });
-
-        const res = await request(app)
-            .post("/api/events")
-            .set(userAuth.headers)
-            .send({
-                title: "",
-                description: "",
-                type: "",
-                theme: "",
-                mode: ""
+    describe("Validation errors", () => {
+        it("rejects missing required fields", async () => {
+            const organizerAuth = await createOrganizer({
+                name: "Validation User",
+                email: `validationeventuser${Date.now()}@test.com`
             });
 
-        expect(res.statusCode).toBe(400);
-    });
+            const response = await createEventAsAuthenticatedUser(
+                organizerAuth.headers,
+                {
+                    title: "",
+                    description: "",
+                    type: "",
+                    theme: "",
+                    mode: ""
+                }
+            );
 
-    it("should reject invalid mode", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Invalid Mode User",
-            email: `invalidmode${Date.now()}@test.com`
+            expect(response.statusCode).toBe(400);
         });
 
-        const res = await request(app)
-            .post("/api/events")
-            .set(userAuth.headers)
-            .send(createEventPayload({
-                title: "Invalid Mode Event",
-                description: "Invalid mode",
-                mode: "physical"
-            }));
+        it("rejects invalid mode", async () => {
+            const organizerAuth = await createOrganizer({
+                name: "Invalid Mode User",
+                email: `invalidmodeuser${Date.now()}@test.com`
+            });
 
-        expect(res.statusCode).toBe(400);
-    });
+            const response = await createEventAsAuthenticatedUser(
+                organizerAuth.headers,
+                {
+                    title: "Invalid Mode Event",
+                    description: "Invalid mode",
+                    mode: "physical"
+                }
+            );
 
-    it("should reject invalid date order", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Date User",
-            email: `date${Date.now()}@test.com`
+            expect(response.statusCode).toBe(400);
         });
 
-        const res = await request(app)
-            .post("/api/events")
-            .set(userAuth.headers)
-            .send(createEventPayload({
-                title: "Invalid Dates Event",
-                description: "Bad dates",
-                startDateTime: "2026-12-31T12:00:00.000Z",
-                endDateTime: "2026-12-31T10:00:00.000Z"
-            }));
+        it("rejects invalid date order", async () => {
+            const organizerAuth = await createOrganizer({
+                name: "Invalid Date User",
+                email: `invaliddateuser${Date.now()}@test.com`
+            });
 
-        expect(res.statusCode).toBe(400);
-    });
+            const response = await createEventAsAuthenticatedUser(
+                organizerAuth.headers,
+                {
+                    title: "Invalid Dates Event",
+                    description: "Bad dates",
+                    startDateTime: "2026-12-31T12:00:00.000Z",
+                    endDateTime: "2026-12-31T10:00:00.000Z"
+                }
+            );
 
-    it("should reject invalid registration deadline", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Deadline User",
-            email: `deadline${Date.now()}@test.com`
+            expect(response.statusCode).toBe(400);
         });
 
-        const res = await request(app)
-            .post("/api/events")
-            .set(userAuth.headers)
-            .send(createEventPayload({
-                title: "Deadline Event",
-                description: "Deadline validation",
-                registrationDeadline: "2026-12-31T11:00:00.000Z"
-            }));
+        it("rejects invalid registration deadline", async () => {
+            const organizerAuth = await createOrganizer({
+                name: "Deadline User",
+                email: `deadlineuser${Date.now()}@test.com`
+            });
 
-        expect(res.statusCode).toBe(400);
+            const response = await createEventAsAuthenticatedUser(
+                organizerAuth.headers,
+                {
+                    title: "Deadline Event",
+                    description: "Deadline validation",
+                    registrationDeadline: "2026-12-31T11:00:00.000Z"
+                }
+            );
+
+            expect(response.statusCode).toBe(400);
+        });
     });
 
-    it("should reject invalid image type", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Invalid Image User",
-            email: `invalidimage${Date.now()}@test.com`
-        });
+    /* =============================
+       FILE UPLOAD ERRORS
+    ============================= */
 
-        const res = await request(app)
-            .post("/api/events")
-            .set(userAuth.headers)
-            .field("title", "Invalid Image Event")
-            .field("description", "Invalid image")
-            .field("type", "Meetup")
-            .field("theme", "Technology")
-            .field("mode", EVENT_MODES.IN_PERSON)
-            .field("location", "Montreal")
-            .field("startDateTime", "2026-12-31T10:00:00.000Z")
-            .field("endDateTime", "2026-12-31T12:00:00.000Z")
-            .attach("image", Buffer.from("fake pdf"), {
+    describe("File upload errors", () => {
+        it("rejects invalid image type", async () => {
+            const organizerAuth = await createOrganizer({
+                name: "Invalid Image User",
+                email: `invalidimageuser${Date.now()}@test.com`
+            });
+
+            const response = await createMultipartEventRequest(
+                organizerAuth.headers,
+                {
+                    title: "Invalid Image Event",
+                    description: "Invalid image"
+                }
+            ).attach("image", Buffer.from("fake pdf"), {
                 filename: "document.pdf",
                 contentType: "application/pdf"
             });
 
-        expect(res.statusCode).toBe(400);
-    });
-
-    it("should reject invalid image extension even with image mimetype", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Invalid Extension User",
-            email: `invalidext${Date.now()}@test.com`
+            expect(response.statusCode).toBe(400);
         });
 
-        const res = await request(app)
-            .post("/api/events")
-            .set(userAuth.headers)
-            .field("title", "Invalid Extension Event")
-            .field("description", "Invalid extension")
-            .field("type", "Meetup")
-            .field("theme", "Technology")
-            .field("mode", EVENT_MODES.IN_PERSON)
-            .field("location", "Montreal")
-            .field("startDateTime", "2026-12-31T10:00:00.000Z")
-            .field("endDateTime", "2026-12-31T12:00:00.000Z")
-            .attach("image", Buffer.from("fake image"), {
+        it("rejects invalid image extension even with image mimetype", async () => {
+            const organizerAuth = await createOrganizer({
+                name: "Invalid Extension User",
+                email: `invalidextensionuser${Date.now()}@test.com`
+            });
+
+            const response = await createMultipartEventRequest(
+                organizerAuth.headers,
+                {
+                    title: "Invalid Extension Event",
+                    description: "Invalid extension"
+                }
+            ).attach("image", Buffer.from("fake image"), {
                 filename: "image.txt",
                 contentType: "image/png"
             });
 
-        expect(res.statusCode).toBe(400);
-    });
-
-    it("should reject oversized image upload", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Oversized Image User",
-            email: `oversized${Date.now()}@test.com`
+            expect(response.statusCode).toBe(400);
         });
 
-        const oversizedBuffer = Buffer.alloc(4 * 1024 * 1024);
+        it("rejects oversized image upload", async () => {
+            const organizerAuth = await createOrganizer({
+                name: "Oversized Image User",
+                email: `oversizedimageuser${Date.now()}@test.com`
+            });
 
-        const res = await request(app)
-            .post("/api/events")
-            .set(userAuth.headers)
-            .field("title", "Oversized Image Event")
-            .field("description", "Oversized upload")
-            .field("type", "Meetup")
-            .field("theme", "Technology")
-            .field("mode", EVENT_MODES.IN_PERSON)
-            .field("location", "Montreal")
-            .field("startDateTime", "2026-12-31T10:00:00.000Z")
-            .field("endDateTime", "2026-12-31T12:00:00.000Z")
-            .attach("image", oversizedBuffer, {
+            const oversizedBuffer = Buffer.alloc(4 * 1024 * 1024);
+
+            const response = await createMultipartEventRequest(
+                organizerAuth.headers,
+                {
+                    title: "Oversized Image Event",
+                    description: "Oversized upload"
+                }
+            ).attach("image", oversizedBuffer, {
                 filename: "huge.png",
                 contentType: "image/png"
             });
 
-        expect(res.statusCode).toBe(400);
+            expect(response.statusCode).toBe(400);
+        });
     });
 });

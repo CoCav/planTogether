@@ -1,314 +1,390 @@
-/* ==================================================
-   EVENT REVIEWS INTEGRATION - UPDATE REVIEW TESTS
+const { EventReview } = require("../../../src/models");
 
-   Tests:
-   - authenticated review update
-   - rating and comment persistence
-   - ownership enforcement
-   - authentication protection
-   - nonexistent review handling
-   - invalid review ID validation
-   - update payload validation
-
-   Ensures:
-   - users can update their own rated reviews
-   - users cannot update reviews owned by others
-   - protected routes require authentication
-   - updated reviews keep public reviewer data
-   - invalid review update requests are rejected correctly
-================================================== */
-
-const request = require("supertest");
-const app = require("../../../src/app");
-
-const { EventReview, EventUserRole } = require("../../../src/models");
-
-const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
-
-const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../helpers/database/dbTestHelper");
+const {
+    initializeTestDatabase,
+    resetTestDatabase,
+    closeTestDatabase
+} = require("../../helpers/database/dbTestHelper");
 
 const { registerAndAuthenticateUser } = require("../../helpers/http/authTestHelper");
-const { createOrganizerAndEvent } = require("../../helpers/http/eventTestHelper");
+const {
+    createEventReview,
+    updateEventReview,
+    createCompletedEventWithParticipant
+} = require("../../helpers/http/eventReviewTestHelper");
+
+const { createReviewPayload } = require("../../factories/eventReviewFactory");
+
+/* ==========================================================================
+   Event Reviews Integration Tests - Update Review
+
+   Tests event review update behavior.
+
+   Responsibilities
+   - Test successful review updates
+   - Test authentication errors
+   - Test ownership rules
+   - Test validation errors
+   - Test missing review handling
+
+   Notes
+   - Users can only update their own reviews.
+   - Updated reviews keep public reviewer data.
+   - Invalid updates must not modify the persisted review.
+=========================================================================== */
 
 describe("Update Event Review API", () => {
-
     beforeAll(initializeTestDatabase);
     afterEach(resetTestDatabase);
     afterAll(closeTestDatabase);
 
     /* =============================
-       TEST HELPERS
-    ============================= */
-
-    const createReviewScenario = async () => {
-        const { event } = await createOrganizerAndEvent({
-            organizer: {
-                name: "Review Organizer",
-                email: `revieworganizer${Date.now()}@test.com`
-            },
-            event: {
-                title: "Past Review Event",
-                startDateTime: "2020-01-01T10:00:00.000Z",
-                endDateTime: "2020-01-01T12:00:00.000Z"
-            }
-        });
-
-        const reviewerAuth = await registerAndAuthenticateUser({
-            name: "Reviewer",
-            email: `reviewer${Date.now()}@test.com`
-        });
-
-        await EventUserRole.create({
-            eventId: event.id,
-            userId: reviewerAuth.user.userId,
-            role: EVENT_ROLES.PARTICIPANT
-        });
-
-        const review = await EventReview.create({
-            eventId: event.id,
-            userId: reviewerAuth.user.userId,
-            rating: 5,
-            comment: "Great event!"
-        });
-
-        return {
-            event,
-            review,
-            reviewerAuth
-        };
-    };
-
-    /* =============================
        REVIEW UPDATE SUCCESS
     ============================= */
 
-    it("should update a review owned by the authenticated user", async () => {
-        const { review, reviewerAuth } = await createReviewScenario();
+    describe("Review update success", () => {
+        it("updates a review owned by the authenticated user", async () => {
+            const { event, participantAuth } = await createCompletedEventWithParticipant({
+                participant: {
+                    name: "Reviewer"
+                }
+            });
 
-        const res = await request(app)
-            .put(`/api/events/reviews/${review.id}`)
-            .set(reviewerAuth.headers)
-            .send({
+            const createResponse = await createEventReview(
+                event.id,
+                participantAuth.headers,
+                createReviewPayload({
+                    comment: "Great event!"
+                })
+            );
+
+            const reviewId = createResponse.body.review.id;
+
+            const response = await updateEventReview(
+                reviewId,
+                participantAuth.headers,
+                createReviewPayload({
+                    rating: 4,
+                    comment: "Updated review comment"
+                })
+            );
+
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "Event review updated successfully");
+
+            expect(response.body.review).toMatchObject({
+                id: reviewId,
+                userId: participantAuth.user.userId,
                 rating: 4,
                 comment: "Updated review comment"
             });
 
-        expect(res.statusCode).toBe(200);
+            const updatedReview = await EventReview.findByPk(reviewId);
 
-        expect(res.body).toHaveProperty("message", "Event review updated successfully");
-
-        expect(res.body.review).toMatchObject({
-            id: review.id,
-            userId: reviewerAuth.user.userId,
-            rating: 4,
-            comment: "Updated review comment"
+            expect(updatedReview.rating).toBe(4);
+            expect(updatedReview.comment).toBe("Updated review comment");
         });
 
-        const updatedReview = await EventReview.findByPk(review.id);
+        it("trims updated review comment before persistence", async () => {
+            const { event, participantAuth } = await createCompletedEventWithParticipant();
 
-        expect(updatedReview.rating).toBe(4);
-        expect(updatedReview.comment).toBe("Updated review comment");
-    });
+            const createResponse = await createEventReview(
+                event.id,
+                participantAuth.headers,
+                createReviewPayload({
+                    comment: "Great event!"
+                })
+            );
 
-    it("should trim updated review comment before persistence", async () => {
-        const { review, reviewerAuth } = await createReviewScenario();
+            const reviewId = createResponse.body.review.id;
 
-        const res = await request(app)
-            .put(`/api/events/reviews/${review.id}`)
-            .set(reviewerAuth.headers)
-            .send({
-                rating: 3,
-                comment: "   Updated with spaces   "
-            });
+            const response = await updateEventReview(
+                reviewId,
+                participantAuth.headers,
+                createReviewPayload({
+                    rating: 3,
+                    comment: "   Updated with spaces   "
+                })
+            );
 
-        expect(res.statusCode).toBe(200);
-        expect(res.body.review.comment).toBe("Updated with spaces");
+            expect(response.statusCode).toBe(200);
+            expect(response.body.review.comment).toBe("Updated with spaces");
 
-        const updatedReview = await EventReview.findByPk(review.id);
+            const updatedReview = await EventReview.findByPk(reviewId);
 
-        expect(updatedReview.comment).toBe("Updated with spaces");
-    });
-
-    it("should include public user data on updated review", async () => {
-        const { review, reviewerAuth } = await createReviewScenario();
-
-        const res = await request(app)
-            .put(`/api/events/reviews/${review.id}`)
-            .set(reviewerAuth.headers)
-            .send({
-                rating: 4,
-                comment: "Updated review comment"
-            });
-
-        expect(res.statusCode).toBe(200);
-
-        expect(res.body.review).toHaveProperty("user");
-
-        expect(res.body.review.user).toMatchObject({
-            id: reviewerAuth.user.userId,
-            name: "Reviewer"
+            expect(updatedReview.comment).toBe("Updated with spaces");
         });
 
-        expect(res.body.review.user).not.toHaveProperty("email");
-        expect(res.body.review.user).not.toHaveProperty("password");
+        it("includes public user data on updated review", async () => {
+            const { event, participantAuth } = await createCompletedEventWithParticipant({
+                participant: {
+                    name: "Reviewer"
+                }
+            });
+
+            const createResponse = await createEventReview(
+                event.id,
+                participantAuth.headers,
+                createReviewPayload({
+                    comment: "Great event!"
+                })
+            );
+
+            const reviewId = createResponse.body.review.id;
+
+            const response = await updateEventReview(
+                reviewId,
+                participantAuth.headers,
+                createReviewPayload({
+                    rating: 4,
+                    comment: "Updated review comment"
+                })
+            );
+
+            expect(response.statusCode).toBe(200);
+            expect(response.body.review).toHaveProperty("user");
+
+            expect(response.body.review.user).toMatchObject({
+                id: participantAuth.user.userId,
+                name: "Reviewer"
+            });
+
+            expect(response.body.review.user).not.toHaveProperty("email");
+            expect(response.body.review.user).not.toHaveProperty("password");
+        });
     });
 
     /* =============================
        AUTHENTICATION ERRORS
     ============================= */
 
-    it("should reject updating a review without token", async () => {
-        const { review } = await createReviewScenario();
+    describe("Authentication errors", () => {
+        it("rejects updating a review without token", async () => {
+            const { event, participantAuth } = await createCompletedEventWithParticipant();
 
-        const res = await request(app)
-            .put(`/api/events/reviews/${review.id}`)
-            .send({
-                rating: 4,
-                comment: "Updated review comment"
-            });
+            const createResponse = await createEventReview(
+                event.id,
+                participantAuth.headers,
+                createReviewPayload()
+            );
 
-        expect(res.statusCode).toBe(401);
+            const reviewId = createResponse.body.review.id;
+
+            const response = await updateEventReview(
+                reviewId,
+                undefined,
+                createReviewPayload({
+                    rating: 4,
+                    comment: "Updated review comment"
+                })
+            );
+
+            expect(response.statusCode).toBe(401);
+        });
     });
 
     /* =============================
-       REVIEW OWNERSHIP
+       BUSINESS RULES
     ============================= */
 
-    it("should reject updating another user's review", async () => {
-        const { review } = await createReviewScenario();
+    describe("Business rules", () => {
+        it("rejects updating another user's review", async () => {
+            const { event, participantAuth } = await createCompletedEventWithParticipant();
 
-        const otherUserAuth = await registerAndAuthenticateUser({
-            name: "Other User",
-            email: `otheruser${Date.now()}@test.com`
-        });
+            const createResponse = await createEventReview(
+                event.id,
+                participantAuth.headers,
+                createReviewPayload()
+            );
 
-        const res = await request(app)
-            .put(`/api/events/reviews/${review.id}`)
-            .set(otherUserAuth.headers)
-            .send({
-                rating: 4,
-                comment: "Trying to update another user's review"
+            const reviewId = createResponse.body.review.id;
+
+            const otherUserAuth = await registerAndAuthenticateUser({
+                name: "Other Reviewer",
+                email: `otherreviewer${Date.now()}@test.com`
             });
 
-        expect(res.statusCode).toBe(403);
+            const response = await updateEventReview(
+                reviewId,
+                otherUserAuth.headers,
+                createReviewPayload({
+                    rating: 4,
+                    comment: "Trying to update another user's review"
+                })
+            );
 
-        expect(res.body.message).toBe("You can only manage your own review");
-    });
-
-    /* =============================
-       EDGE CASES
-    ============================= */
-
-    it("should return 404 when review does not exist", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Update User",
-            email: `updateuser${Date.now()}@test.com`
+            expect(response.statusCode).toBe(403);
+            expect(response.body.message).toBe("You can only manage your own review");
         });
-
-        const res = await request(app)
-            .put("/api/events/reviews/999999")
-            .set(userAuth.headers)
-            .send({
-                rating: 4,
-                comment: "Updated review comment"
-            });
-
-        expect(res.statusCode).toBe(404);
-
-        expect(res.body.message).toBe("Review not found");
     });
 
     /* =============================
        VALIDATION ERRORS
     ============================= */
 
-    it("should reject invalid reviewId", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Validation User",
-            email: `validation${Date.now()}@test.com`
+    describe("Validation errors", () => {
+        it("rejects invalid review identifiers", async () => {
+            const userAuth = await registerAndAuthenticateUser({
+                name: "Validation User",
+                email: `validationreview${Date.now()}@test.com`
+            });
+
+            const response = await updateEventReview(
+                "abc",
+                userAuth.headers,
+                createReviewPayload({
+                    rating: 4,
+                    comment: "Updated review comment"
+                })
+            );
+
+            expect(response.statusCode).toBe(400);
         });
 
-        const res = await request(app)
-            .put("/api/events/reviews/abc")
-            .set(userAuth.headers)
-            .send({
-                rating: 4,
-                comment: "Updated review comment"
-            });
+        it("rejects missing rating", async () => {
+            const { event, participantAuth } = await createCompletedEventWithParticipant();
 
-        expect(res.statusCode).toBe(400);
+            const createResponse = await createEventReview(
+                event.id,
+                participantAuth.headers,
+                createReviewPayload()
+            );
+
+            const reviewId = createResponse.body.review.id;
+
+            const response = await updateEventReview(
+                reviewId,
+                participantAuth.headers,
+                {
+                    comment: "Updated review comment"
+                }
+            );
+
+            expect(response.statusCode).toBe(400);
+        });
+
+        it("rejects invalid rating", async () => {
+            const { event, participantAuth } = await createCompletedEventWithParticipant();
+
+            const createResponse = await createEventReview(
+                event.id,
+                participantAuth.headers,
+                createReviewPayload()
+            );
+
+            const reviewId = createResponse.body.review.id;
+
+            const response = await updateEventReview(
+                reviewId,
+                participantAuth.headers,
+                createReviewPayload({
+                    rating: 6,
+                    comment: "Updated review comment"
+                })
+            );
+
+            expect(response.statusCode).toBe(400);
+        });
+
+        it("keeps the original review unchanged when update validation fails", async () => {
+            const { event, participantAuth } = await createCompletedEventWithParticipant();
+
+            const createResponse = await createEventReview(
+                event.id,
+                participantAuth.headers,
+                createReviewPayload({
+                    rating: 5,
+                    comment: "Great event!"
+                })
+            );
+
+            const reviewId = createResponse.body.review.id;
+
+            const response = await updateEventReview(
+                reviewId,
+                participantAuth.headers,
+                createReviewPayload({
+                    rating: 6,
+                    comment: "Updated review comment"
+                })
+            );
+
+            expect(response.statusCode).toBe(400);
+
+            const unchangedReview = await EventReview.findByPk(reviewId);
+
+            expect(unchangedReview.rating).toBe(5);
+            expect(unchangedReview.comment).toBe("Great event!");
+        });
+
+        it("rejects missing comment", async () => {
+            const { event, participantAuth } = await createCompletedEventWithParticipant();
+
+            const createResponse = await createEventReview(
+                event.id,
+                participantAuth.headers,
+                createReviewPayload()
+            );
+
+            const reviewId = createResponse.body.review.id;
+
+            const response = await updateEventReview(
+                reviewId,
+                participantAuth.headers,
+                {
+                    rating: 4
+                }
+            );
+
+            expect(response.statusCode).toBe(400);
+        });
+
+        it("rejects too short comment", async () => {
+            const { event, participantAuth } = await createCompletedEventWithParticipant();
+
+            const createResponse = await createEventReview(
+                event.id,
+                participantAuth.headers,
+                createReviewPayload()
+            );
+
+            const reviewId = createResponse.body.review.id;
+
+            const response = await updateEventReview(
+                reviewId,
+                participantAuth.headers,
+                createReviewPayload({
+                    rating: 4,
+                    comment: "Bad"
+                })
+            );
+
+            expect(response.statusCode).toBe(400);
+        });
     });
 
-    it("should reject missing rating", async () => {
-        const { review, reviewerAuth } = await createReviewScenario();
+    /* =============================
+       NOT FOUND
+    ============================= */
 
-        const res = await request(app)
-            .put(`/api/events/reviews/${review.id}`)
-            .set(reviewerAuth.headers)
-            .send({
-                comment: "Updated review comment"
+    describe("Not found", () => {
+        it("returns 404 when the review does not exist", async () => {
+            const userAuth = await registerAndAuthenticateUser({
+                name: "Missing Review User",
+                email: `missingreviewuser${Date.now()}@test.com`
             });
 
-        expect(res.statusCode).toBe(400);
-    });
+            const response = await updateEventReview(
+                999999,
+                userAuth.headers,
+                createReviewPayload({
+                    rating: 4,
+                    comment: "Updated review comment"
+                })
+            );
 
-    it("should reject invalid rating", async () => {
-        const { review, reviewerAuth } = await createReviewScenario();
-
-        const res = await request(app)
-            .put(`/api/events/reviews/${review.id}`)
-            .set(reviewerAuth.headers)
-            .send({
-                rating: 6,
-                comment: "Updated review comment"
-            });
-
-        expect(res.statusCode).toBe(400);
-    });
-
-    it("should keep the original review unchanged when update validation fails", async () => {
-        const { review, reviewerAuth } = await createReviewScenario();
-
-        const res = await request(app)
-            .put(`/api/events/reviews/${review.id}`)
-            .set(reviewerAuth.headers)
-            .send({
-                rating: 6,
-                comment: "Updated review comment"
-            });
-
-        expect(res.statusCode).toBe(400);
-
-        const unchangedReview = await EventReview.findByPk(review.id);
-
-        expect(unchangedReview.rating).toBe(5);
-        expect(unchangedReview.comment).toBe("Great event!");
-    });
-
-    it("should reject missing comment", async () => {
-        const { review, reviewerAuth } = await createReviewScenario();
-
-        const res = await request(app)
-            .put(`/api/events/reviews/${review.id}`)
-            .set(reviewerAuth.headers)
-            .send({
-                rating: 4
-            });
-
-        expect(res.statusCode).toBe(400);
-    });
-
-    it("should reject too short comment", async () => {
-        const { review, reviewerAuth } = await createReviewScenario();
-
-        const res = await request(app)
-            .put(`/api/events/reviews/${review.id}`)
-            .set(reviewerAuth.headers)
-            .send({
-                rating: 4,
-                comment: "Bad"
-            });
-
-        expect(res.statusCode).toBe(400);
+            expect(response.statusCode).toBe(404);
+            expect(response.body.message).toBe("Review not found");
+        });
     });
 });

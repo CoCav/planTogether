@@ -1,62 +1,66 @@
-/* ==================================================
-   USER INTEGRATION - CURRENT USER PROFILE TESTS
-
-   Tests:
-   - authenticated current profile retrieval
-   - authentication protection
-
-   Ensures:
-   - authenticated users can retrieve their profile
-   - password is never exposed
-   - authentication middleware protects the route
-================================================== */
-
-const request = require("supertest");
-const app = require("../../../../src/app");
-
-const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../../helpers/database/dbTestHelper");
+const {
+    initializeTestDatabase,
+    resetTestDatabase,
+    closeTestDatabase
+} = require("../../../helpers/database/dbTestHelper");
 
 const { registerAndAuthenticateUser } = require("../../../helpers/http/authTestHelper");
+const { getCurrentUserProfile } = require("../../../helpers/http/userTestHelper");
+
+/* ==========================================================================
+   Users Integration Tests - Get Current User Profile
+
+   Tests current user profile retrieval.
+
+   Responsibilities
+   - Test authenticated profile retrieval
+   - Test authentication errors
+
+   Notes
+   - Authenticated users can retrieve their own profile.
+   - Passwords must never be exposed in profile responses.
+=========================================================================== */
 
 describe("Get Current User Profile API", () => {
-
     beforeAll(initializeTestDatabase);
     afterEach(resetTestDatabase);
     afterAll(closeTestDatabase);
 
     /* =============================
-       CURRENT USER PROFILE SUCCESS
+       PROFILE RETRIEVAL SUCCESS
     ============================= */
 
-    it("should get current authenticated user profile", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Profile User",
-            email: `profile${Date.now()}@test.com`
+    describe("Profile retrieval success", () => {
+        it("retrieves the authenticated user's profile", async () => {
+            const userAuth = await registerAndAuthenticateUser({
+                name: "Profile User",
+                email: `profile${Date.now()}@test.com`
+            });
+
+            const response = await getCurrentUserProfile(userAuth.headers);
+
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "User profile retrieved successfully");
+            expect(response.body).toHaveProperty("user");
+
+            expect(response.body.user).toMatchObject({
+                name: "Profile User",
+                email: userAuth.email
+            });
+
+            expect(response.body.user).not.toHaveProperty("password");
         });
-
-        const res = await request(app)
-            .get("/api/users/me")
-            .set(userAuth.headers);
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "User profile retrieved successfully");
-        expect(res.body).toHaveProperty("user");
-
-        expect(res.body.user).toMatchObject({
-            name: "Profile User",
-            email: userAuth.email
-        });
-
-        expect(res.body.user).not.toHaveProperty("password");
     });
 
     /* =============================
        AUTHENTICATION ERRORS
     ============================= */
 
-    it("should reject getting current profile without token", async () => {
-        const res = await request(app).get("/api/users/me");
+    describe("Authentication errors", () => {
+        it("rejects profile retrieval without authentication", async () => {
+            const response = await getCurrentUserProfile();
 
-        expect(res.statusCode).toBe(401);
+            expect(response.statusCode).toBe(401);
+        });
     });
 });

@@ -1,28 +1,31 @@
-/* ==================================================
-   USER INTEGRATION - CURRENT USER PASSWORD TESTS
+const {
+    initializeTestDatabase,
+    resetTestDatabase,
+    closeTestDatabase
+} = require("../../../helpers/database/dbTestHelper");
 
-   Tests:
-   - authenticated password update
-   - authentication protection
-   - invalid token rejection
-   - wrong current password rejection
-   - same password rejection
-   - weak password rejection
-   - missing password fields validation
-   - password persistence after update
+const {
+    registerAndAuthenticateUser,
+    loginUser,
+    updateCurrentUserPassword
+} = require("../../../helpers/http/authTestHelper");
 
-   Ensures:
-   - authenticated users can change their password
-   - validators protect password rules
-   - old passwords become invalid after update
-==================================================== */
+/* ==========================================================================
+   Users Integration Tests - Change Current User Password
 
-const request = require("supertest");
-const app = require("../../../../src/app");
+   Tests current user password updates.
 
-const { initializeTestDatabase, resetTestDatabase, closeTestDatabase } = require("../../../helpers/database/dbTestHelper");
+   Responsibilities
+   - Test successful password updates
+   - Test authentication errors
+   - Test validation errors
+   - Test password business rules
+   - Test password persistence
 
-const { registerAndAuthenticateUser } = require("../../../helpers/http/authTestHelper");
+   Notes
+   - Password updates require the current password.
+   - Old passwords become invalid after update.
+=========================================================================== */
 
 describe("Change Current User Password API", () => {
 
@@ -30,178 +33,193 @@ describe("Change Current User Password API", () => {
     afterEach(resetTestDatabase);
     afterAll(closeTestDatabase);
 
-    /* ============================
+    /* =============================
        PASSWORD UPDATE SUCCESS
     ============================= */
 
-    it("should update current user password", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Password User",
-            email: `password${Date.now()}@test.com`,
-            password: "Password123"
-        });
-
-        const res = await request(app)
-            .put("/api/users/me/password")
-            .set(userAuth.headers)
-            .send({
-                currentPassword: "Password123",
-                newPassword: "NewPassword123"
+    describe("Password update success", () => {
+        it("updates the authenticated user's password", async () => {
+            const userAuth = await registerAndAuthenticateUser({
+                name: "Password User",
+                email: `password${Date.now()}@test.com`,
+                password: "Password123"
             });
 
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "Password updated successfully");
+            const response = await updateCurrentUserPassword(
+                userAuth.headers,
+                {
+                    currentPassword: "Password123",
+                    newPassword: "NewPassword123"
+                }
+            );
+
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "Password updated successfully");
+        });
     });
 
-    it("should allow login with new password after update", async () => {
-        const email = `persist${Date.now()}@test.com`;
+    /* =============================
+       PASSWORD PERSISTENCE
+    ============================= */
 
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Persistence User",
-            email,
-            password: "Password123"
-        });
+    describe("Password persistence", () => {
+        it("allows login with the new password", async () => {
+            const email = `persist${Date.now()}@test.com`;
 
-        await request(app)
-            .put("/api/users/me/password")
-            .set(userAuth.headers)
-            .send({
-                currentPassword: "Password123",
-                newPassword: "NewPassword123"
+            const userAuth = await registerAndAuthenticateUser({
+                name: "Persistence User",
+                email,
+                password: "Password123"
             });
 
-        const res = await request(app)
-            .post("/api/auth/login")
-            .send({
+            await updateCurrentUserPassword(
+                userAuth.headers,
+                {
+                    currentPassword: "Password123",
+                    newPassword: "NewPassword123"
+                }
+            );
+
+            const response = await loginUser({
                 email,
                 password: "NewPassword123"
             });
 
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("message", "Login successful");
-        expect(res.body).toHaveProperty("token");
+            expect(response.statusCode).toBe(200);
+            expect(response.body).toHaveProperty("message", "Login successful");
+            expect(response.body).toHaveProperty("token");
+        });
     });
 
     /* =============================
        AUTHENTICATION ERRORS
     ============================= */
 
-    it("should reject password update without token", async () => {
-        const res = await request(app)
-            .put("/api/users/me/password")
-            .send({
-                currentPassword: "Password123",
-                newPassword: "NewPassword123"
-            });
+    describe("Authentication errors", () => {
+        it("rejects password updates without authentication", async () => {
+            const response = await updateCurrentUserPassword(
+                {},
+                {
+                    currentPassword: "Password123",
+                    newPassword: "NewPassword123"
+                }
+            );
 
-        expect(res.statusCode).toBe(401);
-    });
+            expect(response.statusCode).toBe(401);
+        });
 
-    it("should reject password update with invalid token", async () => {
-        const res = await request(app)
-            .put("/api/users/me/password")
-            .set("Authorization", "Bearer invalid-token")
-            .send({
-                currentPassword: "Password123",
-                newPassword: "NewPassword123"
-            });
+        it("rejects invalid authentication tokens", async () => {
+            const response = await updateCurrentUserPassword(
+                {
+                    Authorization: "Bearer invalid-token"
+                },
+                {
+                    currentPassword: "Password123",
+                    newPassword: "NewPassword123"
+                }
+            );
 
-        expect(res.statusCode).toBe(401);
+            expect(response.statusCode).toBe(401);
+        });
     });
 
     /* =============================
        VALIDATION ERRORS
     ============================= */
 
-    it("should reject missing current password", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Validation User",
-            email: `missingcurrent${Date.now()}@test.com`
-        });
-
-        const res = await request(app)
-            .put("/api/users/me/password")
-            .set(userAuth.headers)
-            .send({
-                currentPassword: "",
-                newPassword: "NewPassword123"
+    describe("Validation errors", () => {
+        it("rejects missing current password", async () => {
+            const userAuth = await registerAndAuthenticateUser({
+                name: "Validation User",
+                email: `missingcurrent${Date.now()}@test.com`
             });
 
-        expect(res.statusCode).toBe(400);
-    });
+            const response = await updateCurrentUserPassword(
+                userAuth.headers,
+                {
+                    currentPassword: "",
+                    newPassword: "NewPassword123"
+                }
+            );
 
-    it("should reject missing new password", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Validation User",
-            email: `missingnew${Date.now()}@test.com`
+            expect(response.statusCode).toBe(400);
         });
 
-        const res = await request(app)
-            .put("/api/users/me/password")
-            .set(userAuth.headers)
-            .send({
-                currentPassword: "Password123",
-                newPassword: ""
+        it("rejects missing new password", async () => {
+            const userAuth = await registerAndAuthenticateUser({
+                name: "Validation User",
+                email: `missingnew${Date.now()}@test.com`
             });
 
-        expect(res.statusCode).toBe(400);
-    });
+            const response = await updateCurrentUserPassword(
+                userAuth.headers,
+                {
+                    currentPassword: "Password123",
+                    newPassword: ""
+                }
+            );
 
-    it("should reject weak new password", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Weak Password User",
-            email: `weak${Date.now()}@test.com`,
-            password: "Password123"
+            expect(response.statusCode).toBe(400);
         });
 
-        const res = await request(app)
-            .put("/api/users/me/password")
-            .set(userAuth.headers)
-            .send({
-                currentPassword: "Password123",
-                newPassword: "abc"
+        it("rejects weak new passwords", async () => {
+            const userAuth = await registerAndAuthenticateUser({
+                name: "Weak Password User",
+                email: `weak${Date.now()}@test.com`,
+                password: "Password123"
             });
 
-        expect(res.statusCode).toBe(400);
+            const response = await updateCurrentUserPassword(
+                userAuth.headers,
+                {
+                    currentPassword: "Password123",
+                    newPassword: "abc"
+                }
+            );
+
+            expect(response.statusCode).toBe(400);
+        });
     });
 
     /* =============================
        BUSINESS RULES
     ============================= */
 
-    it("should reject wrong current password", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Wrong Password User",
-            email: `wrong${Date.now()}@test.com`,
-            password: "Password123"
-        });
-
-        const res = await request(app)
-            .put("/api/users/me/password")
-            .set(userAuth.headers)
-            .send({
-                currentPassword: "WrongPassword",
-                newPassword: "NewPassword123"
+    describe("Business rules", () => {
+        it("rejects incorrect current password", async () => {
+            const userAuth = await registerAndAuthenticateUser({
+                name: "Wrong Password User",
+                email: `wrong${Date.now()}@test.com`,
+                password: "Password123"
             });
 
-        expect(res.statusCode).toBe(401);
-    });
+            const response = await updateCurrentUserPassword(
+                userAuth.headers,
+                {
+                    currentPassword: "WrongPassword",
+                    newPassword: "NewPassword123"
+                }
+            );
 
-    it("should reject updating to the same password", async () => {
-        const userAuth = await registerAndAuthenticateUser({
-            name: "Same Password User",
-            email: `same${Date.now()}@test.com`,
-            password: "Password123"
+            expect(response.statusCode).toBe(401);
         });
 
-        const res = await request(app)
-            .put("/api/users/me/password")
-            .set(userAuth.headers)
-            .send({
-                currentPassword: "Password123",
-                newPassword: "Password123"
+        it("rejects updating to the current password", async () => {
+            const userAuth = await registerAndAuthenticateUser({
+                name: "Same Password User",
+                email: `same${Date.now()}@test.com`,
+                password: "Password123"
             });
 
-        expect(res.statusCode).toBe(400);
+            const response = await updateCurrentUserPassword(
+                userAuth.headers,
+                {
+                    currentPassword: "Password123",
+                    newPassword: "Password123"
+                }
+            );
+
+            expect(response.statusCode).toBe(400);
+        });
     });
 });

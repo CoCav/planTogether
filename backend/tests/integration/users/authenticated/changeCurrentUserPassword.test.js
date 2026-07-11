@@ -28,7 +28,6 @@ const {
 =========================================================================== */
 
 describe("Change Current User Password API", () => {
-
     beforeAll(initializeTestDatabase);
     afterEach(resetTestDatabase);
     afterAll(closeTestDatabase);

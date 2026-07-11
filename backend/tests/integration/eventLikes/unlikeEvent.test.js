@@ -33,7 +33,6 @@ const {
 =========================================================================== */
 
 describe("Unlike Event API", () => {
-
     beforeAll(initializeTestDatabase);
     afterEach(resetTestDatabase);
     afterAll(closeTestDatabase);

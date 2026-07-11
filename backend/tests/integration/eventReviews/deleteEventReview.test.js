@@ -32,7 +32,6 @@ const { createReviewPayload } = require("../../factories/eventReviewFactory");
 =========================================================================== */
 
 describe("Delete Event Review API", () => {
-
     beforeAll(initializeTestDatabase);
     afterEach(resetTestDatabase);
     afterAll(closeTestDatabase);

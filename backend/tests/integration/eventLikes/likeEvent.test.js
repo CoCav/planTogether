@@ -28,7 +28,6 @@ const { likeEvent } = require("../../helpers/http/eventLikeTestHelper");
 =========================================================================== */
 
 describe("Like Event API", () => {
-
     beforeAll(initializeTestDatabase);
     afterEach(resetTestDatabase);
     afterAll(closeTestDatabase);

@@ -431,9 +431,15 @@ describe("Get All Events API", () => {
             });
 
             expect(response.statusCode).toBe(200);
-
             expect(response.body.events.length).toBe(1);
-            expect(response.body.pagination).toBeDefined();
+
+            expect(response.body).toMatchObject({
+                page: 1,
+                pageSize: 1
+            });
+
+            expect(response.body.totalEvents).toBeGreaterThanOrEqual(2);
+            expect(response.body.totalPages).toBeGreaterThanOrEqual(2);
         });
 
         it("supports sorting", async () => {

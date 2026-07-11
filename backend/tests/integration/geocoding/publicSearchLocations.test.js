@@ -34,13 +34,7 @@ const {
 
 describe("Public Search Locations API", () => {
     beforeAll(initializeTestDatabase);
-
-    afterEach(async () => {
-        await resetTestDatabase();
-        jest.restoreAllMocks();
-        delete global.fetch;
-    });
-
+    afterEach(resetTestDatabase);
     afterAll(closeTestDatabase);
 
     /* =============================

@@ -1,6 +1,6 @@
 const { body } = require("express-validator");
 
-const { eventIdParamValidator, reviewIdParamValidator } = require("./shared/paramValidators");
+const { eventIdParamValidator, reviewIdParamValidator } = require("./shared/paramsValidators");
 const { pageQueryValidator, pageSizeQueryValidator } = require("./shared/paginationValidators");
 const { orderQueryValidator, createSortByValidator } = require("./shared/sortValidators");
 

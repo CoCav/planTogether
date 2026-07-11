@@ -3,7 +3,7 @@ const { body } = require("express-validator");
 const { EVENT_MODES, VALID_EVENT_MODES } = require("../constants/eventModes");
 const { EVENT_ADMIN_SORT_FIELDS } = require("../constants/eventSortFields");
 
-const { eventIdParamValidator } = require("./shared/paramValidators");
+const { eventIdParamValidator } = require("./shared/paramsValidators");
 const { pageQueryValidator, pageSizeQueryValidator } = require("./shared/paginationValidators");
 const { orderQueryValidator, createSortByValidator } = require("./shared/sortValidators");
 const { structuredLocationValidators } = require("./shared/geocodingValidators");

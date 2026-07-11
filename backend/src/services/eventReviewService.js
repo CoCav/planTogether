@@ -12,7 +12,7 @@ const { throwHttpError } = require("../utils/errors/httpError");
 const { isEventPast } = require("../utils/events/eventStatus");
 const { findEventByIdOrFail } = require("../utils/events/eventQueries");
 
-const { findReviewByIdOrFail } = require("../utils/eventReviews/eventReviewQueries");
+const { findReviewByIdOrFail } = require("../utils/eventReviews/eventReviewsQueries");
 
 const {
     getPaginationOptions,

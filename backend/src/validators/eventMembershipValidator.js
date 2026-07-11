@@ -2,7 +2,7 @@ const { body } = require("express-validator");
 
 const { VALID_EVENT_ROLES } = require("../constants/eventRoles");
 
-const { eventIdParamValidator, userIdParamValidator } = require("./shared/paramValidators");
+const { eventIdParamValidator, userIdParamValidator } = require("./shared/paramsValidators");
 
 /* ==========================================================================
    Event Membership Validators

@@ -7,7 +7,7 @@ const { resolveCurrentUser } = require("../../middlewares/auth/resolveCurrentUse
 const handleValidationErrors = require("../../middlewares/errors/handleValidationErrors");
 
 const {
-    userIdParamValidator,
+    publicUserIdParamValidator,
     getPublicUserEventsValidator
 } = require("../../validators/userValidator");
 
@@ -27,7 +27,7 @@ const {
 
 router.get(
     "/:id",
-    userIdParamValidator,
+    publicUserIdParamValidator,
     handleValidationErrors,
     userController.getPublicUserProfile
 );
@@ -35,7 +35,7 @@ router.get(
 router.get(
     "/:id/events",
     resolveCurrentUser,
-    userIdParamValidator,
+    publicUserIdParamValidator,
     getPublicUserEventsValidator,
     handleValidationErrors,
     userController.getPublicUserEvents

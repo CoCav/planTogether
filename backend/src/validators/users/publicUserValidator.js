@@ -2,7 +2,7 @@ const { query } = require("express-validator");
 
 const { EVENT_SORT_FIELDS } = require("../../constants/eventSortFields");
 
-const { publicUserIdParamValidator } = require("../shared/paramValidators");
+const { publicUserIdParamValidator } = require("../shared/paramsValidators");
 const { pageQueryValidator, pageSizeQueryValidator } = require("../shared/paginationValidators");
 const { orderQueryValidator, createSortByValidator } = require("../shared/sortValidators");
 const {

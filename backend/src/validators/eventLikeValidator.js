@@ -1,4 +1,4 @@
-const { eventIdParamValidator } = require("./shared/paramValidators");
+const { eventIdParamValidator } = require("./shared/paramsValidators");
 
 /* ==========================================================================
    Event Like Validators

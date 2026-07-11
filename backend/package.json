@@ -10,7 +10,10 @@
         "test:coverage": "cross-env NODE_ENV=test jest --runInBand --coverage"
     },
     "jest": {
-        "testEnvironment": "node"
+        "testEnvironment": "node",
+        "setupFilesAfterEnv": [
+            "<rootDir>/tests/setup/setupTests.js"
+        ]
     },
     "keywords": [],
     "author": "",

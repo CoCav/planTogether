@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const { Sequelize } = require("sequelize");
 
 const logger = require("./logger");
@@ -28,7 +30,9 @@ const isTest = process.env.NODE_ENV === TEST_ENV;
 const isProduction = process.env.NODE_ENV === PRODUCTION_ENV;
 const isSslEnabled = process.env.DB_SSL === "true";
 
-const databaseName = isTest ? process.env.DB_NAME_TEST : process.env.DB_NAME;
+const databaseName = isTest
+    ? process.env.DB_NAME_TEST
+    : process.env.DB_NAME;
 
 const sequelize = new Sequelize(
     databaseName,
@@ -36,7 +40,10 @@ const sequelize = new Sequelize(
     process.env.DB_PASSWORD,
     {
         host: process.env.DB_HOST,
-        port: process.env.DB_PORT ? Number(process.env.DB_PORT) : DEFAULT_DB_PORT,
+        port: process.env.DB_PORT
+            ? Number(process.env.DB_PORT)
+            : DEFAULT_DB_PORT,
+
         dialect: POSTGRES_DIALECT,
         logging: false,
 
@@ -54,7 +61,7 @@ const sequelize = new Sequelize(
 );
 
 if (!isProduction) {
-    logger.info(`Connecting to development database: ${databaseName}`);
+    logger.info(`Connecting to ${isTest ? "test" : "development"} database: ${databaseName}`);
 }
 
 module.exports = sequelize;

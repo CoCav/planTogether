@@ -56,39 +56,9 @@ const { findCoOrganizerId } = require("../../helpers/http/userTestHelper");
 =========================================================================== */
 
 describe("Update Event API", () => {
-    beforeAll(async () => {
-        global.fetch = jest.fn().mockResolvedValue({
-            ok: true,
-            status: 200,
-            json: jest.fn().mockResolvedValue([
-                {
-                    lat: "45.5031824",
-                    lon: "-73.5698065",
-                    display_name: "Montréal, Québec, Canada",
-                    address: {
-                        road: "Rue Sainte-Catherine O",
-                        house_number: "1500",
-                        city: "Montréal",
-                        state: "Québec",
-                        postcode: "H3G 1S8",
-                        country: "Canada"
-                    }
-                }
-            ])
-        });
-
-        await initializeTestDatabase();
-    });
-
-    afterEach(async () => {
-        await resetTestDatabase();
-        jest.clearAllMocks();
-    });
-
-    afterAll(async () => {
-        await closeTestDatabase();
-        delete global.fetch;
-    });
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* =============================
        EVENT UPDATE SUCCESS
@@ -140,12 +110,20 @@ describe("Update Event API", () => {
         });
 
         it("updates event geolocation data", async () => {
-            const { organizerAuth, event } = await createOrganizerAndEvent();
+            const { organizerAuth, event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Geolocation Update Event"
+                }
+            });
+
+            jest.clearAllMocks();
 
             const response = await updateEvent(
                 event.id,
                 organizerAuth.headers,
-                { location: "Quebec City" }
+                {
+                    location: "Quebec City"
+                }
             );
 
             expect(response.statusCode).toBe(200);
@@ -165,12 +143,20 @@ describe("Update Event API", () => {
         });
 
         it("clears geolocation data when updating event to online", async () => {
-            const { organizerAuth, event } = await createOrganizerAndEvent();
+            const { organizerAuth, event } = await createOrganizerAndEvent({
+                event: {
+                    title: "Online Update Event"
+                }
+            });
+
+            jest.clearAllMocks();
 
             const response = await updateEvent(
                 event.id,
                 organizerAuth.headers,
-                { mode: EVENT_MODES.ONLINE }
+                {
+                    mode: EVENT_MODES.ONLINE
+                }
             );
 
             expect(response.statusCode).toBe(200);
@@ -231,8 +217,18 @@ describe("Update Event API", () => {
                 }
             );
 
+            expect(createResponse.statusCode).toBe(201);
+            expect(createResponse.body.event.image).toMatch(
+                /^\/uploads\/events\/event-/
+            );
+
             const event = createResponse.body.event;
-            const oldImagePath = path.join(__dirname, "../../../", event.image);
+
+            const oldImagePath = path.resolve(
+                __dirname,
+                "../../../uploads/events",
+                path.basename(event.image)
+            );
 
             expect(fs.existsSync(oldImagePath)).toBe(true);
 
@@ -272,8 +268,18 @@ describe("Update Event API", () => {
                 }
             );
 
+            expect(createResponse.statusCode).toBe(201);
+            expect(createResponse.body.event.image).toMatch(
+                /^\/uploads\/events\/event-/
+            );
+
             const event = createResponse.body.event;
-            const oldImagePath = path.join(__dirname, "../../../", event.image);
+
+            const oldImagePath = path.resolve(
+                __dirname,
+                "../../../uploads/events",
+                path.basename(event.image)
+            );
 
             expect(fs.existsSync(oldImagePath)).toBe(true);
 

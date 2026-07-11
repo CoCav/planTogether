@@ -37,39 +37,9 @@ const {
 =========================================================================== */
 
 describe("Create Event API", () => {
-    beforeAll(async () => {
-        global.fetch = jest.fn().mockResolvedValue({
-            ok: true,
-            status: 200,
-            json: jest.fn().mockResolvedValue([
-                {
-                    lat: "45.5031824",
-                    lon: "-73.5698065",
-                    display_name: "Montréal, Québec, Canada",
-                    address: {
-                        road: "Rue Sainte-Catherine O",
-                        house_number: "1500",
-                        city: "Montréal",
-                        state: "Québec",
-                        postcode: "H3G 1S8",
-                        country: "Canada"
-                    }
-                }
-            ])
-        });
-
-        await initializeTestDatabase();
-    });
-
-    afterEach(async () => {
-        await resetTestDatabase();
-        jest.clearAllMocks();
-    });
-
-    afterAll(async () => {
-        await closeTestDatabase();
-        delete global.fetch;
-    });
+    beforeAll(initializeTestDatabase);
+    afterEach(resetTestDatabase);
+    afterAll(closeTestDatabase);
 
     /* =============================
        EVENT CREATION SUCCESS

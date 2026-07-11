@@ -50,9 +50,13 @@ const generateUploadFileName = (prefix, originalName) => {
 
 // Create a reusable Multer uploader for image files.
 const createImageUploader = ({ folder, prefix, maxSize }) => {
-    const uploadPath = path.join(__dirname, "../../", uploadDirectory, folder);
+    const uploadPath = path.join(
+        __dirname,
+        "../../../",
+        uploadDirectory,
+        folder
+    );
 
-    // Ensure the target upload folder exists before saving files.
     if (!fs.existsSync(uploadPath)) {
         fs.mkdirSync(uploadPath, { recursive: true });
     }

@@ -25,7 +25,7 @@ const searchLocations = ({
     query = {}
 } = {}) => {
     return request(app)
-        .get("/api/geocoding/search")
+        .get("/api/locations/search")
         .set(headers)
         .query(query);
 };
@@ -35,7 +35,7 @@ const publicSearchLocations = ({
     query = {}
 } = {}) => {
     return request(app)
-        .get("/api/geocoding/public-search")
+        .get("/api/locations/public-search")
         .set(headers)
         .query(query);
 };

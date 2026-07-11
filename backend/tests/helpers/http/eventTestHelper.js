@@ -186,6 +186,12 @@ const createOrganizerAndEvent = async ({
         event
     );
 
+    if (response.statusCode !== 201 || !response.body.event) {
+        throw new Error(
+            `Failed to create test event: status=${response.statusCode}, body=${JSON.stringify(response.body)}`
+        );
+    }
+
     return {
         organizerAuth,
         event: response.body.event,

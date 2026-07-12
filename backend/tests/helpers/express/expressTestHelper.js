@@ -6,20 +6,23 @@ const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
    Builds reusable Express request, response and next mocks.
 
    Responsibilities
-   - Build mock request objects
-   - Build mock response objects
-   - Build mock next functions
-   - Build controller-specific mocks
-   - Build middleware-specific mocks
+   - Build generic Express middleware mocks
+   - Build controller-specific request contexts
+   - Build authorization middleware contexts
+   - Assert that no HTTP response was sent
 
    Notes
    - Shared across controller and middleware unit tests.
-   - Domain-specific helpers should stay thin wrappers around createMockReqResNext.
+   - Domain-specific helpers stay thin wrappers around createMockReqResNext.
 =========================================================================== */
 
 const DEFAULT_AUTH_USER = {
     userId: 10
 };
+
+/* =============================
+   GENERIC EXPRESS MOCKS
+============================= */
 
 const createMockReqResNext = ({
     params = {},
@@ -51,6 +54,10 @@ const createMockReqResNext = ({
         next
     };
 };
+
+/* =============================
+   CONTROLLER MOCKS
+============================= */
 
 const createAuthControllerMocks = ({
     body = {},
@@ -96,6 +103,10 @@ const createEventControllerMocks = ({
     });
 };
 
+/* =============================
+   AUTHORIZATION MIDDLEWARES MOCKS
+============================= */
+
 const createEventMemberAuthorizationMocks = ({
     eventId = "1",
     targetUserId = "2",
@@ -130,11 +141,21 @@ const createEventRoleMocks = ({
     });
 };
 
+/* =============================
+   RESPONSE ASSERTIONS
+============================= */
+
+const expectNoResponseSent = (res) => {
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.json).not.toHaveBeenCalled();
+};
+
 module.exports = {
     createMockReqResNext,
     createAuthControllerMocks,
     createUserControllerMocks,
     createEventControllerMocks,
     createEventMemberAuthorizationMocks,
-    createEventRoleMocks
+    createEventRoleMocks,
+    expectNoResponseSent
 };

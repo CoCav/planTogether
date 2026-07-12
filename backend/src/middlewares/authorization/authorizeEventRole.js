@@ -1,6 +1,7 @@
 const EventUserRole = require("../../models/associations/eventUserRoleModel");
 
 const { createHttpError } = require("../../utils/errors/httpError");
+const { findActiveMembership } = require("../../utils/eventMemberships/eventMembershipQueries");
 
 /* ==========================================================================
    Authorize Event Role Middleware
@@ -31,13 +32,13 @@ const authorizeEventRole = (allowedRoles) => {
                 return next(createHttpError(400, EVENT_ID_REQUIRED_ERROR));
             }
 
-            const membership = await EventUserRole.findOne({
-                where: {
+            const membership = await findActiveMembership(
+                EventUserRole,
+                {
                     eventId,
-                    userId,
-                    deletedAt: null
+                    userId
                 }
-            });
+            );
 
             if (!membership || !allowedRoles.includes(membership.role)) {
                 return next(createHttpError(403, INSUFFICIENT_EVENT_ROLE_ERROR));

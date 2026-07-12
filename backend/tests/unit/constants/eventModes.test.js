@@ -1,29 +1,46 @@
-/* ==================================================
-   EVENT MODE CONSTANTS TESTS
+const {
+    EVENT_MODES,
+    VALID_EVENT_MODES
+} = require("../../../src/constants/eventModes");
 
-   Tests:
-   - event mode values
-   - valid mode allowlist
+/* ==========================================================================
+   Event Mode Constants Unit Tests
 
-   Ensures:
-   - shared event mode constants stay consistent
-   - valid mode list contains all supported event modes
-================================================== */
+   Tests shared event mode constants.
 
-const { EVENT_MODES, VALID_EVENT_MODES } = require("../../../src/constants/eventModes");
+   Responsibilities
+   - Test supported event mode values
+   - Test the valid event mode allowlist
+
+   Notes
+   - The allowlist must stay aligned with EVENT_MODES.
+=========================================================================== */
 
 describe("eventModes constants", () => {
-    it("should expose supported event mode values", () => {
-        expect(EVENT_MODES).toEqual({
-            ONLINE: "online",
-            IN_PERSON: "in_person"
+
+    /* =============================
+       EVENT MODE VALUES
+    ============================= */
+
+    describe("Event mode values", () => {
+        it("exposes the supported event modes", () => {
+            expect(EVENT_MODES).toEqual({
+                ONLINE: "online",
+                IN_PERSON: "in_person"
+            });
         });
     });
 
-    it("should expose all valid event modes", () => {
-        expect(VALID_EVENT_MODES).toEqual([
-            EVENT_MODES.ONLINE,
-            EVENT_MODES.IN_PERSON
-        ]);
+    /* =============================
+       VALID EVENT MODES
+    ============================= */
+
+    describe("Valid event modes", () => {
+        it("includes every supported event mode", () => {
+            expect(VALID_EVENT_MODES).toEqual([
+                EVENT_MODES.ONLINE,
+                EVENT_MODES.IN_PERSON
+            ]);
+        });
     });
 });

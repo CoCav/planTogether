@@ -1,31 +1,48 @@
-/* ==================================================
-   EVENT STATUS CONSTANTS TESTS
+const {
+    EVENT_STATUS,
+    VALID_EVENT_STATUS
+} = require("../../../src/constants/eventStatus");
 
-   Tests:
-   - event status values
-   - valid event status allowlist
+/* ==========================================================================
+   Event Status Constants Unit Tests
 
-   Ensures:
-   - shared event status constants stay consistent
-   - valid event status allowlist stays aligned with supported statuses
-================================================== */
+   Tests shared event status constants.
 
-const { EVENT_STATUS, VALID_EVENT_STATUS } = require("../../../src/constants/eventStatus");
+   Responsibilities
+   - Test supported event status values
+   - Test the valid event status allowlist
+
+   Notes
+   - The allowlist must stay aligned with EVENT_STATUS.
+=========================================================================== */
 
 describe("eventStatus constants", () => {
-    it("should expose supported event status values", () => {
-        expect(EVENT_STATUS).toEqual({
-            UPCOMING: "upcoming",
-            ONGOING: "ongoing",
-            PAST: "past"
+
+    /* =============================
+       EVENT STATUS VALUES
+    ============================= */
+
+    describe("Event status values", () => {
+        it("exposes the supported event statuses", () => {
+            expect(EVENT_STATUS).toEqual({
+                UPCOMING: "upcoming",
+                ONGOING: "ongoing",
+                PAST: "past"
+            });
         });
     });
 
-    it("should expose valid event status values", () => {
-        expect(VALID_EVENT_STATUS).toEqual([
-            EVENT_STATUS.UPCOMING,
-            EVENT_STATUS.ONGOING,
-            EVENT_STATUS.PAST
-        ]);
+    /* =============================
+       VALID EVENT STATUS
+    ============================= */
+
+    describe("Valid event status", () => {
+        it("includes every supported event status", () => {
+            expect(VALID_EVENT_STATUS).toEqual([
+                EVENT_STATUS.UPCOMING,
+                EVENT_STATUS.ONGOING,
+                EVENT_STATUS.PAST
+            ]);
+        });
     });
 });

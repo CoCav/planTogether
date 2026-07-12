@@ -1,23 +1,3 @@
-/* ==================================================
-   EVENT STATUS TESTS
-
-   Tests:
-   - event start detection
-   - past event detection
-   - missing event handling
-   - event status computation
-   - past event action protection
-   - started event deletion protection
-
-   Ensures:
-   - started events are detected from startDateTime
-   - event status is computed from event start and end dates
-   - upcoming and ongoing events remain actionable where allowed
-   - past events throw a 403 business error
-   - started events cannot be deleted
-   - shared event status constants are used for expected statuses
-================================================== */
-
 const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
 
 const {
@@ -30,176 +10,207 @@ const {
 
 const { mockSystemTime } = require("../../../helpers/mocks/systemTimeMockHelper");
 
-describe("eventStatus utils", () => {
+/* ==========================================================================
+   Event Status Utility Unit Tests
 
+   Tests time-based event status helpers and business rules.
+
+   Responsibilities
+   - Test event start detection
+   - Test past event detection
+   - Test lifecycle status calculation
+   - Test past event action protection
+   - Test started event deletion protection
+
+   Notes
+   - System time is fixed to keep date comparisons deterministic.
+   - Event lifecycle statuses use shared constants.
+=========================================================================== */
+
+describe("event status utility", () => {
     mockSystemTime("2026-04-25T12:00:00.000Z");
 
     /* =============================
-       STARTED EVENT DETECTION
+       EVENT START DETECTION
     ============================= */
 
-    it("should return false when checking started state for missing event", () => {
-        expect(hasEventStarted(null)).toBe(false);
-        expect(hasEventStarted(undefined)).toBe(false);
-    });
+    describe("hasEventStarted", () => {
+        it.each([
+            ["null event", null],
+            ["undefined event", undefined],
+            ["missing start date", { id: 1 }]
+        ])("returns false for %s", (_, event) => {
+            expect(hasEventStarted(event)).toBe(false);
+        });
 
-    it("should return false when startDateTime is missing", () => {
-        expect(hasEventStarted({ id: 1 })).toBe(false);
-    });
-
-    it("should return true when event startDateTime is before now", () => {
-        expect(
-            hasEventStarted({
+        it("returns true when the event started before now", () => {
+            expect(hasEventStarted({
                 startDateTime: "2026-04-25T11:59:00.000Z"
-            })
-        ).toBe(true);
-    });
+            })).toBe(true);
+        });
 
-    it("should return true when event startDateTime is equal to now", () => {
-        expect(
-            hasEventStarted({
+        it("returns true when the event starts exactly now", () => {
+            expect(hasEventStarted({
                 startDateTime: "2026-04-25T12:00:00.000Z"
-            })
-        ).toBe(true);
-    });
+            })).toBe(true);
+        });
 
-    it("should return false when event startDateTime is after now", () => {
-        expect(
-            hasEventStarted({
+        it("returns false when the event starts after now", () => {
+            expect(hasEventStarted({
                 startDateTime: "2026-04-25T12:01:00.000Z"
-            })
-        ).toBe(false);
+            })).toBe(false);
+        });
     });
 
     /* =============================
        PAST EVENT DETECTION
     ============================= */
 
-    it("should return false when checking past state for missing event", () => {
-        expect(isEventPast(null)).toBe(false);
-        expect(isEventPast(undefined)).toBe(false);
-    });
+    describe("isEventPast", () => {
+        it.each([
+            ["null event", null],
+            ["undefined event", undefined],
+            ["missing end date", { id: 1 }]
+        ])("returns false for %s", (_, event) => {
+            expect(isEventPast(event)).toBe(false);
+        });
 
-    it("should return false when endDateTime is missing", () => {
-        expect(isEventPast({ id: 1 })).toBe(false);
-    });
-
-    it("should return true when event endDateTime is before now", () => {
-        expect(
-            isEventPast({
+        it("returns true when the event ended before now", () => {
+            expect(isEventPast({
                 endDateTime: "2026-04-25T11:59:00.000Z"
-            })
-        ).toBe(true);
-    });
+            })).toBe(true);
+        });
 
-    it("should return false when event endDateTime is equal to now", () => {
-        expect(
-            isEventPast({
+        it("returns false when the event ends exactly now", () => {
+            expect(isEventPast({
                 endDateTime: "2026-04-25T12:00:00.000Z"
-            })
-        ).toBe(false);
-    });
+            })).toBe(false);
+        });
 
-    it("should return false when event endDateTime is after now", () => {
-        expect(
-            isEventPast({
+        it("returns false when the event ends after now", () => {
+            expect(isEventPast({
                 endDateTime: "2026-04-25T12:01:00.000Z"
-            })
-        ).toBe(false);
+            })).toBe(false);
+        });
     });
 
     /* =============================
-       EVENT STATUS COMPUTATION
+       EVENT STATUS
     ============================= */
 
-    it("should return upcoming status for future event", () => {
-        expect(
-            getEventStatus({
-                startDateTime: "2026-04-25T13:00:00.000Z",
-                endDateTime: "2026-04-25T14:00:00.000Z"
-            })
-        ).toBe(EVENT_STATUS.UPCOMING);
-    });
+    describe("getEventStatus", () => {
+        it("returns upcoming for a future event", () => {
+            expect(
+                getEventStatus({
+                    startDateTime: "2026-04-25T13:00:00.000Z",
+                    endDateTime: "2026-04-25T14:00:00.000Z"
+                })
+            ).toBe(EVENT_STATUS.UPCOMING);
+        });
 
-    it("should return ongoing status for started event that has not ended", () => {
-        expect(
-            getEventStatus({
-                startDateTime: "2026-04-25T11:00:00.000Z",
-                endDateTime: "2026-04-25T13:00:00.000Z"
-            })
-        ).toBe(EVENT_STATUS.ONGOING);
-    });
+        it("returns ongoing for a started event that has not ended", () => {
+            expect(
+                getEventStatus({
+                    startDateTime: "2026-04-25T11:00:00.000Z",
+                    endDateTime: "2026-04-25T13:00:00.000Z"
+                })
+            ).toBe(EVENT_STATUS.ONGOING);
+        });
 
-    it("should return ongoing status when event starts exactly now", () => {
-        expect(
-            getEventStatus({
-                startDateTime: "2026-04-25T12:00:00.000Z",
-                endDateTime: "2026-04-25T13:00:00.000Z"
-            })
-        ).toBe(EVENT_STATUS.ONGOING);
-    });
+        it("returns ongoing when the event starts exactly now", () => {
+            expect(
+                getEventStatus({
+                    startDateTime: "2026-04-25T12:00:00.000Z",
+                    endDateTime: "2026-04-25T13:00:00.000Z"
+                })
+            ).toBe(EVENT_STATUS.ONGOING);
+        });
 
-    it("should return past status for past event", () => {
-        expect(
-            getEventStatus({
-                endDateTime: "2026-04-25T11:59:00.000Z"
-            })
-        ).toBe(EVENT_STATUS.PAST);
+        it("returns past for an ended event", () => {
+            expect(
+                getEventStatus({
+                    startDateTime: "2026-04-25T10:00:00.000Z",
+                    endDateTime: "2026-04-25T11:59:00.000Z"
+                })
+            ).toBe(EVENT_STATUS.PAST);
+        });
+
+        it("returns upcoming when event dates are missing", () => {
+            expect(getEventStatus({})).toBe(EVENT_STATUS.UPCOMING);
+        });
     });
 
     /* =============================
-       PAST EVENT ACTION PROTECTION
+       PAST EVENT PROTECTION
     ============================= */
 
-    it("should not throw for upcoming event", () => {
-        expect(() =>
-            assertEventNotPast({
-                endDateTime: "2026-04-25T12:01:00.000Z"
-            })
-        ).not.toThrow();
-    });
+    describe("assertEventNotPast", () => {
+        it("does not throw for an event that has not ended", () => {
+            expect(() => {
+                assertEventNotPast({
+                    endDateTime: "2026-04-25T12:01:00.000Z"
+                });
+            }).not.toThrow();
+        });
 
-    it("should throw 403 error for past event", () => {
-        expect(() =>
-            assertEventNotPast({
-                endDateTime: "2026-04-25T11:59:00.000Z"
-            })
-        ).toThrow("No action is allowed on a past event");
+        it("does not throw when event data is missing", () => {
+            expect(() => {
+                assertEventNotPast(null);
+            }).not.toThrow();
+        });
 
-        try {
-            assertEventNotPast({
-                endDateTime: "2026-04-25T11:59:00.000Z"
+        it("throws a 403 error for a past event", () => {
+            let thrownError;
+
+            try {
+                assertEventNotPast({
+                    endDateTime: "2026-04-25T11:59:00.000Z"
+                });
+            } catch (error) {
+                thrownError = error;
+            }
+
+            expect(thrownError).toMatchObject({
+                message: "No action is allowed on a past event",
+                statusCode: 403
             });
-        } catch (error) {
-            expect(error.statusCode).toBe(403);
-        }
+        });
     });
 
     /* =============================
-       STARTED EVENT DELETION PROTECTION
+       STARTED EVENT PROTECTION
     ============================= */
 
-    it("should not throw when event has not started", () => {
-        expect(() =>
-            assertEventNotStarted({
-                startDateTime: "2026-04-25T12:01:00.000Z"
-            })
-        ).not.toThrow();
-    });
+    describe("assertEventNotStarted", () => {
+        it("does not throw before the event starts", () => {
+            expect(() => {
+                assertEventNotStarted({
+                    startDateTime: "2026-04-25T12:01:00.000Z"
+                });
+            }).not.toThrow();
+        });
 
-    it("should throw 403 error when event has already started", () => {
-        expect(() =>
-            assertEventNotStarted({
-                startDateTime: "2026-04-25T12:00:00.000Z"
-            })
-        ).toThrow("An event that has already started cannot be deleted");
+        it("does not throw when event data is missing", () => {
+            expect(() => {
+                assertEventNotStarted(undefined);
+            }).not.toThrow();
+        });
 
-        try {
-            assertEventNotStarted({
-                startDateTime: "2026-04-25T12:00:00.000Z"
+        it("throws a 403 error when the event has started", () => {
+            let thrownError;
+
+            try {
+                assertEventNotStarted({
+                    startDateTime: "2026-04-25T12:00:00.000Z"
+                });
+            } catch (error) {
+                thrownError = error;
+            }
+
+            expect(thrownError).toMatchObject({
+                message: "An event that has already started cannot be deleted",
+                statusCode: 403
             });
-        } catch (error) {
-            expect(error.statusCode).toBe(403);
-        }
+        });
     });
 });

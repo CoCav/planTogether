@@ -1,46 +1,75 @@
-/* ==================================================
-   HTTP ERROR UTILITY TESTS
+const {
+    createHttpError,
+    throwHttpError
+} = require("../../../../src/utils/errors/httpError");
 
-   Tests:
-   - HTTP error creation
-   - statusCode attachment
-   - reusable HTTP error throwing
+/* ==========================================================================
+   HTTP Error Utility Unit Tests
 
-   Ensures:
-   - custom application errors are standardized
-   - status codes are preserved correctly
-================================================== */
+   Tests reusable HTTP error utilities.
 
-const { createHttpError, throwHttpError } = require("../../../../src/utils/errors/httpError");
+   Responsibilities
+   - Test HTTP error creation
+   - Test status code attachment
+   - Test direct HTTP error throwing
+   - Test thrown error shape
 
-describe("httpError utils", () => {
+   Notes
+   - Errors are designed for the global error handler middleware.
+=========================================================================== */
+
+describe("HTTP error utility", () => {
 
     /* =============================
        ERROR CREATION
     ============================= */
 
-    it("should create HTTP error with message and statusCode", () => {
-        const error = createHttpError(404, "User not found");
+    describe("createHttpError", () => {
+        it("creates an Error with the provided message and status code", () => {
+            const error = createHttpError(
+                404,
+                "User not found"
+            );
 
-        expect(error).toBeInstanceOf(Error);
+            expect(error).toBeInstanceOf(Error);
+            expect(error.message).toBe("User not found");
+            expect(error.statusCode).toBe(404);
+        });
 
-        expect(error.message).toBe("User not found");
-        expect(error.statusCode).toBe(404);
+        it("preserves the provided error values", () => {
+            const error = createHttpError(
+                422,
+                "Validation failed"
+            );
+
+            expect(error).toMatchObject({
+                message: "Validation failed",
+                statusCode: 422
+            });
+        });
     });
 
     /* =============================
        ERROR THROWING
     ============================= */
 
-    it("should throw reusable HTTP error", () => {
-        expect(() => {
-            throwHttpError(403, "Forbidden");
-        }).toThrow("Forbidden");
+    describe("throwHttpError", () => {
+        it("throws an HTTP error with the provided message", () => {
+            expect(() => {
+                throwHttpError(403, "Forbidden");
+            }).toThrow("Forbidden");
+        });
 
-        try {
-            throwHttpError(403, "Forbidden");
-        } catch (error) {
-            expect(error.statusCode).toBe(403);
-        }
+        it("throws an Error with the provided status code", () => {
+            try {
+                throwHttpError(403, "Forbidden");
+
+                throw new Error("Expected throwHttpError to throw");
+            } catch (error) {
+                expect(error).toBeInstanceOf(Error);
+                expect(error.message).toBe("Forbidden");
+                expect(error.statusCode).toBe(403);
+            }
+        });
     });
 });

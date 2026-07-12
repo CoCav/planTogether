@@ -15,21 +15,24 @@ const { EVENT_CREATOR_ATTRIBUTES } = require("../../constants/userAttributes");
    - Creator filtering uses an INNER JOIN when a creator name is provided.
 =========================================================================== */
 
-const buildEventCreatorInclude = (User, creator) => ({
-    model: User,
-    as: "creator",
-    attributes: EVENT_CREATOR_ATTRIBUTES,
+const buildEventCreatorInclude = (User, creator) => {
+    const creatorSearch = String(creator ?? "").trim();
 
-    ...(creator && {
-        where: {
-            name: {
-                [Op.iLike]: `%${String(creator).trim()}%`
-            }
-        },
-        required: true
-    })
-});
+    return {
+        model: User,
+        as: "creator",
+        attributes: EVENT_CREATOR_ATTRIBUTES,
 
+        ...(creatorSearch && {
+            where: {
+                name: {
+                    [Op.iLike]: `%${creatorSearch}%`
+                }
+            },
+            required: true
+        })
+    };
+};
 module.exports = {
     buildEventCreatorInclude
 };

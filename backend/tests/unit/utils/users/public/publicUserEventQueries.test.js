@@ -1,29 +1,32 @@
-/* ==================================================
-   PUBLIC USER EVENT QUERIES TESTS
-
-   Tests:
-   - created event query building
-   - created event query result passthrough
-   - joined event query building
-   - joined membership event extraction
-   - joined event count preservation
-
-   Ensures:
-   - created view queries Event directly with filters and pagination
-   - joined view queries EventUserRole with active non-organizer memberships
-   - creator filtering is handled through includes
-   - joined membership rows are normalized into event rows
-   - shared event role constants are used correctly
-================================================== */
-
 const { Op } = require("sequelize");
 
-const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
+const { EVENT_ROLES } = require("../../../../../src/constants/eventRoles");
 
-const { getPublicCreatedEvents, getPublicJoinedEvents } = require("../../../../src/utils/users/public/publicUserEventQueries");
+const {
+    getPublicCreatedEvents,
+    getPublicJoinedEvents
+} = require("../../../../../src/utils/users/public/publicUserEventQueries");
 
-describe("publicUserEventQueries utils", () => {
+/* ==========================================================================
+   Public User Event Query Utility Unit Tests
 
+   Tests public user event query helpers.
+
+   Responsibilities
+   - Test created event query building
+   - Test created event query result passthrough
+   - Test joined event query building
+   - Test active non-organizer membership filtering
+   - Test joined membership event extraction
+   - Test joined event count preservation
+
+   Notes
+   - Created events are queried directly from Event.
+   - Joined events are queried through EventUserRole.
+   - Participant count enrichment is handled by the user service.
+=========================================================================== */
+
+describe("public user event query utility", () => {
     const Event = {
         findAndCountAll: jest.fn()
     };
@@ -59,8 +62,7 @@ describe("publicUserEventQueries utils", () => {
     ============================= */
 
     describe("getPublicCreatedEvents", () => {
-
-        it("should query paginated public created events", async () => {
+        it("queries paginated events created by the user", async () => {
             Event.findAndCountAll.mockResolvedValue({
                 count: 1,
                 rows: []
@@ -87,26 +89,29 @@ describe("publicUserEventQueries utils", () => {
                     creatorId: 1,
                     theme: "Tech"
                 },
-                include: [
-                    {
-                        model: User,
-                        as: "creator"
-                    }
-                ],
+                include: [{
+                    model: User,
+                    as: "creator"
+                }],
                 limit: 10,
                 offset: 0,
-                order: [["startDateTime", "ASC"]],
+                order: [[
+                    "startDateTime",
+                    "ASC"
+                ]],
                 subQuery: false
             });
         });
 
-        it("should return created event query result", async () => {
-            const resultPayload = {
+        it("returns the created event query result unchanged", async () => {
+            const queryResult = {
                 count: 1,
-                rows: [{ id: 1 }]
+                rows: [{
+                    id: 1
+                }]
             };
 
-            Event.findAndCountAll.mockResolvedValue(resultPayload);
+            Event.findAndCountAll.mockResolvedValue(queryResult);
 
             const result = await getPublicCreatedEvents({
                 Event,
@@ -118,7 +123,32 @@ describe("publicUserEventQueries utils", () => {
                 buildEventCreatorInclude
             });
 
-            expect(result).toBe(resultPayload);
+            expect(result).toBe(queryResult);
+        });
+
+        it("supports empty event filters", async () => {
+            Event.findAndCountAll.mockResolvedValue({
+                count: 0,
+                rows: []
+            });
+
+            await getPublicCreatedEvents({
+                Event,
+                User,
+                userId: 5,
+                eventFilter: {},
+                creator: undefined,
+                pagination,
+                buildEventCreatorInclude
+            });
+
+            expect(Event.findAndCountAll).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    where: {
+                        creatorId: 5
+                    }
+                })
+            );
         });
     });
 
@@ -127,8 +157,7 @@ describe("publicUserEventQueries utils", () => {
     ============================= */
 
     describe("getPublicJoinedEvents", () => {
-
-        it("should query paginated public joined events through memberships", async () => {
+        it("queries active non-organizer memberships", async () => {
             EventUserRole.findAndCountAll.mockResolvedValue({
                 count: 1,
                 rows: []
@@ -142,8 +171,6 @@ describe("publicUserEventQueries utils", () => {
                 Event,
                 User,
                 EventUserRole,
-                EVENT_ROLES,
-                Op,
                 userId: 1,
                 eventFilter,
                 creator: "Alice",
@@ -167,17 +194,18 @@ describe("publicUserEventQueries utils", () => {
                     where: {
                         theme: "React"
                     },
-                    include: [
-                        {
-                            model: User,
-                            as: "creator"
-                        }
-                    ]
+                    include: [{
+                        model: User,
+                        as: "creator"
+                    }]
                 }],
                 limit: 10,
                 offset: 0,
                 order: [[
-                    { model: Event, as: "event" },
+                    {
+                        model: Event,
+                        as: "event"
+                    },
                     "startDateTime",
                     "ASC"
                 ]],
@@ -185,7 +213,7 @@ describe("publicUserEventQueries utils", () => {
             });
         });
 
-        it("should extract events from joined membership rows", async () => {
+        it("extracts events from membership rows", async () => {
             const eventA = {
                 id: 1,
                 title: "Joined Event A"
@@ -198,18 +226,17 @@ describe("publicUserEventQueries utils", () => {
 
             EventUserRole.findAndCountAll.mockResolvedValue({
                 count: 2,
-                rows: [
-                    { event: eventA },
-                    { event: eventB }
-                ]
+                rows: [{
+                    event: eventA
+                }, {
+                    event: eventB
+                }]
             });
 
             const result = await getPublicJoinedEvents({
                 Event,
                 User,
                 EventUserRole,
-                EVENT_ROLES,
-                Op,
                 userId: 1,
                 eventFilter: {},
                 creator: undefined,
@@ -219,11 +246,14 @@ describe("publicUserEventQueries utils", () => {
 
             expect(result).toEqual({
                 count: 2,
-                rows: [eventA, eventB]
+                rows: [
+                    eventA,
+                    eventB
+                ]
             });
         });
 
-        it("should preserve joined events count", async () => {
+        it("preserves the joined event count", async () => {
             EventUserRole.findAndCountAll.mockResolvedValue({
                 count: 5,
                 rows: []
@@ -233,8 +263,6 @@ describe("publicUserEventQueries utils", () => {
                 Event,
                 User,
                 EventUserRole,
-                EVENT_ROLES,
-                Op,
                 userId: 1,
                 eventFilter: {},
                 creator: undefined,
@@ -242,8 +270,38 @@ describe("publicUserEventQueries utils", () => {
                 buildEventCreatorInclude
             });
 
-            expect(result.count).toBe(5);
-            expect(result.rows).toEqual([]);
+            expect(result).toEqual({
+                count: 5,
+                rows: []
+            });
+        });
+
+        it("supports empty event filters", async () => {
+            EventUserRole.findAndCountAll.mockResolvedValue({
+                count: 0,
+                rows: []
+            });
+
+            await getPublicJoinedEvents({
+                Event,
+                User,
+                EventUserRole,
+                userId: 1,
+                eventFilter: {},
+                creator: undefined,
+                pagination,
+                buildEventCreatorInclude
+            });
+
+            expect(EventUserRole.findAndCountAll).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    include: [
+                        expect.objectContaining({
+                            where: {}
+                        })
+                    ]
+                })
+            );
         });
     });
 });

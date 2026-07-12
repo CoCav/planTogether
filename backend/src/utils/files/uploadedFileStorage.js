@@ -33,21 +33,32 @@ const deleteUploadedFile = async (filePath) => {
             ? filePath.slice(1)
             : filePath;
 
-        // Prevent deleting files outside the configured upload directory.
+        const projectRoot = path.resolve(
+            __dirname,
+            "..",
+            "..",
+            ".."
+        );
+
+        const uploadRoot = path.resolve(projectRoot, uploadDirectory);
+        const absolutePath = path.resolve(projectRoot, normalizedPath);
+        const relativePath = path.relative(uploadRoot, absolutePath);
+
+        // Prevent deleting the upload root or files outside it.
         const isInsideUploadDirectory =
-            normalizedPath === uploadDirectory ||
-            normalizedPath.startsWith(`${uploadDirectory}/`);
+            relativePath !== "" &&
+            relativePath !== ".." &&
+            !relativePath.startsWith(`..${path.sep}`) &&
+            !path.isAbsolute(relativePath);
 
         if (!isInsideUploadDirectory) {
             logger.warn(
                 { filePath },
                 "Attempted to delete a file outside the upload directory"
             );
+
             return;
         }
-
-        // Resolve the absolute file path from the project root.
-        const absolutePath = path.join(__dirname, "..", "..", "..", normalizedPath);
 
         // Delete the file only if it still exists.
         if (fs.existsSync(absolutePath)) {

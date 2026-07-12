@@ -58,6 +58,30 @@ const createLocationValidator = () => {
         });
 };
 
+const validateEndAfterStart = (value, { req }) => {
+    const start = new Date(req.body.startDateTime);
+    const end = new Date(value);
+
+    if (end <= start) {
+        throw new Error(END_AFTER_START_MESSAGE);
+    }
+
+    return true;
+};
+
+const validateDeadlineBeforeStart = (value, { req }) => {
+    if (!value || !req.body.startDateTime) return true;
+
+    const deadline = new Date(value);
+    const start = new Date(req.body.startDateTime);
+
+    if (deadline >= start) {
+        throw new Error(DEADLINE_BEFORE_START_MESSAGE);
+    }
+
+    return true;
+};
+
 /* Event payload */
 
 const createEventValidator = [
@@ -87,16 +111,7 @@ const createEventValidator = [
         .withMessage("End date and time is required")
         .isISO8601()
         .withMessage("End date and time must be a valid ISO8601 date")
-        .custom((value, { req }) => {
-            const start = new Date(req.body.startDateTime);
-            const end = new Date(value);
-
-            if (end <= start) {
-                throw new Error(END_AFTER_START_MESSAGE);
-            }
-
-            return true;
-        }),
+        .custom(validateEndAfterStart),
 
     body("maxParticipants")
         .optional()
@@ -107,18 +122,7 @@ const createEventValidator = [
         .optional()
         .isISO8601()
         .withMessage("Registration deadline must be a valid ISO8601 date")
-        .custom((value, { req }) => {
-            if (!value || !req.body.startDateTime) return true;
-
-            const deadline = new Date(value);
-            const start = new Date(req.body.startDateTime);
-
-            if (deadline >= start) {
-                throw new Error(DEADLINE_BEFORE_START_MESSAGE);
-            }
-
-            return true;
-        })
+        .custom(validateDeadlineBeforeStart)
 ];
 
 const updateEventValidator = [
@@ -149,16 +153,7 @@ const updateEventValidator = [
         .withMessage("End date and time is required")
         .isISO8601()
         .withMessage("End date and time must be a valid ISO8601 date")
-        .custom((value, { req }) => {
-            const start = new Date(req.body.startDateTime);
-            const end = new Date(value);
-
-            if (end <= start) {
-                throw new Error(END_AFTER_START_MESSAGE);
-            }
-
-            return true;
-        }),
+        .custom(validateEndAfterStart),
 
     body("maxParticipants")
         .optional({ values: "undefined" })
@@ -185,18 +180,7 @@ const updateEventValidator = [
 
             return true;
         })
-        .custom((value, { req }) => {
-            if (!value || !req.body.startDateTime) return true;
-
-            const deadline = new Date(value);
-            const start = new Date(req.body.startDateTime);
-
-            if (deadline >= start) {
-                throw new Error(DEADLINE_BEFORE_START_MESSAGE);
-            }
-
-            return true;
-        })
+        .custom(validateDeadlineBeforeStart)
 ];
 
 /* Event query filters */

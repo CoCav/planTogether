@@ -1,20 +1,20 @@
 const mockCreateRateLimiter = jest.fn(() => jest.fn());
 
-const loadAuthRateLimiter = () => {
+const loadGeocodingRateLimiter = () => {
     jest.resetModules();
 
-    return require("../../../../src/middlewares/rateLimiters/authRateLimiter");
+    return require("../../../../src/middlewares/rateLimiters/geocodingRateLimiter");
 };
 
 /* ==========================================================================
-   Auth Rate Limiter Middleware Unit Tests
+   Geocoding Rate Limiter Middleware Unit Tests
 
-   Tests authentication-specific rate limiter configuration.
+   Tests geocoding-specific rate limiter configuration.
 
    Responsibilities
-   - Test default authentication rate limit settings
-   - Test configured authentication rate limit settings
-   - Test authentication rate limit response message
+   - Test default geocoding rate limit settings
+   - Test configured geocoding rate limit settings
+   - Test geocoding rate limit response message
    - Test limiter middleware export
 
    Notes
@@ -31,15 +31,15 @@ jest.mock(
     () => mockCreateRateLimiter
 );
 
-describe("auth rate limiter middleware", () => {
-    const originalWindowMs = process.env.AUTH_RATE_LIMIT_WINDOW_MS;
-    const originalMax = process.env.AUTH_RATE_LIMIT_MAX;
+describe("geocoding rate limiter middleware", () => {
+    const originalWindowMs = process.env.GEOCODING_RATE_LIMIT_WINDOW_MS;
+    const originalMax = process.env.GEOCODING_RATE_LIMIT_MAX;
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        delete process.env.AUTH_RATE_LIMIT_WINDOW_MS;
-        delete process.env.AUTH_RATE_LIMIT_MAX;
+        delete process.env.GEOCODING_RATE_LIMIT_WINDOW_MS;
+        delete process.env.GEOCODING_RATE_LIMIT_MAX;
 
         mockCreateRateLimiter.mockReturnValue(
             jest.fn()
@@ -47,8 +47,8 @@ describe("auth rate limiter middleware", () => {
     });
 
     afterEach(() => {
-        process.env.AUTH_RATE_LIMIT_WINDOW_MS = originalWindowMs;
-        process.env.AUTH_RATE_LIMIT_MAX = originalMax;
+        process.env.GEOCODING_RATE_LIMIT_WINDOW_MS = originalWindowMs;
+        process.env.GEOCODING_RATE_LIMIT_MAX = originalMax;
 
         jest.resetModules();
     });
@@ -58,15 +58,15 @@ describe("auth rate limiter middleware", () => {
     ============================= */
 
     describe("Default configuration", () => {
-        it("creates the authentication limiter with default settings", () => {
-            const limiter = loadAuthRateLimiter();
+        it("creates the geocoding limiter with default settings", () => {
+            const limiter = loadGeocodingRateLimiter();
 
             expect(mockCreateRateLimiter).toHaveBeenCalledTimes(1);
 
             expect(mockCreateRateLimiter).toHaveBeenCalledWith({
-                windowMs: 15 * 60 * 1000,
-                max: 10,
-                message: "Too many authentication attempts. Please try again later."
+                windowMs: 60 * 1000,
+                max: 30,
+                message: "Too many location requests. Please try again later."
             });
 
             expect(typeof limiter).toBe("function");
@@ -77,7 +77,7 @@ describe("auth rate limiter middleware", () => {
 
             mockCreateRateLimiter.mockReturnValue(rateLimiterMiddleware);
 
-            const limiter = loadAuthRateLimiter();
+            const limiter = loadGeocodingRateLimiter();
 
             expect(limiter).toBe(rateLimiterMiddleware);
         });
@@ -88,33 +88,34 @@ describe("auth rate limiter middleware", () => {
     ============================= */
 
     describe("Environment configuration", () => {
-        it("uses configured authentication rate limit settings", () => {
-            process.env.AUTH_RATE_LIMIT_WINDOW_MS = "300000";
+        it("uses configured geocoding rate limit settings", () => {
+            process.env.GEOCODING_RATE_LIMIT_WINDOW_MS = "120000";
 
-            process.env.AUTH_RATE_LIMIT_MAX = "25";
+            process.env.GEOCODING_RATE_LIMIT_MAX = "50";
 
-            loadAuthRateLimiter();
+            loadGeocodingRateLimiter();
 
             expect(mockCreateRateLimiter).toHaveBeenCalledWith({
-                windowMs: 300000,
-                max: 25,
-                message: "Too many authentication attempts. Please try again later."
+                windowMs: 120000,
+                max: 50,
+                message: "Too many location requests. Please try again later."
             });
         });
 
         it("converts configured values to numbers", () => {
-            process.env.AUTH_RATE_LIMIT_WINDOW_MS = "60000";
+            process.env.GEOCODING_RATE_LIMIT_WINDOW_MS = "30000";
 
-            process.env.AUTH_RATE_LIMIT_MAX = "5";
+            process.env.GEOCODING_RATE_LIMIT_MAX = "15";
 
-            loadAuthRateLimiter();
+            loadGeocodingRateLimiter();
 
             const options = mockCreateRateLimiter.mock.calls[0][0];
 
-            expect(options.windowMs).toBe(60000);
-            expect(options.max).toBe(5);
+            expect(options.windowMs).toBe(30000);
+            expect(options.max).toBe(15);
 
             expect(typeof options.windowMs).toBe("number");
+
             expect(typeof options.max).toBe("number");
         });
     });

@@ -1,36 +1,78 @@
-/* ==================================================
-   EVENT LIKE CONTROLLER TESTS
+const eventLikeService = require("../../../src/services/eventLikeService");
 
-   Tests:
-   - liking an event
-   - unliking an event
+const eventLikeController = require("../../../src/controllers/eventLikeController");
 
-   Ensures:
-   - controller calls service correctly
-   - HTTP responses are properly formatted
-   - errors are forwarded to next()
-================================================== */
+const {
+    createEventControllerMocks,
+    expectNoResponseSent,
+    expectJsonResponse
+} = require("../../helpers/express/expressTestHelper");
+
+/* ==========================================================================
+   Event Like Controller Unit Tests
+
+   Tests event like request handling and responses.
+
+   Responsibilities
+   - Test event like creation
+   - Test event like removal
+   - Test authenticated user forwarding
+   - Test event identifier forwarding
+   - Test service result responses
+   - Test service error forwarding
+
+   Notes
+   - Event like services are mocked.
+   - Business logic is tested separately in eventLikeService tests.
+=========================================================================== */
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../src/services/eventLikeService");
 
-const eventLikeController = require("../../../src/controllers/eventLikeController");
-const eventLikeService = require("../../../src/services/eventLikeService");
-
-const { createEventControllerMocks } = require("../../helpers/express/expressTestHelper");
-
-describe("eventLikeController", () => {
-
+describe("event like controller", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
     /* =============================
-       LIKE EVENT
+       EVENT LIKE ACTIONS
     ============================= */
 
-    describe("likeEvent", () => {
-
-        it("should like an event", async () => {
+    describe.each([{
+        name: "likeEvent",
+        controller: eventLikeController.likeEvent,
+        service: eventLikeService.likeEvent,
+        statusCode: 201,
+        message: "Event liked successfully",
+        result: {
+            eventId: 42,
+            userId: 10,
+            liked: true,
+            likesCount: 5
+        }
+    }, {
+        name: "unlikeEvent",
+        controller: eventLikeController.unlikeEvent,
+        service: eventLikeService.unlikeEvent,
+        statusCode: 200,
+        message: "Event unliked successfully",
+        result: {
+            eventId: 42,
+            userId: 10,
+            liked: false,
+            likesCount: 4
+        }
+    }])("$name", ({
+        controller,
+        service,
+        statusCode,
+        message,
+        result
+    }) => {
+        it("forwards the event and authenticated user to the service", async () => {
             const { req, res, next } = createEventControllerMocks({
                 params: {
                     eventId: "42"
@@ -40,32 +82,26 @@ describe("eventLikeController", () => {
                 }
             });
 
-            const result = {
-                eventId: 42,
-                userId: 10,
-                liked: true,
-                likesCount: 5
-            };
+            service.mockResolvedValue(result);
 
-            eventLikeService.likeEvent.mockResolvedValue(result);
+            await controller(req, res, next);
 
-            await eventLikeController.likeEvent(req, res, next);
-
-            expect(eventLikeService.likeEvent).toHaveBeenCalledWith({
+            expect(service).toHaveBeenCalledTimes(1);
+            expect(service).toHaveBeenCalledWith({
                 eventId: "42",
                 userId: 10
             });
 
-            expect(res.status).toHaveBeenCalledWith(201);
-
-            expect(res.json).toHaveBeenCalledWith({
+            expectJsonResponse(res, statusCode, {
                 success: true,
-                message: "Event liked successfully",
+                message,
                 ...result
             });
+
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should forward like event errors to next", async () => {
+        it("forwards service errors to next", async () => {
             const { req, res, next } = createEventControllerMocks({
                 params: {
                     eventId: "42"
@@ -75,74 +111,16 @@ describe("eventLikeController", () => {
                 }
             });
 
-            const error = new Error("Like failed");
+            const error = new Error("Event like action failed");
 
-            eventLikeService.likeEvent.mockRejectedValue(error);
+            service.mockRejectedValue(error);
 
-            await eventLikeController.likeEvent(req, res, next);
+            await controller(req, res, next);
 
+            expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(error);
-        });
-    });
 
-    /* =============================
-       UNLIKE EVENT
-    ============================= */
-
-    describe("unlikeEvent", () => {
-
-        it("should unlike an event", async () => {
-            const { req, res, next } = createEventControllerMocks({
-                params: {
-                    eventId: "42"
-                },
-                user: {
-                    userId: 10
-                }
-            });
-
-            const result = {
-                eventId: 42,
-                userId: 10,
-                liked: false,
-                likesCount: 4
-            };
-
-            eventLikeService.unlikeEvent.mockResolvedValue(result);
-
-            await eventLikeController.unlikeEvent(req, res, next);
-
-            expect(eventLikeService.unlikeEvent).toHaveBeenCalledWith({
-                eventId: "42",
-                userId: 10
-            });
-
-            expect(res.status).toHaveBeenCalledWith(200);
-
-            expect(res.json).toHaveBeenCalledWith({
-                success: true,
-                message: "Event unliked successfully",
-                ...result
-            });
-        });
-
-        it("should forward unlike event errors to next", async () => {
-            const { req, res, next } = createEventControllerMocks({
-                params: {
-                    eventId: "42"
-                },
-                user: {
-                    userId: 10
-                }
-            });
-
-            const error = new Error("Unlike failed");
-
-            eventLikeService.unlikeEvent.mockRejectedValue(error);
-
-            await eventLikeController.unlikeEvent(req, res, next);
-
-            expect(next).toHaveBeenCalledWith(error);
+            expectNoResponseSent(res);
         });
     });
 });

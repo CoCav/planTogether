@@ -1,71 +1,82 @@
-/* ==================================================
-   LOCATION CONTROLLER TESTS
+const geocodingService = require("../../../src/services/geocodingService");
 
-   Tests:
-   - location search
-   - location search error forwarding
+const geocodingController = require("../../../src/controllers/geocodingController");
 
-   Ensures:
-   - controller calls locationService correctly
-   - HTTP responses are properly formatted
-   - errors are forwarded to next()
-================================================== */
+const {
+    createMockReqResNext,
+    expectNoResponseSent,
+    expectJsonResponse
+} = require("../../helpers/express/expressTestHelper");
 
-jest.mock("../../../src/services/locationService");
+/* ==========================================================================
+   Geocoding Controller Unit Tests
 
-const locationController = require("../../../src/controllers/geocodingController");
-const locationService = require("../../../src/services/locationService");
+   Tests location search request handling and responses.
 
-const { createEventControllerMocks } = require("../../helpers/express/expressTestHelper");
+   Responsibilities
+   - Test location search query forwarding
+   - Test geocoding result responses
+   - Test service error forwarding
 
-describe("geocodingController", () => {
+   Notes
+   - Geocoding services are mocked.
+   - Cache and provider logic is tested separately in geocodingService tests.
+=========================================================================== */
 
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../src/services/geocodingService");
+
+describe("geocoding controller", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
     /* =============================
-       SEARCH LOCATIONS
+       LOCATION SEARCH
     ============================= */
 
     describe("searchLocations", () => {
-
-        it("should search locations", async () => {
-            const { req, res, next } = createEventControllerMocks({
+        it("searches locations using the provided query", async () => {
+            const { req, res, next } = createMockReqResNext({
                 query: {
                     q: "Montreal"
                 }
             });
 
-            const locations = [
-                {
-                    id: 1,
-                    query: "montreal",
-                    label: "Montréal, Québec, Canada",
-                    latitude: 45.5031824,
-                    longitude: -73.5698065,
-                    provider: "nominatim"
-                }
-            ];
+            const locations = [{
+                id: 1,
+                query: "montreal",
+                label: "Montréal, Québec, Canada",
+                city: "Montréal",
+                region: "Québec",
+                country: "Canada",
+                latitude: 45.5031824,
+                longitude: -73.5698065,
+                provider: "nominatim"
+            }];
 
-            locationService.searchLocations.mockResolvedValue(locations);
+            geocodingService.searchLocations.mockResolvedValue(locations);
 
-            await locationController.searchLocations(req, res, next);
+            await geocodingController.searchLocations(req, res, next);
 
-            expect(locationService.searchLocations)
-                .toHaveBeenCalledWith("Montreal");
+            expect(geocodingService.searchLocations).toHaveBeenCalledTimes(1);
 
-            expect(res.status).toHaveBeenCalledWith(200);
+            expect(geocodingService.searchLocations).toHaveBeenCalledWith("Montreal");
 
-            expect(res.json).toHaveBeenCalledWith({
+            expectJsonResponse(res, 200, {
                 success: true,
                 message: "Locations retrieved successfully",
                 locations
             });
+
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should forward location search errors to next", async () => {
-            const { req, res, next } = createEventControllerMocks({
+        it("forwards location search errors to next", async () => {
+            const { req, res, next } = createMockReqResNext({
                 query: {
                     q: "Montreal"
                 }
@@ -73,11 +84,16 @@ describe("geocodingController", () => {
 
             const error = new Error("Location search failed");
 
-            locationService.searchLocations.mockRejectedValue(error);
+            geocodingService.searchLocations.mockRejectedValue(error);
 
-            await locationController.searchLocations(req, res, next);
+            await geocodingController.searchLocations(req, res, next);
 
+            expect(geocodingService.searchLocations).toHaveBeenCalledWith("Montreal");
+
+            expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(error);
+
+            expectNoResponseSent(res);
         });
     });
 });

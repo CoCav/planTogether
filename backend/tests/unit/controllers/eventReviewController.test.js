@@ -1,30 +1,38 @@
-/* ==================================================
-   EVENT REVIEW CONTROLLER TESTS
+const eventReviewService = require("../../../src/services/eventReviewService");
 
-   Tests:
-   - creating event reviews
-   - retrieving paginated event reviews
-   - updating reviews
-   - deleting reviews
+const eventReviewController = require("../../../src/controllers/eventReviewController");
 
-   Ensures:
-   - controller calls service correctly
-   - authenticated user payload is passed correctly
-   - review query params are forwarded for pagination
-   - review rating and comment payloads are forwarded
-   - paginated review responses are properly formatted
-   - errors are forwarded to next()
-================================================== */
+const {
+    createEventControllerMocks,
+    expectNoResponseSent,
+    expectJsonResponse
+} = require("../../helpers/express/expressTestHelper");
+
+/* ==========================================================================
+   Event Review Controller Unit Tests
+
+   Tests event review request handling and responses.
+
+   Responsibilities
+   - Test review creation
+   - Test review retrieval
+   - Test review updates
+   - Test review deletion
+   - Test authenticated user forwarding
+   - Test service error forwarding
+
+   Notes
+   - Event review services are mocked.
+   - Business logic is tested separately in eventReviewService tests.
+=========================================================================== */
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../src/services/eventReviewService");
 
-const eventReviewController = require("../../../src/controllers/eventReviewController");
-const eventReviewService = require("../../../src/services/eventReviewService");
-
-const { createEventControllerMocks } = require("../../helpers/express/expressTestHelper");
-
-describe("eventReviewController", () => {
-
+describe("event review controller", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -34,13 +42,10 @@ describe("eventReviewController", () => {
     ============================= */
 
     describe("createEventReview", () => {
-        it("should create an event review", async () => {
+        it("creates an event review", async () => {
             const { req, res, next } = createEventControllerMocks({
                 params: {
                     eventId: "1"
-                },
-                user: {
-                    userId: 10
                 },
                 body: {
                     rating: 5,
@@ -67,16 +72,16 @@ describe("eventReviewController", () => {
                 comment: "Great event!"
             });
 
-            expect(res.status).toHaveBeenCalledWith(201);
-
-            expect(res.json).toHaveBeenCalledWith({
+            expectJsonResponse(res, 201, {
                 success: true,
                 message: "Event review created successfully",
                 review
             });
+
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should forward create review errors to next", async () => {
+        it("forwards service errors to next", async () => {
             const { req, res, next } = createEventControllerMocks();
 
             const error = new Error("Create review failed");
@@ -86,6 +91,7 @@ describe("eventReviewController", () => {
             await eventReviewController.createEventReview(req, res, next);
 
             expect(next).toHaveBeenCalledWith(error);
+            expectNoResponseSent(res);
         });
     });
 
@@ -94,7 +100,7 @@ describe("eventReviewController", () => {
     ============================= */
 
     describe("getEventReviews", () => {
-        it("should get paginated event reviews", async () => {
+        it("retrieves paginated event reviews", async () => {
             const { req, res, next } = createEventControllerMocks({
                 params: {
                     eventId: "1"
@@ -126,24 +132,19 @@ describe("eventReviewController", () => {
 
             expect(eventReviewService.getEventReviews).toHaveBeenCalledWith(
                 "1",
-                {
-                    page: "1",
-                    pageSize: "10",
-                    sortBy: "createdAt",
-                    order: "desc"
-                }
+                req.query
             );
 
-            expect(res.status).toHaveBeenCalledWith(200);
-
-            expect(res.json).toHaveBeenCalledWith({
+            expectJsonResponse(res, 200, {
                 success: true,
                 message: "Event reviews retrieved successfully",
                 ...payload
             });
+
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should forward get reviews errors to next", async () => {
+        it("forwards service errors to next", async () => {
             const { req, res, next } = createEventControllerMocks();
 
             const error = new Error("Get reviews failed");
@@ -153,6 +154,7 @@ describe("eventReviewController", () => {
             await eventReviewController.getEventReviews(req, res, next);
 
             expect(next).toHaveBeenCalledWith(error);
+            expectNoResponseSent(res);
         });
     });
 
@@ -161,57 +163,54 @@ describe("eventReviewController", () => {
     ============================= */
 
     describe("updateEventReview", () => {
-        it("should update a review", async () => {
+        it("updates an event review", async () => {
             const { req, res, next } = createEventControllerMocks({
                 params: {
                     reviewId: "1"
                 },
-                user: {
-                    userId: 10
-                },
                 body: {
                     rating: 4,
-                    comment: "Updated review comment"
+                    comment: "Updated review"
                 }
             });
 
             const review = {
                 id: 1,
-                userId: 10,
                 rating: 4,
-                comment: "Updated review comment"
+                comment: "Updated review"
             };
 
-            eventReviewService.updateEventReviewByID.mockResolvedValue(review);
+            eventReviewService.updateEventReviewById.mockResolvedValue(review);
 
             await eventReviewController.updateEventReview(req, res, next);
 
-            expect(eventReviewService.updateEventReviewByID).toHaveBeenCalledWith({
+            expect(eventReviewService.updateEventReviewById).toHaveBeenCalledWith({
                 reviewId: "1",
                 userId: 10,
                 rating: 4,
-                comment: "Updated review comment"
+                comment: "Updated review"
             });
 
-            expect(res.status).toHaveBeenCalledWith(200);
-
-            expect(res.json).toHaveBeenCalledWith({
+            expectJsonResponse(res, 200, {
                 success: true,
                 message: "Event review updated successfully",
                 review
             });
+
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should forward update review errors to next", async () => {
+        it("forwards service errors to next", async () => {
             const { req, res, next } = createEventControllerMocks();
 
             const error = new Error("Update review failed");
 
-            eventReviewService.updateEventReviewByID.mockRejectedValue(error);
+            eventReviewService.updateEventReviewById.mockRejectedValue(error);
 
             await eventReviewController.updateEventReview(req, res, next);
 
             expect(next).toHaveBeenCalledWith(error);
+            expectNoResponseSent(res);
         });
     });
 
@@ -220,43 +219,41 @@ describe("eventReviewController", () => {
     ============================= */
 
     describe("deleteEventReview", () => {
-        it("should delete a review", async () => {
+        it("deletes an event review", async () => {
             const { req, res, next } = createEventControllerMocks({
                 params: {
                     reviewId: "1"
-                },
-                user: {
-                    userId: 10
                 }
             });
 
-            eventReviewService.deleteEventReviewByID.mockResolvedValue();
+            eventReviewService.deleteEventReviewById.mockResolvedValue();
 
             await eventReviewController.deleteEventReview(req, res, next);
 
-            expect(eventReviewService.deleteEventReviewByID).toHaveBeenCalledWith({
+            expect(eventReviewService.deleteEventReviewById).toHaveBeenCalledWith({
                 reviewId: "1",
                 userId: 10
             });
 
-            expect(res.status).toHaveBeenCalledWith(200);
-
-            expect(res.json).toHaveBeenCalledWith({
+            expectJsonResponse(res, 200, {
                 success: true,
                 message: "Event review deleted successfully"
             });
+
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should forward delete review errors to next", async () => {
+        it("forwards service errors to next", async () => {
             const { req, res, next } = createEventControllerMocks();
 
             const error = new Error("Delete review failed");
 
-            eventReviewService.deleteEventReviewByID.mockRejectedValue(error);
+            eventReviewService.deleteEventReviewById.mockRejectedValue(error);
 
             await eventReviewController.deleteEventReview(req, res, next);
 
             expect(next).toHaveBeenCalledWith(error);
+            expectNoResponseSent(res);
         });
     });
 });

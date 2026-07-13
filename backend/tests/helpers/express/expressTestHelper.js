@@ -9,7 +9,7 @@ const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
    - Build generic Express middleware mocks
    - Build controller-specific request contexts
    - Build authorization middleware contexts
-   - Assert that no HTTP response was sent
+   - Assert HTTP response behavior
 
    Notes
    - Shared across controller and middleware unit tests.
@@ -104,7 +104,7 @@ const createEventControllerMocks = ({
 };
 
 /* =============================
-   AUTHORIZATION MIDDLEWARES MOCKS
+   AUTHORIZATION MIDDLEWARE MOCKS
 ============================= */
 
 const createEventMemberAuthorizationMocks = ({
@@ -150,12 +150,27 @@ const expectNoResponseSent = (res) => {
     expect(res.json).not.toHaveBeenCalled();
 };
 
+const expectJsonResponse = (
+    res,
+    statusCode,
+    payload
+) => {
+    expect(res.status).toHaveBeenCalledTimes(1);
+    expect(res.status).toHaveBeenCalledWith(statusCode);
+
+    expect(res.json).toHaveBeenCalledTimes(1);
+    expect(res.json).toHaveBeenCalledWith(payload);
+};
+
 module.exports = {
     createMockReqResNext,
+
     createAuthControllerMocks,
     createUserControllerMocks,
     createEventControllerMocks,
     createEventMemberAuthorizationMocks,
     createEventRoleMocks,
-    expectNoResponseSent
+
+    expectNoResponseSent,
+    expectJsonResponse
 };

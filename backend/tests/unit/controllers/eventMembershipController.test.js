@@ -1,50 +1,63 @@
-/* ==================================================
-   EVENT MEMBERSHIP CONTROLLER TESTS
-
-   Tests:
-   - joining events
-   - leaving events
-   - retrieving event members
-   - retrieving event staff
-   - updating member roles
-   - removing members
-   - transferring event ownership
-
-   Ensures:
-   - controller calls service correctly
-   - shared event role constants are used for valid role scenarios
-   - ownership transfer payload is passed correctly
-   - HTTP responses are properly formatted
-   - route params and authenticated user payload are passed correctly
-   - errors are forwarded to next()
-================================================== */
-
-jest.mock("../../../src/services/eventMembershipService");
-
-const eventMembershipController = require("../../../src/controllers/eventMembershipController");
+const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
 const eventMembershipService = require("../../../src/services/eventMembershipService");
 
-const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
+const eventMembershipController = require("../../../src/controllers/eventMembershipController");
 
-const { createEventControllerMocks } = require("../../helpers/express/expressTestHelper");
+const {
+    createEventControllerMocks,
+    expectNoResponseSent,
+    expectJsonResponse
+} = require("../../helpers/express/expressTestHelper");
 
-describe("eventMembershipController", () => {
+/* ==========================================================================
+   Event Membership Controller Unit Tests
 
+   Tests event membership request handling and responses.
+
+   Responsibilities
+   - Test joining and leaving events
+   - Test event member and staff retrieval
+   - Test member role updates
+   - Test member removal
+   - Test event ownership transfer
+   - Test service error forwarding
+
+   Notes
+   - Event membership services are mocked.
+   - Authorization and business rules are tested separately.
+=========================================================================== */
+
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock(
+    "../../../src/services/eventMembershipService"
+);
+
+describe("event membership controller", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
     /* =============================
-       JOIN EVENTS
+       JOIN EVENT
     ============================= */
 
     describe("joinEvent", () => {
-        it("should join an event", async () => {
-            const { req, res, next } = createEventControllerMocks();
+        it("joins the authenticated user to an event", async () => {
+            const { req, res, next } = createEventControllerMocks({
+                params: {
+                    eventId: "42"
+                },
+                user: {
+                    userId: 10
+                }
+            });
 
             const membership = {
-                eventId: "1",
+                eventId: 42,
                 userId: 10,
                 role: EVENT_ROLES.PARTICIPANT
             };
@@ -53,76 +66,99 @@ describe("eventMembershipController", () => {
 
             await eventMembershipController.joinEvent(req, res, next);
 
+            expect(eventMembershipService.joinEvent).toHaveBeenCalledTimes(1);
+
             expect(eventMembershipService.joinEvent).toHaveBeenCalledWith({
-                eventId: "1",
+                eventId: "42",
                 userId: 10
             });
 
-            expect(res.status).toHaveBeenCalledWith(200);
-
-            expect(res.json).toHaveBeenCalledWith({
+            expectJsonResponse(res, 200, {
                 success: true,
                 message: "User successfully joined the event",
                 membership
             });
+
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should forward join errors to next", async () => {
+        it("forwards service errors to next", async () => {
             const { req, res, next } = createEventControllerMocks();
 
             const error = new Error("Join failed");
+
             eventMembershipService.joinEvent.mockRejectedValue(error);
 
             await eventMembershipController.joinEvent(req, res, next);
 
+            expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(error);
+
+            expectNoResponseSent(res);
         });
     });
 
     /* =============================
-       LEAVE EVENTS
+       LEAVE EVENT
     ============================= */
 
     describe("leaveEvent", () => {
-        it("should leave an event", async () => {
-            const { req, res, next } = createEventControllerMocks();
+        it("removes the authenticated user from an event", async () => {
+            const { req, res, next } = createEventControllerMocks({
+                params: {
+                    eventId: "42"
+                },
+                user: {
+                    userId: 10
+                }
+            });
 
             eventMembershipService.leaveEvent.mockResolvedValue();
 
             await eventMembershipController.leaveEvent(req, res, next);
 
+            expect(eventMembershipService.leaveEvent).toHaveBeenCalledTimes(1);
+
             expect(eventMembershipService.leaveEvent).toHaveBeenCalledWith({
-                eventId: "1",
+                eventId: "42",
                 userId: 10
             });
 
-            expect(res.status).toHaveBeenCalledWith(200);
-
-            expect(res.json).toHaveBeenCalledWith({
+            expectJsonResponse(res, 200, {
                 success: true,
                 message: "User successfully left the event"
             });
+
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should forward leave errors to next", async () => {
+        it("forwards service errors to next", async () => {
             const { req, res, next } = createEventControllerMocks();
 
             const error = new Error("Leave failed");
+
             eventMembershipService.leaveEvent.mockRejectedValue(error);
 
             await eventMembershipController.leaveEvent(req, res, next);
 
+            expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(error);
+
+            expectNoResponseSent(res);
         });
     });
 
     /* =============================
-       GET EVENT MEMBERS
+       EVENT MEMBERS
     ============================= */
 
     describe("getEventMembers", () => {
-        it("should get event members", async () => {
-            const { req, res, next } = createEventControllerMocks();
+        it("retrieves event members", async () => {
+            const { req, res, next } = createEventControllerMocks({
+                params: {
+                    eventId: "42"
+                }
+            });
 
             const members = [{
                 id: 1,
@@ -133,36 +169,46 @@ describe("eventMembershipController", () => {
 
             await eventMembershipController.getEventMembers(req, res, next);
 
-            expect(eventMembershipService.getEventMembers).toHaveBeenCalledWith("1");
+            expect(eventMembershipService.getEventMembers).toHaveBeenCalledTimes(1);
 
-            expect(res.status).toHaveBeenCalledWith(200);
+            expect(eventMembershipService.getEventMembers).toHaveBeenCalledWith("42");
 
-            expect(res.json).toHaveBeenCalledWith({
+            expectJsonResponse(res, 200, {
                 success: true,
                 message: "Event members retrieved successfully",
                 members
             });
+
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should forward get members errors to next", async () => {
+        it("forwards service errors to next", async () => {
             const { req, res, next } = createEventControllerMocks();
 
-            const error = new Error("Members failed");
+            const error = new Error("Member retrieval failed");
+
             eventMembershipService.getEventMembers.mockRejectedValue(error);
 
             await eventMembershipController.getEventMembers(req, res, next);
 
+            expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(error);
+
+            expectNoResponseSent(res);
         });
     });
 
     /* =============================
-       GET EVENT STAFF
+       EVENT STAFF
     ============================= */
 
     describe("getEventStaff", () => {
-        it("should get event staff with organizer and co-organizer roles", async () => {
-            const { req, res, next } = createEventControllerMocks();
+        it("retrieves event staff", async () => {
+            const { req, res, next } = createEventControllerMocks({
+                params: {
+                    eventId: "42"
+                }
+            });
 
             const eventStaff = [{
                 id: 1,
@@ -176,134 +222,164 @@ describe("eventMembershipController", () => {
 
             await eventMembershipController.getEventStaff(req, res, next);
 
-            expect(eventMembershipService.getEventStaff).toHaveBeenCalledWith("1");
+            expect(eventMembershipService.getEventStaff).toHaveBeenCalledTimes(1);
 
-            expect(res.status).toHaveBeenCalledWith(200);
+            expect(eventMembershipService.getEventStaff).toHaveBeenCalledWith("42");
 
-            expect(res.json).toHaveBeenCalledWith({
+            expectJsonResponse(res, 200, {
                 success: true,
                 message: "Event staff retrieved successfully",
                 eventStaff
             });
+
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should forward get event staff errors to next", async () => {
+        it("forwards service errors to next", async () => {
             const { req, res, next } = createEventControllerMocks();
 
-            const error = new Error("Event staff failed");
+            const error = new Error("Staff retrieval failed");
+
             eventMembershipService.getEventStaff.mockRejectedValue(error);
 
             await eventMembershipController.getEventStaff(req, res, next);
 
+            expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(error);
+
+            expectNoResponseSent(res);
         });
     });
 
     /* =============================
-       ROLE MANAGEMENT
+       MEMBER ROLE UPDATE
     ============================= */
 
     describe("updateEventMemberRole", () => {
-        it("should update event member role", async () => {
-            const { req, res, next } =
-                createEventControllerMocks({
-                    params: {
-                        eventId: "1",
-                        userId: "2"
-                    },
-                    body: {
-                        newRole: EVENT_ROLES.CO_ORGANIZER
-                    }
-                });
+        it("updates an event member role", async () => {
+            const { req, res, next } = createEventControllerMocks({
+                params: {
+                    eventId: "42",
+                    userId: "20"
+                },
+                body: {
+                    newRole:
+                        EVENT_ROLES.CO_ORGANIZER
+                }
+            });
 
             const membership = {
-                eventId: "1",
-                userId: "2",
+                eventId: 42,
+                userId: 20,
                 role: EVENT_ROLES.CO_ORGANIZER
             };
 
-            eventMembershipService.updateEventMemberRole.mockResolvedValue(membership);
+            eventMembershipService
+                .updateEventMemberRole
+                .mockResolvedValue(membership);
 
             await eventMembershipController.updateEventMemberRole(req, res, next);
 
+            expect(eventMembershipService.updateEventMemberRole).toHaveBeenCalledTimes(1);
+
             expect(eventMembershipService.updateEventMemberRole).toHaveBeenCalledWith({
-                eventId: "1",
-                userId: "2",
+                eventId: "42",
+                userId: "20",
                 newRole: EVENT_ROLES.CO_ORGANIZER
             });
 
-            expect(res.status).toHaveBeenCalledWith(200);
-
-            expect(res.json).toHaveBeenCalledWith({
+            expectJsonResponse(res, 200, {
                 success: true,
                 message: "Event member role updated successfully",
                 membership
             });
+
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should forward update role errors to next", async () => {
+        it("forwards service errors to next", async () => {
             const { req, res, next } = createEventControllerMocks();
 
-            const error = new Error("Update role failed");
-            eventMembershipService.updateEventMemberRole.mockRejectedValue(error);
+            const error = new Error("Role update failed");
+
+            eventMembershipService
+                .updateEventMemberRole
+                .mockRejectedValue(error);
 
             await eventMembershipController.updateEventMemberRole(req, res, next);
 
+            expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(error);
+
+            expectNoResponseSent(res);
         });
     });
 
+    /* =============================
+       MEMBER REMOVAL
+    ============================= */
+
     describe("removeEventMember", () => {
-        it("should remove event member", async () => {
-            const { req, res, next } =
-                createEventControllerMocks({
-                    params: {
-                        eventId: "1",
-                        userId: "2"
-                    }
-                });
+        it("removes a member from an event", async () => {
+            const { req, res, next } = createEventControllerMocks({
+                params: {
+                    eventId: "42",
+                    userId: "20"
+                }
+            });
 
             eventMembershipService.removeEventMember.mockResolvedValue();
 
             await eventMembershipController.removeEventMember(req, res, next);
 
+            expect(eventMembershipService.removeEventMember).toHaveBeenCalledTimes(1);
+
             expect(eventMembershipService.removeEventMember).toHaveBeenCalledWith({
-                eventId: "1",
-                userId: "2"
+                eventId: "42",
+                userId: "20"
             });
 
-            expect(res.status).toHaveBeenCalledWith(200);
-
-            expect(res.json).toHaveBeenCalledWith({
+            expectJsonResponse(res, 200, {
                 success: true,
                 message: "Event member removed successfully"
             });
+
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should forward remove member errors to next", async () => {
+        it("forwards service errors to next", async () => {
             const { req, res, next } = createEventControllerMocks();
 
-            const error = new Error("Remove failed");
+            const error = new Error("Member removal failed");
+
             eventMembershipService.removeEventMember.mockRejectedValue(error);
 
             await eventMembershipController.removeEventMember(req, res, next);
 
+            expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(error);
+
+            expectNoResponseSent(res);
         });
     });
 
-    describe("transferEventOwnership", () => {
+    /* =============================
+       OWNERSHIP TRANSFER
+    ============================= */
 
-        it("should transfer event ownership", async () => {
-            const { req, res, next } =
-                createEventControllerMocks({
-                    params: {
-                        eventId: "1"
-                    },
-                    body: {
-                        targetUserId: 2
-                    }
-                });
+    describe("transferEventOwnership", () => {
+        it("transfers event ownership", async () => {
+            const { req, res, next } = createEventControllerMocks({
+                params: {
+                    eventId: "42"
+                },
+                user: {
+                    userId: 10
+                },
+                body: {
+                    targetUserId: 20
+                }
+            });
 
             const result = {
                 previousOrganizer: {
@@ -311,40 +387,49 @@ describe("eventMembershipController", () => {
                     role: EVENT_ROLES.CO_ORGANIZER
                 },
                 newOrganizer: {
-                    userId: 2,
+                    userId: 20,
                     role: EVENT_ROLES.ORGANIZER
                 }
             };
 
-            eventMembershipService.transferEventOwnership.mockResolvedValue(result);
+            eventMembershipService
+                .transferEventOwnership
+                .mockResolvedValue(result);
 
             await eventMembershipController.transferEventOwnership(req, res, next);
 
+            expect(eventMembershipService.transferEventOwnership).toHaveBeenCalledTimes(1);
+
             expect(eventMembershipService.transferEventOwnership).toHaveBeenCalledWith({
-                eventId: "1",
+                eventId: "42",
                 currentUserId: 10,
-                targetUserId: 2
+                targetUserId: 20
             });
 
-            expect(res.status).toHaveBeenCalledWith(200);
-
-            expect(res.json).toHaveBeenCalledWith({
+            expectJsonResponse(res, 200, {
                 success: true,
                 message: "Event ownership transferred successfully",
                 data: result
             });
+
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should forward ownership transfer errors to next", async () => {
+        it("forwards service errors to next", async () => {
             const { req, res, next } = createEventControllerMocks();
 
             const error = new Error("Ownership transfer failed");
 
-            eventMembershipService.transferEventOwnership.mockRejectedValue(error);
+            eventMembershipService
+                .transferEventOwnership
+                .mockRejectedValue(error);
 
             await eventMembershipController.transferEventOwnership(req, res, next);
 
+            expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(error);
+
+            expectNoResponseSent(res);
         });
     });
 });

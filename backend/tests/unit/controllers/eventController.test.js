@@ -1,38 +1,46 @@
-/* ==================================================
-   EVENT CONTROLLER TESTS
-
-   Tests:
-   - event creation
-   - event listing
-   - current user event access retrieval
-   - single event retrieval
-   - event update
-   - event image preservation, replacement and removal
-   - current user like state forwarding
-   - event deletion
-
-   Ensures:
-   - controller calls service correctly
-   - uploaded event images are preserved, replaced and cleared correctly
-   - current user ID is forwarded for user-specific event state
-   - event access responses are properly formatted
-   - HTTP responses are properly formatted
-   - errors are forwarded to next()
-================================================== */
-
-jest.mock("../../../src/services/eventService");
-
-const eventController = require("../../../src/controllers/eventController");
 const eventService = require("../../../src/services/eventService");
 
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 const { EVENT_STATUS } = require("../../../src/constants/eventStatus");
 
-const { createEventControllerMocks } = require("../../helpers/express/expressTestHelper");
+const eventController = require("../../../src/controllers/eventController");
+
+const {
+    createEventControllerMocks,
+    expectNoResponseSent,
+    expectJsonResponse
+} = require("../../helpers/express/expressTestHelper");
 
 const { createEventResponse } = require("../../factories/eventFactory");
 
-describe("eventController", () => {
+/* ==========================================================================
+   Event Controller Unit Tests
+
+   Tests event request handling and responses.
+
+   Responsibilities
+   - Test event creation
+   - Test event listing
+   - Test current user event access retrieval
+   - Test event detail retrieval
+   - Test event updates
+   - Test event image creation, preservation, removal and replacement
+   - Test optional authenticated user forwarding
+   - Test event deletion
+   - Test service error forwarding
+
+   Notes
+   - Event services are mocked.
+   - Business logic is tested separately in eventService tests.
+=========================================================================== */
+
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../src/services/eventService");
+
+describe("event controller", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -42,146 +50,142 @@ describe("eventController", () => {
     ============================= */
 
     describe("createEvent", () => {
-        it("should create an event without image", async () => {
-            const { req, res, next } = createEventControllerMocks({
-                body: { title: "Test Event" },
-                user: { userId: 10 }
-            });
+        it.each([[
+            "without an uploaded image",
+            undefined,
+            null
+        ], [
+            "with an uploaded image",
+            {
+                filename: "event-123.png"
+            },
+            "/uploads/events/event-123.png"
+        ]])("creates an event %s",
+            async (_, file, expectedImage) => {
+                const { req, res, next } = createEventControllerMocks({
+                    body: {
+                        title: "Test Event"
+                    },
+                    user: {
+                        userId: 10
+                    },
+                    file
+                });
 
-            const event = createEventResponse({
-                image: null
-            });
+                const event = createEventResponse({
+                    image: expectedImage
+                });
 
-            eventService.createEvent.mockResolvedValue(event);
+                eventService.createEvent.mockResolvedValue(event);
 
-            await eventController.createEvent(req, res, next);
+                await eventController.createEvent(req, res, next);
 
-            expect(eventService.createEvent).toHaveBeenCalledWith({
-                title: "Test Event",
-                image: null
-            }, 10);
+                expect(eventService.createEvent).toHaveBeenCalledTimes(1);
 
-            expect(res.status).toHaveBeenCalledWith(201);
-            expect(res.json).toHaveBeenCalledWith({
-                success: true,
-                message: "Event created successfully",
-                event
-            });
-        });
+                expect(eventService.createEvent).toHaveBeenCalledWith(
+                    {
+                        title: "Test Event",
+                        image: expectedImage
+                    },
+                    10
+                );
 
-        it("should create an event with image", async () => {
-            const { req, res, next } = createEventControllerMocks({
-                body: { title: "Test Event" },
-                user: { userId: 10 },
-                file: { filename: "event-123.png" }
-            });
+                expectJsonResponse(res, 201, {
+                    success: true,
+                    message: "Event created successfully",
+                    event
+                });
 
-            const event = createEventResponse({
-                image: "/uploads/events/event-123.png"
-            });
+                expect(next).not.toHaveBeenCalled();
+            }
+        );
 
-            eventService.createEvent.mockResolvedValue(event);
-
-            await eventController.createEvent(req, res, next);
-
-            expect(eventService.createEvent).toHaveBeenCalledWith({
-                title: "Test Event",
-                image: "/uploads/events/event-123.png"
-            }, 10);
-
-            expect(res.status).toHaveBeenCalledWith(201);
-            expect(res.json).toHaveBeenCalledWith({
-                success: true,
-                message: "Event created successfully",
-                event
-            });
-        });
-
-        it("should forward create event errors to next", async () => {
+        it("forwards service errors to next", async () => {
             const { req, res, next } = createEventControllerMocks();
 
-            const error = new Error("Create failed");
+            const error = new Error("Event creation failed");
+
             eventService.createEvent.mockRejectedValue(error);
 
             await eventController.createEvent(req, res, next);
 
+            expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(error);
+
+            expectNoResponseSent(res);
         });
     });
 
     /* =============================
-       READ EVENTS
-    ============================= */
-
-    /* =============================
-       GET ALL EVENTS
+       EVENT LISTING
     ============================= */
 
     describe("getAllEvents", () => {
-        it("should get all events", async () => {
-            const { req, res, next } = createEventControllerMocks({
-                query: { page: "1" }
-            });
+        it.each([[
+            "an authenticated request",
+            {
+                userId: 10
+            },
+            10
+        ], [
+            "an anonymous request",
+            undefined,
+            undefined
+        ]])("retrieves events for %s",
+            async (_, user, expectedUserId) => {
+                const { req, res, next } = createEventControllerMocks({
+                    query: {
+                        page: "1",
+                        pageSize: "10"
+                    },
+                    user
+                });
 
-            const result = {
-                page: 1,
-                pageSize: 4,
-                totalEvents: 1,
-                totalPages: 1,
-                events: [createEventResponse()]
-            };
+                const result = {
+                    page: 1,
+                    pageSize: 10,
+                    totalEvents: 1,
+                    totalPages: 1,
+                    events: [
+                        createEventResponse()
+                    ]
+                };
 
-            eventService.getAllEvents.mockResolvedValue(result);
+                eventService.getAllEvents.mockResolvedValue(result);
 
-            await eventController.getAllEvents(req, res, next);
+                await eventController.getAllEvents(req, res, next);
 
-            expect(eventService.getAllEvents).toHaveBeenCalledWith(
-                { page: "1" },
-                10
-            );
+                expect(eventService.getAllEvents).toHaveBeenCalledTimes(1);
 
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({
-                success: true,
-                message: "Events retrieved successfully",
-                ...result
-            });
-        });
+                expect(eventService.getAllEvents).toHaveBeenCalledWith(
+                    req.query,
+                    expectedUserId
+                );
 
-        it("should forward get all events errors to next", async () => {
+                expectJsonResponse(res, 200, {
+                    success: true,
+                    message: "Events retrieved successfully",
+                    ...result
+                });
+
+                expect(next).not.toHaveBeenCalled();
+            }
+        );
+
+        it("forwards service errors to next", async () => {
             const { req, res, next } = createEventControllerMocks();
 
-            const error = new Error("Fetch failed");
+            const error = new Error("Event retrieval failed");
+
             eventService.getAllEvents.mockRejectedValue(error);
 
             await eventController.getAllEvents(req, res, next);
 
+            expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(error);
+
+            expectNoResponseSent(res);
         });
-    });
-
-    it("should pass current user ID when getting all events", async () => {
-        const { req, res, next } = createEventControllerMocks({
-            query: { page: "1" },
-            user: { userId: 10 }
-        });
-
-        const result = {
-            page: 1,
-            pageSize: 4,
-            totalEvents: 1,
-            totalPages: 1,
-            events: [createEventResponse()]
-        };
-
-        eventService.getAllEvents.mockResolvedValue(result);
-
-        await eventController.getAllEvents(req, res, next);
-
-        expect(eventService.getAllEvents).toHaveBeenCalledWith(
-            { page: "1" },
-            10
-        );
     });
 
     /* =============================
@@ -189,10 +193,14 @@ describe("eventController", () => {
     ============================= */
 
     describe("getCurrentUserEventAccess", () => {
-        it("should get current user event access", async () => {
+        it("retrieves the authenticated user's event access", async () => {
             const { req, res, next } = createEventControllerMocks({
-                params: { eventId: "42" },
-                user: { userId: 10 }
+                params: {
+                    eventId: "42"
+                },
+                user: {
+                    userId: 10
+                }
             });
 
             const access = {
@@ -206,92 +214,110 @@ describe("eventController", () => {
 
             await eventController.getCurrentUserEventAccess(req, res, next);
 
+            expect(eventService.getCurrentUserEventAccess).toHaveBeenCalledTimes(1);
+
             expect(eventService.getCurrentUserEventAccess).toHaveBeenCalledWith(
                 "42",
                 10
             );
 
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({
+            expectJsonResponse(res, 200, {
                 success: true,
                 message: "Current user event access retrieved successfully",
                 ...access
             });
+
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should forward current user event access errors to next", async () => {
+        it("forwards service errors to next", async () => {
             const { req, res, next } = createEventControllerMocks({
-                params: { eventId: "42" },
-                user: { userId: 10 }
+                params: {
+                    eventId: "42"
+                }
             });
 
-            const error = new Error("Access failed");
+            const error = new Error("Event access retrieval failed");
 
             eventService.getCurrentUserEventAccess.mockRejectedValue(error);
 
             await eventController.getCurrentUserEventAccess(req, res, next);
 
+            expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(error);
+
+            expectNoResponseSent(res);
         });
     });
 
     /* =============================
-       GET EVENT
+       EVENT DETAILS
     ============================= */
 
     describe("getEvent", () => {
-        it("should get an event by ID", async () => {
+        it.each([[
+            "an authenticated request",
+            {
+                userId: 10
+            },
+            10
+        ], [
+            "an anonymous request",
+            undefined,
+            undefined
+        ]])("retrieves an event for %s",
+            async (_, user, expectedUserId) => {
+                const { req, res, next } = createEventControllerMocks({
+                    params: {
+                        eventId: "42"
+                    },
+                    user
+                });
+
+                const event = createEventResponse({
+                    id: 42,
+                    title: "Test Event"
+                });
+
+                eventService.getEventById.mockResolvedValue(event);
+
+                await eventController.getEvent(req, res, next);
+
+                expect(eventService.getEventById).toHaveBeenCalledTimes(1);
+
+                expect(eventService.getEventById).toHaveBeenCalledWith(
+                    "42",
+                    expectedUserId
+                );
+
+                expectJsonResponse(res, 200, {
+                    success: true,
+                    message: "Event retrieved successfully",
+                    event
+                });
+
+                expect(next).not.toHaveBeenCalled();
+            }
+        );
+
+        it("forwards service errors to next", async () => {
             const { req, res, next } = createEventControllerMocks({
-                params: { eventId: "42" }
+                params: {
+                    eventId: "42"
+                }
             });
 
-            const event = createEventResponse({
-                id: 42,
-                title: "Event"
-            });
+            const error = new Error("Event not found");
 
-            eventService.getEventByID.mockResolvedValue(event);
+            eventService.getEventById.mockRejectedValue(error);
 
             await eventController.getEvent(req, res, next);
 
-            expect(eventService.getEventByID).toHaveBeenCalledWith("42", 10);
-
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({
-                success: true,
-                message: "Event retrieved successfully",
-                event
-            });
-        });
-
-        it("should forward get event errors to next", async () => {
-            const { req, res, next } = createEventControllerMocks();
-
-            const error = new Error("Not found");
-            eventService.getEventByID.mockRejectedValue(error);
-
-            await eventController.getEvent(req, res, next);
-
+            expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(error);
+
+            expectNoResponseSent(res);
         });
-    });
-
-    it("should pass current user ID when getting an event by ID", async () => {
-        const { req, res, next } = createEventControllerMocks({
-            params: { eventId: "42" },
-            user: { userId: 10 }
-        });
-
-        const event = createEventResponse({
-            id: 42,
-            title: "Event"
-        });
-
-        eventService.getEventByID.mockResolvedValue(event);
-
-        await eventController.getEvent(req, res, next);
-
-        expect(eventService.getEventByID).toHaveBeenCalledWith("42", 10);
     });
 
     /* =============================
@@ -299,105 +325,137 @@ describe("eventController", () => {
     ============================= */
 
     describe("updateEvent", () => {
-        it("should update an event without new image", async () => {
-            const { req, res, next } = createEventControllerMocks({
-                params: { eventId: "42" },
-                body: { title: "Updated Event" }
-            });
-
-            const event = createEventResponse({
-                id: 42,
+        it.each([[
+            "preserves the image when the image field is omitted",
+            {
                 title: "Updated Event"
-            });
-
-            eventService.updateEventByID.mockResolvedValue(event);
-
-            await eventController.updateEvent(req, res, next);
-
-            expect(eventService.updateEventByID).toHaveBeenCalledWith("42", {
+            },
+            undefined,
+            undefined
+        ], [
+            "clears the image when an empty image field is provided",
+            {
                 title: "Updated Event",
-                image: undefined
-            });
+                image: ""
+            },
+            undefined,
+            null
+        ], [
+            "preserves an explicitly provided image path",
+            {
+                title: "Updated Event",
+                image: "/uploads/events/existing.png"
+            },
+            undefined,
+            "/uploads/events/existing.png"
+        ], [
+            "replaces the image when a new file is uploaded",
+            {
+                title: "Updated Event"
+            },
+            {
+                filename: "event-updated.png"
+            },
+            "/uploads/events/event-updated.png"
+        ]])("%s",
+            async (
+                _,
+                body,
+                file,
+                expectedImage
+            ) => {
+                const { req, res, next } = createEventControllerMocks({
+                    params: {
+                        eventId: "42"
+                    },
+                    body,
+                    file
+                });
 
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({
-                success: true,
-                message: "Event updated successfully",
-                event
-            });
-        });
+                const event = createEventResponse({
+                    id: 42,
+                    title: "Updated Event",
+                    image: expectedImage
+                });
 
-        it("should clear event image when empty image field is provided", async () => {
+                eventService.updateEventById.mockResolvedValue(event);
+
+                await eventController.updateEvent(req, res, next);
+
+                expect(eventService.updateEventById).toHaveBeenCalledTimes(1);
+
+                expect(eventService.updateEventById).toHaveBeenCalledWith(
+                    "42",
+                    {
+                        ...body,
+                        image: expectedImage
+                    }
+                );
+
+                expectJsonResponse(res, 200, {
+                    success: true,
+                    message: "Event updated successfully",
+                    event
+                });
+
+                expect(next).not.toHaveBeenCalled();
+            }
+        );
+
+        it("gives an uploaded file priority over the image body field", async () => {
             const { req, res, next } = createEventControllerMocks({
-                params: { eventId: "42" },
+                params: {
+                    eventId: "42"
+                },
                 body: {
                     title: "Updated Event",
                     image: ""
+                },
+                file: {
+                    filename: "replacement.png"
                 }
             });
 
             const event = createEventResponse({
                 id: 42,
-                title: "Updated Event",
-                image: null
+                image: "/uploads/events/replacement.png"
             });
 
-            eventService.updateEventByID.mockResolvedValue(event);
+            eventService.updateEventById.mockResolvedValue(event);
 
             await eventController.updateEvent(req, res, next);
 
-            expect(eventService.updateEventByID).toHaveBeenCalledWith("42", {
-                title: "Updated Event",
-                image: null
-            });
+            expect(eventService.updateEventById).toHaveBeenCalledWith(
+                "42",
+                {
+                    title: "Updated Event",
+                    image:
+                        "/uploads/events/replacement.png"
+                }
+            );
 
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({
+            expectJsonResponse(res, 200, {
                 success: true,
                 message: "Event updated successfully",
                 event
             });
+
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should update an event with new image", async () => {
-            const { req, res, next } = createEventControllerMocks({
-                params: { eventId: "42" },
-                body: { title: "Updated Event" },
-                file: { filename: "event-updated.png" }
-            });
-
-            const event = createEventResponse({
-                id: 42,
-                title: "Updated Event",
-                image: "/uploads/events/event-updated.png"
-            });
-
-            eventService.updateEventByID.mockResolvedValue(event);
-
-            await eventController.updateEvent(req, res, next);
-
-            expect(eventService.updateEventByID).toHaveBeenCalledWith("42", {
-                title: "Updated Event",
-                image: "/uploads/events/event-updated.png"
-            });
-
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({
-                success: true,
-                message: "Event updated successfully",
-                event
-            });
-        });
-
-        it("should forward update event errors to next", async () => {
+        it("forwards service errors to next", async () => {
             const { req, res, next } = createEventControllerMocks();
 
-            const error = new Error("Update failed");
-            eventService.updateEventByID.mockRejectedValue(error);
+            const error = new Error("Event update failed");
+
+            eventService.updateEventById.mockRejectedValue(error);
 
             await eventController.updateEvent(req, res, next);
 
+            expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(error);
+
+            expectNoResponseSent(res);
         });
     });
 
@@ -406,33 +464,46 @@ describe("eventController", () => {
     ============================= */
 
     describe("deleteEvent", () => {
-        it("should delete an event", async () => {
+        it("deletes an event", async () => {
             const { req, res, next } = createEventControllerMocks({
-                params: { eventId: "42" }
+                params: {
+                    eventId: "42"
+                }
             });
 
-            eventService.deleteEventByID.mockResolvedValue();
+            eventService.deleteEventById.mockResolvedValue();
 
             await eventController.deleteEvent(req, res, next);
 
-            expect(eventService.deleteEventByID).toHaveBeenCalledWith("42");
+            expect(eventService.deleteEventById).toHaveBeenCalledTimes(1);
 
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({
+            expect(eventService.deleteEventById).toHaveBeenCalledWith("42");
+
+            expectJsonResponse(res, 200, {
                 success: true,
                 message: "Event deleted successfully"
             });
+
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should forward delete event errors to next", async () => {
-            const { req, res, next } = createEventControllerMocks();
+        it("forwards service errors to next", async () => {
+            const { req, res, next } = createEventControllerMocks({
+                params: {
+                    eventId: "42"
+                }
+            });
 
-            const error = new Error("Delete failed");
-            eventService.deleteEventByID.mockRejectedValue(error);
+            const error = new Error("Event deletion failed");
+
+            eventService.deleteEventById.mockRejectedValue(error);
 
             await eventController.deleteEvent(req, res, next);
 
+            expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(error);
+
+            expectNoResponseSent(res);
         });
     });
 });

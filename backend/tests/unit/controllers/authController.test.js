@@ -1,39 +1,124 @@
-/* ==================================================
-   AUTH CONTROLLER TESTS
-
-   Tests:
-   - user registration
-   - user login
-   - logout response
-
-   Ensures:
-   - auth controller calls authService correctly
-   - uploaded avatars are handled during registration
-   - HTTP responses are properly formatted
-   - errors are forwarded to next()
-================================================== */
-
-jest.mock("../../../src/services/authService");
-
-const authController = require("../../../src/controllers/authController");
 const authService = require("../../../src/services/authService");
 
-const { createAuthControllerMocks } = require("../../helpers/express/expressTestHelper");
+const { formatAuthenticatedUser } = require("../../../src/utils/users/authenticated/authenticatedUserFormatter");
+
+const authController = require("../../../src/controllers/authController");
+
+const {
+    createAuthControllerMocks,
+    expectNoResponseSent,
+    expectJsonResponse
+} = require("../../helpers/express/expressTestHelper");
 
 const { createMockUser } = require("../../factories/userFactory");
 
-describe("authController", () => {
+/* ==========================================================================
+   Auth Controller Unit Tests
+
+   Tests authentication request handling and responses.
+
+   Responsibilities
+   - Test user registration
+   - Test optional registration avatar handling
+   - Test user login
+   - Test authenticated user formatting
+   - Test logout responses
+   - Test service error forwarding
+
+   Notes
+   - Authentication services and user formatting are mocked.
+   - Business logic is tested separately in authService tests.
+=========================================================================== */
+
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../src/services/authService");
+
+jest.mock(
+    "../../../src/utils/users/authenticated/authenticatedUserFormatter",
+    () => ({
+        formatAuthenticatedUser: jest.fn()
+    })
+);
+
+describe("auth controller", () => {
+    const formattedUser = {
+        userId: 1,
+        name: "John Doe",
+        email: "john@test.com",
+        avatar: null
+    };
 
     beforeEach(() => {
         jest.clearAllMocks();
+
+        formatAuthenticatedUser.mockReturnValue(formattedUser);
     });
 
     /* =============================
-       REGISTER
+       USER REGISTRATION
     ============================= */
 
     describe("register", () => {
-        it("should register user and return token", async () => {
+        it.each([[
+            "without an avatar",
+            undefined,
+            null
+        ], [
+            "with an uploaded avatar",
+            {
+                filename: "avatar-test.png"
+            },
+            "/uploads/avatars/avatar-test.png"
+        ]])("registers a user %s",
+            async (_, file, expectedAvatar) => {
+                const { req, res, next } = createAuthControllerMocks({
+                    body: {
+                        name: "John Doe",
+                        email: "john@test.com",
+                        password: "Password1"
+                    },
+                    file
+                });
+
+                const user = createMockUser({
+                    avatar: expectedAvatar
+                });
+
+                authService.registerUser.mockResolvedValue({
+                    user,
+                    token: "fake-token"
+                });
+
+                await authController.register(req, res, next);
+
+                expect(authService.registerUser).toHaveBeenCalledTimes(1);
+
+                expect(authService.registerUser).toHaveBeenCalledWith({
+                    name: "John Doe",
+                    email: "john@test.com",
+                    password: "Password1",
+                    avatar: expectedAvatar
+                });
+
+                expect(formatAuthenticatedUser).toHaveBeenCalledTimes(1);
+
+                expect(formatAuthenticatedUser).toHaveBeenCalledWith(user);
+
+                expectJsonResponse(res, 201, {
+                    success: true,
+                    message: "User registered successfully",
+                    user: formattedUser,
+                    token: "fake-token"
+                });
+
+                expect(next).not.toHaveBeenCalled();
+            }
+        );
+
+        it("forwards registration errors to next", async () => {
             const { req, res, next } = createAuthControllerMocks({
                 body: {
                     name: "John Doe",
@@ -42,100 +127,27 @@ describe("authController", () => {
                 }
             });
 
-            authService.registerUser.mockResolvedValue({
-                user: createMockUser(),
-                token: "fake-token"
-            });
+            const error = new Error("Registration failed");
 
-            await authController.register(req, res, next);
-
-            expect(authService.registerUser).toHaveBeenCalledWith({
-                name: "John Doe",
-                email: "john@test.com",
-                password: "Password1",
-                avatar: null
-            });
-
-            expect(res.status).toHaveBeenCalledWith(201);
-            expect(res.json).toHaveBeenCalledWith({
-                success: true,
-                message: "User registered successfully",
-                user: {
-                    userId: 1,
-                    name: "John Doe",
-                    email: "john@test.com",
-                    avatar: null
-                },
-                token: "fake-token"
-            });
-        });
-
-        it("should register user with uploaded avatar", async () => {
-            const { req, res, next } = createAuthControllerMocks({
-                body: {
-                    name: "John Doe",
-                    email: "john@test.com",
-                    password: "Password1"
-                },
-                file: {
-                    filename: "avatar-test.png"
-                }
-            });
-
-            authService.registerUser.mockResolvedValue({
-                user: createMockUser({
-                    avatar: "/uploads/avatars/avatar-test.png"
-                }),
-                token: "fake-token"
-            });
-
-            await authController.register(req, res, next);
-
-            expect(authService.registerUser).toHaveBeenCalledWith({
-                name: "John Doe",
-                email: "john@test.com",
-                password: "Password1",
-                avatar: "/uploads/avatars/avatar-test.png"
-            });
-
-            expect(res.status).toHaveBeenCalledWith(201);
-            expect(res.json).toHaveBeenCalledWith({
-                success: true,
-                message: "User registered successfully",
-                user: {
-                    userId: 1,
-                    name: "John Doe",
-                    email: "john@test.com",
-                    avatar: "/uploads/avatars/avatar-test.png"
-                },
-                token: "fake-token"
-            });
-        });
-
-        it("should forward register errors to next", async () => {
-            const { req, res, next } = createAuthControllerMocks({
-                body: {
-                    name: "John Doe",
-                    email: "john@test.com",
-                    password: "Password1"
-                }
-            });
-
-            const error = new Error("Register failed");
             authService.registerUser.mockRejectedValue(error);
 
             await authController.register(req, res, next);
 
+            expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(error);
+
+            expect(formatAuthenticatedUser).not.toHaveBeenCalled();
+
+            expectNoResponseSent(res);
         });
     });
 
     /* =============================
-       LOGIN
+       USER LOGIN
     ============================= */
 
     describe("login", () => {
-        it("should login user and return token", async () => {
+        it("logs in a user and returns an authentication token", async () => {
             const { req, res, next } = createAuthControllerMocks({
                 body: {
                     email: "john@test.com",
@@ -143,33 +155,37 @@ describe("authController", () => {
                 }
             });
 
+            const user = createMockUser();
+
             authService.loginUser.mockResolvedValue({
-                user: createMockUser(),
+                user,
                 token: "fake-token"
             });
 
             await authController.login(req, res, next);
+
+            expect(authService.loginUser).toHaveBeenCalledTimes(1);
 
             expect(authService.loginUser).toHaveBeenCalledWith({
                 email: "john@test.com",
                 password: "Password1"
             });
 
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({
+            expect(formatAuthenticatedUser).toHaveBeenCalledTimes(1);
+
+            expect(formatAuthenticatedUser).toHaveBeenCalledWith(user);
+
+            expectJsonResponse(res, 200, {
                 success: true,
                 message: "Login successful",
-                user: {
-                    userId: 1,
-                    name: "John Doe",
-                    email: "john@test.com",
-                    avatar: null
-                },
+                user: formattedUser,
                 token: "fake-token"
             });
+
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it("should forward login errors to next", async () => {
+        it("forwards login errors to next", async () => {
             const { req, res, next } = createAuthControllerMocks({
                 body: {
                     email: "john@test.com",
@@ -178,26 +194,31 @@ describe("authController", () => {
             });
 
             const error = new Error("Login failed");
+
             authService.loginUser.mockRejectedValue(error);
 
             await authController.login(req, res, next);
 
+            expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(error);
+
+            expect(formatAuthenticatedUser).not.toHaveBeenCalled();
+
+            expectNoResponseSent(res);
         });
     });
 
     /* =============================
-       LOGOUT
+       USER LOGOUT
     ============================= */
 
     describe("logout", () => {
-        it("should return logout success message", async () => {
+        it("returns a successful logout response", () => {
             const { req, res } = createAuthControllerMocks();
 
-            await authController.logout(req, res);
+            authController.logout(req, res);
 
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({
+            expectJsonResponse(res, 200, {
                 success: true,
                 message: "Logout successful"
             });

@@ -1,5 +1,7 @@
 const eventService = require("../services/eventService");
 
+const { UPLOAD_PATHS } = require("../constants/uploadPaths");
+
 /* ==========================================================================
    Event Controller
 
@@ -20,14 +22,12 @@ const eventService = require("../services/eventService");
    - Event listing and detail responses may include participant, review and like stats.
 =========================================================================== */
 
-const EVENT_IMAGE_UPLOAD_PATH = "/uploads/events";
-
 /* Create event */
 
 const createEvent = async (req, res, next) => {
     try {
         const image = req.file
-            ? `${EVENT_IMAGE_UPLOAD_PATH}/${req.file.filename}`
+            ? `${UPLOAD_PATHS.EVENTS}/${req.file.filename}`
             : null;
 
         const event = await eventService.createEvent(
@@ -113,7 +113,7 @@ const updateEvent = async (req, res, next) => {
         // Empty image field clears the existing image.
         // Missing image field keeps the existing image unchanged.
         const image = req.file
-            ? `${EVENT_IMAGE_UPLOAD_PATH}/${req.file.filename}`
+            ? `${UPLOAD_PATHS.EVENTS}/${req.file.filename}`
             : req.body.image !== undefined
                 ? req.body.image || null
                 : undefined;

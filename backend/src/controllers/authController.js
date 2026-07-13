@@ -1,5 +1,7 @@
 const authService = require("../services/authService");
 
+const { UPLOAD_PATHS } = require("../constants/uploadPaths");
+
 const { formatAuthenticatedUser } = require("../utils/users/authenticated/authenticatedUserFormatter");
 
 /* ==========================================================================
@@ -26,7 +28,7 @@ const register = async (req, res, next) => {
         const { name, email, password } = req.body;
 
         const avatar = req.file
-            ? `/uploads/avatars/${req.file.filename}`
+            ? `${UPLOAD_PATHS.AVATARS}/${req.file.filename}`
             : null;
 
         const { user, token } = await authService.registerUser({

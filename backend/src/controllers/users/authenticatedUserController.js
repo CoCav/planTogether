@@ -1,5 +1,7 @@
 const userService = require("../../services/userService");
 
+const AVATAR_UPLOAD_PATH = "/uploads/avatars";
+
 const { formatAuthenticatedUser } = require("../../utils/users/authenticated/authenticatedUserFormatter");
 
 /* ==========================================================================
@@ -19,8 +21,6 @@ const { formatAuthenticatedUser } = require("../../utils/users/authenticated/aut
    - Business logic is delegated to userService.
    - Authenticated user responses can expose email.
 =========================================================================== */
-
-const AVATAR_UPLOAD_PATH = "/uploads/avatars";
 
 /* Current user events */
 
@@ -68,7 +68,7 @@ const updateCurrentUserProfile = async (req, res, next) => {
         };
 
         if (req.file) {
-            updatedData.avatar = `${AVATAR_UPLOAD_PATH}/${req.file.filename}`;
+            updatedData.avatar = `${UPLOAD_PATHS.AVATARS}/${req.file.filename}`;
         }
 
         const user = await userService.updateCurrentUserProfileById(

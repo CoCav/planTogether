@@ -28,8 +28,7 @@ const SEQUELIZE_UNIQUE_CONSTRAINT_ERROR = "SequelizeUniqueConstraintError";
 
 const VALIDATION_ERROR_MESSAGE = "Validation error";
 const FILE_TOO_LARGE_MESSAGE = "File too large. Maximum size exceeded.";
-const INTERNAL_SERVER_ERROR_MESSAGE =
-    "Internal Server Error. Please try again later.";
+const INTERNAL_SERVER_ERROR_MESSAGE = "Internal Server Error. Please try again later.";
 
 function errorHandler(error, req, res, next) {
     const isProduction = process.env.NODE_ENV === PRODUCTION_ENV;
@@ -57,17 +56,19 @@ function errorHandler(error, req, res, next) {
         });
     }
 
-    if (
-        error.name === SEQUELIZE_VALIDATION_ERROR ||
-        error.name === SEQUELIZE_UNIQUE_CONSTRAINT_ERROR
-    ) {
+    if (error.name === SEQUELIZE_VALIDATION_ERROR || error.name === SEQUELIZE_UNIQUE_CONSTRAINT_ERROR) {
+
+        const formattedErrors = error.errors?.map((err) => ({
+            field: err.path,
+            message: err.message
+        }));
+
         return res.status(400).json({
             success: false,
             message: VALIDATION_ERROR_MESSAGE,
-            errors: error.errors?.map((err) => ({
-                field: err.path,
-                message: err.message
-            }))
+            ...(formattedErrors && {
+                errors: formattedErrors
+            })
         });
     }
 

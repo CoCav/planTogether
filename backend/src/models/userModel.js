@@ -1,6 +1,8 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
 
+const { normalizeEmail } = require("../utils/stringNormalizer");
+
 /* ==========================================================================
    User Model
 
@@ -35,9 +37,12 @@ const User = sequelize.define("User", {
         allowNull: false,
         unique: true,
 
-        // Normalize email before saving
+        // Normalize email before saving.
         set(value) {
-            this.setDataValue("email", value.toLowerCase().trim());
+            this.setDataValue(
+                "email",
+                normalizeEmail(value)
+            );
         },
 
         validate: {
@@ -64,15 +69,19 @@ const User = sequelize.define("User", {
     tableName: "users",
     timestamps: true,
 
-    // Hide password from regular queries
+    // Hide password from regular queries.
     defaultScope: {
-        attributes: { exclude: ["password"] }
+        attributes: {
+            exclude: ["password"]
+        }
     },
 
-    // Explicit scope for login/password checks
+    // Explicit scope for authentication.
     scopes: {
         withPassword: {
-            attributes: { include: ["password"] }
+            attributes: {
+                include: ["password"]
+            }
         }
     }
 });

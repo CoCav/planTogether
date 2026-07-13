@@ -6,6 +6,7 @@
    Responsibilities
    - Define allowed image MIME types
    - Define allowed image file extensions
+   - Define valid MIME type and extension pairs
    - Define upload size limits
 
    Notes
@@ -13,25 +14,35 @@
    - Keep these rules synchronized with frontend upload validation.
 =========================================================================== */
 
-const ALLOWED_IMAGE_MIME_TYPES = [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "image/gif"
-];
+const IMAGE_TYPE_POLICY = {
+    ".jpg": [
+        "image/jpeg"
+    ],
+    ".jpeg": [
+        "image/jpeg"
+    ],
+    ".png": [
+        "image/png"
+    ],
+    ".webp": [
+        "image/webp"
+    ],
+    ".gif": [
+        "image/gif"
+    ]
+};
 
-const ALLOWED_IMAGE_EXTENSIONS = [
-    ".jpg",
-    ".jpeg",
-    ".png",
-    ".webp",
-    ".gif"
-];
+const ALLOWED_IMAGE_EXTENSIONS = Object.keys(IMAGE_TYPE_POLICY);
+
+const ALLOWED_IMAGE_MIME_TYPES = Array.from(
+    new Set(Object.values(IMAGE_TYPE_POLICY).flat())
+);
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
 const MAX_EVENT_IMAGE_SIZE = 3 * 1024 * 1024;
 
 module.exports = {
+    IMAGE_TYPE_POLICY,
     ALLOWED_IMAGE_MIME_TYPES,
     ALLOWED_IMAGE_EXTENSIONS,
     MAX_AVATAR_SIZE,

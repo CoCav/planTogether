@@ -46,8 +46,8 @@ router.get(
 
 router.put(
     "/me",
-    uploadAvatar.single("avatar"),
     authenticateToken,
+    uploadAvatar.single("avatar"),
     updateCurrentUserProfileValidator,
     handleValidationErrors,
     userController.updateCurrentUserProfile

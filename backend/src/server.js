@@ -1,4 +1,5 @@
 const app = require("./app");
+
 const { initDB } = require("./models");
 
 const logger = require("./config/logger");
@@ -21,20 +22,30 @@ const logger = require("./config/logger");
 =========================================================================== */
 
 const DEFAULT_PORT = 3000;
-const PORT = process.env.PORT || DEFAULT_PORT;
 
-async function startServer() {
+const startServer = async () => {
+    const port = process.env.PORT || DEFAULT_PORT;
+
     try {
         await initDB();
 
-        app.listen(PORT, () => {
-            logger.info(`Server listening on http://localhost:${PORT}`);
+        return app.listen(port, () => {
+            logger.info(`Server listening on http://localhost:${port}`);
         });
+
     } catch (error) {
         logger.error({ error }, "Failed to start server");
 
         process.exit(1);
+
+        return null;
     }
+};
+
+if (require.main === module) {
+    startServer();
 }
 
-startServer();
+module.exports = {
+    startServer
+};

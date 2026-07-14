@@ -8,7 +8,7 @@ const {
     assertEventNotStarted
 } = require("../../../../src/utils/events/eventStatus");
 
-const { mockSystemTime } = require("../../../helpers/mocks/systemTimeMockHelper");
+const { mockSystemTime } = require("../../../helpers/mocks/systemTimeTestHelper.js");
 
 /* ==========================================================================
    Event Status Utility Unit Tests

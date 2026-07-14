@@ -10,7 +10,7 @@ const {
     buildEventWhereConditions
 } = require("../../../../src/utils/events/eventFilters");
 
-const { mockSystemTime } = require("../../../helpers/mocks/systemTimeMockHelper");
+const { mockSystemTime } = require("../../../helpers/mocks/systemTimeTestHelper.js");
 
 /* ==========================================================================
    Event Filter Utility Unit Tests

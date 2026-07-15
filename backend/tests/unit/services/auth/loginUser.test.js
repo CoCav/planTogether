@@ -1,172 +1,224 @@
-/* ==================================================
-   AUTH SERVICE - LOGIN USER TESTS
-
-   Tests:
-   - successful login
-   - email normalization
-   - invalid password rejection
-   - JWT token generation
-   - unknown email rejection
-   - deleted account rejection
-
-   Ensures:
-   - credentials are validated correctly
-   - emails are normalized before querying users
-   - JWT tokens are generated after authentication
-   - invalid login attempts are rejected
-   - deleted accounts cannot login
-================================================== */
-
-jest.mock("bcrypt");
-
-jest.mock("../../../../src/utils/auth/authToken", () => ({
-    generateAuthToken: jest.fn()
-}));
+const mockNormalizeEmail = jest.fn();
+const mockHashPassword = jest.fn();
+const mockComparePassword = jest.fn();
+const mockGenerateAuthToken = jest.fn();
 
 jest.mock("../../../../src/models/userModel", () => ({
     scope: jest.fn()
 }));
 
-const bcrypt = require("bcrypt");
-const { generateAuthToken } = require("../../../../src/utils/auth/authToken");
+jest.mock("../../../../src/utils/stringNormalizer", () => ({
+    normalizeEmail: mockNormalizeEmail
+}));
+
+jest.mock("../../../../src/utils/auth/passwordHasher", () => ({
+    hashPassword: mockHashPassword,
+    comparePassword: mockComparePassword
+}));
+
+jest.mock("../../../../src/utils/auth/authToken", () => ({
+    generateAuthToken: mockGenerateAuthToken
+}));
 
 const User = require("../../../../src/models/userModel");
-const authService = require("../../../../src/services/authService");
+
+const { loginUser } = require("../../../../src/services/authService");
 
 const { createMockUserWithPassword } = require("../../../factories/userFactory");
 
-describe("authService - loginUser", () => {
+const { createScopedModelMock } = require("../../../helpers/database/modelTestHelper");
+
+/* ==========================================================================
+   Login User Service Unit Tests
+
+   Tests user login business logic.
+
+   Responsibilities
+   - Test email normalization
+   - Test password-enabled user scope usage
+   - Test credential verification
+   - Test deleted account protection
+   - Test authentication token generation
+   - Test unexpected error propagation
+
+   Notes
+   - User model and authentication utilities are mocked.
+   - Password comparison behavior is tested separately in passwordHasher tests.
+=========================================================================== */
+
+describe("login user service", () => {
+    let scopedUserModel;
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        generateAuthToken.mockReturnValue("token");
+        scopedUserModel = createScopedModelMock();
+
+        User.scope.mockReturnValue(scopedUserModel);
+
+        mockNormalizeEmail.mockReturnValue("john@test.com");
+
+        mockComparePassword.mockResolvedValue(true);
+
+        mockGenerateAuthToken.mockReturnValue("fake-token");
     });
 
     /* =============================
-       LOGIN SUCCESS
+       USER LOGIN
     ============================= */
 
-    it("should login user and return token", async () => {
-        const scoped = {
-            findOne: jest.fn().mockResolvedValue(createMockUserWithPassword())
-        };
+    describe("loginUser", () => {
+        it("authenticates a user and returns a token", async () => {
+            const user = createMockUserWithPassword({
+                id: 1,
+                email: "john@test.com",
+                password: "hashed-password"
+            });
 
-        User.scope.mockReturnValue(scoped);
+            scopedUserModel.findOne.mockResolvedValue(user);
 
-        bcrypt.compare.mockResolvedValue(true);
+            const result = await loginUser({
+                email: " JOHN@TEST.COM ",
+                password: "Password123"
+            });
 
-        const result = await authService.loginUser({
-            email: " JOHN@TEST.COM ",
-            password: "Password123"
-        });
+            expect(mockNormalizeEmail).toHaveBeenCalledTimes(1);
 
-        expect(result.token).toBe("token");
-    });
+            expect(mockNormalizeEmail).toHaveBeenCalledWith(
+                " JOHN@TEST.COM "
+            );
 
-    /* =============================
-       EMAIL NORMALIZATION
-    ============================= */
+            expect(User.scope).toHaveBeenCalledTimes(1);
 
-    it("should normalize email before querying database", async () => {
-        const scoped = {
-            findOne: jest.fn().mockResolvedValue(createMockUserWithPassword())
-        };
+            expect(User.scope).toHaveBeenCalledWith(
+                "withPassword"
+            );
 
-        User.scope.mockReturnValue(scoped);
+            expect(scopedUserModel.findOne).toHaveBeenCalledTimes(1);
 
-        bcrypt.compare.mockResolvedValue(true);
+            expect(scopedUserModel.findOne).toHaveBeenCalledWith({
+                where: {
+                    email: "john@test.com"
+                }
+            });
 
-        await authService.loginUser({
-            email: " JOHN@TEST.COM ",
-            password: "Password123"
-        });
+            expect(mockComparePassword).toHaveBeenCalledTimes(1);
 
-        expect(scoped.findOne).toHaveBeenCalledWith({
-            where: {
-                email: "john@test.com"
-            }
-        });
-    });
+            expect(mockComparePassword).toHaveBeenCalledWith(
+                "Password123",
+                user.password
+            );
 
-    /* =============================
-       PASSWORD VERIFICATION
-    ============================= */
+            expect(mockGenerateAuthToken).toHaveBeenCalledTimes(1);
 
-    it("should throw if password is invalid", async () => {
-        User.scope.mockReturnValue({
-            findOne: jest.fn().mockResolvedValue(createMockUserWithPassword())
-        });
+            expect(mockGenerateAuthToken).toHaveBeenCalledWith(user.id);
 
-        bcrypt.compare.mockResolvedValue(false);
-
-        await expect(authService.loginUser({
-            email: "x",
-            password: "x"
-        })).rejects.toMatchObject({
-            statusCode: 401
+            expect(result).toEqual({
+                user,
+                token: "fake-token"
+            });
         });
     });
 
     /* =============================
-       TOKEN GENERATION
+       INVALID CREDENTIALS
     ============================= */
 
-    it("should generate JWT token with userId payload", async () => {
-        const mockUser = createMockUserWithPassword({
-            id: 1
+    describe("Invalid credentials", () => {
+        it("throws a 401 error when the user is not found", async () => {
+            scopedUserModel.findOne.mockResolvedValue(null);
+
+            await expect(
+                loginUser({
+                    email: "missing@test.com",
+                    password: "Password123"
+                })
+            ).rejects.toMatchObject({
+                message: "Invalid email or invalid password",
+                statusCode: 401
+            });
+
+            expect(mockComparePassword).not.toHaveBeenCalled();
+
+            expect(mockGenerateAuthToken).not.toHaveBeenCalled();
         });
 
-        const scoped = {
-            findOne: jest.fn().mockResolvedValue(mockUser)
-        };
+        it("throws a 401 error when the password is invalid", async () => {
+            const user = createMockUserWithPassword();
 
-        User.scope.mockReturnValue(scoped);
+            scopedUserModel.findOne.mockResolvedValue(user);
 
-        bcrypt.compare.mockResolvedValue(true);
+            mockComparePassword.mockResolvedValue(false);
 
-        await authService.loginUser({
-            email: "john@test.com",
-            password: "Password123"
+            await expect(
+                loginUser({
+                    email: "john@test.com",
+                    password: "WrongPassword"
+                })
+            ).rejects.toMatchObject({
+                message: "Invalid email or invalid password",
+                statusCode: 401
+            });
+
+            expect(mockComparePassword).toHaveBeenCalledWith(
+                "WrongPassword",
+                user.password
+            );
+
+            expect(mockGenerateAuthToken).not.toHaveBeenCalled();
         });
-
-        expect(generateAuthToken).toHaveBeenCalledWith(mockUser.id);
     });
-
 
     /* =============================
-       BUSINESS RULES
+       DELETED ACCOUNT PROTECTION
     ============================= */
 
-    it("should throw if user is not found", async () => {
-        User.scope.mockReturnValue({
-            findOne: jest.fn().mockResolvedValue(null)
-        });
+    describe("Deleted account protection", () => {
+        it("throws a 403 error when the account is deleted", async () => {
+            const user = createMockUserWithPassword({
+                deletedAt: new Date("2026-01-01T00:00:00.000Z")
+            });
 
-        await expect(authService.loginUser({
-            email: "x",
-            password: "x"
-        })).rejects.toMatchObject({
-            statusCode: 401
+            scopedUserModel.findOne.mockResolvedValue(user);
+
+            await expect(
+                loginUser({
+                    email: "john@test.com",
+                    password: "Password123"
+                })
+            ).rejects.toMatchObject({
+                message: "Account has been deleted",
+                statusCode: 403
+            });
+
+            expect(mockComparePassword).not.toHaveBeenCalled();
+
+            expect(mockGenerateAuthToken).not.toHaveBeenCalled();
         });
     });
 
-    it("should throw if account is deleted", async () => {
-        User.scope.mockReturnValue({
-            findOne: jest.fn().mockResolvedValue(createMockUserWithPassword({
-                deletedAt: new Date()
-            }))
-        });
+    /* =============================
+       UNEXPECTED ERRORS
+    ============================= */
 
-        await expect(authService.loginUser({
-            email: "john@test.com",
-            password: "Password123"
-        })).rejects.toMatchObject({
-            message: "Account has been deleted",
-            statusCode: 403
-        });
+    describe("Unexpected errors", () => {
+        it("propagates password comparison errors", async () => {
+            const user = createMockUserWithPassword();
 
-        expect(bcrypt.compare).not.toHaveBeenCalled();
-        expect(generateAuthToken).not.toHaveBeenCalled();
+            const error = new Error("Password comparison failed");
+
+            scopedUserModel.findOne.mockResolvedValue(user);
+
+            mockComparePassword.mockRejectedValue(error);
+
+            await expect(
+                loginUser({
+                    email: "john@test.com",
+                    password: "Password123"
+                })
+            ).rejects.toBe(error);
+
+            expect(mockGenerateAuthToken).not.toHaveBeenCalled();
+        });
     });
 });

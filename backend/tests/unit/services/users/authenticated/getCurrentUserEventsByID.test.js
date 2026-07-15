@@ -1,531 +1,599 @@
-/* ==================================================
-   USER SERVICE - GET CURRENT USER EVENTS BY ID TESTS
+const mockFindUserByIdOrFail = jest.fn();
+const mockBuildEventWhereConditions = jest.fn();
+const mockBuildEventCreatorInclude = jest.fn();
+const mockGetEventListStats = jest.fn();
+const mockGetEventStatus = jest.fn();
 
-   Tests:
-   - paginated active current user events retrieval
-   - optimized participant count enrichment
-   - like count enrichment
-   - current user like state enrichment
-   - event status enrichment
-   - created / joined / history views
-   - creator filter handling
-   - inactive membership exclusion
-   - missing user rejection
-   - database error propagation
+const mockGetPaginationOptions = jest.fn();
+const mockGetTotalCount = jest.fn();
+const mockGetTotalPages = jest.fn();
 
-   Ensures:
-   - current user event lists only include active memberships
-   - pagination metadata is returned correctly
-   - event metadata is added before response
-   - participant counts are retrieved through optimized grouped queries
-   - like counts are retrieved through optimized grouped queries
-   - current user liked event IDs are fetched in one query
-   - shared event role constants are used for role-based filters
-   - shared event status constants are used for expected statuses
-   - missing users and database errors are handled safely
-================================================== */
+const mockOpIn = Symbol("in");
+const mockOpLt = Symbol("lt");
+const mockOpGte = Symbol("gte");
+
+jest.mock("sequelize", () => ({
+    Op: {
+        in: mockOpIn,
+        lt: mockOpLt,
+        gte: mockOpGte
+    }
+}));
+
+jest.mock("../../../../../src/config/database", () => ({
+    name: "sequelize"
+}));
+
+jest.mock("../../../../../src/models/userModel", () => ({
+    name: "User"
+}));
+
+jest.mock("../../../../../src/models/eventModel", () => ({
+    name: "Event"
+}));
 
 jest.mock("../../../../../src/models/associations/eventUserRoleModel", () => ({
     findAndCountAll: jest.fn()
 }));
 
-jest.mock("../../../../../src/models/associations/eventLikeModel", () => ({}));
+jest.mock("../../../../../src/models/associations/eventLikeModel", () => ({
+    name: "EventLike"
+}));
 
-jest.mock("../../../../../src/models/userModel", () => ({
-    findByPk: jest.fn()
+jest.mock("../../../../../src/utils/users/userQueries", () => ({
+    findUserByIdOrFail: mockFindUserByIdOrFail
+}));
+
+jest.mock("../../../../../src/utils/events/eventFilters", () => ({
+    buildEventWhereConditions: mockBuildEventWhereConditions
+}));
+
+jest.mock("../../../../../src/utils/events/eventCreatorInclude", () => ({
+    buildEventCreatorInclude: mockBuildEventCreatorInclude
+}));
+
+jest.mock("../../../../../src/utils/events/eventListStats", () => ({
+    getEventListStats: mockGetEventListStats
+}));
+
+jest.mock("../../../../../src/utils/events/eventStatus", () => ({
+    getEventStatus: mockGetEventStatus
 }));
 
 jest.mock("../../../../../src/utils/pagination", () => ({
-    getPaginationOptions: jest.fn(),
-    getTotalCount: jest.fn((count) =>
-        Array.isArray(count) ? count.length : count
-    ),
-    getTotalPages: jest.fn((totalItems, pageSize) =>
-        Math.ceil(totalItems / pageSize)
-    )
+    getPaginationOptions: mockGetPaginationOptions,
+    getTotalCount: mockGetTotalCount,
+    getTotalPages: mockGetTotalPages
 }));
 
-jest.mock("../../../../../src/utils/events/eventStatus");
-
-jest.mock("../../../../../src/utils/events/eventFilters.js", () => ({
-    buildEventWhereConditions: jest.fn()
+jest.mock("../../../../../src/utils/stringNormalizer", () => ({
+    normalizeEmail: jest.fn()
 }));
 
-jest.mock("../../../../../src/utils/events/eventCreator.js", () => ({
-    buildEventCreatorInclude: jest.fn()
+jest.mock("../../../../../src/utils/files/uploadedFileStorage", () => ({
+    deleteUploadedFile: jest.fn()
 }));
 
-jest.mock("../../../../../src/utils/eventMemberships/eventParticipants.js", () => ({
-    countActiveParticipantsByEventIds: jest.fn()
+jest.mock("../../../../../src/utils/auth/passwordHasher", () => ({
+    hashPassword: jest.fn(),
+    comparePassword: jest.fn()
 }));
 
-jest.mock("../../../../../src/utils/eventLikes/eventLikes.js", () => ({
-    findLikedEventIdsByUser: jest.fn(),
-    countEventLikesByEventIds: jest.fn()
-}));
+const sequelize = require("../../../../../src/config/database");
 
-const { Op } = require("sequelize");
-
+const User = require("../../../../../src/models/userModel");
+const Event = require("../../../../../src/models/eventModel");
 const EventUserRole = require("../../../../../src/models/associations/eventUserRoleModel");
 const EventLike = require("../../../../../src/models/associations/eventLikeModel");
-const User = require("../../../../../src/models/userModel");
-
-const userService = require("../../../../../src/services/userService");
 
 const { EVENT_ROLES } = require("../../../../../src/constants/eventRoles");
+const { EVENT_SORT_FIELDS } = require("../../../../../src/constants/eventSortFields");
 const { EVENT_STATUS } = require("../../../../../src/constants/eventStatus");
 
-const { getEventStatus } = require("../../../../../src/utils/events/eventStatus");
+const { getCurrentUserEventsById } = require("../../../../../src/services/users/authenticatedUserService");
 
-const { buildEventWhereConditions } = require("../../../../../src/utils/events/eventFilters");
-const { buildEventCreatorInclude } = require("../../../../../src/utils/events/eventCreatorInclude");
-const { countActiveParticipantsByEventIds } = require("../../../../../src/utils/eventMemberships/eventParticipants");
+/* ==========================================================================
+   Get Current User Events Service Unit Tests
 
-const {
-    findLikedEventIdsByUser,
-    countEventLikesByEventIds
-} = require("../../../../../src/utils/eventLikes/eventLikes");
+   Tests current user event listing business logic.
 
+   Responsibilities
+   - Test current user existence validation
+   - Test created and joined view role filters
+   - Test current and history date filters
+   - Test event filter delegation
+   - Test pagination delegation
+   - Test membership query composition
+   - Test shared event statistic enrichment
+   - Test event status and like state enrichment
+   - Test pagination metadata
+   - Test unexpected error propagation
 
-const { getPaginationOptions, getTotalCount, getTotalPages } = require("../../../../../src/utils/pagination");
+   Notes
+   - User queries, filters, pagination and event statistics are mocked.
+   - Active memberships are queried through EventUserRole.
+=========================================================================== */
 
-describe("userService - getCurrentUserEventsById", () => {
-
-    const pagination = {
-        page: 1,
-        pageSize: 10,
-        limit: 10,
-        offset: 0,
-        orderField: "startDateTime",
-        orderDirection: "ASC"
-    };
+describe("get current user events service", () => {
+    let creatorInclude;
+    let membership;
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        buildEventWhereConditions.mockImplementation((where) => where);
-
-        buildEventCreatorInclude.mockReturnValue({
+        creatorInclude = {
             model: User,
-            as: "creator",
-            attributes: ["id", "name"]
-        });
-
-        countActiveParticipantsByEventIds.mockResolvedValue({
-            100: 5
-        });
-
-        countEventLikesByEventIds.mockResolvedValue({
-            100: 2
-        });
-
-        findLikedEventIdsByUser.mockResolvedValue(new Set([100]));
-
-        getPaginationOptions.mockReturnValue(pagination);
-    });
-
-    /* =============================
-       CURRENT USER EVENTS SUCCESS
-    ============================= */
-
-    it("should return paginated current user events with metadata", async () => {
-        const membership = {
-            toJSON: () => ({
-                id: 1,
-                event: {
-                    id: 100,
-                    title: "Event"
-                }
-            })
+            as: "creator"
         };
 
-        User.findByPk.mockResolvedValue({ id: 1 });
+        membership = {
+            toJSON: jest.fn(() => ({
+                id: 1,
+                userId: 10,
+                role: EVENT_ROLES.PARTICIPANT,
+                event: {
+                    id: 100,
+                    title: "User Event"
+                }
+            }))
+        };
+
+        mockFindUserByIdOrFail.mockResolvedValue({
+            id: 10
+        });
+
+        mockBuildEventWhereConditions.mockImplementation(
+            (whereConditions) => whereConditions
+        );
+
+        mockBuildEventCreatorInclude.mockReturnValue(creatorInclude);
+
+        mockGetPaginationOptions.mockReturnValue({
+            page: 1,
+            pageSize: 10,
+            limit: 10,
+            offset: 0,
+            orderField: "startDateTime",
+            orderDirection: "ASC"
+        });
+
+        mockGetEventListStats.mockResolvedValue({
+            participantCountByEventId: {
+                100: 5
+            },
+            likesCountByEventId: {
+                100: 2
+            },
+            likedEventIds: new Set([100])
+        });
+
+        mockGetEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
+
+        mockGetTotalCount.mockReturnValue(1);
+        mockGetTotalPages.mockReturnValue(1);
 
         EventUserRole.findAndCountAll.mockResolvedValue({
             count: 1,
             rows: [membership]
         });
+    });
 
-        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
+    /* =============================
+       EVENT LISTING
+    ============================= */
 
-        const result = await userService.getCurrentUserEventsById(1, {});
+    describe("getCurrentUserEventsById", () => {
+        it("returns paginated current user events with shared metadata", async () => {
+            const result = await getCurrentUserEventsById(10, {});
 
-        expect(User.findByPk).toHaveBeenCalledWith(1);
+            expect(mockFindUserByIdOrFail).toHaveBeenCalledWith(User, 10);
 
-        const queryOptions = EventUserRole.findAndCountAll.mock.calls[0][0];
+            expect(mockBuildEventWhereConditions).toHaveBeenCalledWith({}, {}, {
+                includeStatus: false
+            });
 
-        expect(queryOptions.where).toMatchObject({
-            userId: 1,
-            deletedAt: null
-        });
+            expect(mockBuildEventCreatorInclude).toHaveBeenCalledWith(User, undefined);
 
-        expect(result).toEqual({
-            page: 1,
-            pageSize: 10,
-            totalEvents: 1,
-            totalPages: 1,
-            events: [
+            expect(mockGetPaginationOptions).toHaveBeenCalledWith(
                 {
+                    sortBy: "startDateTime",
+                    order: "asc"
+                },
+                EVENT_SORT_FIELDS,
+                "startDateTime",
+                "ASC"
+            );
+
+            expect(EventUserRole.findAndCountAll).toHaveBeenCalledWith({
+                where: {
+                    userId: 10,
+                    deletedAt: null
+                },
+                include: [{
+                    model: Event,
+                    as: "event",
+                    where: {},
+                    include: [
+                        creatorInclude
+                    ]
+                }],
+                limit: 10,
+                offset: 0,
+                order: [[
+                    {
+                        model: Event,
+                        as: "event"
+                    },
+                    "startDateTime",
+                    "ASC"
+                ]],
+                subQuery: false
+            });
+
+            expect(membership.toJSON).toHaveBeenCalled();
+
+            expect(mockGetEventListStats).toHaveBeenCalledWith({
+                EventUserRole,
+                EventLike,
+                sequelize,
+                eventIds: [100],
+                currentUserId: 10
+            });
+
+            expect(mockGetEventStatus).toHaveBeenCalledWith({
+                id: 100,
+                title: "User Event",
+                participantCount: 5,
+                likesCount: 2
+            });
+
+            expect(mockGetTotalCount).toHaveBeenCalledWith(1);
+            expect(mockGetTotalPages).toHaveBeenCalledWith(1, 10);
+
+            expect(result).toEqual({
+                page: 1,
+                pageSize: 10,
+                totalEvents: 1,
+                totalPages: 1,
+                events: [{
                     id: 1,
+                    userId: 10,
+                    role: EVENT_ROLES.PARTICIPANT,
                     event: {
                         id: 100,
-                        title: "Event",
+                        title: "User Event",
                         participantCount: 5,
                         likesCount: 2,
                         status: EVENT_STATUS.UPCOMING,
                         isLikedByCurrentUser: true
                     }
-                }
-            ]
+                }]
+            });
+        });
+
+        it("returns empty pagination data when no memberships are found", async () => {
+            EventUserRole.findAndCountAll.mockResolvedValue({
+                count: 0,
+                rows: []
+            });
+
+            mockGetEventListStats.mockResolvedValue({
+                participantCountByEventId: {},
+                likesCountByEventId: {},
+                likedEventIds: new Set()
+            });
+
+            mockGetTotalCount.mockReturnValue(0);
+            mockGetTotalPages.mockReturnValue(0);
+
+            const result = await getCurrentUserEventsById(10);
+
+            expect(mockGetEventListStats).toHaveBeenCalledWith({
+                EventUserRole,
+                EventLike,
+                sequelize,
+                eventIds: [],
+                currentUserId: 10
+            });
+
+            expect(result).toEqual({
+                page: 1,
+                pageSize: 10,
+                totalEvents: 0,
+                totalPages: 0,
+                events: []
+            });
         });
     });
 
     /* =============================
-       QUERY FILTERS
+       VIEW FILTERS
     ============================= */
 
-    it("should apply creator filter through creator include", async () => {
-        User.findByPk.mockResolvedValue({ id: 1 });
+    describe("View filters", () => {
+        it.each([[
+            "created",
+            EVENT_ROLES.ORGANIZER
+        ], [
+            "createdHistory",
+            EVENT_ROLES.ORGANIZER
+        ]])("filters %s views by organizer role",
+            async (view, expectedRole) => {
+                await getCurrentUserEventsById(10, {
+                    view
+                });
 
-        EventUserRole.findAndCountAll.mockResolvedValue({
-            count: 0,
-            rows: []
-        });
+                const options = EventUserRole
+                    .findAndCountAll
+                    .mock.calls[0][0];
 
-        await userService.getCurrentUserEventsById(1, {
-            view: "joined",
-            creator: "john"
-        });
-
-        expect(buildEventCreatorInclude).toHaveBeenCalledWith(
-            User,
-            "john"
+                expect(options.where.role).toBe(expectedRole);
+            }
         );
-    });
 
-    it("should apply role filter for created view", async () => {
-        User.findByPk.mockResolvedValue({ id: 1 });
+        it.each([
+            "joined",
+            "joinedHistory"
+        ])("filters %s views by participant and co-organizer roles",
+            async (view) => {
+                await getCurrentUserEventsById(10, {
+                    view
+                });
 
-        EventUserRole.findAndCountAll.mockResolvedValue({
-            count: 0,
-            rows: []
-        });
+                const options = EventUserRole
+                    .findAndCountAll
+                    .mock.calls[0][0];
 
-        await userService.getCurrentUserEventsById(1, {
-            view: "created"
-        });
+                expect(options.where.role[mockOpIn]).toEqual([
+                    EVENT_ROLES.PARTICIPANT,
+                    EVENT_ROLES.CO_ORGANIZER
+                ]);
+            }
+        );
 
-        const queryOptions = EventUserRole.findAndCountAll.mock.calls[0][0];
+        it.each([
+            "created",
+            "joined"
+        ])("filters %s views to active or upcoming events",
+            async (view) => {
+                await getCurrentUserEventsById(10, {
+                    view
+                });
 
-        expect(queryOptions.where.role).toBe(EVENT_ROLES.ORGANIZER);
-    });
+                const options = EventUserRole
+                    .findAndCountAll
+                    .mock.calls[0][0];
 
-    it("should apply role filter for joined view", async () => {
-        User.findByPk.mockResolvedValue({ id: 1 });
+                expect(options.include[0]
+                    .where
+                    .endDateTime[mockOpGte]
+                ).toBeInstanceOf(Date);
+            }
+        );
 
-        EventUserRole.findAndCountAll.mockResolvedValue({
-            count: 0,
-            rows: []
-        });
+        it.each([
+            "createdHistory",
+            "joinedHistory"
+        ])("filters %s views to completed events",
+            async (view) => {
+                await getCurrentUserEventsById(10, {
+                    view
+                });
 
-        await userService.getCurrentUserEventsById(1, {
-            view: "joined"
-        });
+                const options = EventUserRole
+                    .findAndCountAll
+                    .mock.calls[0][0];
 
-        const queryOptions = EventUserRole.findAndCountAll.mock.calls[0][0];
-
-        expect(queryOptions.where.role[Op.in]).toEqual([
-            EVENT_ROLES.PARTICIPANT,
-            EVENT_ROLES.CO_ORGANIZER
-        ]);
-    });
-
-    it("should apply history date filter", async () => {
-        User.findByPk.mockResolvedValue({ id: 1 });
-
-        EventUserRole.findAndCountAll.mockResolvedValue({
-            count: 0,
-            rows: []
-        });
-
-        await userService.getCurrentUserEventsById(1, {
-            view: "createdHistory"
-        });
-
-        const queryOptions = EventUserRole.findAndCountAll.mock.calls[0][0];
-
-        expect(queryOptions.include[0].where.endDateTime[Op.lt]).toBeDefined();
-    });
-
-    it("should not pass creator to generic event filters", async () => {
-        User.findByPk.mockResolvedValue({ id: 1 });
-
-        EventUserRole.findAndCountAll.mockResolvedValue({
-            count: 0,
-            rows: []
-        });
-
-        await userService.getCurrentUserEventsById(1, {
-            view: "joined",
-            creator: "john",
-            search: "music"
-        });
-
-        expect(buildEventWhereConditions).toHaveBeenCalledWith(
-            expect.any(Object),
-            expect.not.objectContaining({
-                creator: "john"
-            }),
-            { includeStatus: false }
+                expect(options.include[0]
+                    .where
+                    .endDateTime[mockOpLt]
+                ).toBeInstanceOf(Date);
+            }
         );
     });
 
     /* =============================
-       EVENT METADATA
+       FILTERS AND PAGINATION
     ============================= */
 
-    it("should enrich each event with participant count and status", async () => {
-        const membership = {
-            toJSON: () => ({
-                id: 1,
-                event: {
-                    id: 100,
-                    title: "Metadata Event"
-                }
-            })
-        };
+    describe("Filters and pagination", () => {
+        it("keeps creator filtering outside generic event filters", async () => {
+            await getCurrentUserEventsById(10, {
+                view: "joined",
+                creator: "John",
+                search: "music"
+            });
 
-        User.findByPk.mockResolvedValue({ id: 1 });
+            expect(mockBuildEventWhereConditions).toHaveBeenCalledWith(expect.any(Object),
+                {
+                    view: "joined",
+                    search: "music"
+                }, {
+                includeStatus: false
+            });
 
-        EventUserRole.findAndCountAll.mockResolvedValue({
-            count: 1,
-            rows: [membership]
+            expect(mockBuildEventCreatorInclude).toHaveBeenCalledWith(User, "John");
         });
 
-        getEventStatus.mockReturnValue(EVENT_STATUS.PAST);
+        it("uses descending defaults for history views", async () => {
+            await getCurrentUserEventsById(10, {
+                view: "createdHistory"
+            });
 
-        const result = await userService.getCurrentUserEventsById(1, {});
-
-        expect(getEventStatus).toHaveBeenCalledWith({
-            id: 100,
-            title: "Metadata Event",
-            participantCount: 5,
-            likesCount: 2
+            expect(mockGetPaginationOptions).toHaveBeenCalledWith(
+                {
+                    view: "createdHistory",
+                    sortBy: "startDateTime",
+                    order: "desc"
+                },
+                EVENT_SORT_FIELDS,
+                "startDateTime",
+                "DESC"
+            );
         });
 
-        expect(result.events[0].event).toMatchObject({
-            participantCount: 5,
-            status: EVENT_STATUS.PAST
-        });
-    });
+        it("forwards custom pagination options through the membership query", async () => {
+            mockGetPaginationOptions.mockReturnValue({
+                page: 2,
+                pageSize: 5,
+                limit: 5,
+                offset: 5,
+                orderField: "title",
+                orderDirection: "DESC"
+            });
 
-    it("should enrich each event with like count and current user like state", async () => {
-        const membership = {
-            toJSON: () => ({
-                id: 1,
-                event: {
-                    id: 100,
-                    title: "Liked Event"
-                }
-            })
-        };
+            await getCurrentUserEventsById(10, {
+                page: "2",
+                pageSize: "5",
+                sortBy: "title",
+                order: "desc"
+            }
+            );
 
-        User.findByPk.mockResolvedValue({ id: 1 });
-
-        EventUserRole.findAndCountAll.mockResolvedValue({
-            count: 1,
-            rows: [membership]
-        });
-
-        countActiveParticipantsByEventIds.mockResolvedValue({
-            100: 3
-        });
-
-        countEventLikesByEventIds.mockResolvedValue({
-            100: 2
-        });
-
-        findLikedEventIdsByUser.mockResolvedValue(new Set([100]));
-
-        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
-
-        const result = await userService.getCurrentUserEventsById(1, {});
-
-        expect(countEventLikesByEventIds).toHaveBeenCalledWith(
-            EventLike,
-            expect.any(Object),
-            [100]
-        );
-
-        expect(findLikedEventIdsByUser).toHaveBeenCalledWith(
-            EventLike,
-            [100],
-            1
-        );
-
-        expect(result.events[0].event).toMatchObject({
-            id: 100,
-            title: "Liked Event",
-            participantCount: 3,
-            likesCount: 2,
-            isLikedByCurrentUser: true,
-            status: EVENT_STATUS.UPCOMING
+            expect(EventUserRole.findAndCountAll).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    limit: 5,
+                    offset: 5,
+                    order: [[
+                        {
+                            model: Event,
+                            as: "event"
+                        },
+                        "title",
+                        "DESC"
+                    ]]
+                })
+            );
         });
     });
 
-    it("should fallback like count to zero and liked state to false when missing", async () => {
-        const membership = {
-            toJSON: () => ({
-                id: 1,
-                event: {
-                    id: 999,
-                    title: "Unliked Event"
-                }
-            })
-        };
+    /* =============================
+       EVENT ENRICHMENT
+    ============================= */
 
-        User.findByPk.mockResolvedValue({ id: 1 });
+    describe("Event enrichment", () => {
+        it("falls back to zero counts and false like state", async () => {
+            mockGetEventListStats.mockResolvedValue({
+                participantCountByEventId: {},
+                likesCountByEventId: {},
+                likedEventIds: new Set()
+            });
 
-        EventUserRole.findAndCountAll.mockResolvedValue({
-            count: 1,
-            rows: [membership]
+            const result = await getCurrentUserEventsById(10);
+
+            expect(result.events[0].event).toMatchObject({
+                participantCount: 0,
+                likesCount: 0,
+                isLikedByCurrentUser: false
+            });
         });
 
-        countActiveParticipantsByEventIds.mockResolvedValue({});
-        countEventLikesByEventIds.mockResolvedValue({});
-        findLikedEventIdsByUser.mockResolvedValue(new Set());
-
-        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
-
-        const result = await userService.getCurrentUserEventsById(1, {});
-
-        expect(result.events[0].event).toMatchObject({
-            likesCount: 0,
-            isLikedByCurrentUser: false
-        });
-    });
-
-    it("should preserve event image data in current user events", async () => {
-        const membership = {
-            toJSON: () => ({
+        it("preserves existing event response fields", async () => {
+            membership.toJSON.mockReturnValue({
                 id: 1,
                 event: {
                     id: 100,
                     title: "Image Event",
                     image: "/uploads/events/image.jpg"
                 }
-            })
-        };
+            });
 
-        User.findByPk.mockResolvedValue({ id: 1 });
+            const result = await getCurrentUserEventsById(10);
 
-        EventUserRole.findAndCountAll.mockResolvedValue({
-            count: 1,
-            rows: [membership]
+            expect(result.events[0].event.image).toBe("/uploads/events/image.jpg");
         });
 
-        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
+        it("normalizes grouped membership counts through the pagination helper", async () => {
+            const groupedCount = [{
+                count: "1"
+            }, {
+                count: "1"
+            }];
 
-        const result = await userService.getCurrentUserEventsById(1, {});
+            EventUserRole.findAndCountAll.mockResolvedValue({
+                count: groupedCount,
+                rows: []
+            });
 
-        expect(result.events[0].event.image).toBe("/uploads/events/image.jpg");
+            mockGetEventListStats.mockResolvedValue({
+                participantCountByEventId: {},
+                likesCountByEventId: {},
+                likedEventIds: new Set()
+            });
+
+            mockGetTotalCount.mockReturnValue(2);
+            mockGetTotalPages.mockReturnValue(1);
+
+            const result = await getCurrentUserEventsById(10);
+
+            expect(mockGetTotalCount).toHaveBeenCalledWith(groupedCount);
+
+            expect(result.totalEvents).toBe(2);
+        });
     });
 
     /* =============================
-       PARTICIPANT COUNT
+       USER VALIDATION
     ============================= */
 
-    it("should use optimized participant count query helpers", async () => {
-        User.findByPk.mockResolvedValue({ id: 1 });
-
-        EventUserRole.findAndCountAll.mockResolvedValue({
-            count: 0,
-            rows: []
-        });
-
-        await userService.getCurrentUserEventsById(1, {});
-
-        expect(countActiveParticipantsByEventIds).toHaveBeenCalledWith(
-            EventUserRole,
-            expect.any(Object),
-            []
-        );
-    });
-
-    it("should fallback participant count to zero when count is missing", async () => {
-        const membership = {
-            toJSON: () => ({
-                id: 1,
-                event: {
-                    id: 999,
-                    title: "Empty Event"
+    describe("User validation", () => {
+        it("stops when the current user does not exist", async () => {
+            const error = Object.assign(
+                new Error("User not found"),
+                {
+                    statusCode: 404
                 }
-            })
-        };
+            );
 
-        User.findByPk.mockResolvedValue({ id: 1 });
+            mockFindUserByIdOrFail.mockRejectedValue(error);
 
-        EventUserRole.findAndCountAll.mockResolvedValue({
-            count: 1,
-            rows: [membership]
+            await expect(getCurrentUserEventsById(999)).rejects.toBe(error);
+
+            expect(mockBuildEventWhereConditions).not.toHaveBeenCalled();
+
+            expect(EventUserRole.findAndCountAll).not.toHaveBeenCalled();
+
+            expect(mockGetEventListStats).not.toHaveBeenCalled();
         });
-
-        countActiveParticipantsByEventIds.mockResolvedValue({});
-
-        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
-
-        const result = await userService.getCurrentUserEventsById(1, {});
-
-        expect(result.events[0].event.participantCount).toBe(0);
     });
 
     /* =============================
-       PAGINATION
+       UNEXPECTED ERRORS
     ============================= */
 
-    it("should normalize grouped count results", async () => {
-        User.findByPk.mockResolvedValue({ id: 1 });
+    describe("Unexpected errors", () => {
+        it.each([[
+            "membership query",
+            () => {
+                EventUserRole.findAndCountAll.mockRejectedValue(
+                    new Error("Membership query failed")
+                );
+            }
+        ], [
+            "event statistics",
+            () => {
+                mockGetEventListStats.mockRejectedValue(
+                    new Error("Event statistics failed")
+                );
+            }
+        ]])("propagates %s errors",
+            async (_, configureError) => {
+                configureError();
 
-        EventUserRole.findAndCountAll.mockResolvedValue({
-            count: [
-                { count: 1 },
-                { count: 1 }
-            ],
-            rows: []
+                await expect(getCurrentUserEventsById(10)).rejects.toBeInstanceOf(Error);
+            }
+        );
+
+        it("propagates membership serialization errors before statistic retrieval", async () => {
+            const error = new Error("Membership serialization failed");
+
+            membership.toJSON.mockImplementation(() => {
+                throw error;
+            });
+
+            await expect(getCurrentUserEventsById(10)).rejects.toBe(error);
+
+            expect(mockGetEventListStats).not.toHaveBeenCalled();
         });
-
-        await userService.getCurrentUserEventsById(1, {});
-
-        expect(getTotalCount).toHaveBeenCalledWith([
-            { count: 1 },
-            { count: 1 }
-        ]);
-
-        expect(getTotalPages).toHaveBeenCalledWith(2, 10);
-    });
-
-    /* =============================
-       EDGE CASES
-    ============================= */
-
-    it("should throw 404 when user is not found", async () => {
-        User.findByPk.mockResolvedValue(null);
-
-        await expect(userService.getCurrentUserEventsById(999, {})).rejects.toMatchObject({
-            message: "User not found",
-            statusCode: 404
-        });
-
-        expect(EventUserRole.findAndCountAll).not.toHaveBeenCalled();
-    });
-
-    /* =============================
-       DATABASE ERRORS
-    ============================= */
-
-    it("should forward database errors", async () => {
-        User.findByPk.mockRejectedValue(new Error("DB error"));
-
-        await expect(userService.getCurrentUserEventsById(1, {})).rejects.toThrow("DB error");
     });
 });

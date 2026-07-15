@@ -1,223 +1,407 @@
-/* ==================================================
-   USER SERVICE - DELETE CURRENT USER BY ID TESTS
+const mockFindUserByIdOrFail = jest.fn();
+const mockHashPassword = jest.fn();
+const mockDeleteUploadedFile = jest.fn();
 
-   Tests:
-   - successful account deletion
-   - deleted account data update
-   - active organizer deletion rejection
-   - inactive organizer membership exclusion
-   - past organizer deletion allowance
-   - missing user rejection
-   - transaction rollback on database errors
+const mockOpGte = Symbol("gte");
 
-   Ensures:
-   - current users can soft delete their account
-   - deleted accounts keep historical display name
-   - deleted accounts anonymize email and avatar data
-   - only active organizer memberships block account deletion
-   - active or upcoming organizer ownership must be transferred first
-   - Sequelize transactions are committed on success
-   - Sequelize transactions are rolled back on failures
-================================================== */
-
-jest.mock("bcrypt");
+jest.mock("sequelize", () => ({
+    Op: {
+        gte: mockOpGte
+    }
+}));
 
 jest.mock("../../../../../src/config/database", () => ({
     transaction: jest.fn()
 }));
 
-jest.mock("../../../../../src/models/eventModel", () => ({}));
-
-jest.mock("../../../../../src/models/associations/eventLikeModel", () => ({}));
-
 jest.mock("../../../../../src/models/userModel", () => ({
-    findByPk: jest.fn()
+    name: "User"
+}));
+
+jest.mock("../../../../../src/models/eventModel", () => ({
+    name: "Event"
 }));
 
 jest.mock("../../../../../src/models/associations/eventUserRoleModel", () => ({
     findOne: jest.fn()
 }));
 
-jest.mock("../../../../../src/utils/files/uploadedFileStorage", () => ({
-    deleteUploadedFile: jest.fn()
+jest.mock("../../../../../src/models/associations/eventLikeModel", () => ({
+    name: "EventLike"
 }));
 
-const bcrypt = require("bcrypt");
+jest.mock("../../../../../src/utils/users/userQueries", () => ({
+    findUserByIdOrFail: mockFindUserByIdOrFail
+}));
+
+jest.mock("../../../../../src/utils/auth/passwordHasher", () => ({
+    hashPassword: mockHashPassword,
+    comparePassword: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/files/uploadedFileStorage", () => ({
+    deleteUploadedFile: mockDeleteUploadedFile
+}));
+
+jest.mock("../../../../../src/utils/events/eventStatus", () => ({
+    getEventStatus: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/events/eventFilters", () => ({
+    buildEventWhereConditions: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/events/eventCreatorInclude", () => ({
+    buildEventCreatorInclude: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/events/eventListStats", () => ({
+    getEventListStats: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/stringNormalizer", () => ({
+    normalizeEmail: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/pagination", () => ({
+    getPaginationOptions: jest.fn(),
+    getTotalCount: jest.fn(),
+    getTotalPages: jest.fn()
+}));
 
 const sequelize = require("../../../../../src/config/database");
-const User = require("../../../../../src/models/userModel");
-const EventUserRole = require("../../../../../src/models/associations/eventUserRoleModel");
 
-const userService = require("../../../../../src/services/userService");
+const User = require("../../../../../src/models/userModel");
+const Event = require("../../../../../src/models/eventModel");
+const EventUserRole = require("../../../../../src/models/associations/eventUserRoleModel");
 
 const { EVENT_ROLES } = require("../../../../../src/constants/eventRoles");
 
-const { deleteUploadedFile } = require("../../../../../src/utils/files/uploadedFileStorage");
+const { deleteCurrentUserById } = require("../../../../../src/services/users/authenticatedUserService");
+
+const { createTransactionMock } = require("../../../../helpers/database/modelTestHelper");
+
+const { mockSystemTime } = require("../../../../helpers/mocks/systemTimeTestHelper");
 
 const { createMockUserWithPassword } = require("../../../../factories/userFactory");
 
-describe("userService - deleteCurrentUserById", () => {
+/* ==========================================================================
+   Delete Current User Service Unit Tests
+
+   Tests current user account deletion.
+
+   Responsibilities
+   - Test current user lookup
+   - Test active organizer ownership protection
+   - Test account anonymization
+   - Test password replacement
+   - Test avatar removal
+   - Test post-commit file cleanup
+   - Test transaction commit and rollback
+   - Test unexpected error propagation
+
+   Notes
+   - Account deletion soft-deletes and anonymizes the user.
+   - Active or upcoming event ownership must be transferred first.
+   - Avatar files are removed only after the transaction commits.
+=========================================================================== */
+
+describe("delete current user service", () => {
+    mockSystemTime("2026-04-25T12:00:00.000Z");
+
     let transaction;
     let user;
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        transaction = {
-            commit: jest.fn().mockResolvedValue(),
-            rollback: jest.fn().mockResolvedValue()
-        };
+        transaction = createTransactionMock();
 
         user = createMockUserWithPassword({
-            id: 1,
+            id: 10,
             name: "John Doe",
             email: "john@test.com",
-            avatar: "/uploads/avatars/avatar-test.png",
+            password: "current-hash",
+            avatar:
+                "/uploads/avatars/current-avatar.png",
             deletedAt: null,
             save: jest.fn().mockResolvedValue()
         });
 
         sequelize.transaction.mockResolvedValue(transaction);
-        bcrypt.hash.mockResolvedValue("deleted-hash");
+
+        mockFindUserByIdOrFail.mockResolvedValue(user);
+
+        EventUserRole.findOne.mockResolvedValue(null);
+
+        mockHashPassword.mockResolvedValue("deleted-password-hash");
+
+        mockDeleteUploadedFile.mockResolvedValue();
     });
 
     /* =============================
-       ACCOUNT DELETION SUCCESS
+       ACCOUNT DELETION
     ============================= */
 
-    it("should soft delete current user account", async () => {
-        User.findByPk.mockResolvedValue(user);
-        EventUserRole.findOne.mockResolvedValue(null);
+    describe("deleteCurrentUserById", () => {
+        it("soft-deletes and anonymizes the current user", async () => {
+            const result = await deleteCurrentUserById(10);
 
-        const result = await userService.deleteCurrentUserById(1);
+            const deletionToken = new Date("2026-04-25T12:00:00.000Z").getTime();
 
-        expect(sequelize.transaction).toHaveBeenCalled();
+            const deletedCredential = `deleted_user_10_${deletionToken}`;
 
-        expect(User.findByPk).toHaveBeenCalledWith(1, { transaction });
+            expect(sequelize.transaction).toHaveBeenCalledTimes(1);
 
-        expect(EventUserRole.findOne).toHaveBeenCalled();
+            expect(mockFindUserByIdOrFail).toHaveBeenCalledTimes(1);
 
-        expect(user.deletedAt).toBeInstanceOf(Date);
-        expect(user.name).toBe("John Doe");
-        expect(user.email).toMatch(/^deleted_user_1_/);
-        expect(user.password).toBe("deleted-hash");
-        expect(user.avatar).toBeNull();
+            expect(mockFindUserByIdOrFail).toHaveBeenCalledWith(User, 10, {
+                transaction
+            });
 
-        expect(bcrypt.hash).toHaveBeenCalledWith(expect.stringMatching(/^deleted_user_1_/), 10);
+            expect(EventUserRole.findOne).toHaveBeenCalledTimes(1);
 
-        expect(user.save).toHaveBeenCalledWith({ transaction });
+            expect(EventUserRole.findOne).toHaveBeenCalledWith({
+                where: {
+                    userId: 10,
+                    role:
+                        EVENT_ROLES.ORGANIZER,
+                    deletedAt: null
+                },
+                include: [{
+                    model: Event,
+                    as: "event",
+                    where: {
+                        endDateTime: {
+                            [mockOpGte]: new Date("2026-04-25T12:00:00.000Z")
+                        }
+                    }
+                }],
+                transaction
+            });
 
-        expect(transaction.commit).toHaveBeenCalled();
-        expect(transaction.rollback).not.toHaveBeenCalled();
+            expect(user.deletedAt).toEqual(
+                new Date("2026-04-25T12:00:00.000Z")
+            );
 
-        expect(deleteUploadedFile).toHaveBeenCalledWith("/uploads/avatars/avatar-test.png");
+            // Historical content keeps the original display name.
+            expect(user.name).toBe("John Doe");
 
-        expect(result).toBe(user);
-    });
+            expect(user.email).toBe(`${deletedCredential}@deleted.local`);
 
-    it("should allow deletion when user only owns past events", async () => {
-        User.findByPk.mockResolvedValue(user);
-        EventUserRole.findOne.mockResolvedValue(null);
+            expect(mockHashPassword).toHaveBeenCalledTimes(1);
+            expect(mockHashPassword).toHaveBeenCalledWith(deletedCredential);
 
-        await userService.deleteCurrentUserById(1);
+            expect(user.password).toBe("deleted-password-hash");
 
-        expect(EventUserRole.findOne).toHaveBeenCalled();
+            expect(user.avatar).toBeNull();
 
-        expect(user.deletedAt).toBeInstanceOf(Date);
+            expect(user.save).toHaveBeenCalledTimes(1);
+            expect(user.save).toHaveBeenCalledWith({
+                transaction
+            });
 
-        expect(transaction.commit).toHaveBeenCalled();
-        expect(transaction.rollback).not.toHaveBeenCalled();
-    });
+            expect(transaction.commit).toHaveBeenCalledTimes(1);
 
-    it("should ignore inactive organizer memberships when checking deletion blocker", async () => {
-        User.findByPk.mockResolvedValue(user);
-        EventUserRole.findOne.mockResolvedValue(null);
+            expect(transaction.rollback).not.toHaveBeenCalled();
 
-        await userService.deleteCurrentUserById(1);
+            expect(mockDeleteUploadedFile).toHaveBeenCalledWith("/uploads/avatars/current-avatar.png");
 
-        expect(EventUserRole.findOne).toHaveBeenCalledWith(expect.objectContaining({
-            where: {
-                userId: 1,
-                role: EVENT_ROLES.ORGANIZER,
-                deletedAt: null
-            },
-            transaction
-        }));
-
-        expect(user.deletedAt).toBeInstanceOf(Date);
-
-        expect(transaction.commit).toHaveBeenCalled();
-        expect(transaction.rollback).not.toHaveBeenCalled();
-    });
-
-    it("should not delete avatar when user has no avatar", async () => {
-        user.avatar = null;
-
-        User.findByPk.mockResolvedValue(user);
-        EventUserRole.findOne.mockResolvedValue(null);
-
-        await userService.deleteCurrentUserById(1);
-
-        expect(deleteUploadedFile).not.toHaveBeenCalled();
-
-        expect(transaction.commit).toHaveBeenCalled();
-        expect(transaction.rollback).not.toHaveBeenCalled();
-    });
-
-    /* =============================
-       BUSINESS RULES
-    ============================= */
-
-    it("should reject deletion if user owns active or upcoming events", async () => {
-        User.findByPk.mockResolvedValue(user);
-
-        EventUserRole.findOne.mockResolvedValue({
-            id: 1,
-            userId: 1,
-            eventId: 1
+            expect(result).toBe(user);
         });
 
-        await expect(userService.deleteCurrentUserById(1)).rejects.toMatchObject({
-            message: "You must transfer ownership of your active or upcoming events before deleting your account",
-            statusCode: 403
+        it("does not delete a file when the user has no avatar", async () => {
+            user.avatar = null;
+
+            await deleteCurrentUserById(10);
+
+            expect(user.avatar).toBeNull();
+
+            expect(transaction.commit).toHaveBeenCalledTimes(1);
+
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
         });
-
-        expect(user.save).not.toHaveBeenCalled();
-        expect(deleteUploadedFile).not.toHaveBeenCalled();
-
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
     });
 
     /* =============================
-       EDGE CASES
+       OWNERSHIP PROTECTION
     ============================= */
 
-    it("should throw 404 when user is not found", async () => {
-        User.findByPk.mockResolvedValue(null);
+    describe("Event ownership protection", () => {
+        it("throws a 403 error when the user owns an active or upcoming event", async () => {
+            EventUserRole.findOne.mockResolvedValue({
+                id: 1,
+                eventId: 100,
+                userId: 10,
+                role: EVENT_ROLES.ORGANIZER
+            });
 
-        await expect(userService.deleteCurrentUserById(1)).rejects.toMatchObject({
-            message: "User not found",
-            statusCode: 404
+            await expect(
+                deleteCurrentUserById(10)
+            ).rejects.toMatchObject({
+                message: "You must transfer ownership of your active or upcoming events before deleting your account",
+                statusCode: 403
+            });
+
+            expect(mockHashPassword).not.toHaveBeenCalled();
+
+            expect(user.save).not.toHaveBeenCalled();
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
         });
 
-        expect(EventUserRole.findOne).not.toHaveBeenCalled();
-        expect(deleteUploadedFile).not.toHaveBeenCalled();
+        it("allows deletion when no active organizer membership is found", async () => {
+            EventUserRole.findOne.mockResolvedValue(null);
 
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
+            await deleteCurrentUserById(10);
+
+            expect(user.save).toHaveBeenCalledTimes(1);
+
+            expect(transaction.commit).toHaveBeenCalledTimes(1);
+
+            expect(transaction.rollback).not.toHaveBeenCalled();
+        });
     });
 
     /* =============================
-       DATABASE ERRORS
+       FILE CLEANUP
     ============================= */
 
-    it("should rollback transaction when database error occurs", async () => {
-        User.findByPk.mockRejectedValue(new Error("DB error"));
+    describe("Avatar cleanup", () => {
+        it("deletes the avatar only after the transaction commits", async () => {
+            await deleteCurrentUserById(10);
 
-        await expect(userService.deleteCurrentUserById(1)).rejects.toThrow("DB error");
+            expect(transaction.commit.mock.invocationCallOrder[0]).toBeLessThan(
+                mockDeleteUploadedFile.mock.invocationCallOrder[0]
+            );
+        });
 
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
+        it("propagates cleanup errors without rolling back committed changes", async () => {
+            const error = new Error("Avatar cleanup failed");
+
+            mockDeleteUploadedFile.mockRejectedValue(error);
+
+            await expect(deleteCurrentUserById(10)).rejects.toBe(error);
+
+            expect(user.save).toHaveBeenCalledTimes(1);
+
+            expect(transaction.commit).toHaveBeenCalledTimes(1);
+
+            // Account deletion is already committed.
+            expect(transaction.rollback).not.toHaveBeenCalled();
+        });
+    });
+
+    /* =============================
+       USER VALIDATION
+    ============================= */
+
+    describe("User validation", () => {
+        it("rolls back when the current user does not exist", async () => {
+            const error = Object.assign(
+                new Error("User not found"),
+                {
+                    statusCode: 404
+                }
+            );
+
+            mockFindUserByIdOrFail.mockRejectedValue(error);
+
+            await expect(deleteCurrentUserById(999)).rejects.toBe(error);
+
+            expect(EventUserRole.findOne).not.toHaveBeenCalled();
+
+            expect(mockHashPassword).not.toHaveBeenCalled();
+
+            expect(user.save).not.toHaveBeenCalled();
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
+        });
+    });
+
+    /* =============================
+       TRANSACTION ERRORS
+    ============================= */
+
+    describe("Transaction errors", () => {
+        it("propagates transaction creation errors", async () => {
+            const error = new Error("Transaction creation failed");
+
+            sequelize.transaction.mockRejectedValue(error);
+
+            await expect(deleteCurrentUserById(10)).rejects.toBe(error);
+
+            expect(mockFindUserByIdOrFail).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).not.toHaveBeenCalled();
+        });
+
+        it("rolls back when the ownership lookup fails", async () => {
+            const error = new Error("Ownership lookup failed");
+
+            EventUserRole.findOne.mockRejectedValue(error);
+
+            await expect(deleteCurrentUserById(10)).rejects.toBe(error);
+
+            expect(mockHashPassword).not.toHaveBeenCalled();
+
+            expect(user.save).not.toHaveBeenCalled();
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+        });
+
+        it("rolls back when password anonymization fails", async () => {
+            const error = new Error("Password hashing failed");
+
+            mockHashPassword.mockRejectedValue(error);
+
+            await expect(deleteCurrentUserById(10)).rejects.toBe(error);
+
+            expect(user.save).not.toHaveBeenCalled();
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
+        });
+
+        it("rolls back when user persistence fails", async () => {
+            const error = new Error("User persistence failed");
+
+            user.save.mockRejectedValue(error);
+
+            await expect(deleteCurrentUserById(10)).rejects.toBe(error);
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
+        });
+
+        it("rolls back when transaction commit fails", async () => {
+            const error = new Error("Transaction commit failed");
+
+            transaction.commit.mockRejectedValue(error);
+
+            await expect(deleteCurrentUserById(10)).rejects.toBe(error);
+
+            expect(user.save).toHaveBeenCalledTimes(1);
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
+        });
     });
 });

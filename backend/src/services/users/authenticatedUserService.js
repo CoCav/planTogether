@@ -16,13 +16,7 @@ const { deleteUploadedFile } = require("../../utils/files/uploadedFileStorage");
 const { getEventStatus } = require("../../utils/events/eventStatus");
 const { buildEventWhereConditions } = require("../../utils/events/eventFilters");
 const { buildEventCreatorInclude } = require("../../utils/events/eventCreatorInclude");
-
-const { countActiveParticipantsByEventIds } = require("../../utils/eventMemberships/eventParticipants");
-
-const {
-    findLikedEventIdsByUser,
-    countEventLikesByEventIds
-} = require("../../utils/eventLikes/eventLikes");
+const { getEventListStats } = require("../../utils/events/eventListStats");
 
 const {
     getPaginationOptions,
@@ -67,10 +61,10 @@ const getCurrentUserEventsById = async (userId, query = {}) => {
 
     await findUserByIdOrFail(User, userId);
 
-    const isHistoryView =
-        view === "createdHistory" ||
-        view === "joinedHistory";
+    const isHistoryView = view === "createdHistory" || view === "joinedHistory";
 
+    // Created views contain organizer memberships.
+    // Joined views contain participant and co-organizer memberships.
     const roleFilter = !view
         ? undefined
         : view === "created" || view === "createdHistory"
@@ -82,17 +76,27 @@ const getCurrentUserEventsById = async (userId, query = {}) => {
                 ]
             };
 
-    const eventDateFilter = !view
-        ? {}
-        : isHistoryView
-            ? { endDateTime: { [Op.lt]: now } }
-            : { endDateTime: { [Op.gte]: now } };
+    // History views only contain completed events.
+    const eventDateFilter = !view ? {} : isHistoryView
+        ? {
+            endDateTime: {
+                [Op.lt]: now
+            }
+        }
+        : {
+            endDateTime: {
+                [Op.gte]: now
+            }
+        };
 
     const { creator, ...eventQuery } = query;
 
-    const eventFilter = { ...eventDateFilter };
+    const eventFilter = {
+        ...eventDateFilter
+    };
 
     buildEventWhereConditions(eventFilter, eventQuery, {
+        // The current user view already controls its date range.
         includeStatus: false
     });
 
@@ -116,45 +120,55 @@ const getCurrentUserEventsById = async (userId, query = {}) => {
         isHistoryView ? "DESC" : "ASC"
     );
 
-    const { count, rows } = await EventUserRole.findAndCountAll({
-        where: {
-            userId,
-            deletedAt: null,
-            ...(roleFilter && { role: roleFilter })
-        },
-        include: [{
-            model: Event,
-            as: "event",
-            where: eventFilter,
-            include: [
-                buildEventCreatorInclude(User, creator)
-            ]
-        }],
-        limit,
-        offset,
-        order: [[{ model: Event, as: "event" }, orderField, orderDirection]],
-        subQuery: false
-    });
+    const { count, rows } =
+        await EventUserRole.findAndCountAll({
+            where: {
+                userId,
+                deletedAt: null,
+                ...(roleFilter && {
+                    role: roleFilter
+                })
+            },
+            include: [{
+                model: Event,
+                as: "event",
+                where: eventFilter,
+                include: [
+                    buildEventCreatorInclude(
+                        User,
+                        creator
+                    )
+                ]
+            }],
+            limit,
+            offset,
+            order: [[
+                {
+                    model: Event,
+                    as: "event"
+                },
+                orderField,
+                orderDirection
+            ]],
+            subQuery: false
+        });
 
-    const eventIds = rows.map((membership) => membership.toJSON().event.id);
+    const eventIds = rows.map(
+        (membership) => membership.toJSON().event.id
+    );
 
-    const participantCountByEventId = await countActiveParticipantsByEventIds(
+    // Retrieve shared event statistics in one step.
+    const {
+        participantCountByEventId,
+        likesCountByEventId,
+        likedEventIds
+    } = await getEventListStats({
         EventUserRole,
-        sequelize,
-        eventIds
-    );
-
-    const likesCountByEventId = await countEventLikesByEventIds(
         EventLike,
         sequelize,
-        eventIds
-    );
-
-    const likedEventIds = await findLikedEventIdsByUser(
-        EventLike,
         eventIds,
-        userId
-    );
+        currentUserId: userId
+    });
 
     const events = rows.map((membership) => {
         const data = membership.toJSON();
@@ -193,33 +207,46 @@ const getCurrentUserProfileById = async (userId) => {
 const updateCurrentUserProfileById = async (userId, updatedData) => {
     const transaction = await sequelize.transaction();
 
+    let updatedUser;
+    let oldAvatarToDelete = null;
+
     try {
-        const user = await findUserByIdOrFail(User, userId, { transaction });
+        const user = await findUserByIdOrFail(User, userId, {
+            transaction
+        });
 
         const oldAvatar = user.avatar;
         const { name, email, avatar } = updatedData;
 
-        if (name) user.name = name;
-        if (email) user.email = normalizeEmail(email);
+        if (name) {
+            user.name = name;
+        }
 
+        if (email) {
+            user.email = normalizeEmail(email);
+        }
+
+        // Preserve the current avatar when the field is omitted.
         if (avatar !== undefined) {
             user.avatar = avatar || null;
         }
 
-        await user.save({ transaction });
-        await transaction.commit();
+        await user.save({
+            transaction
+        });
 
         const shouldDeleteOldAvatar =
             avatar !== undefined &&
-            avatar &&
             oldAvatar &&
-            oldAvatar !== avatar;
+            oldAvatar !== user.avatar;
 
         if (shouldDeleteOldAvatar) {
-            await deleteUploadedFile(oldAvatar);
+            oldAvatarToDelete = oldAvatar;
         }
 
-        return user;
+        await transaction.commit();
+
+        updatedUser = user;
 
     } catch (error) {
         await transaction.rollback();
@@ -230,18 +257,18 @@ const updateCurrentUserProfileById = async (userId, updatedData) => {
 
         throw error;
     }
+
+    // Clean uploaded files only after the database commit.
+    if (oldAvatarToDelete) {
+        await deleteUploadedFile(oldAvatarToDelete);
+    }
+
+    return updatedUser;
 };
 
-const changeCurrentUserPasswordById = async (
-    userId,
-    currentPassword,
-    newPassword
-) => {
+const changeCurrentUserPasswordById = async (userId, currentPassword, newPassword) => {
 
-    const user = await findUserByIdOrFail(
-        User.scope("withPassword"),
-        userId
-    );
+    const user = await findUserByIdOrFail(User.scope("withPassword"), userId);
 
     const isPasswordValid = await comparePassword(
         currentPassword,
@@ -269,54 +296,71 @@ const changeCurrentUserPasswordById = async (
 const deleteCurrentUserById = async (userId) => {
     const transaction = await sequelize.transaction();
 
-    try {
-        const user = await findUserByIdOrFail(User, userId, { transaction });
+    let deletedUser;
+    let oldAvatarToDelete = null;
 
-        const activeOrganizerMembership = await EventUserRole.findOne({
-            where: {
-                userId,
-                role: EVENT_ROLES.ORGANIZER,
-                deletedAt: null
-            },
-            include: [{
-                model: Event,
-                as: "event",
-                where: {
-                    endDateTime: {
-                        [Op.gte]: new Date()
-                    }
-                }
-            }],
+    try {
+        const user = await findUserByIdOrFail(User, userId, {
             transaction
-        });
+        }
+        );
+
+        // Active and upcoming events must keep an organizer.
+        const activeOrganizerMembership =
+            await EventUserRole.findOne({
+                where: {
+                    userId,
+                    role: EVENT_ROLES.ORGANIZER,
+                    deletedAt: null
+                },
+                include: [{
+                    model: Event,
+                    as: "event",
+                    where: {
+                        endDateTime: {
+                            [Op.gte]: new Date()
+                        }
+                    }
+                }],
+                transaction
+            });
 
         if (activeOrganizerMembership) {
             throwHttpError(403, ACTIVE_EVENTS_OWNERSHIP_ERROR);
         }
 
-        const oldAvatar = user.avatar;
-        const deletionToken = Date.now();
+        const deletionDate = new Date();
+        const deletionToken = deletionDate.getTime();
 
-        user.deletedAt = new Date();
+        oldAvatarToDelete = user.avatar;
+
+        // Keep the display name for historical event data.
+        user.deletedAt = deletionDate;
+
+        // Replace unique account credentials with anonymous values.
         user.email = `deleted_user_${user.id}_${deletionToken}@deleted.local`;
-        user.password = await hashPassword(
-            `deleted_user_${user.id}_${deletionToken}`
-        );
+        user.password = await hashPassword(`deleted_user_${user.id}_${deletionToken}`);
         user.avatar = null;
 
-        await user.save({ transaction });
+        await user.save({
+            transaction
+        });
+
         await transaction.commit();
 
-        if (oldAvatar) {
-            await deleteUploadedFile(oldAvatar);
-        }
-
-        return user;
+        deletedUser = user;
 
     } catch (error) {
         await transaction.rollback();
         throw error;
     }
+
+    // Account deletion is already committed before file cleanup.
+    if (oldAvatarToDelete) {
+        await deleteUploadedFile(oldAvatarToDelete);
+    }
+
+    return deletedUser;
 };
 
 module.exports = {

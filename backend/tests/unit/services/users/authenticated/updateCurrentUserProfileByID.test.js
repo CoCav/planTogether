@@ -1,254 +1,424 @@
-/* ==================================================
-   USER SERVICE - UPDATE CURRENT USER PROFILE BY ID TESTS
-
-   Tests:
-   - profile field updates
-   - avatar updates
-   - avatar cleanup
-   - duplicate email rejection
-   - missing user rejection
-   - transaction rollback on database errors
-
-   Ensures:
-   - current user profile fields are updated safely
-   - emails are normalized before persistence
-   - avatar files are cleaned up only after successful DB commit
-   - duplicate emails are converted to API-friendly errors
-   - Sequelize transactions are committed on successful updates
-   - Sequelize transactions are rolled back on failed updates
-   - missing users and database errors are handled safely
-================================================== */
+const mockFindUserByIdOrFail = jest.fn();
+const mockNormalizeEmail = jest.fn();
+const mockDeleteUploadedFile = jest.fn();
 
 jest.mock("../../../../../src/config/database", () => ({
     transaction: jest.fn()
 }));
 
-jest.mock("../../../../../src/models/eventModel", () => ({}));
-
-jest.mock("../../../../../src/models/associations/eventUserRoleModel", () => ({}));
-
-jest.mock("../../../../../src/models/associations/eventLikeModel", () => ({}));
-
 jest.mock("../../../../../src/models/userModel", () => ({
-    findByPk: jest.fn()
+    name: "User"
+}));
+
+jest.mock("../../../../../src/models/eventModel", () => ({
+    name: "Event"
+}));
+
+jest.mock("../../../../../src/models/associations/eventUserRoleModel", () => ({
+    name: "EventUserRole"
+}));
+
+jest.mock("../../../../../src/models/associations/eventLikeModel", () => ({
+    name: "EventLike"
+}));
+
+jest.mock("../../../../../src/utils/users/userQueries", () => ({
+    findUserByIdOrFail: mockFindUserByIdOrFail
+}));
+
+jest.mock("../../../../../src/utils/stringNormalizer", () => ({
+    normalizeEmail: mockNormalizeEmail
 }));
 
 jest.mock("../../../../../src/utils/files/uploadedFileStorage", () => ({
-    deleteUploadedFile: jest.fn()
+    deleteUploadedFile: mockDeleteUploadedFile
+}));
+
+jest.mock("../../../../../src/utils/events/eventStatus", () => ({
+    getEventStatus: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/events/eventFilters", () => ({
+    buildEventWhereConditions: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/events/eventCreatorInclude", () => ({
+    buildEventCreatorInclude: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/events/eventListStats", () => ({
+    getEventListStats: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/auth/passwordHasher", () => ({
+    hashPassword: jest.fn(),
+    comparePassword: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/pagination", () => ({
+    getPaginationOptions: jest.fn(),
+    getTotalCount: jest.fn(),
+    getTotalPages: jest.fn()
 }));
 
 const sequelize = require("../../../../../src/config/database");
+
 const User = require("../../../../../src/models/userModel");
 
-const userService = require("../../../../../src/services/userService");
+const { updateCurrentUserProfileById } = require("../../../../../src/services/users/authenticatedUserService");
 
-const { deleteUploadedFile } = require("../../../../../src/utils/files/uploadedFileStorage");
+const { createTransactionMock } = require("../../../../helpers/database/modelTestHelper");
 
 const { createMockUser } = require("../../../../factories/userFactory");
 
-describe("userService - updateCurrentUserProfileById", () => {
+/* ==========================================================================
+   Update Current User Profile Service Unit Tests
 
-    let user;
+   Tests current user profile updates.
+
+   Responsibilities
+   - Test current user lookup
+   - Test name and email updates
+   - Test email normalization
+   - Test avatar replacement and removal
+   - Test post-commit avatar cleanup
+   - Test duplicate email error conversion
+   - Test transaction commit and rollback
+   - Test unexpected error propagation
+
+   Notes
+   - User lookup and file storage utilities are mocked.
+   - Old avatars are removed only after the database transaction commits.
+=========================================================================== */
+
+describe("update current user profile service", () => {
     let transaction;
+    let user;
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        transaction = {
-            commit: jest.fn().mockResolvedValue(),
-            rollback: jest.fn().mockResolvedValue()
-        };
-
-        sequelize.transaction.mockResolvedValue(transaction);
+        transaction = createTransactionMock();
 
         user = createMockUser({
+            id: 10,
+            name: "John Doe",
+            email: "john@test.com",
+            avatar: null,
             save: jest.fn().mockResolvedValue()
         });
 
-        deleteUploadedFile.mockResolvedValue();
+        sequelize.transaction.mockResolvedValue(transaction);
+
+        mockFindUserByIdOrFail.mockResolvedValue(user);
+
+        mockNormalizeEmail.mockImplementation(
+            (email) => String(email).trim().toLowerCase()
+        );
+
+        mockDeleteUploadedFile.mockResolvedValue();
     });
 
     /* =============================
-       PROFILE UPDATE SUCCESS
+       PROFILE UPDATE
     ============================= */
 
-    it("should update user profile fields", async () => {
+    describe("updateCurrentUserProfileById", () => {
+        it("updates and returns the current user profile", async () => {
+            const result =
+                await updateCurrentUserProfileById(10, {
+                    name: "Updated User",
+                    email: " UPDATED@TEST.COM "
+                });
 
-        User.findByPk.mockResolvedValue(user);
+            expect(sequelize.transaction).toHaveBeenCalledTimes(1);
 
-        const result = await userService.updateCurrentUserProfileById(1, {
-            name: "Updated",
-            email: " UPDATED@TEST.COM "
+            expect(mockFindUserByIdOrFail).toHaveBeenCalledTimes(1);
+
+            expect(mockFindUserByIdOrFail).toHaveBeenCalledWith(User, 10, {
+                transaction
+            });
+
+            expect(mockNormalizeEmail).toHaveBeenCalledWith(" UPDATED@TEST.COM ");
+
+            expect(user.name).toBe("Updated User");
+
+            expect(user.email).toBe("updated@test.com");
+
+            expect(user.save).toHaveBeenCalledTimes(1);
+
+            expect(user.save).toHaveBeenCalledWith({
+                transaction
+            });
+
+            expect(transaction.commit).toHaveBeenCalledTimes(1);
+
+            expect(transaction.rollback).not.toHaveBeenCalled();
+
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
+
+            expect(result).toBe(user);
         });
 
-        expect(sequelize.transaction).toHaveBeenCalled();
+        it("preserves fields that are omitted from the update", async () => {
+            await updateCurrentUserProfileById(10, {});
 
-        expect(User.findByPk).toHaveBeenCalledWith(1, { transaction });
+            expect(user.name).toBe("John Doe");
+            expect(user.email).toBe("john@test.com");
 
-        expect(user.name).toBe("Updated");
-        expect(user.email).toBe("updated@test.com");
+            expect(user.avatar).toBeNull();
 
-        expect(user.save).toHaveBeenCalledWith({ transaction });
+            expect(mockNormalizeEmail).not.toHaveBeenCalled();
 
-        expect(transaction.commit).toHaveBeenCalled();
-        expect(transaction.rollback).not.toHaveBeenCalled();
+            expect(user.save).toHaveBeenCalledTimes(1);
+        });
 
-        expect(result).toBe(user);
+        it("does not update the name when an empty value is provided", async () => {
+            await updateCurrentUserProfileById(10, {
+                name: ""
+            });
+
+            expect(user.name).toBe("John Doe");
+        });
+
+        it("does not update the email when an empty value is provided", async () => {
+            await updateCurrentUserProfileById(10, {
+                email: ""
+            });
+
+            expect(user.email).toBe("john@test.com");
+
+            expect(mockNormalizeEmail).not.toHaveBeenCalled();
+        });
     });
 
-    it("should update user avatar when provided", async () => {
+    /* =============================
+       AVATAR UPDATE
+    ============================= */
 
-        User.findByPk.mockResolvedValue(user);
+    describe("Avatar update", () => {
+        it("sets a new avatar", async () => {
+            const newAvatar = "/uploads/avatars/new-avatar.png";
 
-        const result = await userService.updateCurrentUserProfileById(1, {
-            avatar: "/uploads/avatars/avatar-test.png"
+            const result = await updateCurrentUserProfileById(10, {
+                avatar: newAvatar
+            });
+
+            expect(user.avatar).toBe(newAvatar);
+
+            expect(user.save).toHaveBeenCalledWith({
+                transaction
+            });
+
+            expect(transaction.commit).toHaveBeenCalledTimes(1);
+
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
+
+            expect(result).toBe(user);
         });
 
-        expect(sequelize.transaction).toHaveBeenCalled();
+        it.each([
+            ["an empty string", ""],
+            ["null", null]
+        ])("clears the current avatar when %s is provided",
+            async (_, avatar) => {
+                user.avatar = "/uploads/avatars/old-avatar.png";
 
-        expect(User.findByPk).toHaveBeenCalledWith(1, { transaction });
+                await updateCurrentUserProfileById(10, {
+                    avatar
+                });
 
-        expect(user.avatar).toBe("/uploads/avatars/avatar-test.png");
+                expect(user.avatar).toBeNull();
 
-        expect(user.save).toHaveBeenCalledWith({ transaction });
+                expect(transaction.commit).toHaveBeenCalledTimes(1);
 
-        expect(transaction.commit).toHaveBeenCalled();
-        expect(transaction.rollback).not.toHaveBeenCalled();
+                expect(mockDeleteUploadedFile).toHaveBeenCalledTimes(1);
+                expect(mockDeleteUploadedFile).toHaveBeenCalledWith("/uploads/avatars/old-avatar.png");
+            }
+        );
 
-        expect(result).toBe(user);
-    });
+        it("preserves the current avatar when the avatar field is omitted", async () => {
+            user.avatar = "/uploads/avatars/current-avatar.png";
 
-    it("should clear user avatar when empty string is provided", async () => {
+            await updateCurrentUserProfileById(10, {
+                name: "Updated User"
+            });
 
-        user.avatar = "/uploads/avatars/old-avatar.png";
+            expect(user.avatar).toBe("/uploads/avatars/current-avatar.png");
 
-        User.findByPk.mockResolvedValue(user);
-
-        const result = await userService.updateCurrentUserProfileById(1, {
-            avatar: ""
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
         });
-
-        expect(user.avatar).toBeNull();
-
-        expect(user.save).toHaveBeenCalledWith({ transaction });
-
-        expect(transaction.commit).toHaveBeenCalled();
-        expect(transaction.rollback).not.toHaveBeenCalled();
-
-        expect(result).toBe(user);
     });
 
     /* =============================
        AVATAR CLEANUP
     ============================= */
 
-    it("should delete old avatar when new avatar is provided", async () => {
-
-        user.avatar = "/uploads/avatars/old-avatar.png";
-
-        User.findByPk.mockResolvedValue(user);
-
-        await userService.updateCurrentUserProfileById(1, {
-            avatar: "/uploads/avatars/new-avatar.png"
+    describe("Avatar cleanup", () => {
+        beforeEach(() => {
+            user.avatar = "/uploads/avatars/old-avatar.png";
         });
 
-        expect(transaction.commit).toHaveBeenCalled();
+        it("deletes the previous avatar after a successful replacement", async () => {
+            await updateCurrentUserProfileById(10, {
+                avatar: "/uploads/avatars/new-avatar.png"
+            });
 
-        expect(deleteUploadedFile).toHaveBeenCalledWith(
-            "/uploads/avatars/old-avatar.png"
-        );
-    });
+            expect(transaction.commit).toHaveBeenCalledTimes(1);
 
-    it("should not delete avatar when avatar is unchanged", async () => {
+            expect(mockDeleteUploadedFile).toHaveBeenCalledTimes(1);
+            expect(mockDeleteUploadedFile).toHaveBeenCalledWith("/uploads/avatars/old-avatar.png");
 
-        user.avatar = "/uploads/avatars/avatar-test.png";
-
-        User.findByPk.mockResolvedValue(user);
-
-        await userService.updateCurrentUserProfileById(1, {
-            avatar: "/uploads/avatars/avatar-test.png"
+            expect(transaction.commit.mock.invocationCallOrder[0]).toBeLessThan(
+                mockDeleteUploadedFile.mock.invocationCallOrder[0]
+            );
         });
 
-        expect(deleteUploadedFile).not.toHaveBeenCalled();
-    });
+        it("does not delete the avatar when the path is unchanged", async () => {
+            await updateCurrentUserProfileById(10, {
+                avatar: "/uploads/avatars/old-avatar.png"
+            });
 
-    it("should not delete avatar when avatar is cleared", async () => {
-
-        user.avatar = "/uploads/avatars/old-avatar.png";
-
-        User.findByPk.mockResolvedValue(user);
-
-        await userService.updateCurrentUserProfileById(1, {
-            avatar: ""
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
         });
 
-        expect(user.avatar).toBeNull();
+        it("propagates cleanup errors without rolling back committed changes", async () => {
+            const error = new Error("Avatar cleanup failed");
 
-        expect(deleteUploadedFile).not.toHaveBeenCalled();
-    });
+            mockDeleteUploadedFile.mockRejectedValue(error);
 
-    /* =============================
-       BUSINESS RULES
-    ============================= */
+            await expect(
+                updateCurrentUserProfileById(10, {
+                    avatar: "/uploads/avatars/new-avatar.png"
+                })
+            ).rejects.toBe(error);
 
-    it("should convert duplicate email database error to 409", async () => {
+            expect(transaction.commit).toHaveBeenCalledTimes(1);
 
-        const duplicateEmailError = new Error("Duplicate email");
-        duplicateEmailError.name = "SequelizeUniqueConstraintError";
-
-        User.findByPk.mockResolvedValue(user);
-
-        user.save.mockRejectedValue(duplicateEmailError);
-
-        await expect(userService.updateCurrentUserProfileById(1, {
-            email: "taken@test.com"
-        })).rejects.toMatchObject({
-            message: "Email already in use",
-            statusCode: 409
+            // The profile update is already committed.
+            expect(transaction.rollback).not.toHaveBeenCalled();
         });
-
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
     });
 
     /* =============================
-       EDGE CASES
+       USER VALIDATION
     ============================= */
 
-    it("should throw 404 when updated user is not found", async () => {
+    describe("User validation", () => {
+        it("rolls back when the current user does not exist", async () => {
+            const error = Object.assign(
+                new Error("User not found"),
+                {
+                    statusCode: 404
+                }
+            );
 
-        User.findByPk.mockResolvedValue(null);
+            mockFindUserByIdOrFail.mockRejectedValue(error);
 
-        await expect(
-            userService.updateCurrentUserProfileById(1, {})
-        ).rejects.toMatchObject({
-            message: "User not found",
-            statusCode: 404
+            await expect(
+                updateCurrentUserProfileById(
+                    999,
+                    {}
+                )
+            ).rejects.toBe(error);
+
+            expect(user.save).not.toHaveBeenCalled();
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
         });
-
-        expect(sequelize.transaction).toHaveBeenCalled();
-
-        expect(User.findByPk).toHaveBeenCalledWith(1, { transaction });
-
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
     });
 
     /* =============================
-       DATABASE ERRORS
+       DUPLICATE EMAIL
     ============================= */
 
-    it("should rollback transaction on profile update database errors", async () => {
+    describe("Duplicate email", () => {
+        it("converts Sequelize unique constraint errors to a 409 error", async () => {
+            const error = Object.assign(
+                new Error("Duplicate email"),
+                {
+                    name: "SequelizeUniqueConstraintError"
+                }
+            );
 
-        User.findByPk.mockResolvedValue(user);
+            user.save.mockRejectedValue(error);
 
-        user.save.mockRejectedValue(new Error("DB error"));
+            await expect(
+                updateCurrentUserProfileById(10, {
+                    email: "taken@test.com"
+                })
+            ).rejects.toMatchObject({
+                message: "Email already in use",
+                statusCode: 409
+            });
 
-        await expect(userService.updateCurrentUserProfileById(1, {
-            name: "Updated"
-        })).rejects.toThrow("DB error");
+            expect(transaction.commit).not.toHaveBeenCalled();
 
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
+        });
+    });
+
+    /* =============================
+       TRANSACTION ERRORS
+    ============================= */
+
+    describe("Transaction errors", () => {
+        it("propagates transaction creation errors", async () => {
+            const error = new Error("Transaction creation failed");
+
+            sequelize.transaction.mockRejectedValue(error);
+
+            await expect(
+                updateCurrentUserProfileById(10, {
+                    name: "Updated User"
+                })
+            ).rejects.toBe(error);
+
+            expect(mockFindUserByIdOrFail).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).not.toHaveBeenCalled();
+        });
+
+        it("rolls back when profile persistence fails", async () => {
+            const error = new Error("Profile persistence failed");
+
+            user.save.mockRejectedValue(error);
+
+            await expect(
+                updateCurrentUserProfileById(10, {
+                    name: "Updated User"
+                })
+            ).rejects.toBe(error);
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
+        });
+
+        it("rolls back when transaction commit fails", async () => {
+            const error = new Error("Transaction commit failed");
+
+            transaction.commit.mockRejectedValue(error);
+
+            await expect(
+                updateCurrentUserProfileById(10, {
+                    avatar: "/uploads/avatars/new-avatar.png"
+                })
+            ).rejects.toBe(error);
+
+            expect(user.save).toHaveBeenCalledTimes(1);
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
+        });
     });
 });

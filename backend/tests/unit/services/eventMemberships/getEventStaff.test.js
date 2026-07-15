@@ -1,102 +1,205 @@
-/* ==================================================
-   EVENT MEMBERSHIP SERVICE - GET EVENT STAFF TESTS
+const mockFindEventByIdOrFail = jest.fn();
+const mockBuildPublicUserInclude = jest.fn();
 
-   Tests:
-   - successful active staff listing
-   - inactive staff membership exclusion
-   - missing event rejection
-   - database error propagation
+const mockOpIn = Symbol("in");
 
-   Ensures:
-   - only active organizer and co_organizer memberships are retrieved
-   - inactive staff memberships are excluded from staff listings
-   - role-based organizer filtering is applied
-   - organizer data is returned with public user information, including avatar
-   - missing events are rejected before membership query
-   - shared event role constants are used for valid role scenarios
-================================================== */
+jest.mock("sequelize", () => ({
+    Op: {
+        in: mockOpIn
+    }
+}));
+
+jest.mock("../../../../src/config/database", () => ({
+    transaction: jest.fn()
+}));
 
 jest.mock("../../../../src/models/eventModel", () => ({
-    findByPk: jest.fn()
+    name: "Event"
+}));
+
+jest.mock("../../../../src/models/userModel", () => ({
+    name: "User"
 }));
 
 jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
     findAll: jest.fn()
 }));
 
-const { Op } = require("sequelize");
+jest.mock("../../../../src/utils/events/eventQueries", () => ({
+    findEventByIdOrFail: mockFindEventByIdOrFail
+}));
+
+jest.mock("../../../../src/utils/events/eventStatus", () => ({
+    assertEventNotPast: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventMemberships/eventMembershipQueries", () => ({
+    findActiveMembership: jest.fn(),
+    findMembership: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventMemberships/eventParticipants", () => ({
+    countActiveParticipants: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/users/userInclude", () => ({
+    buildPublicUserInclude: mockBuildPublicUserInclude
+}));
 
 const Event = require("../../../../src/models/eventModel");
 const User = require("../../../../src/models/userModel");
 const EventUserRole = require("../../../../src/models/associations/eventUserRoleModel");
 
-const eventMembershipService = require("../../../../src/services/eventMembershipService");
+const {
+    EVENT_ROLES,
+    STAFF_EVENT_ROLES
+} = require("../../../../src/constants/eventRoles");
 
-const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
+const { getEventStaff } = require("../../../../src/services/eventMembershipService");
 
-describe("eventMembershipService - getEventStaff", () => {
+/* ==========================================================================
+   Get Event Staff Service Unit Tests
+
+   Tests active event staff retrieval.
+
+   Responsibilities
+   - Test event existence validation
+   - Test active staff membership filtering
+   - Test organizer and co-organizer role filtering
+   - Test public user data inclusion
+   - Test staff ordering
+   - Test result forwarding
+   - Test unexpected error propagation
+
+   Notes
+   - Event query and user include utilities are mocked.
+   - Inactive memberships and participant roles are excluded by the query.
+=========================================================================== */
+
+describe("get event staff service", () => {
+    let publicUserInclude;
 
     beforeEach(() => {
         jest.clearAllMocks();
+
+        publicUserInclude = {
+            model: User,
+            as: "user",
+            attributes: [
+                "id",
+                "name",
+                "avatar"
+            ]
+        };
+
+        mockFindEventByIdOrFail.mockResolvedValue({
+            id: 1
+        });
+
+        mockBuildPublicUserInclude.mockReturnValue(publicUserInclude);
     });
 
     /* =============================
-      STAFF RETRIEVAL
+       EVENT STAFF RETRIEVAL
     ============================= */
 
-    it("should get event organizers and co-organizers", async () => {
-        const eventStaff = [{
-            id: 1,
-            role: EVENT_ROLES.ORGANIZER
-        }];
-
-        Event.findByPk.mockResolvedValue({ id: 1 });
-        EventUserRole.findAll.mockResolvedValue(eventStaff);
-
-        const result = await eventMembershipService.getEventStaff(1);
-
-        expect(Event.findByPk).toHaveBeenCalledWith(1);
-
-        expect(EventUserRole.findAll).toHaveBeenCalledWith({
-            where: {
+    describe("getEventStaff", () => {
+        it("returns active organizers and co-organizers with public user data", async () => {
+            const eventStaff = [{
+                id: 1,
                 eventId: 1,
-                deletedAt: null,
-                role: {
-                    [Op.in]: [EVENT_ROLES.ORGANIZER, EVENT_ROLES.CO_ORGANIZER]
+                userId: 10,
+                role: EVENT_ROLES.ORGANIZER,
+                deletedAt: null
+            }, {
+                id: 2,
+                eventId: 1,
+                userId: 20,
+                role: EVENT_ROLES.CO_ORGANIZER,
+                deletedAt: null
+            }];
+
+            EventUserRole.findAll.mockResolvedValue(eventStaff);
+
+            const result = await getEventStaff(1);
+
+            expect(mockFindEventByIdOrFail).toHaveBeenCalledTimes(1);
+
+            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(
+                Event,
+                1
+            );
+
+            expect(mockBuildPublicUserInclude).toHaveBeenCalledTimes(1);
+
+            expect(mockBuildPublicUserInclude).toHaveBeenCalledWith(User);
+
+            expect(EventUserRole.findAll).toHaveBeenCalledTimes(1);
+
+            expect(EventUserRole.findAll).toHaveBeenCalledWith({
+                where: {
+                    eventId: 1,
+                    deletedAt: null,
+                    role: {
+                        [mockOpIn]:
+                            STAFF_EVENT_ROLES
+                    }
+                },
+                include: [
+                    publicUserInclude
+                ],
+                order: [
+                    ["role", "ASC"],
+                    ["createdAt", "ASC"]
+                ]
+            });
+
+            expect(result).toBe(eventStaff);
+        });
+
+        it("returns an empty array when the event has no active staff", async () => {
+            EventUserRole.findAll.mockResolvedValue([]);
+
+            const result = await getEventStaff(1);
+
+            expect(result).toEqual([]);
+        });
+    });
+
+    /* =============================
+       EVENT VALIDATION
+    ============================= */
+
+    describe("Event validation", () => {
+        it("stops staff retrieval when the event does not exist", async () => {
+            const error = Object.assign(
+                new Error("Event not found"),
+                {
+                    statusCode: 404
                 }
-            },
-            include: [{
-                model: User,
-                attributes: ["id", "name", "email", "avatar"]
-            }],
-            order: [["role", "ASC"], ["createdAt", "ASC"]]
-        });
+            );
 
-        expect(result).toBe(eventStaff);
+            mockFindEventByIdOrFail.mockRejectedValue(error);
+
+            await expect(getEventStaff(999)).rejects.toBe(error);
+
+            expect(mockBuildPublicUserInclude).not.toHaveBeenCalled();
+
+            expect(EventUserRole.findAll).not.toHaveBeenCalled();
+        });
     });
 
     /* =============================
-      EDGE CASES
+       UNEXPECTED ERRORS
     ============================= */
 
-    it("should throw 404 if event is not found", async () => {
-        Event.findByPk.mockResolvedValue(null);
+    describe("Unexpected errors", () => {
+        it("propagates staff retrieval errors", async () => {
+            const error = new Error("Staff retrieval failed");
 
-        await expect(eventMembershipService.getEventStaff(999)).rejects.toMatchObject({
-            message: "Event not found",
-            statusCode: 404
+            EventUserRole.findAll.mockRejectedValue(error);
+
+            await expect(getEventStaff(1)).rejects.toBe(error);
         });
-
-        expect(EventUserRole.findAll).not.toHaveBeenCalled();
-    });
-
-    /* =============================
-      DATABASE ERRORS
-    ============================= */
-
-    it("should forward database errors", async () => {
-        Event.findByPk.mockRejectedValue(new Error("DB error"));
-
-        await expect(eventMembershipService.getEventStaff(1)).rejects.toThrow("DB error");
     });
 });

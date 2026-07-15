@@ -1,186 +1,309 @@
-/* ===========================================================
-   EVENT MEMBERSHIP SERVICE - UPDATE EVENT MEMBER ROLE TESTS
+const mockFindEventByIdOrFail = jest.fn();
+const mockAssertEventNotPast = jest.fn();
+const mockFindActiveMembership = jest.fn();
 
-   Tests:
-   - successful active membership role update
-   - past event rejection
-   - invalid role rejection
-   - same role rejection
-   - missing event rejection
-   - missing membership rejection
-   - database error propagation
-
-   Ensures:
-   - active member roles are updated correctly
-   - inactive memberships cannot be updated
-   - invalid role changes are rejected
-   - same-role updates are rejected
-   - past event rules are respected
-   - missing events and memberships are rejected correctly
-   - shared event role constants are used for valid role scenarios
-=========================================================== */
+jest.mock("../../../../src/config/database", () => ({
+    transaction: jest.fn()
+}));
 
 jest.mock("../../../../src/models/eventModel", () => ({
-    findByPk: jest.fn()
+    name: "Event"
+}));
+
+jest.mock("../../../../src/models/userModel", () => ({
+    name: "User"
 }));
 
 jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
-    findOne: jest.fn()
+    name: "EventUserRole"
+}));
+
+jest.mock("../../../../src/utils/events/eventQueries", () => ({
+    findEventByIdOrFail: mockFindEventByIdOrFail
 }));
 
 jest.mock("../../../../src/utils/events/eventStatus", () => ({
-    assertEventNotPast: jest.fn()
+    assertEventNotPast: mockAssertEventNotPast
+}));
+
+jest.mock("../../../../src/utils/eventMemberships/eventMembershipQueries", () => ({
+    findActiveMembership: mockFindActiveMembership,
+    findMembership: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventMemberships/eventParticipants", () => ({
+    countActiveParticipants: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/users/userInclude", () => ({
+    buildPublicUserInclude: jest.fn()
 }));
 
 const Event = require("../../../../src/models/eventModel");
 const EventUserRole = require("../../../../src/models/associations/eventUserRoleModel");
 
-const eventMembershipService = require("../../../../src/services/eventMembershipService");
-
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 
-const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
+const { updateEventMemberRole } = require("../../../../src/services/eventMembershipService");
 
 const { createMockMembership } = require("../../../factories/eventMembershipFactory");
 
-describe("eventMembershipService - updateEventMemberRole", () => {
+/* ==========================================================================
+   Update Event Member Role Service Unit Tests
+
+   Tests event membership role updates.
+
+   Responsibilities
+   - Test event existence and lifecycle validation
+   - Test supported role validation
+   - Test organizer assignment protection
+   - Test active membership validation
+   - Test duplicate role protection
+   - Test membership role persistence
+   - Test unexpected error propagation
+
+   Notes
+   - Event and membership query utilities are mocked.
+   - Ownership transfer is the only valid way to assign organizer.
+=========================================================================== */
+
+describe("update event member role service", () => {
+    let membership;
 
     beforeEach(() => {
         jest.clearAllMocks();
-    });
 
-    /* =============================
-      ROLE UPDATE
-    ============================= */
-
-    it("should update event member role", async () => {
-        const membership = createMockMembership({
+        membership = createMockMembership({
+            eventId: 1,
+            userId: 10,
             role: EVENT_ROLES.PARTICIPANT,
+            deletedAt: null,
             save: jest.fn().mockResolvedValue()
         });
 
-        Event.findByPk.mockResolvedValue({ id: 1 });
-        assertEventNotPast.mockImplementation(() => { });
-        EventUserRole.findOne.mockResolvedValue(membership);
-
-        const result = await eventMembershipService.updateEventMemberRole({
-            eventId: 1,
-            userId: 10,
-            newRole: EVENT_ROLES.CO_ORGANIZER
+        mockFindEventByIdOrFail.mockResolvedValue({
+            id: 1
         });
 
-        expect(EventUserRole.findOne).toHaveBeenCalledWith({
-            where: {
-                eventId: 1,
-                userId: 10,
-                deletedAt: null
-            }
-        });
+        mockAssertEventNotPast.mockImplementation(() => { });
 
-        expect(membership.role).toBe(EVENT_ROLES.CO_ORGANIZER);
-        expect(membership.save).toHaveBeenCalled();
-        expect(result).toBe(membership);
+        mockFindActiveMembership.mockResolvedValue(membership);
     });
 
     /* =============================
-      BUSINESS RULES
+       MEMBER ROLE UPDATE
     ============================= */
 
-    it("should block role update on past event", async () => {
-        Event.findByPk.mockResolvedValue({ id: 1 });
+    describe("updateEventMemberRole", () => {
+        it("updates and returns the active membership", async () => {
+            const result =
+                await updateEventMemberRole({
+                    eventId: 1,
+                    userId: 10,
+                    newRole: EVENT_ROLES.CO_ORGANIZER
+                });
 
-        const error = new Error("No action is allowed on a past event");
-        error.statusCode = 403;
+            expect(mockFindEventByIdOrFail).toHaveBeenCalledTimes(1);
 
-        assertEventNotPast.mockImplementation(() => {
-            throw error;
-        });
+            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(
+                Event,
+                1
+            );
 
-        await expect(eventMembershipService.updateEventMemberRole({
-            eventId: 1,
-            userId: 10,
-            newRole: EVENT_ROLES.PARTICIPANT
-        })).rejects.toMatchObject({
-            statusCode: 403
-        });
-    });
+            expect(mockAssertEventNotPast).toHaveBeenCalledTimes(1);
 
-    it("should throw 400 if role is invalid", async () => {
-        Event.findByPk.mockResolvedValue({ id: 1 });
-        assertEventNotPast.mockImplementation(() => { });
+            expect(mockAssertEventNotPast).toHaveBeenCalledWith({
+                id: 1
+            });
 
-        await expect(eventMembershipService.updateEventMemberRole({
-            eventId: 1,
-            userId: 10,
-            newRole: "invalid"
-        })).rejects.toMatchObject({
-            message: "Invalid role provided",
-            statusCode: 400
-        });
-    });
+            expect(mockFindActiveMembership).toHaveBeenCalledTimes(1);
 
-    it("should throw 400 if user already has this role", async () => {
-        const membership = createMockMembership({
-            role: EVENT_ROLES.PARTICIPANT
-        });
+            expect(mockFindActiveMembership).toHaveBeenCalledWith(
+                EventUserRole,
+                {
+                    eventId: 1,
+                    userId: 10,
+                    transaction: undefined
+                }
+            );
 
-        Event.findByPk.mockResolvedValue({ id: 1 });
-        assertEventNotPast.mockImplementation(() => { });
-        EventUserRole.findOne.mockResolvedValue(membership);
+            expect(membership.role).toBe(EVENT_ROLES.CO_ORGANIZER);
 
-        await expect(eventMembershipService.updateEventMemberRole({
-            eventId: 1,
-            userId: 10,
-            newRole: EVENT_ROLES.PARTICIPANT
-        })).rejects.toMatchObject({
-            message: "User already has this role",
-            statusCode: 400
+            expect(membership.save).toHaveBeenCalledTimes(1);
+
+            expect(membership.save).toHaveBeenCalledWith();
+
+            expect(result).toBe(membership);
         });
     });
 
     /* =============================
-      EDGE CASES
+       EVENT VALIDATION
     ============================= */
 
-    it("should throw 404 if event is not found", async () => {
-        Event.findByPk.mockResolvedValue(null);
+    describe("Event validation", () => {
+        it("stops when the event does not exist", async () => {
+            const error = Object.assign(
+                new Error("Event not found"),
+                {
+                    statusCode: 404
+                }
+            );
 
-        await expect(eventMembershipService.updateEventMemberRole({
-            eventId: 1,
-            userId: 10,
-            newRole: EVENT_ROLES.PARTICIPANT
-        })).rejects.toMatchObject({
-            message: "Event not found",
-            statusCode: 404
+            mockFindEventByIdOrFail.mockRejectedValue(error);
+
+            await expect(
+                updateEventMemberRole({
+                    eventId: 999,
+                    userId: 10,
+                    newRole: EVENT_ROLES.CO_ORGANIZER
+                })
+            ).rejects.toBe(error);
+
+            expect(mockAssertEventNotPast).not.toHaveBeenCalled();
+
+            expect(mockFindActiveMembership).not.toHaveBeenCalled();
+
+            expect(membership.save).not.toHaveBeenCalled();
         });
-    });
 
-    it("should throw 404 if membership is not found", async () => {
-        Event.findByPk.mockResolvedValue({ id: 1 });
-        assertEventNotPast.mockImplementation(() => { });
-        EventUserRole.findOne.mockResolvedValue(null);
+        it("stops when the event is past", async () => {
+            const error = Object.assign(
+                new Error("No action is allowed on a past event"),
+                {
+                    statusCode: 403
+                }
+            );
 
-        await expect(eventMembershipService.updateEventMemberRole({
-            eventId: 1,
-            userId: 10,
-            newRole: EVENT_ROLES.PARTICIPANT
-        })).rejects.toMatchObject({
-            message: "User is not a member of this event",
-            statusCode: 404
+            mockAssertEventNotPast.mockImplementation(() => {
+                throw error;
+            });
+
+            await expect(
+                updateEventMemberRole({
+                    eventId: 1,
+                    userId: 10,
+                    newRole: EVENT_ROLES.CO_ORGANIZER
+                })
+            ).rejects.toBe(error);
+
+            expect(mockFindActiveMembership).not.toHaveBeenCalled();
+
+            expect(membership.save).not.toHaveBeenCalled();
         });
     });
 
     /* =============================
-        DATABASE ERRORS
+       ROLE VALIDATION
     ============================= */
 
-    it("should forward database errors", async () => {
-        Event.findByPk.mockRejectedValue(new Error("DB error"));
+    describe("Role validation", () => {
+        it("throws a 400 error for an unsupported role", async () => {
+            await expect(
+                updateEventMemberRole({
+                    eventId: 1,
+                    userId: 10,
+                    newRole: "invalid-role"
+                })
+            ).rejects.toMatchObject({
+                message: "Invalid role provided",
+                statusCode: 400
+            });
 
-        await expect(eventMembershipService.updateEventMemberRole({
-            eventId: 1,
-            userId: 10,
-            newRole: EVENT_ROLES.PARTICIPANT
-        })).rejects.toThrow("DB error");
+            expect(mockFindActiveMembership).not.toHaveBeenCalled();
+
+            expect(membership.save).not.toHaveBeenCalled();
+        });
+
+        it("throws a 403 error when assigning organizer directly", async () => {
+            await expect(
+                updateEventMemberRole({
+                    eventId: 1,
+                    userId: 10,
+                    newRole: EVENT_ROLES.ORGANIZER
+                })
+            ).rejects.toMatchObject({
+                message: "Only one organizer is allowed per event",
+                statusCode: 403
+            });
+
+            expect(mockFindActiveMembership).not.toHaveBeenCalled();
+
+            expect(membership.save).not.toHaveBeenCalled();
+        });
+
+        it("throws a 400 error when the role is already assigned", async () => {
+            await expect(
+                updateEventMemberRole({
+                    eventId: 1,
+                    userId: 10,
+                    newRole: EVENT_ROLES.PARTICIPANT
+                })
+            ).rejects.toMatchObject({
+                message: "User already has this role",
+                statusCode: 400
+            });
+
+            expect(membership.save).not.toHaveBeenCalled();
+        });
+    });
+
+    /* =============================
+       MEMBERSHIP VALIDATION
+    ============================= */
+
+    describe("Membership validation", () => {
+        it("throws a 404 error when the active membership is missing", async () => {
+            mockFindActiveMembership.mockResolvedValue(null);
+
+            await expect(
+                updateEventMemberRole({
+                    eventId: 1,
+                    userId: 10,
+                    newRole: EVENT_ROLES.CO_ORGANIZER
+                })
+            ).rejects.toMatchObject({
+                message: "User is not a member of this event",
+                statusCode: 404
+            });
+
+            expect(membership.save).not.toHaveBeenCalled();
+        });
+    });
+
+    /* =============================
+       UNEXPECTED ERRORS
+    ============================= */
+
+    describe("Unexpected errors", () => {
+        it("propagates active membership lookup errors", async () => {
+            const error = new Error("Membership lookup failed");
+
+            mockFindActiveMembership.mockRejectedValue(error);
+
+            await expect(
+                updateEventMemberRole({
+                    eventId: 1,
+                    userId: 10,
+                    newRole: EVENT_ROLES.CO_ORGANIZER
+                })
+            ).rejects.toBe(error);
+
+            expect(membership.save).not.toHaveBeenCalled();
+        });
+
+        it("propagates membership persistence errors", async () => {
+            const error = new Error("Membership save failed");
+
+            membership.save.mockRejectedValue(error);
+
+            await expect(
+                updateEventMemberRole({
+                    eventId: 1,
+                    userId: 10,
+                    newRole: EVENT_ROLES.CO_ORGANIZER
+                })
+            ).rejects.toBe(error);
+        });
     });
 });

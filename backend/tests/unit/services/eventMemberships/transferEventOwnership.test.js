@@ -1,352 +1,501 @@
-/* ==================================================
-   EVENT MEMBERSHIP SERVICE - TRANSFER OWNERSHIP TESTS
+const mockFindEventByIdOrFail = jest.fn();
+const mockAssertEventNotPast = jest.fn();
 
-   Tests:
-   - successful ownership transfer to active participant
-   - successful ownership transfer to active co_organizer
-   - self-transfer rejection
-   - inactive target membership rejection
-   - target non-member rejection
-   - organizer authorization rejection
-   - past event rejection
-   - missing event rejection
-   - transaction rollback on database errors
+const mockFindActiveMembership = jest.fn();
+const mockFindMembership = jest.fn();
+const mockCountActiveParticipants = jest.fn();
+const mockBuildPublicUserInclude = jest.fn();
 
-   Ensures:
-   - ownership is transferred atomically
-   - only active memberships can receive ownership transfer
-   - selected members become organizer
-   - previous organizers become co_organizer
-   - only organizers can transfer ownership
-   - past event rules are respected
-   - Sequelize transactions are committed on success
-   - Sequelize transactions are rolled back on failures
-   - shared event role constants are used for valid role scenarios
-================================================== */
+jest.mock("sequelize", () => ({
+    Op: {
+        in: Symbol("in")
+    }
+}));
 
 jest.mock("../../../../src/config/database", () => ({
     transaction: jest.fn()
 }));
 
-jest.mock("../../../../src/models/userModel", () => ({}));
-
 jest.mock("../../../../src/models/eventModel", () => ({
-    findByPk: jest.fn()
+    name: "Event"
+}));
+
+jest.mock("../../../../src/models/userModel", () => ({
+    name: "User"
 }));
 
 jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
-    findOne: jest.fn()
+    name: "EventUserRole"
+}));
+
+jest.mock("../../../../src/utils/events/eventQueries", () => ({
+    findEventByIdOrFail: mockFindEventByIdOrFail
 }));
 
 jest.mock("../../../../src/utils/events/eventStatus", () => ({
-    assertEventNotPast: jest.fn()
+    assertEventNotPast: mockAssertEventNotPast
+}));
+
+jest.mock("../../../../src/utils/eventMemberships/eventMembershipQueries", () => ({
+    findActiveMembership: mockFindActiveMembership,
+    findMembership: mockFindMembership
+}));
+
+jest.mock("../../../../src/utils/eventMemberships/eventParticipants", () => ({
+    countActiveParticipants: mockCountActiveParticipants
+}));
+
+jest.mock("../../../../src/utils/users/userInclude", () => ({
+    buildPublicUserInclude: mockBuildPublicUserInclude
 }));
 
 const sequelize = require("../../../../src/config/database");
+
 const Event = require("../../../../src/models/eventModel");
 const EventUserRole = require("../../../../src/models/associations/eventUserRoleModel");
 
-const eventMembershipService = require("../../../../src/services/eventMembershipService");
-
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 
-const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
+const { transferEventOwnership } = require("../../../../src/services/eventMembershipService");
 
-const { createMockMembershipEvent, createMockMembership } = require("../../../factories/eventMembershipFactory");
+const { createTransactionMock } = require("../../../helpers/database/modelTestHelper");
 
-describe("eventMembershipService - transferEventOwnership", () => {
+const { createMockMembership } = require("../../../factories/eventMembershipFactory");
 
+/* ==========================================================================
+   Transfer Event Ownership Service Unit Tests
+
+   Tests event ownership transfer business logic.
+
+   Responsibilities
+   - Test event existence and lifecycle validation
+   - Test self-transfer protection
+   - Test current organizer membership validation
+   - Test organizer role authorization
+   - Test target membership validation
+   - Test atomic role changes
+   - Test transaction commit and rollback
+   - Test unexpected error propagation
+
+   Notes
+   - Event and membership query utilities are mocked.
+   - Only active event members can receive ownership.
+   - Previous organizers become co-organizers after transfer.
+=========================================================================== */
+
+describe("transfer event ownership service", () => {
     let transaction;
+    let currentOrganizerMembership;
+    let targetMembership;
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        transaction = {
-            commit: jest.fn().mockResolvedValue(),
-            rollback: jest.fn().mockResolvedValue()
-        };
+        transaction = createTransactionMock();
 
-        sequelize.transaction.mockResolvedValue(transaction);
-        assertEventNotPast.mockImplementation(() => { });
-    });
-
-    /* =============================
-       OWNERSHIP TRANSFER SUCCESS
-    ============================= */
-
-    it("should transfer ownership to participant", async () => {
-        const event = createMockMembershipEvent({ id: 1 });
-
-        const currentOrganizerMembership = createMockMembership({
+        currentOrganizerMembership = createMockMembership({
             eventId: 1,
             userId: 10,
             role: EVENT_ROLES.ORGANIZER,
+            deletedAt: null,
             save: jest.fn().mockResolvedValue()
         });
 
-        const targetMembership = createMockMembership({
+        targetMembership = createMockMembership({
             eventId: 1,
             userId: 20,
             role: EVENT_ROLES.PARTICIPANT,
+            deletedAt: null,
             save: jest.fn().mockResolvedValue()
         });
 
-        Event.findByPk.mockResolvedValue(event);
+        sequelize.transaction.mockResolvedValue(transaction);
 
-        EventUserRole.findOne
+        mockFindEventByIdOrFail.mockResolvedValue({
+            id: 1
+        });
+
+        mockAssertEventNotPast.mockImplementation(() => { });
+
+        mockFindActiveMembership
             .mockResolvedValueOnce(currentOrganizerMembership)
             .mockResolvedValueOnce(targetMembership);
-
-        const result = await eventMembershipService.transferEventOwnership({
-            eventId: 1,
-            currentUserId: 10,
-            targetUserId: 20
-        });
-
-        expect(sequelize.transaction).toHaveBeenCalled();
-
-        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
-
-        expect(assertEventNotPast).toHaveBeenCalledWith(event);
-
-        expect(EventUserRole.findOne).toHaveBeenNthCalledWith(1, {
-            where: {
-                eventId: 1,
-                userId: 10,
-                deletedAt: null
-            },
-            transaction
-        });
-
-        expect(EventUserRole.findOne).toHaveBeenNthCalledWith(2, {
-            where: {
-                eventId: 1,
-                userId: 20,
-                deletedAt: null
-            },
-            transaction
-        });
-
-        expect(currentOrganizerMembership.role).toBe(EVENT_ROLES.CO_ORGANIZER);
-        expect(targetMembership.role).toBe(EVENT_ROLES.ORGANIZER);
-
-        expect(currentOrganizerMembership.save).toHaveBeenCalledWith({ transaction });
-        expect(targetMembership.save).toHaveBeenCalledWith({ transaction });
-
-        expect(transaction.commit).toHaveBeenCalled();
-        expect(transaction.rollback).not.toHaveBeenCalled();
-
-        expect(result.previousOrganizer).toBe(currentOrganizerMembership);
-        expect(result.newOrganizer).toBe(targetMembership);
-    });
-
-    it("should transfer ownership to co_organizer", async () => {
-        const currentOrganizerMembership = createMockMembership({
-            eventId: 1,
-            userId: 10,
-            role: EVENT_ROLES.ORGANIZER,
-            save: jest.fn().mockResolvedValue()
-        });
-
-        const targetMembership = createMockMembership({
-            eventId: 1,
-            userId: 20,
-            role: EVENT_ROLES.CO_ORGANIZER,
-            save: jest.fn().mockResolvedValue()
-        });
-
-        Event.findByPk.mockResolvedValue(createMockMembershipEvent({ id: 1 }));
-
-        EventUserRole.findOne
-            .mockResolvedValueOnce(currentOrganizerMembership)
-            .mockResolvedValueOnce(targetMembership);
-
-        const result = await eventMembershipService.transferEventOwnership({
-            eventId: 1,
-            currentUserId: 10,
-            targetUserId: 20
-        });
-
-        expect(currentOrganizerMembership.role).toBe(EVENT_ROLES.CO_ORGANIZER);
-        expect(targetMembership.role).toBe(EVENT_ROLES.ORGANIZER);
-
-        expect(currentOrganizerMembership.save).toHaveBeenCalledWith({ transaction });
-        expect(targetMembership.save).toHaveBeenCalledWith({ transaction });
-
-        expect(transaction.commit).toHaveBeenCalled();
-        expect(transaction.rollback).not.toHaveBeenCalled();
-
-        expect(result.newOrganizer).toBe(targetMembership);
     });
 
     /* =============================
-       BUSINESS RULES
+       OWNERSHIP TRANSFER
     ============================= */
 
-    it("should throw 400 when transferring ownership to self", async () => {
-        Event.findByPk.mockResolvedValue(createMockMembershipEvent({ id: 1 }));
+    describe("transferEventOwnership", () => {
+        it.each([[
+            "participant",
+            EVENT_ROLES.PARTICIPANT
+        ], [
+            "co-organizer",
+            EVENT_ROLES.CO_ORGANIZER
+        ]])("transfers ownership to an active %s",
+            async (_, targetRole) => {
+                targetMembership.role = targetRole;
 
-        await expect(eventMembershipService.transferEventOwnership({
-            eventId: 1,
-            currentUserId: 10,
-            targetUserId: 10
-        })).rejects.toMatchObject({
-            message: "You cannot transfer ownership to yourself",
-            statusCode: 400
-        });
+                const result = await transferEventOwnership({
+                    eventId: 1,
+                    currentUserId: 10,
+                    targetUserId: 20
+                });
 
-        expect(EventUserRole.findOne).not.toHaveBeenCalled();
+                expect(sequelize.transaction).toHaveBeenCalledTimes(1);
 
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
-    });
+                expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(
+                    Event,
+                    1,
+                    {
+                        transaction
+                    }
+                );
 
-    it("should throw 404 when target member is not part of event", async () => {
-        const currentOrganizerMembership = createMockMembership({
-            eventId: 1,
-            userId: 10,
-            role: EVENT_ROLES.ORGANIZER
-        });
+                expect(mockAssertEventNotPast).toHaveBeenCalledWith({
+                    id: 1
+                });
 
-        Event.findByPk.mockResolvedValue(createMockMembershipEvent({ id: 1 }));
+                expect(mockFindActiveMembership).toHaveBeenNthCalledWith(
+                    1,
+                    EventUserRole,
+                    {
+                        eventId: 1,
+                        userId: 10,
+                        transaction
+                    }
+                );
 
-        EventUserRole.findOne
-            .mockResolvedValueOnce(currentOrganizerMembership)
-            .mockResolvedValueOnce(null);
+                expect(mockFindActiveMembership).toHaveBeenNthCalledWith(
+                    2,
+                    EventUserRole,
+                    {
+                        eventId: 1,
+                        userId: 20,
+                        transaction
+                    }
+                );
 
-        await expect(eventMembershipService.transferEventOwnership({
-            eventId: 1,
-            currentUserId: 10,
-            targetUserId: 20
-        })).rejects.toMatchObject({
-            message: "Target member is not part of this event",
-            statusCode: 404
-        });
+                expect(currentOrganizerMembership.role).toBe(EVENT_ROLES.CO_ORGANIZER);
 
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
-    });
+                expect(targetMembership.role).toBe(EVENT_ROLES.ORGANIZER);
 
-    it("should throw 403 when current user is not organizer", async () => {
-        const requesterMembership = createMockMembership({
-            eventId: 1,
-            userId: 10,
-            role: EVENT_ROLES.CO_ORGANIZER
-        });
+                expect(currentOrganizerMembership.save).toHaveBeenCalledWith({
+                    transaction
+                });
 
-        Event.findByPk.mockResolvedValue(createMockMembershipEvent({ id: 1 }));
+                expect(targetMembership.save).toHaveBeenCalledWith({
+                    transaction
+                });
 
-        EventUserRole.findOne.mockResolvedValueOnce(requesterMembership);
+                expect(currentOrganizerMembership.save.mock.invocationCallOrder[0]).toBeLessThan(
+                    targetMembership.save.mock.invocationCallOrder[0]
+                );
 
-        await expect(eventMembershipService.transferEventOwnership({
-            eventId: 1,
-            currentUserId: 10,
-            targetUserId: 20
-        })).rejects.toMatchObject({
-            message: "Only the organizer can transfer event ownership",
-            statusCode: 403
-        });
+                expect(transaction.commit).toHaveBeenCalledTimes(1);
 
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
-    });
+                expect(transaction.rollback).not.toHaveBeenCalled();
 
-    it("should block ownership transfer for past event", async () => {
-        const event = createMockMembershipEvent({ id: 1 });
-
-        Event.findByPk.mockResolvedValue(event);
-
-        const error = new Error("No action is allowed on a past event");
-        error.statusCode = 403;
-
-        assertEventNotPast.mockImplementation(() => {
-            throw error;
-        });
-
-        await expect(eventMembershipService.transferEventOwnership({
-            eventId: 1,
-            currentUserId: 10,
-            targetUserId: 20
-        })).rejects.toMatchObject({
-            statusCode: 403
-        });
-
-        expect(assertEventNotPast).toHaveBeenCalledWith(event);
-
-        expect(EventUserRole.findOne).not.toHaveBeenCalled();
-
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
-    });
-
-    it("should reject ownership transfer to inactive membership", async () => {
-        const currentOrganizerMembership = createMockMembership({
-            eventId: 1,
-            userId: 10,
-            role: EVENT_ROLES.ORGANIZER
-        });
-
-        Event.findByPk.mockResolvedValue(
-            createMockMembershipEvent({ id: 1 })
+                expect(result).toEqual({
+                    previousOrganizer: currentOrganizerMembership,
+                    newOrganizer: targetMembership
+                });
+            }
         );
-
-        EventUserRole.findOne
-            .mockResolvedValueOnce(currentOrganizerMembership)
-            .mockResolvedValueOnce(null);
-
-        await expect(eventMembershipService.transferEventOwnership({
-            eventId: 1,
-            currentUserId: 10,
-            targetUserId: 20
-        })).rejects.toMatchObject({
-            message: "Target member is not part of this event",
-            statusCode: 404
-        });
-
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
     });
 
     /* =============================
-       EDGE CASES
+       EVENT VALIDATION
     ============================= */
 
-    it("should throw 404 if event is not found", async () => {
-        Event.findByPk.mockResolvedValue(null);
+    describe("Event validation", () => {
+        it("rolls back when the event does not exist", async () => {
+            const error = Object.assign(
+                new Error("Event not found"),
+                {
+                    statusCode: 404
+                }
+            );
 
-        await expect(eventMembershipService.transferEventOwnership({
-            eventId: 1,
-            currentUserId: 10,
-            targetUserId: 20
-        })).rejects.toMatchObject({
-            message: "Event not found",
-            statusCode: 404
+            mockFindEventByIdOrFail.mockRejectedValue(error);
+
+            await expect(
+                transferEventOwnership({
+                    eventId: 999,
+                    currentUserId: 10,
+                    targetUserId: 20
+                })
+            ).rejects.toBe(error);
+
+            expect(mockAssertEventNotPast).not.toHaveBeenCalled();
+
+            expect(mockFindActiveMembership).not.toHaveBeenCalled();
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
         });
 
-        expect(EventUserRole.findOne).not.toHaveBeenCalled();
+        it("rolls back when the event is past", async () => {
+            const error = Object.assign(
+                new Error("No action is allowed on a past event"),
+                {
+                    statusCode: 403
+                }
+            );
 
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
+            mockAssertEventNotPast.mockImplementation(() => {
+                throw error;
+            });
+
+            await expect(
+                transferEventOwnership({
+                    eventId: 1,
+                    currentUserId: 10,
+                    targetUserId: 20
+                })
+            ).rejects.toBe(error);
+
+            expect(mockFindActiveMembership).not.toHaveBeenCalled();
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+        });
     });
 
     /* =============================
-       DATABASE ERRORS
+       SELF-TRANSFER PROTECTION
     ============================= */
 
-    it("should rollback transaction when database error occurs", async () => {
-        Event.findByPk.mockRejectedValue(new Error("DB error"));
+    describe("Self-transfer protection", () => {
+        it("throws a 400 error when transferring ownership to self", async () => {
+            await expect(
+                transferEventOwnership({
+                    eventId: 1,
+                    currentUserId: 10,
+                    targetUserId: 10
+                })
+            ).rejects.toMatchObject({
+                message: "You cannot transfer ownership to yourself",
+                statusCode: 400
+            });
 
-        await expect(eventMembershipService.transferEventOwnership({
-            eventId: 1,
-            currentUserId: 10,
-            targetUserId: 20
-        })).rejects.toThrow("DB error");
+            expect(mockFindActiveMembership).not.toHaveBeenCalled();
 
-        expect(sequelize.transaction).toHaveBeenCalled();
+            expect(currentOrganizerMembership.save).not.toHaveBeenCalled();
 
-        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
+            expect(targetMembership.save).not.toHaveBeenCalled();
 
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    /* =============================
+       CURRENT ORGANIZER VALIDATION
+    ============================= */
+
+    describe("Current organizer validation", () => {
+        it("throws a 404 error when the current organizer membership is missing", async () => {
+            mockFindActiveMembership
+                .mockReset()
+                .mockResolvedValue(null);
+
+            await expect(
+                transferEventOwnership({
+                    eventId: 1,
+                    currentUserId: 10,
+                    targetUserId: 20
+                })
+            ).rejects.toMatchObject({
+                message: "Current organizer membership not found",
+                statusCode: 404
+            });
+
+            expect(mockFindActiveMembership).toHaveBeenCalledTimes(1);
+
+            expect(currentOrganizerMembership.save).not.toHaveBeenCalled();
+
+            expect(targetMembership.save).not.toHaveBeenCalled();
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+        });
+
+        it("throws a 403 error when the current user is not the organizer", async () => {
+            currentOrganizerMembership.role = EVENT_ROLES.CO_ORGANIZER;
+
+            await expect(
+                transferEventOwnership({
+                    eventId: 1,
+                    currentUserId: 10,
+                    targetUserId: 20
+                })
+            ).rejects.toMatchObject({
+                message: "Only the organizer can transfer event ownership",
+                statusCode: 403
+            });
+
+            expect(mockFindActiveMembership).toHaveBeenCalledTimes(1);
+
+            expect(currentOrganizerMembership.save).not.toHaveBeenCalled();
+
+            expect(targetMembership.save).not.toHaveBeenCalled();
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    /* =============================
+       TARGET MEMBER VALIDATION
+    ============================= */
+
+    describe("Target member validation", () => {
+        it("throws a 404 error when the target has no active membership", async () => {
+            mockFindActiveMembership
+                .mockReset()
+                .mockResolvedValueOnce(currentOrganizerMembership)
+                .mockResolvedValueOnce(null);
+
+            await expect(
+                transferEventOwnership({
+                    eventId: 1,
+                    currentUserId: 10,
+                    targetUserId: 20
+                })
+            ).rejects.toMatchObject({
+                message: "Target member is not part of this event",
+                statusCode: 404
+            });
+
+            expect(mockFindActiveMembership).toHaveBeenCalledTimes(2);
+
+            expect(currentOrganizerMembership.save).not.toHaveBeenCalled();
+
+            expect(targetMembership.save).not.toHaveBeenCalled();
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    /* =============================
+       UNEXPECTED ERRORS
+    ============================= */
+
+    describe("Unexpected errors", () => {
+        it("rolls back when the organizer membership lookup fails", async () => {
+            const error = new Error("Organizer lookup failed");
+
+            mockFindActiveMembership
+                .mockReset()
+                .mockRejectedValue(error);
+
+            await expect(
+                transferEventOwnership({
+                    eventId: 1,
+                    currentUserId: 10,
+                    targetUserId: 20
+                })
+            ).rejects.toBe(error);
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+        });
+
+        it("rolls back when the target membership lookup fails", async () => {
+            const error = new Error("Target lookup failed");
+
+            mockFindActiveMembership
+                .mockReset()
+                .mockResolvedValueOnce(currentOrganizerMembership)
+                .mockRejectedValueOnce(error);
+
+            await expect(
+                transferEventOwnership({
+                    eventId: 1,
+                    currentUserId: 10,
+                    targetUserId: 20
+                })
+            ).rejects.toBe(error);
+
+            expect(currentOrganizerMembership.save).not.toHaveBeenCalled();
+
+            expect(targetMembership.save).not.toHaveBeenCalled();
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+        });
+
+        it("rolls back when the previous organizer cannot be saved", async () => {
+            const error = new Error("Previous organizer save failed");
+
+            currentOrganizerMembership.save.mockRejectedValue(error);
+
+            await expect(
+                transferEventOwnership({
+                    eventId: 1,
+                    currentUserId: 10,
+                    targetUserId: 20
+                })
+            ).rejects.toBe(error);
+
+            expect(targetMembership.save).not.toHaveBeenCalled();
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+        });
+
+        it("rolls back when the new organizer cannot be saved", async () => {
+            const error = new Error("New organizer save failed");
+
+            targetMembership.save.mockRejectedValue(error);
+
+            await expect(
+                transferEventOwnership({
+                    eventId: 1,
+                    currentUserId: 10,
+                    targetUserId: 20
+                })
+            ).rejects.toBe(error);
+
+            expect(currentOrganizerMembership.save).toHaveBeenCalledWith({
+                transaction
+            });
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+        });
+
+        it("rolls back when the transaction commit fails", async () => {
+            const error = new Error("Transaction commit failed");
+
+            transaction.commit.mockRejectedValue(error);
+
+            await expect(
+                transferEventOwnership({
+                    eventId: 1,
+                    currentUserId: 10,
+                    targetUserId: 20
+                })
+            ).rejects.toBe(error);
+
+            expect(currentOrganizerMembership.save).toHaveBeenCalledTimes(1);
+
+            expect(targetMembership.save).toHaveBeenCalledTimes(1);
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+        });
     });
 });

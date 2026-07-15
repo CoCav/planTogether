@@ -33,3 +33,7 @@ uploads/
 # IDE
 .vscode/
 .idea/
+
+# Test and tool caches
+.jest-cache/
+.cache/

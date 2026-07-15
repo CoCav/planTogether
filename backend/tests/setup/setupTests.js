@@ -1,3 +1,10 @@
+const path = require("path");
+
+require("dotenv").config({
+    path: path.resolve(__dirname, "../../.env.test"),
+    override: true
+});
+
 const {
     createNominatimFetchResponse,
     createNominatimResult
@@ -9,6 +16,7 @@ const {
    Configures shared test behavior.
 
    Responsibilities
+   - Load the test environment configuration
    - Prevent real geocoding provider requests
    - Provide a valid default geocoding response
    - Reset shared mocks between tests

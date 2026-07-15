@@ -1,69 +1,144 @@
-/* ==================================================
-   DELETE EVENT REVIEW SERVICE BY ID TESTS
+const mockFindReviewByIdOrFail = jest.fn();
 
-   Tests:
-   - event review deletion
-   - review existence validation
-   - review ownership validation
+jest.mock("../../../../src/models/eventModel", () => ({
+    name: "Event"
+}));
 
-   Ensures:
-   - users can delete only their own reviews
-   - missing reviews are rejected before deletion
-   - reviews owned by another user cannot be deleted
-   - valid reviews are destroyed
-================================================== */
+jest.mock("../../../../src/models/userModel", () => ({
+    name: "User"
+}));
 
-jest.mock("../../../../src/models/associations/eventReviewModel");
+jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
+    name: "EventUserRole"
+}));
+
+jest.mock("../../../../src/models/associations/eventReviewModel", () => ({
+    name: "EventReview"
+}));
+
+jest.mock("../../../../src/config/database", () => ({
+    transaction: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/events/eventQueries", () => ({
+    findEventByIdOrFail: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/events/eventStatus", () => ({
+    isEventPast: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventMemberships/eventMembershipQueries", () => ({
+    findActiveMembership: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventReviews/eventReviewsQueries", () => ({
+    findReviewByIdOrFail: mockFindReviewByIdOrFail
+}));
+
+jest.mock("../../../../src/utils/stringNormalizer", () => ({
+    normalizeString: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/users/userInclude", () => ({
+    buildPublicUserInclude: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/pagination", () => ({
+    getPaginationOptions: jest.fn(),
+    getTotalCount: jest.fn(),
+    getTotalPages: jest.fn()
+}));
+
+jest.mock("sequelize", () => ({
+    fn: jest.fn(),
+    col: jest.fn()
+}));
 
 const EventReview = require("../../../../src/models/associations/eventReviewModel");
 
-const eventReviewService = require("../../../../src/services/eventReviewService");
+const { deleteEventReviewById } = require("../../../../src/services/eventReviewService");
 
-describe("eventReviewService - deleteEventReviewById", () => {
+/* ==========================================================================
+   Delete Event Review Service Unit Tests
 
-    /* =============================
-       TEST SETUP
-    ============================= */
+   Tests event review deletion business logic.
+
+   Responsibilities
+   - Test review existence validation
+   - Test review ownership validation
+   - Test review deletion
+   - Test unexpected error propagation
+
+   Notes
+   - Review queries are mocked.
+   - Users can only delete their own reviews.
+=========================================================================== */
+
+describe("delete event review service", () => {
+    let review;
 
     beforeEach(() => {
         jest.clearAllMocks();
+
+        review = {
+            id: 1,
+            userId: 10,
+            destroy: jest.fn().mockResolvedValue()
+        };
+
+        mockFindReviewByIdOrFail.mockResolvedValue(review);
     });
 
     /* =============================
-       SUCCESS CASES
+       REVIEW DELETION
     ============================= */
 
-    it("should delete current user's review", async () => {
-        const review = {
-            id: 1,
-            userId: 10,
-            destroy: jest.fn()
-        };
+    describe("deleteEventReviewById", () => {
+        it("deletes the current user's review", async () => {
+            const result = await deleteEventReviewById({
+                reviewId: 1,
+                userId: 10
+            });
 
-        EventReview.findByPk.mockResolvedValue(review);
+            expect(mockFindReviewByIdOrFail).toHaveBeenCalledTimes(1);
 
-        await eventReviewService.deleteEventReviewById({
-            reviewId: 1,
-            userId: 10
+            expect(mockFindReviewByIdOrFail).toHaveBeenCalledWith(
+                EventReview,
+                1
+            );
+
+            expect(review.destroy).toHaveBeenCalledTimes(1);
+
+            expect(review.destroy).toHaveBeenCalledWith();
+
+            expect(result).toBeUndefined();
         });
-
-        expect(EventReview.findByPk).toHaveBeenCalledWith(1, {});
-        expect(review.destroy).toHaveBeenCalledTimes(1);
     });
 
     /* =============================
        REVIEW VALIDATION
     ============================= */
 
-    it("should throw 404 when review does not exist", async () => {
-        EventReview.findByPk.mockResolvedValue(null);
+    describe("Review validation", () => {
+        it("stops when the review does not exist", async () => {
+            const error = Object.assign(
+                new Error("Review not found"),
+                {
+                    statusCode: 404
+                }
+            );
 
-        await expect(eventReviewService.deleteEventReviewById({
-            reviewId: 999,
-            userId: 10
-        })).rejects.toMatchObject({
-            statusCode: 404,
-            message: "Review not found"
+            mockFindReviewByIdOrFail.mockRejectedValue(error);
+
+            await expect(
+                deleteEventReviewById({
+                    reviewId: 999,
+                    userId: 10
+                })
+            ).rejects.toBe(error);
+
+            expect(review.destroy).not.toHaveBeenCalled();
         });
     });
 
@@ -71,23 +146,40 @@ describe("eventReviewService - deleteEventReviewById", () => {
        REVIEW OWNERSHIP
     ============================= */
 
-    it("should throw 403 when review belongs to another user", async () => {
-        const review = {
-            id: 1,
-            userId: 20,
-            destroy: jest.fn()
-        };
+    describe("Review ownership", () => {
+        it("throws a 403 error when the review belongs to another user", async () => {
+            review.userId = 20;
 
-        EventReview.findByPk.mockResolvedValue(review);
+            await expect(
+                deleteEventReviewById({
+                    reviewId: 1,
+                    userId: 10
+                })
+            ).rejects.toMatchObject({
+                message: "You can only manage your own review",
+                statusCode: 403
+            });
 
-        await expect(eventReviewService.deleteEventReviewById({
-            reviewId: 1,
-            userId: 10
-        })).rejects.toMatchObject({
-            statusCode: 403,
-            message: "You can only manage your own review"
+            expect(review.destroy).not.toHaveBeenCalled();
         });
+    });
 
-        expect(review.destroy).not.toHaveBeenCalled();
+    /* =============================
+       UNEXPECTED ERRORS
+    ============================= */
+
+    describe("Unexpected errors", () => {
+        it("propagates review deletion errors", async () => {
+            const error = new Error("Review deletion failed");
+
+            review.destroy.mockRejectedValue(error);
+
+            await expect(
+                deleteEventReviewById({
+                    reviewId: 1,
+                    userId: 10
+                })
+            ).rejects.toBe(error);
+        });
     });
 });

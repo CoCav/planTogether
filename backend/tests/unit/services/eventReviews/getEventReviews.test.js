@@ -1,192 +1,409 @@
-/* ==================================================
-   GET EVENT REVIEWS SERVICE TESTS
+const mockFindEventByIdOrFail = jest.fn();
+const mockBuildPublicUserInclude = jest.fn();
 
-   Tests:
-   - paginated event review retrieval
-   - pagination metadata generation
-   - global average rating calculation
-   - event existence validation
-   - review ordering query configuration
-   - review rating retrieval
-   - public user data inclusion
+const mockGetPaginationOptions = jest.fn();
+const mockGetTotalCount = jest.fn();
+const mockGetTotalPages = jest.fn();
 
-   Ensures:
-   - reviews are retrieved only for existing events
-   - paginated responses include page metadata and average rating
-   - average rating is calculated globally for the event
-   - reviews include ratings and public user data
-   - reviews are ordered according to pagination settings
-   - missing events are rejected before review lookup
-================================================== */
+const mockFn = jest.fn();
+const mockCol = jest.fn();
 
-jest.mock("../../../../src/models/eventModel");
-jest.mock("../../../../src/models/userModel");
-jest.mock("../../../../src/models/associations/eventReviewModel");
+jest.mock("sequelize", () => ({
+    fn: mockFn,
+    col: mockCol
+}));
+
+jest.mock("../../../../src/models/eventModel", () => ({
+    name: "Event"
+}));
+
+jest.mock("../../../../src/models/userModel", () => ({
+    name: "User"
+}));
+
+jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
+    name: "EventUserRole"
+}));
+
+jest.mock("../../../../src/models/associations/eventReviewModel", () => ({
+    findAndCountAll: jest.fn(),
+    findOne: jest.fn()
+}));
+
+jest.mock("../../../../src/config/database", () => ({
+    transaction: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/events/eventQueries", () => ({
+    findEventByIdOrFail: mockFindEventByIdOrFail
+}));
+
+jest.mock("../../../../src/utils/events/eventStatus", () => ({
+    isEventPast: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventMemberships/eventMembershipQueries", () => ({
+    findActiveMembership: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventReviews/eventReviewsQueries", () => ({
+    findReviewByIdOrFail: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/stringNormalizer", () => ({
+    normalizeString: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/users/userInclude", () => ({
+    buildPublicUserInclude: mockBuildPublicUserInclude
+}));
+
+jest.mock("../../../../src/utils/pagination", () => ({
+    getPaginationOptions: mockGetPaginationOptions,
+    getTotalCount: mockGetTotalCount,
+    getTotalPages: mockGetTotalPages
+}));
 
 const Event = require("../../../../src/models/eventModel");
 const User = require("../../../../src/models/userModel");
 const EventReview = require("../../../../src/models/associations/eventReviewModel");
 
-const eventReviewService = require("../../../../src/services/eventReviewService");
+const { getEventReviews } = require("../../../../src/services/eventReviewService");
 
-describe("eventReviewService getEventReviews", () => {
+/* ==========================================================================
+   Get Event Reviews Service Unit Tests
 
-    /* =============================
-       TEST SETUP
-    ============================= */
+   Tests paginated event review retrieval.
+
+   Responsibilities
+   - Test event existence validation
+   - Test pagination option delegation
+   - Test review query composition
+   - Test public user inclusion
+   - Test review count normalization
+   - Test total page calculation
+   - Test average rating calculation
+   - Test query error propagation
+
+   Notes
+   - Event queries, pagination helpers and user include helpers are mocked.
+   - Sequelize aggregation functions are mocked.
+=========================================================================== */
+
+describe("get event reviews service", () => {
+    let publicUserInclude;
 
     beforeEach(() => {
         jest.clearAllMocks();
-    });
 
-    /* =============================
-       SUCCESS CASES
-    ============================= */
+        publicUserInclude = {
+            model: User,
+            as: "user",
+            attributes: [
+                "id",
+                "name",
+                "avatar"
+            ]
+        };
 
-    it("should get paginated reviews for an event", async () => {
-        const reviews = [
-            {
-                id: 1,
-                eventId: 1,
-                userId: 10,
-                rating: 5,
-                comment: "Great event!"
-            }
-        ];
-
-        Event.findByPk.mockResolvedValue({ id: 1 });
-
-        EventReview.findAndCountAll.mockResolvedValue({
-            count: 1,
-            rows: reviews
+        mockFindEventByIdOrFail.mockResolvedValue({
+            id: 1
         });
 
-        EventReview.findOne.mockResolvedValue({
-            averageRating: "5.0000000000000000"
-        });
+        mockBuildPublicUserInclude.mockReturnValue(publicUserInclude);
 
-        const result = await eventReviewService.getEventReviews(1);
-
-        expect(Event.findByPk).toHaveBeenCalledWith(1, {});
-
-        expect(EventReview.findAndCountAll).toHaveBeenCalledWith({
-            where: {
-                eventId: 1
-            },
-            include: [{
-                model: User,
-                as: "user",
-                attributes: ["id", "name", "avatar"]
-            }],
-            order: [["createdAt", "DESC"]],
-            limit: 10,
-            offset: 0
-        });
-
-        expect(result).toMatchObject({
+        mockGetPaginationOptions.mockReturnValue({
             page: 1,
             pageSize: 10,
-            totalReviews: 1,
-            totalPages: 1,
-            averageRating: 5,
-            reviews
+            limit: 10,
+            offset: 0,
+            orderField: "createdAt",
+            orderDirection: "DESC"
         });
 
-        expect(result.reviews[0]).toMatchObject({
-            rating: 5,
-            comment: "Great event!"
-        });
-    });
+        mockGetTotalCount.mockReturnValue(2);
+        mockGetTotalPages.mockReturnValue(1);
 
-    it("should apply custom pagination params", async () => {
-        Event.findByPk.mockResolvedValue({ id: 1 });
-
-        EventReview.findAndCountAll.mockResolvedValue({
-            count: 25,
-            rows: []
-        });
-
-        EventReview.findOne.mockResolvedValue({
-            averageRating: "4.2000000000000000"
-        });
-
-        await eventReviewService.getEventReviews(1, {
-            page: 2,
-            pageSize: 5
-        });
-
-        expect(EventReview.findAndCountAll).toHaveBeenCalledWith(
-            expect.objectContaining({
-                limit: 5,
-                offset: 5
-            })
-        );
-    });
-
-    it("should include global average rating for event reviews", async () => {
-        Event.findByPk.mockResolvedValue({ id: 1 });
+        mockCol.mockReturnValue("rating-column");
+        mockFn.mockReturnValue("average-expression");
 
         EventReview.findAndCountAll.mockResolvedValue({
             count: 2,
-            rows: []
+            rows: [
+                {
+                    id: 1,
+                    rating: 5,
+                    comment: "Great event!"
+                },
+                {
+                    id: 2,
+                    rating: 4,
+                    comment: "Very good"
+                }
+            ]
         });
 
         EventReview.findOne.mockResolvedValue({
             averageRating: "4.5000000000000000"
         });
-
-        const result = await eventReviewService.getEventReviews(1);
-
-        expect(EventReview.findOne).toHaveBeenCalledWith({
-            where: {
-                eventId: 1
-            },
-            attributes: [
-                expect.any(Array)
-            ],
-            raw: true
-        });
-
-        expect(result.averageRating).toBe(4.5);
     });
 
-    it("should return null average rating when event has no reviews", async () => {
-        Event.findByPk.mockResolvedValue({ id: 1 });
+    /* =============================
+       REVIEW RETRIEVAL
+    ============================= */
 
-        EventReview.findAndCountAll.mockResolvedValue({
-            count: 0,
-            rows: []
+    describe("getEventReviews", () => {
+        it("returns paginated reviews with average rating metadata", async () => {
+            const query = {
+                page: "1",
+                pageSize: "10",
+                sortBy: "createdAt",
+                order: "desc"
+            };
+
+            const result = await getEventReviews(
+                1,
+                query
+            );
+
+            expect(mockFindEventByIdOrFail).toHaveBeenCalledTimes(1);
+
+            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(
+                Event,
+                1
+            );
+
+            expect(mockGetPaginationOptions).toHaveBeenCalledTimes(1);
+
+            expect(mockGetPaginationOptions).toHaveBeenCalledWith(
+                query,
+                [
+                    "createdAt",
+                    "rating"
+                ],
+                "createdAt",
+                "DESC"
+            );
+
+            expect(mockBuildPublicUserInclude).toHaveBeenCalledWith(User);
+
+            expect(EventReview.findAndCountAll).toHaveBeenCalledWith({
+                where: {
+                    eventId: 1
+                },
+                include: [
+                    publicUserInclude
+                ],
+                order: [
+                    [
+                        "createdAt",
+                        "DESC"
+                    ]
+                ],
+                limit: 10,
+                offset: 0
+            });
+
+            expect(mockGetTotalCount).toHaveBeenCalledWith(2);
+
+            expect(mockFn).toHaveBeenCalledWith(
+                "AVG",
+                "rating-column"
+            );
+
+            expect(mockCol).toHaveBeenCalledWith("rating");
+
+            expect(EventReview.findOne).toHaveBeenCalledWith({
+                where: {
+                    eventId: 1
+                },
+                attributes: [
+                    [
+                        "average-expression",
+                        "averageRating"
+                    ]
+                ],
+                raw: true
+            });
+
+            expect(mockGetTotalPages).toHaveBeenCalledWith(
+                2,
+                10
+            );
+
+            expect(result).toEqual({
+                page: 1,
+                pageSize: 10,
+                totalReviews: 2,
+                totalPages: 1,
+                averageRating: 4.5,
+                reviews: [{
+                    id: 1,
+                    rating: 5,
+                    comment: "Great event!"
+                }, {
+                    id: 2,
+                    rating: 4,
+                    comment: "Very good"
+                }]
+            });
         });
 
-        EventReview.findOne.mockResolvedValue({
-            averageRating: null
-        });
+        it("forwards custom pagination and sorting options to the review query", async () => {
+            const query = {
+                page: "2",
+                pageSize: "5",
+                sortBy: "rating",
+                order: "asc"
+            };
 
-        const result = await eventReviewService.getEventReviews(1);
+            mockGetPaginationOptions.mockReturnValue({
+                page: 2,
+                pageSize: 5,
+                limit: 5,
+                offset: 5,
+                orderField: "rating",
+                orderDirection: "ASC"
+            });
 
-        expect(result).toMatchObject({
-            totalReviews: 0,
-            totalPages: 0,
-            averageRating: null,
-            reviews: []
+            mockGetTotalCount.mockReturnValue(12);
+            mockGetTotalPages.mockReturnValue(3);
+
+            await getEventReviews(1, query);
+
+            expect(EventReview.findAndCountAll).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    order: [
+                        [
+                            "rating",
+                            "ASC"
+                        ]
+                    ],
+                    limit: 5,
+                    offset: 5
+                })
+            );
+
+            expect(mockGetTotalPages).toHaveBeenCalledWith(
+                12,
+                5
+            );
         });
+    });
+
+    /* =============================
+       REVIEW COUNT
+    ============================= */
+
+    describe("Review count", () => {
+        it("normalizes grouped Sequelize counts through the pagination helper", async () => {
+            const groupedCount = [{
+                count: "2"
+            }, {
+                count: "3"
+            }];
+
+            EventReview.findAndCountAll.mockResolvedValue({
+                count: groupedCount,
+                rows: []
+            });
+
+            mockGetTotalCount.mockReturnValue(5);
+            mockGetTotalPages.mockReturnValue(1);
+
+            const result = await getEventReviews(1);
+
+            expect(mockGetTotalCount).toHaveBeenCalledWith(
+                groupedCount
+            );
+
+            expect(result.totalReviews).toBe(5);
+        });
+    });
+
+    /* =============================
+       AVERAGE RATING
+    ============================= */
+
+    describe("Average rating", () => {
+        it.each([[
+            "rounds a numeric string to one decimal",
+            {
+                averageRating: "4.6666666666666667"
+            },
+            4.7
+        ], [
+            "returns null for a null average",
+            {
+                averageRating: null
+            },
+            null
+        ], [
+            "returns null for a missing result",
+            null,
+            null
+        ], [
+            "returns null for a missing average value",
+            {},
+            null
+        ]])("%s",
+            async (_, averageResult, expected) => {
+                EventReview.findOne.mockResolvedValue(averageResult);
+
+                const result = await getEventReviews(1);
+
+                expect(result.averageRating).toBe(expected);
+            }
+        );
     });
 
     /* =============================
        EVENT VALIDATION
     ============================= */
 
-    it("should throw 404 when event does not exist", async () => {
-        Event.findByPk.mockResolvedValue(null);
+    describe("Event validation", () => {
+        it("stops review retrieval when the event does not exist", async () => {
+            const error = Object.assign(
+                new Error("Event not found"),
+                {
+                    statusCode: 404
+                }
+            );
 
-        await expect(eventReviewService.getEventReviews(999, {}))
-            .rejects
-            .toMatchObject({
-                statusCode: 404,
-                message: "Event not found"
-            });
+            mockFindEventByIdOrFail.mockRejectedValue(error);
 
-        expect(EventReview.findOne).not.toHaveBeenCalled();
-        expect(EventReview.findAndCountAll).not.toHaveBeenCalled();
+            await expect(getEventReviews(999)).rejects.toBe(error);
+
+            expect(mockGetPaginationOptions).not.toHaveBeenCalled();
+
+            expect(EventReview.findAndCountAll).not.toHaveBeenCalled();
+
+            expect(EventReview.findOne).not.toHaveBeenCalled();
+        });
+    });
+
+    /* =============================
+       UNEXPECTED ERRORS
+    ============================= */
+
+    describe("Unexpected errors", () => {
+        it.each([[
+            "review retrieval", () => {
+                EventReview.findAndCountAll
+                    .mockRejectedValue(
+                        new Error("Review retrieval failed")
+                    );
+            }], [
+            "average rating retrieval", () => {
+                EventReview.findOne.mockRejectedValue(
+                    new Error("Average rating failed")
+                );
+            }]])("propagates %s errors",
+                async (_, configureError) => {
+                    configureError();
+
+                    await expect(getEventReviews(1)).rejects.toBeInstanceOf(Error);
+                }
+            );
     });
 });

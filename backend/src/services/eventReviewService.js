@@ -6,13 +6,17 @@ const User = require("../models/userModel");
 const EventUserRole = require("../models/associations/eventUserRoleModel");
 const EventReview = require("../models/associations/eventReviewModel");
 
-const { PUBLIC_USER_ATTRIBUTES } = require("../constants/userAttributes");
-
 const { throwHttpError } = require("../utils/errors/httpError");
+const { normalizeString } = require("../utils/stringNormalizer");
+
 const { isEventPast } = require("../utils/events/eventStatus");
 const { findEventByIdOrFail } = require("../utils/events/eventQueries");
 
+const { findActiveMembership } = require("../utils/eventMemberships/eventMembershipQueries");
+
 const { findReviewByIdOrFail } = require("../utils/eventReviews/eventReviewsQueries");
+
+const { buildPublicUserInclude } = require("../utils/users/userInclude");
 
 const {
     getPaginationOptions,
@@ -41,19 +45,22 @@ const {
 =========================================================================== */
 
 const EVENT_NOT_COMPLETED_ERROR = "Only completed events can be reviewed";
+
 const USER_CANNOT_REVIEW_ERROR = "Only event participants can leave a review";
+
 const REVIEW_ALREADY_EXISTS_ERROR = "You have already reviewed this event";
+
 const REVIEW_OWNER_ERROR = "You can only manage your own review";
 
-const REVIEW_SORT_FIELDS = ["createdAt", "rating"];
+const REVIEW_SORT_FIELDS = [
+    "createdAt",
+    "rating"
+];
+
 const DEFAULT_REVIEW_SORT_FIELD = "createdAt";
 const DEFAULT_REVIEW_SORT_ORDER = "DESC";
 
 /* Helpers */
-
-const normalizeReviewComment = (comment) => {
-    return String(comment ?? "").trim();
-};
 
 const assertEventIsCompleted = (event) => {
     if (!isEventPast(event)) {
@@ -62,12 +69,9 @@ const assertEventIsCompleted = (event) => {
 };
 
 const assertUserCanReviewEvent = async ({ eventId, userId, transaction }) => {
-    const membership = await EventUserRole.findOne({
-        where: {
-            eventId,
-            userId,
-            deletedAt: null
-        },
+    const membership = await findActiveMembership(EventUserRole, {
+        eventId,
+        userId,
         transaction
     });
 
@@ -96,15 +100,13 @@ const assertReviewOwner = (review, userId) => {
     }
 };
 
-const buildReviewUserInclude = () => ({
-    model: User,
-    as: "user",
-    attributes: PUBLIC_USER_ATTRIBUTES
-});
-
-const findReviewWithUserById = (reviewId) => {
+// Reload the review with its public author data.
+const findReviewWithUserById = (reviewId, options = {}) => {
     return EventReview.findByPk(reviewId, {
-        include: [buildReviewUserInclude()]
+        ...options,
+        include: [
+            buildPublicUserInclude(User)
+        ]
     });
 };
 
@@ -114,16 +116,24 @@ const getEventAverageRating = async (eventId) => {
             eventId
         },
         attributes: [
-            [fn("AVG", col("rating")), "averageRating"]
+            [
+                fn("AVG", col("rating")),
+                "averageRating"
+            ]
         ],
         raw: true
     });
 
     const averageRating = result?.averageRating;
 
-    return averageRating === null || averageRating === undefined
-        ? null
-        : Number(Number(averageRating).toFixed(1));
+    if (averageRating === null || averageRating === undefined) {
+        return null;
+    }
+
+    // Keep API ratings consistent to one decimal.
+    return Number(
+        Number(averageRating).toFixed(1)
+    );
 };
 
 /* Create review */
@@ -154,14 +164,19 @@ const createEventReview = async ({ eventId, userId, rating, comment }) => {
             eventId,
             userId,
             rating,
-            comment: normalizeReviewComment(comment)
+            comment: normalizeString(comment)
         }, {
+            transaction
+        });
+
+        // Reload inside the same transaction before committing.
+        const reviewWithUser = await findReviewWithUserById(review.id, {
             transaction
         });
 
         await transaction.commit();
 
-        return findReviewWithUserById(review.id);
+        return reviewWithUser;
 
     } catch (error) {
         await transaction.rollback();
@@ -192,13 +207,18 @@ const getEventReviews = async (eventId, query = {}) => {
         where: {
             eventId
         },
-        include: [buildReviewUserInclude()],
-        order: [[orderField, orderDirection]],
+        include: [
+            buildPublicUserInclude(User)
+        ],
+        order: [
+            [orderField, orderDirection]
+        ],
         limit,
         offset
     });
 
     const totalReviews = getTotalCount(count);
+
     const averageRating = await getEventAverageRating(eventId);
 
     return {
@@ -223,7 +243,7 @@ const updateEventReviewById = async ({ reviewId, userId, rating, comment }) => {
 
     await review.update({
         rating,
-        comment: normalizeReviewComment(comment)
+        comment: normalizeString(comment)
     });
 
     return findReviewWithUserById(review.id);

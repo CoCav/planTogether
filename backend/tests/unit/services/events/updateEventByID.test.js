@@ -1,535 +1,663 @@
-/* ==================================================
-   EVENT SERVICE - UPDATE EVENT BY ID TESTS
+const mockResolveEventLocation = jest.fn();
+const mockNormalizeString = jest.fn();
 
-   Tests:
-   - successful event update
-   - partial update field preservation
-   - event image replacement
-   - event image removal
-   - image preservation when omitted
-   - event geolocation resolution
-   - online event geolocation bypass
-   - empty in-person location rejection
-   - invalid date order rejection
-   - past event update rejection
-   - missing event rejection
-   - transaction rollback on database errors
-
-   Ensures:
-   - event updates are applied through normalized update data
-   - partial updates preserve omitted fields
-   - images can be preserved, replaced or removed
-   - old images are deleted only after successful DB commit
-   - location-aware event updates
-   - location provider calls are skipped when not needed
-   - in-person events cannot be updated with an empty location
-   - past event rules are enforced
-   - Sequelize transactions are committed on successful updates
-   - Sequelize transactions are rolled back on failed updates
-================================================== */
+const mockFindEventByIdOrFail = jest.fn();
+const mockAssertEventNotPast = jest.fn();
+const mockBuildUpdateEventPayload = jest.fn();
+const mockDeleteUploadedFile = jest.fn();
 
 jest.mock("../../../../src/config/database", () => ({
     transaction: jest.fn()
 }));
 
-jest.mock("../../../../src/models/userModel", () => ({}));
+jest.mock("../../../../src/models/eventModel", () => ({
+    name: "Event"
+}));
 
-jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({}));
+jest.mock("../../../../src/models/userModel", () => ({
+    name: "User"
+}));
+
+jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
+    name: "EventUserRole"
+}));
 
 jest.mock("../../../../src/models/associations/eventReviewModel", () => ({
-    name: "EventReviewModel"
+    name: "EventReview"
 }));
 
 jest.mock("../../../../src/models/associations/eventLikeModel", () => ({
-    findOne: jest.fn(),
-    count: jest.fn()
+    name: "EventLike"
 }));
 
-jest.mock("../../../../src/models/eventModel", () => ({
-    findByPk: jest.fn()
+jest.mock("../../../../src/services/geocodingService", () => ({
+    resolveEventLocation:
+        mockResolveEventLocation
 }));
 
-jest.mock("../../../../src/services/locationService", () => ({
-    resolveEventLocation: jest.fn()
+jest.mock("../../../../src/utils/stringNormalizer", () => ({
+    normalizeString: mockNormalizeString
 }));
 
-jest.mock("../../../../src/utils/events/eventPayploadBuilder.js", () => ({
-    buildUpdateEventPayload: jest.fn()
+jest.mock("../../../../src/utils/events/eventQueries", () => ({
+    findEventByIdOrFail: mockFindEventByIdOrFail
 }));
 
 jest.mock("../../../../src/utils/events/eventStatus", () => ({
-    assertEventNotPast: jest.fn()
+    assertEventNotPast: mockAssertEventNotPast,
+    assertEventNotStarted: jest.fn(),
+    hasEventStarted: jest.fn(),
+    getEventStatus: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/events/eventPayloadBuilder", () => ({
+    buildCreateEventPayload: jest.fn(),
+    buildUpdateEventPayload: mockBuildUpdateEventPayload
 }));
 
 jest.mock("../../../../src/utils/files/uploadedFileStorage", () => ({
-    deleteUploadedFile: jest.fn()
+    deleteUploadedFile: mockDeleteUploadedFile
+}));
+
+jest.mock("../../../../src/utils/events/eventFilters", () => ({
+    buildEventWhereConditions: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/events/eventCreatorInclude", () => ({
+    buildEventCreatorInclude: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventMemberships/eventMembershipQueries", () => ({
+    findActiveMembership: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventMemberships/eventParticipants", () => ({
+    buildActiveParticipantInclude: jest.fn(),
+    buildEventParticipantCountAttribute: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventReviews/eventReviews", () => ({
+    buildEventReviewInclude: jest.fn(),
+    buildEventReviewCountAttribute: jest.fn(),
+    buildEventAverageRatingAttribute: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventLikes/eventLikes", () => ({
+    buildEventLikeInclude: jest.fn(),
+    buildEventLikeCountAttribute: jest.fn(),
+    findLikedEventIdsByUser: jest.fn(),
+    findEventLike: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/pagination", () => ({
+    getPaginationOptions: jest.fn(),
+    getTotalCount: jest.fn(),
+    getTotalPages: jest.fn()
 }));
 
 const sequelize = require("../../../../src/config/database");
-const Event = require("../../../../src/models/eventModel");
 
-const eventService = require("../../../../src/services/eventService");
-const locationService = require("../../../../src/services/locationService");
+const Event = require("../../../../src/models/eventModel");
 
 const { EVENT_MODES } = require("../../../../src/constants/eventModes");
 
-const { buildUpdateEventPayload } = require("../../../../src/utils/events/eventPayploadBuilder");
+const { updateEventById } = require("../../../../src/services/eventService");
 
-const { assertEventNotPast } = require("../../../../src/utils/events/eventStatus");
-const { deleteUploadedFile } = require("../../../../src/utils/files/uploadedFileStorage");
+const { createTransactionMock } = require("../../../helpers/database/modelTestHelper");
 
 const { createMockEventModel } = require("../../../factories/eventFactory");
 
-describe("eventService - updateEventById", () => {
+/* ==========================================================================
+   Update Event Service Unit Tests
 
+   Tests event update business logic.
+
+   Responsibilities
+   - Test event existence and lifecycle validation
+   - Test complete and partial date validation
+   - Test event location validation and geocoding
+   - Test update payload construction
+   - Test event persistence
+   - Test image replacement and removal
+   - Test post-commit file cleanup
+   - Test transaction commit and rollback
+   - Test unexpected error propagation
+
+   Notes
+   - Database changes run inside a transaction.
+   - Old uploaded images are removed only after the transaction commits.
+   - File cleanup failures cannot roll back committed database changes.
+=========================================================================== */
+
+describe("update event service", () => {
     let transaction;
+    let event;
+    let locationData;
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        transaction = {
-            commit: jest.fn().mockResolvedValue(),
-            rollback: jest.fn().mockResolvedValue()
+        transaction = createTransactionMock();
+
+        event = createMockEventModel({
+            id: 1,
+            mode: EVENT_MODES.IN_PERSON,
+            location: "Montreal",
+            startDateTime: "2026-12-20T10:00:00.000Z",
+            endDateTime: "2026-12-20T12:00:00.000Z",
+            image: null,
+            update: jest.fn().mockResolvedValue()
+        });
+
+        locationData = {
+            latitude: 46.8137431,
+            longitude: -71.2084061,
+            label: "Québec, Canada",
+            streetAddress: "2 Rue des Jardins",
+            city: "Québec",
+            region: "Québec",
+            postalCode: "G1R 4L5",
+            country: "Canada"
         };
 
         sequelize.transaction.mockResolvedValue(transaction);
 
-        locationService.resolveEventLocation.mockResolvedValue({
-            latitude: 46.8137431,
-            longitude: -71.2084061,
-            label: "Québec, Canada",
-            streetAddress: "2 Rue des Jardins",
-            city: "Québec",
-            region: "Québec",
-            postalCode: "G1R 4L5",
-            country: "Canada"
+        mockFindEventByIdOrFail.mockResolvedValue(event);
+
+        mockAssertEventNotPast.mockImplementation(() => { });
+
+        mockNormalizeString.mockImplementation(
+            (value) => String(value ?? "").trim()
+        );
+
+        mockResolveEventLocation.mockResolvedValue(locationData);
+
+        mockBuildUpdateEventPayload.mockReturnValue({
+            title: "Updated Event"
+        });
+
+        mockDeleteUploadedFile.mockResolvedValue();
+    });
+
+    /* =============================
+       EVENT UPDATE
+    ============================= */
+
+    describe("updateEventById", () => {
+        it("updates and returns the event inside a transaction", async () => {
+            const data = {
+                title: "Updated Event"
+            };
+
+            const updatedData = {
+                title: "Updated Event"
+            };
+
+            mockBuildUpdateEventPayload.mockReturnValue(updatedData);
+
+            const result = await updateEventById(
+                1,
+                data
+            );
+
+            expect(sequelize.transaction).toHaveBeenCalledTimes(1);
+
+            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(
+                Event,
+                1,
+                {
+                    transaction
+                }
+            );
+
+            expect(mockAssertEventNotPast).toHaveBeenCalledWith(event);
+
+            expect(mockBuildUpdateEventPayload).toHaveBeenCalledWith(
+                event,
+                data,
+                null
+            );
+
+            expect(event.update).toHaveBeenCalledWith(
+                updatedData,
+                {
+                    transaction
+                }
+            );
+
+            expect(transaction.commit).toHaveBeenCalledTimes(1);
+
+            expect(transaction.rollback).not.toHaveBeenCalled();
+
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
+
+            expect(result).toBe(event);
+        });
+
+        it("preserves location data when the location field is omitted", async () => {
+            const data = {
+                title: "Updated Event"
+            };
+
+            await updateEventById(1, data);
+
+            expect(mockNormalizeString).not.toHaveBeenCalled();
+
+            expect(mockResolveEventLocation).not.toHaveBeenCalled();
+
+            expect(mockBuildUpdateEventPayload).toHaveBeenCalledWith(
+                event,
+                data,
+                null
+            );
         });
     });
 
     /* =============================
-       EVENT UPDATE SUCCESS
+       DATE VALIDATION
     ============================= */
 
-    it("should update event successfully", async () => {
-        const event = createMockEventModel({
-            id: 1,
-            image: null,
-            update: jest.fn().mockResolvedValue()
-        });
-
-        const updateData = createMockEventModel({
-            title: "Updated Event"
-        });
-
-        Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => { });
-        buildUpdateEventPayload.mockReturnValue(updateData);
-
-        const result = await eventService.updateEventById(1, {
-            title: "Updated Event"
-        });
-
-        expect(sequelize.transaction).toHaveBeenCalled();
-
-        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
-
-        expect(assertEventNotPast).toHaveBeenCalledWith(event);
-
-        expect(buildUpdateEventPayload).toHaveBeenCalledWith(event, {
-            title: "Updated Event"
-        }, null);
-
-        expect(event.update).toHaveBeenCalledWith(updateData, { transaction });
-
-        expect(transaction.commit).toHaveBeenCalled();
-        expect(transaction.rollback).not.toHaveBeenCalled();
-
-        expect(deleteUploadedFile).not.toHaveBeenCalled();
-
-        expect(result).toBe(event);
-    });
-
-    it("should preserve existing fields when partial update data is omitted", async () => {
-        const event = createMockEventModel({
-            id: 1,
-            image: "/uploads/events/current-event.png",
-            maxParticipants: 20,
-            registrationDeadline: "2026-12-19T10:00:00.000Z",
-            update: jest.fn().mockResolvedValue()
-        });
-
-        const updateData = createMockEventModel({
-            title: "Updated Event",
-            image: "/uploads/events/current-event.png"
-        });
-
-        Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => { });
-        buildUpdateEventPayload.mockReturnValue(updateData);
-
-        await eventService.updateEventById(1, {
-            title: "Updated Event"
-        });
-
-        expect(sequelize.transaction).toHaveBeenCalled();
-
-        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
-
-        expect(buildUpdateEventPayload).toHaveBeenCalledWith(event, {
-            title: "Updated Event"
-        }, null);
-
-        expect(event.update).toHaveBeenCalledWith(updateData, { transaction });
-
-        expect(transaction.commit).toHaveBeenCalled();
-        expect(transaction.rollback).not.toHaveBeenCalled();
-
-        expect(deleteUploadedFile).not.toHaveBeenCalled();
-    });
-
-    it("should replace event image and delete previous image", async () => {
-        const event = createMockEventModel({
-            id: 1,
-            image: "/uploads/events/old-event.png",
-            update: jest.fn().mockResolvedValue()
-        });
-
-        const updateData = createMockEventModel({
-            image: "/uploads/events/new-event.png"
-        });
-
-        Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => { });
-        buildUpdateEventPayload.mockReturnValue(updateData);
-
-        await eventService.updateEventById(1, {
-            image: "/uploads/events/new-event.png"
-        });
-
-        expect(buildUpdateEventPayload).toHaveBeenCalledWith(event, {
-            image: "/uploads/events/new-event.png"
-        }, null);
-
-        expect(sequelize.transaction).toHaveBeenCalled();
-
-        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
-        expect(event.update).toHaveBeenCalledWith(updateData, { transaction });
-
-        expect(transaction.commit).toHaveBeenCalled();
-        expect(transaction.rollback).not.toHaveBeenCalled();
-
-        expect(deleteUploadedFile).toHaveBeenCalledWith("/uploads/events/old-event.png");
-    });
-
-    it("should remove event image and delete previous image", async () => {
-        const event = createMockEventModel({
-            id: 1,
-            image: "/uploads/events/old-event.png",
-            update: jest.fn().mockResolvedValue()
-        });
-
-        const updateData = createMockEventModel({
-            image: null
-        });
-
-        Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => { });
-        buildUpdateEventPayload.mockReturnValue(updateData);
-
-        await eventService.updateEventById(1, {
-            image: null
-        });
-
-        expect(buildUpdateEventPayload).toHaveBeenCalledWith(event, {
-            image: null
-        }, null);
-
-        expect(event.update).toHaveBeenCalledWith(updateData, { transaction });
-
-        expect(transaction.commit).toHaveBeenCalled();
-
-        expect(deleteUploadedFile).toHaveBeenCalledWith("/uploads/events/old-event.png");
-    });
-
-    it("should resolve location data when updating physical event location", async () => {
-        const event = createMockEventModel({
-            id: 1,
-            mode: EVENT_MODES.IN_PERSON,
-            location: "Montreal",
-            image: null,
-            update: jest.fn().mockResolvedValue()
-        });
-
-        const updateData = {
-            location: "Quebec City",
-            latitude: 46.8137431,
-            longitude: -71.2084061,
-            locationLabel: "Québec, Canada",
-            streetAddress: "2 Rue des Jardins",
-            city: "Québec",
-            region: "Québec",
-            postalCode: "G1R 4L5",
-            country: "Canada"
-        };
-
-        Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => { });
-        buildUpdateEventPayload.mockReturnValue(updateData);
-
-        await eventService.updateEventById(1, {
-            location: "Quebec City"
-        });
-
-        expect(locationService.resolveEventLocation).toHaveBeenCalledWith("Quebec City");
-
-        expect(buildUpdateEventPayload).toHaveBeenCalledWith(event, {
-            location: "Quebec City"
-        }, {
-            latitude: 46.8137431,
-            longitude: -71.2084061,
-            label: "Québec, Canada",
-            streetAddress: "2 Rue des Jardins",
-            city: "Québec",
-            region: "Québec",
-            postalCode: "G1R 4L5",
-            country: "Canada"
-        });
-
-        expect(event.update).toHaveBeenCalledWith(updateData, { transaction });
-    });
-
-    it("should not resolve location data when location is omitted", async () => {
-        const event = createMockEventModel({
-            id: 1,
-            mode: EVENT_MODES.IN_PERSON,
-            location: "Montreal",
-            image: null,
-            update: jest.fn().mockResolvedValue()
-        });
-
-        const updateData = {
-            title: "Updated Event"
-
-        };
-
-        Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => { });
-        buildUpdateEventPayload.mockReturnValue(updateData);
-
-        await eventService.updateEventById(1, {
-            title: "Updated Event"
-        });
-
-        expect(event.update).toHaveBeenCalledWith(updateData, { transaction });
-
-        expect(locationService.resolveEventLocation).not.toHaveBeenCalled();
-
-        expect(buildUpdateEventPayload).toHaveBeenCalledWith(event, {
-            title: "Updated Event"
-        }, null);
-    });
-
-    it("should not resolve location data when updating event to online mode", async () => {
-        const event = createMockEventModel({
-            id: 1,
-            mode: EVENT_MODES.IN_PERSON,
-            location: "Montreal",
-            image: null,
-            update: jest.fn().mockResolvedValue()
-        });
-
-        const updateData = {
-            mode: EVENT_MODES.ONLINE,
-            location: null,
-            latitude: null,
-            longitude: null,
-            locationLabel: null,
-            streetAddress: null,
-            city: null,
-            region: null,
-            postalCode: null,
-            country: null
-        };
-
-        Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => { });
-        buildUpdateEventPayload.mockReturnValue(updateData);
-
-        await eventService.updateEventById(1, {
-            mode: EVENT_MODES.ONLINE
-        });
-
-        expect(locationService.resolveEventLocation).not.toHaveBeenCalled();
-
-        expect(buildUpdateEventPayload).toHaveBeenCalledWith(event, {
-            mode: EVENT_MODES.ONLINE
-        }, null);
-
-        expect(event.update).toHaveBeenCalledWith(updateData, { transaction });
-    });
-
-    it("should reject empty location for in-person event update", async () => {
-        const event = createMockEventModel({
-            id: 1,
-            mode: EVENT_MODES.IN_PERSON,
-            location: "Montreal",
-            image: null,
-            update: jest.fn()
-        });
-
-        Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => { });
-
-        await expect(eventService.updateEventById(1, {
-            location: ""
-        })).rejects.toMatchObject({
-            message: "Location is required for in-person events",
-            statusCode: 400
-        });
-
-        expect(locationService.resolveEventLocation).not.toHaveBeenCalled();
-        expect(buildUpdateEventPayload).not.toHaveBeenCalled();
-        expect(event.update).not.toHaveBeenCalled();
-
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
+    describe("Date validation", () => {
+        it.each([[
+            "both supplied dates are reversed",
+            {
+                startDateTime: "2026-12-20T13:00:00.000Z",
+                endDateTime: "2026-12-20T12:00:00.000Z"
+            }
+        ], [
+            "both supplied dates are equal",
+            {
+                startDateTime: "2026-12-20T12:00:00.000Z",
+                endDateTime: "2026-12-20T12:00:00.000Z"
+            }
+        ], [
+            "only the new start date is after the existing end date",
+            {
+                startDateTime: "2026-12-20T13:00:00.000Z"
+            }
+        ], [
+            "only the new end date is before the existing start date",
+            {
+                endDateTime: "2026-12-20T09:00:00.000Z"
+            }
+        ]])("throws a 400 error when %s",
+            async (_, data) => {
+                await expect(
+                    updateEventById(1, data)
+                ).rejects.toMatchObject({
+                    message: "End date must be after start date",
+                    statusCode: 400
+                });
+
+                expect(mockBuildUpdateEventPayload).not.toHaveBeenCalled();
+
+                expect(event.update).not.toHaveBeenCalled();
+
+                expect(transaction.commit).not.toHaveBeenCalled();
+
+                expect(transaction.rollback).toHaveBeenCalledTimes(1);
+
+                expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
+            }
+        );
+
+        it.each([[
+            "only the start date",
+            {
+                startDateTime:
+                    "2026-12-20T11:00:00.000Z"
+            }
+        ], [
+            "only the end date",
+            {
+                endDateTime:
+                    "2026-12-20T13:00:00.000Z"
+            }
+        ]])("accepts a valid update containing %s",
+            async (_, data) => {
+                await updateEventById(1, data);
+
+                expect(mockBuildUpdateEventPayload).toHaveBeenCalledWith(
+                    event,
+                    data,
+                    null
+                );
+
+                expect(event.update).toHaveBeenCalledTimes(1);
+
+                expect(transaction.commit).toHaveBeenCalledTimes(1);
+            }
+        );
     });
 
     /* =============================
-       BUSINESS RULES
+       LOCATION UPDATES
     ============================= */
 
-    it("should throw 400 when end date is before start date", async () => {
-        const event = createMockEventModel({
-            id: 1,
-            update: jest.fn()
+    describe("Location updates", () => {
+        it("resolves location data when an in-person address changes", async () => {
+            const data = {
+                location: "Quebec City"
+            };
+
+            const updatedData = {
+                location: "Quebec City",
+                locationLabel: "Québec, Canada",
+                latitude: 46.8137431,
+                longitude: -71.2084061
+            };
+
+            mockBuildUpdateEventPayload.mockReturnValue(updatedData);
+
+            await updateEventById(1, data);
+
+            expect(mockNormalizeString).toHaveBeenCalledWith("Quebec City");
+
+            expect(mockResolveEventLocation).toHaveBeenCalledTimes(1);
+
+            expect(mockResolveEventLocation).toHaveBeenCalledWith("Quebec City");
+
+            expect(mockBuildUpdateEventPayload).toHaveBeenCalledWith(
+                event,
+                data,
+                locationData
+            );
+
+            expect(event.update).toHaveBeenCalledWith(
+                updatedData,
+                {
+                    transaction
+                }
+            );
         });
 
-        Event.findByPk.mockResolvedValue(event);
-        assertEventNotPast.mockImplementation(() => { });
+        it("throws a 400 error for a blank in-person location", async () => {
+            const data = {
+                location: "   "
+            };
 
-        await expect(eventService.updateEventById(1, {
-            startDateTime: "2026-12-20T12:00:00.000Z",
-            endDateTime: "2026-12-20T10:00:00.000Z"
-        })).rejects.toMatchObject({
-            message: "End date must be after start date",
-            statusCode: 400
+            await expect(
+                updateEventById(1, data)
+            ).rejects.toMatchObject({
+                message: "Location is required for in-person events",
+                statusCode: 400
+            });
+
+            expect(mockNormalizeString).toHaveBeenCalledWith("   ");
+
+            expect(mockResolveEventLocation).not.toHaveBeenCalled();
+
+            expect(mockBuildUpdateEventPayload).not.toHaveBeenCalled();
+
+            expect(event.update).not.toHaveBeenCalled();
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
         });
 
-        expect(sequelize.transaction).toHaveBeenCalled();
+        it("switches an event to online mode without geocoding", async () => {
+            const data = {
+                mode: EVENT_MODES.ONLINE
+            };
 
-        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
-        expect(assertEventNotPast).toHaveBeenCalledWith(event);
+            const updatedData = {
+                mode: EVENT_MODES.ONLINE,
+                location: null,
+                locationLabel: null,
+                streetAddress: null,
+                city: null,
+                region: null,
+                postalCode: null,
+                country: null,
+                latitude: null,
+                longitude: null
+            };
 
-        expect(buildUpdateEventPayload).not.toHaveBeenCalled();
-        expect(event.update).not.toHaveBeenCalled();
+            mockBuildUpdateEventPayload.mockReturnValue(updatedData);
 
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
+            await updateEventById(1, data);
 
-        expect(deleteUploadedFile).not.toHaveBeenCalled();
-    });
+            expect(mockResolveEventLocation).not.toHaveBeenCalled();
 
-    it("should block update if event is past", async () => {
-        const event = createMockEventModel({
-            id: 1,
-            update: jest.fn()
+            expect(mockBuildUpdateEventPayload).toHaveBeenCalledWith(
+                event,
+                data,
+                null
+            );
+
+            expect(event.update).toHaveBeenCalledWith(
+                updatedData,
+                {
+                    transaction
+                }
+            );
         });
 
-        Event.findByPk.mockResolvedValue(event);
+        it("does not geocode an explicitly supplied location when the next mode is online", async () => {
+            const data = {
+                mode: EVENT_MODES.ONLINE,
+                location: "Ignored location"
+            };
 
-        const error = new Error("No action is allowed on a past event");
-        error.statusCode = 403;
+            await updateEventById(1, data);
 
-        assertEventNotPast.mockImplementation(() => {
-            throw error;
+            expect(mockResolveEventLocation).not.toHaveBeenCalled();
+
+            expect(mockBuildUpdateEventPayload).toHaveBeenCalledWith(
+                event,
+                data,
+                null
+            );
         });
 
-        await expect(eventService.updateEventById(1, {
-            title: "Updated Event"
-        })).rejects.toMatchObject({
-            message: "No action is allowed on a past event",
-            statusCode: 403
+        it("propagates geocoding errors and rolls back", async () => {
+            const error = new Error("Geocoding failed");
+
+            mockResolveEventLocation.mockRejectedValue(error);
+
+            await expect(updateEventById(1, {
+                location: "Quebec City"
+            })).rejects.toBe(error);
+
+            expect(mockBuildUpdateEventPayload).not.toHaveBeenCalled();
+
+            expect(event.update).not.toHaveBeenCalled();
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
         });
-
-        expect(sequelize.transaction).toHaveBeenCalled();
-
-        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
-        expect(assertEventNotPast).toHaveBeenCalledWith(event);
-
-        expect(buildUpdateEventPayload).not.toHaveBeenCalled();
-        expect(event.update).not.toHaveBeenCalled();
-
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
-
-        expect(deleteUploadedFile).not.toHaveBeenCalled();
     });
 
     /* =============================
-       EDGE CASES
+       IMAGE CLEANUP
     ============================= */
 
-    it("should throw 404 when event is not found", async () => {
-        Event.findByPk.mockResolvedValue(null);
-
-        await expect(eventService.updateEventById(999, {
-            title: "Updated Event"
-        })).rejects.toMatchObject({
-            message: "Event not found",
-            statusCode: 404
+    describe("Image cleanup", () => {
+        beforeEach(() => {
+            event.image = "/uploads/events/old-event.png";
         });
 
-        expect(sequelize.transaction).toHaveBeenCalled();
+        it("deletes the previous image after a successful replacement", async () => {
+            const data = {
+                image: "/uploads/events/new-event.png"
+            };
 
-        expect(Event.findByPk).toHaveBeenCalledWith(999, { transaction });
+            await updateEventById(1, data);
 
-        expect(buildUpdateEventPayload).not.toHaveBeenCalled();
+            expect(transaction.commit).toHaveBeenCalledTimes(1);
 
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
+            expect(mockDeleteUploadedFile).toHaveBeenCalledTimes(1);
 
-        expect(deleteUploadedFile).not.toHaveBeenCalled();
+            expect(mockDeleteUploadedFile).toHaveBeenCalledWith("/uploads/events/old-event.png");
+
+            expect(transaction.commit.mock.invocationCallOrder[0]).toBeLessThan(
+                mockDeleteUploadedFile.mock.invocationCallOrder[0]
+            );
+        });
+
+        it("deletes the previous image after explicit image removal", async () => {
+            await updateEventById(1, {
+                image: null
+            });
+
+            expect(mockDeleteUploadedFile).toHaveBeenCalledWith("/uploads/events/old-event.png");
+        });
+
+        it("preserves the previous image when the image field is omitted", async () => {
+            await updateEventById(1, {
+                title: "Updated Event"
+            });
+
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
+        });
+
+        it("does not delete the image when the same path is supplied", async () => {
+            await updateEventById(1, {
+                image: "/uploads/events/old-event.png"
+            });
+
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
+        });
+
+        it("propagates post-commit cleanup errors without rolling back", async () => {
+            const error = new Error("File cleanup failed");
+
+            mockDeleteUploadedFile.mockRejectedValue(error);
+
+            await expect(updateEventById(1, {
+                image: "/uploads/events/new-event.png"
+            })).rejects.toBe(error);
+
+            expect(transaction.commit).toHaveBeenCalledTimes(1);
+
+            // Database changes are already committed.
+            expect(transaction.rollback).not.toHaveBeenCalled();
+        });
     });
 
     /* =============================
-       DATABASE ERRORS
+       EVENT VALIDATION
     ============================= */
 
-    it("should forward database errors and rollback transaction", async () => {
-        const event = createMockEventModel({
-            id: 1,
-            image: null,
-            update: jest.fn().mockRejectedValue(new Error("DB error"))
+    describe("Event validation", () => {
+        it("rolls back when the event does not exist", async () => {
+            const error = Object.assign(
+                new Error("Event not found"),
+                {
+                    statusCode: 404
+                }
+            );
+
+            mockFindEventByIdOrFail.mockRejectedValue(error);
+
+            await expect(updateEventById(999, {
+                title: "Updated Event"
+            })).rejects.toBe(error);
+
+            expect(mockAssertEventNotPast).not.toHaveBeenCalled();
+
+            expect(mockBuildUpdateEventPayload).not.toHaveBeenCalled();
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
         });
 
-        Event.findByPk.mockResolvedValue(event);
+        it("rolls back when the event is past", async () => {
+            const error = Object.assign(
+                new Error("No action is allowed on a past event"),
+                {
+                    statusCode: 403
+                }
+            );
 
-        assertEventNotPast.mockImplementation(() => { });
+            mockAssertEventNotPast.mockImplementation(() => {
+                throw error;
+            });
 
-        buildUpdateEventPayload.mockReturnValue({
-            title: "Updated Event"
+            await expect(updateEventById(1, {
+                title: "Updated Event"
+            })).rejects.toBe(error);
+
+            expect(mockBuildUpdateEventPayload).not.toHaveBeenCalled();
+
+            expect(event.update).not.toHaveBeenCalled();
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    /* =============================
+       TRANSACTION ERRORS
+    ============================= */
+
+    describe("Transaction errors", () => {
+        it("propagates transaction creation errors", async () => {
+            const error = new Error("Transaction creation failed");
+
+            sequelize.transaction.mockRejectedValue(error);
+
+            await expect(updateEventById(1, {
+                title: "Updated Event"
+            })).rejects.toBe(error);
+
+            expect(mockFindEventByIdOrFail).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).not.toHaveBeenCalled();
         });
 
-        await expect(eventService.updateEventById(1, {
-            title: "Updated Event"
-        })).rejects.toThrow("DB error");
+        it("rolls back when payload construction fails", async () => {
+            const error = new Error("Payload construction failed");
 
-        expect(sequelize.transaction).toHaveBeenCalled();
+            mockBuildUpdateEventPayload.mockImplementation(() => {
+                throw error;
+            });
 
-        expect(buildUpdateEventPayload).toHaveBeenCalledWith(event, {
-            title: "Updated Event"
-        }, null);
+            await expect(updateEventById(1, {
+                title: "Updated Event"
+            })).rejects.toBe(error);
 
-        expect(event.update).toHaveBeenCalledWith({
-            title: "Updated Event"
-        }, { transaction });
+            expect(event.update).not.toHaveBeenCalled();
 
-        expect(Event.findByPk).toHaveBeenCalledWith(1, { transaction });
+            expect(transaction.commit).not.toHaveBeenCalled();
 
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+        });
 
-        expect(deleteUploadedFile).not.toHaveBeenCalled();
+        it("rolls back when event persistence fails", async () => {
+            const error = new Error("Event update failed");
+
+            event.update.mockRejectedValue(error);
+
+            await expect(updateEventById(1, {
+                title: "Updated Event"
+            })).rejects.toBe(error);
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
+        });
+
+        it("rolls back when transaction commit fails", async () => {
+            const error = new Error("Transaction commit failed");
+
+            transaction.commit.mockRejectedValue(error);
+
+            await expect(updateEventById(1, {
+                title: "Updated Event"
+            })).rejects.toBe(error);
+
+            expect(event.update).toHaveBeenCalledTimes(1);
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+
+            expect(mockDeleteUploadedFile).not.toHaveBeenCalled();
+        });
     });
 });

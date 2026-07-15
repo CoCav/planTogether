@@ -1,299 +1,427 @@
-/* ==================================================
-   EVENT SERVICE - GET EVENT BY ID TESTS
+const mockBuildEventCreatorInclude = jest.fn();
 
-   Tests:
-   - successful event retrieval with optimized participant count
-   - event status enrichment
-   - active participant include configuration
-   - review stats include configuration
-   - review count and average rating enrichment
-   - like stats include configuration
-   - like count enrichment
-   - current user like state enrichment
-   - missing event rejection
-   - database error propagation
+const mockBuildActiveParticipantInclude = jest.fn();
+const mockBuildEventParticipantCountAttribute = jest.fn();
 
-   Ensures:
-   - single events are retrieved correctly
-   - active participants are counted through optimized query helpers
-   - computed status is added before response
-   - review stats are built through optimized query helpers
-   - like stats are built through optimized query helpers
-   - current user like state is computed when currentUserId is provided
-   - missing events return a 404 error
-   - shared event status constants are used for expected statuses
-================================================== */
+const mockBuildEventReviewInclude = jest.fn();
+const mockBuildEventReviewCountAttribute = jest.fn();
+const mockBuildEventAverageRatingAttribute = jest.fn();
+
+const mockBuildEventLikeInclude = jest.fn();
+const mockBuildEventLikeCountAttribute = jest.fn();
+const mockFindEventLike = jest.fn();
+
+const mockGetEventStatus = jest.fn();
+
+jest.mock("../../../../src/config/database", () => ({
+    fn: jest.fn(),
+    col: jest.fn(),
+    cast: jest.fn()
+}));
 
 jest.mock("../../../../src/models/eventModel", () => ({
     findOne: jest.fn()
 }));
 
+jest.mock("../../../../src/models/userModel", () => ({
+    name: "User"
+}));
+
+jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
+    name: "EventUserRole"
+}));
+
+jest.mock("../../../../src/models/associations/eventReviewModel", () => ({
+    name: "EventReview"
+}));
+
 jest.mock("../../../../src/models/associations/eventLikeModel", () => ({
-    findOne: jest.fn()
+    name: "EventLike"
 }));
 
-jest.mock("../../../../src/utils/events/eventCreator.js", () => ({
-    buildEventCreatorInclude: jest.fn()
+jest.mock("../../../../src/services/geocodingService", () => ({
+    resolveEventLocation: jest.fn()
 }));
 
-jest.mock("../../../../src/utils/eventMemberships/eventParticipants.js", () => ({
-    buildActiveParticipantInclude: jest.fn(),
-    buildEventParticipantCountAttribute: jest.fn()
+jest.mock("../../../../src/utils/stringNormalizer", () => ({
+    normalizeString: jest.fn()
 }));
 
-jest.mock("../../../../src/utils/eventReviews/eventReviews.js", () => ({
-    buildEventReviewInclude: jest.fn(),
-    buildEventReviewCountAttribute: jest.fn(),
-    buildEventAverageRatingAttribute: jest.fn()
+jest.mock("../../../../src/utils/events/eventFilters", () => ({
+    buildEventWhereConditions: jest.fn()
 }));
 
-jest.mock("../../../../src/utils/eventLikes/eventLikes.js", () => ({
-    buildEventLikeInclude: jest.fn(),
-    buildEventLikeCountAttribute: jest.fn()
+jest.mock("../../../../src/utils/events/eventCreatorInclude", () => ({
+    buildEventCreatorInclude: mockBuildEventCreatorInclude
+}));
+
+jest.mock("../../../../src/utils/events/eventQueries", () => ({
+    findEventByIdOrFail: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/events/eventPayloadBuilder", () => ({
+    buildCreateEventPayload: jest.fn(),
+    buildUpdateEventPayload: jest.fn()
 }));
 
 jest.mock("../../../../src/utils/events/eventStatus", () => ({
-    getEventStatus: jest.fn()
+    assertEventNotPast: jest.fn(),
+    assertEventNotStarted: jest.fn(),
+    hasEventStarted: jest.fn(),
+    getEventStatus: mockGetEventStatus
 }));
+
+jest.mock("../../../../src/utils/eventMemberships/eventMembershipQueries", () => ({
+    findActiveMembership: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventMemberships/eventParticipants", () => ({
+    buildActiveParticipantInclude: mockBuildActiveParticipantInclude,
+    buildEventParticipantCountAttribute: mockBuildEventParticipantCountAttribute
+}));
+
+jest.mock("../../../../src/utils/eventReviews/eventReviews", () => ({
+    buildEventReviewInclude: mockBuildEventReviewInclude,
+    buildEventReviewCountAttribute: mockBuildEventReviewCountAttribute,
+    buildEventAverageRatingAttribute: mockBuildEventAverageRatingAttribute
+}));
+
+jest.mock("../../../../src/utils/eventLikes/eventLikes", () => ({
+    buildEventLikeInclude: mockBuildEventLikeInclude,
+    buildEventLikeCountAttribute: mockBuildEventLikeCountAttribute,
+    findLikedEventIdsByUser: jest.fn(),
+    findEventLike: mockFindEventLike
+}));
+
+jest.mock("../../../../src/utils/files/uploadedFileStorage", () => ({
+    deleteUploadedFile: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/pagination", () => ({
+    getPaginationOptions: jest.fn(),
+    getTotalCount: jest.fn(),
+    getTotalPages: jest.fn()
+}));
+
+const sequelize = require("../../../../src/config/database");
 
 const Event = require("../../../../src/models/eventModel");
 const User = require("../../../../src/models/userModel");
+const EventReview = require("../../../../src/models/associations/eventReviewModel");
 const EventLike = require("../../../../src/models/associations/eventLikeModel");
 
-const eventService = require("../../../../src/services/eventService");
-const EventReview = require("../../../../src/models/associations/eventReviewModel");
-
 const { EVENT_STATUS } = require("../../../../src/constants/eventStatus");
-const { getEventStatus } = require("../../../../src/utils/events/eventStatus");
 
-const { buildEventCreatorInclude } = require("../../../../src/utils/events/eventCreator");
-
-const {
-    buildActiveParticipantInclude,
-    buildEventParticipantCountAttribute
-} = require("../../../../src/utils/eventMemberships/eventParticipants");
-
-const {
-    buildEventReviewInclude,
-    buildEventReviewCountAttribute,
-    buildEventAverageRatingAttribute
-} = require("../../../../src/utils/eventReviews/eventReviews");
-
-const {
-    buildEventLikeInclude,
-    buildEventLikeCountAttribute
-} = require("../../../../src/utils/eventLikes/eventLikes");
+const { getEventById } = require("../../../../src/services/eventService");
 
 const { createMockEventModel } = require("../../../factories/eventFactory");
 
-describe("eventService - getEventById", () => {
+/* ==========================================================================
+   Get Event By ID Service Unit Tests
+
+   Tests detailed event retrieval.
+
+   Responsibilities
+   - Test event detail query composition
+   - Test creator, participant, review and like includes
+   - Test aggregated event attributes
+   - Test event status enrichment
+   - Test authenticated user like state
+   - Test anonymous user like state
+   - Test missing event handling
+   - Test unexpected error propagation
+
+   Notes
+   - Event query builders and like lookup utilities are mocked.
+   - Aggregation helper behavior remains covered by utility unit tests.
+=========================================================================== */
+
+describe("get event by ID service", () => {
+    let event;
+
+    let creatorInclude;
+    let participantInclude;
+    let reviewInclude;
+    let likeInclude;
+
+    let participantCountAttribute;
+    let reviewCountAttribute;
+    let averageRatingAttribute;
+    let likeCountAttribute;
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        buildEventCreatorInclude.mockReturnValue({
-            model: User,
-            as: "creator"
+        event = createMockEventModel({
+            id: 1,
+            title: "Test Event"
         });
 
-        buildActiveParticipantInclude.mockReturnValue({
+        creatorInclude = {
+            model: User,
+            as: "creator"
+        };
+
+        participantInclude = {
             model: User,
             as: "participants",
             attributes: []
-        });
+        };
 
-        buildEventParticipantCountAttribute.mockReturnValue([
-            "COUNT_DISTINCT_PARTICIPANTS",
-            "participantCount"
-        ]);
-
-        buildEventReviewInclude.mockReturnValue({
+        reviewInclude = {
             model: EventReview,
             as: "reviews",
             attributes: []
-        });
+        };
 
-        buildEventReviewCountAttribute.mockReturnValue([
-            "COUNT_DISTINCT_REVIEWS",
-            "reviewCount"
-        ]);
-
-        buildEventAverageRatingAttribute.mockReturnValue([
-            "AVG_REVIEWS_RATING",
-            "averageRating"
-        ]);
-
-        buildEventLikeInclude.mockReturnValue({
+        likeInclude = {
             model: EventLike,
             as: "likes",
             attributes: []
-        });
+        };
 
-        buildEventLikeCountAttribute.mockReturnValue([
+        participantCountAttribute = [
+            "COUNT_DISTINCT_PARTICIPANTS",
+            "participantCount"
+        ];
+
+        reviewCountAttribute = [
+            "COUNT_DISTINCT_REVIEWS",
+            "reviewCount"
+        ];
+
+        averageRatingAttribute = [
+            "AVERAGE_RATING",
+            "averageRating"
+        ];
+
+        likeCountAttribute = [
             "COUNT_DISTINCT_LIKES",
             "likesCount"
-        ]);
+        ];
 
-        EventLike.findOne.mockResolvedValue(null);
+        mockBuildEventCreatorInclude.mockReturnValue(creatorInclude);
+        mockBuildActiveParticipantInclude.mockReturnValue(participantInclude);
+        mockBuildEventParticipantCountAttribute.mockReturnValue(participantCountAttribute);
+
+        mockBuildEventReviewInclude.mockReturnValue(reviewInclude);
+        mockBuildEventReviewCountAttribute.mockReturnValue(reviewCountAttribute);
+        mockBuildEventAverageRatingAttribute.mockReturnValue(averageRatingAttribute);
+
+        mockBuildEventLikeInclude.mockReturnValue(likeInclude);
+        mockBuildEventLikeCountAttribute.mockReturnValue(likeCountAttribute);
+
+        mockGetEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
+
+        mockFindEventLike.mockResolvedValue(null);
+
+        Event.findOne.mockResolvedValue(event);
     });
 
     /* =============================
-       EVENT RETRIEVAL SUCCESS
+       EVENT RETRIEVAL
     ============================= */
 
-    it("should return event with computed status", async () => {
+    describe("getEventById", () => {
+        it("returns an event with computed status and anonymous like state", async () => {
+            const result = await getEventById(1);
 
-        Event.findOne.mockResolvedValue(createMockEventModel());
+            expect(mockBuildEventParticipantCountAttribute).toHaveBeenCalledWith(
+                sequelize,
+                "participants.id"
+            );
 
-        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
+            expect(mockBuildEventReviewCountAttribute).toHaveBeenCalledWith(
+                sequelize,
+                "reviews.id"
+            );
 
-        const result = await eventService.getEventById(1);
+            expect(mockBuildEventAverageRatingAttribute).toHaveBeenCalledWith(
+                sequelize,
+                "reviews.rating"
+            );
 
-        expect(Event.findOne).toHaveBeenCalled();
+            expect(mockBuildEventLikeCountAttribute).toHaveBeenCalledWith(
+                sequelize,
+                "likes.id"
+            );
 
-        expect(result).toMatchObject({
-            id: 1,
-            title: "Test Event",
-            status: EVENT_STATUS.UPCOMING,
-            isLikedByCurrentUser: false
+            expect(mockBuildEventCreatorInclude).toHaveBeenCalledWith(User);
+            expect(mockBuildActiveParticipantInclude).toHaveBeenCalledWith(User);
+            expect(mockBuildEventReviewInclude).toHaveBeenCalledWith(EventReview);
+            expect(mockBuildEventLikeInclude).toHaveBeenCalledWith(EventLike);
+
+            expect(Event.findOne).toHaveBeenCalledWith({
+                where: {
+                    id: 1
+                },
+                attributes: {
+                    include: [
+                        participantCountAttribute,
+                        reviewCountAttribute,
+                        averageRatingAttribute,
+                        likeCountAttribute
+                    ]
+                },
+                include: [
+                    creatorInclude,
+                    participantInclude,
+                    reviewInclude,
+                    likeInclude
+                ],
+                group: [
+                    "Event.id",
+                    "creator.id"
+                ]
+            });
+
+            expect(mockGetEventStatus).toHaveBeenCalledWith(event);
+
+            expect(mockFindEventLike).not.toHaveBeenCalled();
+
+            expect(result).toEqual({
+                ...event.toJSON(),
+                status: EVENT_STATUS.UPCOMING,
+                isLikedByCurrentUser: false
+            });
         });
     });
 
     /* =============================
-       EVENT METADATA
+       EVENT STATUS
     ============================= */
 
-    it("should enrich retrieved event with computed status", async () => {
-        const mockEvent = createMockEventModel({
-            title: "Past Event"
-        });
+    describe("Event status", () => {
+        it("returns the computed event status", async () => {
+            mockGetEventStatus.mockReturnValue(EVENT_STATUS.PAST);
 
-        Event.findOne.mockResolvedValue(mockEvent);
+            const result = await getEventById(1);
 
-        getEventStatus.mockReturnValue(EVENT_STATUS.PAST);
-
-        const result = await eventService.getEventById(1);
-
-        expect(getEventStatus).toHaveBeenCalledWith(mockEvent);
-
-        expect(result).toMatchObject({
-            status: EVENT_STATUS.PAST
+            expect(result.status).toBe(EVENT_STATUS.PAST);
         });
     });
 
     /* =============================
-       PARTICIPANT COUNT
+       CURRENT USER LIKE STATE
     ============================= */
 
-    it("should use optimized active participant count helpers", async () => {
-        Event.findOne.mockResolvedValue(createMockEventModel());
-
-        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
-
-        await eventService.getEventById(1);
-
-        expect(buildEventParticipantCountAttribute).toHaveBeenCalledWith(
-            expect.any(Object),
-            "participants.id"
-        );
-
-        expect(buildEventCreatorInclude).toHaveBeenCalledWith(User);
-        expect(buildActiveParticipantInclude).toHaveBeenCalledWith(User);
-    });
-
-    it("should use optimized review stats helpers", async () => {
-        Event.findOne.mockResolvedValue(createMockEventModel());
-
-        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
-
-        await eventService.getEventById(1);
-
-        expect(buildEventReviewCountAttribute).toHaveBeenCalledWith(
-            expect.any(Object),
-            "reviews.id"
-        );
-
-        expect(buildEventAverageRatingAttribute).toHaveBeenCalledWith(
-            expect.any(Object),
-            "reviews.rating"
-        );
-
-        expect(buildEventReviewInclude).toHaveBeenCalledWith(EventReview);
-    });
-
-    it("should use optimized like stats helpers", async () => {
-        Event.findOne.mockResolvedValue(createMockEventModel());
-
-        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
-
-        await eventService.getEventById(1);
-
-        expect(buildEventLikeCountAttribute).toHaveBeenCalledWith(
-            expect.any(Object),
-            "likes.id"
-        );
-
-        expect(buildEventLikeInclude).toHaveBeenCalledWith(EventLike);
-    });
-
-    it("should enrich event with current user like state", async () => {
-        const mockEvent = createMockEventModel({
-            id: 1,
-            title: "Liked Event"
-        });
-
-        Event.findOne.mockResolvedValue(mockEvent);
-
-        EventLike.findOne.mockResolvedValue({
-            eventId: 1,
-            userId: 10
-        });
-
-        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
-
-        const result = await eventService.getEventById(1, 10);
-
-        expect(EventLike.findOne).toHaveBeenCalledWith({
-            where: {
+    describe("Current user like state", () => {
+        it("returns true when the authenticated user liked the event", async () => {
+            mockFindEventLike.mockResolvedValue({
+                id: 1,
                 eventId: 1,
                 userId: 10
+            });
+
+            const result = await getEventById(
+                1,
+                10
+            );
+
+            expect(mockFindEventLike).toHaveBeenCalledTimes(1);
+
+            expect(mockFindEventLike).toHaveBeenCalledWith(
+                EventLike,
+                {
+                    eventId: 1,
+                    userId: 10
+                }
+            );
+
+            expect(result.isLikedByCurrentUser).toBe(true);
+        });
+
+        it("returns false when the authenticated user did not like the event", async () => {
+            const result = await getEventById(
+                1,
+                10
+            );
+
+            expect(mockFindEventLike).toHaveBeenCalledWith(
+                EventLike,
+                {
+                    eventId: 1,
+                    userId: 10
+                }
+            );
+
+            expect(result.isLikedByCurrentUser).toBe(false);
+        });
+
+        it.each([
+            ["undefined", undefined],
+            ["null", null],
+            ["zero", 0]
+        ])("does not query likes for an anonymous %s user ID",
+            async (_, currentUserId) => {
+                const result = await getEventById(
+                    1,
+                    currentUserId
+                );
+
+                expect(mockFindEventLike).not.toHaveBeenCalled();
+
+                expect(result.isLikedByCurrentUser).toBe(false);
             }
-        });
-
-        expect(result.isLikedByCurrentUser).toBe(true);
-    });
-
-    it("should return false like state without querying likes for anonymous users", async () => {
-        Event.findOne.mockResolvedValue(createMockEventModel());
-
-        getEventStatus.mockReturnValue(EVENT_STATUS.UPCOMING);
-
-        const result = await eventService.getEventById(1);
-
-        expect(EventLike.findOne).not.toHaveBeenCalled();
-        expect(result.isLikedByCurrentUser).toBe(false);
+        );
     });
 
     /* =============================
-       EDGE CASES
+       EVENT VALIDATION
     ============================= */
 
-    it("should throw 404 when event is not found", async () => {
-        Event.findOne.mockResolvedValue(null);
+    describe("Event validation", () => {
+        it("throws a 404 error when the event does not exist", async () => {
+            Event.findOne.mockResolvedValue(null);
 
-        await expect(eventService.getEventById(999)).rejects.toMatchObject({
-            message: "Event not found",
-            statusCode: 404
+            await expect(getEventById(999)).rejects.toMatchObject({
+                message: "Event not found",
+                statusCode: 404
+            });
+
+            expect(mockGetEventStatus).not.toHaveBeenCalled();
+            expect(mockFindEventLike).not.toHaveBeenCalled();
         });
     });
 
     /* =============================
-       DATABASE ERRORS
+       UNEXPECTED ERRORS
     ============================= */
 
-    it("should forward database errors", async () => {
-        Event.findOne.mockRejectedValue(new Error("DB error"));
+    describe("Unexpected errors", () => {
+        it("propagates event query errors", async () => {
+            const error = new Error("Event query failed");
 
-        await expect(eventService.getEventById(1)).rejects.toThrow("DB error");
+            Event.findOne.mockRejectedValue(error);
+
+            await expect(getEventById(1)).rejects.toBe(error);
+
+            expect(mockGetEventStatus).not.toHaveBeenCalled();
+            expect(mockFindEventLike).not.toHaveBeenCalled();
+        });
+
+        it("propagates current user like lookup errors", async () => {
+            const error = new Error("Like lookup failed");
+
+            mockFindEventLike.mockRejectedValue(error);
+
+            await expect(getEventById(1, 10)).rejects.toBe(error);
+
+            expect(Event.findOne).toHaveBeenCalledTimes(1);
+
+            expect(mockGetEventStatus).toHaveBeenCalledWith(event);
+        });
+
+        it("propagates event serialization errors", async () => {
+            const error = new Error("Event serialization failed");
+
+            event.toJSON.mockImplementation(() => {
+                throw error;
+            });
+
+            await expect(getEventById(1)).rejects.toBe(error);
+
+            expect(mockFindEventLike).not.toHaveBeenCalled();
+        });
     });
 });

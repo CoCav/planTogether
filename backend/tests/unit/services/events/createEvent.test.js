@@ -1,31 +1,17 @@
-/* ==================================================
-   EVENT SERVICE - CREATE EVENT TESTS
-
-   Tests:
-   - successful event creation
-   - organizer membership creation
-   - event geolocation resolution
-   - online event geolocation bypass
-   - invalid date order rejection
-   - transaction rollback on database errors
-
-   Ensures:
-   - events are created with normalized data
-   - creators are automatically linked as organizers
-   - business rules are validated before persistence
-   - Sequelize transactions are committed on success
-   - Sequelize transactions are rolled back on failure
-   - shared event role constants are used consistently
-================================================== */
+const mockResolveEventLocation = jest.fn();
+const mockNormalizeString = jest.fn();
+const mockBuildCreateEventPayload = jest.fn();
 
 jest.mock("../../../../src/config/database", () => ({
     transaction: jest.fn()
 }));
 
-jest.mock("../../../../src/models/userModel", () => ({}));
-
 jest.mock("../../../../src/models/eventModel", () => ({
     create: jest.fn()
+}));
+
+jest.mock("../../../../src/models/userModel", () => ({
+    name: "User"
 }));
 
 jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
@@ -33,51 +19,132 @@ jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
 }));
 
 jest.mock("../../../../src/models/associations/eventReviewModel", () => ({
-    name: "EventReviewModel"
+    name: "EventReview"
 }));
 
 jest.mock("../../../../src/models/associations/eventLikeModel", () => ({
-    findOne: jest.fn(),
-    count: jest.fn()
+    name: "EventLike"
 }));
 
-jest.mock("../../../../src/services/locationService", () => ({
-    resolveEventLocation: jest.fn()
+jest.mock("../../../../src/services/geocodingService", () => ({
+    resolveEventLocation: mockResolveEventLocation
 }));
 
-jest.mock("../../../../src/utils/events/eventPayploadBuilder.js", () => ({
-    buildCreateEventPayload: jest.fn()
+jest.mock("../../../../src/utils/stringNormalizer", () => ({
+    normalizeString: mockNormalizeString
+}));
+
+jest.mock("../../../../src/utils/events/eventPayloadBuilder", () => ({
+    buildCreateEventPayload: mockBuildCreateEventPayload,
+    buildUpdateEventPayload: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/events/eventFilters", () => ({
+    buildEventWhereConditions: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/events/eventCreatorInclude", () => ({
+    buildEventCreatorInclude: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/events/eventQueries", () => ({
+    findEventByIdOrFail: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/events/eventStatus", () => ({
+    assertEventNotPast: jest.fn(),
+    assertEventNotStarted: jest.fn(),
+    hasEventStarted: jest.fn(),
+    getEventStatus: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventMemberships/eventMembershipQueries", () => ({
+    findActiveMembership: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventMemberships/eventParticipants", () => ({
+    buildActiveParticipantInclude: jest.fn(),
+    buildEventParticipantCountAttribute: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventReviews/eventReviews", () => ({
+    buildEventReviewInclude: jest.fn(),
+    buildEventReviewCountAttribute: jest.fn(),
+    buildEventAverageRatingAttribute: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventLikes/eventLikes", () => ({
+    buildEventLikeInclude: jest.fn(),
+    buildEventLikeCountAttribute: jest.fn(),
+    findLikedEventIdsByUser: jest.fn(),
+    findEventLike: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/files/uploadedFileStorage", () => ({
+    deleteUploadedFile: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/pagination", () => ({
+    getPaginationOptions: jest.fn(),
+    getTotalCount: jest.fn(),
+    getTotalPages: jest.fn()
 }));
 
 const sequelize = require("../../../../src/config/database");
+
 const Event = require("../../../../src/models/eventModel");
 const EventUserRole = require("../../../../src/models/associations/eventUserRoleModel");
-
-const eventService = require("../../../../src/services/eventService");
-const locationService = require("../../../../src/services/locationService");
 
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
 const { EVENT_MODES } = require("../../../../src/constants/eventModes");
 
-const { buildCreateEventPayload } = require("../../../../src/utils/events/eventPayploadBuilder");
+const { createEvent } = require("../../../../src/services/eventService");
+
+const { createTransactionMock } = require("../../../helpers/database/modelTestHelper");
 
 const { createEventPayload } = require("../../../factories/eventFactory");
 
-describe("eventService - createEvent", () => {
+/* ==========================================================================
+   Create Event Service Unit Tests
 
+   Tests event creation business logic.
+
+   Responsibilities
+   - Test event date validation
+   - Test in-person event geocoding
+   - Test online event geocoding bypass
+   - Test event payload construction
+   - Test event persistence
+   - Test organizer membership creation
+   - Test transaction commit and rollback
+   - Test unexpected error propagation
+
+   Notes
+   - Validation, geocoding and payload construction run before the transaction.
+   - The event creator is automatically assigned the organizer role.
+=========================================================================== */
+
+describe("create event service", () => {
     let transaction;
+    let eventInput;
+    let locationData;
+    let eventData;
+    let createdEvent;
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        transaction = {
-            commit: jest.fn().mockResolvedValue(),
-            rollback: jest.fn().mockResolvedValue()
-        };
+        transaction = createTransactionMock();
 
-        sequelize.transaction.mockResolvedValue(transaction);
+        eventInput = createEventPayload({
+            mode: EVENT_MODES.IN_PERSON,
+            location: "Montreal",
+            startDateTime: "2026-12-20T10:00:00.000Z",
+            endDateTime: "2026-12-20T12:00:00.000Z",
+            image: null
+        });
 
-        locationService.resolveEventLocation.mockResolvedValue({
+        locationData = {
             latitude: 45.5031824,
             longitude: -73.5698065,
             label: "Montréal, Québec, Canada",
@@ -86,194 +153,352 @@ describe("eventService - createEvent", () => {
             region: "Québec",
             postalCode: "H3G 1S8",
             country: "Canada"
-        });
-    });
+        };
 
-    /* =============================
-       CREATE EVENT SUCCESS
-    ============================= */
-
-    it("should create an event and organizer membership", async () => {
-        const eventInput = createEventPayload({
-            description: "Description",
-            theme: "Tech",
-            startDateTime: "2026-12-20T10:00:00.000Z",
-            endDateTime: "2026-12-20T12:00:00.000Z",
-            image: null
-        });
-
-        const builtEventData = {
-            creatorId: 10,
+        eventData = {
             ...eventInput,
-            maxParticipants: null,
-            registrationDeadline: null,
-            image: null
+            creatorId: 10,
+            locationLabel: locationData.label,
+            streetAddress: locationData.streetAddress,
+            city: locationData.city,
+            region: locationData.region,
+            postalCode: locationData.postalCode,
+            country: locationData.country,
+            latitude: locationData.latitude,
+            longitude: locationData.longitude
         };
 
-        const event = {
+        createdEvent = {
             id: 1,
-            title: "Test Event"
+            creatorId: 10,
+            title: eventInput.title
         };
 
-        buildCreateEventPayload.mockReturnValue(builtEventData);
-
-        Event.create.mockResolvedValue(event);
-        EventUserRole.create.mockResolvedValue({});
-
-        const result = await eventService.createEvent(eventInput, 10);
-
-        expect(sequelize.transaction).toHaveBeenCalled();
-
-        expect(locationService.resolveEventLocation).toHaveBeenCalledWith("Montreal");
-
-        expect(buildCreateEventPayload).toHaveBeenCalledWith(
-            eventInput,
-            10,
-            {
-                latitude: 45.5031824,
-                longitude: -73.5698065,
-                label: "Montréal, Québec, Canada",
-                streetAddress: "1500 Rue Sainte-Catherine O",
-                city: "Montréal",
-                region: "Québec",
-                postalCode: "H3G 1S8",
-                country: "Canada"
-            }
+        mockNormalizeString.mockImplementation(
+            (value) => String(value ?? "").trim()
         );
 
-        expect(Event.create).toHaveBeenCalledWith(builtEventData, { transaction });
+        mockResolveEventLocation.mockResolvedValue(locationData);
 
-        expect(EventUserRole.create).toHaveBeenCalledWith({
+        mockBuildCreateEventPayload.mockReturnValue(eventData);
+
+        sequelize.transaction.mockResolvedValue(transaction);
+
+        Event.create.mockResolvedValue(createdEvent);
+
+        EventUserRole.create.mockResolvedValue({
+            id: 1,
             eventId: 1,
             userId: 10,
             role: EVENT_ROLES.ORGANIZER
-        }, {
-            transaction
         });
-
-        expect(transaction.commit).toHaveBeenCalled();
-        expect(transaction.rollback).not.toHaveBeenCalled();
-
-        expect(result).toBe(event);
-    });
-
-    it("should not resolve location data for online events", async () => {
-        const eventInput = createEventPayload({
-            mode: EVENT_MODES.ONLINE,
-            location: undefined,
-            startDateTime: "2026-12-20T10:00:00.000Z",
-            endDateTime: "2026-12-20T12:00:00.000Z"
-        });
-
-        const builtEventData = {
-            creatorId: 10,
-            ...eventInput,
-            location: null,
-            latitude: null,
-            longitude: null,
-            locationLabel: null,
-            streetAddress: null,
-            city: null,
-            region: null,
-            postalCode: null,
-            country: null
-        };
-
-        const event = {
-            id: 1,
-            title: "Online Event"
-        };
-
-        buildCreateEventPayload.mockReturnValue(builtEventData);
-
-        Event.create.mockResolvedValue(event);
-        EventUserRole.create.mockResolvedValue({});
-
-        const result = await eventService.createEvent(eventInput, 10);
-
-        expect(locationService.resolveEventLocation).not.toHaveBeenCalled();
-
-        expect(buildCreateEventPayload).toHaveBeenCalledWith(
-            eventInput,
-            10,
-            null
-        );
-
-        expect(Event.create).toHaveBeenCalledWith(builtEventData, { transaction });
-        expect(EventUserRole.create).toHaveBeenCalled();
-        expect(transaction.commit).toHaveBeenCalled();
-
-        expect(result).toBe(event);
     });
 
     /* =============================
-       BUSINESS RULES
+       EVENT CREATION
     ============================= */
 
-    it("should throw 400 when end date is before start date", async () => {
-        await expect(
-            eventService.createEvent({
-                startDateTime: "2026-12-20T12:00:00.000Z",
-                endDateTime: "2026-12-20T10:00:00.000Z"
-            }, 10)
-        ).rejects.toMatchObject({
-            message: "End date must be after start date",
-            statusCode: 400
+    describe("createEvent", () => {
+        it("creates an in-person event and organizer membership", async () => {
+            const result = await createEvent(
+                eventInput,
+                10
+            );
+
+            expect(mockNormalizeString).toHaveBeenCalledWith(
+                "Montreal"
+            );
+
+            expect(mockResolveEventLocation).toHaveBeenCalledTimes(1);
+
+            expect(mockResolveEventLocation).toHaveBeenCalledWith(
+                "Montreal"
+            );
+
+            expect(mockBuildCreateEventPayload).toHaveBeenCalledTimes(1);
+
+            expect(mockBuildCreateEventPayload).toHaveBeenCalledWith(
+                eventInput,
+                10,
+                locationData
+            );
+
+            expect(sequelize.transaction).toHaveBeenCalledTimes(1);
+
+            expect(Event.create).toHaveBeenCalledTimes(1);
+
+            expect(Event.create).toHaveBeenCalledWith(
+                eventData,
+                {
+                    transaction
+                }
+            );
+
+            expect(EventUserRole.create).toHaveBeenCalledTimes(1);
+
+            expect(EventUserRole.create).toHaveBeenCalledWith({
+                eventId: 1,
+                userId: 10,
+                role:
+                    EVENT_ROLES.ORGANIZER
+            }, {
+                transaction
+            });
+
+            expect(transaction.commit).toHaveBeenCalledTimes(1);
+
+            expect(transaction.rollback).not.toHaveBeenCalled();
+
+            expect(result).toBe(createdEvent);
         });
 
-        expect(sequelize.transaction).toHaveBeenCalled();
+        it("creates an online event without resolving location data", async () => {
+            const onlineInput = createEventPayload({
+                mode: EVENT_MODES.ONLINE,
+                location: undefined,
+                startDateTime: "2026-12-20T10:00:00.000Z",
+                endDateTime: "2026-12-20T12:00:00.000Z"
+            });
 
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
+            const onlineEventData = {
+                ...onlineInput,
+                creatorId: 10,
+                location: null,
+                locationLabel: null,
+                streetAddress: null,
+                city: null,
+                region: null,
+                postalCode: null,
+                country: null,
+                latitude: null,
+                longitude: null
+            };
 
-        expect(locationService.resolveEventLocation).not.toHaveBeenCalled();
+            const onlineEvent = {
+                id: 2,
+                creatorId: 10,
+                title: onlineInput.title,
+                mode: EVENT_MODES.ONLINE
+            };
 
-        expect(buildCreateEventPayload).not.toHaveBeenCalled();
-        expect(Event.create).not.toHaveBeenCalled();
-        expect(EventUserRole.create).not.toHaveBeenCalled();
+            mockBuildCreateEventPayload.mockReturnValue(onlineEventData);
+
+            Event.create.mockResolvedValue(onlineEvent);
+
+            const result = await createEvent(
+                onlineInput,
+                10
+            );
+
+            expect(mockResolveEventLocation).not.toHaveBeenCalled();
+
+            expect(mockBuildCreateEventPayload).toHaveBeenCalledWith(
+                onlineInput,
+                10,
+                null
+            );
+
+            expect(Event.create).toHaveBeenCalledWith(
+                onlineEventData,
+                {
+                    transaction
+                }
+            );
+
+            expect(EventUserRole.create).toHaveBeenCalledWith({
+                eventId: 2,
+                userId: 10,
+                role:
+                    EVENT_ROLES.ORGANIZER
+            }, {
+                transaction
+            });
+
+            expect(transaction.commit).toHaveBeenCalledTimes(1);
+
+            expect(transaction.rollback).not.toHaveBeenCalled();
+
+            expect(result).toBe(onlineEvent);
+        });
+
+        it("does not resolve location data when the location is blank", async () => {
+            const input = createEventPayload({
+                mode: EVENT_MODES.IN_PERSON,
+                location: "   ",
+                startDateTime: "2026-12-20T10:00:00.000Z",
+                endDateTime: "2026-12-20T12:00:00.000Z"
+            });
+
+            mockBuildCreateEventPayload.mockReturnValue({
+                ...input,
+                creatorId: 10
+            });
+
+            await createEvent(input, 10);
+
+            expect(mockNormalizeString).toHaveBeenCalledWith("   ");
+
+            expect(mockResolveEventLocation).not.toHaveBeenCalled();
+
+            expect(mockBuildCreateEventPayload).toHaveBeenCalledWith(
+                input,
+                10,
+                null
+            );
+        });
     });
 
     /* =============================
-       DATABASE ERRORS
+       DATE VALIDATION
     ============================= */
 
-    it("should forward database errors and rollback transaction", async () => {
-        const eventInput = createEventPayload({
-            mode: EVENT_MODES.ONLINE,
-            description: "Description",
-            theme: "Tech",
-            startDateTime: "2026-12-20T10:00:00.000Z",
-            endDateTime: "2026-12-20T12:00:00.000Z"
+    describe("Date validation", () => {
+        it.each([[
+            "before the start date",
+            "2026-12-20T12:00:00.000Z",
+            "2026-12-20T10:00:00.000Z"
+        ], [
+            "equal to the start date",
+            "2026-12-20T10:00:00.000Z",
+            "2026-12-20T10:00:00.000Z"
+        ]])("throws a 400 error when the end date is %s",
+            async (
+                _,
+                startDateTime,
+                endDateTime
+            ) => {
+                await expect(
+                    createEvent(
+                        {
+                            ...eventInput,
+                            startDateTime,
+                            endDateTime
+                        },
+                        10
+                    )
+                ).rejects.toMatchObject({
+                    message: "End date must be after start date",
+                    statusCode: 400
+                });
+
+                expect(mockNormalizeString).not.toHaveBeenCalled();
+
+                expect(mockResolveEventLocation).not.toHaveBeenCalled();
+
+                expect(mockBuildCreateEventPayload).not.toHaveBeenCalled();
+
+                // Validation happens before opening a transaction.
+                expect(sequelize.transaction).not.toHaveBeenCalled();
+
+                expect(Event.create).not.toHaveBeenCalled();
+                expect(EventUserRole.create).not.toHaveBeenCalled();
+
+                expect(transaction.rollback).not.toHaveBeenCalled();
+            }
+        );
+    });
+
+    /* =============================
+       PRE-TRANSACTION ERRORS
+    ============================= */
+
+    describe("Pre-transaction errors", () => {
+        it("propagates geocoding errors without opening a transaction", async () => {
+            const error = new Error("Geocoding failed");
+
+            mockResolveEventLocation.mockRejectedValue(error);
+
+            await expect(createEvent(eventInput, 10)).rejects.toBe(error);
+
+            expect(mockBuildCreateEventPayload).not.toHaveBeenCalled();
+
+            expect(sequelize.transaction).not.toHaveBeenCalled();
+
+            expect(Event.create).not.toHaveBeenCalled();
+            expect(EventUserRole.create).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).not.toHaveBeenCalled();
         });
 
-        const builtEventData = {
-            creatorId: 10,
-            title: "Test Event"
-        };
+        it("propagates payload construction errors without opening a transaction", async () => {
+            const error = new Error("Payload construction failed");
 
-        buildCreateEventPayload.mockReturnValue(builtEventData);
+            mockBuildCreateEventPayload.mockImplementation(() => {
+                throw error;
+            });
 
-        Event.create.mockRejectedValue(new Error("DB error"));
+            await expect(createEvent(eventInput, 10)).rejects.toBe(error);
 
-        await expect(eventService.createEvent(eventInput, 10))
-            .rejects
-            .toThrow("DB error");
+            expect(mockResolveEventLocation).toHaveBeenCalledTimes(1);
 
-        expect(sequelize.transaction).toHaveBeenCalled();
+            expect(sequelize.transaction).not.toHaveBeenCalled();
 
-        expect(locationService.resolveEventLocation).not.toHaveBeenCalled();
+            expect(Event.create).not.toHaveBeenCalled();
+            expect(EventUserRole.create).not.toHaveBeenCalled();
 
-        expect(buildCreateEventPayload).toHaveBeenCalledWith(
-            eventInput,
-            10,
-            null
-        );
+            expect(transaction.rollback).not.toHaveBeenCalled();
+        });
+    });
 
-        expect(Event.create).toHaveBeenCalledWith(builtEventData, { transaction });
+    /* =============================
+       TRANSACTION ERRORS
+    ============================= */
 
-        expect(transaction.rollback).toHaveBeenCalled();
-        expect(transaction.commit).not.toHaveBeenCalled();
+    describe("Transaction errors", () => {
+        it("propagates transaction creation errors", async () => {
+            const error = new Error("Transaction creation failed");
 
-        expect(EventUserRole.create).not.toHaveBeenCalled();
+            sequelize.transaction.mockRejectedValue(error);
+
+            await expect(createEvent(eventInput, 10)).rejects.toBe(error);
+
+            expect(mockBuildCreateEventPayload).toHaveBeenCalledTimes(1);
+
+            expect(Event.create).not.toHaveBeenCalled();
+            expect(EventUserRole.create).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).not.toHaveBeenCalled();
+        });
+
+        it("rolls back when event creation fails", async () => {
+            const error = new Error("Event creation failed");
+
+            Event.create.mockRejectedValue(error);
+
+            await expect(createEvent(eventInput, 10)).rejects.toBe(error);
+
+            expect(EventUserRole.create).not.toHaveBeenCalled();
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+        });
+
+        it("rolls back when organizer membership creation fails", async () => {
+            const error = new Error("Organizer membership creation failed");
+
+            EventUserRole.create.mockRejectedValue(error);
+
+            await expect(createEvent(eventInput, 10)).rejects.toBe(error);
+
+            expect(Event.create).toHaveBeenCalledTimes(1);
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+        });
+
+        it("rolls back when transaction commit fails", async () => {
+            const error = new Error("Transaction commit failed");
+
+            transaction.commit.mockRejectedValue(error);
+
+            await expect(createEvent(eventInput, 10)).rejects.toBe(error);
+
+            expect(Event.create).toHaveBeenCalledTimes(1);
+            expect(EventUserRole.create).toHaveBeenCalledTimes(1);
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+        });
     });
 });

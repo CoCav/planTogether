@@ -20,6 +20,7 @@ const { buildEventWhereConditions } = require("../utils/events/eventFilters");
 const { buildEventCreatorInclude } = require("../utils/events/eventCreatorInclude");
 const { findEventByIdOrFail } = require("../utils/events/eventQueries");
 
+const { findActiveMembership } = require("../utils/eventMemberships/eventMembershipQueries");
 const {
     buildActiveParticipantInclude,
     buildEventParticipantCountAttribute
@@ -52,11 +53,13 @@ const {
 
 const { deleteUploadedFile } = require("../utils/files/uploadedFileStorage");
 
+const { normalizeString } = require("../utils/stringNormalizer");
 const {
     getPaginationOptions,
     getTotalCount,
     getTotalPages
 } = require("../utils/pagination");
+
 
 /* ==========================================================================
    Event Service
@@ -88,13 +91,19 @@ const DEFAULT_EVENT_SORT_ORDER = "DESC";
 
 /* Helpers */
 
+/* Event dates */
+
+const assertValidEventDateRange = (startDateTime, endDateTime) => {
+    if (new Date(endDateTime) <= new Date(startDateTime)) {
+        throwHttpError(400, END_DATE_AFTER_START_ERROR);
+    }
+};
+
 /* Event location */
 
 const resolveEventLocationData = async (mode, location) => {
-    if (
-        mode === EVENT_MODES.ONLINE ||
-        !String(location ?? "").trim()
-    ) {
+    // Online events never require geocoding data.
+    if (mode === EVENT_MODES.ONLINE || !normalizeString(location)) {
         return null;
     }
 
@@ -103,21 +112,16 @@ const resolveEventLocationData = async (mode, location) => {
 
 /* Event likes */
 
-const getIsLikedByCurrentUser = async (
-    eventId,
-    currentUserId
-) => {
+const getIsLikedByCurrentUser = async (eventId, currentUserId) => {
+    // Anonymous users cannot have an event like state.
     if (!currentUserId) {
         return false;
     }
 
-    const like = await findEventLike(
-        EventLike,
-        {
-            eventId,
-            userId: currentUserId
-        }
-    );
+    const like = await findEventLike(EventLike, {
+        eventId,
+        userId: currentUserId
+    });
 
     return Boolean(like);
 };
@@ -125,30 +129,32 @@ const getIsLikedByCurrentUser = async (
 /* Create event */
 
 const createEvent = async (data, userId) => {
+    const {
+        startDateTime,
+        endDateTime
+    } = data;
+
+    assertValidEventDateRange(startDateTime, endDateTime);
+
+    const locationData = await resolveEventLocationData(
+        data.mode,
+        data.location
+    );
+
+    const eventData = buildCreateEventPayload(
+        data,
+        userId,
+        locationData
+    );
+
     const transaction = await sequelize.transaction();
 
     try {
-        const { startDateTime, endDateTime } = data;
-
-        if (new Date(endDateTime) < new Date(startDateTime)) {
-            throwHttpError(400, END_DATE_AFTER_START_ERROR);
-        }
-
-        const locationData = await resolveEventLocationData(
-            data.mode,
-            data.location
-        );
-
-        const eventData = buildCreateEventPayload(
-            data,
-            userId,
-            locationData
-        );
-
         const event = await Event.create(eventData, {
             transaction
         });
 
+        // The creator always becomes the initial organizer.
         await EventUserRole.create({
             eventId: event.id,
             userId,
@@ -239,26 +245,30 @@ const getAllEvents = async (query = {}, currentUserId = null) => {
 };
 
 const getCurrentUserEventAccess = async (eventId, userId) => {
-    const event = await findEventByIdOrFail(Event, eventId);
+    const event = await findEventByIdOrFail(
+        Event,
+        eventId
+    );
 
-    const membership = await EventUserRole.findOne({
-        where: {
-            eventId,
-            userId,
-            deletedAt: null
-        }
+    const membership = await findActiveMembership(EventUserRole, {
+        eventId,
+        userId
     });
 
     const role = membership?.role || null;
     const status = getEventStatus(event);
+
     const isPast = status === EVENT_STATUS.PAST;
+
     const isStarted = hasEventStarted(event);
 
+    // Organizers and co-organizers can edit upcoming events.
     const canEdit = !isPast && (
         role === EVENT_ROLES.ORGANIZER ||
         role === EVENT_ROLES.CO_ORGANIZER
     );
 
+    // Only organizers can delete events that have not started.
     const canDelete =
         role === EVENT_ROLES.ORGANIZER &&
         !isPast &&
@@ -312,9 +322,11 @@ const getEventById = async (id, currentUserId = null) => {
 };
 
 /* Update event */
-
 const updateEventById = async (id, data) => {
     const transaction = await sequelize.transaction();
+
+    let updatedEvent;
+    let oldImageToDelete = null;
 
     try {
         const event = await findEventByIdOrFail(Event, id, {
@@ -323,14 +335,12 @@ const updateEventById = async (id, data) => {
 
         assertEventNotPast(event);
 
-        const oldImage = event.image;
-        const { startDateTime, endDateTime, image } = data;
+        const nextStartDateTime = data.startDateTime ?? event.startDateTime;
 
-        const hasBothDates = startDateTime && endDateTime;
+        const nextEndDateTime = data.endDateTime ?? event.endDateTime;
 
-        if (hasBothDates && new Date(endDateTime) < new Date(startDateTime)) {
-            throwHttpError(400, END_DATE_AFTER_START_ERROR);
-        }
+        // Validate partial date updates against existing values.
+        assertValidEventDateRange(nextStartDateTime, nextEndDateTime);
 
         const nextMode = data.mode ?? event.mode;
 
@@ -341,7 +351,7 @@ const updateEventById = async (id, data) => {
         if (
             nextMode === EVENT_MODES.IN_PERSON &&
             data.location !== undefined &&
-            !String(nextLocation ?? "").trim()
+            !normalizeString(nextLocation)
         ) {
             throwHttpError(400, LOCATION_REQUIRED_ERROR);
         }
@@ -360,33 +370,44 @@ const updateEventById = async (id, data) => {
             locationData
         );
 
+        const oldImage = event.image;
+
         await event.update(updatedData, {
             transaction
         });
 
-        await transaction.commit();
-
         const shouldDeleteOldImage =
-            image !== undefined &&
+            data.image !== undefined &&
             oldImage &&
-            oldImage !== image;
+            oldImage !== data.image;
 
         if (shouldDeleteOldImage) {
-            await deleteUploadedFile(oldImage);
+            oldImageToDelete = oldImage;
         }
 
-        return event;
+        await transaction.commit();
+
+        updatedEvent = event;
 
     } catch (error) {
         await transaction.rollback();
         throw error;
     }
+
+    // File cleanup runs only after the database commit succeeds.
+    if (oldImageToDelete) {
+        await deleteUploadedFile(oldImageToDelete);
+    }
+
+    return updatedEvent;
 };
 
 /* Delete event */
 
 const deleteEventById = async (id) => {
     const transaction = await sequelize.transaction();
+
+    let oldImageToDelete = null;
 
     try {
         const event = await findEventByIdOrFail(Event, id, {
@@ -395,8 +416,9 @@ const deleteEventById = async (id) => {
 
         assertEventNotStarted(event);
 
-        const oldImage = event.image;
+        oldImageToDelete = event.image;
 
+        // Remove explicit memberships before deleting the event.
         await EventUserRole.destroy({
             where: {
                 eventId: id
@@ -410,13 +432,14 @@ const deleteEventById = async (id) => {
 
         await transaction.commit();
 
-        if (oldImage) {
-            await deleteUploadedFile(oldImage);
-        }
-
     } catch (error) {
         await transaction.rollback();
         throw error;
+    }
+
+    // File cleanup must never trigger a rollback after the commit.
+    if (oldImageToDelete) {
+        await deleteUploadedFile(oldImageToDelete);
     }
 };
 

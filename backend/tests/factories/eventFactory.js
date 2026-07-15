@@ -76,11 +76,12 @@ const createEventResponse = (overrides = {}) => ({
 const createMockEventModel = (overrides = {}) => {
     const event = {
         ...createEventResponse(),
+
         update: jest.fn(),
         save: jest.fn(),
         destroy: jest.fn(),
 
-        toJSON() {
+        toJSON: jest.fn(function () {
             const {
                 update,
                 save,
@@ -90,7 +91,7 @@ const createMockEventModel = (overrides = {}) => {
             } = this;
 
             return data;
-        },
+        }),
 
         ...overrides
     };

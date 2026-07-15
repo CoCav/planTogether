@@ -71,15 +71,12 @@ const likeEvent = async ({ eventId, userId }) => {
             throwHttpError(409, EVENT_ALREADY_LIKED_ERROR);
         }
 
-        await EventLike.create(
-            {
-                eventId,
-                userId
-            },
-            {
-                transaction
-            }
-        );
+        await EventLike.create({
+            eventId,
+            userId
+        }, {
+            transaction
+        });
 
         const likesCount = await countEventLikes(eventId, {
             transaction

@@ -1,35 +1,26 @@
-/* ==================================================
-   EVENT LIKE SERVICE - UNLIKE EVENT TESTS
-
-   Tests:
-   - successful event unlike
-   - idempotent unlike
-   - updated likes count return
-   - transaction commit
-   - missing event rejection
-   - transaction rollback
-   - database error propagation
-
-   Ensures:
-   - users can remove their likes
-   - unliking an already unliked event succeeds
-   - missing events return a 404 error
-   - unlike uses transactions
-   - updated likes count is returned
-   - failed operations rollback transactions
-================================================== */
+const mockFindEventByIdOrFail = jest.fn();
+const mockFindEventLike = jest.fn();
+const mockGetEventLikesCount = jest.fn();
 
 jest.mock("../../../../src/config/database", () => ({
     transaction: jest.fn()
 }));
 
 jest.mock("../../../../src/models/eventModel", () => ({
-    findByPk: jest.fn()
+    name: "Event"
 }));
 
 jest.mock("../../../../src/models/associations/eventLikeModel", () => ({
-    findOne: jest.fn(),
-    count: jest.fn()
+    name: "EventLike"
+}));
+
+jest.mock("../../../../src/utils/events/eventQueries", () => ({
+    findEventByIdOrFail: mockFindEventByIdOrFail
+}));
+
+jest.mock("../../../../src/utils/eventLikes/eventLikes", () => ({
+    findEventLike: mockFindEventLike,
+    getEventLikesCount: mockGetEventLikesCount
 }));
 
 const sequelize = require("../../../../src/config/database");
@@ -37,175 +28,202 @@ const sequelize = require("../../../../src/config/database");
 const Event = require("../../../../src/models/eventModel");
 const EventLike = require("../../../../src/models/associations/eventLikeModel");
 
-const eventLikeService = require("../../../../src/services/eventLikeService");
+const { unlikeEvent } = require("../../../../src/services/eventLikeService");
 
-describe("eventLikeService - unlikeEvent", () => {
+const { createTransactionMock } = require("../../../helpers/database/modelTestHelper");
 
+/* ==========================================================================
+   Unlike Event Service Unit Tests
+
+   Tests event like removal business logic.
+
+   Responsibilities
+   - Test event existence validation
+   - Test existing like deletion
+   - Test idempotent unlike behavior
+   - Test updated like count retrieval
+   - Test transaction commit and rollback
+   - Test unexpected error propagation
+
+   Notes
+   - Event queries and event like utilities are mocked.
+   - Unlike succeeds when no existing like is found.
+=========================================================================== */
+
+describe("unlike event service", () => {
     let transaction;
     let existingLike;
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        transaction = {
-            commit: jest.fn(),
-            rollback: jest.fn()
+        transaction = createTransactionMock();
+
+        existingLike = {
+            destroy: jest.fn().mockResolvedValue()
         };
 
         sequelize.transaction.mockResolvedValue(transaction);
 
-        Event.findByPk.mockResolvedValue({
-            id: 1,
-            title: "Liked Event"
+        mockFindEventByIdOrFail.mockResolvedValue({
+            id: 1
         });
 
-        existingLike = {
-            destroy: jest.fn()
-        };
+        mockFindEventLike.mockResolvedValue(existingLike);
 
-        EventLike.findOne.mockResolvedValue(existingLike);
-
-        EventLike.count.mockResolvedValue(0);
+        mockGetEventLikesCount.mockResolvedValue(0);
     });
 
     /* =============================
-       UNLIKE EVENT SUCCESS
+       EVENT LIKE REMOVAL
     ============================= */
 
-    it("should unlike an event for the current user", async () => {
-
-        const result = await eventLikeService.unlikeEvent({
-            eventId: 1,
-            userId: 10
-        });
-
-        expect(Event.findByPk).toHaveBeenCalledWith(1, {
-            transaction
-        });
-
-        expect(EventLike.findOne).toHaveBeenCalledWith({
-            where: {
+    describe("unlikeEvent", () => {
+        it("deletes an existing like and returns the updated like state", async () => {
+            const result = await unlikeEvent({
                 eventId: 1,
                 userId: 10
-            },
-            transaction
+            });
+
+            expect(sequelize.transaction).toHaveBeenCalledTimes(1);
+
+            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(
+                Event,
+                1,
+                {
+                    transaction
+                }
+            );
+
+            expect(mockFindEventLike).toHaveBeenCalledWith(
+                EventLike,
+                {
+                    eventId: 1,
+                    userId: 10,
+                    transaction
+                }
+            );
+
+            expect(existingLike.destroy).toHaveBeenCalledWith({
+                transaction
+            });
+
+            expect(mockGetEventLikesCount).toHaveBeenCalledWith(
+                EventLike,
+                1,
+                {
+                    transaction
+                }
+            );
+
+            expect(transaction.commit).toHaveBeenCalledTimes(1);
+
+            expect(transaction.rollback).not.toHaveBeenCalled();
+
+            expect(result).toEqual({
+                eventId: 1,
+                userId: 10,
+                liked: false,
+                likesCount: 0
+            });
         });
 
-        expect(existingLike.destroy).toHaveBeenCalledWith({
-            transaction
-        });
+        it("succeeds when the event was not previously liked", async () => {
+            mockFindEventLike.mockResolvedValue(null);
 
-        expect(result).toEqual({
-            eventId: 1,
-            userId: 10,
-            liked: false,
-            likesCount: 0
-        });
-    });
+            mockGetEventLikesCount.mockResolvedValue(3);
 
-    it("should return updated likes count", async () => {
-
-        EventLike.count.mockResolvedValue(7);
-
-        const result = await eventLikeService.unlikeEvent({
-            eventId: 1,
-            userId: 10
-        });
-
-        expect(EventLike.count).toHaveBeenCalledWith({
-            where: {
-                eventId: 1
-            },
-            transaction
-        });
-
-        expect(result.likesCount).toBe(7);
-    });
-
-    it("should commit transaction after successful unlike", async () => {
-
-        await eventLikeService.unlikeEvent({
-            eventId: 1,
-            userId: 10
-        });
-
-        expect(transaction.commit).toHaveBeenCalledWith();
-        expect(transaction.rollback).not.toHaveBeenCalled();
-    });
-
-    it("should start a database transaction", async () => {
-        await eventLikeService.unlikeEvent({
-            eventId: 1,
-            userId: 10
-        });
-
-        expect(sequelize.transaction).toHaveBeenCalledTimes(1);
-    });
-
-    /* =============================
-       IDEMPOTENT UNLIKE
-    ============================= */
-
-    it("should succeed when the event was not previously liked", async () => {
-
-        EventLike.findOne.mockResolvedValue(null);
-
-        const result = await eventLikeService.unlikeEvent({
-            eventId: 1,
-            userId: 10
-        });
-
-        expect(result).toEqual({
-            eventId: 1,
-            userId: 10,
-            liked: false,
-            likesCount: 0
-        });
-
-        expect(EventLike.count).toHaveBeenCalled();
-
-        expect(transaction.commit).toHaveBeenCalledWith();
-    });
-
-    /* =============================
-       EDGE CASES
-    ============================= */
-
-    it("should throw 404 when event is not found", async () => {
-
-        Event.findByPk.mockResolvedValue(null);
-
-        await expect(
-            eventLikeService.unlikeEvent({
-                eventId: 999,
-                userId: 10
-            })
-        ).rejects.toMatchObject({
-            message: "Event not found",
-            statusCode: 404
-        });
-
-        expect(transaction.rollback).toHaveBeenCalledWith();
-        expect(transaction.commit).not.toHaveBeenCalled();
-    });
-
-    /* =============================
-       DATABASE ERRORS
-    ============================= */
-
-    it("should rollback and forward database errors", async () => {
-
-        existingLike.destroy.mockRejectedValue(new Error("DB error"));
-
-        await expect(
-            eventLikeService.unlikeEvent({
+            const result = await unlikeEvent({
                 eventId: 1,
                 userId: 10
-            })
-        ).rejects.toThrow("DB error");
+            });
 
-        expect(transaction.rollback).toHaveBeenCalledWith();
-        expect(transaction.commit).not.toHaveBeenCalled();
+            expect(existingLike.destroy).not.toHaveBeenCalled();
+
+            expect(mockGetEventLikesCount).toHaveBeenCalledWith(
+                EventLike,
+                1,
+                {
+                    transaction
+                }
+            );
+
+            expect(transaction.commit).toHaveBeenCalledTimes(1);
+
+            expect(transaction.rollback).not.toHaveBeenCalled();
+
+            expect(result).toEqual({
+                eventId: 1,
+                userId: 10,
+                liked: false,
+                likesCount: 3
+            });
+        });
     });
 
+    /* =============================
+       EVENT VALIDATION ERRORS
+    ============================= */
+
+    describe("Event validation errors", () => {
+        it("rolls back when the event does not exist", async () => {
+            const error = Object.assign(
+                new Error("Event not found"),
+                {
+                    statusCode: 404
+                }
+            );
+
+            mockFindEventByIdOrFail.mockRejectedValue(error);
+
+            await expect(
+                unlikeEvent({
+                    eventId: 999,
+                    userId: 10
+                })
+            ).rejects.toBe(error);
+
+            expect(mockFindEventLike).not.toHaveBeenCalled();
+
+            expect(existingLike.destroy).not.toHaveBeenCalled();
+
+            expect(transaction.rollback).toHaveBeenCalledTimes(1);
+
+            expect(transaction.commit).not.toHaveBeenCalled();
+        });
+    });
+
+    /* =============================
+       UNEXPECTED ERRORS
+    ============================= */
+
+    describe("Unexpected errors", () => {
+        it.each([
+            ["like deletion", () => {
+                existingLike.destroy.mockRejectedValue(
+                    new Error("Like deletion failed")
+                );
+            }
+            ], ["like count retrieval", () => {
+                mockGetEventLikesCount.mockRejectedValue(
+                    new Error("Like count failed")
+                );
+            }
+            ]])("rolls back and propagates %s errors",
+                async (_, configureError) => {
+                    configureError();
+
+                    await expect(
+                        unlikeEvent({
+                            eventId: 1,
+                            userId: 10
+                        })
+                    ).rejects.toBeInstanceOf(Error);
+
+                    expect(transaction.rollback).toHaveBeenCalledTimes(1);
+
+                    expect(transaction.commit).not.toHaveBeenCalled();
+                }
+            );
+    });
 });

@@ -16,12 +16,7 @@ const { buildEventWhereConditions } = require("../../utils/events/eventFilters")
 const { buildEventCreatorInclude } = require("../../utils/events/eventCreatorInclude");
 const { getEventStatus } = require("../../utils/events/eventStatus");
 
-const { countActiveParticipantsByEventIds } = require("../../utils/eventMemberships/eventParticipants");
-
-const {
-    findLikedEventIdsByUser,
-    countEventLikesByEventIds
-} = require("../../utils/eventLikes/eventLikes");
+const { getEventListStats } = require("../../utils/events/eventListStats");
 
 const {
     getPublicCreatedEvents,
@@ -56,22 +51,31 @@ const DEFAULT_PUBLIC_USER_EVENT_SORT_FIELD = "startDateTime";
 
 const getPublicUserProfileById = async (userId) => {
     const user = await findUserByIdOrFail(User, userId, {
-        attributes: PUBLIC_USER_PROFILE_ATTRIBUTES
+        attributes:
+            PUBLIC_USER_PROFILE_ATTRIBUTES
     });
 
-    const createdEventsCount = await Event.count({
-        where: { creatorId: userId }
-    });
-
-    const joinedEventsCount = await EventUserRole.count({
-        where: {
-            userId,
-            deletedAt: null,
-            role: {
-                [Op.ne]: EVENT_ROLES.ORGANIZER
+    // Profile statistics are independent and can run in parallel.
+    const [
+        createdEventsCount,
+        joinedEventsCount
+    ] = await Promise.all([
+        Event.count({
+            where: {
+                creatorId: userId
             }
-        }
-    });
+        }),
+        EventUserRole.count({
+            where: {
+                userId,
+                deletedAt: null,
+                role: {
+                    [Op.ne]:
+                        EVENT_ROLES.ORGANIZER
+                }
+            }
+        })
+    ]);
 
     return {
         user: formatPublicUser(user),
@@ -82,11 +86,7 @@ const getPublicUserProfileById = async (userId) => {
     };
 };
 
-const getPublicUserEventsById = async (
-    userId,
-    query = {},
-    currentUserId = null
-) => {
+const getPublicUserEventsById = async (userId, query = {}, currentUserId = null) => {
     await findUserByIdOrFail(User, userId);
 
     const {
@@ -123,8 +123,6 @@ const getPublicUserEventsById = async (
             Event,
             User,
             EventUserRole,
-            EVENT_ROLES,
-            Op,
             userId,
             eventFilter,
             creator,
@@ -154,23 +152,18 @@ const getPublicUserEventsById = async (
     const { count, rows } = result;
     const eventIds = rows.map((event) => event.id);
 
-    const participantCountByEventId = await countActiveParticipantsByEventIds(
+    // Retrieve shared event statistics for the current page.
+    const {
+        participantCountByEventId,
+        likesCountByEventId,
+        likedEventIds
+    } = await getEventListStats({
         EventUserRole,
-        sequelize,
-        eventIds
-    );
-
-    const likesCountByEventId = await countEventLikesByEventIds(
         EventLike,
         sequelize,
-        eventIds
-    );
-
-    const likedEventIds = await findLikedEventIdsByUser(
-        EventLike,
         eventIds,
         currentUserId
-    );
+    });
 
     const events = rows.map((event) => {
         const data = event.toJSON();

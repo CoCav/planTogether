@@ -1,24 +1,16 @@
-/* ==================================================
-   USER SERVICE - GET PUBLIC USER PROFILE BY ID TESTS
+const mockFindUserByIdOrFail = jest.fn();
+const mockFormatPublicUser = jest.fn();
 
-   Tests:
-   - public profile retrieval
-   - public stats computation
-   - active joined events count
-   - null avatar handling
-   - missing user rejection
-   - database error propagation
+const mockOpNe = Symbol("ne");
 
-   Ensures:
-   - only public user fields are selected
-   - user statistics are computed correctly
-   - joined event stats only count active non-organizer memberships
-   - null avatars are handled safely
-   - missing users and database errors are handled safely
-================================================== */
+jest.mock("sequelize", () => ({
+    Op: {
+        ne: mockOpNe
+    }
+}));
 
 jest.mock("../../../../../src/models/userModel", () => ({
-    findByPk: jest.fn()
+    name: "User"
 }));
 
 jest.mock("../../../../../src/models/eventModel", () => ({
@@ -29,160 +21,298 @@ jest.mock("../../../../../src/models/associations/eventUserRoleModel", () => ({
     count: jest.fn()
 }));
 
-const { Op } = require("sequelize");
+jest.mock("../../../../../src/models/associations/eventLikeModel", () => ({
+    name: "EventLike"
+}));
+
+jest.mock("../../../../../src/utils/users/userQueries", () => ({
+    findUserByIdOrFail: mockFindUserByIdOrFail
+}));
+
+jest.mock("../../../../../src/utils/users/public/publicUserFormatter", () => ({
+    formatPublicUser: mockFormatPublicUser
+}));
+
+jest.mock("../../../../../src/utils/events/eventFilters", () => ({
+    buildEventWhereConditions: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/events/eventCreatorInclude", () => ({
+    buildEventCreatorInclude: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/events/eventStatus", () => ({
+    getEventStatus: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/events/eventListStats", () => ({
+    getEventListStats: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/users/public/publicUserEventQueries", () => ({
+    getPublicCreatedEvents: jest.fn(),
+    getPublicJoinedEvents: jest.fn()
+}));
+
+jest.mock("../../../../../src/utils/pagination", () => ({
+    getPaginationOptions: jest.fn(),
+    getTotalCount: jest.fn(),
+    getTotalPages: jest.fn()
+}));
+
+jest.mock("../../../../../src/config/database", () => ({
+    name: "sequelize"
+}));
 
 const User = require("../../../../../src/models/userModel");
 const Event = require("../../../../../src/models/eventModel");
 const EventUserRole = require("../../../../../src/models/associations/eventUserRoleModel");
 
-const userService = require("../../../../../src/services/userService");
-
 const { EVENT_ROLES } = require("../../../../../src/constants/eventRoles");
+const { PUBLIC_USER_PROFILE_ATTRIBUTES } = require("../../../../../src/constants/userAttributes");
+
+const { getPublicUserProfileById } = require("../../../../../src/services/users/publicUserService");
 
 const { createMockUser } = require("../../../../factories/userFactory");
 
-describe("userService - getPublicUserProfileById", () => {
+/* ==========================================================================
+   Get Public User Profile Service Unit Tests
+
+   Tests public user profile retrieval.
+
+   Responsibilities
+   - Test public user lookup
+   - Test public attribute selection
+   - Test public user formatting
+   - Test created event statistics
+   - Test joined event statistics
+   - Test organizer membership exclusion
+   - Test missing user error propagation
+   - Test unexpected error propagation
+
+   Notes
+   - User lookup and formatter utilities are mocked.
+   - Created and joined event counts are retrieved in parallel.
+=========================================================================== */
+
+describe("get public user profile service", () => {
+    let user;
+    let formattedUser;
+
     beforeEach(() => {
         jest.clearAllMocks();
-    });
 
-    /* =============================
-       PUBLIC PROFILE RETRIEVAL SUCCESS
-    ============================= */
-
-    it("should return public user profile with stats", async () => {
-        const user = createMockUser({
-            name: "John",
+        user = createMockUser({
+            id: 10,
+            name: "John Doe",
+            email: "private@test.com",
             avatar: "/uploads/avatars/john.png"
         });
 
-        User.findByPk.mockResolvedValue(user);
+        formattedUser = {
+            name: "John Doe",
+            avatar: "/uploads/avatars/john.png"
+        };
+
+        mockFindUserByIdOrFail.mockResolvedValue(user);
+
+        mockFormatPublicUser.mockReturnValue(formattedUser);
+
         Event.count.mockResolvedValue(3);
+
         EventUserRole.count.mockResolvedValue(5);
-
-        const result = await userService.getPublicUserProfileById(1);
-
-        expect(User.findByPk).toHaveBeenCalledWith(1, {
-            attributes: ["name", "avatar"]
-        });
-
-        expect(result).toEqual({
-            user: {
-                name: "John",
-                avatar: "/uploads/avatars/john.png"
-            },
-            stats: {
-                createdEventsCount: 3,
-                joinedEventsCount: 5
-            }
-        });
     });
 
     /* =============================
-       PUBLIC STATS
+       PUBLIC PROFILE
     ============================= */
 
-    it("should compute public user stats", async () => {
-        const user = createMockUser({
-            name: "John",
-            avatar: null
-        });
+    describe("getPublicUserProfileById", () => {
+        it("returns the formatted public profile with event statistics", async () => {
+            const result = await getPublicUserProfileById(10);
 
-        User.findByPk.mockResolvedValue(user);
-        Event.count.mockResolvedValue(2);
-        EventUserRole.count.mockResolvedValue(4);
+            expect(mockFindUserByIdOrFail).toHaveBeenCalledTimes(1);
 
-        const result = await userService.getPublicUserProfileById(1);
+            expect(mockFindUserByIdOrFail).toHaveBeenCalledWith(User, 10, {
+                attributes: PUBLIC_USER_PROFILE_ATTRIBUTES
+            });
 
-        expect(Event.count).toHaveBeenCalledWith({
-            where: { creatorId: 1 }
-        });
+            expect(mockFormatPublicUser).toHaveBeenCalledTimes(1);
 
-        expect(EventUserRole.count).toHaveBeenCalledWith({
-            where: {
-                userId: 1,
-                deletedAt: null,
-                role: {
-                    [Op.ne]: EVENT_ROLES.ORGANIZER
+            expect(mockFormatPublicUser).toHaveBeenCalledWith(user);
+
+            expect(Event.count).toHaveBeenCalledTimes(1);
+
+            expect(Event.count).toHaveBeenCalledWith({
+                where: {
+                    creatorId: 10
                 }
-            }
-        });
+            });
 
-        expect(result.stats).toEqual({
-            createdEventsCount: 2,
-            joinedEventsCount: 4
-        });
-    });
+            expect(EventUserRole.count).toHaveBeenCalledTimes(1);
 
-    it("should exclude organizer memberships from joined event stats", async () => {
-        const user = createMockUser({
-            name: "John",
-            avatar: null
-        });
-
-        User.findByPk.mockResolvedValue(user);
-        Event.count.mockResolvedValue(2);
-        EventUserRole.count.mockResolvedValue(3);
-
-        await userService.getPublicUserProfileById(1);
-
-        expect(EventUserRole.count).toHaveBeenCalledWith({
-            where: {
-                userId: 1,
-                deletedAt: null,
-                role: {
-                    [Op.ne]: EVENT_ROLES.ORGANIZER
+            expect(EventUserRole.count).toHaveBeenCalledWith({
+                where: {
+                    userId: 10,
+                    deletedAt: null,
+                    role: {
+                        [mockOpNe]: EVENT_ROLES.ORGANIZER
+                    }
                 }
-            }
-        });
-    });
+            });
 
-    it("should return public user profile with null avatar", async () => {
-        const user = createMockUser({
-            name: "John",
-            avatar: null
-        });
-
-        User.findByPk.mockResolvedValue(user);
-        Event.count.mockResolvedValue(0);
-        EventUserRole.count.mockResolvedValue(0);
-
-        const result = await userService.getPublicUserProfileById(1);
-
-        expect(result.user).toMatchObject({
-            name: "John",
-            avatar: null
+            expect(result).toEqual({
+                user: formattedUser,
+                stats: {
+                    createdEventsCount: 3,
+                    joinedEventsCount: 5
+                }
+            });
         });
 
-        expect(result.stats).toEqual({
-            createdEventsCount: 0,
-            joinedEventsCount: 0
+        it("supports a public profile with no avatar", async () => {
+            user.avatar = null;
+
+            formattedUser = {
+                name: "John Doe",
+                avatar: null
+            };
+
+            mockFormatPublicUser.mockReturnValue(formattedUser);
+
+            Event.count.mockResolvedValue(0);
+
+            EventUserRole.count.mockResolvedValue(0);
+
+            const result = await getPublicUserProfileById(10);
+
+            expect(mockFormatPublicUser).toHaveBeenCalledWith(user);
+
+            expect(result).toEqual({
+                user: {
+                    name: "John Doe",
+                    avatar: null
+                },
+                stats: {
+                    createdEventsCount: 0,
+                    joinedEventsCount: 0
+                }
+            });
         });
     });
 
     /* =============================
-       EDGE CASES
+       PROFILE STATISTICS
     ============================= */
 
-    it("should throw 404 when user is not found", async () => {
-        User.findByPk.mockResolvedValue(null);
+    describe("Profile statistics", () => {
+        it("counts events created by the public user", async () => {
+            await getPublicUserProfileById(10);
 
-        await expect(userService.getPublicUserProfileById(1)).rejects.toMatchObject({
-            statusCode: 404,
-            message: "User not found"
+            expect(Event.count).toHaveBeenCalledWith({
+                where: {
+                    creatorId: 10
+                }
+            });
         });
 
-        expect(Event.count).not.toHaveBeenCalled();
-        expect(EventUserRole.count).not.toHaveBeenCalled();
+        it("counts only active non-organizer memberships as joined events", async () => {
+            await getPublicUserProfileById(10);
+
+            expect(EventUserRole.count).toHaveBeenCalledWith({
+                where: {
+                    userId: 10,
+                    deletedAt: null,
+                    role: {
+                        [mockOpNe]: EVENT_ROLES.ORGANIZER
+                    }
+                }
+            });
+        });
+
+        it("selects only public profile attributes", async () => {
+            await getPublicUserProfileById(10);
+
+            expect(mockFindUserByIdOrFail).toHaveBeenCalledWith(User, 10, {
+                attributes: PUBLIC_USER_PROFILE_ATTRIBUTES
+            });
+        });
     });
 
     /* =============================
-       DATABASE ERRORS
+       USER VALIDATION
     ============================= */
 
-    it("should forward database errors", async () => {
-        User.findByPk.mockRejectedValue(new Error("DB error"));
+    describe("User validation", () => {
+        it("propagates the missing user error before calculating statistics", async () => {
+            const error = Object.assign(
+                new Error("User not found"),
+                {
+                    statusCode: 404
+                }
+            );
 
-        await expect(userService.getPublicUserProfileById(1)).rejects.toThrow("DB error");
+            mockFindUserByIdOrFail.mockRejectedValue(error);
+
+            await expect(getPublicUserProfileById(999)).rejects.toBe(error);
+
+            expect(mockFormatPublicUser).not.toHaveBeenCalled();
+
+            expect(Event.count).not.toHaveBeenCalled();
+
+            expect(EventUserRole.count).not.toHaveBeenCalled();
+        });
+    });
+
+    /* =============================
+       UNEXPECTED ERRORS
+    ============================= */
+
+    describe("Unexpected errors", () => {
+        it("propagates user lookup errors", async () => {
+            const error = new Error("User lookup failed");
+
+            mockFindUserByIdOrFail.mockRejectedValue(error);
+
+            await expect(getPublicUserProfileById(10)).rejects.toBe(error);
+
+            expect(Event.count).not.toHaveBeenCalled();
+
+            expect(EventUserRole.count).not.toHaveBeenCalled();
+        });
+
+        it("propagates created event count errors", async () => {
+            const error = new Error("Created event count failed");
+
+            Event.count.mockRejectedValue(error);
+
+            await expect(getPublicUserProfileById(10)).rejects.toBe(error);
+
+            expect(mockFormatPublicUser).not.toHaveBeenCalled();
+        });
+
+        it("propagates joined event count errors", async () => {
+            const error = new Error("Joined event count failed");
+
+            EventUserRole.count.mockRejectedValue(error);
+
+            await expect(getPublicUserProfileById(10)).rejects.toBe(error);
+
+            expect(mockFormatPublicUser).not.toHaveBeenCalled();
+        });
+
+        it("propagates public user formatting errors", async () => {
+            const error = new Error("Public user formatting failed");
+
+            mockFormatPublicUser.mockImplementation(() => {
+                throw error;
+            });
+
+            await expect(getPublicUserProfileById(10)).rejects.toBe(error);
+
+            expect(Event.count).toHaveBeenCalledTimes(1);
+
+            expect(EventUserRole.count).toHaveBeenCalledTimes(1);
+        });
     });
 });

@@ -40,6 +40,7 @@ const GEOCODING_SERVICE_UNAVAILABLE_ERROR = "Location search service unavailable
 
 const HTTP_TOO_MANY_REQUESTS = 429;
 
+// Ignore cached entries that do not contain usable address information.
 const hasStructuredAddressData = (location = {}) => {
     return Boolean(
         location.streetAddress ||
@@ -50,6 +51,7 @@ const hasStructuredAddressData = (location = {}) => {
     );
 };
 
+// Retrieve cached results for the normalized search query.
 const findCachedLocations = async (query) => {
     return Location.findAll({
         where: {
@@ -74,6 +76,7 @@ const saveLocationsToCache = async (locations = []) => {
             defaults: location
         });
 
+        // Refresh cached structured address fields when provider data changes.
         if (!created) {
             await savedLocation.update({
                 label: location.label,
@@ -94,25 +97,36 @@ const saveLocationsToCache = async (locations = []) => {
 const searchNominatimLocations = async (query, originalQuery = query) => {
     const params = buildNominatimSearchParams(query);
 
-    const response = await fetch(
-        `${geocodingConfig.nominatim.searchUrl}?${params.toString()}`,
-        {
+    let response;
+
+    try {
+        // Network failures are treated as provider unavailability.
+        response = await fetch(`${geocodingConfig.nominatim.searchUrl}?${params.toString()}`, {
             headers: {
                 Accept: "application/json",
                 "User-Agent": geocodingConfig.nominatim.userAgent
             }
-        }
-    );
+        });
+    } catch {
+        throwHttpError(502, GEOCODING_SERVICE_UNAVAILABLE_ERROR);
+    }
 
     if (response.status === HTTP_TOO_MANY_REQUESTS) {
-        throwHttpError(429, GEOCODING_RATE_LIMIT_ERROR);
+        throwHttpError(HTTP_TOO_MANY_REQUESTS, GEOCODING_RATE_LIMIT_ERROR);
     }
 
     if (!response.ok) {
         throwHttpError(502, GEOCODING_SERVICE_UNAVAILABLE_ERROR);
     }
 
-    const results = await response.json();
+    let results;
+
+    try {
+        // Invalid provider responses are treated as service failures.
+        results = await response.json();
+    } catch {
+        throwHttpError(502, GEOCODING_SERVICE_UNAVAILABLE_ERROR);
+    }
 
     if (!Array.isArray(results) || results.length === 0) {
         return [];
@@ -124,6 +138,7 @@ const searchNominatimLocations = async (query, originalQuery = query) => {
     );
 };
 
+// Try progressively broader location queries until a match is found.
 const searchProviderLocationsWithFallbacks = async (query) => {
     const searchQueries = buildLocationSearchQueries(query);
 
@@ -147,10 +162,8 @@ const searchLocations = async (query) => {
 
     const cachedLocations = await findCachedLocations(cleanQuery);
 
-    if (
-        cachedLocations.length > 0 &&
-        cachedLocations.some(hasStructuredAddressData)
-    ) {
+    // Reuse cached provider results whenever structured address data exists.
+    if (cachedLocations.length > 0 && cachedLocations.some(hasStructuredAddressData)) {
         return cachedLocations;
     }
 
@@ -159,6 +172,7 @@ const searchLocations = async (query) => {
     return saveLocationsToCache(providerLocations);
 };
 
+// Event persistence only needs the best matching location.
 const resolveEventLocation = async (query) => {
     const locations = await searchLocations(query);
 

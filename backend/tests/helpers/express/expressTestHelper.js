@@ -61,12 +61,12 @@ const createMockReqResNext = ({
 
 const createAuthControllerMocks = ({
     body = {},
-    user = DEFAULT_AUTH_USER,
+    user,
     file = undefined
 } = {}) => {
     return createMockReqResNext({
         body,
-        user,
+        user: user === undefined ? DEFAULT_AUTH_USER : user,
         file
     });
 };
@@ -75,14 +75,14 @@ const createUserControllerMocks = ({
     params = { id: 1 },
     query = {},
     body = {},
-    user = DEFAULT_AUTH_USER,
+    user,
     file = undefined
 } = {}) => {
     return createMockReqResNext({
         params,
         query,
         body,
-        user,
+        user: user === undefined ? DEFAULT_AUTH_USER : user,
         file
     });
 };
@@ -91,14 +91,14 @@ const createEventControllerMocks = ({
     body = {},
     params = { eventId: "1" },
     query = {},
-    user = DEFAULT_AUTH_USER,
+    user,
     file = undefined
 } = {}) => {
     return createMockReqResNext({
         body,
         params,
         query,
-        user,
+        user: user === undefined ? DEFAULT_AUTH_USER : user,
         file
     });
 };
@@ -127,10 +127,15 @@ const createEventMemberAuthorizationMocks = ({
     });
 };
 
-const createEventRoleMocks = ({
-    eventId = "1",
-    userId = 1
-} = {}) => {
+const createEventRoleMocks = (options = {}) => {
+    const eventId = Object.prototype.hasOwnProperty.call(options, "eventId")
+        ? options.eventId
+        : "1";
+
+    const userId = Object.prototype.hasOwnProperty.call(options, "userId")
+        ? options.userId
+        : 1;
+
     return createMockReqResNext({
         params: {
             eventId

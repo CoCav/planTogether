@@ -129,7 +129,7 @@ describe("event controller", () => {
             10
         ], [
             "an anonymous request",
-            undefined,
+            null,
             undefined
         ]])("retrieves events for %s",
             async (_, user, expectedUserId) => {
@@ -156,11 +156,7 @@ describe("event controller", () => {
                 await eventController.getAllEvents(req, res, next);
 
                 expect(eventService.getAllEvents).toHaveBeenCalledTimes(1);
-
-                expect(eventService.getAllEvents).toHaveBeenCalledWith(
-                    req.query,
-                    expectedUserId
-                );
+                expect(eventService.getAllEvents).toHaveBeenCalledWith(req.query, expectedUserId);
 
                 expectJsonResponse(res, 200, {
                     success: true,
@@ -263,7 +259,7 @@ describe("event controller", () => {
             10
         ], [
             "an anonymous request",
-            undefined,
+            null,
             undefined
         ]])("retrieves an event for %s",
             async (_, user, expectedUserId) => {

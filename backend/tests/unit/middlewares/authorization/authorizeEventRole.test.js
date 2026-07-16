@@ -33,19 +33,13 @@ const {
    TEST MOCKS
 ============================= */
 
-jest.mock(
-    "../../../../src/models/associations/eventUserRoleModel",
-    () => ({
-        findOne: jest.fn()
-    })
-);
+jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
+    findOne: jest.fn()
+}));
 
-jest.mock(
-    "../../../../src/utils/eventMemberships/eventMembershipQueries",
-    () => ({
-        findActiveMembership: jest.fn()
-    })
-);
+jest.mock("../../../../src/utils/eventMemberships/eventMembershipQueries", () => ({
+    findActiveMembership: jest.fn()
+}));
 
 describe("authorizeEventRole middleware", () => {
     beforeEach(() => {

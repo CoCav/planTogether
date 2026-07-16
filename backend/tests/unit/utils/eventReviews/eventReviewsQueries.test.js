@@ -1,4 +1,4 @@
-const { findReviewByIdOrFail } = require("../../../../src/utils/eventReviews/eventReviewQueries");
+const { findReviewByIdOrFail } = require("../../../../src/utils/eventReviews/eventReviewsQueries");
 
 /* ==========================================================================
    Event Review Query Utility Unit Tests

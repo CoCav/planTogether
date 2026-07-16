@@ -8,6 +8,22 @@ const mockUserModel = {
 
 const mockDefine = jest.fn(() => mockUserModel);
 
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../src/config/database", () => ({
+    define: mockDefine
+}));
+
+jest.mock("../../../src/utils/stringNormalizer", () => ({
+    normalizeEmail: jest.fn()
+}));
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const User = require("../../../src/models/userModel");
 
 /* ==========================================================================
@@ -28,28 +44,12 @@ const User = require("../../../src/models/userModel");
    - Email normalization is delegated to stringNormalizer.
 =========================================================================== */
 
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("../../../src/config/database", () => ({
-    define: mockDefine
-}));
-
-jest.mock("../../../src/utils/stringNormalizer", () => ({
-    normalizeEmail: jest.fn()
-}));
-
 describe("user model", () => {
     const [
         modelName,
         attributes,
         options
     ] = mockDefine.mock.calls[0];
-
-    beforeEach(() => {
-        jest.clearAllMocks();
-    });
 
     /* =============================
        MODEL DEFINITION

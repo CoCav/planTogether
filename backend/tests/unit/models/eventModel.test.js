@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
 
-const { EVENT_MODES } = require("../../../../src/constants/eventModes");
+const { EVENT_MODES } = require("../../../src/constants/eventModes");
 
 const mockEventModel = {
     name: "EventModel"
@@ -8,7 +8,7 @@ const mockEventModel = {
 
 const mockDefine = jest.fn(() => mockEventModel);
 
-const Event = require("../../../../src/models/eventModel");
+const Event = require("../../../src/models/eventModel");
 
 /* ==========================================================================
    Event Model Unit Tests
@@ -33,7 +33,7 @@ const Event = require("../../../../src/models/eventModel");
    TEST MOCKS
 ============================= */
 
-jest.mock("../../../../src/config/database", () => ({
+jest.mock("../../../src/config/database", () => ({
     define: mockDefine
 }));
 

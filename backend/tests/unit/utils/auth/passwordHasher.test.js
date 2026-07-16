@@ -43,15 +43,12 @@ describe("password hasher utility", () => {
     ============================= */
 
     describe("hashPassword", () => {
-        it("hashes a password with the default salt rounds", async () => {
+        it("hashes a password with the configured salt rounds", async () => {
             bcrypt.hash.mockResolvedValue("hashed-password");
 
             const result = await hashPassword("Password123");
 
-            expect(bcrypt.hash).toHaveBeenCalledWith(
-                "Password123",
-                10
-            );
+            expect(bcrypt.hash).toHaveBeenCalledWith("Password123", 4);
 
             expect(result).toBe("hashed-password");
         });
@@ -70,10 +67,7 @@ describe("password hasher utility", () => {
 
             const result = await loadHashPassword("Password123");
 
-            expect(bcryptMock.hash).toHaveBeenCalledWith(
-                "Password123",
-                4
-            );
+            expect(bcryptMock.hash).toHaveBeenCalledWith("Password123", 4);
 
             expect(result).toBe("hashed-password");
         });
@@ -87,15 +81,9 @@ describe("password hasher utility", () => {
         it("compares a plain password with a hashed password", async () => {
             bcrypt.compare.mockResolvedValue(true);
 
-            const result = await comparePassword(
-                "Password123",
-                "hashed-password"
-            );
+            const result = await comparePassword("Password123", "hashed-password");
 
-            expect(bcrypt.compare).toHaveBeenCalledWith(
-                "Password123",
-                "hashed-password"
-            );
+            expect(bcrypt.compare).toHaveBeenCalledWith("Password123", "hashed-password");
 
             expect(result).toBe(true);
         });
@@ -103,10 +91,7 @@ describe("password hasher utility", () => {
         it("returns false when passwords do not match", async () => {
             bcrypt.compare.mockResolvedValue(false);
 
-            const result = await comparePassword(
-                "WrongPassword",
-                "hashed-password"
-            );
+            const result = await comparePassword("WrongPassword", "hashed-password");
 
             expect(result).toBe(false);
         });

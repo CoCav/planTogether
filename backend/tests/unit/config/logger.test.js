@@ -1,8 +1,30 @@
-const pino = require("pino");
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("pino", () =>
+    jest.fn(() => ({
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn()
+    }))
+);
+
+/* =============================
+   TEST HELPERS
+============================= */
 
 const loadLogger = () => {
     jest.resetModules();
-    return require("../../../src/config/logger");
+
+    const pino = require("pino");
+    const logger = require("../../../src/config/logger");
+
+    return {
+        pino,
+        logger
+    };
 };
 
 /* ==========================================================================
@@ -19,19 +41,6 @@ const loadLogger = () => {
    Notes
    - pino-pretty is enabled outside production.
 =========================================================================== */
-
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("pino", () =>
-    jest.fn(() => ({
-        info: jest.fn(),
-        warn: jest.fn(),
-        error: jest.fn(),
-        debug: jest.fn()
-    }))
-);
 
 describe("logger config", () => {
     const originalNodeEnv = process.env.NODE_ENV;
@@ -54,7 +63,7 @@ describe("logger config", () => {
             delete process.env.LOG_LEVEL;
             process.env.NODE_ENV = "production";
 
-            loadLogger();
+            const { pino } = loadLogger();
 
             expect(pino).toHaveBeenCalledWith(
                 expect.objectContaining({
@@ -67,7 +76,7 @@ describe("logger config", () => {
             process.env.LOG_LEVEL = "debug";
             process.env.NODE_ENV = "production";
 
-            loadLogger();
+            const { pino } = loadLogger();
 
             expect(pino).toHaveBeenCalledWith(
                 expect.objectContaining({
@@ -85,7 +94,7 @@ describe("logger config", () => {
         it("uses pino-pretty outside production", () => {
             process.env.NODE_ENV = "development";
 
-            loadLogger();
+            const { pino } = loadLogger();
 
             expect(pino).toHaveBeenCalledWith(
                 expect.objectContaining({
@@ -104,7 +113,7 @@ describe("logger config", () => {
         it("does not use pino-pretty in production", () => {
             process.env.NODE_ENV = "production";
 
-            loadLogger();
+            const { pino } = loadLogger();
 
             expect(pino).toHaveBeenCalledWith(
                 expect.not.objectContaining({

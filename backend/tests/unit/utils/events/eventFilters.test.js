@@ -597,33 +597,26 @@ describe("event filter utility", () => {
         it("excludes status filtering when includeStatus is false", () => {
             const where = {};
 
-            const result = buildEventWhereConditions(
-                where,
-                {
-                    status: EVENT_STATUS.PAST,
-                    mode: "online"
-                },
-                {
-                    includeStatus: false
-                }
-            );
+            const result = buildEventWhereConditions(where, {
+                status: EVENT_STATUS.PAST,
+                mode: "online"
+            }, {
+                includeStatus: false
+            });
 
             expect(result).toEqual({
                 mode: "online"
             });
 
-            expect(result).not.toHaveProperty(Op.and);
+            expect(result[Op.and]).toBeUndefined();
         });
 
         it("applies status filtering by default", () => {
             const where = {};
 
-            buildEventWhereConditions(
-                where,
-                {
-                    status: EVENT_STATUS.PAST
-                }
-            );
+            buildEventWhereConditions(where, {
+                status: EVENT_STATUS.PAST
+            });
 
             expect(where).toEqual({
                 [Op.and]: [{
@@ -645,13 +638,10 @@ describe("event filter utility", () => {
                 ]
             };
 
-            const result = buildEventWhereConditions(
-                where,
-                {
-                    status: EVENT_STATUS.ONGOING,
-                    city: "Montreal"
-                }
-            );
+            const result = buildEventWhereConditions(where, {
+                status: EVENT_STATUS.ONGOING,
+                city: "Montreal"
+            });
 
             expect(result).toEqual({
                 city: {
@@ -676,13 +666,9 @@ describe("event filter utility", () => {
         it("supports an empty query with status filtering disabled", () => {
             const where = {};
 
-            const result = buildEventWhereConditions(
-                where,
-                {},
-                {
-                    includeStatus: false
-                }
-            );
+            const result = buildEventWhereConditions(where, {}, {
+                includeStatus: false
+            });
 
             expect(result).toEqual({});
         });

@@ -12,26 +12,61 @@ const mockReviewIdParamValidator = jest.fn();
 const mockGetReviewsPageValidator = jest.fn();
 const mockGetReviewsOrderValidator = jest.fn();
 
-const getEventReviewsValidator = [
-    mockGetReviewsPageValidator,
-    mockGetReviewsOrderValidator
-];
-
 const mockCreateReviewRatingValidator = jest.fn();
 const mockCreateReviewCommentValidator = jest.fn();
-
-const createReviewValidator = [
-    mockCreateReviewRatingValidator,
-    mockCreateReviewCommentValidator
-];
 
 const mockUpdateReviewRatingValidator = jest.fn();
 const mockUpdateReviewCommentValidator = jest.fn();
 
-const updateReviewValidator = [
-    mockUpdateReviewRatingValidator,
-    mockUpdateReviewCommentValidator
-];
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../src/controllers/eventReviewController", () => ({
+    getEventReviews: mockGetEventReviews,
+    createEventReview: mockCreateEventReview,
+    updateEventReview: mockUpdateEventReview,
+    deleteEventReview: mockDeleteEventReview
+}));
+
+jest.mock("../../../src/middlewares/auth/authenticateToken", () => ({
+    authenticateToken: mockAuthenticateToken
+}));
+
+jest.mock("../../../src/middlewares/errors/handleValidationErrors", () => mockHandleValidationErrors);
+
+jest.mock("../../../src/validators/eventReviewValidator", () => ({
+    eventIdParamValidator:
+        mockEventIdParamValidator,
+
+    reviewIdParamValidator:
+        mockReviewIdParamValidator,
+
+    getEventReviewsValidator: [
+        mockGetReviewsPageValidator,
+        mockGetReviewsOrderValidator
+    ],
+
+    createReviewValidator: [
+        mockCreateReviewRatingValidator,
+        mockCreateReviewCommentValidator
+    ],
+
+    updateReviewValidator: [
+        mockUpdateReviewRatingValidator,
+        mockUpdateReviewCommentValidator
+    ]
+}));
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
+const {
+    getEventReviewsValidator,
+    createReviewValidator,
+    updateReviewValidator
+} = require("../../../src/validators/eventReviewValidator");
 
 const eventReviewRoutes = require("../../../src/routes/eventReviewRoutes");
 
@@ -55,31 +90,6 @@ const { expectRoute } = require("../../helpers/express/routeTestHelper");
    - Validator arrays are flattened by the shared route test helper.
    - HTTP behavior remains covered by event review integration tests.
 =========================================================================== */
-
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("../../../src/controllers/eventReviewController", () => ({
-    getEventReviews: mockGetEventReviews,
-    createEventReview: mockCreateEventReview,
-    updateEventReview: mockUpdateEventReview,
-    deleteEventReview: mockDeleteEventReview
-}));
-
-jest.mock("../../../src/middlewares/auth/authenticateToken", () => ({
-    authenticateToken: mockAuthenticateToken
-}));
-
-jest.mock("../../../src/middlewares/errors/handleValidationErrors", () => mockHandleValidationErrors);
-
-jest.mock("../../../src/validators/eventReviewValidator", () => ({
-    eventIdParamValidator: mockEventIdParamValidator,
-    reviewIdParamValidator: mockReviewIdParamValidator,
-    getEventReviewsValidator,
-    createReviewValidator,
-    updateReviewValidator
-}));
 
 describe("event review routes", () => {
 

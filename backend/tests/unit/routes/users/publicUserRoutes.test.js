@@ -9,10 +9,35 @@ const mockPublicUserIdParamValidator = jest.fn();
 const mockPublicEventsPageValidator = jest.fn();
 const mockPublicEventsStatusValidator = jest.fn();
 
-const getPublicUserEventsValidator = [
-    mockPublicEventsPageValidator,
-    mockPublicEventsStatusValidator
-];
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../../src/controllers/userController", () => ({
+    getPublicUserProfile: mockGetPublicUserProfile,
+    getPublicUserEvents: mockGetPublicUserEvents
+}));
+
+jest.mock("../../../../src/middlewares/auth/resolveCurrentUser", () => ({
+    resolveCurrentUser: mockResolveCurrentUser
+}));
+
+jest.mock("../../../../src/middlewares/errors/handleValidationErrors", () => mockHandleValidationErrors);
+
+jest.mock("../../../../src/validators/userValidator", () => ({
+    publicUserIdParamValidator: mockPublicUserIdParamValidator,
+
+    getPublicUserEventsValidator: [
+        mockPublicEventsPageValidator,
+        mockPublicEventsStatusValidator
+    ]
+}));
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
+const { getPublicUserEventsValidator } = require("../../../../src/validators/userValidator");
 
 const publicUserRoutes = require("../../../../src/routes/users/publicUserRoutes");
 
@@ -36,26 +61,6 @@ const { expectRoute } = require("../../../helpers/express/routeTestHelper");
    - Validator arrays are flattened by the shared route test helper.
    - HTTP behavior remains covered by user integration tests.
 =========================================================================== */
-
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("../../../../src/controllers/userController", () => ({
-    getPublicUserProfile: mockGetPublicUserProfile,
-    getPublicUserEvents: mockGetPublicUserEvents
-}));
-
-jest.mock("../../../../src/middlewares/auth/resolveCurrentUser", () => ({
-    resolveCurrentUser: mockResolveCurrentUser
-}));
-
-jest.mock("../../../../src/middlewares/errors/handleValidationErrors", () => mockHandleValidationErrors);
-
-jest.mock("../../../../src/validators/userValidator", () => ({
-    publicUserIdParamValidator: mockPublicUserIdParamValidator,
-    getPublicUserEventsValidator
-}));
 
 describe("public user routes", () => {
 

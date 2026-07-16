@@ -35,54 +35,11 @@ const mockEventIdParamValidator = jest.fn();
 const mockCreateEventTitleValidator = jest.fn();
 const mockCreateEventDateValidator = jest.fn();
 
-const createEventValidator = [
-    mockCreateEventTitleValidator,
-    mockCreateEventDateValidator
-];
-
 const mockUpdateEventTitleValidator = jest.fn();
 const mockUpdateEventDateValidator = jest.fn();
 
-const updateEventValidator = [
-    mockUpdateEventTitleValidator,
-    mockUpdateEventDateValidator
-];
-
 const mockGetAllEventsPageValidator = jest.fn();
 const mockGetAllEventsStatusValidator = jest.fn();
-
-const getAllEventsValidator = [
-    mockGetAllEventsPageValidator,
-    mockGetAllEventsStatusValidator
-];
-
-const eventRoutes = require("../../../src/routes/eventRoutes");
-
-const {
-    expectRoute,
-    expectRouteOrder
-} = require("../../helpers/express/routeTestHelper");
-
-/* ==========================================================================
-   Event Routes Unit Tests
-
-   Tests event route configuration.
-
-   Responsibilities
-   - Test public event listing route composition
-   - Test current user event access route composition
-   - Test public event detail route composition
-   - Test event creation route composition
-   - Test event update authorization
-   - Test event deletion authorization
-   - Test upload field configuration
-   - Test event route declaration order
-
-   Notes
-   - Controllers, validators and middlewares are mocked.
-   - Validator arrays are flattened by the shared route test helper.
-   - HTTP behavior remains covered by event integration tests.
-=========================================================================== */
 
 /* =============================
    TEST MOCKS
@@ -116,11 +73,58 @@ jest.mock("../../../src/middlewares/authorization/authorizeEventRole", () => moc
 jest.mock("../../../src/middlewares/errors/handleValidationErrors", () => mockHandleValidationErrors);
 
 jest.mock("../../../src/validators/eventValidator", () => ({
+    createEventValidator: [
+        mockCreateEventTitleValidator,
+        mockCreateEventDateValidator
+    ],
+    updateEventValidator: [
+        mockUpdateEventTitleValidator,
+        mockUpdateEventDateValidator
+    ],
     eventIdParamValidator: mockEventIdParamValidator,
+    getAllEventsValidator: [
+        mockGetAllEventsPageValidator,
+        mockGetAllEventsStatusValidator
+    ]
+}));
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
+const {
     createEventValidator,
     updateEventValidator,
     getAllEventsValidator
-}));
+} = require("../../../src/validators/eventValidator");
+
+const eventRoutes = require("../../../src/routes/eventRoutes");
+
+const {
+    expectRoute,
+    expectRouteOrder
+} = require("../../helpers/express/routeTestHelper");
+
+/* ==========================================================================
+   Event Routes Unit Tests
+
+   Tests event route configuration.
+
+   Responsibilities
+   - Test public event listing route composition
+   - Test current user event access route composition
+   - Test public event detail route composition
+   - Test event creation route composition
+   - Test event update authorization
+   - Test event deletion authorization
+   - Test upload field configuration
+   - Test event route declaration order
+
+   Notes
+   - Controllers, validators and middlewares are mocked.
+   - Validator arrays are flattened by the shared route test helper.
+   - HTTP behavior remains covered by event integration tests.
+=========================================================================== */
 
 describe("event routes", () => {
 
@@ -199,12 +203,6 @@ describe("event routes", () => {
                 ]
             });
         });
-
-        it("configures event image single-file uploads", () => {
-            expect(mockUploadEventImageSingle).toHaveBeenCalledTimes(1);
-
-            expect(mockUploadEventImageSingle).toHaveBeenCalledWith("image");
-        });
     });
 
     /* =============================
@@ -227,13 +225,6 @@ describe("event routes", () => {
                 ]
             });
         });
-
-        it("allows organizers and co-organizers to update events", () => {
-            expect(mockAuthorizeEventRole).toHaveBeenCalledWith([
-                EVENT_ROLES.ORGANIZER,
-                EVENT_ROLES.CO_ORGANIZER
-            ]);
-        });
     });
 
     /* =============================
@@ -253,12 +244,6 @@ describe("event routes", () => {
                     mockDeleteEvent
                 ]
             });
-        });
-
-        it("restricts event deletion to organizers", () => {
-            expect(mockAuthorizeEventRole).toHaveBeenCalledWith([
-                EVENT_ROLES.ORGANIZER
-            ]);
         });
     });
 

@@ -1,5 +1,5 @@
 const mockFindEventByIdOrFail = jest.fn();
-const mockBuildPublicUserInclude = jest.fn();
+const mockBuildAuthenticatedUserInclude = jest.fn();
 
 const mockOpIn = Symbol("in");
 
@@ -43,7 +43,7 @@ jest.mock("../../../../src/utils/eventMemberships/eventParticipants", () => ({
 }));
 
 jest.mock("../../../../src/utils/users/userInclude", () => ({
-    buildPublicUserInclude: mockBuildPublicUserInclude
+    buildAuthenticatedUserInclude: mockBuildAuthenticatedUserInclude
 }));
 
 const Event = require("../../../../src/models/eventModel");
@@ -77,14 +77,13 @@ const { getEventStaff } = require("../../../../src/services/eventMembershipServi
 =========================================================================== */
 
 describe("get event staff service", () => {
-    let publicUserInclude;
+    let AuthenticatedUserInclude;
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        publicUserInclude = {
+        AuthenticatedUserInclude = {
             model: User,
-            as: "user",
             attributes: [
                 "id",
                 "name",
@@ -96,7 +95,7 @@ describe("get event staff service", () => {
             id: 1
         });
 
-        mockBuildPublicUserInclude.mockReturnValue(publicUserInclude);
+        mockBuildAuthenticatedUserInclude.mockReturnValue(AuthenticatedUserInclude);
     });
 
     /* =============================
@@ -104,7 +103,7 @@ describe("get event staff service", () => {
     ============================= */
 
     describe("getEventStaff", () => {
-        it("returns active organizers and co-organizers with public user data", async () => {
+        it("returns active organizers and co-organizers with authenticated user data", async () => {
             const eventStaff = [{
                 id: 1,
                 eventId: 1,
@@ -130,9 +129,9 @@ describe("get event staff service", () => {
                 1
             );
 
-            expect(mockBuildPublicUserInclude).toHaveBeenCalledTimes(1);
+            expect(mockBuildAuthenticatedUserInclude).toHaveBeenCalledTimes(1);
 
-            expect(mockBuildPublicUserInclude).toHaveBeenCalledWith(User);
+            expect(mockBuildAuthenticatedUserInclude).toHaveBeenCalledWith(User);
 
             expect(EventUserRole.findAll).toHaveBeenCalledTimes(1);
 
@@ -146,7 +145,7 @@ describe("get event staff service", () => {
                     }
                 },
                 include: [
-                    publicUserInclude
+                    AuthenticatedUserInclude
                 ],
                 order: [
                     ["role", "ASC"],
@@ -183,7 +182,7 @@ describe("get event staff service", () => {
 
             await expect(getEventStaff(999)).rejects.toBe(error);
 
-            expect(mockBuildPublicUserInclude).not.toHaveBeenCalled();
+            expect(mockBuildAuthenticatedUserInclude).not.toHaveBeenCalled();
 
             expect(EventUserRole.findAll).not.toHaveBeenCalled();
         });

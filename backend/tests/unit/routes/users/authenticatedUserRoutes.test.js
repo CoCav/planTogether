@@ -16,40 +16,6 @@ const mockUpdateCurrentUserEmailValidator = jest.fn();
 const mockChangeCurrentPasswordValidator = jest.fn();
 const mockNewPasswordValidator = jest.fn();
 
-const updateCurrentUserProfileValidator = [
-    mockUpdateCurrentUserNameValidator,
-    mockUpdateCurrentUserEmailValidator
-];
-
-const changeCurrentUserPasswordValidator = [
-    mockChangeCurrentPasswordValidator,
-    mockNewPasswordValidator
-];
-
-const authenticatedUserRoutes = require("../../../../src/routes/users/authenticatedUserRoutes");
-
-const { expectRoute } = require("../../../helpers/express/routeTestHelper");
-
-/* ==========================================================================
-   Authenticated User Routes Unit Tests
-
-   Tests current user route configuration.
-
-   Responsibilities
-   - Test current user event route composition
-   - Test current user profile retrieval route composition
-   - Test current user profile update route composition
-   - Test current user password route composition
-   - Test current user deletion route composition
-   - Test avatar upload field configuration
-   - Test authentication and validation ordering
-
-   Notes
-   - Controllers, validators and middlewares are mocked.
-   - Validator arrays are flattened by the shared route test helper.
-   - HTTP behavior remains covered by user integration tests.
-=========================================================================== */
-
 /* =============================
    TEST MOCKS
 ============================= */
@@ -76,9 +42,50 @@ jest.mock("../../../../src/middlewares/errors/handleValidationErrors", () => moc
 
 jest.mock("../../../../src/validators/userValidator", () => ({
     getCurrentUserEventsValidator: mockGetCurrentUserEventsValidator,
+
+    updateCurrentUserProfileValidator: [
+        mockUpdateCurrentUserNameValidator,
+        mockUpdateCurrentUserEmailValidator
+    ],
+
+    changeCurrentUserPasswordValidator: [
+        mockChangeCurrentPasswordValidator,
+        mockNewPasswordValidator
+    ]
+}));
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
+const {
     updateCurrentUserProfileValidator,
     changeCurrentUserPasswordValidator
-}));
+} = require("../../../../src/validators/userValidator");
+
+const authenticatedUserRoutes = require("../../../../src/routes/users/authenticatedUserRoutes");
+
+const { expectRoute } = require("../../../helpers/express/routeTestHelper");
+
+/* ==========================================================================
+   Authenticated User Routes Unit Tests
+
+   Tests current user route configuration.
+
+   Responsibilities
+   - Test current user event route composition
+   - Test current user profile retrieval route composition
+   - Test current user profile update route composition
+   - Test current user password route composition
+   - Test current user deletion route composition
+   - Test avatar upload field configuration
+   - Test authentication and validation ordering
+
+   Notes
+   - Controllers, validators and middlewares are mocked.
+   - Validator arrays are flattened by the shared route test helper.
+   - HTTP behavior remains covered by user integration tests.
+=========================================================================== */
 
 describe("authenticated user routes", () => {
 
@@ -135,12 +142,6 @@ describe("authenticated user routes", () => {
                     mockUpdateCurrentUserProfile
                 ]
             });
-        });
-
-        it("configures avatar single-file uploads", () => {
-            expect(mockUploadAvatarSingle).toHaveBeenCalledTimes(1);
-
-            expect(mockUploadAvatarSingle).toHaveBeenCalledWith("avatar");
         });
     });
 

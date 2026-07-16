@@ -7,10 +7,35 @@ const mockHandleValidationErrors = jest.fn();
 const mockSearchQueryValidator = jest.fn();
 const mockSearchLimitValidator = jest.fn();
 
-const searchLocationsValidator = [
-    mockSearchQueryValidator,
-    mockSearchLimitValidator
-];
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../src/controllers/geocodingController", () => ({
+    searchLocations: mockSearchLocations
+}));
+
+jest.mock("../../../src/middlewares/auth/authenticateToken", () => ({
+    authenticateToken: mockAuthenticateToken
+}));
+
+jest.mock("../../../src/middlewares/rateLimiters/geocodingRateLimiter", () => mockGeocodingRateLimiter);
+
+jest.mock("../../../src/middlewares/errors/handleValidationErrors", () => mockHandleValidationErrors);
+
+jest.mock("../../../src/validators/geocodingValidator", () => ({
+    searchLocationsValidator: [
+        mockSearchQueryValidator,
+        mockSearchLimitValidator
+    ]
+}))
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
+
+const { searchLocationsValidator } = require("../../../src/validators/geocodingValidator");
 
 const geocodingRoutes = require("../../../src/routes/geocodingRoutes");
 
@@ -33,26 +58,6 @@ const { expectRoute } = require("../../helpers/express/routeTestHelper");
    - Validator arrays are flattened by the shared route test helper.
    - HTTP behavior remains covered by geocoding integration tests.
 =========================================================================== */
-
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("../../../src/controllers/geocodingController", () => ({
-    searchLocations: mockSearchLocations
-}));
-
-jest.mock("../../../src/middlewares/auth/authenticateToken", () => ({
-    authenticateToken: mockAuthenticateToken
-}));
-
-jest.mock("../../../src/middlewares/rateLimiters/geocodingRateLimiter", () => mockGeocodingRateLimiter);
-
-jest.mock("../../../src/middlewares/errors/handleValidationErrors", () => mockHandleValidationErrors);
-
-jest.mock("../../../src/validators/geocodingValidator", () => ({
-    searchLocationsValidator
-}));
 
 describe("geocoding routes", () => {
 

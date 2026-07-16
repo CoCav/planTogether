@@ -6,6 +6,10 @@ jest.mock("../../../../src/models/eventModel", () => ({
     name: "Event"
 }));
 
+jest.mock("../../../../src/models/userModel", () => ({
+    name: "User"
+}));
+
 jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
     name: "EventUserRole"
 }));

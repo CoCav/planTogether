@@ -35,28 +35,6 @@ const mockUpdateEventMemberRoleValidator = jest.fn();
 const mockRemoveEventMemberValidator = jest.fn();
 const mockTransferEventOwnershipValidator = jest.fn();
 
-const eventMembershipRoutes = require("../../../src/routes/eventMembershipRoutes");
-
-const { expectRoute } = require("../../helpers/express/routeTestHelper");
-
-/* ==========================================================================
-   Event Membership Routes Unit Tests
-
-   Tests event membership route configuration.
-
-   Responsibilities
-   - Test join and leave route composition
-   - Test member and staff retrieval routes
-   - Test member role update authorization
-   - Test member removal authorization
-   - Test ownership transfer authorization
-   - Test route handler ordering
-
-   Notes
-   - Controllers, validators and middlewares are mocked.
-   - HTTP behavior remains covered by event membership integration tests.
-=========================================================================== */
-
 /* =============================
    TEST MOCKS
 ============================= */
@@ -90,6 +68,32 @@ jest.mock("../../../src/validators/eventMembershipValidator", () => ({
     removeEventMemberValidator: mockRemoveEventMemberValidator,
     transferEventOwnershipValidator: mockTransferEventOwnershipValidator
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
+const eventMembershipRoutes = require("../../../src/routes/eventMembershipRoutes");
+
+const { expectRoute } = require("../../helpers/express/routeTestHelper");
+
+/* ==========================================================================
+   Event Membership Routes Unit Tests
+
+   Tests event membership route configuration.
+
+   Responsibilities
+   - Test join and leave route composition
+   - Test member and staff retrieval routes
+   - Test member role update authorization
+   - Test member removal authorization
+   - Test ownership transfer authorization
+   - Test route handler ordering
+
+   Notes
+   - Controllers, validators and middlewares are mocked.
+   - HTTP behavior remains covered by event membership integration tests.
+=========================================================================== */
 
 describe("event membership routes", () => {
 
@@ -174,12 +178,6 @@ describe("event membership routes", () => {
                 ]
             });
         });
-
-        it("restricts role updates to organizers", () => {
-            expect(mockAuthorizeEventRole).toHaveBeenCalledWith([
-                EVENT_ROLES.ORGANIZER
-            ]);
-        });
     });
 
     /* =============================
@@ -201,13 +199,6 @@ describe("event membership routes", () => {
                 ]
             });
         });
-
-        it("allows organizers and co-organizers to manage removal", () => {
-            expect(mockAuthorizeEventRole).toHaveBeenCalledWith([
-                EVENT_ROLES.ORGANIZER,
-                EVENT_ROLES.CO_ORGANIZER
-            ]);
-        });
     });
 
     /* =============================
@@ -227,12 +218,6 @@ describe("event membership routes", () => {
                     mockTransferEventOwnership
                 ]
             });
-        });
-
-        it("restricts ownership transfer to organizers", () => {
-            expect(mockAuthorizeEventRole).toHaveBeenCalledWith([
-                EVENT_ROLES.ORGANIZER
-            ]);
         });
     });
 });

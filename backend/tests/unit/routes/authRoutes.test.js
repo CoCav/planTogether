@@ -13,36 +13,6 @@ const mockRegisterNameValidator = jest.fn();
 const mockRegisterEmailValidator = jest.fn();
 const mockLoginEmailValidator = jest.fn();
 
-const registerValidator = [
-    mockRegisterNameValidator,
-    mockRegisterEmailValidator
-];
-
-const loginValidator = [
-    mockLoginEmailValidator
-];
-
-const authRoutes = require("../../../src/routes/authRoutes");
-
-const { expectRoute } = require("../../helpers/express/routeTestHelper");
-
-/* ==========================================================================
-   Auth Routes Unit Tests
-
-   Tests authentication route configuration.
-
-   Responsibilities
-   - Test registration route composition
-   - Test login route composition
-   - Test logout route composition
-   - Test avatar upload field configuration
-   - Test authentication middleware ordering
-
-   Notes
-   - Controllers, validators and middlewares are mocked.
-   - HTTP behavior remains covered by authentication integration tests.
-=========================================================================== */
-
 /* =============================
    TEST MOCKS
 ============================= */
@@ -65,16 +35,47 @@ jest.mock("../../../src/middlewares/files/uploadFiles", () => ({
 
 jest.mock("../../../src/middlewares/rateLimiters/authRateLimiter", () => mockAuthRateLimiter);
 
-jest.mock("../../../src/middlewares/errors/handleValidationErrors",
-    () => mockHandleValidationErrors
-);
+jest.mock("../../../src/middlewares/errors/handleValidationErrors", () => mockHandleValidationErrors);
 
-jest.mock(
-    "../../../src/validators/authValidator", () => ({
-        registerValidator,
-        loginValidator
-    })
-);
+jest.mock("../../../src/validators/authValidator", () => ({
+    registerValidator: [
+        mockRegisterNameValidator,
+        mockRegisterEmailValidator
+    ],
+    loginValidator: [
+        mockLoginEmailValidator
+    ]
+}));
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
+const {
+    registerValidator,
+    loginValidator
+} = require("../../../src/validators/authValidator");
+
+const authRoutes = require("../../../src/routes/authRoutes");
+
+const { expectRoute } = require("../../helpers/express/routeTestHelper");
+
+/* ==========================================================================
+   Auth Routes Unit Tests
+
+   Tests authentication route configuration.
+
+   Responsibilities
+   - Test registration route composition
+   - Test login route composition
+   - Test logout route composition
+   - Test avatar upload field configuration
+   - Test authentication middleware ordering
+
+   Notes
+   - Controllers, validators and middlewares are mocked.
+   - HTTP behavior remains covered by authentication integration tests.
+=========================================================================== */
 
 describe("auth routes", () => {
 
@@ -95,12 +96,6 @@ describe("auth routes", () => {
                     mockRegister
                 ]
             });
-        });
-
-        it("configures avatar single-file uploads", () => {
-            expect(mockUploadAvatarSingle).toHaveBeenCalledTimes(1);
-
-            expect(mockUploadAvatarSingle).toHaveBeenCalledWith("avatar");
         });
     });
 

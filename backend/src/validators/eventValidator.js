@@ -47,14 +47,22 @@ const DEADLINE_BEFORE_START_MESSAGE = "Registration deadline must be before even
 
 const createLocationValidator = () => {
     return body("location")
-        .optional({ nullable: true })
-        .trim()
         .custom((value, { req }) => {
-            if (req.body.mode === EVENT_MODES.IN_PERSON && !value?.trim()) {
+            const location = String(value ?? "").trim();
+
+            if (
+                req.body.mode === EVENT_MODES.IN_PERSON &&
+                !location
+            ) {
                 throw new Error(LOCATION_REQUIRED_MESSAGE);
             }
 
             return true;
+        })
+        .customSanitizer((value) => {
+            return typeof value === "string"
+                ? value.trim()
+                : value;
         });
 };
 

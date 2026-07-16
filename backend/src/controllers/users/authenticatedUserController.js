@@ -1,6 +1,6 @@
 const userService = require("../../services/userService");
 
-const AVATAR_UPLOAD_PATH = "/uploads/avatars";
+const { UPLOAD_PATHS } = require("../../constants/uploadPaths");
 
 const { formatAuthenticatedUser } = require("../../utils/users/authenticated/authenticatedUserFormatter");
 

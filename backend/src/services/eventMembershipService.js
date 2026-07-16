@@ -23,7 +23,7 @@ const {
 
 const { countActiveParticipants } = require("../utils/eventMemberships/eventParticipants");
 
-const { buildPublicUserInclude } = require("../utils/users/userInclude");
+const { buildAuthenticatedUserInclude } = require("../utils/users/userInclude");
 
 /* ==========================================================================
    Event Membership Service
@@ -206,7 +206,7 @@ const getEventMembers = async (eventId) => {
             deletedAt: null
         },
         include: [
-            buildPublicUserInclude(User)
+            buildAuthenticatedUserInclude(User)
         ],
         order: [
             ["createdAt", "ASC"]
@@ -226,7 +226,7 @@ const getEventStaff = async (eventId) => {
             }
         },
         include: [
-            buildPublicUserInclude(User)
+            buildAuthenticatedUserInclude(User)
         ],
         order: [
             ["role", "ASC"],

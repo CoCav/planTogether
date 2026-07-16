@@ -22,7 +22,7 @@ const removePostalCode = (query) => {
         .replace(/\s+/g, " ")
         .replace(/\s+,/g, ",")
         .replace(/,+/g, ",")
-        .replace(/^,|,$/g, "")
+        .replace(/^,\s*|,\s*$/g, "")
         .trim();
 };
 

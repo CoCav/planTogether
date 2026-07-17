@@ -1,8 +1,19 @@
 const { body } = require("express-validator");
 
-const { eventIdParamValidator, reviewIdParamValidator } = require("./shared/paramsValidators");
-const { pageQueryValidator, pageSizeQueryValidator } = require("./shared/paginationValidators");
-const { orderQueryValidator, createSortByValidator } = require("./shared/sortValidators");
+const {
+    eventIdParamValidator,
+    reviewIdParamValidator
+} = require("./shared/paramsValidators");
+
+const {
+    pageQueryValidator,
+    pageSizeQueryValidator
+} = require("./shared/paginationValidators");
+
+const {
+    orderQueryValidator,
+    createSortByValidator
+} = require("./shared/sortValidators");
 
 /* ==========================================================================
    Event Review Validators
@@ -20,16 +31,29 @@ const { orderQueryValidator, createSortByValidator } = require("./shared/sortVal
    - Review permissions are handled by the service layer.
 =========================================================================== */
 
-const REVIEW_SORT_FIELDS = ["createdAt", "rating"];
+/* =============================
+   REVIEW SORT OPTIONS
+============================= */
 
-/* Review payload */
+const REVIEW_SORT_FIELDS = [
+    "createdAt",
+    "rating"
+];
 
+/* =============================
+   REVIEW PAYLOAD VALIDATION
+============================= */
+
+// Validate review creation fields
 const createReviewValidator = [
     body("rating")
         .notEmpty()
         .withMessage("Rating is required")
         .bail()
-        .isInt({ min: 1, max: 5 })
+        .isInt({
+            min: 1,
+            max: 5
+        })
         .withMessage("Rating must be an integer between 1 and 5")
         .toInt(),
 
@@ -38,14 +62,21 @@ const createReviewValidator = [
         .notEmpty()
         .withMessage("Comment is required")
         .bail()
-        .isLength({ min: 5, max: 1000 })
+        .isLength({
+            min: 5,
+            max: 1000
+        })
         .withMessage("Comment must be between 5 and 1000 characters")
 ];
 
+// Review updates currently require the same fields as review creation
 const updateReviewValidator = createReviewValidator;
 
-/* Review query */
+/* =============================
+   REVIEW QUERY VALIDATION
+============================= */
 
+// Validate review sorting and pagination
 const getEventReviewsValidator = [
     createSortByValidator(REVIEW_SORT_FIELDS),
     pageQueryValidator,

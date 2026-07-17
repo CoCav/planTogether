@@ -13,12 +13,20 @@ const { query } = require("express-validator");
    - Search queries support autocomplete and geocoding requests.
 =========================================================================== */
 
+/* =============================
+   LOCATION SEARCH VALIDATION
+============================= */
+
+// Validate the geocoding search query
 const searchLocationsValidator = [
     query("q")
         .trim()
         .notEmpty()
         .withMessage("Location query is required")
-        .isLength({ min: 2, max: 200 })
+        .isLength({
+            min: 2,
+            max: 200
+        })
         .withMessage("Location query must be between 2 and 200 characters")
 ];
 

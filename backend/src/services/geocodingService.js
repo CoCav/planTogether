@@ -33,14 +33,26 @@ const {
    - resolveEventLocation returns the best matching location for event persistence.
 =========================================================================== */
 
+/* =============================
+   GEOCODING ERRORS
+============================= */
+
 const LOCATION_QUERY_REQUIRED_ERROR = "Location query is required";
 const LOCATION_NOT_FOUND_ERROR = "Location not found";
 const GEOCODING_RATE_LIMIT_ERROR = "Location search rate limit exceeded. Please try again later.";
 const GEOCODING_SERVICE_UNAVAILABLE_ERROR = "Location search service unavailable";
 
+/* =============================
+   HTTP STATUS CODES
+============================= */
+
 const HTTP_TOO_MANY_REQUESTS = 429;
 
-// Ignore cached entries that do not contain usable address information.
+/* =============================
+   GEOCODING HELPERS
+============================= */
+
+// Check whether a cached location contains usable structured address data
 const hasStructuredAddressData = (location = {}) => {
     return Boolean(
         location.streetAddress ||
@@ -51,7 +63,7 @@ const hasStructuredAddressData = (location = {}) => {
     );
 };
 
-// Retrieve cached results for the normalized search query.
+// Retrieve cached results for a normalized search query
 const findCachedLocations = async (query) => {
     return Location.findAll({
         where: {
@@ -62,6 +74,7 @@ const findCachedLocations = async (query) => {
     });
 };
 
+// Save normalized provider results to the location cache
 const saveLocationsToCache = async (locations = []) => {
     const savedLocations = [];
 
@@ -76,7 +89,7 @@ const saveLocationsToCache = async (locations = []) => {
             defaults: location
         });
 
-        // Refresh cached structured address fields when provider data changes.
+        // Refresh cached structured address fields when provider data changes
         if (!created) {
             await savedLocation.update({
                 label: location.label,
@@ -94,13 +107,14 @@ const saveLocationsToCache = async (locations = []) => {
     return savedLocations;
 };
 
+// Search Nominatim and normalize provider results
 const searchNominatimLocations = async (query, originalQuery = query) => {
     const params = buildNominatimSearchParams(query);
 
     let response;
 
     try {
-        // Network failures are treated as provider unavailability.
+        // Network failures are treated as provider unavailability
         response = await fetch(`${geocodingConfig.nominatim.searchUrl}?${params.toString()}`, {
             headers: {
                 Accept: "application/json",
@@ -122,7 +136,7 @@ const searchNominatimLocations = async (query, originalQuery = query) => {
     let results;
 
     try {
-        // Invalid provider responses are treated as service failures.
+        // Invalid provider responses are treated as service failures
         results = await response.json();
     } catch {
         throwHttpError(502, GEOCODING_SERVICE_UNAVAILABLE_ERROR);
@@ -132,13 +146,13 @@ const searchNominatimLocations = async (query, originalQuery = query) => {
         return [];
     }
 
-    // Cache fallback results under the original user query.
+    // Cache fallback results under the original user query
     return results.map((result) =>
         normalizeLocation(originalQuery, result)
     );
 };
 
-// Try progressively broader location queries until a match is found.
+// Search progressively broader queries until results are found
 const searchProviderLocationsWithFallbacks = async (query) => {
     const searchQueries = buildLocationSearchQueries(query);
 
@@ -153,6 +167,11 @@ const searchProviderLocationsWithFallbacks = async (query) => {
     throwHttpError(404, LOCATION_NOT_FOUND_ERROR);
 };
 
+/* =============================
+   LOCATION SEARCH
+============================= */
+
+// Search cached or provider-backed locations
 const searchLocations = async (query) => {
     const cleanQuery = normalizeString(query);
 
@@ -162,7 +181,7 @@ const searchLocations = async (query) => {
 
     const cachedLocations = await findCachedLocations(cleanQuery);
 
-    // Reuse cached provider results whenever structured address data exists.
+    // Reuse cached provider results whenever structured address data exists
     if (cachedLocations.length > 0 && cachedLocations.some(hasStructuredAddressData)) {
         return cachedLocations;
     }
@@ -172,7 +191,11 @@ const searchLocations = async (query) => {
     return saveLocationsToCache(providerLocations);
 };
 
-// Event persistence only needs the best matching location.
+/* =============================
+   EVENT LOCATION RESOLUTION
+============================= */
+
+// Resolve the best matching location for event persistence
 const resolveEventLocation = async (query) => {
     const locations = await searchLocations(query);
 

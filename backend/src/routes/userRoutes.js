@@ -17,6 +17,10 @@ const publicUserRoutes = require("./users/publicUserRoutes");
    - /me routes must be mounted before /:id public routes.
 =========================================================================== */
 
+/* =============================
+   USER ROUTE GROUPS
+============================= */
+
 router.use(authenticatedUserRoutes);
 router.use(publicUserRoutes);
 

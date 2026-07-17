@@ -15,9 +15,17 @@ const { throwHttpError } = require("../errors/httpError");
      can be passed through the options parameter.
 =========================================================================== */
 
+/* =============================
+   USER ERRORS
+============================= */
+
 const USER_NOT_FOUND_ERROR = "User not found";
 
-// Finds a user by ID or throws a 404 error.
+/* =============================
+   USER QUERIES
+============================= */
+
+// Find a user by ID or throw a not found error
 const findUserByIdOrFail = async (User, userId, options = {}) => {
     const user = await User.findByPk(userId, options);
 

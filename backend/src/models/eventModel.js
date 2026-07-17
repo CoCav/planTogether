@@ -22,6 +22,11 @@ const { EVENT_MODES } = require("../constants/eventModes");
    - Null maxParticipants means unlimited capacity.
 =========================================================================== */
 
+/* =============================
+   EVENT MODEL
+============================= */
+
+// Define event metadata, scheduling and structured location fields
 const Event = sequelize.define("Event", {
     id: {
         type: DataTypes.INTEGER,

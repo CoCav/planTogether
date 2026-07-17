@@ -16,9 +16,21 @@ const pino = require("pino");
    - LOG_LEVEL can override the default log level.
 =========================================================================== */
 
+/* =============================
+   DEFAULT VALUES
+============================= */
+
+// Production environment identifier
 const PRODUCTION_ENV = "production";
+
+// Default application log level
 const DEFAULT_LOG_LEVEL = "info";
 
+/* =============================
+   LOGGER CONFIGURATION
+============================= */
+
+// Determines whether pretty logs should be disabled
 const isProduction = process.env.NODE_ENV === PRODUCTION_ENV;
 
 const logger = pino({

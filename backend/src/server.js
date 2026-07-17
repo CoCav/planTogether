@@ -21,8 +21,17 @@ const logger = require("./config/logger");
    - A startup failure exits the process with code 1.
 =========================================================================== */
 
+/* =============================
+   SERVER CONFIGURATION
+============================= */
+
 const DEFAULT_PORT = 3000;
 
+/* =============================
+   SERVER STARTUP
+============================= */
+
+// Initialize the database and start the HTTP server
 const startServer = async () => {
     const port = process.env.PORT || DEFAULT_PORT;
 
@@ -42,6 +51,11 @@ const startServer = async () => {
     }
 };
 
+/* =============================
+   DIRECT EXECUTION
+============================= */
+
+// Start the server only when this file is executed directly
 if (require.main === module) {
     startServer();
 }

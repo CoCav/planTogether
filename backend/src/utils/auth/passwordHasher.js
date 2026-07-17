@@ -15,16 +15,26 @@ const bcrypt = require("bcrypt");
    - Tests can use lower salt rounds for faster execution.
 =========================================================================== */
 
+/* =============================
+   HASHING CONFIGURATION
+============================= */
+
+// Default bcrypt work factor
 const DEFAULT_BCRYPT_SALT_ROUNDS = 10;
 
-const bcryptSaltRounds = Number(
-    process.env.BCRYPT_SALT_ROUNDS || DEFAULT_BCRYPT_SALT_ROUNDS
-);
+// Resolve the configured bcrypt work factor
+const bcryptSaltRounds = Number(process.env.BCRYPT_SALT_ROUNDS || DEFAULT_BCRYPT_SALT_ROUNDS);
 
+/* =============================
+   PASSWORD HASHING
+============================= */
+
+// Hash a plain text password
 const hashPassword = (password) => {
     return bcrypt.hash(password, bcryptSaltRounds);
 };
 
+// Compare a plain text password with a stored hash
 const comparePassword = (password, hashedPassword) => {
     return bcrypt.compare(password, hashedPassword);
 };

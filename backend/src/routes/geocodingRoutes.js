@@ -25,7 +25,9 @@ const { searchLocationsValidator } = require("../validators/geocodingValidator")
    - Both routes share the same validation and controller logic.
 =========================================================================== */
 
-/* Authenticated search */
+/* =============================
+   AUTHENTICATED LOCATION SEARCH
+============================= */
 
 router.get(
     "/search",
@@ -36,7 +38,9 @@ router.get(
     geocodingController.searchLocations
 );
 
-/* Public search */
+/* =============================
+   PUBLIC LOCATION SEARCH
+============================= */
 
 router.get(
     "/public-search",

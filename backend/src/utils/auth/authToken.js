@@ -15,9 +15,17 @@ const jwt = require("jsonwebtoken");
    - JWT_SECRET is read from environment variables.
 =========================================================================== */
 
+/* =============================
+   TOKEN CONFIGURATION
+============================= */
+
 const AUTH_TOKEN_EXPIRES_IN = "24h";
 
-// Generate a signed JWT containing the authenticated user ID.
+/* =============================
+   TOKEN GENERATION
+============================= */
+
+// Generate a signed JWT containing the authenticated user ID
 const generateAuthToken = (userId) => {
     return jwt.sign(
         { userId },

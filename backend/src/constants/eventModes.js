@@ -11,10 +11,18 @@
    - Shared across validators, services and tests.
 =========================================================================== */
 
+/* =============================
+   EVENT MODES
+============================= */
+
 const EVENT_MODES = {
     ONLINE: "online",
     IN_PERSON: "in_person"
 };
+
+/* =============================
+   VALID EVENT MODES
+============================= */
 
 const VALID_EVENT_MODES = Object.values(EVENT_MODES);
 

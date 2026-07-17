@@ -19,6 +19,10 @@ const logger = require("../../config/logger");
    - Uses centralized structured logging.
 =========================================================================== */
 
+/* =============================
+   ERROR CONSTANTS
+============================= */
+
 const PRODUCTION_ENV = "production";
 
 const MULTER_FILE_SIZE_ERROR_CODE = "LIMIT_FILE_SIZE";
@@ -30,21 +34,22 @@ const VALIDATION_ERROR_MESSAGE = "Validation error";
 const FILE_TOO_LARGE_MESSAGE = "File too large. Maximum size exceeded.";
 const INTERNAL_SERVER_ERROR_MESSAGE = "Internal Server Error. Please try again later.";
 
+/* =============================
+   GLOBAL ERROR HANDLING
+============================= */
+
+// Convert application errors into consistent API responses
 function errorHandler(error, req, res, next) {
     const isProduction = process.env.NODE_ENV === PRODUCTION_ENV;
 
+    // Log full errors outside production
     if (!isProduction) {
-        logger.error(
-            { error },
-            "Error caught by error middleware"
-        );
+        logger.error({ error }, "Error caught by error middleware");
     } else {
-        logger.error(
-            { message: error.message },
-            "Error"
-        );
+        logger.error({ message: error.message }, "Error");
     }
 
+    // Handle Multer upload errors
     if (error instanceof multer.MulterError) {
         const message = error.code === MULTER_FILE_SIZE_ERROR_CODE
             ? FILE_TOO_LARGE_MESSAGE
@@ -56,6 +61,7 @@ function errorHandler(error, req, res, next) {
         });
     }
 
+    // Handle Sequelize validation and constraint errors
     if (error.name === SEQUELIZE_VALIDATION_ERROR || error.name === SEQUELIZE_UNIQUE_CONSTRAINT_ERROR) {
 
         const formattedErrors = error.errors?.map((err) => ({
@@ -72,6 +78,7 @@ function errorHandler(error, req, res, next) {
         });
     }
 
+    // Handle custom and unexpected application errors
     const statusCode = error.statusCode || 500;
     const message = error.message || INTERNAL_SERVER_ERROR_MESSAGE;
 

@@ -48,13 +48,26 @@ const { findUserByIdOrFail } = require("../../utils/users/userQueries");
    - Critical profile and deletion flows use transactions.
 =========================================================================== */
 
+/* =============================
+   SERVICE ERRORS
+============================= */
+
 const EMAIL_ALREADY_IN_USE_ERROR = "Email already in use";
 const CURRENT_PASSWORD_INCORRECT_ERROR = "Current password is incorrect";
 const NEW_PASSWORD_MUST_BE_DIFFERENT_ERROR = "New password must be different from the current password";
 const ACTIVE_EVENTS_OWNERSHIP_ERROR = "You must transfer ownership of your active or upcoming events before deleting your account";
 
+/* =============================
+   EVENT LIST DEFAULTS
+============================= */
+
 const DEFAULT_USER_EVENT_SORT_FIELD = "startDateTime";
 
+/* =============================
+   CURRENT USER EVENTS
+============================= */
+
+// Retrieve and enrich event listings for the authenticated user
 const getCurrentUserEventsById = async (userId, query = {}) => {
     const { view } = query;
     const now = new Date();
@@ -63,8 +76,8 @@ const getCurrentUserEventsById = async (userId, query = {}) => {
 
     const isHistoryView = view === "createdHistory" || view === "joinedHistory";
 
-    // Created views contain organizer memberships.
-    // Joined views contain participant and co-organizer memberships.
+    // Created views contain organizer memberships
+    // Joined views contain participant and co-organizer memberships
     const roleFilter = !view
         ? undefined
         : view === "created" || view === "createdHistory"
@@ -76,7 +89,7 @@ const getCurrentUserEventsById = async (userId, query = {}) => {
                 ]
             };
 
-    // History views only contain completed events.
+    // History views only contain completed events
     const eventDateFilter = !view ? {} : isHistoryView
         ? {
             endDateTime: {
@@ -96,7 +109,7 @@ const getCurrentUserEventsById = async (userId, query = {}) => {
     };
 
     buildEventWhereConditions(eventFilter, eventQuery, {
-        // The current user view already controls its date range.
+        // The current user view already controls its date range
         includeStatus: false
     });
 
@@ -157,7 +170,7 @@ const getCurrentUserEventsById = async (userId, query = {}) => {
         (membership) => membership.toJSON().event.id
     );
 
-    // Retrieve shared event statistics in one step.
+    // Retrieve shared event statistics in one step
     const {
         participantCountByEventId,
         likesCountByEventId,
@@ -200,10 +213,16 @@ const getCurrentUserEventsById = async (userId, query = {}) => {
     };
 };
 
+/* =============================
+   CURRENT USER PROFILE
+============================= */
+
+// Retrieve the authenticated user's profile
 const getCurrentUserProfileById = async (userId) => {
     return findUserByIdOrFail(User, userId);
 };
 
+// Update the authenticated user's profile
 const updateCurrentUserProfileById = async (userId, updatedData) => {
     const transaction = await sequelize.transaction();
 
@@ -226,7 +245,7 @@ const updateCurrentUserProfileById = async (userId, updatedData) => {
             user.email = normalizeEmail(email);
         }
 
-        // Preserve the current avatar when the field is omitted.
+        // Preserve the current avatar when the field is omitted
         if (avatar !== undefined) {
             user.avatar = avatar || null;
         }
@@ -258,7 +277,7 @@ const updateCurrentUserProfileById = async (userId, updatedData) => {
         throw error;
     }
 
-    // Clean uploaded files only after the database commit.
+    // Clean uploaded files only after the database commit
     if (oldAvatarToDelete) {
         await deleteUploadedFile(oldAvatarToDelete);
     }
@@ -266,6 +285,11 @@ const updateCurrentUserProfileById = async (userId, updatedData) => {
     return updatedUser;
 };
 
+/* =============================
+   CURRENT USER PASSWORD
+============================= */
+
+// Change the authenticated user's password
 const changeCurrentUserPasswordById = async (userId, currentPassword, newPassword) => {
 
     const user = await findUserByIdOrFail(User.scope("withPassword"), userId);
@@ -279,10 +303,7 @@ const changeCurrentUserPasswordById = async (userId, currentPassword, newPasswor
         throwHttpError(401, CURRENT_PASSWORD_INCORRECT_ERROR);
     }
 
-    const isSamePassword = await comparePassword(
-        newPassword,
-        user.password
-    );
+    const isSamePassword = await comparePassword(newPassword, user.password);
 
     if (isSamePassword) {
         throwHttpError(400, NEW_PASSWORD_MUST_BE_DIFFERENT_ERROR);
@@ -293,6 +314,11 @@ const changeCurrentUserPasswordById = async (userId, currentPassword, newPasswor
     await user.save();
 };
 
+/* =============================
+   CURRENT USER ACCOUNT
+============================= */
+
+// Soft-delete the authenticated user's account
 const deleteCurrentUserById = async (userId) => {
     const transaction = await sequelize.transaction();
 
@@ -302,10 +328,9 @@ const deleteCurrentUserById = async (userId) => {
     try {
         const user = await findUserByIdOrFail(User, userId, {
             transaction
-        }
-        );
+        });
 
-        // Active and upcoming events must keep an organizer.
+        // Active and upcoming events must keep an organizer
         const activeOrganizerMembership =
             await EventUserRole.findOne({
                 where: {
@@ -334,7 +359,7 @@ const deleteCurrentUserById = async (userId) => {
 
         oldAvatarToDelete = user.avatar;
 
-        // Keep the display name for historical event data.
+        // Keep the display name for historical event data
         user.deletedAt = deletionDate;
 
         // Replace unique account credentials with anonymous values.
@@ -355,7 +380,7 @@ const deleteCurrentUserById = async (userId) => {
         throw error;
     }
 
-    // Account deletion is already committed before file cleanup.
+    // Account deletion is already committed before file cleanup
     if (oldAvatarToDelete) {
         await deleteUploadedFile(oldAvatarToDelete);
     }

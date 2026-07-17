@@ -13,7 +13,11 @@
    - Avoids repeating custom Error boilerplate.
 =========================================================================== */
 
-// Create a standard Error object with an attached HTTP status code.
+/* =============================
+   HTTP ERROR CREATION
+============================= */
+
+// Create an Error with an attached HTTP status code
 const createHttpError = (statusCode, message) => {
     const error = new Error(message);
     error.statusCode = statusCode;
@@ -21,7 +25,7 @@ const createHttpError = (statusCode, message) => {
     return error;
 };
 
-// Convenience helper for early returns inside services and controllers.
+// Create and immediately throw an HTTP error
 const throwHttpError = (statusCode, message) => {
     throw createHttpError(statusCode, message);
 };

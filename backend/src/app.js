@@ -2,7 +2,7 @@ const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
 
-// Load environment variables for application configuration.
+// Load environment variables for application configuration
 require("dotenv").config();
 
 const path = require("path");
@@ -41,26 +41,45 @@ const userRoutes = require("./routes/userRoutes");
    - The global error handler must always be registered last.
 =========================================================================== */
 
+/* =============================
+   APPLICATION INSTANCE
+============================= */
+
+// Create the Express application
 const app = express();
 
+/* =============================
+   SECURITY CONFIGURATION
+============================= */
+
 const helmetOptions = {
-    // Allows uploaded avatars and event images to be displayed by the frontend.
+    // Allow uploaded avatars and event images to be displayed by the frontend
     crossOriginResourcePolicy: false
 };
 
-/* Global middlewares */
+/* =============================
+   GLOBAL MIDDLEWARES
+============================= */
 
 app.use(helmet(helmetOptions));
 app.use(cors(corsOptions));
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({
+    extended: true
+}));
 
-/* Static files */
+/* =============================
+   STATIC FILES
+============================= */
 
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use("/uploads", express.static(
+    path.join(__dirname, "../uploads")
+));
 
-/* Health and root routes */
+/* =============================
+   SYSTEM ROUTES
+============================= */
 
 app.get("/api/health", (req, res) => {
     return res.json({
@@ -71,10 +90,12 @@ app.get("/api/health", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-    res.send("PlanTogether is online!");
+    return res.send("PlanTogether is online!");
 });
 
-/* API routes */
+/* =============================
+   API ROUTES
+============================= */
 
 app.use("/api/auth", authRoutes);
 
@@ -87,15 +108,19 @@ app.use("/api/locations", geocodingRoutes);
 
 app.use("/api/users", userRoutes);
 
-/* Fallback handlers */
+/* =============================
+   FALLBACK HANDLERS
+============================= */
 
+// Return a consistent response for unknown routes
 app.use((req, res) => {
-    res.status(404).json({
+    return res.status(404).json({
         success: false,
         message: "Route not found"
     });
 });
 
+// Register the global error handler last
 app.use(errorHandler);
 
 module.exports = app;

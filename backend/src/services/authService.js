@@ -27,12 +27,19 @@ const {
    - User profile logic belongs to userService.
 =========================================================================== */
 
+/* =============================
+   AUTHENTICATION ERRORS
+============================= */
+
 const EMAIL_ALREADY_IN_USE_ERROR = "Email already in use";
 const INVALID_CREDENTIALS_ERROR = "Invalid email or invalid password";
 const ACCOUNT_DELETED_ERROR = "Account has been deleted";
 
-/* Register / login */
+/* =============================
+   USER REGISTRATION
+============================= */
 
+// Register a user and generate an authentication token
 const registerUser = async ({ name, email, password, avatar }) => {
     const normalizedEmail = normalizeEmail(email);
 
@@ -58,6 +65,11 @@ const registerUser = async ({ name, email, password, avatar }) => {
     return { user, token };
 };
 
+/* =============================
+   USER LOGIN
+============================= */
+
+// Authenticate a user and generate an authentication token
 const loginUser = async ({ email, password }) => {
     const normalizedEmail = normalizeEmail(email);
 

@@ -13,9 +13,14 @@ const geocodingConfig = require("../../config/geocoding");
    - Nominatim expects string query parameters.
 =========================================================================== */
 
+/* =============================
+   NOMINATIM PARAMETERS
+============================= */
+
 const NOMINATIM_RESPONSE_FORMAT = "json";
 const NOMINATIM_ADDRESS_DETAILS_ENABLED = "1";
 
+// Build Nominatim search query parameters
 const buildNominatimSearchParams = (query) => {
     return new URLSearchParams({
         q: query,

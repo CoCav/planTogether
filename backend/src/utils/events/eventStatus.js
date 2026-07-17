@@ -16,23 +16,32 @@ const { throwHttpError } = require("../errors/httpError");
    - Event statuses use shared constants.
 =========================================================================== */
 
-/* Status helpers */
+/* =============================
+   STATUS ERRORS
+============================= */
 
-// Return true when the event start date has been reached.
+const PAST_EVENT_ACTION_ERROR = "No action is allowed on a past event";
+const STARTED_EVENT_DELETION_ERROR = "An event that has already started cannot be deleted";
+
+/* =============================
+   STATUS HELPERS
+============================= */
+
+// Check whether an event has started
 const hasEventStarted = (event) => {
     if (!event || !event.startDateTime) return false;
 
     return new Date(event.startDateTime) <= new Date();
 };
 
-// Return true when the event end date has passed.
+// Check whether an event has ended
 const isEventPast = (event) => {
     if (!event || !event.endDateTime) return false;
 
     return new Date(event.endDateTime) < new Date();
 };
 
-// Determine the current lifecycle status of an event.
+// Determine the current lifecycle status of an event
 const getEventStatus = (event) => {
     if (isEventPast(event)) {
         return EVENT_STATUS.PAST;
@@ -45,22 +54,21 @@ const getEventStatus = (event) => {
     return EVENT_STATUS.UPCOMING;
 };
 
-/* Business rules */
+/* =============================
+   TIME-BASED BUSINESS RULES
+============================= */
 
-// Prevent modifications on past events.
+// Prevent actions on past events
 const assertEventNotPast = (event) => {
     if (isEventPast(event)) {
-        throwHttpError(403, "No action is allowed on a past event");
+        throwHttpError(403, PAST_EVENT_ACTION_ERROR);
     }
 };
 
-// Prevent deleting events that have already started.
+// Prevent deletion after an event has started
 const assertEventNotStarted = (event) => {
     if (hasEventStarted(event)) {
-        throwHttpError(
-            403,
-            "An event that has already started cannot be deleted"
-        );
+        throwHttpError(403, STARTED_EVENT_DELETION_ERROR);
     }
 };
 

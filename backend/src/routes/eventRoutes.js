@@ -38,7 +38,9 @@ const {
    - Update and delete routes require event role authorization.
 =========================================================================== */
 
-/* Read events */
+/* =============================
+   EVENT RETRIEVAL
+============================= */
 
 router.get(
     "/",
@@ -64,7 +66,9 @@ router.get(
     eventController.getEvent
 );
 
-/* Write events */
+/* =============================
+   EVENT CREATION
+============================= */
 
 router.post(
     "/",
@@ -74,6 +78,10 @@ router.post(
     handleValidationErrors,
     eventController.createEvent
 );
+
+/* =============================
+   EVENT UPDATE
+============================= */
 
 router.put(
     "/:eventId",
@@ -85,6 +93,10 @@ router.put(
     authorizeEventRole([EVENT_ROLES.ORGANIZER, EVENT_ROLES.CO_ORGANIZER]),
     eventController.updateEvent
 );
+
+/* =============================
+   EVENT DELETION
+============================= */
 
 router.delete(
     "/:eventId",

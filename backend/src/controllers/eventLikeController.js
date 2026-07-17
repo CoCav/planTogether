@@ -15,8 +15,11 @@ const eventLikeService = require("../services/eventLikeService");
    - Authenticated user IDs are provided by authenticateToken.
 =========================================================================== */
 
-/* Like event */
+/* =============================
+   EVENT LIKES
+============================= */
 
+// Like an event for the authenticated user
 const likeEvent = async (req, res, next) => {
     try {
         const result = await eventLikeService.likeEvent({
@@ -35,8 +38,7 @@ const likeEvent = async (req, res, next) => {
     }
 };
 
-/* Unlike event */
-
+// Remove the authenticated user's like from an event
 const unlikeEvent = async (req, res, next) => {
     try {
         const result = await eventLikeService.unlikeEvent({

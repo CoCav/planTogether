@@ -1,11 +1,22 @@
 const { body, query } = require("express-validator");
 
-const { PASSWORD_REQUIREMENTS, PASSWORD_MESSAGES } = require("../../config/security/passwordPolicy");
+const {
+    PASSWORD_REQUIREMENTS,
+    PASSWORD_MESSAGES
+} = require("../../config/security/passwordPolicy");
 
 const { EVENT_SORT_FIELDS } = require("../../constants/eventSortFields");
 
-const { pageQueryValidator, pageSizeQueryValidator } = require("../shared/paginationValidators");
-const { orderQueryValidator, createSortByValidator } = require("../shared/sortValidators");
+const {
+    pageQueryValidator,
+    pageSizeQueryValidator
+} = require("../shared/paginationValidators");
+
+const {
+    orderQueryValidator,
+    createSortByValidator
+} = require("../shared/sortValidators");
+
 const {
     statusQueryValidator,
     modeQueryValidator,
@@ -35,6 +46,10 @@ const {
    - handleValidationErrors must run after these validators.
 =========================================================================== */
 
+/* =============================
+   EVENT VIEW OPTIONS
+============================= */
+
 const CURRENT_USER_EVENT_VIEWS = [
     "created",
     "joined",
@@ -42,20 +57,31 @@ const CURRENT_USER_EVENT_VIEWS = [
     "joinedHistory"
 ];
 
+/* =============================
+   CURRENT USER EVENT VALIDATION
+============================= */
+
+// Validate filters and pagination for current user event listings
 const getCurrentUserEventsValidator = [
     query("view")
         .optional()
         .isIn(CURRENT_USER_EVENT_VIEWS)
-        .withMessage("View must be one of: created, joined, createdHistory, joinedHistory"),
+        .withMessage(
+            "View must be one of: created, joined, createdHistory, joinedHistory"
+        ),
 
     statusQueryValidator,
+
     creatorIdQueryValidator,
     creatorQueryValidator,
+
     modeQueryValidator,
     typeQueryValidator,
     themeQueryValidator,
+
     locationQueryValidator,
     searchQueryValidator,
+
     dateQueryValidator,
     startDateQueryValidator,
     endDateQueryValidator,
@@ -63,14 +89,16 @@ const getCurrentUserEventsValidator = [
     pageQueryValidator,
     pageSizeQueryValidator,
 
-    createSortByValidator(
-        EVENT_SORT_FIELDS,
-        "Sort field must be one of: startDateTime, title, createdAt"
-    ),
+    createSortByValidator(EVENT_SORT_FIELDS, "Sort field must be one of: startDateTime, title, createdAt"),
 
     orderQueryValidator
 ];
 
+/* =============================
+   PROFILE UPDATE VALIDATION
+============================= */
+
+// Validate optional current user profile fields
 const updateCurrentUserProfileValidator = [
     body("name")
         .optional()
@@ -86,6 +114,11 @@ const updateCurrentUserProfileValidator = [
         .normalizeEmail()
 ];
 
+/* =============================
+   PASSWORD UPDATE VALIDATION
+============================= */
+
+// Validate current and new password fields
 const changeCurrentUserPasswordValidator = [
     body("currentPassword")
         .notEmpty()
@@ -94,7 +127,9 @@ const changeCurrentUserPasswordValidator = [
     body("newPassword")
         .notEmpty()
         .withMessage("New password is required")
-        .isLength({ min: PASSWORD_REQUIREMENTS.minLength })
+        .isLength({
+            min: PASSWORD_REQUIREMENTS.minLength
+        })
         .withMessage(PASSWORD_MESSAGES.newPasswordMinLength)
         .matches(PASSWORD_REQUIREMENTS.hasNumber)
         .withMessage(PASSWORD_MESSAGES.newPasswordNumber)

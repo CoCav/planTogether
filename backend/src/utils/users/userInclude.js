@@ -16,12 +16,18 @@ const {
    - Intended for Sequelize `include` definitions.
 =========================================================================== */
 
+/* =============================
+   USER INCLUDES
+============================= */
+
+// Build a public user include
 const buildPublicUserInclude = (User) => ({
     model: User,
     as: "user",
     attributes: PUBLIC_USER_ATTRIBUTES
 });
 
+// Build an authenticated user include
 const buildAuthenticatedUserInclude = (User) => ({
     model: User,
     attributes: AUTHENTICATED_USER_ATTRIBUTES

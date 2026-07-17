@@ -20,6 +20,11 @@ const { normalizeEmail } = require("../utils/stringNormalizer");
    - The withPassword scope is intended for authentication only.
 =========================================================================== */
 
+/* =============================
+   USER MODEL
+============================= */
+
+// Define user account fields, scopes and normalization behavior
 const User = sequelize.define("User", {
     id: {
         type: DataTypes.INTEGER,
@@ -37,7 +42,7 @@ const User = sequelize.define("User", {
         allowNull: false,
         unique: true,
 
-        // Normalize email before saving.
+        // Normalize email before saving
         set(value) {
             this.setDataValue(
                 "email",
@@ -69,14 +74,14 @@ const User = sequelize.define("User", {
     tableName: "users",
     timestamps: true,
 
-    // Hide password from regular queries.
+    // Hide password from regular queries
     defaultScope: {
         attributes: {
             exclude: ["password"]
         }
     },
 
-    // Explicit scope for authentication.
+    // Explicit scope for authentication
     scopes: {
         withPassword: {
             attributes: {

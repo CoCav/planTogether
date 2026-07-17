@@ -16,13 +16,14 @@ const userService = require("../../services/userService");
    - Business logic is delegated to userService.
 =========================================================================== */
 
-/* Public user profile */
+/* =============================
+   PUBLIC USER PROFILE
+============================= */
 
+// Retrieve a public user profile
 const getPublicUserProfile = async (req, res, next) => {
     try {
-        const profile = await userService.getPublicUserProfileById(
-            req.params.id
-        );
+        const profile = await userService.getPublicUserProfileById(req.params.id);
 
         return res.status(200).json({
             success: true,
@@ -35,8 +36,11 @@ const getPublicUserProfile = async (req, res, next) => {
     }
 };
 
-/* Public user events */
+/* =============================
+   PUBLIC USER EVENTS
+============================= */
 
+// Retrieve public event listings for a user
 const getPublicUserEvents = async (req, res, next) => {
     try {
         const events = await userService.getPublicUserEventsById(

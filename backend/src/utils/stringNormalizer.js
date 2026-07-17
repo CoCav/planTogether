@@ -13,17 +13,21 @@
    - Avoids duplicated trim and lowercase logic.
 =========================================================================== */
 
-// Normalize a raw string value.
+/* =============================
+   STRING NORMALIZATION
+============================= */
+
+// Normalize a raw string value
 const normalizeString = (value) => {
     return String(value ?? "").trim();
 };
 
-// Normalize an email address before persistence or lookup.
+// Normalize an email before persistence or lookup
 const normalizeEmail = (email) => {
     return normalizeString(email).toLowerCase();
 };
 
-// Normalize a value for stable search and cache lookups.
+// Normalize a stable search or cache key
 const normalizeSearchKey = (value) => {
     return normalizeString(value).toLowerCase();
 };

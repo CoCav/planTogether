@@ -25,6 +25,10 @@ const { findActiveMembership } = require("../../utils/eventMemberships/eventMemb
    - Event creator cannot be demoted or removed.
 =========================================================================== */
 
+/* =============================
+   AUTHORIZATION ERRORS
+============================= */
+
 const ONLY_ORGANIZER_CAN_UPDATE_ERROR = "Only the organizer can update member roles";
 const TARGET_MEMBERSHIP_NOT_FOUND_ERROR = "Target membership not found";
 const CANNOT_CHANGE_CREATOR_ROLE_ERROR = "You cannot change the role of the event creator";
@@ -35,20 +39,26 @@ const CANNOT_REMOVE_SELF_ERROR = "You cannot remove yourself from the event";
 const CANNOT_REMOVE_ORGANIZER_ERROR = "Organizer cannot be removed";
 const CO_ORGANIZER_CANNOT_REMOVE_CO_ORGANIZER_ERROR = "Co-organizers cannot remove other co-organizers";
 
-/* Helpers */
+/* =============================
+   AUTHORIZATION HELPERS
+============================= */
 
+// Check whether a membership belongs to the event organizer
 const isOrganizer = (membership) => {
     return membership?.role === EVENT_ROLES.ORGANIZER;
 };
 
+// Check whether a membership can manage member removals
 const canManageMemberRemoval = (membership) => {
     return STAFF_EVENT_ROLES.includes(membership?.role);
 };
 
+// Check whether a membership belongs to the event creator
 const isEventCreator = (event, membership) => {
     return event.creatorId === membership.userId;
 };
 
+// Retrieve an active event membership
 const getActiveMembership = ({ eventId, userId }) => {
     return findActiveMembership(EventUserRole, {
         eventId,
@@ -56,8 +66,11 @@ const getActiveMembership = ({ eventId, userId }) => {
     });
 };
 
-/* Role update authorization */
+/* =============================
+   ROLE UPDATE AUTHORIZATION
+============================= */
 
+// Authorize an organizer to update another member's role
 const authorizeEventMemberRoleUpdate = async (req, res, next) => {
     try {
         const eventId = req.params.eventId;
@@ -102,8 +115,11 @@ const authorizeEventMemberRoleUpdate = async (req, res, next) => {
     }
 };
 
-/* Member removal authorization */
+/* =============================
+   MEMBER REMOVAL AUTHORIZATION
+============================= */
 
+// Authorize an organizer or co-organizer to remove a member
 const authorizeEventMemberRemoval = async (req, res, next) => {
     try {
         const eventId = req.params.eventId;

@@ -27,7 +27,9 @@ const { registerValidator, loginValidator } = require("../validators/authValidat
    - Profile and password routes belong to userRoutes.
 =========================================================================== */
 
-/* Registration */
+/* =============================
+   USER REGISTRATION
+============================= */
 
 router.post(
     "/register",
@@ -38,7 +40,9 @@ router.post(
     authController.register
 );
 
-/* Login */
+/* =============================
+   USER LOGIN
+============================= */
 
 router.post(
     "/login",
@@ -48,7 +52,9 @@ router.post(
     authController.login
 );
 
-/* Logout */
+/* =============================
+   USER LOGOUT
+============================= */
 
 router.post(
     "/logout",

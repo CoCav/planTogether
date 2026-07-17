@@ -31,7 +31,9 @@ const {
    - Review permissions are enforced by the service layer.
 =========================================================================== */
 
-/* Event reviews */
+/* =============================
+   REVIEW RETRIEVAL
+============================= */
 
 router.get(
     "/:eventId/reviews",
@@ -40,6 +42,11 @@ router.get(
     handleValidationErrors,
     eventReviewController.getEventReviews
 );
+
+
+/* =============================
+   REVIEW CREATION
+============================= */
 
 router.post(
     "/:eventId/reviews",
@@ -50,7 +57,9 @@ router.post(
     eventReviewController.createEventReview
 );
 
-/* Review management */
+/* =============================
+   REVIEW UPDATE
+============================= */
 
 router.put(
     "/reviews/:reviewId",
@@ -60,6 +69,10 @@ router.put(
     handleValidationErrors,
     eventReviewController.updateEventReview
 );
+
+/* =============================
+   REVIEW DELETION
+============================= */
 
 router.delete(
     "/reviews/:reviewId",

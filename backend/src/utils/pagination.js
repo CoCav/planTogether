@@ -16,15 +16,28 @@
    - Grouped Sequelize counts can return arrays.
 =========================================================================== */
 
+/* =============================
+   PAGINATION DEFAULTS
+============================= */
+
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 10;
 const MAX_PAGE_SIZE = 100;
+
+/* =============================
+   SORT DEFAULTS
+============================= */
 
 const DEFAULT_SORT_FIELD = "createdAt";
 const DEFAULT_SORT_ORDER = "DESC";
 const ASC_SORT_ORDER = "ASC";
 const DESC_SORT_ORDER = "DESC";
 
+/* =============================
+   PAGINATION OPTIONS
+============================= */
+
+// Normalize pagination and sorting options
 const getPaginationOptions = (
     query = {},
     allowedSortFields = [],
@@ -39,7 +52,7 @@ const getPaginationOptions = (
         order = defaultOrder
     } = query;
 
-    // Normalize pagination values.
+    // Normalize pagination values
     const limit = Math.min(
         parseInt(pageSize, 10) || DEFAULT_PAGE_SIZE,
         MAX_PAGE_SIZE
@@ -50,15 +63,15 @@ const getPaginationOptions = (
         DEFAULT_PAGE
     );
 
-    // Calculate the SQL offset for the requested page.
+    // Calculate the SQL offset for the requested page
     const offset = (currentPage - DEFAULT_PAGE) * limit;
 
-    // Prevent sorting by unsupported database fields.
+    // Prevent sorting by unsupported database fields
     const orderField = allowedSortFields.includes(sortBy)
         ? sortBy
         : defaultSortField;
 
-    // Normalize the requested sort direction.
+    // Normalize the requested sort direction
     const orderDirection = String(order).toLowerCase() === "asc"
         ? ASC_SORT_ORDER
         : DESC_SORT_ORDER;
@@ -73,10 +86,16 @@ const getPaginationOptions = (
     };
 };
 
+/* =============================
+   PAGINATION COUNTS
+============================= */
+
+// Normalize grouped and non-grouped Sequelize counts
 const getTotalCount = (count) => {
     return Array.isArray(count) ? count.length : count;
 };
 
+// Calculate the total number of pages
 const getTotalPages = (totalItems, pageSize) => {
     return Math.ceil(totalItems / pageSize);
 };

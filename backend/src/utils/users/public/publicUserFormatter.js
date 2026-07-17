@@ -10,7 +10,11 @@
    - Public responses never expose sensitive user information.
 =========================================================================== */
 
-// Format the public user response.
+/* =============================
+   PUBLIC USER FORMATTING
+============================= */
+
+// Format a public user API response
 const formatPublicUser = (user) => ({
     name: user.name,
     avatar: user.avatar || null

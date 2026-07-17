@@ -19,16 +19,26 @@ const logger = require("../../config/logger");
    - Missing files are ignored silently.
 =========================================================================== */
 
+/* =============================
+   STORAGE CONFIGURATION
+============================= */
+
 const DEFAULT_UPLOAD_DIRECTORY = "uploads";
+
+// Resolve the configured upload root directory
 
 const uploadDirectory = process.env.UPLOAD_DIR || DEFAULT_UPLOAD_DIRECTORY;
 
-// Delete an uploaded file safely.
+/* =============================
+   FILE DELETION
+============================= */
+
+// Delete an uploaded file without allowing directory traversal
 const deleteUploadedFile = async (filePath) => {
     if (!filePath) return;
 
     try {
-        // Normalize the stored path by removing the leading slash.
+        // Normalize the stored path by removing the leading slash
         const normalizedPath = filePath.startsWith("/")
             ? filePath.slice(1)
             : filePath;
@@ -44,7 +54,7 @@ const deleteUploadedFile = async (filePath) => {
         const absolutePath = path.resolve(projectRoot, normalizedPath);
         const relativePath = path.relative(uploadRoot, absolutePath);
 
-        // Prevent deleting the upload root or files outside it.
+        // Prevent deleting the upload root or files outside it
         const isInsideUploadDirectory =
             relativePath !== "" &&
             relativePath !== ".." &&
@@ -52,24 +62,18 @@ const deleteUploadedFile = async (filePath) => {
             !path.isAbsolute(relativePath);
 
         if (!isInsideUploadDirectory) {
-            logger.warn(
-                { filePath },
-                "Attempted to delete a file outside the upload directory"
-            );
+            logger.warn({ filePath }, "Attempted to delete a file outside the upload directory");
 
             return;
         }
 
-        // Delete the file only if it still exists.
+        // Delete the file only if it still exists
         if (fs.existsSync(absolutePath)) {
             await fs.promises.unlink(absolutePath);
         }
 
     } catch (error) {
-        logger.warn(
-            { error, filePath },
-            "Failed to delete uploaded file"
-        );
+        logger.warn({ error, filePath }, "Failed to delete uploaded file");
     }
 };
 

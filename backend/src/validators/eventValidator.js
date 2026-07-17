@@ -1,12 +1,26 @@
 const { body } = require("express-validator");
 
-const { EVENT_MODES, VALID_EVENT_MODES } = require("../constants/eventModes");
+const {
+    EVENT_MODES,
+    VALID_EVENT_MODES
+} = require("../constants/eventModes");
+
 const { EVENT_ADMIN_SORT_FIELDS } = require("../constants/eventSortFields");
 
 const { eventIdParamValidator } = require("./shared/paramsValidators");
-const { pageQueryValidator, pageSizeQueryValidator } = require("./shared/paginationValidators");
-const { orderQueryValidator, createSortByValidator } = require("./shared/sortValidators");
+
+const {
+    pageQueryValidator,
+    pageSizeQueryValidator
+} = require("./shared/paginationValidators");
+
+const {
+    orderQueryValidator,
+    createSortByValidator
+} = require("./shared/sortValidators");
+
 const { structuredLocationValidators } = require("./shared/geocodingValidators");
+
 const {
     statusQueryValidator,
     modeQueryValidator,
@@ -41,10 +55,20 @@ const {
    - Event-specific business validation stays in this file.
 =========================================================================== */
 
+/* =============================
+   VALIDATION MESSAGES
+============================= */
+
 const LOCATION_REQUIRED_MESSAGE = "Location is required for in-person events";
+
 const END_AFTER_START_MESSAGE = "End date and time must be after start date and time";
 const DEADLINE_BEFORE_START_MESSAGE = "Registration deadline must be before event start date";
 
+/* =============================
+   VALIDATION HELPERS
+============================= */
+
+// Build a location validator that accounts for the selected event mode
 const createLocationValidator = () => {
     return body("location")
         .custom((value, { req }) => {
@@ -66,6 +90,7 @@ const createLocationValidator = () => {
         });
 };
 
+// Ensure the event end date occurs after its start date
 const validateEndAfterStart = (value, { req }) => {
     const start = new Date(req.body.startDateTime);
     const end = new Date(value);
@@ -77,8 +102,11 @@ const validateEndAfterStart = (value, { req }) => {
     return true;
 };
 
+// Ensure registration closes before the event starts
 const validateDeadlineBeforeStart = (value, { req }) => {
-    if (!value || !req.body.startDateTime) return true;
+    if (!value || !req.body.startDateTime) {
+        return true;
+    }
 
     const deadline = new Date(value);
     const start = new Date(req.body.startDateTime);
@@ -90,13 +118,31 @@ const validateDeadlineBeforeStart = (value, { req }) => {
     return true;
 };
 
-/* Event payload */
+/* =============================
+   EVENT CREATION VALIDATION
+============================= */
 
+// Validate the complete payload required to create an event
 const createEventValidator = [
-    body("title").trim().notEmpty().withMessage("Title is required"),
-    body("description").trim().notEmpty().withMessage("Description is required"),
-    body("type").trim().notEmpty().withMessage("Type is required"),
-    body("theme").trim().notEmpty().withMessage("Theme is required"),
+    body("title")
+        .trim()
+        .notEmpty()
+        .withMessage("Title is required"),
+
+    body("description")
+        .trim()
+        .notEmpty()
+        .withMessage("Description is required"),
+
+    body("type")
+        .trim()
+        .notEmpty()
+        .withMessage("Type is required"),
+
+    body("theme")
+        .trim()
+        .notEmpty()
+        .withMessage("Theme is required"),
 
     body("mode")
         .trim()
@@ -133,11 +179,35 @@ const createEventValidator = [
         .custom(validateDeadlineBeforeStart)
 ];
 
+/* =============================
+   EVENT UPDATE VALIDATION
+============================= */
+
+// Validate optional event fields while supporting nullable values
 const updateEventValidator = [
-    body("title").optional().trim().notEmpty().withMessage("Title cannot be empty"),
-    body("description").optional().trim().notEmpty().withMessage("Description cannot be empty"),
-    body("type").optional().trim().notEmpty().withMessage("Type is required"),
-    body("theme").optional().trim().notEmpty().withMessage("Theme is required"),
+    body("title")
+        .optional()
+        .trim()
+        .notEmpty()
+        .withMessage("Title cannot be empty"),
+
+    body("description")
+        .optional()
+        .trim()
+        .notEmpty()
+        .withMessage("Description cannot be empty"),
+
+    body("type")
+        .optional()
+        .trim()
+        .notEmpty()
+        .withMessage("Type is required"),
+
+    body("theme")
+        .optional()
+        .trim()
+        .notEmpty()
+        .withMessage("Theme is required"),
 
     body("mode")
         .optional()
@@ -165,9 +235,13 @@ const updateEventValidator = [
 
     body("maxParticipants")
         .optional({ values: "undefined" })
-        .customSanitizer((value) => value === "" ? null : value)
+        .customSanitizer((value) => {
+            return value === "" ? null : value;
+        })
         .custom((value) => {
-            if (value === null) return true;
+            if (value === null) {
+                return true;
+            }
 
             if (!Number.isInteger(Number(value)) || Number(value) < 1) {
                 throw new Error("Max participants must be a positive integer");
@@ -178,9 +252,13 @@ const updateEventValidator = [
 
     body("registrationDeadline")
         .optional({ values: "undefined" })
-        .customSanitizer((value) => value === "" ? null : value)
+        .customSanitizer((value) => {
+            return value === "" ? null : value;
+        })
         .custom((value) => {
-            if (value === null) return true;
+            if (value === null) {
+                return true;
+            }
 
             if (Number.isNaN(new Date(value).getTime())) {
                 throw new Error("Registration deadline must be a valid ISO8601 date");
@@ -191,24 +269,33 @@ const updateEventValidator = [
         .custom(validateDeadlineBeforeStart)
 ];
 
-/* Event query filters */
+/* =============================
+   EVENT QUERY VALIDATION
+============================= */
 
+// Validate filters, sorting and pagination for event listings
 const getAllEventsValidator = [
     creatorIdQueryValidator,
+
     searchQueryValidator,
+
     typeQueryValidator,
     themeQueryValidator,
     modeQueryValidator,
+
     locationQueryValidator,
     cityQueryValidator,
     regionQueryValidator,
     countryQueryValidator,
+
     dateQueryValidator,
     startDateQueryValidator,
     endDateQueryValidator,
 
     createSortByValidator(EVENT_ADMIN_SORT_FIELDS),
+
     statusQueryValidator,
+
     pageQueryValidator,
     pageSizeQueryValidator,
     orderQueryValidator

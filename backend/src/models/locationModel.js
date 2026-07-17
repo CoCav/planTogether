@@ -17,6 +17,11 @@ const sequelize = require("../config/database");
    - Does not represent an event location directly.
 =========================================================================== */
 
+/* =============================
+   LOCATION CACHE MODEL
+============================= */
+
+// Define cached geocoding results and lookup indexes
 const Location = sequelize.define("Location", {
     id: {
         type: DataTypes.INTEGER,
@@ -79,6 +84,7 @@ const Location = sequelize.define("Location", {
     timestamps: true,
 
     indexes: [
+        // Prevent duplicate provider results for the same resolved location
         {
             unique: true,
             fields: ["query", "provider", "latitude", "longitude"]

@@ -11,10 +11,18 @@
    - Intended for Sequelize `attributes` selections.
 =========================================================================== */
 
+/* =============================
+   EVENT CREATOR ATTRIBUTES
+============================= */
+
 const EVENT_CREATOR_ATTRIBUTES = [
     "id",
     "name"
 ];
+
+/* =============================
+   PUBLIC USER ATTRIBUTES
+============================= */
 
 const PUBLIC_USER_ATTRIBUTES = [
     "id",
@@ -26,6 +34,10 @@ const PUBLIC_USER_PROFILE_ATTRIBUTES = [
     "name",
     "avatar"
 ];
+
+/* =============================
+   AUTHENTICATED USER ATTRIBUTES
+============================= */
 
 const AUTHENTICATED_USER_ATTRIBUTES = [
     "id",

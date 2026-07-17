@@ -2,7 +2,10 @@ const { body } = require("express-validator");
 
 const { VALID_EVENT_ROLES } = require("../constants/eventRoles");
 
-const { eventIdParamValidator, userIdParamValidator } = require("./shared/paramsValidators");
+const {
+    eventIdParamValidator,
+    userIdParamValidator
+} = require("./shared/paramsValidators");
 
 /* ==========================================================================
    Event Membership Validators
@@ -19,11 +22,13 @@ const { eventIdParamValidator, userIdParamValidator } = require("./shared/params
    - Authorization is handled by dedicated middlewares.
 =========================================================================== */
 
-/* Role management */
+/* =============================
+   ROLE UPDATE VALIDATION
+============================= */
 
+// Validate event and member IDs with the requested role
 const updateEventMemberRoleValidator = [
     ...eventIdParamValidator,
-
     ...userIdParamValidator,
 
     body("newRole")
@@ -35,12 +40,21 @@ const updateEventMemberRoleValidator = [
         .withMessage("newRole must be one of: organizer, co_organizer, participant")
 ];
 
+/* =============================
+   MEMBER REMOVAL VALIDATION
+============================= */
+
+// Validate identifiers required to remove an event member
 const removeEventMemberValidator = [
     ...eventIdParamValidator,
-
     ...userIdParamValidator
 ];
 
+/* =============================
+   OWNERSHIP TRANSFER VALIDATION
+============================= */
+
+// Validate the target member for event ownership transfer
 const transferEventOwnershipValidator = [
     ...eventIdParamValidator,
 

@@ -18,8 +18,17 @@ const { EVENT_ROLES } = require("../../constants/eventRoles");
    - Participant count attributes use COUNT DISTINCT to avoid duplicate counts.
 =========================================================================== */
 
+/* =============================
+   PARTICIPANT CONSTANTS
+============================= */
+
 const PARTICIPANT_COUNT_ALIAS = "participantCount";
 
+/* =============================
+   PARTICIPANT QUERY BUILDERS
+============================= */
+
+// Build an include for active event participants
 const buildActiveParticipantInclude = (User) => ({
     model: User,
     as: "participants",
@@ -34,21 +43,21 @@ const buildActiveParticipantInclude = (User) => ({
     required: false
 });
 
+// Build a distinct participant count attribute
 const buildEventParticipantCountAttribute = (sequelize, participantIdPath) => ([
     sequelize.fn(
         "COUNT",
-        sequelize.fn(
-            "DISTINCT",
-            sequelize.col(participantIdPath)
-        )
+        sequelize.fn("DISTINCT", sequelize.col(participantIdPath))
     ),
     PARTICIPANT_COUNT_ALIAS
 ]);
 
-const countActiveParticipants = async (
-    EventUserRole,
-    { eventId, transaction } = {}
-) => {
+/* =============================
+   PARTICIPANT COUNTS
+============================= */
+
+// Count active participants for one event
+const countActiveParticipants = async (EventUserRole, { eventId, transaction } = {}) => {
     return EventUserRole.count({
         where: {
             eventId,
@@ -59,11 +68,8 @@ const countActiveParticipants = async (
     });
 };
 
-const countActiveParticipantsByEventIds = async (
-    EventUserRole,
-    sequelize,
-    eventIds
-) => {
+// Count active participants grouped by event ID
+const countActiveParticipantsByEventIds = async (EventUserRole, sequelize, eventIds) => {
     if (!eventIds.length) {
         return {};
     }

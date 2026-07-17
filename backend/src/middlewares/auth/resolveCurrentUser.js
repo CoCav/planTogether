@@ -17,8 +17,17 @@ const jwt = require("jsonwebtoken");
    - This middleware enriches public request context without enforcing auth.
 =========================================================================== */
 
+/* =============================
+   AUTHENTICATION CONSTANTS
+============================= */
+
 const BEARER_PREFIX = "Bearer ";
 
+/* =============================
+   OPTIONAL USER RESOLUTION
+============================= */
+
+// Resolve the current user without blocking anonymous requests
 const resolveCurrentUser = (req, res, next) => {
     const authHeader = req.headers.authorization;
 
@@ -37,11 +46,11 @@ const resolveCurrentUser = (req, res, next) => {
     try {
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Make authenticated user data available when the token is valid.
+        // Make authenticated user data available when the token is valid
         req.user = decodedToken;
 
     } catch {
-        // Public routes should continue anonymously when the token is invalid.
+        // Continue anonymously when the optional token is invalid
         req.user = null;
     }
 

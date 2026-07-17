@@ -21,8 +21,11 @@ const { formatAuthenticatedUser } = require("../utils/users/authenticated/authen
    - User profile logic belongs to userController.
 =========================================================================== */
 
-/* Registration */
+/* =============================
+   USER REGISTRATION
+============================= */
 
+// Register a user and return an authentication token
 const register = async (req, res, next) => {
     try {
         const { name, email, password } = req.body;
@@ -50,8 +53,11 @@ const register = async (req, res, next) => {
     }
 };
 
-/* Login */
+/* =============================
+   USER LOGIN
+============================= */
 
+// Authenticate a user and return an authentication token
 const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
@@ -73,8 +79,11 @@ const login = async (req, res, next) => {
     }
 };
 
-/* Logout */
+/* =============================
+   USER LOGOUT
+============================= */
 
+// Return a successful logout response
 const logout = (req, res) => {
     return res.status(200).json({
         success: true,

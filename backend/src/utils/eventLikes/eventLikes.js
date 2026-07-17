@@ -18,8 +18,17 @@ const { Op } = require("sequelize");
    - Grouped like count queries avoid N+1 queries.
 =========================================================================== */
 
+/* =============================
+   LIKE CONSTANTS
+============================= */
+
 const LIKES_COUNT_ALIAS = "likesCount";
 
+/* =============================
+   LIKE QUERY BUILDERS
+============================= */
+
+// Build a Sequelize include for event likes
 const buildEventLikeInclude = (EventLike) => ({
     model: EventLike,
     as: "likes",
@@ -27,17 +36,20 @@ const buildEventLikeInclude = (EventLike) => ({
     required: false
 });
 
+// Build a distinct event like count attribute
 const buildEventLikeCountAttribute = (sequelize, likeIdPath) => ([
     sequelize.fn(
         "COUNT",
-        sequelize.fn(
-            "DISTINCT",
-            sequelize.col(likeIdPath)
-        )
+        sequelize.fn("DISTINCT", sequelize.col(likeIdPath))
     ),
     LIKES_COUNT_ALIAS
 ]);
 
+/* =============================
+   SINGLE EVENT LIKES
+============================= */
+
+// Find a user's like for an event
 const findEventLike = (EventLike, { eventId, userId, transaction } = {}) => {
     return EventLike.findOne({
         where: {
@@ -48,6 +60,7 @@ const findEventLike = (EventLike, { eventId, userId, transaction } = {}) => {
     });
 };
 
+// Count likes for one event
 const getEventLikesCount = (EventLike, eventId, options = {}) => {
     return EventLike.count({
         where: {
@@ -57,6 +70,11 @@ const getEventLikesCount = (EventLike, eventId, options = {}) => {
     });
 };
 
+/* =============================
+   EVENT LIST LIKE STATS
+============================= */
+
+// Find event IDs liked by the current user
 const findLikedEventIdsByUser = async (EventLike, eventIds, currentUserId) => {
     if (!currentUserId || !eventIds.length) {
         return new Set();
@@ -78,6 +96,7 @@ const findLikedEventIdsByUser = async (EventLike, eventIds, currentUserId) => {
     );
 };
 
+// Count likes grouped by event ID
 const countEventLikesByEventIds = async (EventLike, sequelize, eventIds) => {
     if (!eventIds.length) {
         return {};

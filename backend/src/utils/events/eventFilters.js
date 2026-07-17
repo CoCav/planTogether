@@ -19,9 +19,18 @@ const { EVENT_STATUS } = require("../../constants/eventStatus");
    - Sequelize operators are kept here because this file builds Sequelize where clauses.
 =========================================================================== */
 
+/* =============================
+   DATE CONSTANTS
+============================= */
+
 const DAY_START_TIME = "T00:00:00.000";
 const DAY_END_TIME = "T23:59:59.999";
 
+/* =============================
+   FILTER HELPERS
+============================= */
+
+// Append a condition to the shared Sequelize AND group
 const addAndCondition = (whereConditions, condition) => {
     if (!whereConditions[Op.and]) {
         whereConditions[Op.and] = [];
@@ -30,6 +39,11 @@ const addAndCondition = (whereConditions, condition) => {
     whereConditions[Op.and].push(condition);
 };
 
+/* =============================
+   STATUS FILTERS
+============================= */
+
+// Apply a lifecycle status filter
 const applyEventStatusFilter = (whereConditions, status) => {
     if (!status) return;
 
@@ -57,13 +71,17 @@ const applyEventStatusFilter = (whereConditions, status) => {
         });
     }
 };
+/* =============================
+   DATE FILTERS
+============================= */
 
+// Apply single-day or date-range overlap filters
 const applyEventDateFilters = (whereConditions, { date, startDate, endDate }) => {
     if (date) {
         const start = new Date(`${date}${DAY_START_TIME}`);
         const end = new Date(`${date}${DAY_END_TIME}`);
 
-        // Include events that overlap the selected day, even if they started earlier.
+        // Include events that overlap the selected day, even if they started earlier
         addAndCondition(whereConditions, {
             startDateTime: { [Op.lte]: end }
         });
@@ -80,7 +98,7 @@ const applyEventDateFilters = (whereConditions, { date, startDate, endDate }) =>
         const end = endDate ? new Date(`${endDate}${DAY_END_TIME}`) : null;
 
         if (start && end) {
-            // Include events that overlap the selected date range.
+            // Include events that overlap the selected date range
             addAndCondition(whereConditions, {
                 startDateTime: { [Op.lte]: end }
             });
@@ -100,6 +118,11 @@ const applyEventDateFilters = (whereConditions, { date, startDate, endDate }) =>
     }
 };
 
+/* =============================
+   SEARCH FILTERS
+============================= */
+
+// Apply event metadata and location search filters
 const applyEventSearchFilters = (whereConditions, query = {}) => {
     const {
         creatorId,
@@ -121,7 +144,7 @@ const applyEventSearchFilters = (whereConditions, query = {}) => {
     const locationSearch = String(location ?? "").trim();
 
     if (locationSearch) {
-        // Search both the display location and structured geocoding fields.
+        // Search both the display location and structured geocoding fields
         addAndCondition(whereConditions, {
             [Op.or]: [
                 { location: { [Op.iLike]: `%${locationSearch}%` } },
@@ -146,6 +169,11 @@ const applyEventSearchFilters = (whereConditions, query = {}) => {
     }
 };
 
+/* =============================
+   EVENT WHERE BUILDER
+============================= */
+
+// Build all supported event where conditions
 const buildEventWhereConditions = (whereConditions, query = {}, options = {}) => {
     const { includeStatus = true } = options;
 

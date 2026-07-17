@@ -14,8 +14,17 @@ const { normalizeString } = require("../stringNormalizer");
    - Fallback queries help recover from overly specific addresses.
 =========================================================================== */
 
+/* =============================
+   SEARCH PATTERNS
+============================= */
+
 const POSTAL_CODE_PATTERN = /\b[A-Z]\d[A-Z][ -]?\d[A-Z]\d\b/gi;
 
+/* =============================
+   SEARCH QUERY HELPERS
+============================= */
+
+// Remove a Canadian postal code from a location query
 const removePostalCode = (query) => {
     return normalizeString(query)
         .replace(POSTAL_CODE_PATTERN, "")
@@ -26,6 +35,7 @@ const removePostalCode = (query) => {
         .trim();
 };
 
+// Build progressively broader geocoding search queries
 const buildLocationSearchQueries = (query) => {
     const cleanQuery = normalizeString(query);
 

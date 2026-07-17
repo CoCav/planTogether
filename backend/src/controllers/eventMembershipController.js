@@ -19,8 +19,11 @@ const eventMembershipService = require("../services/eventMembershipService");
    - Current user event listings belong to userController.
 =========================================================================== */
 
-/* Join / leave events */
+/* =============================
+   MEMBERSHIP ACTIONS
+============================= */
 
+// Join an event as the authenticated user
 const joinEvent = async (req, res, next) => {
     try {
         const userId = req.user.userId;
@@ -42,6 +45,7 @@ const joinEvent = async (req, res, next) => {
     }
 };
 
+// Leave an event as the authenticated user
 const leaveEvent = async (req, res, next) => {
     try {
         const userId = req.user.userId;
@@ -62,8 +66,11 @@ const leaveEvent = async (req, res, next) => {
     }
 };
 
-/* Members and staff */
+/* =============================
+   MEMBER RETRIEVAL
+============================= */
 
+// Retrieve active event members
 const getEventMembers = async (req, res, next) => {
     try {
         const members = await eventMembershipService.getEventMembers(
@@ -81,6 +88,7 @@ const getEventMembers = async (req, res, next) => {
     }
 };
 
+// Retrieve active event organizers and co-organizer
 const getEventStaff = async (req, res, next) => {
     try {
         const eventStaff = await eventMembershipService.getEventStaff(
@@ -98,8 +106,11 @@ const getEventStaff = async (req, res, next) => {
     }
 };
 
-/* Role management */
+/* =============================
+   MEMBER MANAGEMENT
+============================= */
 
+// Update an event member's role
 const updateEventMemberRole = async (req, res, next) => {
     try {
         const membership = await eventMembershipService.updateEventMemberRole({
@@ -119,6 +130,7 @@ const updateEventMemberRole = async (req, res, next) => {
     }
 };
 
+// Remove a member from an event
 const removeEventMember = async (req, res, next) => {
     try {
         await eventMembershipService.removeEventMember({
@@ -136,6 +148,11 @@ const removeEventMember = async (req, res, next) => {
     }
 };
 
+/* =============================
+   OWNERSHIP TRANSFER
+============================= */
+
+// Transfer event ownership to another member
 const transferEventOwnership = async (req, res, next) => {
     try {
         const result = await eventMembershipService.transferEventOwnership({

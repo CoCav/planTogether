@@ -18,15 +18,12 @@ const { EVENT_ROLES } = require("../../../constants/eventRoles");
    - Participant count enrichment stays in the user service.
 =========================================================================== */
 
-const getPublicCreatedEvents = async ({
-    Event,
-    User,
-    userId,
-    eventFilter,
-    creator,
-    pagination,
-    buildEventCreatorInclude
-}) => {
+/* =============================
+   CREATED EVENT QUERIES
+============================= */
+
+// Retrieve paginated events created by a user
+const getPublicCreatedEvents = async ({ Event, User, userId, eventFilter, creator, pagination, buildEventCreatorInclude }) => {
     const {
         limit,
         offset,
@@ -49,16 +46,12 @@ const getPublicCreatedEvents = async ({
     });
 };
 
-const getPublicJoinedEvents = async ({
-    Event,
-    User,
-    EventUserRole,
-    userId,
-    eventFilter,
-    creator,
-    pagination,
-    buildEventCreatorInclude
-}) => {
+/* =============================
+   JOINED EVENT QUERIES
+============================= */
+
+// Retrieve paginated events joined by a user
+const getPublicJoinedEvents = async ({ Event, User, EventUserRole, userId, eventFilter, creator, pagination, buildEventCreatorInclude }) => {
     const {
         limit,
         offset,
@@ -71,7 +64,7 @@ const getPublicJoinedEvents = async ({
             userId,
             deletedAt: null,
 
-            // Organizer memberships are already covered by created events.
+            // Organizer memberships are already covered by created events
             role: {
                 [Op.ne]: EVENT_ROLES.ORGANIZER
             }
@@ -86,7 +79,14 @@ const getPublicJoinedEvents = async ({
         }],
         limit,
         offset,
-        order: [[{ model: Event, as: "event" }, orderField, orderDirection]],
+        order: [[
+            {
+                model: Event,
+                as: "event"
+            },
+            orderField,
+            orderDirection
+        ]],
         subQuery: false
     });
 

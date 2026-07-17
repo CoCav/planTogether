@@ -47,15 +47,23 @@ const { findUserByIdOrFail } = require("../../utils/users/userQueries");
    - Public event listings can include current user like state.
 =========================================================================== */
 
+/* =============================
+   SERVICE CONSTANTS
+============================= */
+
 const DEFAULT_PUBLIC_USER_EVENT_SORT_FIELD = "startDateTime";
 
+/* =============================
+   PUBLIC USER PROFILE
+============================= */
+
+// Retrieve a public user profile with event statistics
 const getPublicUserProfileById = async (userId) => {
     const user = await findUserByIdOrFail(User, userId, {
-        attributes:
-            PUBLIC_USER_PROFILE_ATTRIBUTES
+        attributes: PUBLIC_USER_PROFILE_ATTRIBUTES
     });
 
-    // Profile statistics are independent and can run in parallel.
+    // Profile statistics are independent and can run in parallel
     const [
         createdEventsCount,
         joinedEventsCount
@@ -86,6 +94,11 @@ const getPublicUserProfileById = async (userId) => {
     };
 };
 
+/* =============================
+   PUBLIC USER EVENTS
+============================= */
+
+// Retrieve and enrich public event listings for a user
 const getPublicUserEventsById = async (userId, query = {}, currentUserId = null) => {
     await findUserByIdOrFail(User, userId);
 
@@ -152,7 +165,7 @@ const getPublicUserEventsById = async (userId, query = {}, currentUserId = null)
     const { count, rows } = result;
     const eventIds = rows.map((event) => event.id);
 
-    // Retrieve shared event statistics for the current page.
+    // Retrieve shared event statistics for the current page
     const {
         participantCountByEventId,
         likesCountByEventId,

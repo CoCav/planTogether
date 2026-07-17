@@ -82,27 +82,35 @@ const {
    - Event images are cleaned only after successful database commits.
 =========================================================================== */
 
+/* =============================
+   EVENT ERRORS
+============================= */
+
 const EVENT_NOT_FOUND_ERROR = "Event not found";
 const END_DATE_AFTER_START_ERROR = "End date must be after start date";
 const LOCATION_REQUIRED_ERROR = "Location is required for in-person events";
 
+/* =============================
+   EVENT SORT CONFIGURATION
+============================= */
+
 const DEFAULT_EVENT_SORT_FIELD = "createdAt";
 const DEFAULT_EVENT_SORT_ORDER = "DESC";
 
-/* Helpers */
+/* =============================
+   EVENT HELPERS
+============================= */
 
-/* Event dates */
-
+// Ensure the event end date occurs after its start date
 const assertValidEventDateRange = (startDateTime, endDateTime) => {
     if (new Date(endDateTime) <= new Date(startDateTime)) {
         throwHttpError(400, END_DATE_AFTER_START_ERROR);
     }
 };
 
-/* Event location */
-
+// Resolve structured location data for an in-person event
 const resolveEventLocationData = async (mode, location) => {
-    // Online events never require geocoding data.
+    // Online events never require geocoding data
     if (mode === EVENT_MODES.ONLINE || !normalizeString(location)) {
         return null;
     }
@@ -110,10 +118,9 @@ const resolveEventLocationData = async (mode, location) => {
     return geocodingService.resolveEventLocation(location);
 };
 
-/* Event likes */
-
+// Check whether the current user likes an event
 const getIsLikedByCurrentUser = async (eventId, currentUserId) => {
-    // Anonymous users cannot have an event like state.
+    // Anonymous users cannot have an event like state
     if (!currentUserId) {
         return false;
     }
@@ -126,8 +133,11 @@ const getIsLikedByCurrentUser = async (eventId, currentUserId) => {
     return Boolean(like);
 };
 
-/* Create event */
+/* =============================
+   EVENT CREATION
+============================= */
 
+// Create an event and assign its creator as organizer
 const createEvent = async (data, userId) => {
     const {
         startDateTime,
@@ -136,16 +146,9 @@ const createEvent = async (data, userId) => {
 
     assertValidEventDateRange(startDateTime, endDateTime);
 
-    const locationData = await resolveEventLocationData(
-        data.mode,
-        data.location
-    );
+    const locationData = await resolveEventLocationData(data.mode, data.location);
 
-    const eventData = buildCreateEventPayload(
-        data,
-        userId,
-        locationData
-    );
+    const eventData = buildCreateEventPayload(data, userId, locationData);
 
     const transaction = await sequelize.transaction();
 
@@ -154,7 +157,7 @@ const createEvent = async (data, userId) => {
             transaction
         });
 
-        // The creator always becomes the initial organizer.
+        // The creator always becomes the initial organizer
         await EventUserRole.create({
             eventId: event.id,
             userId,
@@ -173,8 +176,11 @@ const createEvent = async (data, userId) => {
     }
 };
 
-/* Read events */
+/* =============================
+   EVENT RETRIEVAL
+============================= */
 
+// Retrieve paginated and enriched event listings
 const getAllEvents = async (query = {}, currentUserId = null) => {
     const whereConditions = {};
 
@@ -223,11 +229,7 @@ const getAllEvents = async (query = {}, currentUserId = null) => {
     const totalEvents = getTotalCount(count);
     const eventIds = rows.map((event) => event.id);
 
-    const likedEventIds = await findLikedEventIdsByUser(
-        EventLike,
-        eventIds,
-        currentUserId
-    );
+    const likedEventIds = await findLikedEventIdsByUser(EventLike, eventIds, currentUserId);
 
     const events = rows.map((event) => ({
         ...event.toJSON(),
@@ -244,11 +246,9 @@ const getAllEvents = async (query = {}, currentUserId = null) => {
     };
 };
 
+// Retrieve the authenticated user's event permissions
 const getCurrentUserEventAccess = async (eventId, userId) => {
-    const event = await findEventByIdOrFail(
-        Event,
-        eventId
-    );
+    const event = await findEventByIdOrFail(Event, eventId);
 
     const membership = await findActiveMembership(EventUserRole, {
         eventId,
@@ -262,13 +262,13 @@ const getCurrentUserEventAccess = async (eventId, userId) => {
 
     const isStarted = hasEventStarted(event);
 
-    // Organizers and co-organizers can edit upcoming events.
+    // Organizers and co-organizers can edit upcoming events
     const canEdit = !isPast && (
         role === EVENT_ROLES.ORGANIZER ||
         role === EVENT_ROLES.CO_ORGANIZER
     );
 
-    // Only organizers can delete events that have not started.
+    // Only organizers can delete events that have not started
     const canDelete =
         role === EVENT_ROLES.ORGANIZER &&
         !isPast &&
@@ -282,6 +282,7 @@ const getCurrentUserEventAccess = async (eventId, userId) => {
     };
 };
 
+// Retrieve one enriched event by ID
 const getEventById = async (id, currentUserId = null) => {
     const event = await Event.findOne({
         where: {
@@ -321,7 +322,11 @@ const getEventById = async (id, currentUserId = null) => {
     };
 };
 
-/* Update event */
+/* =============================
+   EVENT UPDATE
+============================= */
+
+// Update an event and clean replaced images after commit
 const updateEventById = async (id, data) => {
     const transaction = await sequelize.transaction();
 
@@ -336,10 +341,9 @@ const updateEventById = async (id, data) => {
         assertEventNotPast(event);
 
         const nextStartDateTime = data.startDateTime ?? event.startDateTime;
-
         const nextEndDateTime = data.endDateTime ?? event.endDateTime;
 
-        // Validate partial date updates against existing values.
+        // Validate partial date updates against existing values
         assertValidEventDateRange(nextStartDateTime, nextEndDateTime);
 
         const nextMode = data.mode ?? event.mode;
@@ -364,11 +368,7 @@ const updateEventById = async (id, data) => {
             ? await resolveEventLocationData(nextMode, nextLocation)
             : null;
 
-        const updatedData = buildUpdateEventPayload(
-            event,
-            data,
-            locationData
-        );
+        const updatedData = buildUpdateEventPayload(event, data, locationData);
 
         const oldImage = event.image;
 
@@ -394,7 +394,7 @@ const updateEventById = async (id, data) => {
         throw error;
     }
 
-    // File cleanup runs only after the database commit succeeds.
+    // File cleanup runs only after the database commit succeeds
     if (oldImageToDelete) {
         await deleteUploadedFile(oldImageToDelete);
     }
@@ -402,8 +402,11 @@ const updateEventById = async (id, data) => {
     return updatedEvent;
 };
 
-/* Delete event */
+/* =============================
+   EVENT DELETION
+============================= */
 
+// Delete an event and its explicit memberships
 const deleteEventById = async (id) => {
     const transaction = await sequelize.transaction();
 
@@ -418,7 +421,7 @@ const deleteEventById = async (id) => {
 
         oldImageToDelete = event.image;
 
-        // Remove explicit memberships before deleting the event.
+        // Remove explicit memberships before deleting the event
         await EventUserRole.destroy({
             where: {
                 eventId: id
@@ -437,7 +440,7 @@ const deleteEventById = async (id) => {
         throw error;
     }
 
-    // File cleanup must never trigger a rollback after the commit.
+    // File cleanup must never trigger a rollback after the commit
     if (oldImageToDelete) {
         await deleteUploadedFile(oldImageToDelete);
     }

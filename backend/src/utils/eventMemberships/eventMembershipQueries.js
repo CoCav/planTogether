@@ -12,10 +12,12 @@
    - Additional Sequelize options can be passed through the options parameter.
 =========================================================================== */
 
-const findActiveMembership = (
-    EventUserRole,
-    { eventId, userId, transaction } = {}
-) => {
+/* =============================
+   MEMBERSHIP QUERIES
+============================= */
+
+// Find an active event membership
+const findActiveMembership = (EventUserRole, { eventId, userId, transaction } = {}) => {
     return EventUserRole.findOne({
         where: {
             eventId,
@@ -26,10 +28,8 @@ const findActiveMembership = (
     });
 };
 
-const findMembership = (
-    EventUserRole,
-    { eventId, userId, transaction } = {}
-) => {
+// Find an event membership including inactive records
+const findMembership = (EventUserRole, { eventId, userId, transaction } = {}) => {
     return EventUserRole.findOne({
         where: {
             eventId,

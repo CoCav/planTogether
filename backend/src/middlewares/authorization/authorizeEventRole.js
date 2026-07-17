@@ -1,6 +1,7 @@
 const EventUserRole = require("../../models/associations/eventUserRoleModel");
 
 const { createHttpError } = require("../../utils/errors/httpError");
+
 const { findActiveMembership } = require("../../utils/eventMemberships/eventMembershipQueries");
 
 /* ==========================================================================
@@ -19,9 +20,18 @@ const { findActiveMembership } = require("../../utils/eventMemberships/eventMemb
    - Returns 403 when no matching allowed membership is found.
 =========================================================================== */
 
+/* =============================
+   AUTHORIZATION ERRORS
+============================= */
+
 const EVENT_ID_REQUIRED_ERROR = "Event ID is required";
 const INSUFFICIENT_EVENT_ROLE_ERROR = "Forbidden: insufficient event role";
 
+/* =============================
+   EVENT ROLE AUTHORIZATION
+============================= */
+
+// Build a middleware that allows only the provided event roles
 const authorizeEventRole = (allowedRoles) => {
     return async (req, res, next) => {
         try {
@@ -29,22 +39,23 @@ const authorizeEventRole = (allowedRoles) => {
             const userId = req.user.userId;
 
             if (eventId == null) {
-                return next(createHttpError(400, EVENT_ID_REQUIRED_ERROR));
+                return next(
+                    createHttpError(400, EVENT_ID_REQUIRED_ERROR)
+                );
             }
 
-            const membership = await findActiveMembership(
-                EventUserRole,
-                {
-                    eventId,
-                    userId
-                }
-            );
+            const membership = await findActiveMembership(EventUserRole, {
+                eventId,
+                userId
+            });
 
             if (!membership || !allowedRoles.includes(membership.role)) {
-                return next(createHttpError(403, INSUFFICIENT_EVENT_ROLE_ERROR));
+                return next(
+                    createHttpError(403, INSUFFICIENT_EVENT_ROLE_ERROR)
+                );
             }
 
-            // Reuse membership in downstream handlers.
+            // Reuse the active membership in downstream handlers
             req.eventMembership = membership;
 
             return next();

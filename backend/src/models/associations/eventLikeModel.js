@@ -15,6 +15,11 @@ const sequelize = require("../../config/database");
    - One like per user and event.
 =========================================================================== */
 
+/* =============================
+   EVENT LIKE MODEL
+============================= */
+
+// Define event like fields, constraints and indexes
 const EventLike = sequelize.define("EventLike", {
     eventId: {
         type: DataTypes.INTEGER,

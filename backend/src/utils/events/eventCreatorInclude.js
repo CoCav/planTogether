@@ -15,6 +15,11 @@ const { EVENT_CREATOR_ATTRIBUTES } = require("../../constants/userAttributes");
    - Creator filtering uses an INNER JOIN when a creator name is provided.
 =========================================================================== */
 
+/* =============================
+   REVIEW QUERIES
+============================= */
+
+// Find a review by ID or throw a not found error
 const buildEventCreatorInclude = (User, creator) => {
     const creatorSearch = String(creator ?? "").trim();
 
@@ -33,6 +38,7 @@ const buildEventCreatorInclude = (User, creator) => {
         })
     };
 };
+
 module.exports = {
     buildEventCreatorInclude
 };

@@ -12,8 +12,14 @@
    - Keep these rules synchronized with frontend password validation.
 =========================================================================== */
 
+/* =============================
+   PASSWORD REQUIREMENTS
+============================= */
+
+// Minimum password length required by the application
 const PASSWORD_MIN_LENGTH = 8;
 
+// Shared password validation rules
 const PASSWORD_REQUIREMENTS = {
     minLength: PASSWORD_MIN_LENGTH,
     hasNumber: /\d/,
@@ -21,6 +27,11 @@ const PASSWORD_REQUIREMENTS = {
     hasLowercase: /[a-z]/
 };
 
+/* =============================
+   PASSWORD MESSAGES
+============================= */
+
+// Shared validation messages used by password validators
 const PASSWORD_MESSAGES = {
     minLength:
         `Password must be at least ${PASSWORD_MIN_LENGTH} characters long`,

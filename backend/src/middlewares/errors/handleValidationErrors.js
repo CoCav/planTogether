@@ -19,19 +19,30 @@ const { createHttpError } = require("../../utils/errors/httpError");
    - This middleware does not validate by itself.
 =========================================================================== */
 
+/* =============================
+   VALIDATION CONSTANTS
+============================= */
+
 const PRODUCTION_ENV = "production";
 const VALIDATION_FAILED_MESSAGE = "Validation failed";
 
+/* =============================
+   VALIDATION ERROR HANDLING
+============================= */
+
+// Format express-validator errors and forward an HTTP 400 error
 const handleValidationErrors = (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
         const rawErrors = errors.array();
 
+        // Log raw validation errors outside production
         if (process.env.NODE_ENV !== PRODUCTION_ENV) {
             logger.warn({ errors: rawErrors }, "Validation errors");
         }
 
+        // Convert express-validator errors into API-friendly fields
         const formattedErrors = rawErrors.map((err) => ({
             field: err.path || err.param,
             message: err.msg

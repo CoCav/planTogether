@@ -16,6 +16,11 @@ const sequelize = require("../../config/database");
    - One review per user and event.
 =========================================================================== */
 
+/* =============================
+   EVENT REVIEW MODEL
+============================= */
+
+// Define event review fields, constraints and indexes
 const EventReview = sequelize.define("EventReview", {
     eventId: {
         type: DataTypes.INTEGER,

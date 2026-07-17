@@ -18,6 +18,10 @@ const { EVENT_MODES } = require("../../constants/eventModes");
    - Update payloads preserve omitted fields.
 =========================================================================== */
 
+/* =============================
+   UPDATABLE EVENT FIELDS
+============================= */
+
 const UPDATABLE_EVENT_FIELDS = [
     "title",
     "description",
@@ -30,9 +34,11 @@ const UPDATABLE_EVENT_FIELDS = [
     "registrationDeadline"
 ];
 
-/* Location builders */
+/* =============================
+   LOCATION PAYLOAD BUILDERS
+============================= */
 
-// Build an empty location object for online events.
+// Build empty structured location data for online events
 const buildEmptyStructuredLocationData = () => ({
     location: null,
     locationLabel: null,
@@ -45,7 +51,7 @@ const buildEmptyStructuredLocationData = () => ({
     longitude: null
 });
 
-// Normalize resolved geocoding data before persistence.
+// Normalize resolved geocoding data before persistence
 const buildStructuredLocationData = (locationData) => {
     const location = locationData ?? {};
 
@@ -61,8 +67,11 @@ const buildStructuredLocationData = (locationData) => {
     };
 };
 
-/* Event payload builders */
+/* =============================
+   EVENT PAYLOAD BUILDERS
+============================= */
 
+// Build a complete event creation payload
 const buildCreateEventPayload = (payload, creatorId, locationData = {}) => {
     const isOnlineEvent = payload.mode === EVENT_MODES.ONLINE;
 
@@ -89,10 +98,11 @@ const buildCreateEventPayload = (payload, creatorId, locationData = {}) => {
     };
 };
 
+// Build an event update payload while preserving omitted fields
 const buildUpdateEventPayload = (event, payload, locationData = null) => {
     const updatedPayload = {};
 
-    // Copy only fields that are present in the update payload.
+    // Copy only fields that are present in the update payload
     for (const field of UPDATABLE_EVENT_FIELDS) {
         if (payload[field] !== undefined) {
             updatedPayload[field] = payload[field];
@@ -114,7 +124,7 @@ const buildUpdateEventPayload = (event, payload, locationData = null) => {
         );
     }
 
-    // Preserve the current image unless it is explicitly replaced or removed.
+    // Preserve the current image unless it is explicitly replaced or removed
     if (payload.image !== undefined) {
         updatedPayload.image = payload.image || null;
     } else {

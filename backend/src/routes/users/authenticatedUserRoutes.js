@@ -30,6 +30,10 @@ const {
    - Current user identity comes from the JWT.
 =========================================================================== */
 
+/* =============================
+   CURRENT USER EVENTS
+============================= */
+
 router.get(
     "/me/events",
     authenticateToken,
@@ -37,6 +41,10 @@ router.get(
     handleValidationErrors,
     userController.getCurrentUserEvents
 );
+
+/* =============================
+   CURRENT USER PROFILE
+============================= */
 
 router.get(
     "/me",
@@ -53,6 +61,10 @@ router.put(
     userController.updateCurrentUserProfile
 );
 
+/* =============================
+   CURRENT USER PASSWORD
+============================= */
+
 router.put(
     "/me/password",
     authenticateToken,
@@ -60,6 +72,10 @@ router.put(
     handleValidationErrors,
     userController.changeCurrentUserPassword
 );
+
+/* =============================
+   CURRENT USER ACCOUNT
+============================= */
 
 router.delete(
     "/me",

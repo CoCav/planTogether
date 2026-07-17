@@ -44,13 +44,19 @@ const {
    - Users can only update or delete their own reviews.
 =========================================================================== */
 
+/* =============================
+   REVIEW ERRORS
+============================= */
+
 const EVENT_NOT_COMPLETED_ERROR = "Only completed events can be reviewed";
 
 const USER_CANNOT_REVIEW_ERROR = "Only event participants can leave a review";
-
 const REVIEW_ALREADY_EXISTS_ERROR = "You have already reviewed this event";
-
 const REVIEW_OWNER_ERROR = "You can only manage your own review";
+
+/* =============================
+   REVIEW SORT CONFIGURATION
+============================= */
 
 const REVIEW_SORT_FIELDS = [
     "createdAt",
@@ -60,14 +66,18 @@ const REVIEW_SORT_FIELDS = [
 const DEFAULT_REVIEW_SORT_FIELD = "createdAt";
 const DEFAULT_REVIEW_SORT_ORDER = "DESC";
 
-/* Helpers */
+/* =============================
+   REVIEW HELPERS
+============================= */
 
+// Ensure the event has been completed
 const assertEventIsCompleted = (event) => {
     if (!isEventPast(event)) {
         throwHttpError(403, EVENT_NOT_COMPLETED_ERROR);
     }
 };
 
+// Ensure the user actively participated in the event
 const assertUserCanReviewEvent = async ({ eventId, userId, transaction }) => {
     const membership = await findActiveMembership(EventUserRole, {
         eventId,
@@ -80,6 +90,7 @@ const assertUserCanReviewEvent = async ({ eventId, userId, transaction }) => {
     }
 };
 
+// Ensure the user has not already reviewed the event
 const assertUserHasNotReviewedEvent = async ({ eventId, userId, transaction }) => {
     const existingReview = await EventReview.findOne({
         where: {
@@ -94,13 +105,14 @@ const assertUserHasNotReviewedEvent = async ({ eventId, userId, transaction }) =
     }
 };
 
+// Ensure the authenticated user owns the review
 const assertReviewOwner = (review, userId) => {
     if (review.userId !== userId) {
         throwHttpError(403, REVIEW_OWNER_ERROR);
     }
 };
 
-// Reload the review with its public author data.
+// Reload a review with its public author data
 const findReviewWithUserById = (reviewId, options = {}) => {
     return EventReview.findByPk(reviewId, {
         ...options,
@@ -110,6 +122,7 @@ const findReviewWithUserById = (reviewId, options = {}) => {
     });
 };
 
+// Calculate the average event rating to one decimal place
 const getEventAverageRating = async (eventId) => {
     const result = await EventReview.findOne({
         where: {
@@ -130,14 +143,17 @@ const getEventAverageRating = async (eventId) => {
         return null;
     }
 
-    // Keep API ratings consistent to one decimal.
+    // Keep API ratings consistent to one decimal
     return Number(
         Number(averageRating).toFixed(1)
     );
 };
 
-/* Create review */
+/* =============================
+   REVIEW CREATION
+============================= */
 
+// Create a review for a completed event
 const createEventReview = async ({ eventId, userId, rating, comment }) => {
     const transaction = await sequelize.transaction();
 
@@ -169,7 +185,7 @@ const createEventReview = async ({ eventId, userId, rating, comment }) => {
             transaction
         });
 
-        // Reload inside the same transaction before committing.
+        // Reload inside the same transaction before committing
         const reviewWithUser = await findReviewWithUserById(review.id, {
             transaction
         });
@@ -184,8 +200,11 @@ const createEventReview = async ({ eventId, userId, rating, comment }) => {
     }
 };
 
-/* Get reviews */
+/* =============================
+   REVIEW RETRIEVAL
+============================= */
 
+// Retrieve paginated reviews and average rating for an event
 const getEventReviews = async (eventId, query = {}) => {
     await findEventByIdOrFail(Event, eventId);
 
@@ -231,13 +250,13 @@ const getEventReviews = async (eventId, query = {}) => {
     };
 };
 
-/* Update review */
+/* =============================
+   REVIEW UPDATE
+============================= */
 
+// Update a review owned by the authenticated user
 const updateEventReviewById = async ({ reviewId, userId, rating, comment }) => {
-    const review = await findReviewByIdOrFail(
-        EventReview,
-        reviewId
-    );
+    const review = await findReviewByIdOrFail(EventReview, reviewId);
 
     assertReviewOwner(review, userId);
 
@@ -249,13 +268,13 @@ const updateEventReviewById = async ({ reviewId, userId, rating, comment }) => {
     return findReviewWithUserById(review.id);
 };
 
-/* Delete review */
+/* =============================
+   REVIEW DELETION
+============================= */
 
+// Delete a review owned by the authenticated user
 const deleteEventReviewById = async ({ reviewId, userId }) => {
-    const review = await findReviewByIdOrFail(
-        EventReview,
-        reviewId
-    );
+    const review = await findReviewByIdOrFail(EventReview, reviewId);
 
     assertReviewOwner(review, userId);
 

@@ -11,11 +11,19 @@
    - Shared across services, validators and tests.
 =========================================================================== */
 
+/* =============================
+   EVENT STATUS
+============================= */
+
 const EVENT_STATUS = {
     UPCOMING: "upcoming",
     ONGOING: "ongoing",
     PAST: "past"
 };
+
+/* =============================
+   VALID EVENT STATUS
+============================= */
 
 const VALID_EVENT_STATUS = Object.values(EVENT_STATUS);
 

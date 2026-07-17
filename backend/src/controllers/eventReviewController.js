@@ -18,8 +18,11 @@ const eventReviewService = require("../services/eventReviewService");
    - Review permissions are enforced in the service layer.
 =========================================================================== */
 
-/* Create review */
+/* =============================
+   REVIEW CREATION
+============================= */
 
+// Create a review for an event
 const createEventReview = async (req, res, next) => {
     try {
         const review = await eventReviewService.createEventReview({
@@ -40,8 +43,11 @@ const createEventReview = async (req, res, next) => {
     }
 };
 
-/* Get reviews */
+/* =============================
+   REVIEW RETRIEVAL
+============================= */
 
+// Retrieve paginated reviews for an event
 const getEventReviews = async (req, res, next) => {
     try {
         const reviews = await eventReviewService.getEventReviews(
@@ -60,8 +66,11 @@ const getEventReviews = async (req, res, next) => {
     }
 };
 
-/* Update review */
+/* =============================
+   REVIEW UPDATE
+============================= */
 
+// Update the authenticated user's review
 const updateEventReview = async (req, res, next) => {
     try {
         const review = await eventReviewService.updateEventReviewById({
@@ -82,8 +91,11 @@ const updateEventReview = async (req, res, next) => {
     }
 };
 
-/* Delete review */
+/* =============================
+   REVIEW DELETION
+============================= */
 
+// Delete the authenticated user's review
 const deleteEventReview = async (req, res, next) => {
     try {
         await eventReviewService.deleteEventReviewById({

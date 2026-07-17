@@ -30,14 +30,22 @@ const {
    - Unlike is idempotent.
 =========================================================================== */
 
+/* =============================
+   LIKE ERRORS
+============================= */
+
 const EVENT_ALREADY_LIKED_ERROR = "You have already liked this event";
 
-/* Helpers */
+/* =============================
+   LIKE HELPERS
+============================= */
 
+// Count likes for an event
 const countEventLikes = (eventId, options = {}) => {
     return getEventLikesCount(EventLike, eventId, options);
 };
 
+// Check whether a user currently likes an event
 const getIsEventLikedByUser = async ({ eventId, userId }) => {
     if (!userId) {
         return false;
@@ -51,8 +59,11 @@ const getIsEventLikedByUser = async ({ eventId, userId }) => {
     return Boolean(like);
 };
 
-/* Like event */
+/* =============================
+   LIKE EVENT
+============================= */
 
+// Create a like for an event
 const likeEvent = async ({ eventId, userId }) => {
     const transaction = await sequelize.transaction();
 
@@ -71,10 +82,7 @@ const likeEvent = async ({ eventId, userId }) => {
             throwHttpError(409, EVENT_ALREADY_LIKED_ERROR);
         }
 
-        await EventLike.create({
-            eventId,
-            userId
-        }, {
+        await EventLike.create({ eventId, userId }, {
             transaction
         });
 
@@ -97,8 +105,11 @@ const likeEvent = async ({ eventId, userId }) => {
     }
 };
 
-/* Unlike event */
+/* =============================
+   UNLIKE EVENT
+============================= */
 
+// Remove a user's event like when it exists
 const unlikeEvent = async ({ eventId, userId }) => {
     const transaction = await sequelize.transaction();
 
@@ -113,6 +124,7 @@ const unlikeEvent = async ({ eventId, userId }) => {
             transaction
         });
 
+        // Missing likes are treated as an already completed unlike action
         if (existingLike) {
             await existingLike.destroy({
                 transaction

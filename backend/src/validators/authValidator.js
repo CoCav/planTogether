@@ -1,6 +1,9 @@
 const { body } = require("express-validator");
 
-const { PASSWORD_REQUIREMENTS, PASSWORD_MESSAGES } = require("../config/security/passwordPolicy");
+const {
+    PASSWORD_REQUIREMENTS,
+    PASSWORD_MESSAGES
+} = require("../config/security/passwordPolicy");
 
 /* ==========================================================================
    Auth Validators
@@ -18,8 +21,11 @@ const { PASSWORD_REQUIREMENTS, PASSWORD_MESSAGES } = require("../config/security
    - User profile and password update validators belong to user validators.
 =========================================================================== */
 
-/* Registration */
+/* =============================
+   REGISTRATION VALIDATION
+============================= */
 
+// Validate user registration fields
 const registerValidator = [
     body("name")
         .trim()
@@ -35,7 +41,9 @@ const registerValidator = [
         .normalizeEmail(),
 
     body("password")
-        .isLength({ min: PASSWORD_REQUIREMENTS.minLength })
+        .isLength({
+            min: PASSWORD_REQUIREMENTS.minLength
+        })
         .withMessage(PASSWORD_MESSAGES.minLength)
         .matches(PASSWORD_REQUIREMENTS.hasNumber)
         .withMessage(PASSWORD_MESSAGES.number)
@@ -45,8 +53,11 @@ const registerValidator = [
         .withMessage(PASSWORD_MESSAGES.lowercase)
 ];
 
-/* Login */
+/* =============================
+   LOGIN VALIDATION
+============================= */
 
+// Validate user login fields
 const loginValidator = [
     body("email")
         .trim()

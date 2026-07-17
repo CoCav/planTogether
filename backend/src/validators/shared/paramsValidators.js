@@ -15,8 +15,19 @@ const { param } = require("express-validator");
    - Entity existence is handled by services.
 =========================================================================== */
 
-const POSITIVE_INTEGER_ID_OPTIONS = { min: 1 };
+/* =============================
+   PARAMETER OPTIONS
+============================= */
 
+const POSITIVE_INTEGER_ID_OPTIONS = {
+    min: 1
+};
+
+/* =============================
+   PARAMETER VALIDATOR FACTORY
+============================= */
+
+// Build a positive integer route parameter validator
 const createPositiveIntegerParamValidator = (paramName, message) => [
     param(paramName)
         .isInt(POSITIVE_INTEGER_ID_OPTIONS)
@@ -24,25 +35,14 @@ const createPositiveIntegerParamValidator = (paramName, message) => [
         .toInt()
 ];
 
-const eventIdParamValidator = createPositiveIntegerParamValidator(
-    "eventId",
-    "Event ID must be a positive integer"
-);
+/* =============================
+   IDENTIFIER VALIDATORS
+============================= */
 
-const userIdParamValidator = createPositiveIntegerParamValidator(
-    "userId",
-    "User ID must be a positive integer"
-);
-
-const publicUserIdParamValidator = createPositiveIntegerParamValidator(
-    "id",
-    "User ID must be a positive integer"
-);
-
-const reviewIdParamValidator = createPositiveIntegerParamValidator(
-    "reviewId",
-    "Review ID must be a positive integer"
-);
+const eventIdParamValidator = createPositiveIntegerParamValidator("eventId", "Event ID must be a positive integer");
+const userIdParamValidator = createPositiveIntegerParamValidator("userId", "User ID must be a positive integer");
+const publicUserIdParamValidator = createPositiveIntegerParamValidator("id", "User ID must be a positive integer");
+const reviewIdParamValidator = createPositiveIntegerParamValidator("reviewId", "Review ID must be a positive integer");
 
 module.exports = {
     createPositiveIntegerParamValidator,

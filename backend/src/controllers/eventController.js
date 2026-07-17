@@ -22,8 +22,11 @@ const { UPLOAD_PATHS } = require("../constants/uploadPaths");
    - Event listing and detail responses may include participant, review and like stats.
 =========================================================================== */
 
-/* Create event */
+/* =============================
+   EVENT CREATION
+============================= */
 
+// Create an event for the authenticated user
 const createEvent = async (req, res, next) => {
     try {
         const image = req.file
@@ -49,8 +52,11 @@ const createEvent = async (req, res, next) => {
     }
 };
 
-/* Read events */
+/* =============================
+   EVENT RETRIEVAL
+============================= */
 
+// Retrieve a paginated event listing
 const getAllEvents = async (req, res, next) => {
     try {
         const events = await eventService.getAllEvents(
@@ -69,6 +75,7 @@ const getAllEvents = async (req, res, next) => {
     }
 };
 
+// Retrieve the authenticated user's access to an event
 const getCurrentUserEventAccess = async (req, res, next) => {
     try {
         const access = await eventService.getCurrentUserEventAccess(
@@ -87,6 +94,7 @@ const getCurrentUserEventAccess = async (req, res, next) => {
     }
 };
 
+// Retrieve one event by ID
 const getEvent = async (req, res, next) => {
     try {
         const event = await eventService.getEventById(
@@ -105,8 +113,11 @@ const getEvent = async (req, res, next) => {
     }
 };
 
-/* Update event */
+/* =============================
+   EVENT UPDATE
+============================= */
 
+// Update an event and manage optional image replacement or removal
 const updateEvent = async (req, res, next) => {
     try {
         // Uploaded file replaces the existing image.
@@ -137,8 +148,11 @@ const updateEvent = async (req, res, next) => {
     }
 };
 
-/* Delete event */
+/* =============================
+   EVENT DELETION
+============================= */
 
+// Delete an event by ID
 const deleteEvent = async (req, res, next) => {
     try {
         await eventService.deleteEventById(req.params.eventId);

@@ -18,7 +18,13 @@ const { normalizeSearchKey } = require("../stringNormalizer");
    - Throws a 502 error when the provider response is invalid.
 =========================================================================== */
 
+/* =============================
+   NORMALIZATION CONSTANTS
+============================= */
+
 const GEOCODING_PROVIDER = geocodingConfig.provider;
+
+const INVALID_PROVIDER_RESPONSE_ERROR = "Invalid location provider response";
 
 const ROAD_ADDRESS_KEYS = [
     "road",
@@ -44,7 +50,11 @@ const REGION_ADDRESS_KEYS = [
     "county"
 ];
 
-// Return the first available value for the provided address keys.
+/* =============================
+   ADDRESS NORMALIZATION
+============================= */
+
+// Return the first available value for the provided address keys
 const pickAddressValue = (address = {}, keys = []) => {
     for (const key of keys) {
         if (address[key]) {
@@ -55,7 +65,7 @@ const pickAddressValue = (address = {}, keys = []) => {
     return null;
 };
 
-// Build a readable street address from provider address fields.
+// Build a readable street address from provider fields
 const buildStreetAddress = (address = {}) => {
     const road = pickAddressValue(address, ROAD_ADDRESS_KEYS);
 
@@ -68,7 +78,7 @@ const buildStreetAddress = (address = {}) => {
         : road;
 };
 
-// Normalize the provider address into the application's address format.
+// Normalize a provider address into the application format
 const normalizeAddress = (address = {}) => ({
     streetAddress: buildStreetAddress(address),
     city: pickAddressValue(address, CITY_ADDRESS_KEYS),
@@ -77,12 +87,17 @@ const normalizeAddress = (address = {}) => ({
     country: address.country ?? null
 });
 
+/* =============================
+   LOCATION NORMALIZATION
+============================= */
+
+// Normalize a provider location result
 const normalizeLocation = (query, result = {}) => {
     const latitude = Number(result.lat);
     const longitude = Number(result.lon);
 
     if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
-        throwHttpError(502, "Invalid location provider response");
+        throwHttpError(502, INVALID_PROVIDER_RESPONSE_ERROR);
     }
 
     const address = normalizeAddress(result.address);

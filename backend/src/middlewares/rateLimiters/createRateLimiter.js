@@ -16,24 +16,35 @@ const rateLimit = require("express-rate-limit");
    - Test skipping avoids unstable or slow automated tests.
 =========================================================================== */
 
+/* =============================
+   RATE LIMIT DEFAULTS
+============================= */
+
 const TEST_ENV = "test";
 
 const DEFAULT_RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const DEFAULT_RATE_LIMIT_MAX = 30;
 const DEFAULT_RATE_LIMIT_MESSAGE = "Too many requests. Please try again later.";
 
+/* =============================
+   RATE LIMITER FACTORY
+============================= */
+
+// Build a reusable express-rate-limit middleware
 const createRateLimiter = ({
     windowMs = DEFAULT_RATE_LIMIT_WINDOW_MS,
     max = DEFAULT_RATE_LIMIT_MAX,
     message = DEFAULT_RATE_LIMIT_MESSAGE,
     skipTest = true
 }) => {
+
     return rateLimit({
         windowMs,
         max,
         standardHeaders: true,
         legacyHeaders: false,
 
+        // Skip rate limiting during automated tests when enabled
         skip: () => skipTest && process.env.NODE_ENV === TEST_ENV,
 
         message: {

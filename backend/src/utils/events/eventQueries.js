@@ -14,8 +14,17 @@ const { throwHttpError } = require("../errors/httpError");
    - Additional Sequelize options can be passed through the options parameter.
 =========================================================================== */
 
+/* =============================
+   EVENT ERRORS
+============================= */
+
 const EVENT_NOT_FOUND_ERROR = "Event not found";
 
+/* =============================
+   EVENT QUERIES
+============================= */
+
+// Find an event by ID or throw a not found error
 const findEventByIdOrFail = async (Event, eventId, options = {}) => {
     const event = await Event.findByPk(eventId, options);
 

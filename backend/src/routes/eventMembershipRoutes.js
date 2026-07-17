@@ -40,7 +40,9 @@ const {
    - Validators run before authorization middlewares.
 =========================================================================== */
 
-/* Join / leave events */
+/* =============================
+   MEMBERSHIP ACTIONS
+============================= */
 
 router.post(
     "/:eventId/members/join",
@@ -58,7 +60,9 @@ router.delete(
     eventMembershipController.leaveEvent
 );
 
-/* Members and staff */
+/* =============================
+   MEMBER RETRIEVAL
+============================= */
 
 router.get(
     "/:eventId/members",
@@ -74,7 +78,9 @@ router.get(
     eventMembershipController.getEventStaff
 );
 
-/* Role management */
+/* =============================
+   MEMBER MANAGEMENT
+============================= */
 
 router.put(
     "/:eventId/members/:userId/role",
@@ -95,6 +101,10 @@ router.delete(
     authorizeEventMemberRemoval,
     eventMembershipController.removeEventMember
 );
+
+/* =============================
+   OWNERSHIP TRANSFER
+============================= */
 
 router.put(
     "/:eventId/ownership",

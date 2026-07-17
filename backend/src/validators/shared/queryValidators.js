@@ -18,6 +18,10 @@ const { VALID_EVENT_STATUS } = require("../../constants/eventStatus");
    - Business rules are handled by services.
 =========================================================================== */
 
+/* =============================
+   EVENT FILTER VALIDATORS
+============================= */
+
 const statusQueryValidator = query("status")
     .optional()
     .isIn(VALID_EVENT_STATUS)
@@ -33,6 +37,10 @@ const creatorIdQueryValidator = query("creatorId")
     .isInt({ min: 1 })
     .withMessage("Creator ID must be a positive integer")
     .toInt();
+
+/* =============================
+   TEXT QUERY VALIDATORS
+============================= */
 
 const creatorQueryValidator = query("creator")
     .optional()
@@ -50,6 +58,10 @@ const themeQueryValidator = query("theme")
     .optional()
     .trim();
 
+/* =============================
+   LOCATION QUERY VALIDATORS
+============================= */
+
 const locationQueryValidator = query("location")
     .optional()
     .trim();
@@ -65,6 +77,10 @@ const regionQueryValidator = query("region")
 const countryQueryValidator = query("country")
     .optional()
     .trim();
+
+/* =============================
+   DATE QUERY VALIDATORS
+============================= */
 
 const dateQueryValidator = query("date")
     .optional()
@@ -84,16 +100,22 @@ const endDateQueryValidator = query("endDate")
 module.exports = {
     statusQueryValidator,
     modeQueryValidator,
+
     creatorIdQueryValidator,
     creatorQueryValidator,
+
     searchQueryValidator,
+
     typeQueryValidator,
     themeQueryValidator,
+
     locationQueryValidator,
     cityQueryValidator,
     regionQueryValidator,
     countryQueryValidator,
+
     dateQueryValidator,
+
     startDateQueryValidator,
     endDateQueryValidator
 };

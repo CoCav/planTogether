@@ -14,8 +14,17 @@ const { throwHttpError } = require("../errors/httpError");
    - Additional Sequelize options can be passed through the options parameter.
 =========================================================================== */
 
+/* =============================
+   REVIEW ERRORS
+============================= */
+
 const REVIEW_NOT_FOUND_ERROR = "Review not found";
 
+/* =============================
+   REVIEW QUERIES
+============================= */
+
+// Find a review by ID or throw a not found error
 const findReviewByIdOrFail = async (EventReview, reviewId, options = {}) => {
     const review = await EventReview.findByPk(reviewId, options);
 

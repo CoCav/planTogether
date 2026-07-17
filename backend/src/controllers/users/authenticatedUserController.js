@@ -22,14 +22,14 @@ const { formatAuthenticatedUser } = require("../../utils/users/authenticated/aut
    - Authenticated user responses can expose email.
 =========================================================================== */
 
-/* Current user events */
+/* =============================
+   CURRENT USER EVENTS
+============================= */
 
+// Retrieve the authenticated user's event listings
 const getCurrentUserEvents = async (req, res, next) => {
     try {
-        const result = await userService.getCurrentUserEventsById(
-            req.user.userId,
-            req.query
-        );
+        const result = await userService.getCurrentUserEventsById(req.user.userId, req.query);
 
         return res.status(200).json({
             success: true,
@@ -42,13 +42,14 @@ const getCurrentUserEvents = async (req, res, next) => {
     }
 };
 
-/* Current user profile */
+/* =============================
+   CURRENT USER PROFILE
+============================= */
 
+// Retrieve the authenticated user's profile
 const getCurrentUserProfile = async (req, res, next) => {
     try {
-        const user = await userService.getCurrentUserProfileById(
-            req.user.userId
-        );
+        const user = await userService.getCurrentUserProfileById(req.user.userId);
 
         return res.status(200).json({
             success: true,
@@ -61,6 +62,7 @@ const getCurrentUserProfile = async (req, res, next) => {
     }
 };
 
+// Update the authenticated user's profile and optional avatar
 const updateCurrentUserProfile = async (req, res, next) => {
     try {
         const updatedData = {
@@ -71,10 +73,7 @@ const updateCurrentUserProfile = async (req, res, next) => {
             updatedData.avatar = `${UPLOAD_PATHS.AVATARS}/${req.file.filename}`;
         }
 
-        const user = await userService.updateCurrentUserProfileById(
-            req.user.userId,
-            updatedData
-        );
+        const user = await userService.updateCurrentUserProfileById(req.user.userId, updatedData);
 
         return res.status(200).json({
             success: true,
@@ -87,8 +86,11 @@ const updateCurrentUserProfile = async (req, res, next) => {
     }
 };
 
-/* Current user password */
+/* =============================
+   CURRENT USER PASSWORD
+============================= */
 
+// Change the authenticated user's password
 const changeCurrentUserPassword = async (req, res, next) => {
     try {
         await userService.changeCurrentUserPasswordById(
@@ -107,8 +109,11 @@ const changeCurrentUserPassword = async (req, res, next) => {
     }
 };
 
-/* Current user account */
+/* =============================
+   CURRENT USER ACCOUNT
+============================= */
 
+// Delete the authenticated user's account
 const deleteCurrentUser = async (req, res, next) => {
     try {
         await userService.deleteCurrentUserById(req.user.userId);

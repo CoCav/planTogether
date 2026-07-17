@@ -13,6 +13,10 @@
    - File-system storage directories remain configured separately.
 =========================================================================== */
 
+/* =============================
+   UPLOAD PATHS
+============================= */
+
 const UPLOAD_PATHS = {
     AVATARS: "/uploads/avatars",
     EVENTS: "/uploads/events"

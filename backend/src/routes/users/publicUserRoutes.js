@@ -25,12 +25,20 @@ const {
    - Public user events support optional current user context for like state.
 =========================================================================== */
 
+/* =============================
+   PUBLIC USER PROFILE
+============================= */
+
 router.get(
     "/:id",
     publicUserIdParamValidator,
     handleValidationErrors,
     userController.getPublicUserProfile
 );
+
+/* =============================
+   PUBLIC USER EVENTS
+============================= */
 
 router.get(
     "/:id/events",

@@ -44,34 +44,34 @@ const { buildAuthenticatedUserInclude } = require("../utils/users/userInclude");
    - EventUserRole is used as the event membership join table.
 =========================================================================== */
 
-const REGISTRATION_CLOSED_ERROR = "Registration period is over for this event";
+/* =============================
+   MEMBERSHIP ERRORS
+============================= */
 
+const REGISTRATION_CLOSED_ERROR = "Registration period is over for this event";
 const EVENT_FULL_ERROR = "Event has reached maximum number of participants";
 
 const USER_ALREADY_JOINED_ERROR = "User already joined this event";
-
 const PARTICIPATION_NOT_FOUND_ERROR = "Participation not found";
 
 const ORGANIZER_CANNOT_LEAVE_ERROR = "Organizers cannot leave their own event";
-
 const INVALID_ROLE_ERROR = "Invalid role provided";
 
 const ONLY_ONE_ORGANIZER_ERROR = "Only one organizer is allowed per event";
-
 const MEMBER_NOT_FOUND_ERROR = "User is not a member of this event";
 
 const ROLE_ALREADY_ASSIGNED_ERROR = "User already has this role";
-
 const TRANSFER_SELF_ERROR = "You cannot transfer ownership to yourself";
 
 const CURRENT_ORGANIZER_NOT_FOUND_ERROR = "Current organizer membership not found";
-
 const ONLY_ORGANIZER_TRANSFER_ERROR = "Only the organizer can transfer event ownership";
-
 const TARGET_MEMBER_NOT_FOUND_ERROR = "Target member is not part of this event";
 
-/* Helpers */
+/* =============================
+   MEMBERSHIP HELPERS
+============================= */
 
+// Ensure event registration is still open
 const assertRegistrationIsOpen = (event) => {
     const isRegistrationClosed =
         event.registrationDeadline &&
@@ -82,6 +82,7 @@ const assertRegistrationIsOpen = (event) => {
     }
 };
 
+// Ensure the event still has participant capacity
 const assertParticipantLimitIsAvailable = async ({ event, eventId, transaction }) => {
     if (event.maxParticipants === null) {
         return;
@@ -97,6 +98,7 @@ const assertParticipantLimitIsAvailable = async ({ event, eventId, transaction }
     }
 };
 
+// Retrieve an active membership or throw a not found error
 const findActiveMembershipOrFail = async ({ eventId, userId, transaction, errorMessage }) => {
     const membership = await findActiveMembership(EventUserRole, {
         eventId,
@@ -111,8 +113,11 @@ const findActiveMembershipOrFail = async ({ eventId, userId, transaction, errorM
     return membership;
 };
 
-/* Join / leave events */
+/* =============================
+   MEMBERSHIP ACTIONS
+============================= */
 
+// Join an event as a participant
 const joinEvent = async ({ eventId, userId }) => {
     const transaction = await sequelize.transaction();
 
@@ -140,7 +145,7 @@ const joinEvent = async ({ eventId, userId }) => {
             throwHttpError(409, USER_ALREADY_JOINED_ERROR);
         }
 
-        // Restore inactive memberships instead of creating duplicates.
+        // Restore inactive memberships instead of creating duplicates
         if (existingMembership && existingMembership.deletedAt !== null) {
             existingMembership.deletedAt = null;
             existingMembership.role = EVENT_ROLES.PARTICIPANT;
@@ -172,11 +177,9 @@ const joinEvent = async ({ eventId, userId }) => {
     }
 };
 
+// Leave an active event membership
 const leaveEvent = async ({ eventId, userId }) => {
-    const event = await findEventByIdOrFail(
-        Event,
-        eventId
-    );
+    const event = await findEventByIdOrFail(Event, eventId);
 
     assertEventNotPast(event);
 
@@ -195,8 +198,11 @@ const leaveEvent = async ({ eventId, userId }) => {
     await membership.save();
 };
 
-/* Members and staff */
+/* =============================
+   MEMBER RETRIEVAL
+============================= */
 
+// Retrieve active event members
 const getEventMembers = async (eventId) => {
     await findEventByIdOrFail(Event, eventId);
 
@@ -214,6 +220,7 @@ const getEventMembers = async (eventId) => {
     });
 };
 
+// Retrieve active organizers and co-organizers
 const getEventStaff = async (eventId) => {
     await findEventByIdOrFail(Event, eventId);
 
@@ -235,13 +242,13 @@ const getEventStaff = async (eventId) => {
     });
 };
 
-/* Role management */
+/* =============================
+   MEMBER ROLE MANAGEMENT
+============================= */
 
+// Update an active member's role
 const updateEventMemberRole = async ({ eventId, userId, newRole }) => {
-    const event = await findEventByIdOrFail(
-        Event,
-        eventId
-    );
+    const event = await findEventByIdOrFail(Event, eventId);
 
     assertEventNotPast(event);
 
@@ -249,7 +256,7 @@ const updateEventMemberRole = async ({ eventId, userId, newRole }) => {
         throwHttpError(400, INVALID_ROLE_ERROR);
     }
 
-    // Ownership transfer is the only valid way to assign organizer.
+    // Ownership transfer is the only valid way to assign organizer
     if (newRole === EVENT_ROLES.ORGANIZER) {
         throwHttpError(403, ONLY_ONE_ORGANIZER_ERROR);
     }
@@ -271,11 +278,13 @@ const updateEventMemberRole = async ({ eventId, userId, newRole }) => {
     return membership;
 };
 
+/* =============================
+   MEMBER REMOVAL
+============================= */
+
+// Soft-delete an active event membership
 const removeEventMember = async ({ eventId, userId }) => {
-    const event = await findEventByIdOrFail(
-        Event,
-        eventId
-    );
+    const event = await findEventByIdOrFail(Event, eventId);
 
     assertEventNotPast(event);
 
@@ -290,6 +299,11 @@ const removeEventMember = async ({ eventId, userId }) => {
     await membership.save();
 };
 
+/* =============================
+   OWNERSHIP TRANSFER
+============================= */
+
+// Transfer organizer ownership to another active member
 const transferEventOwnership = async ({ eventId, currentUserId, targetUserId }) => {
     const transaction = await sequelize.transaction();
 

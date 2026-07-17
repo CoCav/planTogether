@@ -14,8 +14,11 @@ const geocodingService = require("../services/geocodingService");
    - Search results may come from cache or the geocoding provider.
 =========================================================================== */
 
-/* Search locations */
+/* =============================
+   LOCATION SEARCH
+============================= */
 
+// Search locations matching the provided query
 const searchLocations = async (req, res, next) => {
     try {
         const locations = await geocodingService.searchLocations(req.query.q);

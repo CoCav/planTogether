@@ -30,6 +30,10 @@ const { createHttpError } = require("../../utils/errors/httpError");
    - Upload errors are forwarded to the global error handler.
 =========================================================================== */
 
+/* =============================
+   UPLOAD CONSTANTS
+============================= */
+
 const DEFAULT_UPLOAD_DIRECTORY = "uploads";
 
 const AVATAR_UPLOAD_FOLDER = "avatars";
@@ -40,33 +44,34 @@ const EVENT_UPLOAD_PREFIX = "event";
 
 const INVALID_IMAGE_FILE_MESSAGE = "Only valid image files are allowed";
 
+/* =============================
+   UPLOAD DIRECTORY
+============================= */
+
+// Resolve the configured upload root directory
 const uploadDirectory = process.env.UPLOAD_DIR || DEFAULT_UPLOAD_DIRECTORY;
 
-/* Filename generation */
+/* =============================
+   FILENAME GENERATION
+============================= */
 
-// Generate a unique filename while preserving the validated extension.
-const generateUploadFileName = (
-    prefix,
-    originalName
-) => {
+// Generate a unique filename while preserving the validated extension
+const generateUploadFileName = (prefix, originalName) => {
     const extension = path
         .extname(originalName)
         .toLowerCase();
 
-    const uniqueSuffix =
-        `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
 
     return `${prefix}-${uniqueSuffix}${extension}`;
 };
 
-/* Image uploader configuration */
+/* =============================
+   IMAGE UPLOADER FACTORY
+============================= */
 
-// Create a reusable Multer uploader for image files.
-const createImageUploader = ({
-    folder,
-    prefix,
-    maxSize
-}) => {
+// Create a reusable Multer uploader for validated image files
+const createImageUploader = ({ folder, prefix, maxSize }) => {
     const uploadPath = path.join(
         __dirname,
         "../../../",
@@ -74,12 +79,14 @@ const createImageUploader = ({
         folder
     );
 
+    // Create the target upload directory when it does not exist
     if (!fs.existsSync(uploadPath)) {
         fs.mkdirSync(uploadPath, {
             recursive: true
         });
     }
 
+    // Store files using generated safe filenames
     const storage = multer.diskStorage({
         destination: (req, file, callback) => {
             callback(null, uploadPath);
@@ -93,6 +100,7 @@ const createImageUploader = ({
         }
     });
 
+    // Ensure the MIME type matches the file extension policy
     const fileFilter = (req, file, callback) => {
         const extension = path
             .extname(file.originalname)
@@ -121,16 +129,18 @@ const createImageUploader = ({
     });
 };
 
-/* Upload middlewares */
+/* =============================
+   UPLOAD MIDDLEWARES
+============================= */
 
-// Configure avatar uploads.
+// Configure avatar uploads
 const uploadAvatar = createImageUploader({
     folder: AVATAR_UPLOAD_FOLDER,
     prefix: AVATAR_UPLOAD_PREFIX,
     maxSize: MAX_AVATAR_SIZE
 });
 
-// Configure event image uploads.
+// Configure event image uploads
 const uploadEventImage = createImageUploader({
     folder: EVENT_IMAGE_UPLOAD_FOLDER,
     prefix: EVENT_UPLOAD_PREFIX,

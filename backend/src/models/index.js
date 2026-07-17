@@ -26,7 +26,11 @@ const EventLike = require("./associations/eventLikeModel");
    - Production uses safe synchronization.
 =========================================================================== */
 
-// Initialize database connection and synchronize models
+/* =============================
+   DATABASE INITIALIZATION
+============================= */
+
+// Initialize the database connection and synchronize models
 const initDB = async () => {
     try {
         logger.info("Connecting to database...");
@@ -37,15 +41,15 @@ const initDB = async () => {
         logger.info("Synchronizing database models...");
 
         if (process.env.NODE_ENV === "development") {
-            // Safely update schema during development
+            // Safely update the schema during development
             await sequelize.sync({ alter: true });
 
         } else if (process.env.NODE_ENV === "test") {
-            // Reset database for isolated test runs
+            // Reset the database for isolated test runs
             await sequelize.sync({ force: true });
 
         } else {
-            // Production-safe synchronization
+            // Use safe synchronization outside development and tests
             await sequelize.sync();
         }
 
@@ -82,7 +86,6 @@ User.hasMany(Event, { foreignKey: "creatorId" });
 // Each event has one creator
 Event.belongsTo(User, { foreignKey: "creatorId", as: "creator" });
 
-
 /* =============================
    PARTICIPATION RELATIONSHIPS
 ============================= */
@@ -109,7 +112,6 @@ Event.belongsToMany(User, {
     as: "participants"
 });
 
-
 /* =============================
    REVIEW RELATIONSHIPS
 ============================= */
@@ -126,7 +128,6 @@ Event.hasMany(EventReview, { foreignKey: "eventId", as: "reviews" });
 // Each review belongs to one event
 EventReview.belongsTo(Event, { foreignKey: "eventId", as: "event" });
 
-
 /* =============================
    LIKE RELATIONSHIPS
 ============================= */
@@ -142,7 +143,6 @@ Event.hasMany(EventLike, { foreignKey: "eventId", as: "likes" });
 
 // Each like belongs to one event
 EventLike.belongsTo(Event, { foreignKey: "eventId", as: "event" });
-
 
 /* =============================
    EVENT MEMBERSHIP RELATIONSHIPS

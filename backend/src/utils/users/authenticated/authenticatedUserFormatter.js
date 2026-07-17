@@ -10,7 +10,11 @@
    - Authenticated users can access their own email address.
 =========================================================================== */
 
-// Format the authenticated user response.
+/* =============================
+   AUTHENTICATED USER FORMATTING
+============================= */
+
+// Format an authenticated user API response
 const formatAuthenticatedUser = (user) => ({
     userId: user.id,
     name: user.name,

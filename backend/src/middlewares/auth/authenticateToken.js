@@ -19,12 +19,21 @@ const { createHttpError } = require("../../utils/errors/httpError");
    - Authentication errors are forwarded to the global error handler.
 =========================================================================== */
 
+/* =============================
+   AUTHENTICATION CONSTANTS
+============================= */
+
 const BEARER_PREFIX = "Bearer ";
 
 const AUTH_HEADER_ERROR = "Authorization header missing or malformed";
 const MISSING_TOKEN_ERROR = "No token provided";
 const INVALID_TOKEN_ERROR = "Invalid or expired token";
 
+/* =============================
+   TOKEN AUTHENTICATION
+============================= */
+
+// Verify the access token and attach the decoded user to the request
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
 
@@ -48,7 +57,7 @@ const authenticateToken = (req, res, next) => {
                 return next(createHttpError(401, INVALID_TOKEN_ERROR));
             }
 
-            // Make authenticated user data available to downstream middlewares.
+            // Make authenticated user data available to downstream middlewares
             req.user = decodedToken;
 
             return next();

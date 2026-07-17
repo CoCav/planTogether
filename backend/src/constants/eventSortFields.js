@@ -12,12 +12,19 @@
    - EVENT_ADMIN_SORT_FIELDS additionally allows sorting by creator.
 =========================================================================== */
 
+/* =============================
+   EVENT SORT FIELDS
+============================= */
+
 const EVENT_SORT_FIELDS = [
     "startDateTime",
     "title",
     "createdAt"
 ];
 
+/* =============================
+   ADMIN EVENT SORT FIELDS
+============================= */
 const EVENT_ADMIN_SORT_FIELDS = [
     ...EVENT_SORT_FIELDS,
     "creatorId"

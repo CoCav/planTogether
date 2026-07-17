@@ -21,14 +21,12 @@ const {
    - Empty event lists are handled by the underlying domain helpers.
 =========================================================================== */
 
-const getEventListStats = async ({
-    EventUserRole,
-    EventLike,
-    sequelize,
-    eventIds,
-    currentUserId
-}) => {
-    // Fetch independent statistics in parallel.
+/* =============================
+   EVENT LIST STATISTICS
+============================= */
+
+// Retrieve independent event list statistics in parallel
+const getEventListStats = async ({ EventUserRole, EventLike, sequelize, eventIds, currentUserId }) => {
     const [
         participantCountByEventId,
         likesCountByEventId,

@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/database");
 
-const { EVENT_ROLES, EVENT_ROLE_VALUES } = require("../../constants/eventRoles");
+const { EVENT_ROLES, VALID_EVENT_ROLES } = require("../../constants/eventRoles");
 
 /* ==========================================================================
    Event User Role Model
@@ -20,6 +20,11 @@ const { EVENT_ROLES, EVENT_ROLE_VALUES } = require("../../constants/eventRoles")
    - deletedAt marks inactive memberships.
 =========================================================================== */
 
+/* =============================
+   EVENT MEMBERSHIP MODEL
+============================= */
+
+// Define event membership fields, roles and indexes
 const EventUserRole = sequelize.define("EventUserRole", {
     eventId: {
         type: DataTypes.INTEGER,
@@ -32,7 +37,7 @@ const EventUserRole = sequelize.define("EventUserRole", {
     },
 
     role: {
-        type: DataTypes.ENUM(...EVENT_ROLE_VALUES),
+        type: DataTypes.ENUM(...VALID_EVENT_ROLES),
         allowNull: false,
         defaultValue: EVENT_ROLES.PARTICIPANT
     },

@@ -13,15 +13,25 @@
    - Shared across models, services, validators and tests.
 =========================================================================== */
 
+/* =============================
+   EVENT ROLES
+============================= */
+
 const EVENT_ROLES = {
     ORGANIZER: "organizer",
     CO_ORGANIZER: "co_organizer",
     PARTICIPANT: "participant"
 };
 
-const EVENT_ROLE_VALUES = Object.values(EVENT_ROLES);
+/* =============================
+   VALID EVENT ROLES
+============================= */
 
-const VALID_EVENT_ROLES = EVENT_ROLE_VALUES;
+const VALID_EVENT_ROLES = Object.values(EVENT_ROLES);
+
+/* =============================
+   STAFF EVENT ROLES
+============================= */
 
 const STAFF_EVENT_ROLES = [
     EVENT_ROLES.ORGANIZER,
@@ -30,7 +40,6 @@ const STAFF_EVENT_ROLES = [
 
 module.exports = {
     EVENT_ROLES,
-    EVENT_ROLE_VALUES,
     VALID_EVENT_ROLES,
     STAFF_EVENT_ROLES
 };

@@ -1,15 +1,31 @@
-const { DataTypes } = require("sequelize");
-
-const {
-    EVENT_ROLES,
-    EVENT_ROLE_VALUES
-} = require("../../../../src/constants/eventRoles");
+/* =============================
+   MOCK FUNCTIONS
+============================= */
 
 const mockEventUserRoleModel = {
     name: "EventUserRoleModel"
 };
 
 const mockDefine = jest.fn(() => mockEventUserRoleModel);
+
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../../src/config/database", () => ({
+    define: mockDefine
+}));
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
+const { DataTypes } = require("sequelize");
+
+const {
+    EVENT_ROLES,
+    VALID_EVENT_ROLES
+} = require("../../../../src/constants/eventRoles");
 
 const EventUserRole = require("../../../../src/models/associations/eventUserRoleModel");
 
@@ -32,14 +48,6 @@ const EventUserRole = require("../../../../src/models/associations/eventUserRole
    - The Sequelize database instance is mocked.
    - Model associations are registered separately in models/index.js.
 =========================================================================== */
-
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("../../../../src/config/database", () => ({
-    define: mockDefine
-}));
 
 describe("event user role model", () => {
     const [
@@ -81,7 +89,7 @@ describe("event user role model", () => {
         });
 
         it("defines all supported event membership roles", () => {
-            expect(attributes.role.type.values).toEqual(EVENT_ROLE_VALUES);
+            expect(attributes.role.type.values).toEqual(VALID_EVENT_ROLES);
 
             expect(attributes.role.allowNull).toBe(false);
         });
@@ -149,8 +157,7 @@ describe("event user role model", () => {
             ["event and role", ["eventId", "role"]],
             ["user and role", ["userId", "role"]]
         ])(
-            "defines an index for %s queries",
-            (_, fields) => {
+            "defines an index for %s queries", (_, fields) => {
                 expect(options.indexes).toContainEqual({
                     fields
                 });

@@ -1,10 +1,37 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockLikeEvent = jest.fn();
 const mockUnlikeEvent = jest.fn();
 
 const mockAuthenticateToken = jest.fn();
 const mockHandleValidationErrors = jest.fn();
 
-const mockEventIdValidator = jest.fn();
+const mockEventIdParamValidator = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../src/controllers/eventLikeController", () => ({
+    likeEvent: mockLikeEvent,
+    unlikeEvent: mockUnlikeEvent
+}));
+
+jest.mock("../../../src/middlewares/auth/authenticateToken", () => ({
+    authenticateToken: mockAuthenticateToken
+}));
+
+jest.mock("../../../src/middlewares/errors/handleValidationErrors", () => mockHandleValidationErrors);
+
+jest.mock("../../../src/validators/shared/paramsValidators", () => ({
+    eventIdParamValidator: mockEventIdParamValidator,
+}));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const eventLikeRoutes = require("../../../src/routes/eventLikeRoutes");
 
@@ -27,25 +54,6 @@ const { expectRoute } = require("../../helpers/express/routeTestHelper");
    - HTTP behavior remains covered by event like integration tests.
 =========================================================================== */
 
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("../../../src/controllers/eventLikeController", () => ({
-    likeEvent: mockLikeEvent,
-    unlikeEvent: mockUnlikeEvent
-}));
-
-jest.mock("../../../src/middlewares/auth/authenticateToken", () => ({
-    authenticateToken: mockAuthenticateToken
-}));
-
-jest.mock("../../../src/middlewares/errors/handleValidationErrors", () => mockHandleValidationErrors);
-
-jest.mock("../../../src/validators/eventLikeValidator", () => ({
-    eventIdParamValidator: mockEventIdValidator
-}));
-
 describe("event like routes", () => {
 
     /* =============================
@@ -59,7 +67,7 @@ describe("event like routes", () => {
                 path: "/:eventId/likes",
                 handlers: [
                     mockAuthenticateToken,
-                    mockEventIdValidator,
+                    mockEventIdParamValidator,
                     mockHandleValidationErrors,
                     mockLikeEvent
                 ]
@@ -78,7 +86,7 @@ describe("event like routes", () => {
                 path: "/:eventId/likes",
                 handlers: [
                     mockAuthenticateToken,
-                    mockEventIdValidator,
+                    mockEventIdParamValidator,
                     mockHandleValidationErrors,
                     mockUnlikeEvent
                 ]

@@ -6,7 +6,7 @@ const eventLikeController = require("../controllers/eventLikeController");
 const { authenticateToken } = require("../middlewares/auth/authenticateToken");
 const handleValidationErrors = require("../middlewares/errors/handleValidationErrors");
 
-const { eventIdParamValidator } = require("../validators/eventLikeValidator");
+const { eventIdParamValidator } = require("../validators/shared/paramsValidators");
 
 /* ==========================================================================
    Event Like Routes
@@ -23,7 +23,9 @@ const { eventIdParamValidator } = require("../validators/eventLikeValidator");
    - Event existence and duplicate likes are handled in eventLikeService.
 =========================================================================== */
 
-/* Event likes */
+/* =============================
+   EVENT LIKES
+============================= */
 
 router.post(
     "/:eventId/likes",

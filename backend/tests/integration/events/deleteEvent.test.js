@@ -64,10 +64,7 @@ describe("Delete Event API", () => {
             const response = await deleteEvent(event.id, organizerAuth.headers);
 
             expect(response.statusCode).toBe(200);
-            expect(response.body).toHaveProperty(
-                "message",
-                "Event deleted successfully"
-            );
+            expect(response.body).toHaveProperty("message", "Event deleted successfully");
 
             const getResponse = await getEventById(event.id);
 
@@ -112,10 +109,7 @@ describe("Delete Event API", () => {
 
             await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
-            const response = await deleteEvent(
-                event.id,
-                participantAuth.headers
-            );
+            const response = await deleteEvent(event.id, participantAuth.headers);
 
             expect(response.statusCode).toBe(403);
         });
@@ -143,10 +137,7 @@ describe("Delete Event API", () => {
                 EVENT_ROLES.CO_ORGANIZER
             );
 
-            const response = await deleteEvent(
-                event.id,
-                coOrganizerAuth.headers
-            );
+            const response = await deleteEvent(event.id, coOrganizerAuth.headers);
 
             expect(response.statusCode).toBe(403);
         });
@@ -157,10 +148,7 @@ describe("Delete Event API", () => {
                 email: `missingdelete${Date.now()}@test.com`
             });
 
-            const response = await deleteEvent(
-                999999,
-                organizerAuth.headers
-            );
+            const response = await deleteEvent(999999, organizerAuth.headers);
 
             expect(response.statusCode).toBe(403);
         });
@@ -184,10 +172,7 @@ describe("Delete Event API", () => {
                 }
             });
 
-            const response = await deleteEvent(
-                event.id,
-                organizerAuth.headers
-            );
+            const response = await deleteEvent(event.id, organizerAuth.headers);
 
             expect(response.statusCode).toBe(403);
             expect(response.body).toHaveProperty("message", "An event that has already started cannot be deleted");
@@ -205,10 +190,7 @@ describe("Delete Event API", () => {
                 email: `invalidid${Date.now()}@test.com`
             });
 
-            const response = await deleteEvent(
-                "abc",
-                organizerAuth.headers
-            );
+            const response = await deleteEvent("abc", organizerAuth.headers);
 
             expect(response.statusCode).toBe(400);
         });

@@ -55,10 +55,7 @@ describe("Delete Event Review API", () => {
 
             const reviewId = createResponse.body.review.id;
 
-            const response = await deleteEventReview(
-                reviewId,
-                participantAuth.headers
-            );
+            const response = await deleteEventReview(reviewId, participantAuth.headers);
 
             expect(response.statusCode).toBe(200);
 
@@ -140,10 +137,7 @@ describe("Delete Event Review API", () => {
                 email: `validationreview${Date.now()}@test.com`
             });
 
-            const response = await deleteEventReview(
-                "abc",
-                userAuth.headers
-            );
+            const response = await deleteEventReview("abc", userAuth.headers);
 
             expect(response.statusCode).toBe(400);
         });
@@ -160,10 +154,7 @@ describe("Delete Event Review API", () => {
                 email: `missingreview${Date.now()}@test.com`
             });
 
-            const response = await deleteEventReview(
-                999999,
-                userAuth.headers
-            );
+            const response = await deleteEventReview(999999, userAuth.headers);
 
             expect(response.statusCode).toBe(404);
             expect(response.body.message).toBe("Review not found");

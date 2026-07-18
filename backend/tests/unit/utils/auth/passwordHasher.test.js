@@ -1,3 +1,13 @@
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("bcrypt");
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const bcrypt = require("bcrypt");
 
 const {
@@ -19,12 +29,6 @@ const {
    Notes
    - BCRYPT_SALT_ROUNDS can override the default value.
 =========================================================================== */
-
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("bcrypt");
 
 describe("password hasher utility", () => {
     const originalSaltRounds = process.env.BCRYPT_SALT_ROUNDS;

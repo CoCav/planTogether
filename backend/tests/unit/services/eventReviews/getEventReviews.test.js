@@ -1,3 +1,7 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindEventByIdOrFail = jest.fn();
 const mockBuildPublicUserInclude = jest.fn();
 
@@ -7,6 +11,10 @@ const mockGetTotalPages = jest.fn();
 
 const mockFn = jest.fn();
 const mockCol = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("sequelize", () => ({
     fn: mockFn,
@@ -63,6 +71,10 @@ jest.mock("../../../../src/utils/pagination", () => ({
     getTotalCount: mockGetTotalCount,
     getTotalPages: mockGetTotalPages
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const Event = require("../../../../src/models/eventModel");
 const User = require("../../../../src/models/userModel");
@@ -161,20 +173,12 @@ describe("get event reviews service", () => {
                 order: "desc"
             };
 
-            const result = await getEventReviews(
-                1,
-                query
-            );
+            const result = await getEventReviews(1, query);
 
             expect(mockFindEventByIdOrFail).toHaveBeenCalledTimes(1);
-
-            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(
-                Event,
-                1
-            );
+            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(Event, 1);
 
             expect(mockGetPaginationOptions).toHaveBeenCalledTimes(1);
-
             expect(mockGetPaginationOptions).toHaveBeenCalledWith(
                 query,
                 [
@@ -206,11 +210,7 @@ describe("get event reviews service", () => {
 
             expect(mockGetTotalCount).toHaveBeenCalledWith(2);
 
-            expect(mockFn).toHaveBeenCalledWith(
-                "AVG",
-                "rating-column"
-            );
-
+            expect(mockFn).toHaveBeenCalledWith("AVG", "rating-column");
             expect(mockCol).toHaveBeenCalledWith("rating");
 
             expect(EventReview.findOne).toHaveBeenCalledWith({
@@ -226,10 +226,7 @@ describe("get event reviews service", () => {
                 raw: true
             });
 
-            expect(mockGetTotalPages).toHaveBeenCalledWith(
-                2,
-                10
-            );
+            expect(mockGetTotalPages).toHaveBeenCalledWith(2, 10);
 
             expect(result).toEqual({
                 page: 1,
@@ -284,10 +281,7 @@ describe("get event reviews service", () => {
                 })
             );
 
-            expect(mockGetTotalPages).toHaveBeenCalledWith(
-                12,
-                5
-            );
+            expect(mockGetTotalPages).toHaveBeenCalledWith(12, 5);
         });
     });
 
@@ -313,9 +307,7 @@ describe("get event reviews service", () => {
 
             const result = await getEventReviews(1);
 
-            expect(mockGetTotalCount).toHaveBeenCalledWith(
-                groupedCount
-            );
+            expect(mockGetTotalCount).toHaveBeenCalledWith(groupedCount);
 
             expect(result.totalReviews).toBe(5);
         });
@@ -346,8 +338,8 @@ describe("get event reviews service", () => {
             "returns null for a missing average value",
             {},
             null
-        ]])("%s",
-            async (_, averageResult, expected) => {
+        ]])(
+            "%s", async (_, averageResult, expected) => {
                 EventReview.findOne.mockResolvedValue(averageResult);
 
                 const result = await getEventReviews(1);
@@ -363,12 +355,9 @@ describe("get event reviews service", () => {
 
     describe("Event validation", () => {
         it("stops review retrieval when the event does not exist", async () => {
-            const error = Object.assign(
-                new Error("Event not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("Event not found"), {
+                statusCode: 404
+            });
 
             mockFindEventByIdOrFail.mockRejectedValue(error);
 
@@ -377,7 +366,6 @@ describe("get event reviews service", () => {
             expect(mockGetPaginationOptions).not.toHaveBeenCalled();
 
             expect(EventReview.findAndCountAll).not.toHaveBeenCalled();
-
             expect(EventReview.findOne).not.toHaveBeenCalled();
         });
     });
@@ -398,12 +386,13 @@ describe("get event reviews service", () => {
                 EventReview.findOne.mockRejectedValue(
                     new Error("Average rating failed")
                 );
-            }]])("propagates %s errors",
-                async (_, configureError) => {
-                    configureError();
+            }]
+        ])(
+            "propagates %s errors", async (_, configureError) => {
+                configureError();
 
-                    await expect(getEventReviews(1)).rejects.toBeInstanceOf(Error);
-                }
-            );
+                await expect(getEventReviews(1)).rejects.toBeInstanceOf(Error);
+            }
+        );
     });
 });

@@ -1,4 +1,12 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockGetEventLikesCount = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../src/models/associations/eventLikeModel", () => ({
     name: "EventLike"
@@ -20,6 +28,10 @@ jest.mock("../../../../src/models/eventModel", () => ({
 jest.mock("../../../../src/utils/events/eventQueries", () => ({
     findEventByIdOrFail: jest.fn()
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const EventLike = require("../../../../src/models/associations/eventLikeModel");
 
@@ -59,18 +71,10 @@ describe("get event likes count service", () => {
 
             mockGetEventLikesCount.mockResolvedValue(7);
 
-            const result = await getEventLikesCount(
-                42,
-                options
-            );
+            const result = await getEventLikesCount(42, options);
 
             expect(mockGetEventLikesCount).toHaveBeenCalledTimes(1);
-
-            expect(mockGetEventLikesCount).toHaveBeenCalledWith(
-                EventLike,
-                42,
-                options
-            );
+            expect(mockGetEventLikesCount).toHaveBeenCalledWith(EventLike, 42, options);
 
             expect(result).toBe(7);
         });
@@ -80,11 +84,7 @@ describe("get event likes count service", () => {
 
             await getEventLikesCount(42);
 
-            expect(mockGetEventLikesCount).toHaveBeenCalledWith(
-                EventLike,
-                42,
-                {}
-            );
+            expect(mockGetEventLikesCount).toHaveBeenCalledWith(EventLike, 42, {});
         });
 
         it("propagates like count errors", async () => {

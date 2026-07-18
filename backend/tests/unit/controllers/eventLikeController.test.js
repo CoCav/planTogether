@@ -1,3 +1,13 @@
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../src/services/eventLikeService");
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const eventLikeService = require("../../../src/services/eventLikeService");
 
 const eventLikeController = require("../../../src/controllers/eventLikeController");
@@ -25,12 +35,6 @@ const {
    - Event like services are mocked.
    - Business logic is tested separately in eventLikeService tests.
 =========================================================================== */
-
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("../../../src/services/eventLikeService");
 
 describe("event like controller", () => {
     beforeEach(() => {

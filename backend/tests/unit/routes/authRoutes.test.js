@@ -1,3 +1,7 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockRegister = jest.fn();
 const mockLogin = jest.fn();
 const mockLogout = jest.fn();

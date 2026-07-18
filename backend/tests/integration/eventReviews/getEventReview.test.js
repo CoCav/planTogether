@@ -302,10 +302,7 @@ describe("Get Event Reviews API", () => {
                 comment: "Second review"
             });
 
-            const response = await getEventReviews(
-                event.id,
-                "?page=1&pageSize=1"
-            );
+            const response = await getEventReviews(event.id, "?page=1&pageSize=1");
 
             expect(response.statusCode).toBe(200);
 
@@ -350,10 +347,7 @@ describe("Get Event Reviews API", () => {
                 comment: "Second page review"
             });
 
-            const response = await getEventReviews(
-                event.id,
-                "?page=2&pageSize=1"
-            );
+            const response = await getEventReviews(event.id, "?page=2&pageSize=1");
 
             expect(response.statusCode).toBe(200);
 
@@ -398,10 +392,7 @@ describe("Get Event Reviews API", () => {
                 comment: "Second paginated rating review"
             });
 
-            const response = await getEventReviews(
-                event.id,
-                "?page=1&pageSize=1"
-            );
+            const response = await getEventReviews(event.id, "?page=1&pageSize=1");
 
             expect(response.statusCode).toBe(200);
             expect(response.body.reviews).toHaveLength(1);

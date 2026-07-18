@@ -1,3 +1,13 @@
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../src/services/geocodingService");
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const geocodingService = require("../../../src/services/geocodingService");
 
 const geocodingController = require("../../../src/controllers/geocodingController");
@@ -22,12 +32,6 @@ const {
    - Geocoding services are mocked.
    - Cache and provider logic is tested separately in geocodingService tests.
 =========================================================================== */
-
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("../../../src/services/geocodingService");
 
 describe("geocoding controller", () => {
     beforeEach(() => {
@@ -63,7 +67,6 @@ describe("geocoding controller", () => {
             await geocodingController.searchLocations(req, res, next);
 
             expect(geocodingService.searchLocations).toHaveBeenCalledTimes(1);
-
             expect(geocodingService.searchLocations).toHaveBeenCalledWith("Montreal");
 
             expectJsonResponse(res, 200, {

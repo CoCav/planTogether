@@ -28,27 +28,21 @@ describe("geocoding validator", () => {
 
     describe("Valid location query", () => {
         it("accepts a valid location query", async () => {
-            const { errors } = await runValidation(
-                searchLocationsValidator,
-                {
-                    query: {
-                        q: "Montreal"
-                    }
+            const { errors } = await runValidation(searchLocationsValidator, {
+                query: {
+                    q: "Montreal"
                 }
-            );
+            });
 
             expect(errors).toHaveLength(0);
         });
 
         it("trims the location query", async () => {
-            const { errors, req } = await runValidation(
-                searchLocationsValidator,
-                {
-                    query: {
-                        q: "  Montreal  "
-                    }
+            const { errors, req } = await runValidation(searchLocationsValidator, {
+                query: {
+                    q: "  Montreal  "
                 }
-            );
+            });
 
             expect(errors).toHaveLength(0);
             expect(req.query.q).toBe("Montreal");
@@ -58,14 +52,11 @@ describe("geocoding validator", () => {
             ["minimum length", "AB"],
             ["maximum length", "A".repeat(200)]
         ])("accepts a query at the %s boundary", async (_, q) => {
-            const { errors } = await runValidation(
-                searchLocationsValidator,
-                {
-                    query: {
-                        q
-                    }
+            const { errors } = await runValidation(searchLocationsValidator, {
+                query: {
+                    q
                 }
-            );
+            });
 
             expect(errors).toHaveLength(0);
         });
@@ -80,20 +71,18 @@ describe("geocoding validator", () => {
             ["missing", undefined],
             ["empty", ""],
             ["whitespace-only", "   "]
-        ])("rejects a %s location query", async (_, q) => {
-            const query = {};
+        ])(
+            "rejects a %s location query", async (_, q) => {
+                const query = {};
 
-            if (q !== undefined) {
-                query.q = q;
-            }
+                if (q !== undefined) {
+                    query.q = q;
+                }
 
-            const { errors } = await runValidation(
-                searchLocationsValidator,
-                { query }
-            );
+                const { errors } = await runValidation(searchLocationsValidator, { query });
 
-            expect(getValidationMessages(errors)).toContain("Location query is required");
-        });
+                expect(getValidationMessages(errors)).toContain("Location query is required");
+            });
     });
 
     /* =============================
@@ -102,29 +91,21 @@ describe("geocoding validator", () => {
 
     describe("Query length", () => {
         it("rejects a location query shorter than 2 characters", async () => {
-            const { errors } = await runValidation(
-                searchLocationsValidator,
-                {
-                    query: {
-                        q: "A"
-                    }
+            const { errors } = await runValidation(searchLocationsValidator, {
+                query: {
+                    q: "A"
                 }
-            );
+            });
 
-            expect(getValidationMessages(errors)).toContain(
-                "Location query must be between 2 and 200 characters"
-            );
+            expect(getValidationMessages(errors)).toContain("Location query must be between 2 and 200 characters");
         });
 
         it("rejects a location query longer than 200 characters", async () => {
-            const { errors } = await runValidation(
-                searchLocationsValidator,
-                {
-                    query: {
-                        q: "A".repeat(201)
-                    }
+            const { errors } = await runValidation(searchLocationsValidator, {
+                query: {
+                    q: "A".repeat(201)
                 }
-            );
+            });
 
             expect(getValidationMessages(errors)).toContain("Location query must be between 2 and 200 characters");
         });

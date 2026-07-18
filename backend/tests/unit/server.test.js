@@ -1,3 +1,7 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockListen = jest.fn((port, callback) => {
     callback();
 
@@ -9,6 +13,10 @@ const mockListen = jest.fn((port, callback) => {
 const mockInitDB = jest.fn();
 const mockLoggerInfo = jest.fn();
 const mockLoggerError = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../src/app", () => ({
     listen: mockListen
@@ -22,6 +30,10 @@ jest.mock("../../src/config/logger", () => ({
     info: mockLoggerInfo,
     error: mockLoggerError
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const { startServer } = require("../../src/server");
 
@@ -67,11 +79,7 @@ describe("server", () => {
             await startServer();
 
             expect(mockInitDB).toHaveBeenCalledTimes(1);
-
-            expect(mockListen).toHaveBeenCalledWith(
-                3000,
-                expect.any(Function)
-            );
+            expect(mockListen).toHaveBeenCalledWith(3000, expect.any(Function));
 
             expect(mockLoggerInfo).toHaveBeenCalledWith("Server listening on http://localhost:3000");
         });
@@ -83,10 +91,7 @@ describe("server", () => {
 
             await startServer();
 
-            expect(mockListen).toHaveBeenCalledWith(
-                "8080",
-                expect.any(Function)
-            );
+            expect(mockListen).toHaveBeenCalledWith("8080", expect.any(Function));
 
             expect(mockLoggerInfo).toHaveBeenCalledWith("Server listening on http://localhost:8080");
         });

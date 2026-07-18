@@ -109,12 +109,9 @@ describe("Get Public User Events API", () => {
                 email: `eventcreator${Date.now()}@test.com`
             });
 
-            const eventResponse = await createEventAsAuthenticatedUser(
-                eventCreatorAuth.headers,
-                {
-                    title: "Joined Public Event"
-                }
-            );
+            const eventResponse = await createEventAsAuthenticatedUser(eventCreatorAuth.headers, {
+                title: "Joined Public Event"
+            });
 
             await joinEventAsAuthenticatedUser(eventResponse.body.event.id, targetUserAuth.headers);
 
@@ -175,12 +172,9 @@ describe("Get Public User Events API", () => {
                 email: `inactivecreator${Date.now()}@test.com`
             });
 
-            const eventResponse = await createEventAsAuthenticatedUser(
-                eventCreatorAuth.headers,
-                {
-                    title: "Inactive Joined Public Event"
-                }
-            );
+            const eventResponse = await createEventAsAuthenticatedUser(eventCreatorAuth.headers, {
+                title: "Inactive Joined Public Event"
+            });
 
             await joinEventAsAuthenticatedUser(eventResponse.body.event.id, targetUserAuth.headers);
             await leaveEventAsAuthenticatedUser(eventResponse.body.event.id, targetUserAuth.headers);
@@ -217,12 +211,9 @@ describe("Get Public User Events API", () => {
                 email: `publicliker${Date.now()}@test.com`
             });
 
-            const eventResponse = await createEventAsAuthenticatedUser(
-                targetUserAuth.headers,
-                {
-                    title: "Public Like Stats Event"
-                }
-            );
+            const eventResponse = await createEventAsAuthenticatedUser(targetUserAuth.headers, {
+                title: "Public Like Stats Event"
+            });
 
             await EventLike.create({
                 eventId: eventResponse.body.event.id,
@@ -258,12 +249,9 @@ describe("Get Public User Events API", () => {
                 email: `publicviewer${Date.now()}@test.com`
             });
 
-            const eventResponse = await createEventAsAuthenticatedUser(
-                targetUserAuth.headers,
-                {
-                    title: "Liked Public Event"
-                }
-            );
+            const eventResponse = await createEventAsAuthenticatedUser(targetUserAuth.headers, {
+                title: "Liked Public Event"
+            });
 
             await EventLike.create({
                 eventId: eventResponse.body.event.id,

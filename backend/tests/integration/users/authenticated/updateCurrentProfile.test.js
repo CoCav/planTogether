@@ -47,12 +47,9 @@ describe("Update Current User Profile API", () => {
                 email: `update${Date.now()}@test.com`
             });
 
-            const response = await updateCurrentUserProfile(
-                userAuth.headers,
-                {
-                    name: "New Name"
-                }
-            );
+            const response = await updateCurrentUserProfile(userAuth.headers, {
+                name: "New Name"
+            });
 
             expect(response.statusCode).toBe(200);
 
@@ -68,12 +65,9 @@ describe("Update Current User Profile API", () => {
                 email: `emailupdate${Date.now()}@test.com`
             });
 
-            const response = await updateCurrentUserProfile(
-                userAuth.headers,
-                {
-                    email: `updated${Date.now()}@test.com`
-                }
-            );
+            const response = await updateCurrentUserProfile(userAuth.headers, {
+                email: `updated${Date.now()}@test.com`
+            });
 
             expect(response.statusCode).toBe(200);
             expect(response.body).toHaveProperty("message", "User profile updated successfully");
@@ -88,12 +82,9 @@ describe("Update Current User Profile API", () => {
                 email: `normalize${Date.now()}@test.com`
             });
 
-            const response = await updateCurrentUserProfile(
-                userAuth.headers,
-                {
-                    email: "   NORMALIZED@TEST.COM   "
-                }
-            );
+            const response = await updateCurrentUserProfile(userAuth.headers, {
+                email: "   NORMALIZED@TEST.COM   "
+            });
 
             expect(response.statusCode).toBe(200);
             expect(response.body).toHaveProperty("message", "User profile updated successfully");
@@ -113,14 +104,11 @@ describe("Update Current User Profile API", () => {
                 email: `avatar${Date.now()}@test.com`
             });
 
-            const response = await updateCurrentUserAvatar(
-                userAuth.headers,
-                {
-                    buffer: Buffer.from("fake image"),
-                    filename: "avatar.png",
-                    contentType: "image/png"
-                }
-            );
+            const response = await updateCurrentUserAvatar(userAuth.headers, {
+                buffer: Buffer.from("fake image"),
+                filename: "avatar.png",
+                contentType: "image/png"
+            });
 
             expect(response.statusCode).toBe(200);
             expect(response.body).toHaveProperty("message", "User profile updated successfully");
@@ -134,25 +122,19 @@ describe("Update Current User Profile API", () => {
                 email: `cleanup${Date.now()}@test.com`
             });
 
-            const firstUploadResponse = await updateCurrentUserAvatar(
-                userAuth.headers,
-                {
-                    buffer: Buffer.from("first image"),
-                    filename: "first.png",
-                    contentType: "image/png"
-                }
-            );
+            const firstUploadResponse = await updateCurrentUserAvatar(userAuth.headers, {
+                buffer: Buffer.from("first image"),
+                filename: "first.png",
+                contentType: "image/png"
+            });
 
             const firstAvatarPath = firstUploadResponse.body.user.avatar;
 
-            const secondUploadResponse = await updateCurrentUserAvatar(
-                userAuth.headers,
-                {
-                    buffer: Buffer.from("second image"),
-                    filename: "second.png",
-                    contentType: "image/png"
-                }
-            );
+            const secondUploadResponse = await updateCurrentUserAvatar(userAuth.headers, {
+                buffer: Buffer.from("second image"),
+                filename: "second.png",
+                contentType: "image/png"
+            });
 
             const secondAvatarPath = secondUploadResponse.body.user.avatar;
 
@@ -177,12 +159,9 @@ describe("Update Current User Profile API", () => {
 
     describe("Authentication errors", () => {
         it("rejects profile updates without authentication", async () => {
-            const response = await updateCurrentUserProfile(
-                {},
-                {
-                    name: "Unauthorized"
-                }
-            );
+            const response = await updateCurrentUserProfile({}, {
+                name: "Unauthorized"
+            });
 
             expect(response.statusCode).toBe(401);
         });
@@ -199,12 +178,9 @@ describe("Update Current User Profile API", () => {
                 email: `invalidemail${Date.now()}@test.com`
             });
 
-            const response = await updateCurrentUserProfile(
-                userAuth.headers,
-                {
-                    email: "not-an-email"
-                }
-            );
+            const response = await updateCurrentUserProfile(userAuth.headers, {
+                email: "not-an-email"
+            });
 
             expect(response.statusCode).toBe(400);
         });
@@ -215,12 +191,9 @@ describe("Update Current User Profile API", () => {
                 email: `shortname${Date.now()}@test.com`
             });
 
-            const response = await updateCurrentUserProfile(
-                userAuth.headers,
-                {
-                    name: "A"
-                }
-            );
+            const response = await updateCurrentUserProfile(userAuth.headers, {
+                name: "A"
+            });
 
             expect(response.statusCode).toBe(400);
         });
@@ -231,14 +204,11 @@ describe("Update Current User Profile API", () => {
                 email: `invalidavatar${Date.now()}@test.com`
             });
 
-            const response = await updateCurrentUserAvatar(
-                userAuth.headers,
-                {
-                    buffer: Buffer.from("fake pdf"),
-                    filename: "document.pdf",
-                    contentType: "application/pdf"
-                }
-            );
+            const response = await updateCurrentUserAvatar(userAuth.headers, {
+                buffer: Buffer.from("fake pdf"),
+                filename: "document.pdf",
+                contentType: "application/pdf"
+            });
 
             expect(response.statusCode).toBe(400);
         });
@@ -251,14 +221,11 @@ describe("Update Current User Profile API", () => {
 
             const oversizedBuffer = Buffer.alloc(3 * 1024 * 1024);
 
-            const response = await updateCurrentUserAvatar(
-                userAuth.headers,
-                {
-                    buffer: oversizedBuffer,
-                    filename: "oversized.png",
-                    contentType: "image/png"
-                }
-            );
+            const response = await updateCurrentUserAvatar(userAuth.headers, {
+                buffer: oversizedBuffer,
+                filename: "oversized.png",
+                contentType: "image/png"
+            });
 
             expect(response.statusCode).toBe(400);
         });
@@ -280,12 +247,9 @@ describe("Update Current User Profile API", () => {
                 email: `second${Date.now()}@test.com`
             });
 
-            const response = await updateCurrentUserProfile(
-                firstUserAuth.headers,
-                {
-                    email: secondUserAuth.email
-                }
-            );
+            const response = await updateCurrentUserProfile(firstUserAuth.headers, {
+                email: secondUserAuth.email
+            });
 
             expect(response.statusCode).toBe(409);
         });

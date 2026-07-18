@@ -26,10 +26,7 @@ describe("HTTP error utility", () => {
 
     describe("createHttpError", () => {
         it("creates an Error with the provided message and status code", () => {
-            const error = createHttpError(
-                404,
-                "User not found"
-            );
+            const error = createHttpError(404, "User not found");
 
             expect(error).toBeInstanceOf(Error);
             expect(error.message).toBe("User not found");
@@ -37,10 +34,7 @@ describe("HTTP error utility", () => {
         });
 
         it("preserves the provided error values", () => {
-            const error = createHttpError(
-                422,
-                "Validation failed"
-            );
+            const error = createHttpError(422, "Validation failed");
 
             expect(error).toMatchObject({
                 message: "Validation failed",

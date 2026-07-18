@@ -20,20 +20,14 @@ const app = require("../../../src/app");
    GEOCODING ACTIONS
 ============================= */
 
-const searchLocations = ({
-    headers = {},
-    query = {}
-} = {}) => {
+const searchLocations = ({ headers = {}, query = {} } = {}) => {
     return request(app)
         .get("/api/locations/search")
         .set(headers)
         .query(query);
 };
 
-const publicSearchLocations = ({
-    headers = {},
-    query = {}
-} = {}) => {
+const publicSearchLocations = ({ headers = {}, query = {} } = {}) => {
     return request(app)
         .get("/api/locations/public-search")
         .set(headers)

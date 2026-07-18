@@ -61,10 +61,7 @@ const deleteCurrentUser = (headers = {}) => {
         .set(headers);
 };
 
-const updateCurrentUserPassword = (
-    headers = {},
-    payload = {}
-) => {
+const updateCurrentUserPassword = (headers = {}, payload = {}) => {
     return request(app)
         .put("/api/users/me/password")
         .set(headers)

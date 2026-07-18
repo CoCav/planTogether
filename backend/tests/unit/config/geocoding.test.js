@@ -1,3 +1,7 @@
+/* =============================
+   TEST HELPERS
+============================= */
+
 const loadGeocodingConfig = () => {
     jest.resetModules();
     return require("../../../src/config/geocoding");
@@ -79,8 +83,7 @@ describe("geocoding config", () => {
         });
 
         it("uses a custom search URL", () => {
-            process.env.NOMINATIM_SEARCH_URL =
-                "https://example.com/search";
+            process.env.NOMINATIM_SEARCH_URL = "https://example.com/search";
 
             const config = loadGeocodingConfig();
 
@@ -88,8 +91,7 @@ describe("geocoding config", () => {
         });
 
         it("uses a custom user agent", () => {
-            process.env.GEOCODING_USER_AGENT =
-                "MyApp/2.0";
+            process.env.GEOCODING_USER_AGENT = "MyApp/2.0";
 
             const config = loadGeocodingConfig();
 

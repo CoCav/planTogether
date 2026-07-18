@@ -49,23 +49,22 @@ describe("shared query validators", () => {
             "upcoming",
             "ongoing",
             "past"
-        ])("accepts the %s event status", async (status) => {
-            const { errors } = await runValidation(
-                [statusQueryValidator],
-                {
-                    query: {
-                        status
+        ])(
+            "accepts the %s event status", async (status) => {
+                const { errors } = await runValidation(
+                    [statusQueryValidator],
+                    {
+                        query: {
+                            status
+                        }
                     }
-                }
-            );
+                );
 
-            expect(errors).toHaveLength(0);
-        });
+                expect(errors).toHaveLength(0);
+            });
 
         it("accepts an omitted event status", async () => {
-            const { errors } = await runValidation(
-                [statusQueryValidator]
-            );
+            const { errors } = await runValidation([statusQueryValidator]);
 
             expect(errors).toHaveLength(0);
         });
@@ -92,23 +91,22 @@ describe("shared query validators", () => {
         it.each([
             "online",
             "in_person"
-        ])("accepts the %s event mode", async (mode) => {
-            const { errors } = await runValidation(
-                [modeQueryValidator],
-                {
-                    query: {
-                        mode
+        ])(
+            "accepts the %s event mode", async (mode) => {
+                const { errors } = await runValidation(
+                    [modeQueryValidator],
+                    {
+                        query: {
+                            mode
+                        }
                     }
-                }
-            );
+                );
 
-            expect(errors).toHaveLength(0);
-        });
+                expect(errors).toHaveLength(0);
+            });
 
         it("accepts an omitted event mode", async () => {
-            const { errors } = await runValidation(
-                [modeQueryValidator]
-            );
+            const { errors } = await runValidation([modeQueryValidator]);
 
             expect(errors).toHaveLength(0);
         });
@@ -147,9 +145,7 @@ describe("shared query validators", () => {
         });
 
         it("accepts an omitted creator ID", async () => {
-            const { errors } = await runValidation(
-                [creatorIdQueryValidator]
-            );
+            const { errors } = await runValidation([creatorIdQueryValidator]);
 
             expect(errors).toHaveLength(0);
         });
@@ -158,18 +154,19 @@ describe("shared query validators", () => {
             ["zero", "0"],
             ["negative", "-1"],
             ["non-numeric", "abc"]
-        ])("rejects a %s creator ID", async (_, creatorId) => {
-            const { errors } = await runValidation(
-                [creatorIdQueryValidator],
-                {
-                    query: {
-                        creatorId
+        ])(
+            "rejects a %s creator ID", async (_, creatorId) => {
+                const { errors } = await runValidation(
+                    [creatorIdQueryValidator],
+                    {
+                        query: {
+                            creatorId
+                        }
                     }
-                }
-            );
+                );
 
-            expect(getValidationMessages(errors)).toContain("Creator ID must be a positive integer");
-        });
+                expect(getValidationMessages(errors)).toContain("Creator ID must be a positive integer");
+            });
     });
 
     /* =============================
@@ -188,32 +185,26 @@ describe("shared query validators", () => {
             ["country", countryQueryValidator]
         ];
 
-        it.each(textQueryScenarios)(
-            "accepts an omitted %s query",
-            async (_, validator) => {
-                const { errors } = await runValidation(
-                    [validator]
-                );
+        it.each(textQueryScenarios)("accepts an omitted %s query", async (_, validator) => {
+            const { errors } = await runValidation([validator]);
 
-                expect(errors).toHaveLength(0);
-            }
+            expect(errors).toHaveLength(0);
+        }
         );
 
-        it.each(textQueryScenarios)(
-            "trims the %s query",
-            async (field, validator) => {
-                const { errors, req } = await runValidation(
-                    [validator],
-                    {
-                        query: {
-                            [field]: "  Test Value  "
-                        }
+        it.each(textQueryScenarios)("trims the %s query", async (field, validator) => {
+            const { errors, req } = await runValidation(
+                [validator],
+                {
+                    query: {
+                        [field]: "  Test Value  "
                     }
-                );
+                }
+            );
 
-                expect(errors).toHaveLength(0);
-                expect(req.query[field]).toBe("Test Value");
-            }
+            expect(errors).toHaveLength(0);
+            expect(req.query[field]).toBe("Test Value");
+        }
         );
     });
 
@@ -222,65 +213,53 @@ describe("shared query validators", () => {
     ============================= */
 
     describe("Date query validators", () => {
-        const dateQueryScenarios = [
-            [
-                "date",
-                dateQueryValidator,
-                "Date must be a valid ISO8601 date"
-            ],
-            [
-                "startDate",
-                startDateQueryValidator,
-                "Start date must be a valid ISO8601 date"
-            ],
-            [
-                "endDate",
-                endDateQueryValidator,
-                "End date must be a valid ISO8601 date"
-            ]
-        ];
+        const dateQueryScenarios = [[
+            "date",
+            dateQueryValidator,
+            "Date must be a valid ISO8601 date"
+        ], [
+            "startDate",
+            startDateQueryValidator,
+            "Start date must be a valid ISO8601 date"
+        ], [
+            "endDate",
+            endDateQueryValidator,
+            "End date must be a valid ISO8601 date"
+        ]];
 
-        it.each(dateQueryScenarios)(
-            "accepts an omitted %s query",
-            async (_, validator) => {
-                const { errors } = await runValidation(
-                    [validator]
-                );
+        it.each(dateQueryScenarios)("accepts an omitted %s query", async (_, validator) => {
+            const { errors } = await runValidation([validator]);
 
-                expect(errors).toHaveLength(0);
-            }
+            expect(errors).toHaveLength(0);
+        }
         );
 
-        it.each(dateQueryScenarios)(
-            "accepts a valid ISO8601 %s query",
-            async (field, validator) => {
-                const { errors } = await runValidation(
-                    [validator],
-                    {
-                        query: {
-                            [field]: "2026-12-31"
-                        }
+        it.each(dateQueryScenarios)("accepts a valid ISO8601 %s query", async (field, validator) => {
+            const { errors } = await runValidation(
+                [validator],
+                {
+                    query: {
+                        [field]: "2026-12-31"
                     }
-                );
+                }
+            );
 
-                expect(errors).toHaveLength(0);
-            }
+            expect(errors).toHaveLength(0);
+        }
         );
 
-        it.each(dateQueryScenarios)(
-            "rejects an invalid %s query",
-            async (field, validator, message) => {
-                const { errors } = await runValidation(
-                    [validator],
-                    {
-                        query: {
-                            [field]: "not-a-date"
-                        }
+        it.each(dateQueryScenarios)("rejects an invalid %s query", async (field, validator, message) => {
+            const { errors } = await runValidation(
+                [validator],
+                {
+                    query: {
+                        [field]: "not-a-date"
                     }
-                );
+                }
+            );
 
-                expect(getValidationMessages(errors)).toContain(message);
-            }
+            expect(getValidationMessages(errors)).toContain(message);
+        }
         );
     });
 });

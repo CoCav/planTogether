@@ -51,10 +51,7 @@ describe("Join Event API", () => {
                 email: `joiningparticipant${Date.now()}@test.com`
             });
 
-            const response = await joinEventAsAuthenticatedUser(
-                event.id,
-                participantAuth.headers
-            );
+            const response = await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
             expect(response.statusCode).toBe(200);
             expect(response.body).toHaveProperty("message", "User successfully joined the event");
@@ -90,10 +87,7 @@ describe("Join Event API", () => {
                 email: `invalidjoinparticipant${Date.now()}@test.com`
             });
 
-            const response = await joinEventAsAuthenticatedUser(
-                "abc",
-                participantAuth.headers
-            );
+            const response = await joinEventAsAuthenticatedUser("abc", participantAuth.headers);
 
             expect(response.statusCode).toBe(400);
         });
@@ -118,10 +112,7 @@ describe("Join Event API", () => {
 
             await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
-            const response = await joinEventAsAuthenticatedUser(
-                event.id,
-                participantAuth.headers
-            );
+            const response = await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
             expect(response.statusCode).toBe(409);
         });
@@ -140,10 +131,7 @@ describe("Join Event API", () => {
                 email: `pasteventparticipant${Date.now()}@test.com`
             });
 
-            const response = await joinEventAsAuthenticatedUser(
-                event.id,
-                participantAuth.headers
-            );
+            const response = await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
             expect(response.statusCode).toBe(403);
         });
@@ -167,10 +155,7 @@ describe("Join Event API", () => {
                 email: `latejoinparticipant${Date.now()}@test.com`
             });
 
-            const response = await joinEventAsAuthenticatedUser(
-                event.id,
-                participantAuth.headers
-            );
+            const response = await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
             expect(response.statusCode).toBe(409);
         });
@@ -195,10 +180,7 @@ describe("Join Event API", () => {
                 email: `secondfulleventparticipant${Date.now()}@test.com`
             });
 
-            const response = await joinEventAsAuthenticatedUser(
-                event.id,
-                secondParticipantAuth.headers
-            );
+            const response = await joinEventAsAuthenticatedUser(event.id, secondParticipantAuth.headers);
 
             expect(response.statusCode).toBe(409);
         });
@@ -218,10 +200,7 @@ describe("Join Event API", () => {
             await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
             await leaveEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
-            const response = await joinEventAsAuthenticatedUser(
-                event.id,
-                participantAuth.headers
-            );
+            const response = await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
             expect(response.statusCode).toBe(200);
             expect(response.body).toHaveProperty("message", "User successfully joined the event");
@@ -248,10 +227,7 @@ describe("Join Event API", () => {
                 email: `newseatparticipant${Date.now()}@test.com`
             });
 
-            const response = await joinEventAsAuthenticatedUser(
-                event.id,
-                secondParticipantAuth.headers
-            );
+            const response = await joinEventAsAuthenticatedUser(event.id, secondParticipantAuth.headers);
 
             expect(response.statusCode).toBe(200);
         });
@@ -268,10 +244,7 @@ describe("Join Event API", () => {
                 email: `missingjoinparticipant${Date.now()}@test.com`
             });
 
-            const response = await joinEventAsAuthenticatedUser(
-                999999,
-                participantAuth.headers
-            );
+            const response = await joinEventAsAuthenticatedUser(999999, participantAuth.headers);
 
             expect(response.statusCode).toBe(404);
         });

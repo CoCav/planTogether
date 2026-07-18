@@ -1,3 +1,7 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockBuildEventCreatorInclude = jest.fn();
 
 const mockBuildActiveParticipantInclude = jest.fn();
@@ -12,6 +16,10 @@ const mockBuildEventLikeCountAttribute = jest.fn();
 const mockFindEventLike = jest.fn();
 
 const mockGetEventStatus = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../src/config/database", () => ({
     fn: jest.fn(),
@@ -102,6 +110,10 @@ jest.mock("../../../../src/utils/pagination", () => ({
     getTotalCount: jest.fn(),
     getTotalPages: jest.fn()
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const sequelize = require("../../../../src/config/database");
 
@@ -226,25 +238,10 @@ describe("get event by ID service", () => {
         it("returns an event with computed status and anonymous like state", async () => {
             const result = await getEventById(1);
 
-            expect(mockBuildEventParticipantCountAttribute).toHaveBeenCalledWith(
-                sequelize,
-                "participants.id"
-            );
-
-            expect(mockBuildEventReviewCountAttribute).toHaveBeenCalledWith(
-                sequelize,
-                "reviews.id"
-            );
-
-            expect(mockBuildEventAverageRatingAttribute).toHaveBeenCalledWith(
-                sequelize,
-                "reviews.rating"
-            );
-
-            expect(mockBuildEventLikeCountAttribute).toHaveBeenCalledWith(
-                sequelize,
-                "likes.id"
-            );
+            expect(mockBuildEventParticipantCountAttribute).toHaveBeenCalledWith(sequelize, "participants.id");
+            expect(mockBuildEventReviewCountAttribute).toHaveBeenCalledWith(sequelize, "reviews.id");
+            expect(mockBuildEventAverageRatingAttribute).toHaveBeenCalledWith(sequelize, "reviews.rating");
+            expect(mockBuildEventLikeCountAttribute).toHaveBeenCalledWith(sequelize, "likes.id");
 
             expect(mockBuildEventCreatorInclude).toHaveBeenCalledWith(User);
             expect(mockBuildActiveParticipantInclude).toHaveBeenCalledWith(User);
@@ -313,37 +310,25 @@ describe("get event by ID service", () => {
                 userId: 10
             });
 
-            const result = await getEventById(
-                1,
-                10
-            );
+            const result = await getEventById(1, 10);
 
             expect(mockFindEventLike).toHaveBeenCalledTimes(1);
 
-            expect(mockFindEventLike).toHaveBeenCalledWith(
-                EventLike,
-                {
-                    eventId: 1,
-                    userId: 10
-                }
-            );
+            expect(mockFindEventLike).toHaveBeenCalledWith(EventLike, {
+                eventId: 1,
+                userId: 10
+            });
 
             expect(result.isLikedByCurrentUser).toBe(true);
         });
 
         it("returns false when the authenticated user did not like the event", async () => {
-            const result = await getEventById(
-                1,
-                10
-            );
+            const result = await getEventById(1, 10);
 
-            expect(mockFindEventLike).toHaveBeenCalledWith(
-                EventLike,
-                {
-                    eventId: 1,
-                    userId: 10
-                }
-            );
+            expect(mockFindEventLike).toHaveBeenCalledWith(EventLike, {
+                eventId: 1,
+                userId: 10
+            });
 
             expect(result.isLikedByCurrentUser).toBe(false);
         });
@@ -352,12 +337,9 @@ describe("get event by ID service", () => {
             ["undefined", undefined],
             ["null", null],
             ["zero", 0]
-        ])("does not query likes for an anonymous %s user ID",
-            async (_, currentUserId) => {
-                const result = await getEventById(
-                    1,
-                    currentUserId
-                );
+        ])(
+            "does not query likes for an anonymous %s user ID", async (_, currentUserId) => {
+                const result = await getEventById(1, currentUserId);
 
                 expect(mockFindEventLike).not.toHaveBeenCalled();
 

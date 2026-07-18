@@ -1,7 +1,15 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockNormalizeEmail = jest.fn();
 const mockHashPassword = jest.fn();
 const mockComparePassword = jest.fn();
 const mockGenerateAuthToken = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../src/models/userModel", () => ({
     scope: jest.fn()
@@ -19,6 +27,10 @@ jest.mock("../../../../src/utils/auth/passwordHasher", () => ({
 jest.mock("../../../../src/utils/auth/authToken", () => ({
     generateAuthToken: mockGenerateAuthToken
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const User = require("../../../../src/models/userModel");
 
@@ -57,9 +69,7 @@ describe("login user service", () => {
         User.scope.mockReturnValue(scopedUserModel);
 
         mockNormalizeEmail.mockReturnValue("john@test.com");
-
         mockComparePassword.mockResolvedValue(true);
-
         mockGenerateAuthToken.mockReturnValue("fake-token");
     });
 
@@ -83,19 +93,12 @@ describe("login user service", () => {
             });
 
             expect(mockNormalizeEmail).toHaveBeenCalledTimes(1);
-
-            expect(mockNormalizeEmail).toHaveBeenCalledWith(
-                " JOHN@TEST.COM "
-            );
+            expect(mockNormalizeEmail).toHaveBeenCalledWith(" JOHN@TEST.COM ");
 
             expect(User.scope).toHaveBeenCalledTimes(1);
-
-            expect(User.scope).toHaveBeenCalledWith(
-                "withPassword"
-            );
+            expect(User.scope).toHaveBeenCalledWith("withPassword");
 
             expect(scopedUserModel.findOne).toHaveBeenCalledTimes(1);
-
             expect(scopedUserModel.findOne).toHaveBeenCalledWith({
                 where: {
                     email: "john@test.com"
@@ -103,14 +106,9 @@ describe("login user service", () => {
             });
 
             expect(mockComparePassword).toHaveBeenCalledTimes(1);
-
-            expect(mockComparePassword).toHaveBeenCalledWith(
-                "Password123",
-                user.password
-            );
+            expect(mockComparePassword).toHaveBeenCalledWith("Password123", user.password);
 
             expect(mockGenerateAuthToken).toHaveBeenCalledTimes(1);
-
             expect(mockGenerateAuthToken).toHaveBeenCalledWith(user.id);
 
             expect(result).toEqual({
@@ -139,7 +137,6 @@ describe("login user service", () => {
             });
 
             expect(mockComparePassword).not.toHaveBeenCalled();
-
             expect(mockGenerateAuthToken).not.toHaveBeenCalled();
         });
 
@@ -160,10 +157,7 @@ describe("login user service", () => {
                 statusCode: 401
             });
 
-            expect(mockComparePassword).toHaveBeenCalledWith(
-                "WrongPassword",
-                user.password
-            );
+            expect(mockComparePassword).toHaveBeenCalledWith("WrongPassword", user.password);
 
             expect(mockGenerateAuthToken).not.toHaveBeenCalled();
         });
@@ -192,7 +186,6 @@ describe("login user service", () => {
             });
 
             expect(mockComparePassword).not.toHaveBeenCalled();
-
             expect(mockGenerateAuthToken).not.toHaveBeenCalled();
         });
     });

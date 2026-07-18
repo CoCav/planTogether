@@ -1,7 +1,15 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindUserByIdOrFail = jest.fn();
 const mockFormatPublicUser = jest.fn();
 
 const mockOpNe = Symbol("ne");
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("sequelize", () => ({
     Op: {
@@ -64,6 +72,10 @@ jest.mock("../../../../../src/config/database", () => ({
     name: "sequelize"
 }));
 
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const User = require("../../../../../src/models/userModel");
 const Event = require("../../../../../src/models/eventModel");
 const EventUserRole = require("../../../../../src/models/associations/eventUserRoleModel");
@@ -119,7 +131,6 @@ describe("get public user profile service", () => {
         mockFormatPublicUser.mockReturnValue(formattedUser);
 
         Event.count.mockResolvedValue(3);
-
         EventUserRole.count.mockResolvedValue(5);
     });
 
@@ -138,11 +149,9 @@ describe("get public user profile service", () => {
             });
 
             expect(mockFormatPublicUser).toHaveBeenCalledTimes(1);
-
             expect(mockFormatPublicUser).toHaveBeenCalledWith(user);
 
             expect(Event.count).toHaveBeenCalledTimes(1);
-
             expect(Event.count).toHaveBeenCalledWith({
                 where: {
                     creatorId: 10
@@ -150,7 +159,6 @@ describe("get public user profile service", () => {
             });
 
             expect(EventUserRole.count).toHaveBeenCalledTimes(1);
-
             expect(EventUserRole.count).toHaveBeenCalledWith({
                 where: {
                     userId: 10,
@@ -181,7 +189,6 @@ describe("get public user profile service", () => {
             mockFormatPublicUser.mockReturnValue(formattedUser);
 
             Event.count.mockResolvedValue(0);
-
             EventUserRole.count.mockResolvedValue(0);
 
             const result = await getPublicUserProfileById(10);
@@ -245,12 +252,9 @@ describe("get public user profile service", () => {
 
     describe("User validation", () => {
         it("propagates the missing user error before calculating statistics", async () => {
-            const error = Object.assign(
-                new Error("User not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("User not found"), {
+                statusCode: 404
+            });
 
             mockFindUserByIdOrFail.mockRejectedValue(error);
 
@@ -259,7 +263,6 @@ describe("get public user profile service", () => {
             expect(mockFormatPublicUser).not.toHaveBeenCalled();
 
             expect(Event.count).not.toHaveBeenCalled();
-
             expect(EventUserRole.count).not.toHaveBeenCalled();
         });
     });
@@ -277,7 +280,6 @@ describe("get public user profile service", () => {
             await expect(getPublicUserProfileById(10)).rejects.toBe(error);
 
             expect(Event.count).not.toHaveBeenCalled();
-
             expect(EventUserRole.count).not.toHaveBeenCalled();
         });
 
@@ -311,7 +313,6 @@ describe("get public user profile service", () => {
             await expect(getPublicUserProfileById(10)).rejects.toBe(error);
 
             expect(Event.count).toHaveBeenCalledTimes(1);
-
             expect(EventUserRole.count).toHaveBeenCalledTimes(1);
         });
     });

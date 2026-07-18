@@ -1,12 +1,19 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindUserByIdOrFail = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../../src/models/userModel", () => ({
     name: "User"
 }));
 
 jest.mock("../../../../../src/utils/users/userQueries", () => ({
-    findUserByIdOrFail:
-        mockFindUserByIdOrFail
+    findUserByIdOrFail: mockFindUserByIdOrFail
 }));
 
 jest.mock("../../../../../src/config/database", () => ({
@@ -59,6 +66,10 @@ jest.mock("../../../../../src/utils/pagination", () => ({
     getTotalCount: jest.fn(),
     getTotalPages: jest.fn()
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const User = require("../../../../../src/models/userModel");
 
@@ -116,12 +127,9 @@ describe("get current user profile service", () => {
 
     describe("User validation", () => {
         it("propagates the missing user error", async () => {
-            const error = Object.assign(
-                new Error("User not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("User not found"), {
+                statusCode: 404
+            });
 
             mockFindUserByIdOrFail.mockRejectedValue(error);
 

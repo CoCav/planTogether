@@ -1,3 +1,7 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindUserByIdOrFail = jest.fn();
 
 const mockBuildEventWhereConditions = jest.fn();
@@ -11,6 +15,10 @@ const mockGetPublicJoinedEvents = jest.fn();
 const mockGetPaginationOptions = jest.fn();
 const mockGetTotalCount = jest.fn();
 const mockGetTotalPages = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../../src/config/database", () => ({
     name: "sequelize"
@@ -66,6 +74,10 @@ jest.mock("../../../../../src/utils/pagination", () => ({
     getTotalCount: mockGetTotalCount,
     getTotalPages: mockGetTotalPages
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const sequelize = require("../../../../../src/config/database");
 
@@ -174,18 +186,16 @@ describe("get public user events service", () => {
 
             expect(mockBuildEventWhereConditions).toHaveBeenCalledWith({}, {});
 
-            expect(mockGetPaginationOptions).toHaveBeenCalledWith(
-                {
-                    sortBy: "startDateTime",
-                    order: "asc"
-                },
+            expect(mockGetPaginationOptions).toHaveBeenCalledWith({
+                sortBy: "startDateTime",
+                order: "asc"
+            },
                 EVENT_SORT_FIELDS,
                 "startDateTime",
                 "ASC"
             );
 
             expect(mockGetPublicCreatedEvents).toHaveBeenCalledTimes(1);
-
             expect(mockGetPublicCreatedEvents).toHaveBeenCalledWith({
                 Event,
                 User,
@@ -291,13 +301,12 @@ describe("get public user events service", () => {
                 order: "desc"
             });
 
-            expect(mockGetPaginationOptions).toHaveBeenCalledWith(
-                {
-                    page: "2",
-                    pageSize: "5",
-                    sortBy: "title",
-                    order: "desc"
-                },
+            expect(mockGetPaginationOptions).toHaveBeenCalledWith({
+                page: "2",
+                pageSize: "5",
+                sortBy: "title",
+                order: "desc"
+            },
                 EVENT_SORT_FIELDS,
                 "startDateTime",
                 "ASC"
@@ -342,15 +351,14 @@ describe("get public user events service", () => {
                 })
             );
 
-            expect(result.events[0])
-                .toMatchObject({
-                    id: 100,
-                    title: "Public Event",
-                    participantCount: 4,
-                    likesCount: 3,
-                    status: EVENT_STATUS.UPCOMING,
-                    isLikedByCurrentUser: true
-                });
+            expect(result.events[0]).toMatchObject({
+                id: 100,
+                title: "Public Event",
+                participantCount: 4,
+                likesCount: 3,
+                status: EVENT_STATUS.UPCOMING,
+                isLikedByCurrentUser: true
+            });
         });
 
         it("uses zero counts and a false like state when statistics are missing", async () => {
@@ -426,7 +434,6 @@ describe("get public user events service", () => {
             const result = await getPublicUserEventsById(10);
 
             expect(mockGetTotalCount).toHaveBeenCalledWith(groupedCount);
-
             expect(mockGetTotalPages).toHaveBeenCalledWith(2, 10);
 
             expect(result).toMatchObject({
@@ -488,23 +495,17 @@ describe("get public user events service", () => {
 
     describe("User validation", () => {
         it("stops when the public user does not exist", async () => {
-            const error = Object.assign(
-                new Error("User not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("User not found"), {
+                statusCode: 404
+            });
 
             mockFindUserByIdOrFail.mockRejectedValue(error);
 
-            await expect(getPublicUserEventsById(
-                999
-            )).rejects.toBe(error);
+            await expect(getPublicUserEventsById(999)).rejects.toBe(error);
 
             expect(mockBuildEventWhereConditions).not.toHaveBeenCalled();
 
             expect(mockGetPublicCreatedEvents).not.toHaveBeenCalled();
-
             expect(mockGetPublicJoinedEvents).not.toHaveBeenCalled();
 
             expect(mockGetEventListStats).not.toHaveBeenCalled();
@@ -521,9 +522,7 @@ describe("get public user events service", () => {
 
             mockGetPublicCreatedEvents.mockRejectedValue(error);
 
-            await expect(getPublicUserEventsById(
-                10
-            )).rejects.toBe(error);
+            await expect(getPublicUserEventsById(10)).rejects.toBe(error);
 
             expect(mockGetEventListStats).not.toHaveBeenCalled();
         });
@@ -547,9 +546,7 @@ describe("get public user events service", () => {
 
             mockGetEventListStats.mockRejectedValue(error);
 
-            await expect(getPublicUserEventsById(
-                10
-            )).rejects.toBe(error);
+            await expect(getPublicUserEventsById(10)).rejects.toBe(error);
 
             expect(mockGetEventStatus).not.toHaveBeenCalled();
         });
@@ -561,9 +558,7 @@ describe("get public user events service", () => {
                 throw error;
             });
 
-            await expect(getPublicUserEventsById(
-                10
-            )).rejects.toBe(error);
+            await expect(getPublicUserEventsById(10)).rejects.toBe(error);
 
             expect(mockGetEventStatus).not.toHaveBeenCalled();
         });
@@ -575,9 +570,7 @@ describe("get public user events service", () => {
                 throw error;
             });
 
-            await expect(getPublicUserEventsById(
-                10
-            )).rejects.toBe(error);
+            await expect(getPublicUserEventsById(10)).rejects.toBe(error);
 
             expect(mockGetPublicCreatedEvents).not.toHaveBeenCalled();
 

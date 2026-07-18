@@ -67,10 +67,7 @@ describe("Get Event Staff API", () => {
                 email: `listedcoorganizer${Date.now()}@test.com`
             });
 
-            await joinEventAsAuthenticatedUser(
-                event.id,
-                coOrganizerAuth.headers
-            );
+            await joinEventAsAuthenticatedUser(event.id, coOrganizerAuth.headers);
 
             const coOrganizerId = await findUserIdByEmail(coOrganizerAuth.email);
 
@@ -157,10 +154,7 @@ describe("Get Event Staff API", () => {
                 email: `staffexcludedparticipant${Date.now()}@test.com`
             });
 
-            await joinEventAsAuthenticatedUser(
-                event.id,
-                participantAuth.headers
-            );
+            await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
             const response = await getEventStaff(event.id);
 
@@ -209,10 +203,7 @@ describe("Get Event Staff API", () => {
                 email: `inactivecoorganizer${Date.now()}@test.com`
             });
 
-            await joinEventAsAuthenticatedUser(
-                event.id,
-                coOrganizerAuth.headers
-            );
+            await joinEventAsAuthenticatedUser(event.id, coOrganizerAuth.headers);
 
             const coOrganizerId = await findUserIdByEmail(coOrganizerAuth.email);
 

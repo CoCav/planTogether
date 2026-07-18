@@ -62,10 +62,7 @@ describe("Create Event Review API", () => {
             );
 
             expect(response.statusCode).toBe(201);
-            expect(response.body).toHaveProperty(
-                "message",
-                "Event review created successfully"
-            );
+            expect(response.body).toHaveProperty("message", "Event review created successfully");
             expect(response.body).toHaveProperty("review");
 
             expect(response.body.review).toMatchObject({

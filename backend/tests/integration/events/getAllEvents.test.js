@@ -409,19 +409,13 @@ describe("Get All Events API", () => {
                 email: `pagination${Date.now()}@test.com`
             });
 
-            await createEventAsAuthenticatedUser(
-                organizerAuth.headers,
-                {
-                    title: "First Event"
-                }
-            );
+            await createEventAsAuthenticatedUser(organizerAuth.headers, {
+                title: "First Event"
+            });
 
-            await createEventAsAuthenticatedUser(
-                organizerAuth.headers,
-                {
-                    title: "Second Event"
-                }
-            );
+            await createEventAsAuthenticatedUser(organizerAuth.headers, {
+                title: "Second Event"
+            });
 
             const response = await getEvents({
                 query: {
@@ -448,19 +442,13 @@ describe("Get All Events API", () => {
                 email: `sorting${Date.now()}@test.com`
             });
 
-            await createEventAsAuthenticatedUser(
-                organizerAuth.headers,
-                {
-                    title: "B Event"
-                }
-            );
+            await createEventAsAuthenticatedUser(organizerAuth.headers, {
+                title: "B Event"
+            });
 
-            await createEventAsAuthenticatedUser(
-                organizerAuth.headers,
-                {
-                    title: "A Event"
-                }
-            );
+            await createEventAsAuthenticatedUser(organizerAuth.headers, {
+                title: "A Event"
+            });
 
             const response = await getEvents({
                 query: {

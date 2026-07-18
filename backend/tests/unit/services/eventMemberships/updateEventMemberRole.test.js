@@ -1,6 +1,14 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindEventByIdOrFail = jest.fn();
 const mockAssertEventNotPast = jest.fn();
 const mockFindActiveMembership = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../src/config/database", () => ({
     transaction: jest.fn()
@@ -38,6 +46,10 @@ jest.mock("../../../../src/utils/eventMemberships/eventParticipants", () => ({
 jest.mock("../../../../src/utils/users/userInclude", () => ({
     buildPublicUserInclude: jest.fn()
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const Event = require("../../../../src/models/eventModel");
 const EventUserRole = require("../../../../src/models/associations/eventUserRoleModel");
@@ -96,41 +108,30 @@ describe("update event member role service", () => {
 
     describe("updateEventMemberRole", () => {
         it("updates and returns the active membership", async () => {
-            const result =
-                await updateEventMemberRole({
-                    eventId: 1,
-                    userId: 10,
-                    newRole: EVENT_ROLES.CO_ORGANIZER
-                });
+            const result = await updateEventMemberRole({
+                eventId: 1,
+                userId: 10,
+                newRole: EVENT_ROLES.CO_ORGANIZER
+            });
 
             expect(mockFindEventByIdOrFail).toHaveBeenCalledTimes(1);
-
-            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(
-                Event,
-                1
-            );
+            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(Event, 1);
 
             expect(mockAssertEventNotPast).toHaveBeenCalledTimes(1);
-
             expect(mockAssertEventNotPast).toHaveBeenCalledWith({
                 id: 1
             });
 
             expect(mockFindActiveMembership).toHaveBeenCalledTimes(1);
-
-            expect(mockFindActiveMembership).toHaveBeenCalledWith(
-                EventUserRole,
-                {
-                    eventId: 1,
-                    userId: 10,
-                    transaction: undefined
-                }
-            );
+            expect(mockFindActiveMembership).toHaveBeenCalledWith(EventUserRole, {
+                eventId: 1,
+                userId: 10,
+                transaction: undefined
+            });
 
             expect(membership.role).toBe(EVENT_ROLES.CO_ORGANIZER);
 
             expect(membership.save).toHaveBeenCalledTimes(1);
-
             expect(membership.save).toHaveBeenCalledWith();
 
             expect(result).toBe(membership);
@@ -143,12 +144,9 @@ describe("update event member role service", () => {
 
     describe("Event validation", () => {
         it("stops when the event does not exist", async () => {
-            const error = Object.assign(
-                new Error("Event not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("Event not found"), {
+                statusCode: 404
+            });
 
             mockFindEventByIdOrFail.mockRejectedValue(error);
 
@@ -168,12 +166,9 @@ describe("update event member role service", () => {
         });
 
         it("stops when the event is past", async () => {
-            const error = Object.assign(
-                new Error("No action is allowed on a past event"),
-                {
-                    statusCode: 403
-                }
-            );
+            const error = Object.assign(new Error("No action is allowed on a past event"), {
+                statusCode: 403
+            });
 
             mockAssertEventNotPast.mockImplementation(() => {
                 throw error;

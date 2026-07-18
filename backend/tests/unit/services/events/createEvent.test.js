@@ -1,6 +1,14 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockResolveEventLocation = jest.fn();
 const mockNormalizeString = jest.fn();
 const mockBuildCreateEventPayload = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../src/config/database", () => ({
     transaction: jest.fn()
@@ -89,6 +97,10 @@ jest.mock("../../../../src/utils/pagination", () => ({
     getTotalCount: jest.fn(),
     getTotalPages: jest.fn()
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const sequelize = require("../../../../src/config/database");
 
@@ -200,42 +212,24 @@ describe("create event service", () => {
 
     describe("createEvent", () => {
         it("creates an in-person event and organizer membership", async () => {
-            const result = await createEvent(
-                eventInput,
-                10
-            );
+            const result = await createEvent(eventInput, 10);
 
-            expect(mockNormalizeString).toHaveBeenCalledWith(
-                "Montreal"
-            );
+            expect(mockNormalizeString).toHaveBeenCalledWith("Montreal");
 
             expect(mockResolveEventLocation).toHaveBeenCalledTimes(1);
-
-            expect(mockResolveEventLocation).toHaveBeenCalledWith(
-                "Montreal"
-            );
+            expect(mockResolveEventLocation).toHaveBeenCalledWith("Montreal");
 
             expect(mockBuildCreateEventPayload).toHaveBeenCalledTimes(1);
-
-            expect(mockBuildCreateEventPayload).toHaveBeenCalledWith(
-                eventInput,
-                10,
-                locationData
-            );
+            expect(mockBuildCreateEventPayload).toHaveBeenCalledWith(eventInput, 10, locationData);
 
             expect(sequelize.transaction).toHaveBeenCalledTimes(1);
 
             expect(Event.create).toHaveBeenCalledTimes(1);
-
-            expect(Event.create).toHaveBeenCalledWith(
-                eventData,
-                {
-                    transaction
-                }
-            );
+            expect(Event.create).toHaveBeenCalledWith(eventData, {
+                transaction
+            });
 
             expect(EventUserRole.create).toHaveBeenCalledTimes(1);
-
             expect(EventUserRole.create).toHaveBeenCalledWith({
                 eventId: 1,
                 userId: 10,
@@ -285,25 +279,15 @@ describe("create event service", () => {
 
             Event.create.mockResolvedValue(onlineEvent);
 
-            const result = await createEvent(
-                onlineInput,
-                10
-            );
+            const result = await createEvent(onlineInput, 10);
 
             expect(mockResolveEventLocation).not.toHaveBeenCalled();
 
-            expect(mockBuildCreateEventPayload).toHaveBeenCalledWith(
-                onlineInput,
-                10,
-                null
-            );
+            expect(mockBuildCreateEventPayload).toHaveBeenCalledWith(onlineInput, 10, null);
 
-            expect(Event.create).toHaveBeenCalledWith(
-                onlineEventData,
-                {
-                    transaction
-                }
-            );
+            expect(Event.create).toHaveBeenCalledWith(onlineEventData, {
+                transaction
+            });
 
             expect(EventUserRole.create).toHaveBeenCalledWith({
                 eventId: 2,
@@ -340,11 +324,7 @@ describe("create event service", () => {
 
             expect(mockResolveEventLocation).not.toHaveBeenCalled();
 
-            expect(mockBuildCreateEventPayload).toHaveBeenCalledWith(
-                input,
-                10,
-                null
-            );
+            expect(mockBuildCreateEventPayload).toHaveBeenCalledWith(input, 10, null);
         });
     });
 
@@ -361,12 +341,8 @@ describe("create event service", () => {
             "equal to the start date",
             "2026-12-20T10:00:00.000Z",
             "2026-12-20T10:00:00.000Z"
-        ]])("throws a 400 error when the end date is %s",
-            async (
-                _,
-                startDateTime,
-                endDateTime
-            ) => {
+        ]])(
+            "throws a 400 error when the end date is %s", async (_, startDateTime, endDateTime) => {
                 await expect(
                     createEvent(
                         {

@@ -1,3 +1,19 @@
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
+    findOne: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventMemberships/eventMembershipQueries", () => ({
+    findActiveMembership: jest.fn()
+}));
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const EventUserRole = require("../../../../src/models/associations/eventUserRoleModel");
 
 const { EVENT_ROLES } = require("../../../../src/constants/eventRoles");
@@ -29,18 +45,6 @@ const {
    - Authorization errors are forwarded to next().
 =========================================================================== */
 
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({
-    findOne: jest.fn()
-}));
-
-jest.mock("../../../../src/utils/eventMemberships/eventMembershipQueries", () => ({
-    findActiveMembership: jest.fn()
-}));
-
 describe("authorizeEventRole middleware", () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -55,8 +59,7 @@ describe("authorizeEventRole middleware", () => {
             EVENT_ROLES.ORGANIZER,
             EVENT_ROLES.CO_ORGANIZER
         ])(
-            "attaches membership and continues when %s is allowed",
-            async (role) => {
+            "attaches membership and continues when %s is allowed", async (role) => {
                 const { req, res, next } =
                     createEventRoleMocks({
                         eventId: "42",
@@ -78,13 +81,10 @@ describe("authorizeEventRole middleware", () => {
 
                 await middleware(req, res, next);
 
-                expect(findActiveMembership).toHaveBeenCalledWith(
-                    EventUserRole,
-                    {
-                        eventId: "42",
-                        userId: 7
-                    }
-                );
+                expect(findActiveMembership).toHaveBeenCalledWith(EventUserRole, {
+                    eventId: "42",
+                    userId: 7
+                });
 
                 expect(req.eventMembership).toBe(membership);
 
@@ -105,12 +105,10 @@ describe("authorizeEventRole middleware", () => {
             ["null", null],
             ["undefined", undefined]
         ])(
-            "forwards 400 when event ID is %s",
-            async (_, eventId) => {
-                const { req, res, next } =
-                    createEventRoleMocks({
-                        eventId
-                    });
+            "forwards 400 when event ID is %s", async (_, eventId) => {
+                const { req, res, next } = createEventRoleMocks({
+                    eventId
+                });
 
                 const middleware = authorizeEventRole([
                     EVENT_ROLES.ORGANIZER

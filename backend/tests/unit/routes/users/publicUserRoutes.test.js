@@ -1,3 +1,7 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockGetPublicUserProfile = jest.fn();
 const mockGetPublicUserEvents = jest.fn();
 

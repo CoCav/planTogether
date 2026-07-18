@@ -1,3 +1,7 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockGetEventReviews = jest.fn();
 const mockCreateEventReview = jest.fn();
 const mockUpdateEventReview = jest.fn();
@@ -36,11 +40,9 @@ jest.mock("../../../src/middlewares/auth/authenticateToken", () => ({
 jest.mock("../../../src/middlewares/errors/handleValidationErrors", () => mockHandleValidationErrors);
 
 jest.mock("../../../src/validators/eventReviewValidator", () => ({
-    eventIdParamValidator:
-        mockEventIdParamValidator,
+    eventIdParamValidator: mockEventIdParamValidator,
 
-    reviewIdParamValidator:
-        mockReviewIdParamValidator,
+    reviewIdParamValidator: mockReviewIdParamValidator,
 
     getEventReviewsValidator: [
         mockGetReviewsPageValidator,

@@ -1,10 +1,26 @@
-const { DataTypes } = require("sequelize");
+/* =============================
+   MOCK FUNCTIONS
+============================= */
 
 const mockEventReviewModel = {
     name: "EventReviewModel"
 };
 
 const mockDefine = jest.fn(() => mockEventReviewModel);
+
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../../src/config/database", () => ({
+    define: mockDefine
+}));
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
+const { DataTypes } = require("sequelize");
 
 const EventReview = require("../../../../src/models/associations/eventReviewModel");
 
@@ -26,14 +42,6 @@ const EventReview = require("../../../../src/models/associations/eventReviewMode
    - The Sequelize database instance is mocked.
    - Model associations are registered separately in models/index.js.
 =========================================================================== */
-
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("../../../../src/config/database", () => ({
-    define: mockDefine
-}));
 
 describe("event review model", () => {
     const [
@@ -132,8 +140,8 @@ describe("event review model", () => {
             ["event ID", ["eventId"]],
             ["user ID", ["userId"]],
             ["creation date", ["createdAt"]]
-        ])("defines an index for %s queries",
-            (_, fields) => {
+        ])(
+            "defines an index for %s queries", (_, fields) => {
                 expect(options.indexes).toContainEqual({
                     fields
                 });

@@ -39,15 +39,9 @@ describe("event review query utility", () => {
 
             EventReview.findByPk.mockResolvedValue(review);
 
-            const result = await findReviewByIdOrFail(
-                EventReview,
-                10
-            );
+            const result = await findReviewByIdOrFail(EventReview, 10);
 
-            expect(EventReview.findByPk).toHaveBeenCalledWith(
-                10,
-                {}
-            );
+            expect(EventReview.findByPk).toHaveBeenCalledWith(10, {});
 
             expect(result).toBe(review);
         });
@@ -70,16 +64,9 @@ describe("event review query utility", () => {
 
             EventReview.findByPk.mockResolvedValue(review);
 
-            const result = await findReviewByIdOrFail(
-                EventReview,
-                10,
-                options
-            );
+            const result = await findReviewByIdOrFail(EventReview, 10, options);
 
-            expect(EventReview.findByPk).toHaveBeenCalledWith(
-                10,
-                options
-            );
+            expect(EventReview.findByPk).toHaveBeenCalledWith(10, options);
 
             expect(result).toBe(review);
         });
@@ -116,10 +103,7 @@ describe("event review query utility", () => {
                 )
             ).rejects.toThrow("Review not found");
 
-            expect(EventReview.findByPk).toHaveBeenCalledWith(
-                999,
-                options
-            );
+            expect(EventReview.findByPk).toHaveBeenCalledWith(999, options);
         });
     });
 });

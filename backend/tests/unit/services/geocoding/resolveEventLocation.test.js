@@ -1,3 +1,7 @@
+/* =============================
+   TEST MOCKS
+============================= */
+
 jest.mock("../../../../src/models/locationModel", () => ({
     findAll: jest.fn(),
     findOrCreate: jest.fn()
@@ -39,6 +43,10 @@ jest.mock("../../../../src/utils/geocoding/geocodingNormalizer", () => ({
     GEOCODING_PROVIDER: "nominatim",
     normalizeLocation: jest.fn()
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const Location = require("../../../../src/models/locationModel");
 
@@ -88,9 +96,7 @@ describe("resolve event location service", () => {
 
             Location.findAll.mockResolvedValue(locations);
 
-            const result = await resolveEventLocation(
-                "Montreal"
-            );
+            const result = await resolveEventLocation("Montreal");
 
             expect(result).toBe(locations[0]);
 
@@ -110,9 +116,7 @@ describe("resolve event location service", () => {
         it("propagates location search errors", async () => {
             Location.findAll.mockRejectedValue(new Error("Database unavailable"));
 
-            await expect(resolveEventLocation("Montreal")).rejects.toThrow(
-                "Database unavailable"
-            );
+            await expect(resolveEventLocation("Montreal")).rejects.toThrow("Database unavailable");
 
             expect(Location.findOrCreate).not.toHaveBeenCalled();
         });

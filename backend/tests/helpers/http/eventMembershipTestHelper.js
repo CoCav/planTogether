@@ -37,19 +37,13 @@ const getEventStaff = (eventId) => {
    MEMBERSHIP ACTIONS
 ============================= */
 
-const joinEventAsAuthenticatedUser = (
-    eventId,
-    headers = {}
-) => {
+const joinEventAsAuthenticatedUser = (eventId, headers = {}) => {
     return request(app)
         .post(`/api/events/${eventId}/members/join`)
         .set(headers);
 };
 
-const leaveEventAsAuthenticatedUser = (
-    eventId,
-    headers = {}
-) => {
+const leaveEventAsAuthenticatedUser = (eventId, headers = {}) => {
     return request(app)
         .delete(`/api/events/${eventId}/members/leave`)
         .set(headers);
@@ -59,12 +53,7 @@ const leaveEventAsAuthenticatedUser = (
    MEMBERSHIP MANAGEMENT
 ============================= */
 
-const updateEventMemberRole = (
-    eventId,
-    userId,
-    headers,
-    newRole
-) => {
+const updateEventMemberRole = (eventId, userId, headers, newRole) => {
     return request(app)
         .put(`/api/events/${eventId}/members/${userId}/role`)
         .set(headers || {})
@@ -73,21 +62,13 @@ const updateEventMemberRole = (
         });
 };
 
-const removeEventMember = (
-    eventId,
-    userId,
-    headers = {}
-) => {
+const removeEventMember = (eventId, userId, headers = {}) => {
     return request(app)
         .delete(`/api/events/${eventId}/members/${userId}`)
         .set(headers);
 };
 
-const transferEventOwnership = (
-    eventId,
-    targetUserId,
-    headers = {}
-) => {
+const transferEventOwnership = (eventId, targetUserId, headers = {}) => {
     return request(app)
         .put(`/api/events/${eventId}/ownership`)
         .set(headers)
@@ -99,9 +80,12 @@ const transferEventOwnership = (
 module.exports = {
     getEventMembers,
     getEventStaff,
+
     joinEventAsAuthenticatedUser,
     leaveEventAsAuthenticatedUser,
+
     updateEventMemberRole,
     removeEventMember,
+
     transferEventOwnership
 };

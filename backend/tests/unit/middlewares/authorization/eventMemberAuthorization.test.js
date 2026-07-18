@@ -1,3 +1,23 @@
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../../src/models/eventModel", () => ({}));
+
+jest.mock("../../../../src/models/associations/eventUserRoleModel", () => ({}));
+
+jest.mock("../../../../src/utils/events/eventQueries", () => ({
+    findEventByIdOrFail: jest.fn()
+}));
+
+jest.mock("../../../../src/utils/eventMemberships/eventMembershipQueries", () => ({
+    findActiveMembership: jest.fn()
+}));
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const Event = require("../../../../src/models/eventModel");
 const EventUserRole = require("../../../../src/models/associations/eventUserRoleModel");
 
@@ -39,33 +59,8 @@ const {
    - Authorization errors are forwarded to next().
 =========================================================================== */
 
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("../../../../src/models/eventModel", () => ({}));
-
-jest.mock(
-    "../../../../src/models/associations/eventUserRoleModel",
-    () => ({})
-);
-
-jest.mock("../../../../src/utils/events/eventQueries", () => ({
-    findEventByIdOrFail: jest.fn()
-}));
-
-jest.mock(
-    "../../../../src/utils/eventMemberships/eventMembershipQueries",
-    () => ({
-        findActiveMembership: jest.fn()
-    })
-);
-
 describe("event member authorization middleware", () => {
-    const mockMembershipLookups = (
-        requesterMembership,
-        targetMembership
-    ) => {
+    const mockMembershipLookups = (requesterMembership, targetMembership) => {
         findActiveMembership
             .mockResolvedValueOnce(requesterMembership)
             .mockResolvedValueOnce(targetMembership);
@@ -96,43 +91,25 @@ describe("event member authorization middleware", () => {
                 role: EVENT_ROLES.PARTICIPANT
             });
 
-            mockMembershipLookups(
-                requesterMembership,
-                targetMembership
-            );
+            mockMembershipLookups(requesterMembership, targetMembership);
 
             const event = createMockMembershipEvent();
 
             findEventByIdOrFail.mockResolvedValue(event);
 
-            await authorizeEventMemberRoleUpdate(
-                req,
-                res,
-                next
-            );
+            await authorizeEventMemberRoleUpdate(req, res, next);
 
-            expect(findActiveMembership).toHaveBeenNthCalledWith(
-                1,
-                EventUserRole,
-                {
-                    eventId: "1",
-                    userId: 10
-                }
-            );
+            expect(findActiveMembership).toHaveBeenNthCalledWith(1, EventUserRole, {
+                eventId: "1",
+                userId: 10
+            });
 
-            expect(findActiveMembership).toHaveBeenNthCalledWith(
-                2,
-                EventUserRole,
-                {
-                    eventId: "1",
-                    userId: 2
-                }
-            );
+            expect(findActiveMembership).toHaveBeenNthCalledWith(2, EventUserRole, {
+                eventId: "1",
+                userId: 2
+            });
 
-            expect(findEventByIdOrFail).toHaveBeenCalledWith(
-                Event,
-                "1"
-            );
+            expect(findEventByIdOrFail).toHaveBeenCalledWith(Event, "1");
 
             expect(req.targetMembership).toBe(targetMembership);
 
@@ -148,37 +125,28 @@ describe("event member authorization middleware", () => {
     ============================= */
 
     describe("authorizeEventMemberRoleUpdate permission errors", () => {
-        it.each([
-            [
-                "missing membership",
-                null
-            ],
-            [
-                "participant membership",
-                createMockMembership({
-                    userId: 10,
-                    role: EVENT_ROLES.PARTICIPANT
-                })
-            ],
-            [
-                "co-organizer membership",
-                createMockMembership({
-                    userId: 10,
-                    role: EVENT_ROLES.CO_ORGANIZER
-                })
-            ]
-        ])(
-            "forwards 403 for requester with %s",
-            async (_, requesterMembership) => {
+        it.each([[
+            "missing membership",
+            null
+        ], [
+            "participant membership",
+            createMockMembership({
+                userId: 10,
+                role: EVENT_ROLES.PARTICIPANT
+            })
+        ], [
+            "co-organizer membership",
+            createMockMembership({
+                userId: 10,
+                role: EVENT_ROLES.CO_ORGANIZER
+            })
+        ]])(
+            "forwards 403 for requester with %s", async (_, requesterMembership) => {
                 const { req, res, next } = createEventMemberAuthorizationMocks();
 
                 findActiveMembership.mockResolvedValueOnce(requesterMembership);
 
-                await authorizeEventMemberRoleUpdate(
-                    req,
-                    res,
-                    next
-                );
+                await authorizeEventMemberRoleUpdate(req, res, next);
 
                 expect(findActiveMembership).toHaveBeenCalledTimes(1);
 
@@ -208,11 +176,7 @@ describe("event member authorization middleware", () => {
                 null
             );
 
-            await authorizeEventMemberRoleUpdate(
-                req,
-                res,
-                next
-            );
+            await authorizeEventMemberRoleUpdate(req, res, next);
 
             expect(findEventByIdOrFail).not.toHaveBeenCalled();
 
@@ -248,11 +212,7 @@ describe("event member authorization middleware", () => {
                 })
             );
 
-            await authorizeEventMemberRoleUpdate(
-                req,
-                res,
-                next
-            );
+            await authorizeEventMemberRoleUpdate(req, res, next);
 
             expect(req.targetMembership).toBeUndefined();
 
@@ -283,11 +243,7 @@ describe("event member authorization middleware", () => {
 
             findEventByIdOrFail.mockResolvedValue(createMockMembershipEvent());
 
-            await authorizeEventMemberRoleUpdate(
-                req,
-                res,
-                next
-            );
+            await authorizeEventMemberRoleUpdate(req, res, next);
 
             expect(req.targetMembership).toBeUndefined();
 
@@ -312,11 +268,7 @@ describe("event member authorization middleware", () => {
 
             findActiveMembership.mockRejectedValue(lookupError);
 
-            await authorizeEventMemberRoleUpdate(
-                req,
-                res,
-                next
-            );
+            await authorizeEventMemberRoleUpdate(req, res, next);
 
             expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(lookupError);
@@ -340,11 +292,7 @@ describe("event member authorization middleware", () => {
 
             findEventByIdOrFail.mockRejectedValue(lookupError);
 
-            await authorizeEventMemberRoleUpdate(
-                req,
-                res,
-                next
-            );
+            await authorizeEventMemberRoleUpdate(req, res, next);
 
             expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(lookupError);
@@ -360,12 +308,10 @@ describe("event member authorization middleware", () => {
             EVENT_ROLES.ORGANIZER,
             EVENT_ROLES.CO_ORGANIZER
         ])(
-            "allows a %s to remove a participant",
-            async (requesterRole) => {
-                const { req, res, next } =
-                    createEventMemberAuthorizationMocks({
-                        targetUserId: "2"
-                    });
+            "allows a %s to remove a participant", async (requesterRole) => {
+                const { req, res, next } = createEventMemberAuthorizationMocks({
+                    targetUserId: "2"
+                });
 
                 const targetMembership = createMockMembership({
                     userId: 2,
@@ -382,11 +328,7 @@ describe("event member authorization middleware", () => {
 
                 findEventByIdOrFail.mockResolvedValue(createMockMembershipEvent());
 
-                await authorizeEventMemberRemoval(
-                    req,
-                    res,
-                    next
-                );
+                await authorizeEventMemberRemoval(req, res, next);
 
                 expect(req.targetMembership).toBe(targetMembership);
 
@@ -417,11 +359,7 @@ describe("event member authorization middleware", () => {
 
             findEventByIdOrFail.mockResolvedValue(createMockMembershipEvent());
 
-            await authorizeEventMemberRemoval(
-                req,
-                res,
-                next
-            );
+            await authorizeEventMemberRemoval(req, res, next);
 
             expect(req.targetMembership).toBe(targetMembership);
 
@@ -434,29 +372,22 @@ describe("event member authorization middleware", () => {
     ============================= */
 
     describe("authorizeEventMemberRemoval permission errors", () => {
-        it.each([
-            [
-                "missing membership",
-                null
-            ],
-            [
-                "participant membership",
-                createMockMembership({
-                    userId: 10,
-                    role: EVENT_ROLES.PARTICIPANT
-                })
-            ]
-        ])("forwards 403 for requester with %s",
-            async (_, requesterMembership) => {
+        it.each([[
+            "missing membership",
+            null
+        ], [
+            "participant membership",
+            createMockMembership({
+                userId: 10,
+                role: EVENT_ROLES.PARTICIPANT
+            })
+        ]])(
+            "forwards 403 for requester with %s", async (_, requesterMembership) => {
                 const { req, res, next } = createEventMemberAuthorizationMocks();
 
                 findActiveMembership.mockResolvedValueOnce(requesterMembership);
 
-                await authorizeEventMemberRemoval(
-                    req,
-                    res,
-                    next
-                );
+                await authorizeEventMemberRemoval(req, res, next);
 
                 expect(findActiveMembership).toHaveBeenCalledTimes(1);
 
@@ -482,11 +413,7 @@ describe("event member authorization middleware", () => {
                 null
             );
 
-            await authorizeEventMemberRemoval(
-                req,
-                res,
-                next
-            );
+            await authorizeEventMemberRemoval(req, res, next);
 
             expect(findEventByIdOrFail).not.toHaveBeenCalled();
 
@@ -520,11 +447,7 @@ describe("event member authorization middleware", () => {
                 })
             );
 
-            await authorizeEventMemberRemoval(
-                req,
-                res,
-                next
-            );
+            await authorizeEventMemberRemoval(req, res, next);
 
             expect(next).toHaveBeenCalledWith(
                 expect.objectContaining({
@@ -553,11 +476,7 @@ describe("event member authorization middleware", () => {
 
             findEventByIdOrFail.mockResolvedValue(createMockMembershipEvent());
 
-            await authorizeEventMemberRemoval(
-                req,
-                res,
-                next
-            );
+            await authorizeEventMemberRemoval(req, res, next);
 
             expect(next).toHaveBeenCalledWith(
                 expect.objectContaining({
@@ -585,11 +504,7 @@ describe("event member authorization middleware", () => {
 
             findEventByIdOrFail.mockResolvedValue(createMockMembershipEvent());
 
-            await authorizeEventMemberRemoval(
-                req,
-                res,
-                next
-            );
+            await authorizeEventMemberRemoval(req, res, next);
 
             expect(next).toHaveBeenCalledWith(
                 expect.objectContaining({
@@ -617,11 +532,7 @@ describe("event member authorization middleware", () => {
 
             findEventByIdOrFail.mockResolvedValue(createMockMembershipEvent());
 
-            await authorizeEventMemberRemoval(
-                req,
-                res,
-                next
-            );
+            await authorizeEventMemberRemoval(req, res, next);
 
             expect(next).toHaveBeenCalledWith(
                 expect.objectContaining({
@@ -644,11 +555,7 @@ describe("event member authorization middleware", () => {
 
             findActiveMembership.mockRejectedValue(lookupError);
 
-            await authorizeEventMemberRemoval(
-                req,
-                res,
-                next
-            );
+            await authorizeEventMemberRemoval(req, res, next);
 
             expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(lookupError);
@@ -672,11 +579,7 @@ describe("event member authorization middleware", () => {
 
             findEventByIdOrFail.mockRejectedValue(lookupError);
 
-            await authorizeEventMemberRemoval(
-                req,
-                res,
-                next
-            );
+            await authorizeEventMemberRemoval(req, res, next);
 
             expect(next).toHaveBeenCalledTimes(1);
             expect(next).toHaveBeenCalledWith(lookupError);

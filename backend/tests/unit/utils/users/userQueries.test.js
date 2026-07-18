@@ -38,15 +38,9 @@ describe("user query utility", () => {
 
             User.findByPk.mockResolvedValue(user);
 
-            const result = await findUserByIdOrFail(
-                User,
-                10
-            );
+            const result = await findUserByIdOrFail(User, 10);
 
-            expect(User.findByPk).toHaveBeenCalledWith(
-                10,
-                {}
-            );
+            expect(User.findByPk).toHaveBeenCalledWith(10, {});
 
             expect(result).toBe(user);
         });
@@ -68,16 +62,9 @@ describe("user query utility", () => {
 
             User.findByPk.mockResolvedValue(user);
 
-            const result = await findUserByIdOrFail(
-                User,
-                10,
-                options
-            );
+            const result = await findUserByIdOrFail(User, 10, options);
 
-            expect(User.findByPk).toHaveBeenCalledWith(
-                10,
-                options
-            );
+            expect(User.findByPk).toHaveBeenCalledWith(10, options);
 
             expect(result).toBe(user);
         });
@@ -114,10 +101,7 @@ describe("user query utility", () => {
                 )
             ).rejects.toThrow("User not found");
 
-            expect(User.findByPk).toHaveBeenCalledWith(
-                999,
-                options
-            );
+            expect(User.findByPk).toHaveBeenCalledWith(999, options);
         });
     });
 });

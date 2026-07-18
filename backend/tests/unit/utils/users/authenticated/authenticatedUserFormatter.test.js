@@ -55,16 +55,17 @@ describe("authenticated user formatter", () => {
             ["null", null],
             ["undefined", undefined],
             ["empty string", ""]
-        ])("normalizes a %s avatar to null", (_, avatar) => {
-            const result = formatAuthenticatedUser({
-                id: 10,
-                name: "Jane Doe",
-                email: "jane@example.com",
-                avatar
-            });
+        ])(
+            "normalizes a %s avatar to null", (_, avatar) => {
+                const result = formatAuthenticatedUser({
+                    id: 10,
+                    name: "Jane Doe",
+                    email: "jane@example.com",
+                    avatar
+                });
 
-            expect(result.avatar).toBeNull();
-        });
+                expect(result.avatar).toBeNull();
+            });
 
         it("returns only authenticated user response fields", () => {
             const result = formatAuthenticatedUser({

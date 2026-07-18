@@ -1,9 +1,17 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindEventByIdOrFail = jest.fn();
 const mockAssertEventNotPast = jest.fn();
 
 const mockFindActiveMembership = jest.fn();
 const mockFindMembership = jest.fn();
 const mockCountActiveParticipants = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../src/config/database", () => ({
     transaction: jest.fn()
@@ -35,13 +43,16 @@ jest.mock("../../../../src/utils/eventMemberships/eventMembershipQueries", () =>
 }));
 
 jest.mock("../../../../src/utils/eventMemberships/eventParticipants", () => ({
-    countActiveParticipants:
-        mockCountActiveParticipants
+    countActiveParticipants: mockCountActiveParticipants
 }));
 
 jest.mock("../../../../src/utils/users/userInclude", () => ({
     buildPublicUserInclude: jest.fn()
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const sequelize = require("../../../../src/config/database");
 
@@ -130,13 +141,9 @@ describe("join event service", () => {
 
             expect(sequelize.transaction).toHaveBeenCalledTimes(1);
 
-            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(
-                Event,
-                1,
-                {
-                    transaction
-                }
-            );
+            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(Event, 1, {
+                transaction
+            });
 
             expect(mockAssertEventNotPast).toHaveBeenCalledWith(
                 expect.objectContaining({
@@ -144,22 +151,16 @@ describe("join event service", () => {
                 })
             );
 
-            expect(mockCountActiveParticipants).toHaveBeenCalledWith(
-                EventUserRole,
-                {
-                    eventId: 1,
-                    transaction
-                }
-            );
+            expect(mockCountActiveParticipants).toHaveBeenCalledWith(EventUserRole, {
+                eventId: 1,
+                transaction
+            });
 
-            expect(mockFindMembership).toHaveBeenCalledWith(
-                EventUserRole,
-                {
-                    eventId: 1,
-                    userId: 10,
-                    transaction
-                }
-            );
+            expect(mockFindMembership).toHaveBeenCalledWith(EventUserRole, {
+                eventId: 1,
+                userId: 10,
+                transaction
+            });
 
             expect(EventUserRole.create).toHaveBeenCalledWith({
                 eventId: 1,
@@ -214,9 +215,7 @@ describe("join event service", () => {
                 eventId: 1,
                 userId: 10,
                 role: EVENT_ROLES.CO_ORGANIZER,
-                deletedAt: new Date(
-                    "2026-01-01T00:00:00.000Z"
-                ),
+                deletedAt: new Date("2026-01-01T00:00:00.000Z"),
                 save: jest.fn().mockResolvedValue()
             });
 
@@ -251,12 +250,9 @@ describe("join event service", () => {
 
     describe("Event validation", () => {
         it("rolls back when the event does not exist", async () => {
-            const error = Object.assign(
-                new Error("Event not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("Event not found"), {
+                statusCode: 404
+            });
 
             mockFindEventByIdOrFail.mockRejectedValue(error);
 
@@ -279,12 +275,9 @@ describe("join event service", () => {
         });
 
         it("rolls back when the event is past", async () => {
-            const error = Object.assign(
-                new Error("No action is allowed on a past event"),
-                {
-                    statusCode: 403
-                }
-            );
+            const error = Object.assign(new Error("No action is allowed on a past event"), {
+                statusCode: 403
+            });
 
             mockAssertEventNotPast.mockImplementation(() => {
                 throw error;
@@ -442,18 +435,20 @@ describe("join event service", () => {
                     new Error("Participant count failed")
                 );
             }
-        ], ["membership lookup", () => {
-            mockFindMembership.mockRejectedValue(
-                new Error("Membership lookup failed")
-            );
-        }
-        ], ["membership creation", () => {
-            EventUserRole.create.mockRejectedValue(
-                new Error("Membership creation failed")
-            );
-        }
-        ]])("rolls back and propagates %s errors",
-            async (_, configureError) => {
+        ], [
+            "membership lookup", () => {
+                mockFindMembership.mockRejectedValue(
+                    new Error("Membership lookup failed")
+                );
+            }
+        ], [
+            "membership creation", () => {
+                EventUserRole.create.mockRejectedValue(
+                    new Error("Membership creation failed")
+                );
+            }
+        ]])(
+            "rolls back and propagates %s errors", async (_, configureError) => {
                 configureError();
 
                 await expect(
@@ -476,9 +471,7 @@ describe("join event service", () => {
                 eventId: 1,
                 userId: 10,
                 role: EVENT_ROLES.CO_ORGANIZER,
-                deletedAt: new Date(
-                    "2026-01-01T00:00:00.000Z"
-                ),
+                deletedAt: new Date("2026-01-01T00:00:00.000Z"),
                 save: jest.fn().mockRejectedValue(error)
             });
 

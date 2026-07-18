@@ -50,15 +50,10 @@ describe("Delete Current User API", () => {
 
             const response = await deleteCurrentUser(userAuth.headers);
 
-            const deletedUser = await User.scope("withPassword").findByPk(
-                userAuth.user.userId
-            );
+            const deletedUser = await User.scope("withPassword").findByPk(userAuth.user.userId);
 
             expect(response.statusCode).toBe(200);
-            expect(response.body).toHaveProperty(
-                "message",
-                "Account deleted successfully"
-            );
+            expect(response.body).toHaveProperty("message", "Account deleted successfully");
 
             expect(deletedUser).not.toBeNull();
             expect(deletedUser.deletedAt).not.toBeNull();
@@ -83,9 +78,7 @@ describe("Delete Current User API", () => {
 
             const response = await deleteCurrentUser(organizerAuth.headers);
 
-            const deletedUser = await User.scope("withPassword").findByPk(
-                organizerAuth.user.userId
-            );
+            const deletedUser = await User.scope("withPassword").findByPk(organizerAuth.user.userId);
 
             expect(response.statusCode).toBe(200);
             expect(response.body).toHaveProperty("message", "Account deleted successfully");

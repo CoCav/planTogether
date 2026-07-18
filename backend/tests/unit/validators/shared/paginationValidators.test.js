@@ -45,9 +45,7 @@ describe("shared pagination validators", () => {
         });
 
         it("accepts an omitted page", async () => {
-            const { errors } = await runValidation(
-                [pageQueryValidator]
-            );
+            const { errors } = await runValidation([pageQueryValidator]);
 
             expect(errors).toHaveLength(0);
         });
@@ -56,18 +54,20 @@ describe("shared pagination validators", () => {
             ["zero", "0"],
             ["negative", "-1"],
             ["non numeric", "abc"]
-        ])("rejects %s page values", async (_, page) => {
-            const { errors } = await runValidation(
-                [pageQueryValidator],
-                {
-                    query: {
-                        page
+        ])(
+            "rejects %s page values", async (_, page) => {
+                const { errors } = await runValidation(
+                    [pageQueryValidator],
+                    {
+                        query: {
+                            page
+                        }
                     }
-                }
-            );
+                );
 
-            expect(getValidationMessages(errors)).toContain("Page must be a positive integer");
-        });
+                expect(getValidationMessages(errors)).toContain("Page must be a positive integer");
+            }
+        );
     });
 
     /* =============================
@@ -90,9 +90,7 @@ describe("shared pagination validators", () => {
         });
 
         it("accepts an omitted page size", async () => {
-            const { errors } = await runValidation(
-                [pageSizeQueryValidator]
-            );
+            const { errors } = await runValidation([pageSizeQueryValidator]);
 
             expect(errors).toHaveLength(0);
         });
@@ -102,17 +100,19 @@ describe("shared pagination validators", () => {
             ["negative", "-5"],
             ["greater than max", "101"],
             ["non numeric", "abc"]
-        ])("rejects %s page size values", async (_, pageSize) => {
-            const { errors } = await runValidation(
-                [pageSizeQueryValidator],
-                {
-                    query: {
-                        pageSize
+        ])(
+            "rejects %s page size values", async (_, pageSize) => {
+                const { errors } = await runValidation(
+                    [pageSizeQueryValidator],
+                    {
+                        query: {
+                            pageSize
+                        }
                     }
-                }
-            );
+                );
 
-            expect(getValidationMessages(errors)).toContain("Page size must be between 1 and 100");
-        });
+                expect(getValidationMessages(errors)).toContain("Page size must be between 1 and 100");
+            }
+        );
     });
 });

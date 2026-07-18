@@ -1,8 +1,16 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindEventByIdOrFail = jest.fn();
 const mockFindActiveMembership = jest.fn();
 const mockIsEventPast = jest.fn();
 const mockNormalizeString = jest.fn();
 const mockBuildPublicUserInclude = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../src/config/database", () => ({
     transaction: jest.fn()
@@ -49,6 +57,10 @@ jest.mock("../../../../src/utils/users/userInclude", () => ({
 jest.mock("../../../../src/utils/eventReviews/eventReviewsQueries", () => ({
     findReviewByIdOrFail: jest.fn()
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const sequelize = require("../../../../src/config/database");
 
@@ -155,13 +167,9 @@ describe("create event review service", () => {
 
             expect(sequelize.transaction).toHaveBeenCalledTimes(1);
 
-            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(
-                Event,
-                1,
-                {
-                    transaction
-                }
-            );
+            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(Event, 1, {
+                transaction
+            });
 
             expect(mockIsEventPast).toHaveBeenCalledTimes(1);
 
@@ -171,14 +179,11 @@ describe("create event review service", () => {
                 })
             );
 
-            expect(mockFindActiveMembership).toHaveBeenCalledWith(
-                EventUserRole,
-                {
-                    eventId: 1,
-                    userId: 10,
-                    transaction
-                }
-            );
+            expect(mockFindActiveMembership).toHaveBeenCalledWith(EventUserRole, {
+                eventId: 1,
+                userId: 10,
+                transaction
+            });
 
             expect(EventReview.findOne).toHaveBeenCalledWith({
                 where: {
@@ -190,29 +195,23 @@ describe("create event review service", () => {
 
             expect(mockNormalizeString).toHaveBeenCalledWith("  Great event!  ");
 
-            expect(EventReview.create).toHaveBeenCalledWith(
-                {
-                    eventId: 1,
-                    userId: 10,
-                    rating: 5,
-                    comment: "Great event!"
-                },
-                {
-                    transaction
-                }
-            );
+            expect(EventReview.create).toHaveBeenCalledWith({
+                eventId: 1,
+                userId: 10,
+                rating: 5,
+                comment: "Great event!"
+            }, {
+                transaction
+            });
 
             expect(mockBuildPublicUserInclude).toHaveBeenCalledWith(User);
 
-            expect(EventReview.findByPk).toHaveBeenCalledWith(
-                5,
-                {
-                    transaction,
-                    include: [
-                        publicUserInclude
-                    ]
-                }
-            );
+            expect(EventReview.findByPk).toHaveBeenCalledWith(5, {
+                transaction,
+                include: [
+                    publicUserInclude
+                ]
+            });
 
             expect(transaction.commit).toHaveBeenCalledTimes(1);
 
@@ -243,12 +242,9 @@ describe("create event review service", () => {
 
     describe("Event validation", () => {
         it("rolls back when the event does not exist", async () => {
-            const error = Object.assign(
-                new Error("Event not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("Event not found"), {
+                statusCode: 404
+            });
 
             mockFindEventByIdOrFail.mockRejectedValue(error);
 
@@ -368,47 +364,43 @@ describe("create event review service", () => {
     ============================= */
 
     describe("Unexpected errors", () => {
-        it.each([
-            ["membership lookup", () => {
+        it.each([[
+            "membership lookup", () => {
                 mockFindActiveMembership.mockRejectedValue(
                     new Error("Membership lookup failed")
                 );
-            }
-            ],
-            ["duplicate review lookup", () => {
+            }], [
+            "duplicate review lookup", () => {
                 EventReview.findOne.mockRejectedValue(
                     new Error("Review lookup failed")
                 );
-            }
-            ],
-            ["review creation", () => {
+            }], [
+            "review creation", () => {
                 EventReview.create.mockRejectedValue(
                     new Error("Review creation failed")
                 );
-            }
-            ], ["created review reload", () => {
+            }], [
+            "created review reload", () => {
                 EventReview.findByPk.mockRejectedValue(
                     new Error("Review reload failed")
                 );
-            }
-            ]
-        ])("rolls back and propagates %s errors",
-            async (_, configureError) => {
-                configureError();
+            }]])(
+                "rolls back and propagates %s errors", async (_, configureError) => {
+                    configureError();
 
-                await expect(
-                    createEventReview({
-                        eventId: 1,
-                        userId: 10,
-                        rating: 5,
-                        comment: "Great event!"
-                    })
-                ).rejects.toBeInstanceOf(Error);
+                    await expect(
+                        createEventReview({
+                            eventId: 1,
+                            userId: 10,
+                            rating: 5,
+                            comment: "Great event!"
+                        })
+                    ).rejects.toBeInstanceOf(Error);
 
-                expect(transaction.commit).not.toHaveBeenCalled();
+                    expect(transaction.commit).not.toHaveBeenCalled();
 
-                expect(transaction.rollback).toHaveBeenCalledTimes(1);
-            }
-        );
+                    expect(transaction.rollback).toHaveBeenCalledTimes(1);
+                }
+            );
     });
 });

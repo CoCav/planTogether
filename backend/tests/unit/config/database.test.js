@@ -1,4 +1,32 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockSequelize = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("sequelize", () => ({
+    Sequelize: jest.fn((...args) => {
+        mockSequelize(...args);
+
+        return {
+            authenticate: jest.fn(),
+            sync: jest.fn()
+        };
+    })
+}));
+
+jest.mock("../../../src/config/logger", () => ({
+    info: jest.fn(),
+    debug: jest.fn()
+}));
+
+/* =============================
+   TEST HELPERS
+============================= */
 
 const loadDatabaseConfig = () => {
     jest.resetModules();
@@ -22,26 +50,6 @@ const loadDatabaseConfig = () => {
    - Other environments use DB_NAME.
    - SQL logging must remain disabled.
 =========================================================================== */
-
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("sequelize", () => ({
-    Sequelize: jest.fn((...args) => {
-        mockSequelize(...args);
-
-        return {
-            authenticate: jest.fn(),
-            sync: jest.fn()
-        };
-    })
-}));
-
-jest.mock("../../../src/config/logger", () => ({
-    info: jest.fn(),
-    debug: jest.fn()
-}));
 
 describe("database config", () => {
     const originalEnv = { ...process.env };

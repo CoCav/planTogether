@@ -42,13 +42,10 @@ describe("event membership query utility", () => {
 
             EventUserRole.findOne.mockResolvedValue(membership);
 
-            const result = await findActiveMembership(
-                EventUserRole,
-                {
-                    eventId: 10,
-                    userId: 20
-                }
-            );
+            const result = await findActiveMembership(EventUserRole, {
+                eventId: 10,
+                userId: 20
+            });
 
             expect(EventUserRole.findOne).toHaveBeenCalledWith({
                 where: {
@@ -69,14 +66,11 @@ describe("event membership query utility", () => {
 
             EventUserRole.findOne.mockResolvedValue(null);
 
-            const result = await findActiveMembership(
-                EventUserRole,
-                {
-                    eventId: 10,
-                    userId: 20,
-                    transaction
-                }
-            );
+            const result = await findActiveMembership(EventUserRole, {
+                eventId: 10,
+                userId: 20,
+                transaction
+            });
 
             expect(EventUserRole.findOne).toHaveBeenCalledWith({
                 where: {
@@ -105,13 +99,10 @@ describe("event membership query utility", () => {
 
             EventUserRole.findOne.mockResolvedValue(membership);
 
-            const result = await findMembership(
-                EventUserRole,
-                {
-                    eventId: 10,
-                    userId: 20
-                }
-            );
+            const result = await findMembership(EventUserRole, {
+                eventId: 10,
+                userId: 20
+            });
 
             expect(EventUserRole.findOne).toHaveBeenCalledWith({
                 where: {
@@ -131,14 +122,11 @@ describe("event membership query utility", () => {
 
             EventUserRole.findOne.mockResolvedValue(null);
 
-            const result = await findMembership(
-                EventUserRole,
-                {
-                    eventId: 10,
-                    userId: 20,
-                    transaction
-                }
-            );
+            const result = await findMembership(EventUserRole, {
+                eventId: 10,
+                userId: 20,
+                transaction
+            });
 
             expect(EventUserRole.findOne).toHaveBeenCalledWith({
                 where: {

@@ -44,13 +44,10 @@ describe("Change Current User Password API", () => {
                 password: "Password123"
             });
 
-            const response = await updateCurrentUserPassword(
-                userAuth.headers,
-                {
-                    currentPassword: "Password123",
-                    newPassword: "NewPassword123"
-                }
-            );
+            const response = await updateCurrentUserPassword(userAuth.headers, {
+                currentPassword: "Password123",
+                newPassword: "NewPassword123"
+            });
 
             expect(response.statusCode).toBe(200);
             expect(response.body).toHaveProperty("message", "Password updated successfully");
@@ -71,13 +68,10 @@ describe("Change Current User Password API", () => {
                 password: "Password123"
             });
 
-            await updateCurrentUserPassword(
-                userAuth.headers,
-                {
-                    currentPassword: "Password123",
-                    newPassword: "NewPassword123"
-                }
-            );
+            await updateCurrentUserPassword(userAuth.headers, {
+                currentPassword: "Password123",
+                newPassword: "NewPassword123"
+            });
 
             const response = await loginUser({
                 email,
@@ -96,27 +90,21 @@ describe("Change Current User Password API", () => {
 
     describe("Authentication errors", () => {
         it("rejects password updates without authentication", async () => {
-            const response = await updateCurrentUserPassword(
-                {},
-                {
-                    currentPassword: "Password123",
-                    newPassword: "NewPassword123"
-                }
-            );
+            const response = await updateCurrentUserPassword({}, {
+                currentPassword: "Password123",
+                newPassword: "NewPassword123"
+            });
 
             expect(response.statusCode).toBe(401);
         });
 
         it("rejects invalid authentication tokens", async () => {
-            const response = await updateCurrentUserPassword(
-                {
-                    Authorization: "Bearer invalid-token"
-                },
-                {
-                    currentPassword: "Password123",
-                    newPassword: "NewPassword123"
-                }
-            );
+            const response = await updateCurrentUserPassword({
+                Authorization: "Bearer invalid-token"
+            }, {
+                currentPassword: "Password123",
+                newPassword: "NewPassword123"
+            });
 
             expect(response.statusCode).toBe(401);
         });
@@ -133,13 +121,10 @@ describe("Change Current User Password API", () => {
                 email: `missingcurrent${Date.now()}@test.com`
             });
 
-            const response = await updateCurrentUserPassword(
-                userAuth.headers,
-                {
-                    currentPassword: "",
-                    newPassword: "NewPassword123"
-                }
-            );
+            const response = await updateCurrentUserPassword(userAuth.headers, {
+                currentPassword: "",
+                newPassword: "NewPassword123"
+            });
 
             expect(response.statusCode).toBe(400);
         });
@@ -150,13 +135,10 @@ describe("Change Current User Password API", () => {
                 email: `missingnew${Date.now()}@test.com`
             });
 
-            const response = await updateCurrentUserPassword(
-                userAuth.headers,
-                {
-                    currentPassword: "Password123",
-                    newPassword: ""
-                }
-            );
+            const response = await updateCurrentUserPassword(userAuth.headers, {
+                currentPassword: "Password123",
+                newPassword: ""
+            });
 
             expect(response.statusCode).toBe(400);
         });
@@ -168,13 +150,10 @@ describe("Change Current User Password API", () => {
                 password: "Password123"
             });
 
-            const response = await updateCurrentUserPassword(
-                userAuth.headers,
-                {
-                    currentPassword: "Password123",
-                    newPassword: "abc"
-                }
-            );
+            const response = await updateCurrentUserPassword(userAuth.headers, {
+                currentPassword: "Password123",
+                newPassword: "abc"
+            });
 
             expect(response.statusCode).toBe(400);
         });
@@ -192,13 +171,10 @@ describe("Change Current User Password API", () => {
                 password: "Password123"
             });
 
-            const response = await updateCurrentUserPassword(
-                userAuth.headers,
-                {
-                    currentPassword: "WrongPassword",
-                    newPassword: "NewPassword123"
-                }
-            );
+            const response = await updateCurrentUserPassword(userAuth.headers, {
+                currentPassword: "WrongPassword",
+                newPassword: "NewPassword123"
+            });
 
             expect(response.statusCode).toBe(401);
         });
@@ -210,13 +186,10 @@ describe("Change Current User Password API", () => {
                 password: "Password123"
             });
 
-            const response = await updateCurrentUserPassword(
-                userAuth.headers,
-                {
-                    currentPassword: "Password123",
-                    newPassword: "Password123"
-                }
-            );
+            const response = await updateCurrentUserPassword(userAuth.headers, {
+                currentPassword: "Password123",
+                newPassword: "Password123"
+            });
 
             expect(response.statusCode).toBe(400);
         });

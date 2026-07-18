@@ -1,3 +1,13 @@
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../src/services/eventReviewService");
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const eventReviewService = require("../../../src/services/eventReviewService");
 
 const eventReviewController = require("../../../src/controllers/eventReviewController");
@@ -25,12 +35,6 @@ const {
    - Event review services are mocked.
    - Business logic is tested separately in eventReviewService tests.
 =========================================================================== */
-
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("../../../src/services/eventReviewService");
 
 describe("event review controller", () => {
     beforeEach(() => {
@@ -130,10 +134,7 @@ describe("event review controller", () => {
 
             await eventReviewController.getEventReviews(req, res, next);
 
-            expect(eventReviewService.getEventReviews).toHaveBeenCalledWith(
-                "1",
-                req.query
-            );
+            expect(eventReviewService.getEventReviews).toHaveBeenCalledWith("1", req.query);
 
             expectJsonResponse(res, 200, {
                 success: true,

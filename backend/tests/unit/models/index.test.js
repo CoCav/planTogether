@@ -1,3 +1,7 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockSequelize = {
     authenticate: jest.fn(),
     sync: jest.fn()
@@ -20,10 +24,27 @@ const mockEvent = createMockModel("Event");
 const mockLocation = createMockModel("Location");
 
 const mockEventUserRole = createMockModel("EventUserRole");
-
 const mockEventReview = createMockModel("EventReview");
-
 const mockEventLike = createMockModel("EventLike");
+
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../src/config/database", () => (mockSequelize));
+
+jest.mock("../../../src/config/logger", () => (mockLogger));
+jest.mock("../../../src/models/userModel", () => (mockUser));
+jest.mock("../../../src/models/eventModel", () => (mockEvent));
+jest.mock("../../../src/models/locationModel", () => (mockLocation));
+
+jest.mock("../../../src/models/associations/eventUserRoleModel", () => mockEventUserRole);
+jest.mock("../../../src/models/associations/eventReviewModel", () => mockEventReview);
+jest.mock("../../../src/models/associations/eventLikeModel", () => mockEventLike);
+
+/* =============================
+   TEST HELPERS
+============================= */
 
 const loadModelsIndex = () => {
     jest.resetModules();
@@ -52,45 +73,6 @@ const loadModelsIndex = () => {
    - Sequelize, logging and model modules are mocked.
    - Associations are registered when the models index is loaded.
 =========================================================================== */
-
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("../../../src/config/database", () => (
-    mockSequelize
-));
-
-jest.mock("../../../src/config/logger", () => (
-    mockLogger
-));
-
-jest.mock("../../../src/models/userModel", () => (
-    mockUser
-));
-
-jest.mock("../../../src/models/eventModel", () => (
-    mockEvent
-));
-
-jest.mock("../../../src/models/locationModel", () => (
-    mockLocation
-));
-
-jest.mock(
-    "../../../src/models/associations/eventUserRoleModel",
-    () => mockEventUserRole
-);
-
-jest.mock(
-    "../../../src/models/associations/eventReviewModel",
-    () => mockEventReview
-);
-
-jest.mock(
-    "../../../src/models/associations/eventLikeModel",
-    () => mockEventLike
-);
 
 describe("models index", () => {
     const originalNodeEnv = process.env.NODE_ENV;
@@ -144,11 +126,7 @@ describe("models index", () => {
 
             expect(mockSequelize.sync).toHaveBeenCalledTimes(1);
 
-            expect(
-                mockSequelize.authenticate.mock.invocationCallOrder[0]
-            ).toBeLessThan(
-                mockSequelize.sync.mock.invocationCallOrder[0]
-            );
+            expect(mockSequelize.authenticate.mock.invocationCallOrder[0]).toBeLessThan(mockSequelize.sync.mock.invocationCallOrder[0]);
         });
 
         it("logs successful database initialization progress", async () => {
@@ -204,8 +182,7 @@ describe("models index", () => {
             "staging",
             undefined
         ])(
-            "uses safe synchronization when NODE_ENV is %s",
-            async (nodeEnv) => {
+            "uses safe synchronization when NODE_ENV is %s", async (nodeEnv) => {
                 if (nodeEnv === undefined) {
                     delete process.env.NODE_ENV;
                 } else {
@@ -233,9 +210,7 @@ describe("models index", () => {
 
             const { initDB } = loadModelsIndex();
 
-            await expect(
-                initDB()
-            ).rejects.toBe(authenticationError);
+            await expect(initDB()).rejects.toBe(authenticationError);
 
             expect(mockSequelize.sync).not.toHaveBeenCalled();
 
@@ -254,9 +229,7 @@ describe("models index", () => {
 
             const { initDB } = loadModelsIndex();
 
-            await expect(
-                initDB()
-            ).rejects.toBe(synchronizationError);
+            await expect(initDB()).rejects.toBe(synchronizationError);
 
             expect(mockSequelize.authenticate).toHaveBeenCalledTimes(1);
 
@@ -277,20 +250,14 @@ describe("models index", () => {
         it("registers event creator associations", () => {
             loadModelsIndex();
 
-            expect(mockUser.hasMany).toHaveBeenCalledWith(
-                mockEvent,
-                {
-                    foreignKey: "creatorId"
-                }
-            );
+            expect(mockUser.hasMany).toHaveBeenCalledWith(mockEvent, {
+                foreignKey: "creatorId"
+            });
 
-            expect(mockEvent.belongsTo).toHaveBeenCalledWith(
-                mockUser,
-                {
-                    foreignKey: "creatorId",
-                    as: "creator"
-                }
-            );
+            expect(mockEvent.belongsTo).toHaveBeenCalledWith(mockUser, {
+                foreignKey: "creatorId",
+                as: "creator"
+            });
         });
     });
 
@@ -302,41 +269,35 @@ describe("models index", () => {
         it("registers the user-to-event participation association", () => {
             loadModelsIndex();
 
-            expect(mockUser.belongsToMany).toHaveBeenCalledWith(
-                mockEvent,
-                {
-                    through: {
-                        model: mockEventUserRole,
-                        attributes: [
-                            "role",
-                            "joinedAt"
-                        ]
-                    },
-                    foreignKey: "userId",
-                    otherKey: "eventId",
-                    as: "events"
-                }
-            );
+            expect(mockUser.belongsToMany).toHaveBeenCalledWith(mockEvent, {
+                through: {
+                    model: mockEventUserRole,
+                    attributes: [
+                        "role",
+                        "joinedAt"
+                    ]
+                },
+                foreignKey: "userId",
+                otherKey: "eventId",
+                as: "events"
+            });
         });
 
         it("registers the event-to-user participant association", () => {
             loadModelsIndex();
 
-            expect(mockEvent.belongsToMany).toHaveBeenCalledWith(
-                mockUser,
-                {
-                    through: {
-                        model: mockEventUserRole,
-                        attributes: [
-                            "role",
-                            "joinedAt"
-                        ]
-                    },
-                    foreignKey: "eventId",
-                    otherKey: "userId",
-                    as: "participants"
-                }
-            );
+            expect(mockEvent.belongsToMany).toHaveBeenCalledWith(mockUser, {
+                through: {
+                    model: mockEventUserRole,
+                    attributes: [
+                        "role",
+                        "joinedAt"
+                    ]
+                },
+                foreignKey: "eventId",
+                otherKey: "userId",
+                as: "participants"
+            });
         });
     });
 
@@ -348,41 +309,29 @@ describe("models index", () => {
         it("registers user review associations", () => {
             loadModelsIndex();
 
-            expect(mockUser.hasMany).toHaveBeenCalledWith(
-                mockEventReview,
-                {
-                    foreignKey: "userId",
-                    as: "reviews"
-                }
-            );
+            expect(mockUser.hasMany).toHaveBeenCalledWith(mockEventReview, {
+                foreignKey: "userId",
+                as: "reviews"
+            });
 
-            expect(mockEventReview.belongsTo).toHaveBeenCalledWith(
-                mockUser,
-                {
-                    foreignKey: "userId",
-                    as: "user"
-                }
-            );
+            expect(mockEventReview.belongsTo).toHaveBeenCalledWith(mockUser, {
+                foreignKey: "userId",
+                as: "user"
+            });
         });
 
         it("registers event review associations", () => {
             loadModelsIndex();
 
-            expect(mockEvent.hasMany).toHaveBeenCalledWith(
-                mockEventReview,
-                {
-                    foreignKey: "eventId",
-                    as: "reviews"
-                }
-            );
+            expect(mockEvent.hasMany).toHaveBeenCalledWith(mockEventReview, {
+                foreignKey: "eventId",
+                as: "reviews"
+            });
 
-            expect(mockEventReview.belongsTo).toHaveBeenCalledWith(
-                mockEvent,
-                {
-                    foreignKey: "eventId",
-                    as: "event"
-                }
-            );
+            expect(mockEventReview.belongsTo).toHaveBeenCalledWith(mockEvent, {
+                foreignKey: "eventId",
+                as: "event"
+            });
         });
     });
 
@@ -394,41 +343,29 @@ describe("models index", () => {
         it("registers user like associations", () => {
             loadModelsIndex();
 
-            expect(mockUser.hasMany).toHaveBeenCalledWith(
-                mockEventLike,
-                {
-                    foreignKey: "userId",
-                    as: "likes"
-                }
-            );
+            expect(mockUser.hasMany).toHaveBeenCalledWith(mockEventLike, {
+                foreignKey: "userId",
+                as: "likes"
+            });
 
-            expect(mockEventLike.belongsTo).toHaveBeenCalledWith(
-                mockUser,
-                {
-                    foreignKey: "userId",
-                    as: "user"
-                }
-            );
+            expect(mockEventLike.belongsTo).toHaveBeenCalledWith(mockUser, {
+                foreignKey: "userId",
+                as: "user"
+            });
         });
 
         it("registers event like associations", () => {
             loadModelsIndex();
 
-            expect(mockEvent.hasMany).toHaveBeenCalledWith(
-                mockEventLike,
-                {
-                    foreignKey: "eventId",
-                    as: "likes"
-                }
-            );
+            expect(mockEvent.hasMany).toHaveBeenCalledWith(mockEventLike, {
+                foreignKey: "eventId",
+                as: "likes"
+            });
 
-            expect(mockEventLike.belongsTo).toHaveBeenCalledWith(
-                mockEvent,
-                {
-                    foreignKey: "eventId",
-                    as: "event"
-                }
-            );
+            expect(mockEventLike.belongsTo).toHaveBeenCalledWith(mockEvent, {
+                foreignKey: "eventId",
+                as: "event"
+            });
         });
     });
 
@@ -440,38 +377,26 @@ describe("models index", () => {
         it("registers membership ownership associations", () => {
             loadModelsIndex();
 
-            expect(mockEventUserRole.belongsTo).toHaveBeenCalledWith(
-                mockUser,
-                {
-                    foreignKey: "userId"
-                }
-            );
+            expect(mockEventUserRole.belongsTo).toHaveBeenCalledWith(mockUser, {
+                foreignKey: "userId"
+            });
 
-            expect(mockEventUserRole.belongsTo).toHaveBeenCalledWith(
-                mockEvent,
-                {
-                    foreignKey: "eventId",
-                    as: "event"
-                }
-            );
+            expect(mockEventUserRole.belongsTo).toHaveBeenCalledWith(mockEvent, {
+                foreignKey: "eventId",
+                as: "event"
+            });
         });
 
         it("registers user and event membership collections", () => {
             loadModelsIndex();
 
-            expect(mockUser.hasMany).toHaveBeenCalledWith(
-                mockEventUserRole,
-                {
-                    foreignKey: "userId"
-                }
-            );
+            expect(mockUser.hasMany).toHaveBeenCalledWith(mockEventUserRole, {
+                foreignKey: "userId"
+            });
 
-            expect(mockEvent.hasMany).toHaveBeenCalledWith(
-                mockEventUserRole,
-                {
-                    foreignKey: "eventId"
-                }
-            );
+            expect(mockEvent.hasMany).toHaveBeenCalledWith(mockEventUserRole, {
+                foreignKey: "eventId"
+            });
         });
     });
 });

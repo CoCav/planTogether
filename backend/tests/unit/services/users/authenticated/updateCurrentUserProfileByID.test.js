@@ -1,6 +1,14 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindUserByIdOrFail = jest.fn();
 const mockNormalizeEmail = jest.fn();
 const mockDeleteUploadedFile = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../../src/config/database", () => ({
     transaction: jest.fn()
@@ -60,6 +68,10 @@ jest.mock("../../../../../src/utils/pagination", () => ({
     getTotalCount: jest.fn(),
     getTotalPages: jest.fn()
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const sequelize = require("../../../../../src/config/database");
 
@@ -125,11 +137,10 @@ describe("update current user profile service", () => {
 
     describe("updateCurrentUserProfileById", () => {
         it("updates and returns the current user profile", async () => {
-            const result =
-                await updateCurrentUserProfileById(10, {
-                    name: "Updated User",
-                    email: " UPDATED@TEST.COM "
-                });
+            const result = await updateCurrentUserProfileById(10, {
+                name: "Updated User",
+                email: " UPDATED@TEST.COM "
+            });
 
             expect(sequelize.transaction).toHaveBeenCalledTimes(1);
 
@@ -142,11 +153,9 @@ describe("update current user profile service", () => {
             expect(mockNormalizeEmail).toHaveBeenCalledWith(" UPDATED@TEST.COM ");
 
             expect(user.name).toBe("Updated User");
-
             expect(user.email).toBe("updated@test.com");
 
             expect(user.save).toHaveBeenCalledTimes(1);
-
             expect(user.save).toHaveBeenCalledWith({
                 transaction
             });
@@ -220,8 +229,8 @@ describe("update current user profile service", () => {
         it.each([
             ["an empty string", ""],
             ["null", null]
-        ])("clears the current avatar when %s is provided",
-            async (_, avatar) => {
+        ])(
+            "clears the current avatar when %s is provided", async (_, avatar) => {
                 user.avatar = "/uploads/avatars/old-avatar.png";
 
                 await updateCurrentUserProfileById(10, {
@@ -269,9 +278,7 @@ describe("update current user profile service", () => {
             expect(mockDeleteUploadedFile).toHaveBeenCalledTimes(1);
             expect(mockDeleteUploadedFile).toHaveBeenCalledWith("/uploads/avatars/old-avatar.png");
 
-            expect(transaction.commit.mock.invocationCallOrder[0]).toBeLessThan(
-                mockDeleteUploadedFile.mock.invocationCallOrder[0]
-            );
+            expect(transaction.commit.mock.invocationCallOrder[0]).toBeLessThan(mockDeleteUploadedFile.mock.invocationCallOrder[0]);
         });
 
         it("does not delete the avatar when the path is unchanged", async () => {
@@ -306,12 +313,9 @@ describe("update current user profile service", () => {
 
     describe("User validation", () => {
         it("rolls back when the current user does not exist", async () => {
-            const error = Object.assign(
-                new Error("User not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("User not found"), {
+                statusCode: 404
+            });
 
             mockFindUserByIdOrFail.mockRejectedValue(error);
 
@@ -338,12 +342,9 @@ describe("update current user profile service", () => {
 
     describe("Duplicate email", () => {
         it("converts Sequelize unique constraint errors to a 409 error", async () => {
-            const error = Object.assign(
-                new Error("Duplicate email"),
-                {
-                    name: "SequelizeUniqueConstraintError"
-                }
-            );
+            const error = Object.assign(new Error("Duplicate email"), {
+                name: "SequelizeUniqueConstraintError"
+            });
 
             user.save.mockRejectedValue(error);
 

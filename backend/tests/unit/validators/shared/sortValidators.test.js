@@ -32,9 +32,7 @@ describe("shared sort validators", () => {
 
     describe("orderQueryValidator", () => {
         it("accepts an omitted sort order", async () => {
-            const { errors } = await runValidation(
-                [orderQueryValidator]
-            );
+            const { errors } = await runValidation([orderQueryValidator]);
 
             expect(errors).toHaveLength(0);
         });
@@ -42,19 +40,21 @@ describe("shared sort validators", () => {
         it.each([
             ["ascending", "asc"],
             ["descending", "desc"]
-        ])("accepts the %s sort order", async (_, order) => {
-            const { errors, req } = await runValidation(
-                [orderQueryValidator],
-                {
-                    query: {
-                        order
+        ])(
+            "accepts the %s sort order", async (_, order) => {
+                const { errors, req } = await runValidation(
+                    [orderQueryValidator],
+                    {
+                        query: {
+                            order
+                        }
                     }
-                }
-            );
+                );
 
-            expect(errors).toHaveLength(0);
-            expect(req.query.order).toBe(order);
-        });
+                expect(errors).toHaveLength(0);
+                expect(req.query.order).toBe(order);
+            }
+        );
 
         it("normalizes the sort order to lowercase", async () => {
             const { errors, req } = await runValidation(
@@ -97,30 +97,25 @@ describe("shared sort validators", () => {
         it("accepts an omitted sort field", async () => {
             const validator = createSortByValidator(allowedFields);
 
-            const { errors } = await runValidation(
-                [validator]
-            );
+            const { errors } = await runValidation([validator]);
 
             expect(errors).toHaveLength(0);
         });
 
-        it.each(allowedFields)(
-            "accepts the %s sort field",
-            async (sortBy) => {
-                const validator = createSortByValidator(allowedFields);
+        it.each(allowedFields)("accepts the %s sort field", async (sortBy) => {
+            const validator = createSortByValidator(allowedFields);
 
-                const { errors } = await runValidation(
-                    [validator],
-                    {
-                        query: {
-                            sortBy
-                        }
+            const { errors } = await runValidation(
+                [validator],
+                {
+                    query: {
+                        sortBy
                     }
-                );
+                }
+            );
 
-                expect(errors).toHaveLength(0);
-            }
-        );
+            expect(errors).toHaveLength(0);
+        });
 
         it("rejects an unsupported sort field with the default message", async () => {
             const validator = createSortByValidator(allowedFields);
@@ -138,10 +133,7 @@ describe("shared sort validators", () => {
         });
 
         it("uses a custom sort field validation message", async () => {
-            const validator = createSortByValidator(
-                allowedFields,
-                "Sort field is not supported"
-            );
+            const validator = createSortByValidator(allowedFields, "Sort field is not supported");
 
             const { errors } = await runValidation(
                 [validator],

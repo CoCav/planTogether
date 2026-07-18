@@ -62,8 +62,8 @@ const createMockReqResNext = ({
 const createAuthControllerMocks = ({
     body = {},
     user,
-    file = undefined
-} = {}) => {
+    file = undefined } = {}
+) => {
     return createMockReqResNext({
         body,
         user: user === undefined ? DEFAULT_AUTH_USER : user,
@@ -155,11 +155,7 @@ const expectNoResponseSent = (res) => {
     expect(res.json).not.toHaveBeenCalled();
 };
 
-const expectJsonResponse = (
-    res,
-    statusCode,
-    payload
-) => {
+const expectJsonResponse = (res, statusCode, payload) => {
     expect(res.status).toHaveBeenCalledTimes(1);
     expect(res.status).toHaveBeenCalledWith(statusCode);
 

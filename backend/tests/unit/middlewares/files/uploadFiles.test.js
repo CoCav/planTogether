@@ -1,9 +1,6 @@
-const path = require("path");
-
-const {
-    MAX_AVATAR_SIZE,
-    MAX_EVENT_IMAGE_SIZE
-} = require("../../../../src/config/security/uploadPolicy");
+/* =============================
+   MOCK FUNCTIONS
+============================= */
 
 const mockExistsSync = jest.fn();
 const mockMkdirSync = jest.fn();
@@ -19,31 +16,6 @@ const mockMulterFactory = jest.fn((options) => ({
     limits: options.limits,
     single: jest.fn(() => jest.fn())
 }));
-
-const loadUploadFiles = () => {
-    jest.resetModules();
-
-    return require("../../../../src/middlewares/files/uploadFiles");
-};
-
-/* ==========================================================================
-   Upload Files Middleware Unit Tests
-
-   Tests reusable image upload middleware configuration.
-
-   Responsibilities
-   - Test avatar and event image uploader exports
-   - Test upload directory creation
-   - Test configurable upload directories
-   - Test upload storage destinations
-   - Test generated upload filenames
-   - Test image MIME type and extension validation
-   - Test upload size limits
-
-   Notes
-   - Multer storage and file system operations are mocked.
-   - Filename generation is tested through the configured storage callback.
-=========================================================================== */
 
 /* =============================
    TEST MOCKS
@@ -65,6 +37,46 @@ jest.mock("multer", () => {
 
     return multer;
 });
+
+/* =============================
+   TEST HELPERS
+============================= */
+
+const loadUploadFiles = () => {
+    jest.resetModules();
+
+    return require("../../../../src/middlewares/files/uploadFiles");
+};
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
+const path = require("path");
+
+const {
+    MAX_AVATAR_SIZE,
+    MAX_EVENT_IMAGE_SIZE
+} = require("../../../../src/config/security/uploadPolicy");
+
+/* ==========================================================================
+   Upload Files Middleware Unit Tests
+
+   Tests reusable image upload middleware configuration.
+
+   Responsibilities
+   - Test avatar and event image uploader exports
+   - Test upload directory creation
+   - Test configurable upload directories
+   - Test upload storage destinations
+   - Test generated upload filenames
+   - Test image MIME type and extension validation
+   - Test upload size limits
+
+   Notes
+   - Multer storage and file system operations are mocked.
+   - Filename generation is tested through the configured storage callback.
+=========================================================================== */
 
 describe("upload files middleware", () => {
     const originalUploadDirectory = process.env.UPLOAD_DIR;
@@ -143,31 +155,17 @@ describe("upload files middleware", () => {
                 "events"
             );
 
-            expect(mockExistsSync).toHaveBeenNthCalledWith(
-                1,
-                avatarUploadPath
-            );
+            expect(mockExistsSync).toHaveBeenNthCalledWith(1, avatarUploadPath);
 
-            expect(mockExistsSync).toHaveBeenNthCalledWith(
-                2,
-                eventUploadPath
-            );
+            expect(mockExistsSync).toHaveBeenNthCalledWith(2, eventUploadPath);
 
-            expect(mockMkdirSync).toHaveBeenNthCalledWith(
-                1,
-                avatarUploadPath,
-                {
-                    recursive: true
-                }
-            );
+            expect(mockMkdirSync).toHaveBeenNthCalledWith(1, avatarUploadPath, {
+                recursive: true
+            });
 
-            expect(mockMkdirSync).toHaveBeenNthCalledWith(
-                2,
-                eventUploadPath,
-                {
-                    recursive: true
-                }
-            );
+            expect(mockMkdirSync).toHaveBeenNthCalledWith(2, eventUploadPath, {
+                recursive: true
+            });
         });
 
         it("does not recreate existing upload directories", () => {
@@ -186,31 +184,23 @@ describe("upload files middleware", () => {
 
             loadUploadFiles();
 
-            expect(mockMkdirSync).toHaveBeenNthCalledWith(
-                1,
-                path.join(
-                    __dirname,
-                    "../../../..",
-                    "storage",
-                    "avatars"
-                ),
-                {
-                    recursive: true
-                }
-            );
+            expect(mockMkdirSync).toHaveBeenNthCalledWith(1, path.join(
+                __dirname,
+                "../../../..",
+                "storage",
+                "avatars"
+            ), {
+                recursive: true
+            });
 
-            expect(mockMkdirSync).toHaveBeenNthCalledWith(
-                2,
-                path.join(
-                    __dirname,
-                    "../../../..",
-                    "storage",
-                    "events"
-                ),
-                {
-                    recursive: true
-                }
-            );
+            expect(mockMkdirSync).toHaveBeenNthCalledWith(2, path.join(
+                __dirname,
+                "../../../..",
+                "storage",
+                "events"
+            ), {
+                recursive: true
+            });
         });
     });
 
@@ -228,37 +218,22 @@ describe("upload files middleware", () => {
             const avatarCallback = jest.fn();
             const eventCallback = jest.fn();
 
-            avatarStorageOptions.destination(
-                {},
-                {},
-                avatarCallback
-            );
+            avatarStorageOptions.destination({}, {}, avatarCallback);
+            eventStorageOptions.destination({}, {}, eventCallback);
 
-            eventStorageOptions.destination(
-                {},
-                {},
-                eventCallback
-            );
+            expect(avatarCallback).toHaveBeenCalledWith(null, path.join(
+                __dirname,
+                "../../../..",
+                "uploads",
+                "avatars"
+            ));
 
-            expect(avatarCallback).toHaveBeenCalledWith(
-                null,
-                path.join(
-                    __dirname,
-                    "../../../..",
-                    "uploads",
-                    "avatars"
-                )
-            );
-
-            expect(eventCallback).toHaveBeenCalledWith(
-                null,
-                path.join(
-                    __dirname,
-                    "../../../..",
-                    "uploads",
-                    "events"
-                )
-            );
+            expect(eventCallback).toHaveBeenCalledWith(null, path.join(
+                __dirname,
+                "../../../..",
+                "uploads",
+                "events"
+            ));
         });
 
         it("generates a safe avatar filename with a normalized extension", () => {
@@ -272,18 +247,11 @@ describe("upload files middleware", () => {
 
             const callback = jest.fn();
 
-            avatarStorageOptions.filename(
-                {},
-                {
-                    originalname: "Profile.PnG"
-                },
-                callback
-            );
+            avatarStorageOptions.filename({}, {
+                originalname: "Profile.PnG"
+            }, callback);
 
-            expect(callback).toHaveBeenCalledWith(
-                null,
-                "avatar-1234567890-123456789.png"
-            );
+            expect(callback).toHaveBeenCalledWith(null, "avatar-1234567890-123456789.png");
         });
 
         it("generates a safe event image filename", () => {
@@ -297,18 +265,11 @@ describe("upload files middleware", () => {
 
             const callback = jest.fn();
 
-            eventStorageOptions.filename(
-                {},
-                {
-                    originalname: "Event Image.WEBP"
-                },
-                callback
-            );
+            eventStorageOptions.filename({}, {
+                originalname: "Event Image.WEBP"
+            }, callback);
 
-            expect(callback).toHaveBeenCalledWith(
-                null,
-                "event-9876543210-500000000.webp"
-            );
+            expect(callback).toHaveBeenCalledWith(null, "event-9876543210-500000000.webp");
         });
     });
 
@@ -324,28 +285,20 @@ describe("upload files middleware", () => {
             ["WebP", "avatar.webp", "image/webp"],
             ["GIF", "avatar.gif", "image/gif"]
         ])(
-            "accepts a valid %s image",
-            (_, originalname, mimetype) => {
+            "accepts a valid %s image", (_, originalname, mimetype) => {
                 loadUploadFiles();
 
                 const avatarOptions = mockMulterFactory.mock.calls[0][0];
 
                 const callback = jest.fn();
 
-                avatarOptions.fileFilter(
-                    {},
-                    {
-                        originalname,
-                        mimetype
-                    },
-                    callback
-                );
+                avatarOptions.fileFilter({}, {
+                    originalname,
+                    mimetype
+                }, callback);
 
                 expect(callback).toHaveBeenCalledTimes(1);
-                expect(callback).toHaveBeenCalledWith(
-                    null,
-                    true
-                );
+                expect(callback).toHaveBeenCalledWith(null, true);
             }
         );
 
@@ -365,22 +318,18 @@ describe("upload files middleware", () => {
             "valid extension with mismatched MIME type",
             "avatar.jpg",
             "image/png"
-        ]])("rejects an image with %s",
-            (_, originalname, mimetype) => {
+        ]])(
+            "rejects an image with %s", (_, originalname, mimetype) => {
                 loadUploadFiles();
 
                 const avatarOptions = mockMulterFactory.mock.calls[0][0];
 
                 const callback = jest.fn();
 
-                avatarOptions.fileFilter(
-                    {},
-                    {
-                        originalname,
-                        mimetype
-                    },
-                    callback
-                );
+                avatarOptions.fileFilter({}, {
+                    originalname,
+                    mimetype
+                }, callback);
 
                 expect(callback).toHaveBeenCalledTimes(1);
 

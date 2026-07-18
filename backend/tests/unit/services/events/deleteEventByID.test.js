@@ -1,6 +1,14 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindEventByIdOrFail = jest.fn();
 const mockAssertEventNotStarted = jest.fn();
 const mockDeleteUploadedFile = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../src/config/database", () => ({
     transaction: jest.fn()
@@ -90,6 +98,10 @@ jest.mock("../../../../src/utils/pagination", () => ({
     getTotalPages: jest.fn()
 }));
 
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const sequelize = require("../../../../src/config/database");
 
 const Event = require("../../../../src/models/eventModel");
@@ -158,21 +170,14 @@ describe("delete event service", () => {
             expect(sequelize.transaction).toHaveBeenCalledTimes(1);
 
             expect(mockFindEventByIdOrFail).toHaveBeenCalledTimes(1);
-
-            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(
-                Event,
-                1,
-                {
-                    transaction
-                }
-            );
+            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(Event, 1, {
+                transaction
+            });
 
             expect(mockAssertEventNotStarted).toHaveBeenCalledTimes(1);
-
             expect(mockAssertEventNotStarted).toHaveBeenCalledWith(event);
 
             expect(EventUserRole.destroy).toHaveBeenCalledTimes(1);
-
             expect(EventUserRole.destroy).toHaveBeenCalledWith({
                 where: {
                     eventId: 1
@@ -181,14 +186,11 @@ describe("delete event service", () => {
             });
 
             expect(event.destroy).toHaveBeenCalledTimes(1);
-
             expect(event.destroy).toHaveBeenCalledWith({
                 transaction
             });
 
-            expect(EventUserRole.destroy.mock.invocationCallOrder[0]).toBeLessThan(
-                event.destroy.mock.invocationCallOrder[0]
-            );
+            expect(EventUserRole.destroy.mock.invocationCallOrder[0]).toBeLessThan(event.destroy.mock.invocationCallOrder[0]);
 
             expect(transaction.commit).toHaveBeenCalledTimes(1);
 
@@ -215,14 +217,9 @@ describe("delete event service", () => {
             expect(transaction.commit).toHaveBeenCalledTimes(1);
 
             expect(mockDeleteUploadedFile).toHaveBeenCalledTimes(1);
+            expect(mockDeleteUploadedFile).toHaveBeenCalledWith("/uploads/events/event-image.png");
 
-            expect(mockDeleteUploadedFile).toHaveBeenCalledWith(
-                "/uploads/events/event-image.png"
-            );
-
-            expect(transaction.commit.mock.invocationCallOrder[0]).toBeLessThan(
-                mockDeleteUploadedFile.mock.invocationCallOrder[0]
-            );
+            expect(transaction.commit.mock.invocationCallOrder[0]).toBeLessThan(mockDeleteUploadedFile.mock.invocationCallOrder[0]);
 
             expect(transaction.rollback).not.toHaveBeenCalled();
         });
@@ -235,7 +232,6 @@ describe("delete event service", () => {
             await expect(deleteEventById(1)).rejects.toBe(error);
 
             expect(EventUserRole.destroy).toHaveBeenCalledTimes(1);
-
             expect(event.destroy).toHaveBeenCalledTimes(1);
 
             expect(transaction.commit).toHaveBeenCalledTimes(1);
@@ -251,12 +247,9 @@ describe("delete event service", () => {
 
     describe("Event validation", () => {
         it("rolls back when the event does not exist", async () => {
-            const error = Object.assign(
-                new Error("Event not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("Event not found"), {
+                statusCode: 404
+            });
 
             mockFindEventByIdOrFail.mockRejectedValue(error);
 
@@ -265,7 +258,6 @@ describe("delete event service", () => {
             expect(mockAssertEventNotStarted).not.toHaveBeenCalled();
 
             expect(EventUserRole.destroy).not.toHaveBeenCalled();
-
             expect(event.destroy).not.toHaveBeenCalled();
 
             expect(transaction.commit).not.toHaveBeenCalled();
@@ -276,12 +268,9 @@ describe("delete event service", () => {
         });
 
         it("rolls back when the event has already started", async () => {
-            const error = Object.assign(
-                new Error("An event that has already started cannot be deleted"),
-                {
-                    statusCode: 403
-                }
-            );
+            const error = Object.assign(new Error("An event that has already started cannot be deleted"), {
+                statusCode: 403
+            });
 
             mockAssertEventNotStarted.mockImplementation(() => {
                 throw error;

@@ -76,30 +76,22 @@ describe("Get Public User Profile API", () => {
                 email: `targetstats${Date.now()}@test.com`
             });
 
-            await createEventAsAuthenticatedUser(
-                targetUserAuth.headers,
-                {
-                    title: "Created Event"
-                }
-            );
+            await createEventAsAuthenticatedUser(targetUserAuth.headers, {
+                title: "Created Event"
+            });
 
             const joinedEventCreatorAuth = await registerAndAuthenticateUser({
                 name: "Joined Event Creator",
                 email: `joinedcreator${Date.now()}@test.com`
             });
 
-            const joinedEventResponse = await createEventAsAuthenticatedUser(
-                joinedEventCreatorAuth.headers,
-                {
-                    title: "Joined Event"
-                }
-            );
+            const joinedEventResponse = await createEventAsAuthenticatedUser(joinedEventCreatorAuth.headers, {
+                title: "Joined Event"
+            });
 
             await joinEventAsAuthenticatedUser(joinedEventResponse.body.event.id, targetUserAuth.headers);
 
-            const response = await getPublicUserProfile(
-                targetUserAuth.user.userId
-            );
+            const response = await getPublicUserProfile(targetUserAuth.user.userId);
 
             expect(response.statusCode).toBe(200);
             expect(response.body).toHaveProperty("message", "Public user profile retrieved successfully");
@@ -119,19 +111,14 @@ describe("Get Public User Profile API", () => {
                 email: `inactiveprofilecreator${Date.now()}@test.com`
             });
 
-            const eventResponse = await createEventAsAuthenticatedUser(
-                eventCreatorAuth.headers,
-                {
-                    title: "Inactive Stats Event"
-                }
-            );
+            const eventResponse = await createEventAsAuthenticatedUser(eventCreatorAuth.headers, {
+                title: "Inactive Stats Event"
+            });
 
             await joinEventAsAuthenticatedUser(eventResponse.body.event.id, targetUserAuth.headers);
             await leaveEventAsAuthenticatedUser(eventResponse.body.event.id, targetUserAuth.headers);
 
-            const response = await getPublicUserProfile(
-                targetUserAuth.user.userId
-            );
+            const response = await getPublicUserProfile(targetUserAuth.user.userId);
 
             expect(response.statusCode).toBe(200);
             expect(response.body).toHaveProperty("message", "Public user profile retrieved successfully");

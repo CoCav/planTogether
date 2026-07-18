@@ -1,10 +1,26 @@
-const { DataTypes } = require("sequelize");
+/* =============================
+   MOCK FUNCTIONS
+============================= */
 
 const mockLocationModel = {
     name: "LocationModel"
 };
 
 const mockDefine = jest.fn(() => mockLocationModel);
+
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../src/config/database", () => ({
+    define: mockDefine
+}));
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
+const { DataTypes } = require("sequelize");
 
 const Location = require("../../../src/models/locationModel");
 
@@ -26,14 +42,6 @@ const Location = require("../../../src/models/locationModel");
    - The Sequelize database instance is mocked.
    - The model stores cached geocoding provider results.
 =========================================================================== */
-
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("../../../src/config/database", () => ({
-    define: mockDefine
-}));
 
 describe("location model", () => {
     const [
@@ -71,8 +79,8 @@ describe("location model", () => {
         it.each([
             "query",
             "label"
-        ])("defines the required %s field",
-            (field) => {
+        ])(
+            "defines the required %s field", (field) => {
                 expect(attributes[field]).toEqual({
                     type: DataTypes.STRING,
                     allowNull: false
@@ -92,8 +100,8 @@ describe("location model", () => {
             "region",
             "postalCode",
             "country"
-        ])("defines the optional %s field",
-            (field) => {
+        ])(
+            "defines the optional %s field", (field) => {
                 expect(attributes[field]).toEqual({
                     type: DataTypes.STRING,
                     allowNull: true
@@ -110,8 +118,8 @@ describe("location model", () => {
         it.each([
             "latitude",
             "longitude"
-        ])("defines the required %s coordinate",
-            (field) => {
+        ])(
+            "defines the required %s coordinate", (field) => {
                 expect(attributes[field]).toEqual({
                     type: DataTypes.DOUBLE,
                     allowNull: false
@@ -168,8 +176,8 @@ describe("location model", () => {
             ["city", ["city"]],
             ["region", ["region"]],
             ["country", ["country"]]
-        ])("defines an index for %s lookups",
-            (_, fields) => {
+        ])(
+            "defines an index for %s lookups", (_, fields) => {
                 expect(options.indexes).toContainEqual({
                     fields
                 });

@@ -1,7 +1,15 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockNormalizeEmail = jest.fn();
 const mockHashPassword = jest.fn();
 const mockComparePassword = jest.fn();
 const mockGenerateAuthToken = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../src/models/userModel", () => ({
     findOne: jest.fn(),
@@ -20,6 +28,10 @@ jest.mock("../../../../src/utils/auth/passwordHasher", () => ({
 jest.mock("../../../../src/utils/auth/authToken", () => ({
     generateAuthToken: mockGenerateAuthToken
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const User = require("../../../../src/models/userModel");
 
@@ -51,9 +63,7 @@ describe("register user service", () => {
         jest.clearAllMocks();
 
         mockNormalizeEmail.mockReturnValue("john@test.com");
-
         mockHashPassword.mockResolvedValue("hashed-password");
-
         mockGenerateAuthToken.mockReturnValue("fake-token");
     });
 
@@ -70,8 +80,8 @@ describe("register user service", () => {
             "with an avatar",
             "/uploads/avatars/avatar-test.png",
             "/uploads/avatars/avatar-test.png"
-        ]])("registers a user %s",
-            async (_, avatar, expectedAvatar) => {
+        ]])(
+            "registers a user %s", async (_, avatar, expectedAvatar) => {
                 const createdUser = createMockUser({
                     id: 1,
                     email: "john@test.com",
@@ -89,13 +99,9 @@ describe("register user service", () => {
                 });
 
                 expect(mockNormalizeEmail).toHaveBeenCalledTimes(1);
-
-                expect(mockNormalizeEmail).toHaveBeenCalledWith(
-                    " JOHN@TEST.COM "
-                );
+                expect(mockNormalizeEmail).toHaveBeenCalledWith(" JOHN@TEST.COM ");
 
                 expect(User.findOne).toHaveBeenCalledTimes(1);
-
                 expect(User.findOne).toHaveBeenCalledWith({
                     where: {
                         email: "john@test.com"
@@ -103,13 +109,9 @@ describe("register user service", () => {
                 });
 
                 expect(mockHashPassword).toHaveBeenCalledTimes(1);
-
-                expect(mockHashPassword).toHaveBeenCalledWith(
-                    "Password123"
-                );
+                expect(mockHashPassword).toHaveBeenCalledWith("Password123");
 
                 expect(User.create).toHaveBeenCalledTimes(1);
-
                 expect(User.create).toHaveBeenCalledWith({
                     name: "John Doe",
                     email: "john@test.com",
@@ -118,10 +120,7 @@ describe("register user service", () => {
                 });
 
                 expect(mockGenerateAuthToken).toHaveBeenCalledTimes(1);
-
-                expect(mockGenerateAuthToken).toHaveBeenCalledWith(
-                    createdUser.id
-                );
+                expect(mockGenerateAuthToken).toHaveBeenCalledWith(createdUser.id);
 
                 expect(result).toEqual({
                     user: createdUser,

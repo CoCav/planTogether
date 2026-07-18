@@ -55,10 +55,7 @@ describe("Leave Event API", () => {
 
             await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
-            const response = await leaveEventAsAuthenticatedUser(
-                event.id,
-                participantAuth.headers
-            );
+            const response = await leaveEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
             const membership = await EventUserRole.findOne({
                 where: {
@@ -104,10 +101,7 @@ describe("Leave Event API", () => {
                 email: `invalidleaveparticipant${Date.now()}@test.com`
             });
 
-            const response = await leaveEventAsAuthenticatedUser(
-                "abc",
-                participantAuth.headers
-            );
+            const response = await leaveEventAsAuthenticatedUser("abc", participantAuth.headers);
 
             expect(response.statusCode).toBe(400);
         });
@@ -130,10 +124,7 @@ describe("Leave Event API", () => {
                 email: `nonmemberparticipant${Date.now()}@test.com`
             });
 
-            const response = await leaveEventAsAuthenticatedUser(
-                event.id,
-                participantAuth.headers
-            );
+            const response = await leaveEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
             expect(response.statusCode).toBe(404);
         });
@@ -145,10 +136,7 @@ describe("Leave Event API", () => {
                 }
             });
 
-            const response = await leaveEventAsAuthenticatedUser(
-                event.id,
-                organizerAuth.headers
-            );
+            const response = await leaveEventAsAuthenticatedUser(event.id, organizerAuth.headers);
 
             expect(response.statusCode).toBe(403);
         });
@@ -169,10 +157,7 @@ describe("Leave Event API", () => {
 
             await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
-            const response = await leaveEventAsAuthenticatedUser(
-                event.id,
-                participantAuth.headers
-            );
+            const response = await leaveEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
             expect(response.statusCode).toBe(403);
         });
@@ -189,10 +174,7 @@ describe("Leave Event API", () => {
                 email: `missingleaveparticipant${Date.now()}@test.com`
             });
 
-            const response = await leaveEventAsAuthenticatedUser(
-                999999,
-                participantAuth.headers
-            );
+            const response = await leaveEventAsAuthenticatedUser(999999, participantAuth.headers);
 
             expect(response.statusCode).toBe(404);
         });

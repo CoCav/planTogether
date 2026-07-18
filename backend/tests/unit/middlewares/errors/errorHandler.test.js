@@ -1,3 +1,15 @@
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../../src/config/logger", () => ({
+    error: jest.fn()
+}));
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const multer = require("multer");
 
 const logger = require("../../../../src/config/logger");
@@ -24,14 +36,6 @@ const { createMockReqResNext } = require("../../../helpers/express/expressTestHe
    - The middleware sends the final HTTP error response directly.
 =========================================================================== */
 
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("../../../../src/config/logger", () => ({
-    error: jest.fn()
-}));
-
 describe("error handler middleware", () => {
     const originalNodeEnv = process.env.NODE_ENV;
 
@@ -52,9 +56,7 @@ describe("error handler middleware", () => {
         it("returns a clear message for file size errors", () => {
             const { req, res, next } = createMockReqResNext();
 
-            const error = new multer.MulterError(
-                "LIMIT_FILE_SIZE"
-            );
+            const error = new multer.MulterError("LIMIT_FILE_SIZE");
 
             errorHandler(error, req, res, next);
 
@@ -73,9 +75,7 @@ describe("error handler middleware", () => {
         it("returns the Multer message for other upload errors", () => {
             const { req, res, next } = createMockReqResNext();
 
-            const error = new multer.MulterError(
-                "LIMIT_UNEXPECTED_FILE"
-            );
+            const error = new multer.MulterError("LIMIT_UNEXPECTED_FILE");
 
             errorHandler(error, req, res, next);
 
@@ -97,8 +97,8 @@ describe("error handler middleware", () => {
         it.each([
             "SequelizeValidationError",
             "SequelizeUniqueConstraintError"
-        ])("formats %s details",
-            (errorName) => {
+        ])(
+            "formats %s details", (errorName) => {
                 const { req, res, next } = createMockReqResNext();
 
                 const error = {

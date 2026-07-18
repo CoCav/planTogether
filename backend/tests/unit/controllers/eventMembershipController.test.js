@@ -1,3 +1,14 @@
+
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../src/services/eventMembershipService");
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
 const eventMembershipService = require("../../../src/services/eventMembershipService");
@@ -27,14 +38,6 @@ const {
    - Event membership services are mocked.
    - Authorization and business rules are tested separately.
 =========================================================================== */
-
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock(
-    "../../../src/services/eventMembershipService"
-);
 
 describe("event membership controller", () => {
     beforeEach(() => {
@@ -67,7 +70,6 @@ describe("event membership controller", () => {
             await eventMembershipController.joinEvent(req, res, next);
 
             expect(eventMembershipService.joinEvent).toHaveBeenCalledTimes(1);
-
             expect(eventMembershipService.joinEvent).toHaveBeenCalledWith({
                 eventId: "42",
                 userId: 10
@@ -118,7 +120,6 @@ describe("event membership controller", () => {
             await eventMembershipController.leaveEvent(req, res, next);
 
             expect(eventMembershipService.leaveEvent).toHaveBeenCalledTimes(1);
-
             expect(eventMembershipService.leaveEvent).toHaveBeenCalledWith({
                 eventId: "42",
                 userId: 10
@@ -170,7 +171,6 @@ describe("event membership controller", () => {
             await eventMembershipController.getEventMembers(req, res, next);
 
             expect(eventMembershipService.getEventMembers).toHaveBeenCalledTimes(1);
-
             expect(eventMembershipService.getEventMembers).toHaveBeenCalledWith("42");
 
             expectJsonResponse(res, 200, {
@@ -223,7 +223,6 @@ describe("event membership controller", () => {
             await eventMembershipController.getEventStaff(req, res, next);
 
             expect(eventMembershipService.getEventStaff).toHaveBeenCalledTimes(1);
-
             expect(eventMembershipService.getEventStaff).toHaveBeenCalledWith("42");
 
             expectJsonResponse(res, 200, {
@@ -333,7 +332,6 @@ describe("event membership controller", () => {
             await eventMembershipController.removeEventMember(req, res, next);
 
             expect(eventMembershipService.removeEventMember).toHaveBeenCalledTimes(1);
-
             expect(eventMembershipService.removeEventMember).toHaveBeenCalledWith({
                 eventId: "42",
                 userId: "20"
@@ -399,7 +397,6 @@ describe("event membership controller", () => {
             await eventMembershipController.transferEventOwnership(req, res, next);
 
             expect(eventMembershipService.transferEventOwnership).toHaveBeenCalledTimes(1);
-
             expect(eventMembershipService.transferEventOwnership).toHaveBeenCalledWith({
                 eventId: "42",
                 currentUserId: 10,

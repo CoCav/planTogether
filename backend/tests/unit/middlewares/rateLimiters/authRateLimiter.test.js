@@ -1,4 +1,18 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockCreateRateLimiter = jest.fn(() => jest.fn());
+
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../../src/middlewares/rateLimiters/createRateLimiter", () => mockCreateRateLimiter);
+
+/* =============================
+   TEST HELPERS
+============================= */
 
 const loadAuthRateLimiter = () => {
     jest.resetModules();
@@ -22,15 +36,6 @@ const loadAuthRateLimiter = () => {
    - Environment-dependent configuration is tested through module reloads.
 =========================================================================== */
 
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock(
-    "../../../../src/middlewares/rateLimiters/createRateLimiter",
-    () => mockCreateRateLimiter
-);
-
 describe("auth rate limiter middleware", () => {
     const originalWindowMs = process.env.AUTH_RATE_LIMIT_WINDOW_MS;
     const originalMax = process.env.AUTH_RATE_LIMIT_MAX;
@@ -41,9 +46,7 @@ describe("auth rate limiter middleware", () => {
         delete process.env.AUTH_RATE_LIMIT_WINDOW_MS;
         delete process.env.AUTH_RATE_LIMIT_MAX;
 
-        mockCreateRateLimiter.mockReturnValue(
-            jest.fn()
-        );
+        mockCreateRateLimiter.mockReturnValue(jest.fn());
     });
 
     afterEach(() => {
@@ -90,7 +93,6 @@ describe("auth rate limiter middleware", () => {
     describe("Environment configuration", () => {
         it("uses configured authentication rate limit settings", () => {
             process.env.AUTH_RATE_LIMIT_WINDOW_MS = "300000";
-
             process.env.AUTH_RATE_LIMIT_MAX = "25";
 
             loadAuthRateLimiter();
@@ -104,7 +106,6 @@ describe("auth rate limiter middleware", () => {
 
         it("converts configured values to numbers", () => {
             process.env.AUTH_RATE_LIMIT_WINDOW_MS = "60000";
-
             process.env.AUTH_RATE_LIMIT_MAX = "5";
 
             loadAuthRateLimiter();

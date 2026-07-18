@@ -57,10 +57,7 @@ describe("Get Current User Event Access API", () => {
                 }
             });
 
-            const response = await getAuthenticatedEventAccess(
-                event.id,
-                organizerAuth.headers
-            );
+            const response = await getAuthenticatedEventAccess(event.id, organizerAuth.headers);
 
             expect(response.statusCode).toBe(200);
             expect(response.body).toMatchObject({
@@ -82,10 +79,7 @@ describe("Get Current User Event Access API", () => {
                 }
             });
 
-            const response = await getAuthenticatedEventAccess(
-                event.id,
-                organizerAuth.headers
-            );
+            const response = await getAuthenticatedEventAccess(event.id, organizerAuth.headers);
 
             expect(response.statusCode).toBe(200);
             expect(response.body).toMatchObject({
@@ -125,10 +119,7 @@ describe("Get Current User Event Access API", () => {
                 EVENT_ROLES.CO_ORGANIZER
             );
 
-            const response = await getAuthenticatedEventAccess(
-                event.id,
-                coOrganizerAuth.headers
-            );
+            const response = await getAuthenticatedEventAccess(event.id, coOrganizerAuth.headers);
 
             expect(response.statusCode).toBe(200);
             expect(response.body).toMatchObject({
@@ -159,10 +150,7 @@ describe("Get Current User Event Access API", () => {
 
             await joinEventAsAuthenticatedUser(event.id, participantAuth.headers);
 
-            const response = await getAuthenticatedEventAccess(
-                event.id,
-                participantAuth.headers
-            );
+            const response = await getAuthenticatedEventAccess(event.id, participantAuth.headers);
 
             expect(response.statusCode).toBe(200);
             expect(response.body).toMatchObject({
@@ -191,10 +179,7 @@ describe("Get Current User Event Access API", () => {
                 email: `nonmember${Date.now()}@test.com`
             });
 
-            const response = await getAuthenticatedEventAccess(
-                event.id,
-                userAuth.headers
-            );
+            const response = await getAuthenticatedEventAccess(event.id, userAuth.headers);
 
             expect(response.statusCode).toBe(200);
             expect(response.body).toMatchObject({
@@ -220,10 +205,7 @@ describe("Get Current User Event Access API", () => {
                 }
             });
 
-            const response = await getAuthenticatedEventAccess(
-                event.id,
-                organizerAuth.headers
-            );
+            const response = await getAuthenticatedEventAccess(event.id, organizerAuth.headers);
 
             expect(response.statusCode).toBe(200);
             expect(response.body).toMatchObject({
@@ -259,12 +241,9 @@ describe("Get Current User Event Access API", () => {
                 }
             });
 
-            const response = await getAuthenticatedEventAccess(
-                event.id,
-                {
-                    Authorization: "Bearer fake-token"
-                }
-            );
+            const response = await getAuthenticatedEventAccess(event.id, {
+                Authorization: "Bearer fake-token"
+            });
 
             expect(response.statusCode).toBe(401);
             expect(response.body).toHaveProperty("message", "Invalid or expired token");
@@ -282,10 +261,7 @@ describe("Get Current User Event Access API", () => {
                 email: `invalidevent${Date.now()}@test.com`
             });
 
-            const response = await getAuthenticatedEventAccess(
-                "abc",
-                userAuth.headers
-            );
+            const response = await getAuthenticatedEventAccess("abc", userAuth.headers);
 
             expect(response.statusCode).toBe(400);
         });
@@ -302,10 +278,7 @@ describe("Get Current User Event Access API", () => {
                 email: `missingevent${Date.now()}@test.com`
             });
 
-            const response = await getAuthenticatedEventAccess(
-                999999,
-                userAuth.headers
-            );
+            const response = await getAuthenticatedEventAccess(999999, userAuth.headers);
 
             expect(response.statusCode).toBe(404);
         });

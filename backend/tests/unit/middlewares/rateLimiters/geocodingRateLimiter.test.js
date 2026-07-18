@@ -1,4 +1,18 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockCreateRateLimiter = jest.fn(() => jest.fn());
+
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../../src/middlewares/rateLimiters/createRateLimiter", () => mockCreateRateLimiter);
+
+/* =============================
+   TEST HELPERS
+============================= */
 
 const loadGeocodingRateLimiter = () => {
     jest.resetModules();
@@ -22,15 +36,6 @@ const loadGeocodingRateLimiter = () => {
    - Environment-dependent configuration is tested through module reloads.
 =========================================================================== */
 
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock(
-    "../../../../src/middlewares/rateLimiters/createRateLimiter",
-    () => mockCreateRateLimiter
-);
-
 describe("geocoding rate limiter middleware", () => {
     const originalWindowMs = process.env.GEOCODING_RATE_LIMIT_WINDOW_MS;
     const originalMax = process.env.GEOCODING_RATE_LIMIT_MAX;
@@ -41,9 +46,7 @@ describe("geocoding rate limiter middleware", () => {
         delete process.env.GEOCODING_RATE_LIMIT_WINDOW_MS;
         delete process.env.GEOCODING_RATE_LIMIT_MAX;
 
-        mockCreateRateLimiter.mockReturnValue(
-            jest.fn()
-        );
+        mockCreateRateLimiter.mockReturnValue(jest.fn());
     });
 
     afterEach(() => {
@@ -62,7 +65,6 @@ describe("geocoding rate limiter middleware", () => {
             const limiter = loadGeocodingRateLimiter();
 
             expect(mockCreateRateLimiter).toHaveBeenCalledTimes(1);
-
             expect(mockCreateRateLimiter).toHaveBeenCalledWith({
                 windowMs: 60 * 1000,
                 max: 30,
@@ -90,7 +92,6 @@ describe("geocoding rate limiter middleware", () => {
     describe("Environment configuration", () => {
         it("uses configured geocoding rate limit settings", () => {
             process.env.GEOCODING_RATE_LIMIT_WINDOW_MS = "120000";
-
             process.env.GEOCODING_RATE_LIMIT_MAX = "50";
 
             loadGeocodingRateLimiter();
@@ -104,7 +105,6 @@ describe("geocoding rate limiter middleware", () => {
 
         it("converts configured values to numbers", () => {
             process.env.GEOCODING_RATE_LIMIT_WINDOW_MS = "30000";
-
             process.env.GEOCODING_RATE_LIMIT_MAX = "15";
 
             loadGeocodingRateLimiter();
@@ -115,7 +115,6 @@ describe("geocoding rate limiter middleware", () => {
             expect(options.max).toBe(15);
 
             expect(typeof options.windowMs).toBe("number");
-
             expect(typeof options.max).toBe("number");
         });
     });

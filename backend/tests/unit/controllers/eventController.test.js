@@ -1,3 +1,13 @@
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../src/services/eventService");
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const eventService = require("../../../src/services/eventService");
 
 const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
@@ -34,12 +44,6 @@ const { createEventResponse } = require("../../factories/eventFactory");
    - Business logic is tested separately in eventService tests.
 =========================================================================== */
 
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("../../../src/services/eventService");
-
 describe("event controller", () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -60,8 +64,8 @@ describe("event controller", () => {
                 filename: "event-123.png"
             },
             "/uploads/events/event-123.png"
-        ]])("creates an event %s",
-            async (_, file, expectedImage) => {
+        ]])(
+            "creates an event %s", async (_, file, expectedImage) => {
                 const { req, res, next } = createEventControllerMocks({
                     body: {
                         title: "Test Event"
@@ -82,13 +86,10 @@ describe("event controller", () => {
 
                 expect(eventService.createEvent).toHaveBeenCalledTimes(1);
 
-                expect(eventService.createEvent).toHaveBeenCalledWith(
-                    {
-                        title: "Test Event",
-                        image: expectedImage
-                    },
-                    10
-                );
+                expect(eventService.createEvent).toHaveBeenCalledWith({
+                    title: "Test Event",
+                    image: expectedImage
+                }, 10);
 
                 expectJsonResponse(res, 201, {
                     success: true,
@@ -131,8 +132,8 @@ describe("event controller", () => {
             "an anonymous request",
             null,
             undefined
-        ]])("retrieves events for %s",
-            async (_, user, expectedUserId) => {
+        ]])(
+            "retrieves events for %s", async (_, user, expectedUserId) => {
                 const { req, res, next } = createEventControllerMocks({
                     query: {
                         page: "1",
@@ -212,10 +213,7 @@ describe("event controller", () => {
 
             expect(eventService.getCurrentUserEventAccess).toHaveBeenCalledTimes(1);
 
-            expect(eventService.getCurrentUserEventAccess).toHaveBeenCalledWith(
-                "42",
-                10
-            );
+            expect(eventService.getCurrentUserEventAccess).toHaveBeenCalledWith("42", 10);
 
             expectJsonResponse(res, 200, {
                 success: true,
@@ -261,8 +259,8 @@ describe("event controller", () => {
             "an anonymous request",
             null,
             undefined
-        ]])("retrieves an event for %s",
-            async (_, user, expectedUserId) => {
+        ]])(
+            "retrieves an event for %s", async (_, user, expectedUserId) => {
                 const { req, res, next } = createEventControllerMocks({
                     params: {
                         eventId: "42"
@@ -281,10 +279,7 @@ describe("event controller", () => {
 
                 expect(eventService.getEventById).toHaveBeenCalledTimes(1);
 
-                expect(eventService.getEventById).toHaveBeenCalledWith(
-                    "42",
-                    expectedUserId
-                );
+                expect(eventService.getEventById).toHaveBeenCalledWith("42", expectedUserId);
 
                 expectJsonResponse(res, 200, {
                     success: true,
@@ -353,13 +348,8 @@ describe("event controller", () => {
                 filename: "event-updated.png"
             },
             "/uploads/events/event-updated.png"
-        ]])("%s",
-            async (
-                _,
-                body,
-                file,
-                expectedImage
-            ) => {
+        ]])(
+            "%s", async (_, body, file, expectedImage) => {
                 const { req, res, next } = createEventControllerMocks({
                     params: {
                         eventId: "42"
@@ -380,13 +370,10 @@ describe("event controller", () => {
 
                 expect(eventService.updateEventById).toHaveBeenCalledTimes(1);
 
-                expect(eventService.updateEventById).toHaveBeenCalledWith(
-                    "42",
-                    {
-                        ...body,
-                        image: expectedImage
-                    }
-                );
+                expect(eventService.updateEventById).toHaveBeenCalledWith("42", {
+                    ...body,
+                    image: expectedImage
+                });
 
                 expectJsonResponse(res, 200, {
                     success: true,
@@ -421,14 +408,10 @@ describe("event controller", () => {
 
             await eventController.updateEvent(req, res, next);
 
-            expect(eventService.updateEventById).toHaveBeenCalledWith(
-                "42",
-                {
-                    title: "Updated Event",
-                    image:
-                        "/uploads/events/replacement.png"
-                }
-            );
+            expect(eventService.updateEventById).toHaveBeenCalledWith("42", {
+                title: "Updated Event",
+                image: "/uploads/events/replacement.png"
+            });
 
             expectJsonResponse(res, 200, {
                 success: true,

@@ -1,14 +1,26 @@
-const path = require("path");
+/* =============================
+   MOCK FUNCTIONS
+============================= */
 
 const mockExistsSync = jest.fn();
 const mockUnlink = jest.fn();
 const mockLoggerWarn = jest.fn();
+
+/* =============================
+   TEST HELPERS
+============================= */
 
 const loadUploadedFileStorage = () => {
     jest.resetModules();
 
     return require("../../../../src/utils/files/uploadedFileStorage");
 };
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
+const path = require("path");
 
 /* ==========================================================================
    Uploaded File Storage Utility Unit Tests
@@ -65,15 +77,16 @@ describe("uploaded file storage utility", () => {
             ["null", null],
             ["undefined", undefined],
             ["empty string", ""]
-        ])("does nothing for a %s file path", async (_, filePath) => {
-            const { deleteUploadedFile } = loadUploadedFileStorage();
+        ])(
+            "does nothing for a %s file path", async (_, filePath) => {
+                const { deleteUploadedFile } = loadUploadedFileStorage();
 
-            await deleteUploadedFile(filePath);
+                await deleteUploadedFile(filePath);
 
-            expect(mockExistsSync).not.toHaveBeenCalled();
-            expect(mockUnlink).not.toHaveBeenCalled();
-            expect(mockLoggerWarn).not.toHaveBeenCalled();
-        });
+                expect(mockExistsSync).not.toHaveBeenCalled();
+                expect(mockUnlink).not.toHaveBeenCalled();
+                expect(mockLoggerWarn).not.toHaveBeenCalled();
+            });
     });
 
     /* =============================
@@ -87,9 +100,7 @@ describe("uploaded file storage utility", () => {
 
             const { deleteUploadedFile } = loadUploadedFileStorage();
 
-            await deleteUploadedFile(
-                "/uploads/avatars/avatar-test.png"
-            );
+            await deleteUploadedFile("/uploads/avatars/avatar-test.png");
 
             const expectedPath = path.resolve(
                 __dirname,
@@ -110,9 +121,7 @@ describe("uploaded file storage utility", () => {
 
             const { deleteUploadedFile } = loadUploadedFileStorage();
 
-            await deleteUploadedFile(
-                "uploads/events/event-test.png"
-            );
+            await deleteUploadedFile("uploads/events/event-test.png");
 
             const expectedPath = path.resolve(
                 __dirname,
@@ -130,9 +139,7 @@ describe("uploaded file storage utility", () => {
 
             const { deleteUploadedFile } = loadUploadedFileStorage();
 
-            await deleteUploadedFile(
-                "/uploads/avatars/missing.png"
-            );
+            await deleteUploadedFile("/uploads/avatars/missing.png");
 
             expect(mockExistsSync).toHaveBeenCalled();
             expect(mockUnlink).not.toHaveBeenCalled();
@@ -146,9 +153,7 @@ describe("uploaded file storage utility", () => {
 
             const { deleteUploadedFile } = loadUploadedFileStorage();
 
-            await deleteUploadedFile(
-                "/storage/events/event-test.png"
-            );
+            await deleteUploadedFile("/storage/events/event-test.png");
 
             const expectedPath = path.resolve(
                 __dirname,
@@ -170,17 +175,14 @@ describe("uploaded file storage utility", () => {
         it("rejects files outside the upload directory", async () => {
             const { deleteUploadedFile } = loadUploadedFileStorage();
 
-            await deleteUploadedFile(
-                "/other-folder/file.png"
-            );
+            await deleteUploadedFile("/other-folder/file.png");
 
             expect(mockExistsSync).not.toHaveBeenCalled();
             expect(mockUnlink).not.toHaveBeenCalled();
 
-            expect(mockLoggerWarn).toHaveBeenCalledWith(
-                {
-                    filePath: "/other-folder/file.png"
-                },
+            expect(mockLoggerWarn).toHaveBeenCalledWith({
+                filePath: "/other-folder/file.png"
+            },
                 "Attempted to delete a file outside the upload directory"
             );
         });
@@ -188,18 +190,15 @@ describe("uploaded file storage utility", () => {
         it("rejects directory traversal through the upload path", async () => {
             const { deleteUploadedFile } = loadUploadedFileStorage();
 
-            await deleteUploadedFile(
-                "/uploads/../private/file.txt"
-            );
+            await deleteUploadedFile("/uploads/../private/file.txt");
 
             expect(mockExistsSync).not.toHaveBeenCalled();
             expect(mockUnlink).not.toHaveBeenCalled();
 
-            expect(mockLoggerWarn).toHaveBeenCalledWith(
-                {
-                    filePath:
-                        "/uploads/../private/file.txt"
-                },
+            expect(mockLoggerWarn).toHaveBeenCalledWith({
+                filePath:
+                    "/uploads/../private/file.txt"
+            },
                 "Attempted to delete a file outside the upload directory"
             );
         });
@@ -231,12 +230,11 @@ describe("uploaded file storage utility", () => {
                 "/uploads/events/event-test.png"
             )).resolves.toBeUndefined();
 
-            expect(mockLoggerWarn).toHaveBeenCalledWith(
-                {
-                    error: unlinkError,
-                    filePath:
-                        "/uploads/events/event-test.png"
-                },
+            expect(mockLoggerWarn).toHaveBeenCalledWith({
+                error: unlinkError,
+                filePath:
+                    "/uploads/events/event-test.png"
+            },
                 "Failed to delete uploaded file"
             );
         });

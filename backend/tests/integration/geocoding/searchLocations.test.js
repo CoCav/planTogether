@@ -68,10 +68,7 @@ describe("Search Locations API", () => {
             });
 
             expect(response.statusCode).toBe(200);
-            expect(response.body).toHaveProperty(
-                "message",
-                "Locations retrieved successfully"
-            );
+            expect(response.body).toHaveProperty("message", "Locations retrieved successfully");
 
             expect(response.body.locations).toHaveLength(1);
             expect(response.body.locations[0]).toMatchObject({

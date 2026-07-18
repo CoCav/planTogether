@@ -1,3 +1,7 @@
+/* =============================
+   TEST MOCKS
+============================= */
+
 const loadCorsOptions = () => {
     jest.resetModules();
     return require("../../../src/config/cors");
@@ -44,8 +48,7 @@ describe("cors config", () => {
         });
 
         it("allows configured comma-separated origins", () => {
-            process.env.CORS_ORIGIN =
-                "http://localhost:5173, https://example.com ";
+            process.env.CORS_ORIGIN = "http://localhost:5173, https://example.com ";
 
             const corsOptions = loadCorsOptions();
             const callback = jest.fn();

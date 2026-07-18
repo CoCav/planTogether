@@ -119,8 +119,7 @@ describe("event payload builder", () => {
                     startDateTime: "2026-12-31T10:00:00.000Z",
                     endDateTime: "2026-12-31T12:00:00.000Z",
                     maxParticipants: 20,
-                    registrationDeadline:
-                        "2026-12-30T10:00:00.000Z",
+                    registrationDeadline: "2026-12-30T10:00:00.000Z",
                     image: "/uploads/events/event.png"
                 },
                 10,
@@ -157,8 +156,7 @@ describe("event payload builder", () => {
                 startDateTime: "2026-12-31T10:00:00.000Z",
                 endDateTime: "2026-12-31T12:00:00.000Z",
                 maxParticipants: 20,
-                registrationDeadline:
-                    "2026-12-30T10:00:00.000Z",
+                registrationDeadline: "2026-12-30T10:00:00.000Z",
                 image: "/uploads/events/event.png"
             });
         });
@@ -187,19 +185,16 @@ describe("event payload builder", () => {
         });
 
         it("normalizes omitted nullable fields to null", () => {
-            const result = buildCreateEventPayload(
-                {
-                    title: "Nullable Event",
-                    description: "Description",
-                    type: "Meetup",
-                    theme: "Technology",
-                    mode: EVENT_MODES.IN_PERSON,
-                    location: "Montreal",
-                    startDateTime: "2026-12-31T10:00:00.000Z",
-                    endDateTime: "2026-12-31T12:00:00.000Z"
-                },
-                10
-            );
+            const result = buildCreateEventPayload({
+                title: "Nullable Event",
+                description: "Description",
+                type: "Meetup",
+                theme: "Technology",
+                mode: EVENT_MODES.IN_PERSON,
+                location: "Montreal",
+                startDateTime: "2026-12-31T10:00:00.000Z",
+                endDateTime: "2026-12-31T12:00:00.000Z"
+            }, 10);
 
             expect(result).toMatchObject({
                 maxParticipants: null,
@@ -228,13 +223,10 @@ describe("event payload builder", () => {
         };
 
         it("includes only provided updatable fields", () => {
-            const result = buildUpdateEventPayload(
-                currentEvent,
-                {
-                    title: "Updated Title",
-                    theme: "Design"
-                }
-            );
+            const result = buildUpdateEventPayload(currentEvent, {
+                title: "Updated Title",
+                theme: "Design"
+            });
 
             expect(result).toEqual({
                 title: "Updated Title",
@@ -244,13 +236,10 @@ describe("event payload builder", () => {
         });
 
         it("clears physical location data when changing to online", () => {
-            const result = buildUpdateEventPayload(
-                currentEvent,
-                {
-                    mode: EVENT_MODES.ONLINE,
-                    location: "Montreal"
-                }
-            );
+            const result = buildUpdateEventPayload(currentEvent, {
+                mode: EVENT_MODES.ONLINE,
+                location: "Montreal"
+            });
 
             expect(result).toMatchObject({
                 mode: EVENT_MODES.ONLINE,
@@ -259,23 +248,19 @@ describe("event payload builder", () => {
         });
 
         it("updates physical location and structured data", () => {
-            const result = buildUpdateEventPayload(
-                currentEvent,
-                {
-                    mode: EVENT_MODES.IN_PERSON,
-                    location: "Quebec City"
-                },
-                {
-                    latitude: 46.8137431,
-                    longitude: -71.2084061,
-                    label: "Québec, Canada",
-                    streetAddress: "2 Rue des Jardins",
-                    city: "Québec",
-                    region: "Québec",
-                    postalCode: "G1R 4L5",
-                    country: "Canada"
-                }
-            );
+            const result = buildUpdateEventPayload(currentEvent, {
+                mode: EVENT_MODES.IN_PERSON,
+                location: "Quebec City"
+            }, {
+                latitude: 46.8137431,
+                longitude: -71.2084061,
+                label: "Québec, Canada",
+                streetAddress: "2 Rue des Jardins",
+                city: "Québec",
+                region: "Québec",
+                postalCode: "G1R 4L5",
+                country: "Canada"
+            });
 
             expect(result).toMatchObject({
                 mode: EVENT_MODES.IN_PERSON,
@@ -292,13 +277,10 @@ describe("event payload builder", () => {
         });
 
         it("normalizes missing resolved location data to null", () => {
-            const result = buildUpdateEventPayload(
-                currentEvent,
-                {
-                    mode: EVENT_MODES.IN_PERSON,
-                    location: "Unknown place"
-                }
-            );
+            const result = buildUpdateEventPayload(currentEvent, {
+                mode: EVENT_MODES.IN_PERSON,
+                location: "Unknown place"
+            });
 
             expect(result).toMatchObject({
                 mode: EVENT_MODES.IN_PERSON,
@@ -315,23 +297,17 @@ describe("event payload builder", () => {
         });
 
         it("preserves the current image when omitted", () => {
-            const result = buildUpdateEventPayload(
-                currentEvent,
-                {
-                    title: "Updated Title"
-                }
-            );
+            const result = buildUpdateEventPayload(currentEvent, {
+                title: "Updated Title"
+            });
 
             expect(result.image).toBe("/uploads/events/current.png");
         });
 
         it("replaces the current image when provided", () => {
-            const result = buildUpdateEventPayload(
-                currentEvent,
-                {
-                    image: "/uploads/events/new.png"
-                }
-            );
+            const result = buildUpdateEventPayload(currentEvent, {
+                image: "/uploads/events/new.png"
+            });
 
             expect(result.image).toBe("/uploads/events/new.png");
         });
@@ -339,13 +315,11 @@ describe("event payload builder", () => {
         it.each([
             ["null", null],
             ["empty string", ""]
-        ])("clears the current image with %s", (_, image) => {
-            const result = buildUpdateEventPayload(
-                currentEvent,
-                { image }
-            );
+        ])(
+            "clears the current image with %s", (_, image) => {
+                const result = buildUpdateEventPayload(currentEvent, { image });
 
-            expect(result.image).toBeNull();
-        });
+                expect(result.image).toBeNull();
+            });
     });
 });

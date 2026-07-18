@@ -1,4 +1,18 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockRateLimit = jest.fn(() => jest.fn());
+
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("express-rate-limit", () => mockRateLimit);
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const createRateLimiter = require("../../../../src/middlewares/rateLimiters/createRateLimiter");
 
@@ -19,12 +33,6 @@ const createRateLimiter = require("../../../../src/middlewares/rateLimiters/crea
    - express-rate-limit is mocked.
    - The returned skip function is tested independently.
 =========================================================================== */
-
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("express-rate-limit", () => mockRateLimit);
 
 describe("create rate limiter middleware", () => {
     const originalNodeEnv = process.env.NODE_ENV;

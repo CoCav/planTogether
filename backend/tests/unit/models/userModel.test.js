@@ -1,6 +1,6 @@
-const { DataTypes } = require("sequelize");
-
-const { normalizeEmail } = require("../../../src/utils/stringNormalizer");
+/* =============================
+   MOCK FUNCTIONS
+============================= */
 
 const mockUserModel = {
     name: "UserModel"
@@ -24,7 +24,11 @@ jest.mock("../../../src/utils/stringNormalizer", () => ({
    TEST IMPORTS
 ============================= */
 
+const { DataTypes } = require("sequelize");
+
 const User = require("../../../src/models/userModel");
+
+const { normalizeEmail } = require("../../../src/utils/stringNormalizer");
 
 /* ==========================================================================
    User Model Unit Tests
@@ -143,18 +147,12 @@ describe("user model", () => {
 
             normalizeEmail.mockReturnValue("user@example.com");
 
-            attributes.email.set.call(
-                userInstance,
-                "  USER@EXAMPLE.COM  "
-            );
+            attributes.email.set.call(userInstance, "  USER@EXAMPLE.COM  ");
 
             expect(normalizeEmail).toHaveBeenCalledTimes(1);
             expect(normalizeEmail).toHaveBeenCalledWith("  USER@EXAMPLE.COM  ");
 
-            expect(userInstance.setDataValue).toHaveBeenCalledWith(
-                "email",
-                "user@example.com"
-            );
+            expect(userInstance.setDataValue).toHaveBeenCalledWith("email", "user@example.com");
         });
 
         it("stores the value returned by normalizeEmail", () => {
@@ -164,15 +162,9 @@ describe("user model", () => {
 
             normalizeEmail.mockReturnValue("");
 
-            attributes.email.set.call(
-                userInstance,
-                undefined
-            );
+            attributes.email.set.call(userInstance, undefined);
 
-            expect(userInstance.setDataValue).toHaveBeenCalledWith(
-                "email",
-                ""
-            );
+            expect(userInstance.setDataValue).toHaveBeenCalledWith("email", "");
         });
     });
 

@@ -1,8 +1,16 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindUserByIdOrFail = jest.fn();
 const mockHashPassword = jest.fn();
 const mockDeleteUploadedFile = jest.fn();
 
 const mockOpGte = Symbol("gte");
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("sequelize", () => ({
     Op: {
@@ -69,6 +77,10 @@ jest.mock("../../../../../src/utils/pagination", () => ({
     getTotalPages: jest.fn()
 }));
 
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const sequelize = require("../../../../../src/config/database");
 
 const User = require("../../../../../src/models/userModel");
@@ -122,8 +134,7 @@ describe("delete current user service", () => {
             name: "John Doe",
             email: "john@test.com",
             password: "current-hash",
-            avatar:
-                "/uploads/avatars/current-avatar.png",
+            avatar: "/uploads/avatars/current-avatar.png",
             deletedAt: null,
             save: jest.fn().mockResolvedValue()
         });
@@ -154,13 +165,11 @@ describe("delete current user service", () => {
             expect(sequelize.transaction).toHaveBeenCalledTimes(1);
 
             expect(mockFindUserByIdOrFail).toHaveBeenCalledTimes(1);
-
             expect(mockFindUserByIdOrFail).toHaveBeenCalledWith(User, 10, {
                 transaction
             });
 
             expect(EventUserRole.findOne).toHaveBeenCalledTimes(1);
-
             expect(EventUserRole.findOne).toHaveBeenCalledWith({
                 where: {
                     userId: 10,
@@ -180,13 +189,10 @@ describe("delete current user service", () => {
                 transaction
             });
 
-            expect(user.deletedAt).toEqual(
-                new Date("2026-04-25T12:00:00.000Z")
-            );
+            expect(user.deletedAt).toEqual(new Date("2026-04-25T12:00:00.000Z"));
 
             // Historical content keeps the original display name.
             expect(user.name).toBe("John Doe");
-
             expect(user.email).toBe(`${deletedCredential}@deleted.local`);
 
             expect(mockHashPassword).toHaveBeenCalledTimes(1);
@@ -275,9 +281,7 @@ describe("delete current user service", () => {
         it("deletes the avatar only after the transaction commits", async () => {
             await deleteCurrentUserById(10);
 
-            expect(transaction.commit.mock.invocationCallOrder[0]).toBeLessThan(
-                mockDeleteUploadedFile.mock.invocationCallOrder[0]
-            );
+            expect(transaction.commit.mock.invocationCallOrder[0]).toBeLessThan(mockDeleteUploadedFile.mock.invocationCallOrder[0]);
         });
 
         it("propagates cleanup errors without rolling back committed changes", async () => {
@@ -302,12 +306,9 @@ describe("delete current user service", () => {
 
     describe("User validation", () => {
         it("rolls back when the current user does not exist", async () => {
-            const error = Object.assign(
-                new Error("User not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("User not found"), {
+                statusCode: 404
+            });
 
             mockFindUserByIdOrFail.mockRejectedValue(error);
 

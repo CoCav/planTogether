@@ -32,39 +32,25 @@ const { createOrganizerAndEvent } = require("./eventTestHelper");
    REVIEW ACTIONS
 ============================= */
 
-const getEventReviews = (
-    eventId,
-    query = ""
-) => {
+const getEventReviews = (eventId, query = "") => {
     return request(app).get(`/api/events/${eventId}/reviews${query}`);
 };
 
-const createEventReview = (
-    eventId,
-    headers = {},
-    payload = {}
-) => {
+const createEventReview = (eventId, headers = {}, payload = {}) => {
     return request(app)
         .post(`/api/events/${eventId}/reviews`)
         .set(headers)
         .send(payload);
 };
 
-const updateEventReview = (
-    reviewId,
-    headers = {},
-    payload = {}
-) => {
+const updateEventReview = (reviewId, headers = {}, payload = {}) => {
     return request(app)
         .put(`/api/events/reviews/${reviewId}`)
         .set(headers)
         .send(payload);
 };
 
-const deleteEventReview = (
-    reviewId,
-    headers = {}
-) => {
+const deleteEventReview = (reviewId, headers = {}) => {
     return request(app)
         .delete(`/api/events/reviews/${reviewId}`)
         .set(headers);
@@ -74,11 +60,7 @@ const deleteEventReview = (
    REVIEW SCENARIOS
 ============================= */
 
-const createCompletedEventWithParticipant = async ({
-    organizer = {},
-    participant = {},
-    event = {}
-} = {}) => {
+const createCompletedEventWithParticipant = async ({ organizer = {}, participant = {}, event = {} } = {}) => {
     const {
         event: createdEvent,
         organizerAuth
@@ -117,8 +99,10 @@ const createCompletedEventWithParticipant = async ({
 
 module.exports = {
     getEventReviews,
+
     createEventReview,
     updateEventReview,
     deleteEventReview,
+
     createCompletedEventWithParticipant
 };

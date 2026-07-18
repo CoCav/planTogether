@@ -42,11 +42,10 @@ describe("geocoding normalizer utility", () => {
 
     describe("pickAddressValue", () => {
         it("returns the first available address value", () => {
-            const result = pickAddressValue(
-                {
-                    town: "Quebec City",
-                    city: "Montreal"
-                },
+            const result = pickAddressValue({
+                town: "Quebec City",
+                city: "Montreal"
+            },
                 ["city", "town"]
             );
 
@@ -54,10 +53,9 @@ describe("geocoding normalizer utility", () => {
         });
 
         it("falls back to the next available key", () => {
-            const result = pickAddressValue(
-                {
-                    village: "Small Village"
-                },
+            const result = pickAddressValue({
+                village: "Small Village"
+            },
                 ["city", "town", "village"]
             );
 
@@ -174,22 +172,19 @@ describe("geocoding normalizer utility", () => {
 
     describe("normalizeLocation", () => {
         it("normalizes a provider result", () => {
-            const result = normalizeLocation(
-                "  Montreal  ",
-                {
-                    display_name: "Montreal, Quebec, Canada",
-                    lat: "45.5017",
-                    lon: "-73.5673",
-                    address: {
-                        house_number: "1500",
-                        road: "Rue Sainte-Catherine O",
-                        city: "Montreal",
-                        state: "Quebec",
-                        postcode: "H3G 1S8",
-                        country: "Canada"
-                    }
+            const result = normalizeLocation("  Montreal  ", {
+                display_name: "Montreal, Quebec, Canada",
+                lat: "45.5017",
+                lon: "-73.5673",
+                address: {
+                    house_number: "1500",
+                    road: "Rue Sainte-Catherine O",
+                    city: "Montreal",
+                    state: "Quebec",
+                    postcode: "H3G 1S8",
+                    country: "Canada"
                 }
-            );
+            });
 
             expect(result).toEqual({
                 query: "montreal",
@@ -206,26 +201,20 @@ describe("geocoding normalizer utility", () => {
         });
 
         it("uses the query as label when display_name is missing", () => {
-            const result = normalizeLocation(
-                "Montreal",
-                {
-                    lat: "45.5017",
-                    lon: "-73.5673"
-                }
-            );
+            const result = normalizeLocation("Montreal", {
+                lat: "45.5017",
+                lon: "-73.5673"
+            });
 
             expect(result.label).toBe("Montreal");
         });
 
         it("normalizes missing address data", () => {
-            const result = normalizeLocation(
-                "Montreal",
-                {
-                    display_name: "Montreal",
-                    lat: "45.5017",
-                    lon: "-73.5673"
-                }
-            );
+            const result = normalizeLocation("Montreal", {
+                display_name: "Montreal",
+                lat: "45.5017",
+                lon: "-73.5673"
+            });
 
             expect(result).toMatchObject({
                 streetAddress: null,
@@ -240,13 +229,9 @@ describe("geocoding normalizer utility", () => {
             ["latitude", { lat: "invalid", lon: "-73.5673" }],
             ["longitude", { lat: "45.5017", lon: "invalid" }]
         ])(
-            "throws a 502 error for an invalid %s",
-            (_, providerResult) => {
+            "throws a 502 error for an invalid %s", (_, providerResult) => {
                 try {
-                    normalizeLocation(
-                        "Montreal",
-                        providerResult
-                    );
+                    normalizeLocation("Montreal", providerResult);
 
                     throw new Error("Expected normalizeLocation to throw");
                 } catch (error) {

@@ -1,3 +1,7 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockBuildEventWhereConditions = jest.fn();
 const mockBuildEventCreatorInclude = jest.fn();
 
@@ -17,6 +21,10 @@ const mockGetEventStatus = jest.fn();
 const mockGetPaginationOptions = jest.fn();
 const mockGetTotalCount = jest.fn();
 const mockGetTotalPages = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../src/models/eventModel", () => ({
     findAndCountAll: jest.fn()
@@ -107,6 +115,10 @@ jest.mock("../../../../src/utils/pagination", () => ({
     getTotalCount: mockGetTotalCount,
     getTotalPages: mockGetTotalPages
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const sequelize = require("../../../../src/config/database");
 
@@ -254,20 +266,12 @@ describe("get all events service", () => {
                 order: "desc"
             };
 
-            const result = await getAllEvents(
-                query,
-                10
-            );
+            const result = await getAllEvents(query, 10);
 
             expect(mockBuildEventWhereConditions).toHaveBeenCalledTimes(1);
-
-            expect(mockBuildEventWhereConditions).toHaveBeenCalledWith(
-                {},
-                query
-            );
+            expect(mockBuildEventWhereConditions).toHaveBeenCalledWith({}, query);
 
             expect(mockGetPaginationOptions).toHaveBeenCalledTimes(1);
-
             expect(mockGetPaginationOptions).toHaveBeenCalledWith(
                 query,
                 EVENT_SORT_FIELDS,
@@ -275,30 +279,13 @@ describe("get all events service", () => {
                 "DESC"
             );
 
-            expect(mockBuildEventParticipantCountAttribute).toHaveBeenCalledWith(
-                sequelize,
-                "participants.id"
-            );
+            expect(mockBuildEventParticipantCountAttribute).toHaveBeenCalledWith(sequelize, "participants.id");
+            expect(mockBuildEventReviewCountAttribute).toHaveBeenCalledWith(sequelize, "reviews.id");
 
-            expect(mockBuildEventReviewCountAttribute).toHaveBeenCalledWith(
-                sequelize,
-                "reviews.id"
-            );
+            expect(mockBuildEventAverageRatingAttribute).toHaveBeenCalledWith(sequelize, "reviews.rating");
+            expect(mockBuildEventLikeCountAttribute).toHaveBeenCalledWith(sequelize, "likes.id");
 
-            expect(mockBuildEventAverageRatingAttribute).toHaveBeenCalledWith(
-                sequelize,
-                "reviews.rating"
-            );
-
-            expect(mockBuildEventLikeCountAttribute).toHaveBeenCalledWith(
-                sequelize,
-                "likes.id"
-            );
-
-            expect(mockBuildEventCreatorInclude).toHaveBeenCalledWith(
-                User,
-                undefined
-            );
+            expect(mockBuildEventCreatorInclude).toHaveBeenCalledWith(User, undefined);
 
             expect(mockBuildActiveParticipantInclude).toHaveBeenCalledWith(User);
             expect(mockBuildEventReviewInclude).toHaveBeenCalledWith(EventReview);
@@ -337,11 +324,7 @@ describe("get all events service", () => {
                 count: 1
             }]);
 
-            expect(mockFindLikedEventIdsByUser).toHaveBeenCalledWith(
-                EventLike,
-                [1],
-                10
-            );
+            expect(mockFindLikedEventIdsByUser).toHaveBeenCalledWith(EventLike, [1], 10);
 
             expect(mockGetEventStatus).toHaveBeenCalledWith(
                 expect.objectContaining({
@@ -349,10 +332,7 @@ describe("get all events service", () => {
                 })
             );
 
-            expect(mockGetTotalPages).toHaveBeenCalledWith(
-                1,
-                10
-            );
+            expect(mockGetTotalPages).toHaveBeenCalledWith(1, 10);
 
             expect(result).toEqual({
                 page: 1,
@@ -386,15 +366,9 @@ describe("get all events service", () => {
 
             await getAllEvents(query);
 
-            expect(mockBuildEventWhereConditions).toHaveBeenCalledWith(
-                {},
-                query
-            );
+            expect(mockBuildEventWhereConditions).toHaveBeenCalledWith({}, query);
 
-            expect(mockBuildEventCreatorInclude).toHaveBeenCalledWith(
-                User,
-                "John"
-            );
+            expect(mockBuildEventCreatorInclude).toHaveBeenCalledWith(User, "John");
         });
 
         it("forwards custom pagination and sorting values to the event query", async () => {
@@ -462,17 +436,9 @@ describe("get all events service", () => {
 
             mockFindLikedEventIdsByUser.mockResolvedValue(new Set([1]));
 
-            const result = await getAllEvents(
-                {},
-                10
-            );
+            const result = await getAllEvents({}, 10);
 
-            expect(mockFindLikedEventIdsByUser)
-                .toHaveBeenCalledWith(
-                    EventLike,
-                    [1, 2],
-                    10
-                );
+            expect(mockFindLikedEventIdsByUser).toHaveBeenCalledWith(EventLike, [1, 2], 10);
 
             expect(result.events[0]).toMatchObject({
                 id: 1,
@@ -488,11 +454,7 @@ describe("get all events service", () => {
         it("forwards a null user ID for anonymous event listings", async () => {
             await getAllEvents();
 
-            expect(mockFindLikedEventIdsByUser).toHaveBeenCalledWith(
-                EventLike,
-                [1],
-                null
-            );
+            expect(mockFindLikedEventIdsByUser).toHaveBeenCalledWith(EventLike, [1], null);
         });
 
         it("supports an empty event result without like lookups failing", async () => {
@@ -508,11 +470,7 @@ describe("get all events service", () => {
 
             const result = await getAllEvents();
 
-            expect(mockFindLikedEventIdsByUser).toHaveBeenCalledWith(
-                EventLike,
-                [],
-                null
-            );
+            expect(mockFindLikedEventIdsByUser).toHaveBeenCalledWith(EventLike, [], null);
 
             expect(result).toEqual({
                 page: 1,
@@ -551,10 +509,7 @@ describe("get all events service", () => {
             });
 
             expect(mockGetTotalCount).toHaveBeenCalledWith(groupedCount);
-            expect(mockGetTotalPages).toHaveBeenCalledWith(
-                3,
-                10
-            );
+            expect(mockGetTotalPages).toHaveBeenCalledWith(3, 10);
 
             expect(result.totalEvents).toBe(3);
         });

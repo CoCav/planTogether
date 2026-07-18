@@ -1,6 +1,14 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockCountActiveParticipantsByEventIds = jest.fn();
 const mockCountEventLikesByEventIds = jest.fn();
 const mockFindLikedEventIdsByUser = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../src/utils/eventMemberships/eventParticipants", () => ({
     countActiveParticipantsByEventIds: mockCountActiveParticipantsByEventIds
@@ -10,6 +18,10 @@ jest.mock("../../../../src/utils/eventLikes/eventLikes", () => ({
     countEventLikesByEventIds: mockCountEventLikesByEventIds,
     findLikedEventIdsByUser: mockFindLikedEventIdsByUser
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const { getEventListStats } = require("../../../../src/utils/events/eventListStats");
 
@@ -83,28 +95,13 @@ describe("event list stats", () => {
             });
 
             expect(mockCountActiveParticipantsByEventIds).toHaveBeenCalledTimes(1);
-
-            expect(mockCountActiveParticipantsByEventIds).toHaveBeenCalledWith(
-                EventUserRole,
-                sequelize,
-                eventIds
-            );
+            expect(mockCountActiveParticipantsByEventIds).toHaveBeenCalledWith(EventUserRole, sequelize, eventIds);
 
             expect(mockCountEventLikesByEventIds).toHaveBeenCalledTimes(1);
-
-            expect(mockCountEventLikesByEventIds).toHaveBeenCalledWith(
-                EventLike,
-                sequelize,
-                eventIds
-            );
+            expect(mockCountEventLikesByEventIds).toHaveBeenCalledWith(EventLike, sequelize, eventIds);
 
             expect(mockFindLikedEventIdsByUser).toHaveBeenCalledTimes(1);
-
-            expect(mockFindLikedEventIdsByUser).toHaveBeenCalledWith(
-                EventLike,
-                eventIds,
-                10
-            );
+            expect(mockFindLikedEventIdsByUser).toHaveBeenCalledWith(EventLike, eventIds, 10);
 
             expect(result).toEqual({
                 participantCountByEventId: {
@@ -128,11 +125,7 @@ describe("event list stats", () => {
                 currentUserId: null
             });
 
-            expect(mockFindLikedEventIdsByUser).toHaveBeenCalledWith(
-                EventLike,
-                [1],
-                null
-            );
+            expect(mockFindLikedEventIdsByUser).toHaveBeenCalledWith(EventLike, [1], null);
         });
     });
 
@@ -154,23 +147,11 @@ describe("event list stats", () => {
                 currentUserId: 10
             });
 
-            expect(mockCountActiveParticipantsByEventIds).toHaveBeenCalledWith(
-                EventUserRole,
-                sequelize,
-                []
-            );
+            expect(mockCountActiveParticipantsByEventIds).toHaveBeenCalledWith(EventUserRole, sequelize, []);
 
-            expect(mockCountEventLikesByEventIds).toHaveBeenCalledWith(
-                EventLike,
-                sequelize,
-                []
-            );
+            expect(mockCountEventLikesByEventIds).toHaveBeenCalledWith(EventLike, sequelize, []);
 
-            expect(mockFindLikedEventIdsByUser).toHaveBeenCalledWith(
-                EventLike,
-                [],
-                10
-            );
+            expect(mockFindLikedEventIdsByUser).toHaveBeenCalledWith(EventLike, [], 10);
 
             expect(result).toEqual({
                 participantCountByEventId: {},
@@ -268,8 +249,8 @@ describe("event list stats", () => {
             "liked event lookup",
             mockFindLikedEventIdsByUser,
             "Liked event lookup failed"
-        ]])("propagates %s errors",
-            async (_, mockFunction, message) => {
+        ]])(
+            "propagates %s errors", async (_, mockFunction, message) => {
                 const error = new Error(message);
 
                 mockFunction.mockRejectedValue(error);

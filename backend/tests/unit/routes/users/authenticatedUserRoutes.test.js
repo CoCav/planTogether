@@ -1,3 +1,7 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockGetCurrentUserEvents = jest.fn();
 const mockGetCurrentUserProfile = jest.fn();
 const mockUpdateCurrentUserProfile = jest.fn();

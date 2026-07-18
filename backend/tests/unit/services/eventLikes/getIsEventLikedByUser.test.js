@@ -1,4 +1,12 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindEventLike = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../src/models/associations/eventLikeModel", () => ({
     name: "EventLike"
@@ -20,6 +28,10 @@ jest.mock("../../../../src/models/eventModel", () => ({
 jest.mock("../../../../src/utils/events/eventQueries", () => ({
     findEventByIdOrFail: jest.fn()
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const EventLike = require("../../../../src/models/associations/eventLikeModel");
 
@@ -56,13 +68,12 @@ describe("get event like state service", () => {
             ["undefined", undefined],
             ["null", null],
             ["zero", 0]
-        ])("returns false for a %s user ID",
-            async (_, userId) => {
-                const result =
-                    await getIsEventLikedByUser({
-                        eventId: 42,
-                        userId
-                    });
+        ])(
+            "returns false for a %s user ID", async (_, userId) => {
+                const result = await getIsEventLikedByUser({
+                    eventId: 42,
+                    userId
+                });
 
                 expect(result).toBe(false);
 
@@ -88,8 +99,8 @@ describe("get event like state service", () => {
             "no existing like",
             null,
             false
-        ]])("returns the correct state for %s",
-            async (_, like, expected) => {
+        ]])(
+            "returns the correct state for %s", async (_, like, expected) => {
                 mockFindEventLike.mockResolvedValue(like);
 
                 const result = await getIsEventLikedByUser({
@@ -99,13 +110,10 @@ describe("get event like state service", () => {
 
                 expect(mockFindEventLike).toHaveBeenCalledTimes(1);
 
-                expect(mockFindEventLike).toHaveBeenCalledWith(
-                    EventLike,
-                    {
-                        eventId: 42,
-                        userId: 10
-                    }
-                );
+                expect(mockFindEventLike).toHaveBeenCalledWith(EventLike, {
+                    eventId: 42,
+                    userId: 10
+                });
 
                 expect(result).toBe(expected);
             }

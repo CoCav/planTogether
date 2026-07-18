@@ -35,10 +35,7 @@ describe("pagination utility", () => {
 
     describe("getPaginationOptions", () => {
         it("returns default pagination and sorting values", () => {
-            const result = getPaginationOptions(
-                {},
-                allowedSortFields
-            );
+            const result = getPaginationOptions({}, allowedSortFields);
 
             expect(result).toEqual({
                 page: 1,
@@ -51,11 +48,10 @@ describe("pagination utility", () => {
         });
 
         it("parses page and page size values", () => {
-            const result = getPaginationOptions(
-                {
-                    page: "2",
-                    pageSize: "20"
-                },
+            const result = getPaginationOptions({
+                page: "2",
+                pageSize: "20"
+            },
                 allowedSortFields
             );
 
@@ -68,10 +64,9 @@ describe("pagination utility", () => {
         });
 
         it("caps page size at the configured maximum", () => {
-            const result = getPaginationOptions(
-                {
-                    pageSize: "500"
-                },
+            const result = getPaginationOptions({
+                pageSize: "500"
+            },
                 allowedSortFields
             );
 
@@ -80,11 +75,10 @@ describe("pagination utility", () => {
         });
 
         it("falls back to default pagination values for invalid numbers", () => {
-            const result = getPaginationOptions(
-                {
-                    page: "invalid",
-                    pageSize: "invalid"
-                },
+            const result = getPaginationOptions({
+                page: "invalid",
+                pageSize: "invalid"
+            },
                 allowedSortFields
             );
 
@@ -97,10 +91,9 @@ describe("pagination utility", () => {
         });
 
         it("normalizes pages below one to the first page", () => {
-            const result = getPaginationOptions(
-                {
-                    page: "-5"
-                },
+            const result = getPaginationOptions({
+                page: "-5"
+            },
                 allowedSortFields
             );
 
@@ -109,10 +102,9 @@ describe("pagination utility", () => {
         });
 
         it("uses an allowed sort field", () => {
-            const result = getPaginationOptions(
-                {
-                    sortBy: "title"
-                },
+            const result = getPaginationOptions({
+                sortBy: "title"
+            },
                 allowedSortFields
             );
 
@@ -120,10 +112,9 @@ describe("pagination utility", () => {
         });
 
         it("falls back to the default sort field when unsupported", () => {
-            const result = getPaginationOptions(
-                {
-                    sortBy: "invalidField"
-                },
+            const result = getPaginationOptions({
+                sortBy: "invalidField"
+            },
                 allowedSortFields
             );
 
@@ -131,8 +122,7 @@ describe("pagination utility", () => {
         });
 
         it("uses a custom default sort field and order", () => {
-            const result = getPaginationOptions(
-                {},
+            const result = getPaginationOptions({},
                 ["startDateTime"],
                 "startDateTime",
                 "ASC"
@@ -143,10 +133,9 @@ describe("pagination utility", () => {
         });
 
         it("normalizes ascending sort order", () => {
-            const result = getPaginationOptions(
-                {
-                    order: "ASC"
-                },
+            const result = getPaginationOptions({
+                order: "ASC"
+            },
                 allowedSortFields
             );
 
@@ -158,12 +147,9 @@ describe("pagination utility", () => {
             "DESC",
             "invalid",
             ""
-        ])("normalizes %s to descending order",
-            (order) => {
-                const result = getPaginationOptions(
-                    { order },
-                    allowedSortFields
-                );
+        ])(
+            "normalizes %s to descending order", (order) => {
+                const result = getPaginationOptions({ order }, allowedSortFields);
 
                 expect(result.orderDirection).toBe("DESC");
             }

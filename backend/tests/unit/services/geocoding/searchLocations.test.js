@@ -1,9 +1,17 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockNormalizeString = jest.fn();
 const mockNormalizeSearchKey = jest.fn();
 
 const mockBuildNominatimSearchParams = jest.fn();
 const mockBuildLocationSearchQueries = jest.fn();
 const mockNormalizeLocation = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../src/models/locationModel", () => ({
     findAll: jest.fn(),
@@ -35,6 +43,10 @@ jest.mock("../../../../src/utils/geocoding/geocodingNormalizer", () => ({
     normalizeLocation: mockNormalizeLocation
 }));
 
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const Location = require("../../../../src/models/locationModel");
 
 const { searchLocations } = require("../../../../src/services/geocodingService");
@@ -59,11 +71,7 @@ const { searchLocations } = require("../../../../src/services/geocodingService")
    - Event location selection is tested separately.
 =========================================================================== */
 
-const createProviderResponse = ({
-    ok = true,
-    status = 200,
-    results = []
-} = {}) => ({
+const createProviderResponse = ({ ok = true, status = 200, results = [] } = {}) => ({
     ok,
     status,
     json: jest.fn().mockResolvedValue(results)
@@ -90,8 +98,7 @@ describe("search locations service", () => {
         mockBuildLocationSearchQueries.mockImplementation((query) => [query]);
 
         mockBuildNominatimSearchParams.mockImplementation((query) => ({
-            toString: () =>
-                `q=${encodeURIComponent(query)}`
+            toString: () => `q=${encodeURIComponent(query)}`
         }));
 
         mockNormalizeLocation.mockImplementation(
@@ -124,8 +131,8 @@ describe("search locations service", () => {
             ["null", null],
             ["empty string", ""],
             ["whitespace", "   "]
-        ])("throws a 400 error for an %s query",
-            async (_, query) => {
+        ])(
+            "throws a 400 error for an %s query", async (_, query) => {
                 await expect(searchLocations(query)).rejects.toMatchObject({
                     message: "Location query is required",
                     statusCode: 400
@@ -155,12 +162,9 @@ describe("search locations service", () => {
 
             Location.findAll.mockResolvedValue(cachedLocations);
 
-            const result = await searchLocations(
-                "  Montreal  "
-            );
+            const result = await searchLocations("  Montreal  ");
 
             expect(mockNormalizeString).toHaveBeenCalledWith("  Montreal  ");
-
             expect(mockNormalizeSearchKey).toHaveBeenCalledWith("Montreal");
 
             expect(Location.findAll).toHaveBeenCalledWith({
@@ -229,9 +233,7 @@ describe("search locations service", () => {
                 true
             ]);
 
-            const result = await searchLocations(
-                "Montreal"
-            );
+            const result = await searchLocations("Montreal");
 
             expect(global.fetch).toHaveBeenCalledTimes(1);
 
@@ -282,20 +284,15 @@ describe("search locations service", () => {
 
             await searchLocations("Montreal");
 
-            expect(
-                mockBuildNominatimSearchParams
-            ).toHaveBeenCalledWith("Montreal");
+            expect(mockBuildNominatimSearchParams).toHaveBeenCalledWith("Montreal");
 
-            expect(global.fetch).toHaveBeenCalledWith(
-                "https://nominatim.example.com/search?q=Montreal",
-                {
-                    headers: {
-                        Accept: "application/json",
-                        "User-Agent":
-                            "PlanTogether Test"
-                    }
+            expect(global.fetch).toHaveBeenCalledWith("https://nominatim.example.com/search?q=Montreal", {
+                headers: {
+                    Accept: "application/json",
+                    "User-Agent":
+                        "PlanTogether Test"
                 }
-            );
+            });
         });
 
         it("tries fallback queries until locations are found", async () => {
@@ -343,16 +340,11 @@ describe("search locations service", () => {
                 true
             ]);
 
-            const result = await searchLocations(
-                "123 Main Street Montreal"
-            );
+            const result = await searchLocations("123 Main Street Montreal");
 
             expect(global.fetch).toHaveBeenCalledTimes(2);
 
-            expect(mockNormalizeLocation).toHaveBeenCalledWith(
-                "123 Main Street Montreal",
-                providerResult
-            );
+            expect(mockNormalizeLocation).toHaveBeenCalledWith("123 Main Street Montreal", providerResult);
 
             expect(result).toEqual([
                 normalizedLocation
@@ -515,36 +507,28 @@ describe("search locations service", () => {
                     false
                 ]);
 
-            const result = await searchLocations(
-                "Montreal"
-            );
+            const result = await searchLocations("Montreal");
 
-            expect(Location.findOrCreate).toHaveBeenNthCalledWith(
-                1,
-                {
-                    where: {
-                        query: "montreal",
-                        provider: "nominatim",
-                        latitude: 45.5,
-                        longitude: -73.5
-                    },
-                    defaults: newLocation
-                }
-            );
+            expect(Location.findOrCreate).toHaveBeenNthCalledWith(1, {
+                where: {
+                    query: "montreal",
+                    provider: "nominatim",
+                    latitude: 45.5,
+                    longitude: -73.5
+                },
+                defaults: newLocation
+            });
 
-            expect(Location.findOrCreate).toHaveBeenNthCalledWith(
-                2,
-                {
-                    where: {
-                        query: "montreal",
-                        provider: "nominatim",
-                        latitude: 45.6,
-                        longitude: -73.4
-                    },
-                    defaults:
-                        refreshedLocationData
-                }
-            );
+            expect(Location.findOrCreate).toHaveBeenNthCalledWith(2, {
+                where: {
+                    query: "montreal",
+                    provider: "nominatim",
+                    latitude: 45.6,
+                    longitude: -73.4
+                },
+                defaults:
+                    refreshedLocationData
+            });
 
             expect(existingLocation.update).toHaveBeenCalledWith({
                 label: "Montreal East",

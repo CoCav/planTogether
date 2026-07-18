@@ -1,3 +1,17 @@
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../src/services/authService");
+
+jest.mock("../../../src/utils/users/authenticated/authenticatedUserFormatter", () => ({
+    formatAuthenticatedUser: jest.fn()
+}));
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const authService = require("../../../src/services/authService");
 
 const { formatAuthenticatedUser } = require("../../../src/utils/users/authenticated/authenticatedUserFormatter");
@@ -30,19 +44,6 @@ const { createMockUser } = require("../../factories/userFactory");
    - Business logic is tested separately in authService tests.
 =========================================================================== */
 
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("../../../src/services/authService");
-
-jest.mock(
-    "../../../src/utils/users/authenticated/authenticatedUserFormatter",
-    () => ({
-        formatAuthenticatedUser: jest.fn()
-    })
-);
-
 describe("auth controller", () => {
     const formattedUser = {
         userId: 1,
@@ -72,8 +73,8 @@ describe("auth controller", () => {
                 filename: "avatar-test.png"
             },
             "/uploads/avatars/avatar-test.png"
-        ]])("registers a user %s",
-            async (_, file, expectedAvatar) => {
+        ]])(
+            "registers a user %s", async (_, file, expectedAvatar) => {
                 const { req, res, next } = createAuthControllerMocks({
                     body: {
                         name: "John Doe",

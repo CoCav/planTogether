@@ -1,4 +1,6 @@
-const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
+/* =============================
+   MOCK FUNCTIONS
+============================= */
 
 const mockCreateEvent = jest.fn();
 const mockGetAllEvents = jest.fn();
@@ -91,6 +93,8 @@ jest.mock("../../../src/validators/eventValidator", () => ({
 /* =============================
    TEST IMPORTS
 ============================= */
+
+const { EVENT_ROLES } = require("../../../src/constants/eventRoles");
 
 const {
     createEventValidator,

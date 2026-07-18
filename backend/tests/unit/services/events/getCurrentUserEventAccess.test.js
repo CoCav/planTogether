@@ -1,7 +1,15 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindEventByIdOrFail = jest.fn();
 const mockFindActiveMembership = jest.fn();
 const mockGetEventStatus = jest.fn();
 const mockHasEventStarted = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../src/models/eventModel", () => ({
     name: "Event"
@@ -91,6 +99,10 @@ jest.mock("../../../../src/utils/pagination", () => ({
     getTotalPages: jest.fn()
 }));
 
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const Event = require("../../../../src/models/eventModel");
 const EventUserRole = require("../../../../src/models/associations/eventUserRoleModel");
 
@@ -155,30 +167,18 @@ describe("get current user event access service", () => {
                 })
             );
 
-            const result = await getCurrentUserEventAccess(
-                1,
-                10
-            );
+            const result = await getCurrentUserEventAccess(1, 10);
 
             expect(mockFindEventByIdOrFail).toHaveBeenCalledTimes(1);
-
-            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(
-                Event,
-                1
-            );
+            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(Event, 1);
 
             expect(mockFindActiveMembership).toHaveBeenCalledTimes(1);
-
-            expect(mockFindActiveMembership).toHaveBeenCalledWith(
-                EventUserRole,
-                {
-                    eventId: 1,
-                    userId: 10
-                }
-            );
+            expect(mockFindActiveMembership).toHaveBeenCalledWith(EventUserRole, {
+                eventId: 1,
+                userId: 10
+            });
 
             expect(mockGetEventStatus).toHaveBeenCalledWith(event);
-
             expect(mockHasEventStarted).toHaveBeenCalledWith(event);
 
             expect(result).toEqual({
@@ -200,10 +200,7 @@ describe("get current user event access service", () => {
 
             mockHasEventStarted.mockReturnValue(true);
 
-            const result = await getCurrentUserEventAccess(
-                1,
-                10
-            );
+            const result = await getCurrentUserEventAccess(1, 10);
 
             expect(result).toEqual({
                 role: EVENT_ROLES.ORGANIZER,
@@ -228,10 +225,7 @@ describe("get current user event access service", () => {
                 })
             );
 
-            const result = await getCurrentUserEventAccess(
-                1,
-                20
-            );
+            const result = await getCurrentUserEventAccess(1, 20);
 
             expect(result).toEqual({
                 role: EVENT_ROLES.CO_ORGANIZER,
@@ -256,10 +250,7 @@ describe("get current user event access service", () => {
                 })
             );
 
-            const result = await getCurrentUserEventAccess(
-                1,
-                30
-            );
+            const result = await getCurrentUserEventAccess(1, 30);
 
             expect(result).toEqual({
                 role: EVENT_ROLES.PARTICIPANT,
@@ -276,10 +267,7 @@ describe("get current user event access service", () => {
 
     describe("Non-member access", () => {
         it("returns a null role without edit or delete access", async () => {
-            const result = await getCurrentUserEventAccess(
-                1,
-                40
-            );
+            const result = await getCurrentUserEventAccess(1, 40);
 
             expect(result).toEqual({
                 role: null,
@@ -301,8 +289,8 @@ describe("get current user event access service", () => {
         ], [
             "co-organizer",
             EVENT_ROLES.CO_ORGANIZER
-        ]])("disables edit and delete access for an %s",
-            async (_, role) => {
+        ]])(
+            "disables edit and delete access for an %s", async (_, role) => {
                 mockFindActiveMembership.mockResolvedValue(
                     createMockMembership({
                         eventId: 1,
@@ -313,10 +301,7 @@ describe("get current user event access service", () => {
 
                 mockGetEventStatus.mockReturnValue(EVENT_STATUS.PAST);
 
-                const result = await getCurrentUserEventAccess(
-                    1,
-                    10
-                );
+                const result = await getCurrentUserEventAccess(1, 10);
 
                 expect(result).toEqual({
                     role,
@@ -334,19 +319,13 @@ describe("get current user event access service", () => {
 
     describe("Event validation", () => {
         it("stops when the event does not exist", async () => {
-            const error = Object.assign(
-                new Error("Event not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("Event not found"), {
+                statusCode: 404
+            });
 
             mockFindEventByIdOrFail.mockRejectedValue(error);
 
-            await expect(getCurrentUserEventAccess(
-                999,
-                10
-            )).rejects.toBe(error);
+            await expect(getCurrentUserEventAccess(999, 10)).rejects.toBe(error);
 
             expect(mockFindActiveMembership).not.toHaveBeenCalled();
 
@@ -366,10 +345,7 @@ describe("get current user event access service", () => {
 
             mockFindActiveMembership.mockRejectedValue(error);
 
-            await expect(getCurrentUserEventAccess(
-                1,
-                10
-            )).rejects.toBe(error);
+            await expect(getCurrentUserEventAccess(1, 10)).rejects.toBe(error);
 
             expect(mockGetEventStatus).not.toHaveBeenCalled();
 

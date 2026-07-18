@@ -1,3 +1,7 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockResolveEventLocation = jest.fn();
 const mockNormalizeString = jest.fn();
 
@@ -5,6 +9,10 @@ const mockFindEventByIdOrFail = jest.fn();
 const mockAssertEventNotPast = jest.fn();
 const mockBuildUpdateEventPayload = jest.fn();
 const mockDeleteUploadedFile = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../src/config/database", () => ({
     transaction: jest.fn()
@@ -94,6 +102,10 @@ jest.mock("../../../../src/utils/pagination", () => ({
     getTotalCount: jest.fn(),
     getTotalPages: jest.fn()
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const sequelize = require("../../../../src/config/database");
 
@@ -195,35 +207,21 @@ describe("update event service", () => {
 
             mockBuildUpdateEventPayload.mockReturnValue(updatedData);
 
-            const result = await updateEventById(
-                1,
-                data
-            );
+            const result = await updateEventById(1, data);
 
             expect(sequelize.transaction).toHaveBeenCalledTimes(1);
 
-            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(
-                Event,
-                1,
-                {
-                    transaction
-                }
-            );
+            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(Event, 1, {
+                transaction
+            });
 
             expect(mockAssertEventNotPast).toHaveBeenCalledWith(event);
 
-            expect(mockBuildUpdateEventPayload).toHaveBeenCalledWith(
-                event,
-                data,
-                null
-            );
+            expect(mockBuildUpdateEventPayload).toHaveBeenCalledWith(event, data, null);
 
-            expect(event.update).toHaveBeenCalledWith(
-                updatedData,
-                {
-                    transaction
-                }
-            );
+            expect(event.update).toHaveBeenCalledWith(updatedData, {
+                transaction
+            });
 
             expect(transaction.commit).toHaveBeenCalledTimes(1);
 
@@ -245,11 +243,7 @@ describe("update event service", () => {
 
             expect(mockResolveEventLocation).not.toHaveBeenCalled();
 
-            expect(mockBuildUpdateEventPayload).toHaveBeenCalledWith(
-                event,
-                data,
-                null
-            );
+            expect(mockBuildUpdateEventPayload).toHaveBeenCalledWith(event, data, null);
         });
     });
 
@@ -280,8 +274,8 @@ describe("update event service", () => {
             {
                 endDateTime: "2026-12-20T09:00:00.000Z"
             }
-        ]])("throws a 400 error when %s",
-            async (_, data) => {
+        ]])(
+            "throws a 400 error when %s", async (_, data) => {
                 await expect(
                     updateEventById(1, data)
                 ).rejects.toMatchObject({
@@ -313,15 +307,11 @@ describe("update event service", () => {
                 endDateTime:
                     "2026-12-20T13:00:00.000Z"
             }
-        ]])("accepts a valid update containing %s",
-            async (_, data) => {
+        ]])(
+            "accepts a valid update containing %s", async (_, data) => {
                 await updateEventById(1, data);
 
-                expect(mockBuildUpdateEventPayload).toHaveBeenCalledWith(
-                    event,
-                    data,
-                    null
-                );
+                expect(mockBuildUpdateEventPayload).toHaveBeenCalledWith(event, data, null);
 
                 expect(event.update).toHaveBeenCalledTimes(1);
 
@@ -354,21 +344,13 @@ describe("update event service", () => {
             expect(mockNormalizeString).toHaveBeenCalledWith("Quebec City");
 
             expect(mockResolveEventLocation).toHaveBeenCalledTimes(1);
-
             expect(mockResolveEventLocation).toHaveBeenCalledWith("Quebec City");
 
-            expect(mockBuildUpdateEventPayload).toHaveBeenCalledWith(
-                event,
-                data,
-                locationData
-            );
+            expect(mockBuildUpdateEventPayload).toHaveBeenCalledWith(event, data, locationData);
 
-            expect(event.update).toHaveBeenCalledWith(
-                updatedData,
-                {
-                    transaction
-                }
-            );
+            expect(event.update).toHaveBeenCalledWith(updatedData, {
+                transaction
+            });
         });
 
         it("throws a 400 error for a blank in-person location", async () => {
@@ -420,18 +402,11 @@ describe("update event service", () => {
 
             expect(mockResolveEventLocation).not.toHaveBeenCalled();
 
-            expect(mockBuildUpdateEventPayload).toHaveBeenCalledWith(
-                event,
-                data,
-                null
-            );
+            expect(mockBuildUpdateEventPayload).toHaveBeenCalledWith(event, data, null);
 
-            expect(event.update).toHaveBeenCalledWith(
-                updatedData,
-                {
-                    transaction
-                }
-            );
+            expect(event.update).toHaveBeenCalledWith(updatedData, {
+                transaction
+            });
         });
 
         it("does not geocode an explicitly supplied location when the next mode is online", async () => {
@@ -444,11 +419,7 @@ describe("update event service", () => {
 
             expect(mockResolveEventLocation).not.toHaveBeenCalled();
 
-            expect(mockBuildUpdateEventPayload).toHaveBeenCalledWith(
-                event,
-                data,
-                null
-            );
+            expect(mockBuildUpdateEventPayload).toHaveBeenCalledWith(event, data, null);
         });
 
         it("propagates geocoding errors and rolls back", async () => {
@@ -492,9 +463,7 @@ describe("update event service", () => {
 
             expect(mockDeleteUploadedFile).toHaveBeenCalledWith("/uploads/events/old-event.png");
 
-            expect(transaction.commit.mock.invocationCallOrder[0]).toBeLessThan(
-                mockDeleteUploadedFile.mock.invocationCallOrder[0]
-            );
+            expect(transaction.commit.mock.invocationCallOrder[0]).toBeLessThan(mockDeleteUploadedFile.mock.invocationCallOrder[0]);
         });
 
         it("deletes the previous image after explicit image removal", async () => {
@@ -543,12 +512,9 @@ describe("update event service", () => {
 
     describe("Event validation", () => {
         it("rolls back when the event does not exist", async () => {
-            const error = Object.assign(
-                new Error("Event not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("Event not found"), {
+                statusCode: 404
+            });
 
             mockFindEventByIdOrFail.mockRejectedValue(error);
 
@@ -566,12 +532,9 @@ describe("update event service", () => {
         });
 
         it("rolls back when the event is past", async () => {
-            const error = Object.assign(
-                new Error("No action is allowed on a past event"),
-                {
-                    statusCode: 403
-                }
-            );
+            const error = Object.assign(new Error("No action is allowed on a past event"), {
+                statusCode: 403
+            });
 
             mockAssertEventNotPast.mockImplementation(() => {
                 throw error;

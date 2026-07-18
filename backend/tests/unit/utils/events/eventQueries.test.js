@@ -38,15 +38,9 @@ describe("event query utility", () => {
 
             Event.findByPk.mockResolvedValue(event);
 
-            const result = await findEventByIdOrFail(
-                Event,
-                10
-            );
+            const result = await findEventByIdOrFail(Event, 10);
 
-            expect(Event.findByPk).toHaveBeenCalledWith(
-                10,
-                {}
-            );
+            expect(Event.findByPk).toHaveBeenCalledWith(10, {});
 
             expect(result).toBe(event);
         });
@@ -69,16 +63,9 @@ describe("event query utility", () => {
 
             Event.findByPk.mockResolvedValue(event);
 
-            const result = await findEventByIdOrFail(
-                Event,
-                10,
-                options
-            );
+            const result = await findEventByIdOrFail(Event, 10, options);
 
-            expect(Event.findByPk).toHaveBeenCalledWith(
-                10,
-                options
-            );
+            expect(Event.findByPk).toHaveBeenCalledWith(10, options);
 
             expect(result).toBe(event);
         });
@@ -101,24 +88,17 @@ describe("event query utility", () => {
         it("queries the requested event before throwing", async () => {
             Event.findByPk.mockResolvedValue(null);
 
-            await expect(findEventByIdOrFail(
-                Event,
-                999,
-                {
-                    transaction: {
-                        id: "transaction"
-                    }
+            await expect(findEventByIdOrFail(Event, 999, {
+                transaction: {
+                    id: "transaction"
                 }
-            )).rejects.toThrow("Event not found");
+            })).rejects.toThrow("Event not found");
 
-            expect(Event.findByPk).toHaveBeenCalledWith(
-                999,
-                {
-                    transaction: {
-                        id: "transaction"
-                    }
+            expect(Event.findByPk).toHaveBeenCalledWith(999, {
+                transaction: {
+                    id: "transaction"
                 }
-            );
+            });
         });
     });
 });

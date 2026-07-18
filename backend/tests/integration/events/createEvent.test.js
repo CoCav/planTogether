@@ -52,13 +52,10 @@ describe("Create Event API", () => {
                 email: `eventcreator${Date.now()}@test.com`
             });
 
-            const response = await createEventAsAuthenticatedUser(
-                organizerAuth.headers,
-                {
-                    title: "Tech Meetup",
-                    description: "A technology meetup"
-                }
-            );
+            const response = await createEventAsAuthenticatedUser(organizerAuth.headers, {
+                title: "Tech Meetup",
+                description: "A technology meetup"
+            });
 
             expect(response.statusCode).toBe(201);
             expect(response.body).toHaveProperty("message", "Event created successfully");
@@ -89,18 +86,14 @@ describe("Create Event API", () => {
                 email: `imagecreator${Date.now()}@test.com`
             });
 
-            const response = await createEventWithImage(
-                organizerAuth.headers,
-                {
-                    title: "Image Event",
-                    description: "Event with image"
-                },
-                {
-                    buffer: Buffer.from("fake image"),
-                    filename: "event.png",
-                    contentType: "image/png"
-                }
-            );
+            const response = await createEventWithImage(organizerAuth.headers, {
+                title: "Image Event",
+                description: "Event with image"
+            }, {
+                buffer: Buffer.from("fake image"),
+                filename: "event.png",
+                contentType: "image/png"
+            });
 
             expect(response.statusCode).toBe(201);
             expect(response.body).toHaveProperty("message", "Event created successfully");
@@ -113,14 +106,11 @@ describe("Create Event API", () => {
                 email: `geocreator${Date.now()}@test.com`
             });
 
-            const response = await createEventAsAuthenticatedUser(
-                organizerAuth.headers,
-                {
-                    title: "Geo Event",
-                    description: "Geocoded event",
-                    location: "Sherbrooke"
-                }
-            );
+            const response = await createEventAsAuthenticatedUser(organizerAuth.headers, {
+                title: "Geo Event",
+                description: "Geocoded event",
+                location: "Sherbrooke"
+            });
 
             expect(response.statusCode).toBe(201);
             expect(global.fetch).toHaveBeenCalledTimes(1);
@@ -133,16 +123,13 @@ describe("Create Event API", () => {
                 email: `onlinecreator${Date.now()}@test.com`
             });
 
-            const response = await createEventAsAuthenticatedUser(
-                organizerAuth.headers,
-                {
-                    title: "Online Event",
-                    description: "Remote event",
-                    type: "Workshop",
-                    mode: EVENT_MODES.ONLINE,
-                    location: undefined
-                }
-            );
+            const response = await createEventAsAuthenticatedUser(organizerAuth.headers, {
+                title: "Online Event",
+                description: "Remote event",
+                type: "Workshop",
+                mode: EVENT_MODES.ONLINE,
+                location: undefined
+            });
 
             expect(response.statusCode).toBe(201);
             expect(response.body).toHaveProperty("message", "Event created successfully");
@@ -168,13 +155,10 @@ describe("Create Event API", () => {
                 email: `organizercreator${Date.now()}@test.com`
             });
 
-            const response = await createEventAsAuthenticatedUser(
-                organizerAuth.headers,
-                {
-                    title: "Organizer Event",
-                    description: "Organizer test"
-                }
-            );
+            const response = await createEventAsAuthenticatedUser(organizerAuth.headers, {
+                title: "Organizer Event",
+                description: "Organizer test"
+            });
 
             const membership = await EventUserRole.findOne({
                 where: {
@@ -195,12 +179,9 @@ describe("Create Event API", () => {
 
     describe("Authentication errors", () => {
         it("rejects event creation without token", async () => {
-            const response = await createEventAsAuthenticatedUser(
-                undefined,
-                {
-                    title: "Unauthorized Event"
-                }
-            );
+            const response = await createEventAsAuthenticatedUser(undefined, {
+                title: "Unauthorized Event"
+            });
 
             expect(response.statusCode).toBe(401);
         });
@@ -217,16 +198,13 @@ describe("Create Event API", () => {
                 email: `validationeventuser${Date.now()}@test.com`
             });
 
-            const response = await createEventAsAuthenticatedUser(
-                organizerAuth.headers,
-                {
-                    title: "",
-                    description: "",
-                    type: "",
-                    theme: "",
-                    mode: ""
-                }
-            );
+            const response = await createEventAsAuthenticatedUser(organizerAuth.headers, {
+                title: "",
+                description: "",
+                type: "",
+                theme: "",
+                mode: ""
+            });
 
             expect(response.statusCode).toBe(400);
         });
@@ -237,14 +215,11 @@ describe("Create Event API", () => {
                 email: `invalidmodeuser${Date.now()}@test.com`
             });
 
-            const response = await createEventAsAuthenticatedUser(
-                organizerAuth.headers,
-                {
-                    title: "Invalid Mode Event",
-                    description: "Invalid mode",
-                    mode: "physical"
-                }
-            );
+            const response = await createEventAsAuthenticatedUser(organizerAuth.headers, {
+                title: "Invalid Mode Event",
+                description: "Invalid mode",
+                mode: "physical"
+            });
 
             expect(response.statusCode).toBe(400);
         });
@@ -255,15 +230,12 @@ describe("Create Event API", () => {
                 email: `invaliddateuser${Date.now()}@test.com`
             });
 
-            const response = await createEventAsAuthenticatedUser(
-                organizerAuth.headers,
-                {
-                    title: "Invalid Dates Event",
-                    description: "Bad dates",
-                    startDateTime: "2026-12-31T12:00:00.000Z",
-                    endDateTime: "2026-12-31T10:00:00.000Z"
-                }
-            );
+            const response = await createEventAsAuthenticatedUser(organizerAuth.headers, {
+                title: "Invalid Dates Event",
+                description: "Bad dates",
+                startDateTime: "2026-12-31T12:00:00.000Z",
+                endDateTime: "2026-12-31T10:00:00.000Z"
+            });
 
             expect(response.statusCode).toBe(400);
         });
@@ -274,14 +246,11 @@ describe("Create Event API", () => {
                 email: `deadlineuser${Date.now()}@test.com`
             });
 
-            const response = await createEventAsAuthenticatedUser(
-                organizerAuth.headers,
-                {
-                    title: "Deadline Event",
-                    description: "Deadline validation",
-                    registrationDeadline: "2026-12-31T11:00:00.000Z"
-                }
-            );
+            const response = await createEventAsAuthenticatedUser(organizerAuth.headers, {
+                title: "Deadline Event",
+                description: "Deadline validation",
+                registrationDeadline: "2026-12-31T11:00:00.000Z"
+            });
 
             expect(response.statusCode).toBe(400);
         });
@@ -298,13 +267,10 @@ describe("Create Event API", () => {
                 email: `invalidimageuser${Date.now()}@test.com`
             });
 
-            const response = await createMultipartEventRequest(
-                organizerAuth.headers,
-                {
-                    title: "Invalid Image Event",
-                    description: "Invalid image"
-                }
-            ).attach("image", Buffer.from("fake pdf"), {
+            const response = await createMultipartEventRequest(organizerAuth.headers, {
+                title: "Invalid Image Event",
+                description: "Invalid image"
+            }).attach("image", Buffer.from("fake pdf"), {
                 filename: "document.pdf",
                 contentType: "application/pdf"
             });
@@ -318,13 +284,10 @@ describe("Create Event API", () => {
                 email: `invalidextensionuser${Date.now()}@test.com`
             });
 
-            const response = await createMultipartEventRequest(
-                organizerAuth.headers,
-                {
-                    title: "Invalid Extension Event",
-                    description: "Invalid extension"
-                }
-            ).attach("image", Buffer.from("fake image"), {
+            const response = await createMultipartEventRequest(organizerAuth.headers, {
+                title: "Invalid Extension Event",
+                description: "Invalid extension"
+            }).attach("image", Buffer.from("fake image"), {
                 filename: "image.txt",
                 contentType: "image/png"
             });
@@ -340,13 +303,10 @@ describe("Create Event API", () => {
 
             const oversizedBuffer = Buffer.alloc(4 * 1024 * 1024);
 
-            const response = await createMultipartEventRequest(
-                organizerAuth.headers,
-                {
-                    title: "Oversized Image Event",
-                    description: "Oversized upload"
-                }
-            ).attach("image", oversizedBuffer, {
+            const response = await createMultipartEventRequest(organizerAuth.headers, {
+                title: "Oversized Image Event",
+                description: "Oversized upload"
+            }).attach("image", oversizedBuffer, {
                 filename: "huge.png",
                 contentType: "image/png"
             });

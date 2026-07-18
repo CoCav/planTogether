@@ -1,3 +1,13 @@
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("jsonwebtoken");
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const jwt = require("jsonwebtoken");
 
 const { authenticateToken } = require("../../../../src/middlewares/auth/authenticateToken");
@@ -24,12 +34,6 @@ const {
    - Authentication failures are forwarded to next().
 =========================================================================== */
 
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("jsonwebtoken");
-
 describe("authenticateToken middleware", () => {
     const originalJwtSecret = process.env.JWT_SECRET;
 
@@ -38,13 +42,11 @@ describe("authenticateToken middleware", () => {
     let next;
 
     beforeEach(() => {
-        const mocks = createMockReqResNext();
-
-        req = {
-            ...mocks.req,
+        const mocks = createMockReqResNext({
             headers: {}
-        };
+        });
 
+        req = mocks.req;
         res = mocks.res;
         next = mocks.next;
 
@@ -190,10 +192,7 @@ describe("authenticateToken middleware", () => {
 
             jwt.verify.mockImplementation(
                 (token, secret, callback) => {
-                    callback(
-                        new Error("Invalid token"),
-                        null
-                    );
+                    callback(new Error("Invalid token"), null);
                 }
             );
 

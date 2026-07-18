@@ -53,10 +53,7 @@ describe("Like Event API", () => {
                 email: `eventliker${Date.now()}@test.com`
             });
 
-            const response = await likeEvent(
-                event.id,
-                likerAuth.headers
-            );
+            const response = await likeEvent(event.id, likerAuth.headers);
 
             expect(response.statusCode).toBe(201);
 
@@ -103,10 +100,7 @@ describe("Like Event API", () => {
 
             await likeEvent(event.id, likerAuthA.headers);
 
-            const response = await likeEvent(
-                event.id,
-                likerAuthB.headers
-            );
+            const response = await likeEvent(event.id, likerAuthB.headers);
 
             expect(response.statusCode).toBe(201);
             expect(Number(response.body.likesCount)).toBe(2);
@@ -137,10 +131,7 @@ describe("Like Event API", () => {
 
             await likeEvent(event.id, likerAuth.headers);
 
-            const response = await likeEvent(
-                event.id,
-                likerAuth.headers
-            );
+            const response = await likeEvent(event.id, likerAuth.headers);
 
             expect(response.statusCode).toBe(409);
         });
@@ -179,10 +170,7 @@ describe("Like Event API", () => {
                 email: `invalidlike${Date.now()}@test.com`
             });
 
-            const response = await likeEvent(
-                "abc",
-                likerAuth.headers
-            );
+            const response = await likeEvent("abc", likerAuth.headers);
 
             expect(response.statusCode).toBe(400);
         });
@@ -199,10 +187,7 @@ describe("Like Event API", () => {
                 email: `missingeventliker${Date.now()}@test.com`
             });
 
-            const response = await likeEvent(
-                999999,
-                likerAuth.headers
-            );
+            const response = await likeEvent(999999, likerAuth.headers);
 
             expect(response.statusCode).toBe(404);
         });

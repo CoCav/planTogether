@@ -39,9 +39,10 @@ describe("event status utility", () => {
             ["null event", null],
             ["undefined event", undefined],
             ["missing start date", { id: 1 }]
-        ])("returns false for %s", (_, event) => {
-            expect(hasEventStarted(event)).toBe(false);
-        });
+        ])(
+            "returns false for %s", (_, event) => {
+                expect(hasEventStarted(event)).toBe(false);
+            });
 
         it("returns true when the event started before now", () => {
             expect(hasEventStarted({
@@ -71,9 +72,10 @@ describe("event status utility", () => {
             ["null event", null],
             ["undefined event", undefined],
             ["missing end date", { id: 1 }]
-        ])("returns false for %s", (_, event) => {
-            expect(isEventPast(event)).toBe(false);
-        });
+        ])(
+            "returns false for %s", (_, event) => {
+                expect(isEventPast(event)).toBe(false);
+            });
 
         it("returns true when the event ended before now", () => {
             expect(isEventPast({

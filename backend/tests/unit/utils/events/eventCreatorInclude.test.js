@@ -41,30 +41,21 @@ describe("event creator include utility", () => {
         });
 
         it("does not add filtering options when creator is omitted", () => {
-            const result = buildEventCreatorInclude(
-                User,
-                undefined
-            );
+            const result = buildEventCreatorInclude(User, undefined);
 
             expect(result).not.toHaveProperty("where");
             expect(result).not.toHaveProperty("required");
         });
 
         it("does not add filtering options for an empty creator value", () => {
-            const result = buildEventCreatorInclude(
-                User,
-                ""
-            );
+            const result = buildEventCreatorInclude(User, "");
 
             expect(result).not.toHaveProperty("where");
             expect(result).not.toHaveProperty("required");
         });
 
         it("does not add filtering options for a whitespace-only creator value", () => {
-            const result = buildEventCreatorInclude(
-                User,
-                "   "
-            );
+            const result = buildEventCreatorInclude(User, "   ");
 
             expect(result).not.toHaveProperty("where");
             expect(result).not.toHaveProperty("required");
@@ -77,10 +68,7 @@ describe("event creator include utility", () => {
 
     describe("buildEventCreatorInclude with filter", () => {
         it("builds a case-insensitive partial creator name filter", () => {
-            const result = buildEventCreatorInclude(
-                User,
-                "Jane"
-            );
+            const result = buildEventCreatorInclude(User, "Jane");
 
             expect(result).toEqual({
                 model: User,
@@ -96,10 +84,7 @@ describe("event creator include utility", () => {
         });
 
         it("trims the creator name before building the filter", () => {
-            const result = buildEventCreatorInclude(
-                User,
-                "  Jane Doe  "
-            );
+            const result = buildEventCreatorInclude(User, "  Jane Doe  ");
 
             expect(result.where).toEqual({
                 name: {
@@ -111,10 +96,7 @@ describe("event creator include utility", () => {
         });
 
         it("converts non-string creator values before trimming", () => {
-            const result = buildEventCreatorInclude(
-                User,
-                42
-            );
+            const result = buildEventCreatorInclude(User, 42);
 
             expect(result.where).toEqual({
                 name: {

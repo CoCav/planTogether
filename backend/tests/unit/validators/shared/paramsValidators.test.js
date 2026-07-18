@@ -37,38 +37,26 @@ describe("shared param validators", () => {
 
     describe("createPositiveIntegerParamValidator", () => {
         it("builds a validator for the requested parameter", async () => {
-            const validators = createPositiveIntegerParamValidator(
-                "resourceId",
-                "Resource ID must be a positive integer"
-            );
+            const validators = createPositiveIntegerParamValidator("resourceId", "Resource ID must be a positive integer");
 
-            const { errors, req } = await runValidation(
-                validators,
-                {
-                    params: {
-                        resourceId: "12"
-                    }
+            const { errors, req } = await runValidation(validators, {
+                params: {
+                    resourceId: "12"
                 }
-            );
+            });
 
             expect(errors).toHaveLength(0);
             expect(req.params.resourceId).toBe(12);
         });
 
         it("uses the provided validation message", async () => {
-            const validators = createPositiveIntegerParamValidator(
-                "resourceId",
-                "Resource ID must be a positive integer"
-            );
+            const validators = createPositiveIntegerParamValidator("resourceId", "Resource ID must be a positive integer");
 
-            const { errors } = await runValidation(
-                validators,
-                {
-                    params: {
-                        resourceId: "invalid"
-                    }
+            const { errors } = await runValidation(validators, {
+                params: {
+                    resourceId: "invalid"
                 }
-            );
+            });
 
             expect(getValidationMessages(errors)).toContain("Resource ID must be a positive integer");
         });
@@ -80,14 +68,11 @@ describe("shared param validators", () => {
 
     describe("eventIdParamValidator", () => {
         it("accepts and converts a positive event ID", async () => {
-            const { errors, req } = await runValidation(
-                eventIdParamValidator,
-                {
-                    params: {
-                        eventId: "5"
-                    }
+            const { errors, req } = await runValidation(eventIdParamValidator, {
+                params: {
+                    eventId: "5"
                 }
-            );
+            });
 
             expect(errors).toHaveLength(0);
             expect(req.params.eventId).toBe(5);
@@ -98,20 +83,18 @@ describe("shared param validators", () => {
             ["negative", "-1"],
             ["non-numeric", "abc"],
             ["missing", undefined]
-        ])("rejects a %s event ID", async (_, eventId) => {
-            const params = {};
+        ])(
+            "rejects a %s event ID", async (_, eventId) => {
+                const params = {};
 
-            if (eventId !== undefined) {
-                params.eventId = eventId;
-            }
+                if (eventId !== undefined) {
+                    params.eventId = eventId;
+                }
 
-            const { errors } = await runValidation(
-                eventIdParamValidator,
-                { params }
-            );
+                const { errors } = await runValidation(eventIdParamValidator, { params });
 
-            expect(getValidationMessages(errors)).toContain("Event ID must be a positive integer");
-        });
+                expect(getValidationMessages(errors)).toContain("Event ID must be a positive integer");
+            });
     });
 
     /* =============================
@@ -120,28 +103,22 @@ describe("shared param validators", () => {
 
     describe("userIdParamValidator", () => {
         it("accepts and converts a positive user ID", async () => {
-            const { errors, req } = await runValidation(
-                userIdParamValidator,
-                {
-                    params: {
-                        userId: "7"
-                    }
+            const { errors, req } = await runValidation(userIdParamValidator, {
+                params: {
+                    userId: "7"
                 }
-            );
+            });
 
             expect(errors).toHaveLength(0);
             expect(req.params.userId).toBe(7);
         });
 
         it("rejects an invalid user ID", async () => {
-            const { errors } = await runValidation(
-                userIdParamValidator,
-                {
-                    params: {
-                        userId: "abc"
-                    }
+            const { errors } = await runValidation(userIdParamValidator, {
+                params: {
+                    userId: "abc"
                 }
-            );
+            });
 
             expect(getValidationMessages(errors)).toContain("User ID must be a positive integer");
         });
@@ -153,28 +130,22 @@ describe("shared param validators", () => {
 
     describe("publicUserIdParamValidator", () => {
         it("validates the id route parameter", async () => {
-            const { errors, req } = await runValidation(
-                publicUserIdParamValidator,
-                {
-                    params: {
-                        id: "9"
-                    }
+            const { errors, req } = await runValidation(publicUserIdParamValidator, {
+                params: {
+                    id: "9"
                 }
-            );
+            });
 
             expect(errors).toHaveLength(0);
             expect(req.params.id).toBe(9);
         });
 
         it("rejects an invalid public user ID", async () => {
-            const { errors } = await runValidation(
-                publicUserIdParamValidator,
-                {
-                    params: {
-                        id: "invalid"
-                    }
+            const { errors } = await runValidation(publicUserIdParamValidator, {
+                params: {
+                    id: "invalid"
                 }
-            );
+            });
 
             expect(getValidationMessages(errors)).toContain("User ID must be a positive integer");
         });
@@ -186,28 +157,22 @@ describe("shared param validators", () => {
 
     describe("reviewIdParamValidator", () => {
         it("accepts and converts a positive review ID", async () => {
-            const { errors, req } = await runValidation(
-                reviewIdParamValidator,
-                {
-                    params: {
-                        reviewId: "11"
-                    }
+            const { errors, req } = await runValidation(reviewIdParamValidator, {
+                params: {
+                    reviewId: "11"
                 }
-            );
+            });
 
             expect(errors).toHaveLength(0);
             expect(req.params.reviewId).toBe(11);
         });
 
         it("rejects an invalid review ID", async () => {
-            const { errors } = await runValidation(
-                reviewIdParamValidator,
-                {
-                    params: {
-                        reviewId: "abc"
-                    }
+            const { errors } = await runValidation(reviewIdParamValidator, {
+                params: {
+                    reviewId: "abc"
                 }
-            );
+            });
 
             expect(getValidationMessages(errors)).toContain("Review ID must be a positive integer");
         });

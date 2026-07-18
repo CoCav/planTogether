@@ -1,3 +1,7 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindUserByIdOrFail = jest.fn();
 const mockBuildEventWhereConditions = jest.fn();
 const mockBuildEventCreatorInclude = jest.fn();
@@ -11,6 +15,10 @@ const mockGetTotalPages = jest.fn();
 const mockOpIn = Symbol("in");
 const mockOpLt = Symbol("lt");
 const mockOpGte = Symbol("gte");
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("sequelize", () => ({
     Op: {
@@ -78,6 +86,10 @@ jest.mock("../../../../../src/utils/auth/passwordHasher", () => ({
     hashPassword: jest.fn(),
     comparePassword: jest.fn()
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const sequelize = require("../../../../../src/config/database");
 
@@ -194,11 +206,10 @@ describe("get current user events service", () => {
 
             expect(mockBuildEventCreatorInclude).toHaveBeenCalledWith(User, undefined);
 
-            expect(mockGetPaginationOptions).toHaveBeenCalledWith(
-                {
-                    sortBy: "startDateTime",
-                    order: "asc"
-                },
+            expect(mockGetPaginationOptions).toHaveBeenCalledWith({
+                sortBy: "startDateTime",
+                order: "asc"
+            },
                 EVENT_SORT_FIELDS,
                 "startDateTime",
                 "ASC"
@@ -317,8 +328,8 @@ describe("get current user events service", () => {
         ], [
             "createdHistory",
             EVENT_ROLES.ORGANIZER
-        ]])("filters %s views by organizer role",
-            async (view, expectedRole) => {
+        ]])(
+            "filters %s views by organizer role", async (view, expectedRole) => {
                 await getCurrentUserEventsById(10, {
                     view
                 });
@@ -334,8 +345,8 @@ describe("get current user events service", () => {
         it.each([
             "joined",
             "joinedHistory"
-        ])("filters %s views by participant and co-organizer roles",
-            async (view) => {
+        ])(
+            "filters %s views by participant and co-organizer roles", async (view) => {
                 await getCurrentUserEventsById(10, {
                     view
                 });
@@ -354,8 +365,8 @@ describe("get current user events service", () => {
         it.each([
             "created",
             "joined"
-        ])("filters %s views to active or upcoming events",
-            async (view) => {
+        ])(
+            "filters %s views to active or upcoming events", async (view) => {
                 await getCurrentUserEventsById(10, {
                     view
                 });
@@ -374,8 +385,8 @@ describe("get current user events service", () => {
         it.each([
             "createdHistory",
             "joinedHistory"
-        ])("filters %s views to completed events",
-            async (view) => {
+        ])(
+            "filters %s views to completed events", async (view) => {
                 await getCurrentUserEventsById(10, {
                     view
                 });
@@ -404,11 +415,10 @@ describe("get current user events service", () => {
                 search: "music"
             });
 
-            expect(mockBuildEventWhereConditions).toHaveBeenCalledWith(expect.any(Object),
-                {
-                    view: "joined",
-                    search: "music"
-                }, {
+            expect(mockBuildEventWhereConditions).toHaveBeenCalledWith(expect.any(Object), {
+                view: "joined",
+                search: "music"
+            }, {
                 includeStatus: false
             });
 
@@ -420,12 +430,11 @@ describe("get current user events service", () => {
                 view: "createdHistory"
             });
 
-            expect(mockGetPaginationOptions).toHaveBeenCalledWith(
-                {
-                    view: "createdHistory",
-                    sortBy: "startDateTime",
-                    order: "desc"
-                },
+            expect(mockGetPaginationOptions).toHaveBeenCalledWith({
+                view: "createdHistory",
+                sortBy: "startDateTime",
+                order: "desc"
+            },
                 EVENT_SORT_FIELDS,
                 "startDateTime",
                 "DESC"
@@ -447,8 +456,7 @@ describe("get current user events service", () => {
                 pageSize: "5",
                 sortBy: "title",
                 order: "desc"
-            }
-            );
+            });
 
             expect(EventUserRole.findAndCountAll).toHaveBeenCalledWith(
                 expect.objectContaining({
@@ -538,12 +546,9 @@ describe("get current user events service", () => {
 
     describe("User validation", () => {
         it("stops when the current user does not exist", async () => {
-            const error = Object.assign(
-                new Error("User not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("User not found"), {
+                statusCode: 404
+            });
 
             mockFindUserByIdOrFail.mockRejectedValue(error);
 
@@ -576,8 +581,8 @@ describe("get current user events service", () => {
                     new Error("Event statistics failed")
                 );
             }
-        ]])("propagates %s errors",
-            async (_, configureError) => {
+        ]])(
+            "propagates %s errors", async (_, configureError) => {
                 configureError();
 
                 await expect(getCurrentUserEventsById(10)).rejects.toBeInstanceOf(Error);

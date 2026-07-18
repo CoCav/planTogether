@@ -1,3 +1,13 @@
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("jsonwebtoken");
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const jwt = require("jsonwebtoken");
 
 const { resolveCurrentUser } = require("../../../../src/middlewares/auth/resolveCurrentUser");
@@ -24,12 +34,6 @@ const {
    - Missing or invalid authentication never blocks public requests.
 =========================================================================== */
 
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("jsonwebtoken");
-
 describe("resolveCurrentUser middleware", () => {
     const originalJwtSecret = process.env.JWT_SECRET;
 
@@ -38,13 +42,11 @@ describe("resolveCurrentUser middleware", () => {
     let next;
 
     beforeEach(() => {
-        const mocks = createMockReqResNext();
-
-        req = {
-            ...mocks.req,
+        const mocks = createMockReqResNext({
             headers: {}
-        };
+        });
 
+        req = mocks.req;
         res = mocks.res;
         next = mocks.next;
 

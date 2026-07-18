@@ -118,13 +118,9 @@ describe("Update Event API", () => {
 
             jest.clearAllMocks();
 
-            const response = await updateEvent(
-                event.id,
-                organizerAuth.headers,
-                {
-                    location: "Quebec City"
-                }
-            );
+            const response = await updateEvent(event.id, organizerAuth.headers, {
+                location: "Quebec City"
+            });
 
             expect(response.statusCode).toBe(200);
             expect(global.fetch).toHaveBeenCalledTimes(1);
@@ -151,13 +147,9 @@ describe("Update Event API", () => {
 
             jest.clearAllMocks();
 
-            const response = await updateEvent(
-                event.id,
-                organizerAuth.headers,
-                {
-                    mode: EVENT_MODES.ONLINE
-                }
-            );
+            const response = await updateEvent(event.id, organizerAuth.headers, {
+                mode: EVENT_MODES.ONLINE
+            });
 
             expect(response.statusCode).toBe(200);
             expect(global.fetch).not.toHaveBeenCalled();
@@ -204,23 +196,17 @@ describe("Update Event API", () => {
                 email: `cleanuporganizer${Date.now()}@test.com`
             });
 
-            const createResponse = await createEventWithImage(
-                organizerAuth.headers,
-                {
-                    title: "Cleanup Event",
-                    description: "Image cleanup test"
-                },
-                {
-                    buffer: Buffer.from("old image"),
-                    filename: "old.png",
-                    contentType: "image/png"
-                }
-            );
+            const createResponse = await createEventWithImage(organizerAuth.headers, {
+                title: "Cleanup Event",
+                description: "Image cleanup test"
+            }, {
+                buffer: Buffer.from("old image"),
+                filename: "old.png",
+                contentType: "image/png"
+            });
 
             expect(createResponse.statusCode).toBe(201);
-            expect(createResponse.body.event.image).toMatch(
-                /^\/uploads\/events\/event-/
-            );
+            expect(createResponse.body.event.image).toMatch(/^\/uploads\/events\/event-/);
 
             const event = createResponse.body.event;
 
@@ -255,23 +241,17 @@ describe("Update Event API", () => {
                 email: `removeimageorganizer${Date.now()}@test.com`
             });
 
-            const createResponse = await createEventWithImage(
-                organizerAuth.headers,
-                {
-                    title: "Remove Image Event",
-                    description: "Image removal test"
-                },
-                {
-                    buffer: Buffer.from("event image"),
-                    filename: "event.png",
-                    contentType: "image/png"
-                }
-            );
+            const createResponse = await createEventWithImage(organizerAuth.headers, {
+                title: "Remove Image Event",
+                description: "Image removal test"
+            }, {
+                buffer: Buffer.from("event image"),
+                filename: "event.png",
+                contentType: "image/png"
+            });
 
             expect(createResponse.statusCode).toBe(201);
-            expect(createResponse.body.event.image).toMatch(
-                /^\/uploads\/events\/event-/
-            );
+            expect(createResponse.body.event.image).toMatch(/^\/uploads\/events\/event-/);
 
             const event = createResponse.body.event;
 

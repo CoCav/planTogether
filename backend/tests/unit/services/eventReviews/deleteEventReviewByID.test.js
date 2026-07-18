@@ -1,4 +1,17 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindReviewByIdOrFail = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("sequelize", () => ({
+    fn: jest.fn(),
+    col: jest.fn()
+}));
 
 jest.mock("../../../../src/models/eventModel", () => ({
     name: "Event"
@@ -50,10 +63,9 @@ jest.mock("../../../../src/utils/pagination", () => ({
     getTotalPages: jest.fn()
 }));
 
-jest.mock("sequelize", () => ({
-    fn: jest.fn(),
-    col: jest.fn()
-}));
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const EventReview = require("../../../../src/models/associations/eventReviewModel");
 
@@ -102,14 +114,9 @@ describe("delete event review service", () => {
             });
 
             expect(mockFindReviewByIdOrFail).toHaveBeenCalledTimes(1);
-
-            expect(mockFindReviewByIdOrFail).toHaveBeenCalledWith(
-                EventReview,
-                1
-            );
+            expect(mockFindReviewByIdOrFail).toHaveBeenCalledWith(EventReview, 1);
 
             expect(review.destroy).toHaveBeenCalledTimes(1);
-
             expect(review.destroy).toHaveBeenCalledWith();
 
             expect(result).toBeUndefined();
@@ -122,12 +129,9 @@ describe("delete event review service", () => {
 
     describe("Review validation", () => {
         it("stops when the review does not exist", async () => {
-            const error = Object.assign(
-                new Error("Review not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("Review not found"), {
+                statusCode: 404
+            });
 
             mockFindReviewByIdOrFail.mockRejectedValue(error);
 

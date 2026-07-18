@@ -1,6 +1,14 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindUserByIdOrFail = jest.fn();
 const mockComparePassword = jest.fn();
 const mockHashPassword = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../../src/models/userModel", () => ({
     scope: jest.fn()
@@ -61,6 +69,10 @@ jest.mock("../../../../../src/utils/pagination", () => ({
     getTotalPages: jest.fn()
 }));
 
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const User = require("../../../../../src/models/userModel");
 
 const { changeCurrentUserPasswordById } = require("../../../../../src/services/users/authenticatedUserService");
@@ -120,37 +132,18 @@ describe("change current user password service", () => {
 
     describe("changeCurrentUserPasswordById", () => {
         it("hashes and saves the new password", async () => {
-            const result = await changeCurrentUserPasswordById(
-                10,
-                "CurrentPassword123",
-                "NewPassword123"
-            );
+            const result = await changeCurrentUserPasswordById(10, "CurrentPassword123", "NewPassword123");
 
             expect(User.scope).toHaveBeenCalledTimes(1);
-
             expect(User.scope).toHaveBeenCalledWith("withPassword");
 
             expect(mockFindUserByIdOrFail).toHaveBeenCalledTimes(1);
+            expect(mockFindUserByIdOrFail).toHaveBeenCalledWith(scopedUserModel, 10);
 
-            expect(mockFindUserByIdOrFail).toHaveBeenCalledWith(
-                scopedUserModel,
-                10
-            );
-
-            expect(mockComparePassword).toHaveBeenNthCalledWith(
-                1,
-                "CurrentPassword123",
-                "current-hash"
-            );
-
-            expect(mockComparePassword).toHaveBeenNthCalledWith(
-                2,
-                "NewPassword123",
-                "current-hash"
-            );
+            expect(mockComparePassword).toHaveBeenNthCalledWith(1, "CurrentPassword123", "current-hash");
+            expect(mockComparePassword).toHaveBeenNthCalledWith(2, "NewPassword123", "current-hash");
 
             expect(mockHashPassword).toHaveBeenCalledTimes(1);
-
             expect(mockHashPassword).toHaveBeenCalledWith("NewPassword123");
 
             expect(user.password).toBe("new-password-hash");
@@ -183,11 +176,7 @@ describe("change current user password service", () => {
             });
 
             expect(mockComparePassword).toHaveBeenCalledTimes(1);
-
-            expect(mockComparePassword).toHaveBeenCalledWith(
-                "WrongPassword",
-                "current-hash"
-            );
+            expect(mockComparePassword).toHaveBeenCalledWith("WrongPassword", "current-hash");
 
             expect(mockHashPassword).not.toHaveBeenCalled();
 
@@ -232,12 +221,9 @@ describe("change current user password service", () => {
 
     describe("User validation", () => {
         it("propagates the missing user error", async () => {
-            const error = Object.assign(
-                new Error("User not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("User not found"), {
+                statusCode: 404
+            });
 
             mockFindUserByIdOrFail.mockRejectedValue(error);
 
@@ -295,8 +281,8 @@ describe("change current user password service", () => {
                         new Error("Password persistence failed")
                     );
                 }
-            ]])("propagates %s errors",
-                async (_, configureError) => {
+            ]])(
+                "propagates %s errors", async (_, configureError) => {
                     configureError();
 
                     await expect(

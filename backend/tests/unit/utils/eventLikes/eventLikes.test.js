@@ -88,24 +88,11 @@ describe("event like utility", () => {
                 .mockReturnValueOnce(distinctExpression)
                 .mockReturnValueOnce(countExpression);
 
-            const result = buildEventLikeCountAttribute(
-                sequelize,
-                "likes.id"
-            );
+            const result = buildEventLikeCountAttribute(sequelize, "likes.id");
 
             expect(sequelize.col).toHaveBeenCalledWith("likes.id");
-
-            expect(sequelize.fn).toHaveBeenNthCalledWith(
-                1,
-                "DISTINCT",
-                likeColumn
-            );
-
-            expect(sequelize.fn).toHaveBeenNthCalledWith(
-                2,
-                "COUNT",
-                distinctExpression
-            );
+            expect(sequelize.fn).toHaveBeenNthCalledWith(1, "DISTINCT", likeColumn);
+            expect(sequelize.fn).toHaveBeenNthCalledWith(2, "COUNT", distinctExpression);
 
             expect(result).toEqual([
                 countExpression,
@@ -127,13 +114,10 @@ describe("event like utility", () => {
 
             EventLike.findOne.mockResolvedValue(like);
 
-            const result = await findEventLike(
-                EventLike,
-                {
-                    eventId: 10,
-                    userId: 20
-                }
-            );
+            const result = await findEventLike(EventLike, {
+                eventId: 10,
+                userId: 20
+            });
 
             expect(EventLike.findOne).toHaveBeenCalledWith({
                 where: {
@@ -153,14 +137,11 @@ describe("event like utility", () => {
 
             EventLike.findOne.mockResolvedValue(null);
 
-            const result = await findEventLike(
-                EventLike,
-                {
-                    eventId: 10,
-                    userId: 20,
-                    transaction
-                }
-            );
+            const result = await findEventLike(EventLike, {
+                eventId: 10,
+                userId: 20,
+                transaction
+            });
 
             expect(EventLike.findOne).toHaveBeenCalledWith({
                 where: {
@@ -182,10 +163,7 @@ describe("event like utility", () => {
         it("counts likes for an event", async () => {
             EventLike.count.mockResolvedValue(4);
 
-            const result = await getEventLikesCount(
-                EventLike,
-                10
-            );
+            const result = await getEventLikesCount(EventLike, 10);
 
             expect(EventLike.count).toHaveBeenCalledWith({
                 where: {
@@ -203,14 +181,10 @@ describe("event like utility", () => {
 
             EventLike.count.mockResolvedValue(2);
 
-            const result = await getEventLikesCount(
-                EventLike,
-                10,
-                {
-                    transaction,
-                    distinct: true
-                }
-            );
+            const result = await getEventLikesCount(EventLike, 10, {
+                transaction,
+                distinct: true
+            });
 
             expect(EventLike.count).toHaveBeenCalledWith({
                 where: {
@@ -230,22 +204,14 @@ describe("event like utility", () => {
 
     describe("findLikedEventIdsByUser", () => {
         it("returns an empty Set when current user ID is missing", async () => {
-            const result = await findLikedEventIdsByUser(
-                EventLike,
-                [10, 20],
-                undefined
-            );
+            const result = await findLikedEventIdsByUser(EventLike, [10, 20], undefined);
 
             expect(result).toEqual(new Set());
             expect(EventLike.findAll).not.toHaveBeenCalled();
         });
 
         it("returns an empty Set when no event IDs are provided", async () => {
-            const result = await findLikedEventIdsByUser(
-                EventLike,
-                [],
-                1
-            );
+            const result = await findLikedEventIdsByUser(EventLike, [], 1);
 
             expect(result).toEqual(new Set());
             expect(EventLike.findAll).not.toHaveBeenCalled();
@@ -254,11 +220,7 @@ describe("event like utility", () => {
         it("queries liked event IDs for the current user", async () => {
             EventLike.findAll.mockResolvedValue([]);
 
-            await findLikedEventIdsByUser(
-                EventLike,
-                [10, 20],
-                1
-            );
+            await findLikedEventIdsByUser(EventLike, [10, 20], 1);
 
             expect(EventLike.findAll).toHaveBeenCalledWith({
                 attributes: ["eventId"],
@@ -279,11 +241,7 @@ describe("event like utility", () => {
                 eventId: 20
             }]);
 
-            const result = await findLikedEventIdsByUser(
-                EventLike,
-                [10, 20],
-                1
-            );
+            const result = await findLikedEventIdsByUser(EventLike, [10, 20], 1);
 
             expect(result).toEqual(new Set([10, 20]));
         });
@@ -291,11 +249,7 @@ describe("event like utility", () => {
         it("returns an empty Set when the query returns no likes", async () => {
             EventLike.findAll.mockResolvedValue([]);
 
-            const result = await findLikedEventIdsByUser(
-                EventLike,
-                [10],
-                1
-            );
+            const result = await findLikedEventIdsByUser(EventLike, [10], 1);
 
             expect(result).toEqual(new Set());
         });
@@ -307,11 +261,7 @@ describe("event like utility", () => {
 
     describe("countEventLikesByEventIds", () => {
         it("returns an empty object when no event IDs are provided", async () => {
-            const result = await countEventLikesByEventIds(
-                EventLike,
-                sequelize,
-                []
-            );
+            const result = await countEventLikesByEventIds(EventLike, sequelize, []);
 
             expect(result).toEqual({});
             expect(EventLike.findAll).not.toHaveBeenCalled();
@@ -333,18 +283,10 @@ describe("event like utility", () => {
 
             EventLike.findAll.mockResolvedValue([]);
 
-            await countEventLikesByEventIds(
-                EventLike,
-                sequelize,
-                [10, 20]
-            );
+            await countEventLikesByEventIds(EventLike, sequelize, [10, 20]);
 
             expect(sequelize.col).toHaveBeenCalledWith("eventId");
-
-            expect(sequelize.fn).toHaveBeenCalledWith(
-                "COUNT",
-                countColumn
-            );
+            expect(sequelize.fn).toHaveBeenCalledWith("COUNT", countColumn);
 
             expect(EventLike.findAll).toHaveBeenCalledWith({
                 attributes: [
@@ -373,11 +315,7 @@ describe("event like utility", () => {
                 likesCount: "1"
             }]);
 
-            const result = await countEventLikesByEventIds(
-                EventLike,
-                sequelize,
-                [10, 20]
-            );
+            const result = await countEventLikesByEventIds(EventLike, sequelize, [10, 20]);
 
             expect(result).toEqual({
                 10: 3,
@@ -388,11 +326,7 @@ describe("event like utility", () => {
         it("returns an empty object when the grouped query returns no rows", async () => {
             EventLike.findAll.mockResolvedValue([]);
 
-            const result = await countEventLikesByEventIds(
-                EventLike,
-                sequelize,
-                [10]
-            );
+            const result = await countEventLikesByEventIds(EventLike, sequelize, [10]);
 
             expect(result).toEqual({});
         });

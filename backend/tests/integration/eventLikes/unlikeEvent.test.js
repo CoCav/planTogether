@@ -60,10 +60,7 @@ describe("Unlike Event API", () => {
 
             await likeEvent(event.id, likerAuth.headers);
 
-            const response = await unlikeEvent(
-                event.id,
-                likerAuth.headers
-            );
+            const response = await unlikeEvent(event.id, likerAuth.headers);
 
             expect(response.statusCode).toBe(200);
 
@@ -111,10 +108,7 @@ describe("Unlike Event API", () => {
             await likeEvent(event.id, likerAuthA.headers);
             await likeEvent(event.id, likerAuthB.headers);
 
-            const response = await unlikeEvent(
-                event.id,
-                likerAuthA.headers
-            );
+            const response = await unlikeEvent(event.id, likerAuthA.headers);
 
             expect(response.statusCode).toBe(200);
             expect(Number(response.body.likesCount)).toBe(1);
@@ -142,10 +136,7 @@ describe("Unlike Event API", () => {
                 email: `neverlikeduser${Date.now()}@test.com`
             });
 
-            const response = await unlikeEvent(
-                event.id,
-                likerAuth.headers
-            );
+            const response = await unlikeEvent(event.id, likerAuth.headers);
 
             expect(response.statusCode).toBe(200);
 
@@ -190,10 +181,7 @@ describe("Unlike Event API", () => {
                 email: `invalidunlike${Date.now()}@test.com`
             });
 
-            const response = await unlikeEvent(
-                "abc",
-                likerAuth.headers
-            );
+            const response = await unlikeEvent("abc", likerAuth.headers);
 
             expect(response.statusCode).toBe(400);
         });
@@ -210,10 +198,7 @@ describe("Unlike Event API", () => {
                 email: `missingunlike${Date.now()}@test.com`
             });
 
-            const response = await unlikeEvent(
-                999999,
-                likerAuth.headers
-            );
+            const response = await unlikeEvent(999999, likerAuth.headers);
 
             expect(response.statusCode).toBe(404);
         });

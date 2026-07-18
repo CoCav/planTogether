@@ -1,6 +1,19 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindReviewByIdOrFail = jest.fn();
 const mockNormalizeString = jest.fn();
 const mockBuildPublicUserInclude = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("sequelize", () => ({
+    fn: jest.fn(),
+    col: jest.fn()
+}));
 
 jest.mock("../../../../src/models/eventModel", () => ({
     name: "Event"
@@ -52,10 +65,9 @@ jest.mock("../../../../src/utils/pagination", () => ({
     getTotalPages: jest.fn()
 }));
 
-jest.mock("sequelize", () => ({
-    fn: jest.fn(),
-    col: jest.fn()
-}));
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const User = require("../../../../src/models/userModel");
 const EventReview = require("../../../../src/models/associations/eventReviewModel");
@@ -140,43 +152,28 @@ describe("update event review service", () => {
             });
 
             expect(mockFindReviewByIdOrFail).toHaveBeenCalledTimes(1);
-
-            expect(mockFindReviewByIdOrFail).toHaveBeenCalledWith(
-                EventReview,
-                1
-            );
+            expect(mockFindReviewByIdOrFail).toHaveBeenCalledWith(EventReview, 1);
 
             expect(mockNormalizeString).toHaveBeenCalledTimes(1);
-
-            expect(mockNormalizeString).toHaveBeenCalledWith(
-                "  Updated review comment  "
-            );
+            expect(mockNormalizeString).toHaveBeenCalledWith("  Updated review comment  ");
 
             expect(review.update).toHaveBeenCalledTimes(1);
-
             expect(review.update).toHaveBeenCalledWith({
                 rating: 4,
                 comment: "Updated review comment"
             });
 
             expect(mockBuildPublicUserInclude).toHaveBeenCalledTimes(1);
-
             expect(mockBuildPublicUserInclude).toHaveBeenCalledWith(User);
 
             expect(EventReview.findByPk).toHaveBeenCalledTimes(1);
+            expect(EventReview.findByPk).toHaveBeenCalledWith(1, {
+                include: [
+                    publicUserInclude
+                ]
+            });
 
-            expect(EventReview.findByPk).toHaveBeenCalledWith(
-                1,
-                {
-                    include: [
-                        publicUserInclude
-                    ]
-                }
-            );
-
-            expect(review.update.mock.invocationCallOrder[0]).toBeLessThan(
-                EventReview.findByPk.mock.invocationCallOrder[0]
-            );
+            expect(review.update.mock.invocationCallOrder[0]).toBeLessThan(EventReview.findByPk.mock.invocationCallOrder[0]);
 
             expect(result).toBe(updatedReview);
         });
@@ -188,12 +185,9 @@ describe("update event review service", () => {
 
     describe("Review validation", () => {
         it("stops when the review does not exist", async () => {
-            const error = Object.assign(
-                new Error("Review not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("Review not found"), {
+                statusCode: 404
+            });
 
             mockFindReviewByIdOrFail.mockRejectedValue(error);
 

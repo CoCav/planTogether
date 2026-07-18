@@ -42,14 +42,7 @@ const findRouteLayer = (
    ROUTE ASSERTIONS
 ============================= */
 
-const expectRoute = (
-    router,
-    {
-        method,
-        path,
-        handlers
-    }
-) => {
+const expectRoute = (router, { method, path, handlers }) => {
     const routeLayer = findRouteLayer(
         router,
         method,
@@ -66,10 +59,7 @@ const expectRoute = (
     expect(registeredHandlers).toEqual(flattenHandlers(handlers));
 };
 
-const expectRouteOrder = (
-    router,
-    expectedRoutes
-) => {
+const expectRouteOrder = (router, expectedRoutes) => {
     const registeredRoutes = router.stack
         .filter((layer) => layer.route)
         .map((layer) => {
@@ -95,10 +85,7 @@ const expectRouteOrder = (
    SUBROUTER ASSERTIONS
 ============================= */
 
-const expectMountedRouters = (
-    router,
-    expectedRouters
-) => {
+const expectMountedRouters = (router, expectedRouters) => {
     const mountedRouters = router.stack
         .filter((layer) => !layer.route)
         .map((layer) => layer.handle);

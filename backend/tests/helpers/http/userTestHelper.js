@@ -68,30 +68,21 @@ const getCurrentUserProfile = (headers = {}) => {
         .set(headers);
 };
 
-const getCurrentUserEvents = ({
-    headers = {},
-    query = {}
-} = {}) => {
+const getCurrentUserEvents = ({ headers = {}, query = {} } = {}) => {
     return request(app)
         .get("/api/users/me/events")
         .set(headers)
         .query(query);
 };
 
-const updateCurrentUserProfile = (
-    headers = {},
-    payload = {}
-) => {
+const updateCurrentUserProfile = (headers = {}, payload = {}) => {
     return request(app)
         .put("/api/users/me")
         .set(headers)
         .send(payload);
 };
 
-const updateCurrentUserAvatar = (
-    headers = {},
-    image = {}
-) => {
+const updateCurrentUserAvatar = (headers = {}, image = {}) => {
     return request(app)
         .put("/api/users/me")
         .set(headers)
@@ -113,11 +104,7 @@ const getPublicUserProfile = (userId) => {
     return request(app).get(`/api/users/${userId}`);
 };
 
-const getPublicUserEvents = ({
-    userId,
-    headers = {},
-    query = {}
-}) => {
+const getPublicUserEvents = ({ userId, headers = {}, query = {} }) => {
     return request(app)
         .get(`/api/users/${userId}/events`)
         .set(headers)

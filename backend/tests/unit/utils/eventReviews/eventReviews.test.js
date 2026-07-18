@@ -79,24 +79,11 @@ describe("event review utility", () => {
                 .mockReturnValueOnce(distinctExpression)
                 .mockReturnValueOnce(countExpression);
 
-            const result = buildEventReviewCountAttribute(
-                sequelize,
-                "reviews.id"
-            );
+            const result = buildEventReviewCountAttribute(sequelize, "reviews.id");
 
             expect(sequelize.col).toHaveBeenCalledWith("reviews.id");
-
-            expect(sequelize.fn).toHaveBeenNthCalledWith(
-                1,
-                "DISTINCT",
-                reviewColumn
-            );
-
-            expect(sequelize.fn).toHaveBeenNthCalledWith(
-                2,
-                "COUNT",
-                distinctExpression
-            );
+            expect(sequelize.fn).toHaveBeenNthCalledWith(1, "DISTINCT", reviewColumn);
+            expect(sequelize.fn).toHaveBeenNthCalledWith(2, "COUNT", distinctExpression);
 
             expect(result).toEqual([
                 countExpression,
@@ -141,23 +128,12 @@ describe("event review utility", () => {
 
             sequelize.cast.mockReturnValue(castExpression);
 
-            const result = buildEventAverageRatingAttribute(
-                sequelize,
-                "reviews.rating"
-            );
+            const result = buildEventAverageRatingAttribute(sequelize, "reviews.rating");
 
             expect(sequelize.col).toHaveBeenCalledWith("reviews.rating");
+            expect(sequelize.fn).toHaveBeenNthCalledWith(1, "AVG", ratingColumn);
 
-            expect(sequelize.fn).toHaveBeenNthCalledWith(
-                1,
-                "AVG",
-                ratingColumn
-            );
-
-            expect(sequelize.cast).toHaveBeenCalledWith(
-                averageExpression,
-                "numeric"
-            );
+            expect(sequelize.cast).toHaveBeenCalledWith(averageExpression, "numeric");
 
             expect(sequelize.fn).toHaveBeenNthCalledWith(
                 2,

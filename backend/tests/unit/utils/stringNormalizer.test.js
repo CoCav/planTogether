@@ -34,16 +34,20 @@ describe("string normalizer utility", () => {
         it.each([
             ["null", null],
             ["undefined", undefined]
-        ])("normalizes %s to an empty string", (_, value) => {
-            expect(normalizeString(value)).toBe("");
-        });
+        ])(
+            "normalizes %s to an empty string", (_, value) => {
+                expect(normalizeString(value)).toBe("");
+            }
+        );
 
         it.each([
             ["number", 42, "42"],
             ["boolean", true, "true"]
-        ])("converts a %s value to a trimmed string", (_, value, expected) => {
-            expect(normalizeString(value)).toBe(expected);
-        });
+        ])(
+            " converts a %s value to a trimmed string", (_, value, expected) => {
+                expect(normalizeString(value)).toBe(expected);
+            }
+        );
 
         it("preserves an already normalized string", () => {
             expect(normalizeString("Montreal")).toBe("Montreal");

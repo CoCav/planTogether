@@ -1,6 +1,14 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindEventByIdOrFail = jest.fn();
 const mockAssertEventNotPast = jest.fn();
 const mockFindActiveMembership = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../src/models/eventModel", () => ({
     name: "Event"
@@ -38,6 +46,10 @@ jest.mock("../../../../src/utils/users/userInclude", () => ({
 jest.mock("../../../../src/config/database", () => ({
     transaction: jest.fn()
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const Event = require("../../../../src/models/eventModel");
 const EventUserRole = require("../../../../src/models/associations/eventUserRoleModel");
@@ -105,35 +117,23 @@ describe("leave event service", () => {
             });
 
             expect(mockFindEventByIdOrFail).toHaveBeenCalledTimes(1);
-
-            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(
-                Event,
-                1
-            );
+            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(Event, 1);
 
             expect(mockAssertEventNotPast).toHaveBeenCalledTimes(1);
-
             expect(mockAssertEventNotPast).toHaveBeenCalledWith({
                 id: 1
             });
 
             expect(mockFindActiveMembership).toHaveBeenCalledTimes(1);
+            expect(mockFindActiveMembership).toHaveBeenCalledWith(EventUserRole, {
+                eventId: 1,
+                userId: 10,
+                transaction: undefined
+            });
 
-            expect(mockFindActiveMembership).toHaveBeenCalledWith(
-                EventUserRole,
-                {
-                    eventId: 1,
-                    userId: 10,
-                    transaction: undefined
-                }
-            );
-
-            expect(membership.deletedAt).toEqual(
-                new Date("2026-04-25T12:00:00.000Z")
-            );
+            expect(membership.deletedAt).toEqual(new Date("2026-04-25T12:00:00.000Z"));
 
             expect(membership.save).toHaveBeenCalledTimes(1);
-
             expect(membership.save).toHaveBeenCalledWith();
 
             expect(result).toBeUndefined();
@@ -146,12 +146,9 @@ describe("leave event service", () => {
 
     describe("Event validation", () => {
         it("stops when the event does not exist", async () => {
-            const error = Object.assign(
-                new Error("Event not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("Event not found"), {
+                statusCode: 404
+            });
 
             mockFindEventByIdOrFail.mockRejectedValue(error);
 
@@ -170,12 +167,9 @@ describe("leave event service", () => {
         });
 
         it("stops when the event is past", async () => {
-            const error = Object.assign(
-                new Error("No action is allowed on a past event"),
-                {
-                    statusCode: 403
-                }
-            );
+            const error = Object.assign(new Error("No action is allowed on a past event"), {
+                statusCode: 403
+            });
 
             mockAssertEventNotPast.mockImplementation(() => {
                 throw error;

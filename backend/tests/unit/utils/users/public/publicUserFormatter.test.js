@@ -38,14 +38,15 @@ describe("public user formatter", () => {
             ["null", null],
             ["undefined", undefined],
             ["empty string", ""]
-        ])("normalizes a %s avatar to null", (_, avatar) => {
-            const result = formatPublicUser({
-                name: "Jane Doe",
-                avatar
-            });
+        ])(
+            "normalizes a %s avatar to null", (_, avatar) => {
+                const result = formatPublicUser({
+                    name: "Jane Doe",
+                    avatar
+                });
 
-            expect(result.avatar).toBeNull();
-        });
+                expect(result.avatar).toBeNull();
+            });
 
         it("returns only public user response fields", () => {
             const result = formatPublicUser({

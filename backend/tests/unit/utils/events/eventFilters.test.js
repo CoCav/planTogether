@@ -164,13 +164,11 @@ describe("event filter utility", () => {
             applyEventStatusFilter(where, EVENT_STATUS.UPCOMING);
 
             expect(where[Op.and]).toEqual([
-                existingCondition,
-                {
+                existingCondition, {
                     startDateTime: {
                         [Op.gt]: new Date("2026-04-25T12:00:00.000Z")
                     }
-                }
-            ]);
+                }]);
         });
 
         it("does not modify conditions for an unsupported status", () => {
@@ -413,8 +411,7 @@ describe("event filter utility", () => {
             ["empty", ""],
             ["whitespace-only", "   "]
         ])(
-            "does not add a broad location filter for a %s value",
-            (_, location) => {
+            "does not add a broad location filter for a %s value", (_, location) => {
                 const where = {};
 
                 applyEventSearchFilters(where, {
@@ -550,10 +547,7 @@ describe("event filter utility", () => {
         it("returns the provided where conditions object", () => {
             const where = {};
 
-            const result = buildEventWhereConditions(
-                where,
-                {}
-            );
+            const result = buildEventWhereConditions(where, {});
 
             expect(result).toBe(where);
         });
@@ -561,15 +555,12 @@ describe("event filter utility", () => {
         it("builds status, date and search conditions together", () => {
             const where = {};
 
-            const result = buildEventWhereConditions(
-                where,
-                {
-                    status: EVENT_STATUS.UPCOMING,
-                    startDate: "2026-04-26",
-                    mode: "online",
-                    search: "community"
-                }
-            );
+            const result = buildEventWhereConditions(where, {
+                status: EVENT_STATUS.UPCOMING,
+                startDate: "2026-04-26",
+                mode: "online",
+                search: "community"
+            });
 
             expect(result).toEqual({
                 mode: "online",

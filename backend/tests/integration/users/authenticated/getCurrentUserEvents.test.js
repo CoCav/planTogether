@@ -153,18 +153,14 @@ describe("Get Current User Events API", () => {
                 email: `imagemetadata${Date.now()}@test.com`
             });
 
-            const createResponse = await createEventWithImage(
-                organizerAuth.headers,
-                {
-                    title: "Image Metadata Event",
-                    description: "Image metadata test"
-                },
-                {
-                    buffer: Buffer.from("event image"),
-                    filename: "metadata.png",
-                    contentType: "image/png"
-                }
-            );
+            const createResponse = await createEventWithImage(organizerAuth.headers, {
+                title: "Image Metadata Event",
+                description: "Image metadata test"
+            }, {
+                buffer: Buffer.from("event image"),
+                filename: "metadata.png",
+                contentType: "image/png"
+            });
 
             const eventId = createResponse.body.event.id;
 
@@ -277,17 +273,11 @@ describe("Get Current User Events API", () => {
                 title: "Created Event"
             });
 
-            const joinedEventResponse = await createEventAsAuthenticatedUser(
-                participantAuth.headers,
-                {
-                    title: "Joined Event"
-                }
-            );
+            const joinedEventResponse = await createEventAsAuthenticatedUser(participantAuth.headers, {
+                title: "Joined Event"
+            });
 
-            await joinEventAsAuthenticatedUser(
-                joinedEventResponse.body.event.id,
-                eventCreatorAuth.headers
-            );
+            await joinEventAsAuthenticatedUser(joinedEventResponse.body.event.id, eventCreatorAuth.headers);
 
             const response = await getCurrentUserEvents({
                 headers: eventCreatorAuth.headers,

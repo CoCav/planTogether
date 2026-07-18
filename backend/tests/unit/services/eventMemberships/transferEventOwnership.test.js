@@ -1,3 +1,7 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindEventByIdOrFail = jest.fn();
 const mockAssertEventNotPast = jest.fn();
 
@@ -5,6 +9,10 @@ const mockFindActiveMembership = jest.fn();
 const mockFindMembership = jest.fn();
 const mockCountActiveParticipants = jest.fn();
 const mockBuildPublicUserInclude = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("sequelize", () => ({
     Op: {
@@ -48,6 +56,10 @@ jest.mock("../../../../src/utils/eventMemberships/eventParticipants", () => ({
 jest.mock("../../../../src/utils/users/userInclude", () => ({
     buildPublicUserInclude: mockBuildPublicUserInclude
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const sequelize = require("../../../../src/config/database");
 
@@ -133,8 +145,8 @@ describe("transfer event ownership service", () => {
         ], [
             "co-organizer",
             EVENT_ROLES.CO_ORGANIZER
-        ]])("transfers ownership to an active %s",
-            async (_, targetRole) => {
+        ]])(
+            "transfers ownership to an active %s", async (_, targetRole) => {
                 targetMembership.role = targetRole;
 
                 const result = await transferEventOwnership({
@@ -145,37 +157,25 @@ describe("transfer event ownership service", () => {
 
                 expect(sequelize.transaction).toHaveBeenCalledTimes(1);
 
-                expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(
-                    Event,
-                    1,
-                    {
-                        transaction
-                    }
-                );
+                expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(Event, 1, {
+                    transaction
+                });
 
                 expect(mockAssertEventNotPast).toHaveBeenCalledWith({
                     id: 1
                 });
 
-                expect(mockFindActiveMembership).toHaveBeenNthCalledWith(
-                    1,
-                    EventUserRole,
-                    {
-                        eventId: 1,
-                        userId: 10,
-                        transaction
-                    }
-                );
+                expect(mockFindActiveMembership).toHaveBeenNthCalledWith(1, EventUserRole, {
+                    eventId: 1,
+                    userId: 10,
+                    transaction
+                });
 
-                expect(mockFindActiveMembership).toHaveBeenNthCalledWith(
-                    2,
-                    EventUserRole,
-                    {
-                        eventId: 1,
-                        userId: 20,
-                        transaction
-                    }
-                );
+                expect(mockFindActiveMembership).toHaveBeenNthCalledWith(2, EventUserRole, {
+                    eventId: 1,
+                    userId: 20,
+                    transaction
+                });
 
                 expect(currentOrganizerMembership.role).toBe(EVENT_ROLES.CO_ORGANIZER);
 
@@ -211,12 +211,9 @@ describe("transfer event ownership service", () => {
 
     describe("Event validation", () => {
         it("rolls back when the event does not exist", async () => {
-            const error = Object.assign(
-                new Error("Event not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("Event not found"), {
+                statusCode: 404
+            });
 
             mockFindEventByIdOrFail.mockRejectedValue(error);
 
@@ -238,12 +235,9 @@ describe("transfer event ownership service", () => {
         });
 
         it("rolls back when the event is past", async () => {
-            const error = Object.assign(
-                new Error("No action is allowed on a past event"),
-                {
-                    statusCode: 403
-                }
-            );
+            const error = Object.assign(new Error("No action is allowed on a past event"), {
+                statusCode: 403
+            });
 
             mockAssertEventNotPast.mockImplementation(() => {
                 throw error;

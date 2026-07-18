@@ -1,3 +1,16 @@
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("express-validator");
+
+jest.mock("../../../../src/config/logger", () => ({
+    warn: jest.fn()
+}));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 const { validationResult } = require("express-validator");
 
 const logger = require("../../../../src/config/logger");
@@ -25,16 +38,6 @@ const {
    - express-validator results and application logging are mocked.
    - Formatted validation errors are forwarded to next().
 =========================================================================== */
-
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("express-validator");
-
-jest.mock("../../../../src/config/logger", () => ({
-    warn: jest.fn()
-}));
 
 describe("handle validation errors middleware", () => {
     const originalNodeEnv = process.env.NODE_ENV;
@@ -79,8 +82,7 @@ describe("handle validation errors middleware", () => {
 
     describe("Validation error formatting", () => {
         it("forwards formatted validation errors", () => {
-            const { req, res, next } =
-                createMockReqResNext();
+            const { req, res, next } = createMockReqResNext();
 
             const rawErrors = [{
                 path: "email",
@@ -129,8 +131,8 @@ describe("handle validation errors middleware", () => {
                 msg: "Username is required"
             },
             "username"
-        ]])("uses the validation %s as the formatted field",
-            (_, rawError, expectedField) => {
+        ]])(
+            "uses the validation %s as the formatted field", (_, rawError, expectedField) => {
                 const { req, res, next } = createMockReqResNext();
 
                 validationResult.mockReturnValue({

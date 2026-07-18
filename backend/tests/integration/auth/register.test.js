@@ -76,10 +76,7 @@ describe("Register API", () => {
                 });
 
             expect(response.statusCode).toBe(201);
-            expect(response.body).toHaveProperty(
-                "message",
-                "User registered successfully"
-            );
+            expect(response.body).toHaveProperty("message", "User registered successfully");
             expect(response.body).toHaveProperty("token");
 
             expect(response.body.user).toMatchObject({

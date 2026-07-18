@@ -30,29 +30,24 @@ describe("shared geocoding validators", () => {
 
     describe("Optional location fields", () => {
         it("accepts an empty structured location payload", async () => {
-            const { errors } = await runValidation(
-                structuredLocationValidators
-            );
+            const { errors } = await runValidation(structuredLocationValidators);
 
             expect(errors).toHaveLength(0);
         });
 
         it("accepts nullable structured location values", async () => {
-            const { errors } = await runValidation(
-                structuredLocationValidators,
-                {
-                    body: {
-                        locationLabel: null,
-                        streetAddress: null,
-                        city: null,
-                        region: null,
-                        postalCode: null,
-                        country: null,
-                        latitude: null,
-                        longitude: null
-                    }
+            const { errors } = await runValidation(structuredLocationValidators, {
+                body: {
+                    locationLabel: null,
+                    streetAddress: null,
+                    city: null,
+                    region: null,
+                    postalCode: null,
+                    country: null,
+                    latitude: null,
+                    longitude: null
                 }
-            );
+            });
 
             expect(errors).toHaveLength(0);
         });
@@ -73,16 +68,12 @@ describe("shared geocoding validators", () => {
         ];
 
         it.each(textFieldScenarios)(
-            "trims the %s field",
-            async (field, value) => {
-                const { errors, req } = await runValidation(
-                    structuredLocationValidators,
-                    {
-                        body: {
-                            [field]: `  ${value}  `
-                        }
+            "trims the %s field", async (field, value) => {
+                const { errors, req } = await runValidation(structuredLocationValidators, {
+                    body: {
+                        [field]: `  ${value}  `
                     }
-                );
+                });
 
                 expect(errors).toHaveLength(0);
                 expect(req.body[field]).toBe(value);
@@ -100,16 +91,12 @@ describe("shared geocoding validators", () => {
             ["maximum", "90", 90],
             ["decimal", "45.5017", 45.5017]
         ])(
-            "accepts and converts the %s latitude",
-            async (_, latitude, expectedLatitude) => {
-                const { errors, req } = await runValidation(
-                    structuredLocationValidators,
-                    {
-                        body: {
-                            latitude
-                        }
+            "accepts and converts the %s latitude", async (_, latitude, expectedLatitude) => {
+                const { errors, req } = await runValidation(structuredLocationValidators, {
+                    body: {
+                        latitude
                     }
-                );
+                });
 
                 expect(errors).toHaveLength(0);
                 expect(req.body.latitude).toBe(expectedLatitude);
@@ -120,18 +107,16 @@ describe("shared geocoding validators", () => {
             ["below minimum", "-90.1"],
             ["above maximum", "90.1"],
             ["non-numeric", "invalid"]
-        ])("rejects a %s latitude", async (_, latitude) => {
-            const { errors } = await runValidation(
-                structuredLocationValidators,
-                {
+        ])(
+            "rejects a %s latitude", async (_, latitude) => {
+                const { errors } = await runValidation(structuredLocationValidators, {
                     body: {
                         latitude
                     }
-                }
-            );
+                });
 
-            expect(getValidationMessages(errors)).toContain("Latitude must be between -90 and 90");
-        });
+                expect(getValidationMessages(errors)).toContain("Latitude must be between -90 and 90");
+            });
     });
 
     /* =============================
@@ -144,16 +129,12 @@ describe("shared geocoding validators", () => {
             ["maximum", "180", 180],
             ["decimal", "-73.5673", -73.5673]
         ])(
-            "accepts and converts the %s longitude",
-            async (_, longitude, expectedLongitude) => {
-                const { errors, req } = await runValidation(
-                    structuredLocationValidators,
-                    {
-                        body: {
-                            longitude
-                        }
+            "accepts and converts the %s longitude", async (_, longitude, expectedLongitude) => {
+                const { errors, req } = await runValidation(structuredLocationValidators, {
+                    body: {
+                        longitude
                     }
-                );
+                });
 
                 expect(errors).toHaveLength(0);
                 expect(req.body.longitude).toBe(expectedLongitude);
@@ -164,17 +145,15 @@ describe("shared geocoding validators", () => {
             ["below minimum", "-180.1"],
             ["above maximum", "180.1"],
             ["non-numeric", "invalid"]
-        ])("rejects a %s longitude", async (_, longitude) => {
-            const { errors } = await runValidation(
-                structuredLocationValidators,
-                {
+        ])(
+            "rejects a %s longitude", async (_, longitude) => {
+                const { errors } = await runValidation(structuredLocationValidators, {
                     body: {
                         longitude
                     }
-                }
-            );
+                });
 
-            expect(getValidationMessages(errors)).toContain("Longitude must be between -180 and 180");
-        });
+                expect(getValidationMessages(errors)).toContain("Longitude must be between -180 and 180");
+            });
     });
 });

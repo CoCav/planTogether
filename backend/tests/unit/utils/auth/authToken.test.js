@@ -1,3 +1,14 @@
+
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("jsonwebtoken");
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
 const jwt = require("jsonwebtoken");
 
 const { generateAuthToken } = require("../../../../src/utils/auth/authToken");
@@ -16,12 +27,6 @@ const { generateAuthToken } = require("../../../../src/utils/auth/authToken");
    Notes
    - JWT payload contains the authenticated user ID only.
 =========================================================================== */
-
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("jsonwebtoken");
 
 describe("auth token utility", () => {
     const originalJwtSecret = process.env.JWT_SECRET;

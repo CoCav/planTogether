@@ -16,20 +16,13 @@ const { validationResult } = require("express-validator");
    - Supports request params, body and query validation.
 =========================================================================== */
 
-const createValidationRequest = ({
-    params = {},
-    body = {},
-    query = {}
-} = {}) => ({
+const createValidationRequest = ({ params = {}, body = {}, query = {} } = {}) => ({
     params: { ...params },
     body: { ...body },
     query: { ...query }
 });
 
-const runValidation = async (
-    validators,
-    requestData = {}
-) => {
+const runValidation = async (validators, requestData = {}) => {
     const req = createValidationRequest(requestData);
 
     for (const validator of validators) {

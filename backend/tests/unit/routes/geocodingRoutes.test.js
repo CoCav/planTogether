@@ -1,3 +1,7 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockSearchLocations = jest.fn();
 
 const mockAuthenticateToken = jest.fn();
@@ -33,7 +37,6 @@ jest.mock("../../../src/validators/geocodingValidator", () => ({
 /* =============================
    TEST IMPORTS
 ============================= */
-
 
 const { searchLocationsValidator } = require("../../../src/validators/geocodingValidator");
 
@@ -84,10 +87,7 @@ describe("geocoding routes", () => {
             mockHandleValidationErrors,
             mockSearchLocations
         ]
-    }])("$name", ({
-        path,
-        handlers
-    }) => {
+    }])("$name", ({ path, handlers }) => {
         it(`registers GET ${path} with the expected handlers`, () => {
             expectRoute(geocodingRoutes, {
                 method: "get",

@@ -1,12 +1,28 @@
-const { DataTypes } = require("sequelize");
-
-const { EVENT_MODES } = require("../../../src/constants/eventModes");
+/* =============================
+   MOCK FUNCTIONS
+============================= */
 
 const mockEventModel = {
     name: "EventModel"
 };
 
 const mockDefine = jest.fn(() => mockEventModel);
+
+/* =============================
+   TEST MOCKS
+============================= */
+
+jest.mock("../../../src/config/database", () => ({
+    define: mockDefine
+}));
+
+/* =============================
+   TEST IMPORTS
+============================= */
+
+const { DataTypes } = require("sequelize");
+
+const { EVENT_MODES } = require("../../../src/constants/eventModes");
 
 const Event = require("../../../src/models/eventModel");
 
@@ -28,14 +44,6 @@ const Event = require("../../../src/models/eventModel");
    - The Sequelize database instance is mocked.
    - Model associations are registered separately in models/index.js.
 =========================================================================== */
-
-/* =============================
-   TEST MOCKS
-============================= */
-
-jest.mock("../../../src/config/database", () => ({
-    define: mockDefine
-}));
 
 describe("event model", () => {
     const [
@@ -74,8 +82,8 @@ describe("event model", () => {
             "description",
             "type",
             "theme"
-        ])("defines the required %s field",
-            (field) => {
+        ])(
+            "defines the required %s field", (field) => {
                 expect(attributes[field].allowNull).toBe(false);
             }
         );
@@ -105,8 +113,8 @@ describe("event model", () => {
             "region",
             "postalCode",
             "country"
-        ])("defines the optional %s field",
-            (field) => {
+        ])(
+            "defines the optional %s field", (field) => {
                 expect(attributes[field].allowNull).toBe(true);
 
                 expect(attributes[field].type).toBe(DataTypes.STRING);
@@ -116,8 +124,8 @@ describe("event model", () => {
         it.each([
             "latitude",
             "longitude"
-        ])("defines the optional %s coordinate",
-            (field) => {
+        ])(
+            "defines the optional %s coordinate", (field) => {
                 expect(attributes[field]).toEqual({
                     type: DataTypes.DOUBLE,
                     allowNull: true
@@ -135,8 +143,7 @@ describe("event model", () => {
             "startDateTime",
             "endDateTime"
         ])(
-            "defines the required %s field",
-            (field) => {
+            "defines the required %s field", (field) => {
                 expect(attributes[field]).toEqual({
                     type: DataTypes.DATE,
                     allowNull: false
@@ -203,8 +210,7 @@ describe("event model", () => {
             ["country", ["country"]],
             ["coordinates", ["latitude", "longitude"]]
         ])(
-            "defines an index for %s queries",
-            (_, fields) => {
+            "defines an index for %s queries", (_, fields) => {
                 expect(options.indexes).toContainEqual({
                     fields
                 });

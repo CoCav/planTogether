@@ -1,7 +1,15 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindEventByIdOrFail = jest.fn();
 const mockBuildAuthenticatedUserInclude = jest.fn();
 
 const mockOpIn = Symbol("in");
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("sequelize", () => ({
     Op: {
@@ -45,6 +53,10 @@ jest.mock("../../../../src/utils/eventMemberships/eventParticipants", () => ({
 jest.mock("../../../../src/utils/users/userInclude", () => ({
     buildAuthenticatedUserInclude: mockBuildAuthenticatedUserInclude
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const Event = require("../../../../src/models/eventModel");
 const User = require("../../../../src/models/userModel");
@@ -123,25 +135,18 @@ describe("get event staff service", () => {
             const result = await getEventStaff(1);
 
             expect(mockFindEventByIdOrFail).toHaveBeenCalledTimes(1);
-
-            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(
-                Event,
-                1
-            );
+            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(Event, 1);
 
             expect(mockBuildAuthenticatedUserInclude).toHaveBeenCalledTimes(1);
-
             expect(mockBuildAuthenticatedUserInclude).toHaveBeenCalledWith(User);
 
             expect(EventUserRole.findAll).toHaveBeenCalledTimes(1);
-
             expect(EventUserRole.findAll).toHaveBeenCalledWith({
                 where: {
                     eventId: 1,
                     deletedAt: null,
                     role: {
-                        [mockOpIn]:
-                            STAFF_EVENT_ROLES
+                        [mockOpIn]: STAFF_EVENT_ROLES
                     }
                 },
                 include: [
@@ -171,12 +176,9 @@ describe("get event staff service", () => {
 
     describe("Event validation", () => {
         it("stops staff retrieval when the event does not exist", async () => {
-            const error = Object.assign(
-                new Error("Event not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("Event not found"), {
+                statusCode: 404
+            });
 
             mockFindEventByIdOrFail.mockRejectedValue(error);
 

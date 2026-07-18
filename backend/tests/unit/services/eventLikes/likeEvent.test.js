@@ -1,6 +1,14 @@
+/* =============================
+   MOCK FUNCTIONS
+============================= */
+
 const mockFindEventByIdOrFail = jest.fn();
 const mockFindEventLike = jest.fn();
 const mockGetEventLikesCount = jest.fn();
+
+/* =============================
+   TEST MOCKS
+============================= */
 
 jest.mock("../../../../src/config/database", () => ({
     transaction: jest.fn()
@@ -22,6 +30,10 @@ jest.mock("../../../../src/utils/eventLikes/eventLikes", () => ({
     findEventLike: mockFindEventLike,
     getEventLikesCount: mockGetEventLikesCount
 }));
+
+/* =============================
+   TEST IMPORTS
+============================= */
 
 const sequelize = require("../../../../src/config/database");
 
@@ -88,40 +100,26 @@ describe("like event service", () => {
 
             expect(sequelize.transaction).toHaveBeenCalledTimes(1);
 
-            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(
-                Event,
-                1,
-                {
-                    transaction
-                }
-            );
+            expect(mockFindEventByIdOrFail).toHaveBeenCalledWith(Event, 1, {
+                transaction
+            });
 
-            expect(mockFindEventLike).toHaveBeenCalledWith(
-                EventLike,
-                {
-                    eventId: 1,
-                    userId: 10,
-                    transaction
-                }
-            );
+            expect(mockFindEventLike).toHaveBeenCalledWith(EventLike, {
+                eventId: 1,
+                userId: 10,
+                transaction
+            });
 
-            expect(EventLike.create).toHaveBeenCalledWith(
-                {
-                    eventId: 1,
-                    userId: 10
-                },
-                {
-                    transaction
-                }
-            );
+            expect(EventLike.create).toHaveBeenCalledWith({
+                eventId: 1,
+                userId: 10
+            }, {
+                transaction
+            });
 
-            expect(mockGetEventLikesCount).toHaveBeenCalledWith(
-                EventLike,
-                1,
-                {
-                    transaction
-                }
-            );
+            expect(mockGetEventLikesCount).toHaveBeenCalledWith(EventLike, 1, {
+                transaction
+            });
 
             expect(transaction.commit).toHaveBeenCalledTimes(1);
 
@@ -174,12 +172,9 @@ describe("like event service", () => {
 
     describe("Event validation errors", () => {
         it("rolls back when the event does not exist", async () => {
-            const error = Object.assign(
-                new Error("Event not found"),
-                {
-                    statusCode: 404
-                }
-            );
+            const error = Object.assign(new Error("Event not found"), {
+                statusCode: 404
+            });
 
             mockFindEventByIdOrFail.mockRejectedValue(error);
 
@@ -217,8 +212,8 @@ describe("like event service", () => {
                     new Error("Like count failed")
                 );
             }
-        ]])("rolls back and propagates %s errors",
-            async (_, configureError) => {
+        ]])(
+            "rolls back and propagates %s errors", async (_, configureError) => {
                 configureError();
 
                 await expect(
